@@ -1,0 +1,120 @@
+name: CI
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build Docker container
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ['remoter-server']
+    outputs:
+      repo-name: ${{ steps.ref.outputs.repo-name }}
+      tag: ${{ steps.ref.outputs.tag }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - id: checkout
+        name: Check out source code
+        uses: actions/checkout@v2
+
+      - id: ref
+        name: Format docker tag and repository name for current image.
+        run: |-
+          # This will take a ref like `refs/heads/master`
+          # and turn it into `refs-heads-master`
+          REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
+
+          # the final tag is something like:
+          # refs-heads-master-a4f8bc313dae
+          # this is what we push to ECR
+          echo "::set-output name=tag::$REF_ID-$GITHUB_SHA"
+
+          # This will take a GitHub repo name like `biomage-ltd/iac`
+          # and turns it into `iac`. This will be the name of the
+          # ECR repository.
+          IMAGE_REPO_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
+          echo "::set-output name=repo-name::$IMAGE_REPO_NAME"
+
+      - id: ref-previous
+        name: Format docker tag and repository name for the previous pushed image.
+        run: |-
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "This is a pull request, base ref and sha set to the target branch."
+            BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
+            BASE_SHA=${{ github.event.pull_request.base.sha }}
+          fi
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "This is a push, base ref and sha set to the previous commit."
+            BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
+            BASE_SHA="${{ github.event.before }}"
+          fi
+
+          echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+
+      - id: set-up-creds
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - id: login-ecr
+        name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+      
+      - id: create-ecr-registry
+        name: Create an ECR repository (if needed)
+        # This will fail if the registry already exists, which is fine. If there is some other
+        # error, the `push` step will fail instead.
+        continue-on-error: true
+        run: |-
+          aws ecr create-repository --repository-name $REPO_NAME
+        env:
+          REPO_NAME: ${{ steps.ref.outputs.repo-name }}
+
+      - id: pull-latest-image
+        name: Pull latest Docker images from mainline
+        run: |-
+          echo Pulling $IMAGE_NAME from ECR.
+          docker pull $IMAGE_NAME || true
+  
+          echo Pulling $IMAGE_NAME-builder from ECR.
+          docker pull $IMAGE_NAME-builder || true
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
+      
+      - id: build
+        name: Build Docker images
+        run: |-
+          docker build --target builder \
+            --cache-from=$PREVIOUS_IMAGE_NAME-builder \
+            --tag $IMAGE_NAME-builder .
+
+          docker build --target prod \
+            --cache-from=$IMAGE_NAME-builder \
+            --cache-from=$PREVIOUS_IMAGE_NAME \
+            --tag $IMAGE_NAME .
+        env:
+          PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+  
+      - id: push
+        name: Push docker images to ECR
+        run: |-
+          echo Pushing image $IMAGE_NAME-builder to ECR.
+          docker push $IMAGE_NAME-builder
+
+          echo Pushing image $IMAGE_NAME to ECR.
+          docker push $IMAGE_NAME
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
