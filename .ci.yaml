@@ -26,4 +26,4 @@ ci-policies:
               - "ecr:CompleteLayerUpload"
               - "ecr:PutImage"
               - "ecr:CreateRepository"
-            Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/worker"
+            Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/pipeline"
