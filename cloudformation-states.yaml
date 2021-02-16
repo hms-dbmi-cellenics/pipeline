@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Set up an executable pipeline state machine
+
+Parameters:
+  Environment:
+    Type: String
+    Default: staging
+    AllowedValues:
+      - staging
+      - production
+    Description: The environment for which the cluster need to be created.
+  ExperimentId:
+    Default: '6379'
+    Type: String
+    Description: The ID of the experiment the system is created for.
+
+Resources:
+  PipelineStateMachine:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      DefinitionString:
+        !Sub
+          - |-
+            {
+              "Comment": "N/A",
+              "StartAt": "DeleteCompletedJobs",
+              "States": {
+                "DeleteCompletedJobs": {
+                  "Type": "Task",
+                  "Comment": "Deletes all the preivous server jobs that are already completed.",
+                  "Resource": "arn:aws:states:::eks:call",
+                  "Parameters": {
+                    "ClusterName": "biomage-${Environment}",
+                    "CertificateAuthority.$": "$.certificateAuthority",
+                    "Endpoint": "${Endpoint}",
+                    "Method": "DELETE",
+                    "Path": "/apis/batch/v1/namespaces/default/jobs",
+                    "QueryParameters": {
+                      "fieldSelector": [
+                        "status.successful=1"
+                      ]
+                    }
+                  },
+                  "Next": "LaunchKubernetesJobIfNotExists"
+                },
+                "LaunchKubernetesJobIfNotExists": {
+                  "Type": "Task",
+                  "Comment": "Attempts to create a Kubernetes Job for the pipeline server. Will swallow a 409 (already exists) error.",
+                  "Resource": "arn:aws:states:::eks:call",
+                  "Parameters": {
+                    "ClusterName": "biomage-${Environment}",
+                    "CertificateAuthority.$": "$.certificateAuthority",
+                    "Endpoint": "${Endpoint}",
+                    "Method": "POST",
+                    "Path": "/apis/batch/v1/namespaces/default/jobs",
+                    "RequestBody": {
+                      "apiVersion": "batch/v1",
+                      "kind": "Job",
+                      "metadata": {
+                        "name": "remoter-server-${ExperimentId}"
+                      },
+                      "spec": {
+                        "template": {
+                          "metadata": {
+                            "name": "remoter-server-${ExperimentId}"
+                          },
+                          "spec": {
+                            "containers": [
+                              {
+                                "name": "remoter-server",
+                                "image": "242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:refs-heads-master-236bab58afda4a763bc6a72514247e228fae5c75-remoter-server"
+                              }
+                            ],
+                            "restartPolicy": "Never"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Retry": [
+                    {
+                      "ErrorEquals": [ "EKS.409" ],
+                      "IntervalSeconds": 1,
+                      "BackoffRate": 2.0,
+                      "MaxAttempts": 2
+                    }
+                  ],
+                  "Catch": [
+                    {
+                      "ErrorEquals": [ "EKS.409" ],
+                      "ResultPath": "$.error-info",
+                      "Next": "Wait"
+                    }
+                  ],
+                  "Next": "Wait"
+                },
+                "Wait": {
+                  "Type": "Wait",
+                  "Seconds": 5,
+                  "End": true
+                }
+              }
+            }
+          - Endpoint:
+              Fn::ImportValue:
+                !Sub "eksctl-biomage-${Environment}-cluster::Endpoint"
+              
+      RoleArn:
+        Fn::ImportValue:
+          !Sub "biomage-state-machine-role-${Environment}::ARN"
