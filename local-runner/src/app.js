@@ -110,7 +110,6 @@ const attachToNewContainers = (docker, emitter, nameColorMap) => {
 
 const main = async () => {
   // Initialize stack for Lambdas first.
-
   try {
     await initStack();
   } catch (e) {
