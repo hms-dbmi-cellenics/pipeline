@@ -110,7 +110,15 @@ const attachToNewContainers = (docker, emitter, nameColorMap) => {
 
 const main = async () => {
   // Initialize stack for Lambdas first.
-  await initStack();
+
+  try {
+    await initStack();
+  } catch (e) {
+    console.error();
+    console.error('Could not initialize stack. Are you sure Inframock is running?');
+    console.error();
+    process.exit(1);
+  }
 
   // Create hook into Docker API.
   const docker = new Docker();
@@ -125,6 +133,7 @@ const main = async () => {
   attachToExistingContainers(docker, nameColorMap);
   attachToNewContainers(docker, emitter, nameColorMap);
 
+  console.log('Waiting for Docker events...');
   emitter.start();
 };
 
