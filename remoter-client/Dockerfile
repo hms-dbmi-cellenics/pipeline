@@ -45,4 +45,4 @@ FROM builder AS dev
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
 # start app
-RUN R -e 'require("remoter"); remoter::batch(addr="remoter-server", port=6969, file="rscript.r")'
+RUN R --no-save -e 'require("remoter"); remoter::batch(addr="remoter-server", port=6969, file="rscript.r")'
