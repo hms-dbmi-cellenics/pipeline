@@ -21,5 +21,7 @@ services:
       args:
         - GITHUB_PAT=${GITHUB_PAT}
         - SERVER_HOSTNAME=remoter-server
+    depends_on:
+      - "remoter-server"
     volumes:
       - ./remoter-client:/remoter-client:cached

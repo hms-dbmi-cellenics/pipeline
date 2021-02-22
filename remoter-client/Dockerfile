@@ -21,13 +21,13 @@ RUN R -e 'utils::install.packages("pak", repos = "https://r-lib.github.io/p/pak/
 # install required packages
 RUN R -e 'pak::pkg_install("remoter")'
 
+# add app
+COPY src ./
+
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
 FROM builder AS prod
-
-# add app
-COPY src ./
 
 # start app
 ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
@@ -45,5 +45,4 @@ FROM builder AS dev
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
 # start app
-WORKDIR /remoter-client/src
-CMD watchmedo auto-restart --directory=. --pattern=* --recursive -- Rscript rscript.r
+RUN R -e 'require("remoter"); remoter::batch(addr="remoter-server", port=6969, file="rscript.r")'
