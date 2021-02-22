@@ -13,27 +13,25 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # add GitHub PAT if required for GitHub installations.
 ARG GITHUB_PAT
 ENV GITHUB_PAT ${GITHUB_PAT}
+ENV SERVER_HOSTNAME $SERVER_HOSTNAME:6969
 
 # install pak for more streamlined installation of packages
 RUN R -e 'utils::install.packages("pak", repos = "https://r-lib.github.io/p/pak/dev/")'
 
 # install required packages
 RUN R -e 'pak::pkg_install("remoter")'
-RUN R -e 'pak::pkg_install("devtools")'
-RUN R -e 'pak::pkg_install("BiocGenerics")'
-RUN R -e 'pak::pkg_install("RJSONIO")'
-RUN R -e 'pak::pkg_install("Seurat")'
-RUN R -e 'pak::pkg_install("gprofiler2")'
-RUN R -e 'pak::pkg_install("sccore")'
-RUN R -e 'pak::pkg_install("GO.db")'
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
 FROM builder AS prod
 
+# add app
+COPY src ./
+
 # start app
-CMD R -e 'require(remoter); remoter::server(port=6969)'
+ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
+CMD ["Rscript", "rscript.r"]
 
 
 # ---------------------------------------------------
@@ -47,4 +45,5 @@ FROM builder AS dev
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
 # start app
-CMD R -e 'require(remoter); remoter::server(port=6969)'
+WORKDIR /remoter-client/src
+CMD watchmedo auto-restart --directory=. --pattern=* --recursive -- Rscript rscript.r
