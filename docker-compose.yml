@@ -9,8 +9,6 @@ services:
         - GITHUB_PAT=${GITHUB_PAT}
     volumes:
       - ./remoter-server:/remoter-server:cached
-    expose:
-      - "6969"
     ports:
       - "6969:6969"
   remoter-client:

@@ -31,7 +31,7 @@ FROM builder AS prod
 
 # start app
 ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
-CMD ["Rscript", "rscript.r"]
+CMD ["R", "--no-save", "-s", "-e", "require('remoter');remoter::batch(addr='remoter-server', port=6969, file='rscript.r')" ]
 
 
 # ---------------------------------------------------
@@ -45,4 +45,4 @@ FROM builder AS dev
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
 # start app
-RUN R --no-save -e 'require("remoter"); remoter::batch(addr="remoter-server", port=6969, file="rscript.r")'
+CMD ["R", "--no-save", "-s", "-e", "require('remoter');remoter::batch(addr='remoter-server', port=6969, file='rscript.r')" ]
