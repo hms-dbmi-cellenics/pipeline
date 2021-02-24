@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: CloudFormation for local testing of pipelines.
+Resources:
+  LambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+  LocalContainerLauncher:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: "local-container-launcher"
+      Handler: "index.handler"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import subprocess
+          import random
+          import string
+
+          def random_string(length):
+            return ''.join(random.choice(string.ascii_letters) for m in range(length))
+
+          def handler(event, context):
+            proc = subprocess.run(f"docker run --rm --name {event['name']}-{random_string(10)} -d {event['image']}", shell=True, check=True)
+
+            return proc.returncode
+      Runtime: "python3.8"
+      Timeout: "25"
+  RemovePreviousPipelineContainers:
+    Type: "AWS::Lambda::Function"
+    Properties:
+
+      FunctionName: "remove-previous-pipeline-containers"
+      Handler: "index.handler"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import subprocess
+
+          # Removes all containers that already exist and contain 'pipeline' in their name.
+          def handler(event, context):
+            proc = subprocess.run("docker kill $(docker ps -f name=pipeline --format '{{.Names}}') || true", shell=True, check=True)
+
+            return proc.returncode
+      Runtime: "python3.8"
+      Timeout: "25"
