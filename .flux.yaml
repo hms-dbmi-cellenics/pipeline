@@ -13,4 +13,4 @@ metadata:
   labels:
     sandboxId: FILLED_IN_BY_CI
 data:
-  r: FILLED_IN_BY_CI
+  dummy: FILLED_IN_BY_CI
