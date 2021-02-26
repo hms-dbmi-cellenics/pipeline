@@ -1,4 +1,4 @@
-# pipeline
+# Biomage Pipeline
 The Cellscope pipeline project for dependency-managed work processing.
 
 Getting started

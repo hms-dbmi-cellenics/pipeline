@@ -1,0 +1,25 @@
+version: "3.2"
+services:
+  remoter-server:
+    container_name: "biomage-remoter-server"
+    build:
+      context: remoter-server/
+      target: dev
+      args:
+        - GITHUB_PAT=${GITHUB_PAT}
+    volumes:
+      - ./remoter-server:/remoter-server:cached
+    ports:
+      - "6969:6969"
+  remoter-client:
+    container_name: "biomage-remoter-client"
+    build:
+      context: remoter-client/
+      target: dev
+      args:
+        - GITHUB_PAT=${GITHUB_PAT}
+        - SERVER_HOSTNAME=remoter-server
+    depends_on:
+      - "remoter-server"
+    volumes:
+      - ./remoter-client:/remoter-client:cached
