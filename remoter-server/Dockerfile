@@ -27,6 +27,12 @@ RUN R -e 'pak::pkg_install("gprofiler2")'
 RUN R -e 'pak::pkg_install("sccore")'
 RUN R -e 'pak::pkg_install("GO.db")'
 
+# install handy development stuff
+RUN R -e 'pak::pkg_install("zeallot")'
+RUN R -e 'pak::pkg_install("paws")'
+RUN R -e 'pak::pkg_install("import")'
+
+
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
@@ -45,6 +51,10 @@ FROM builder AS dev
 # also install watchdog to automatically restart
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+
+RUN R -e 'pak::pkg_install("languageserver")'
+RUN R -e 'pak::pkg_install("lintr")'
+RUN R -e 'pak::pkg_install("styler")'
 
 # start app
 CMD R -e 'require(remoter); remoter::server(port=6969)'

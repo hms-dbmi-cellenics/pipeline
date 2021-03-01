@@ -21,17 +21,13 @@ RUN R -e 'utils::install.packages("pak", repos = "https://r-lib.github.io/p/pak/
 # install required packages
 RUN R -e 'pak::pkg_install("remoter")'
 
-# add app
-COPY src ./
-
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
 FROM builder AS prod
 
 # start app
-ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
-CMD ["R", "--no-save", "-s", "-e", "require('remoter');remoter::batch(addr='remoter-server', port=6969, file='rscript.r')" ]
+CMD ["R", "--no-save", "-s", "-e", "require('remoter');remoter::batch(addr='remoter-server', port=6969, file='/remoter-client/src/rscript.r')" ]
 
 
 # ---------------------------------------------------
@@ -44,5 +40,7 @@ FROM builder AS dev
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
+RUN R -e 'pak::pkg_install("languageserver")'
+
 # start app
-CMD ["R", "--no-save", "-s", "-e", "require('remoter');remoter::batch(addr='remoter-server', port=6969, file='rscript.r')" ]
+CMD ["R", "--no-save", "-s", "-e", "require('remoter');remoter::batch(addr='remoter-server', port=6969, file='/remoter-client/src/rscript.r')" ]

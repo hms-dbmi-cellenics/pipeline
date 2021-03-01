@@ -1,0 +1,14 @@
+{
+	"name": "remoter server",
+	"workspaceFolder": "/remoter-server",
+    "dockerComposeFile": ["./docker-compose.yml"],
+    "service": "remoter-server",
+    "shutdownAction": "none",
+	"forwardPorts": [6969],
+	"extensions": [
+        "ikuyadeu.r",
+        "reditorsupport.r-lsp",
+        "GrapeCity.gc-excelviewer"
+    ],
+
+}

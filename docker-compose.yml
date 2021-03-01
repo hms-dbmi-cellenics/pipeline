@@ -9,17 +9,7 @@ services:
         - GITHUB_PAT=${GITHUB_PAT}
     volumes:
       - ./remoter-server:/remoter-server:cached
+      - ~/.aws:/root/.aws:cached
+      - ./remoter-client/src:/remoter-server/client-scripts:cached
     ports:
       - "6969:6969"
-  remoter-client:
-    container_name: "biomage-remoter-client"
-    build:
-      context: remoter-client/
-      target: dev
-      args:
-        - GITHUB_PAT=${GITHUB_PAT}
-        - SERVER_HOSTNAME=remoter-server
-    depends_on:
-      - "remoter-server"
-    volumes:
-      - ./remoter-client:/remoter-client:cached

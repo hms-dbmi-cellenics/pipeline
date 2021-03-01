@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+        "r.rterm.linux": "/usr/local/bin/radian",
+        "r.bracketedPaste": true,
+		"[r]": {
+			"editor.formatOnPaste": true,
+			"editor.formatOnSave": true,
+		},
+	}
+}
