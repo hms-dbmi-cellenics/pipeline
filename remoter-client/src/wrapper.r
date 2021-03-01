@@ -72,11 +72,6 @@ wrapper <- function(input_json) {
         config = config
     ) %<-% input
 
-    if (!task_name %in% allowed_tasks) {
-        message("Invalid task name, skipping...")
-        return()
-    }
-
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
 
