@@ -32,6 +32,8 @@ RUN R -e 'pak::pkg_install("zeallot")'
 RUN R -e 'pak::pkg_install("paws")'
 RUN R -e 'pak::pkg_install("import")'
 
+COPY src ./
+
 
 # ---------------------------------------------------
 # PRODUCTION BUILD

@@ -2,12 +2,28 @@ require("RJSONIO")
 require("paws")
 require("zeallot")
 
+load_config <- function() {
+    config <- list(
+        cluster_env = Sys.getenv("CLUSTER_ENV", "staging"),
+        sandbox_id = Sys.getenv("SANDBOX_ID", "default"),
+        aws_account_id = Sys.getenv("AWS_ACCOUNT_ID", "242905224710"),
+        aws_region = Sys.getenv("AWS_DEFAULT_REGION", "eu-west-1")
+    )
+
+    config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, sep = "-")
+    config[["sns_topic"]] <- paste("work-results", config$cluster_env, config$sandbox_id, sep = "-")
+    config[["sns_topic"]] <- paste("arn:aws:sns", config$aws_region, config$aws_account_id, config$sns_topic, sep = ":")
+
+    return(config)
+}
+
+pipeline_config <- load_config()
+
 reload_from_s3 <- function(experiment_id) {
     s3 <- paws::s3()
-    bucket_name <- paste("biomage-source", "staging", sep = "-")
 
     c(body, ...rest) %<-% s3$get_object(
-        Bucket = bucket_name,
+        Bucket = pipeline_config$source_bucket,
         Key = paste(experiment_id, "r.rds", sep = "/")
     )
 
@@ -19,7 +35,7 @@ reload_from_s3 <- function(experiment_id) {
 run_step <- function(task_name, scdata, config) {
     switch(task_name,
         test_fn = {
-            import::from("test_fn.r", task)
+            import::from("/src/test_fn.r", task)
         },
         stop(paste("Invalid task name given:", task_name))
     )
@@ -31,11 +47,7 @@ run_step <- function(task_name, scdata, config) {
 send_output_to_api <- function(input, output) {
     c(config, plot_data = plotData) %<-% output
 
-    cluster_env <- Sys.getenv("CLUSTER_ENV", "staging")
-    sandbox_id <- Sys.getenv("SANDBOX_ID", "demo")
-    topic_name <- paste("work-results", cluster_env, sandbox_id, sep = "-")
-
-    message("Sending to SNS topic", topic_name)
+    message("Sending to SNS topic", pipeline_config$sns_topic)
     sns <- paws::sns()
     result <- sns$publish(
         Message = RJSONIO::toJSON(
@@ -45,11 +57,7 @@ send_output_to_api <- function(input, output) {
                 plot_data = plot_data
             )
         ),
-        TopicArn = paste(
-            "arn:aws:sns:eu-west-1:242905224710",
-            topic_name,
-            sep = ":"
-        ),
+        TopicArn = pipeline_config$sns_topic,
         MessageAttributes = list(
             type = list(
                 DataType = "String",
@@ -95,6 +103,4 @@ wrapper <- function(input_json) {
     return(message_id)
 }
 
-wrapper(
-    "{'experimentId': \"5928a56c7cbff9de78974ab50765ed20\", 'taskName': \"test_fn\", 'config': {'auto': true, 'enabled': true, 'name': \"a\", 'limit': 200}}"
-)
+message("Wrapper loaded.")
