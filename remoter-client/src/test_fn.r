@@ -1,13 +1,22 @@
+# This is a dummy function.
+# Its only purpose is to demonstrate the input and output format
+# that you will expect to your pipeline steps.
+
+# some dummy function to check that imports do not import additional
+# functions from a file into the namespace
 some_other_stuff <- function(a) {
     a + 5
 }
 
+# a sample task
 task <- function(input_data, input_config) {
-    config <- input_config
 
+    # example where after coming up with sensible defaults the configuration
+    # will be changed to a different number, say, 202
     config$limit <- 202
 
-    # do some dummy transformation
+
+    # the result object will have to conform to this format.
     result <- list(
         data = input_data,
         config = config,
