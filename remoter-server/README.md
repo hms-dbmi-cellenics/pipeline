@@ -14,4 +14,4 @@ with the argument being the JSON-ified string of the task that is to be executed
 
 For example:
 
-    docker run --rm -ti remoter-client "{'experimentId': \"5928a56c7cbff9de78974ab50765ed20\", 'taskName': \"test_fn\", 'config': {'auto': true, 'enabled': true, 'name': \"a\", 'limit': 200}}"
+    docker run --rm -ti remoter-client "$(cat test.json)"

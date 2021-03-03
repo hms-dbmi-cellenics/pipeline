@@ -1,16 +1,32 @@
 require("RJSONIO")
 require("paws")
 require("zeallot")
+require("ids")
 
 load_config <- function() {
     config <- list(
-        cluster_env = Sys.getenv("CLUSTER_ENV", "staging"),
+        cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
         sandbox_id = Sys.getenv("SANDBOX_ID", "default"),
         aws_account_id = Sys.getenv("AWS_ACCOUNT_ID", "242905224710"),
         aws_region = Sys.getenv("AWS_DEFAULT_REGION", "eu-west-1")
     )
 
+    config[["aws_config"]] <- list(
+        region = config$aws_region
+    )
+
+    if(config$cluster_env == 'development') {
+        config$aws_config[['endpoint']] <- 'http://host.docker.internal:4566'
+        config$aws_account_id <- '000000000000'
+
+        assignInNamespace("update_endpoint_for_s3_config",function(request) {
+            return(request)
+        },ns="paws.common")
+
+    }
+
     config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, sep = "-")
+    config[["results_bucket"]] <- paste("worker-results", config$cluster_env, sep = "-")
     config[["sns_topic"]] <- paste("work-results", config$cluster_env, config$sandbox_id, sep = "-")
     config[["sns_topic"]] <- paste("arn:aws:sns", config$aws_region, config$aws_account_id, config$sns_topic, sep = ":")
 
@@ -20,7 +36,10 @@ load_config <- function() {
 pipeline_config <- load_config()
 
 reload_from_s3 <- function(experiment_id) {
-    s3 <- paws::s3()
+    s3 <- paws::s3(config=pipeline_config$aws_config)
+
+    message(paste(experiment_id, "r.rds", sep = "/"))
+    message(pipeline_config$source_bucket)
 
     c(body, ...rest) %<-% s3$get_object(
         Bucket = pipeline_config$source_bucket,
@@ -47,16 +66,40 @@ run_step <- function(task_name, scdata, config) {
 send_output_to_api <- function(input, output) {
     c(config, plot_data = plotData) %<-% output
 
-    message("Sending to SNS topic", pipeline_config$sns_topic)
-    sns <- paws::sns()
-    result <- sns$publish(
-        Message = RJSONIO::toJSON(
-            list(
-                input = input,
-                config = config,
-                plot_data = plot_data
-            )
+
+    # upload output
+    s3 <- paws::s3(config=pipeline_config$aws_config)
+    id <- ids::uuid()
+    output <- RJSONIO::toJSON(
+        list(
+            config = config,
+            plotData = plot_data
+        )
+    )
+
+    message("Uploading results to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
+    s3$put_object(
+        Bucket = pipeline_config$results_bucket,
+        Key = id,
+        Body = charToRaw(output)
+    )
+
+    message("Sending to SNS topic ", pipeline_config$sns_topic)
+    sns <- paws::sns(config=pipeline_config$aws_config)
+
+    msg <- list(
+        input = input,
+        output = list(
+            bucket = pipeline_config$results_bucket,
+            key = id
         ),
+        response = list(
+            error = FALSE
+        )
+    )
+
+    result <- sns$publish(
+        Message = RJSONIO::toJSON(msg),
         TopicArn = pipeline_config$sns_topic,
         MessageAttributes = list(
             type = list(

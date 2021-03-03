@@ -31,9 +31,7 @@ RUN R -e 'pak::pkg_install("GO.db")'
 RUN R -e 'pak::pkg_install("zeallot")'
 RUN R -e 'pak::pkg_install("paws")'
 RUN R -e 'pak::pkg_install("import")'
-
-COPY src ./
-
+RUN R -e 'pak::pkg_install("ids")'
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -41,6 +39,7 @@ COPY src ./
 FROM builder AS prod
 
 # start app
+COPY src ./
 CMD R -e 'require(remoter); remoter::server(port=6969)'
 
 
@@ -59,4 +58,5 @@ RUN R -e 'pak::pkg_install("lintr")'
 RUN R -e 'pak::pkg_install("styler")'
 
 # start app
+COPY src ./
 CMD R -e 'require(remoter); remoter::server(port=6969)'

@@ -13,7 +13,8 @@ task <- function(input_data, input_config) {
 
     # example where after coming up with sensible defaults the configuration
     # will be changed to a different number, say, 202
-    config$limit <- 202
+    config <- input_config
+    config$filterSettings[["minCellSize"]] <- 420
 
 
     # the result object will have to conform to this format.
