@@ -38,9 +38,6 @@ pipeline_config <- load_config()
 reload_from_s3 <- function(experiment_id) {
     s3 <- paws::s3(config=pipeline_config$aws_config)
 
-    message(paste(experiment_id, "r.rds", sep = "/"))
-    message(pipeline_config$source_bucket)
-
     c(body, ...rest) %<-% s3$get_object(
         Bucket = pipeline_config$source_bucket,
         Key = paste(experiment_id, "r.rds", sep = "/")
