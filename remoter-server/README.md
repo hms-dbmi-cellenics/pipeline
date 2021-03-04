@@ -3,15 +3,16 @@ remoter-server
 
 This is a simple container running a remoter server for a persistent R kernel.
 
-How to run (individually)
--------------------------
+Task definitions for individual pipeline items are located under `src/`.
 
-You can launch an individual client instance with details of a particular task if
-you do not want to run the entire pipeline.
+How to run
+----------
 
-Make sure you have the server running locally. Then, you can launch the client
-with the argument being the JSON-ified string of the task that is to be executed.
+Simply run:
 
-For example:
+    docker-compose up --build
 
-    docker run --rm -ti remoter-client "{'experimentId': \"5928a56c7cbff9de78974ab50765ed20\", 'taskName': \"test_fn\", 'config': {'auto': true, 'enabled': true, 'name': \"a\", 'limit': 200}}"
+from this directory.
+
+You can also open the pipeline project in a development container through VS Code,
+which will also start the server.

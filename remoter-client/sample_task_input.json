@@ -1,0 +1,11 @@
+{
+    "experimentId": "e52b39624588791a7889e39c617f669e",
+    "taskName": "cellSizeDistribution",
+    "config": {
+        "enabled": true,
+        "filterSettings": {
+            "minCellSize": 10800,
+            "binStep": 200
+        }
+    }
+}
