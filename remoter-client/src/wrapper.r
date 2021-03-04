@@ -25,6 +25,8 @@ load_config <- function() {
         config$aws_config[['endpoint']] <- 'http://host.docker.internal:4566'
         config$aws_account_id <- '000000000000'
 
+        # This fixes a bug where paws would try to connect to InfraMock as if it was
+        # a proper AWS endpoint, i.e. to http://bucket-name.host.docker.internal
         assignInNamespace("update_endpoint_for_s3_config",function(request) {
             return(request)
         },ns="paws.common")
