@@ -1,4 +1,4 @@
-FROM r-base:4.0.2
+FROM r-base:4.0.2 AS builder
 WORKDIR /src
 
 # install required debian packages for R installation
@@ -20,6 +20,12 @@ RUN R -e 'pak::pkg_install("remoter")'
 RUN R -e 'pak::pkg_install("ids")'
 RUN R -e 'pak::pkg_install("import")'
 
+# ---------------------------------------------------
+# PRODUCTION BUILD
+# ---------------------------------------------------
+FROM builder AS prod
+
+# start app
 COPY src ./
 
 ENTRYPOINT ["Rscript", "init.r"]
