@@ -12,7 +12,13 @@ load_config <- function() {
     )
 
     config[["aws_config"]] <- list(
-        region = config$aws_region
+        region = config$aws_region,
+        credentials = list(
+            creds = list(
+                access_key_id = "mock-access-key",
+                secret_access_key = "mock-secure-acces-key"
+            )
+        )
     )
 
     if(config$cluster_env == 'development') {
@@ -38,6 +44,9 @@ pipeline_config <- load_config()
 reload_from_s3 <- function(experiment_id) {
     s3 <- paws::s3(config=pipeline_config$aws_config)
 
+    message(pipeline_config$source_bucket)
+    message(paste(experiment_id, "r.rds", sep = "/"))
+
     c(body, ...rest) %<-% s3$get_object(
         Bucket = pipeline_config$source_bucket,
         Key = paste(experiment_id, "r.rds", sep = "/")
@@ -53,6 +62,27 @@ run_step <- function(task_name, scdata, config) {
         test_fn = {
             import::from("/src/test_fn.r", task)
         },
+        cellSizeDistribution = {
+            import::from("/src/test_fn.r", task)
+        },
+        mitochondrialContent = {
+            import::from("/src/test_fn.r", task)
+        },
+        classifier = {
+            import::from("/src/test_fn.r", task)
+        },
+        numGenesVsNumUmis = {
+            import::from("/src/test_fn.r", task)
+        },
+        doubletScores = {
+            import::from("/src/test_fn.r", task)
+        },
+        dataIntegration = {
+            import::from("/src/test_fn.r", task)
+        },
+        configureEmbedding = {
+            import::from("/src/test_fn.r", task)
+        },
         stop(paste("Invalid task name given:", task_name))
     )
 
@@ -62,7 +92,6 @@ run_step <- function(task_name, scdata, config) {
 
 send_output_to_api <- function(input, output) {
     c(config, plot_data = plotData) %<-% output
-
 
     # upload output
     s3 <- paws::s3(config=pipeline_config$aws_config)
