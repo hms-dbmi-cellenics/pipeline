@@ -28,7 +28,7 @@ Resources:
 
           def handler(event, context):
 
-            task = event.get('task', '')
+            task = event.get('task', '').replace('"','\\"')
 
             if task:
               task = f'\"{task}\"'
