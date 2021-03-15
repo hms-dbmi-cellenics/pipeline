@@ -7,10 +7,11 @@ run_id <- ids::random_id()
 message("Got request with ID", run_id, "...")
 message(request)
 message("")
+parsed = RJSONIO::fromJSON(request)
 
 # load wrapper in case it changed from last run
 message("Loading wrapper...")
-remoter::batch(addr = "host.docker.internal", port = 6969, file = "./wrapper.r")
+remoter::batch(addr = parsed$server, port = 6969, file = "./wrapper.r")
 
 message('')
 message('Copying request...')
