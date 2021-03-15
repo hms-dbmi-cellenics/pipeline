@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-job"
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    type: 'pipeline'
+    experimentId: "{{ .Values.experimentId }}"
+    sandboxId: "{{ .Values.sandboxId }}"
+spec:
+  template:
+    metadata:
+      name: "{{ .Release.Name }}-server"
+      labels:
+        type: 'pipeline'
+        experimentId: "{{ .Values.experimentId }}"
+        sandboxId: "{{ .Values.sandboxId }}"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: "{{ .Release.Name }}"
+        image: "{{ .Values.image }}"
+        ports:
+        - containerPort: 6969
+        readinessProbe:
+          tcpSocket:
+            port: 6969
+          initialDelaySeconds: 15
+          timeoutSeconds: 15
