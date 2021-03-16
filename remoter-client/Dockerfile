@@ -19,6 +19,7 @@ RUN R -e 'utils::install.packages("pak", repos = "https://r-lib.github.io/p/pak/
 RUN R -e 'pak::pkg_install("remoter")'
 RUN R -e 'pak::pkg_install("ids")'
 RUN R -e 'pak::pkg_install("import")'
+RUN R -e 'pak::pkg_install("RJSONIO")'
 
 # ---------------------------------------------------
 # PRODUCTION BUILD

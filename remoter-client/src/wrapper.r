@@ -145,6 +145,7 @@ send_output_to_api <- function(input, output) {
 wrapper <- function(input_json) {
     # Get data from state machine input.
     input <- RJSONIO::fromJSON(input_json)
+    input = input[names(input) != "server"]
     c(
         experiment_id = experimentId,
         task_name = taskName,

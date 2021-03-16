@@ -1,3 +1,4 @@
+require("RJSONIO")
 require("remoter")
 require("ids")
 
@@ -10,7 +11,7 @@ message("")
 parsed = RJSONIO::fromJSON(request)
 
 # load wrapper in case it changed from last run
-message("Loading wrapper...")
+message("Loading wrapper for server ", parsed$server, "...")
 remoter::batch(addr = parsed$server, port = 6969, file = "./wrapper.r")
 
 message('')
