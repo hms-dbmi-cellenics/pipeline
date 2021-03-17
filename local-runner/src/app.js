@@ -13,7 +13,7 @@ AWS.config.update({
 });
 
 const setEnVarsInTemplate = (template) => {
-  const varNames = ['DOCKER_GATEWAY_HOST', 'REMOTER_DEBUG_SLEEP'];
+  const varNames = ['DOCKER_GATEWAY_HOST'];
   for (let ii = 0; ii < varNames.length; ii += 1) {
     let value = process.env[varNames[ii]] || '';
     if (value) {
