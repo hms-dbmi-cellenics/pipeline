@@ -30,6 +30,8 @@ spec:
             value: "{{ .Values.awsAccountId }}"
           - name: AWS_DEFAULT_REGION
             value: "{{ .Values.awsRegion }}"
+          - name: REMOTER_DEBUG_SLEEP
+            value: "{{ .Values.debugSleep }}" 
         ports:
         - containerPort: 6969
         readinessProbe:

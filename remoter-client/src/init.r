@@ -9,6 +9,12 @@ message("Got request with ID", run_id, "...")
 message(request)
 message("")
 parsed = RJSONIO::fromJSON(request)
+if (parsed$server == "DOCKER_GATEWAY_HOST") {
+    parsed$server = Sys.getenv("DOCKER_GATEWAY_HOST")
+    if (parsed$server == "") {
+        parsed$server = "host.docker.internal"
+    }
+}
 
 # load wrapper in case it changed from last run
 message("Loading wrapper for server ", parsed$server, "...")
@@ -26,5 +32,10 @@ message(sprintf("wrapper(request_%s)", run_id))
 try(
 remoter::batch(addr = parsed$server, port = 6969, script = sprintf("wrapper(request_%s)", run_id))
 )
-message('About to sleep 60 seconds before exiting')
-Sys.sleep(60)
+sleep = Sys.getenv("REMOTER_DEBUG_SLEEP", "");
+if (sleep != "") {
+    sleep = as.integer(sleep)
+    message('About to sleep ', sleep, ' seconds before exiting.')
+    Sys.sleep(sleep)
+}
+message('Exiting...')

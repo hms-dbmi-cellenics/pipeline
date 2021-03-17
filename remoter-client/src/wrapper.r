@@ -13,16 +13,18 @@ load_config <- function() {
 
     config[["aws_config"]] <- list(
         region = config$aws_region,
-        credentials = list(
+    )
+
+    if(config$cluster_env == 'development') {
+        // TO-DO: fix hardcoded server.
+        //   We need to get it from init.r to take care of DOCKER_GATEWAY_HOST 
+        config$aws_config[['endpoint']] <- 'http://host.docker.internal:4566'
+        config$aws_config[['credentials']] <- list(
             creds = list(
                 access_key_id = "mock-access-key",
                 secret_access_key = "mock-secure-acces-key"
             )
         )
-    )
-
-    if(config$cluster_env == 'development') {
-        config$aws_config[['endpoint']] <- 'http://host.docker.internal:4566'
         config$aws_account_id <- '000000000000'
 
         # This fixes a bug where paws would try to connect to InfraMock as if it was

@@ -12,6 +12,19 @@ AWS.config.update({
   s3ForcePathStyle: true,
 });
 
+const setEnVarsInTemplate = (template) => {
+  const varNames = ['DOCKER_GATEWAY_HOST', 'REMOTER_DEBUG_SLEEP'];
+  for (let ii = 0; ii < varNames.length; ii += 1) {
+    let value = process.env[varNames[ii]] || '';
+    if (value) {
+      value = `-e ${varNames[ii]}=${value}`;
+    }
+    // eslint-disable-next-line no-param-reassign
+    template = template.replace(`__${varNames[ii]}__`, value);
+  }
+  return template;
+};
+
 const initStack = async () => {
   console.log('Loading CloudFormation for local container launcher...');
   const data = fs.readFileSync('cf-local-container-launcher.yaml', 'utf-8');
@@ -32,7 +45,7 @@ const initStack = async () => {
   const { StackId } = await cf.createStack({
     StackName: 'local-container-launcher',
     Capabilities: ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
-    TemplateBody: data,
+    TemplateBody: setEnVarsInTemplate(data),
   }).promise();
 
   console.log('Stack with ARN', StackId, 'successfully created.');
