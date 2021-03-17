@@ -12,8 +12,8 @@ metadata:
   namespace: FILLED_IN_BY_CI
   annotations:
     fluxcd.io/automated: "true"
-    filter.fluxcd.io/r: FILLED_IN_BY_CI
-    filter.fluxcd.io/python: FILLED_IN_BY_CI
+    filter.fluxcd.io/remoter-server: FILLED_IN_BY_CI
+    filter.fluxcd.io/remoter-client: FILLED_IN_BY_CI
   labels:
     sandboxId: FILLED_IN_BY_CI
 spec:
