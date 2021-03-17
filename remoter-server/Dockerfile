@@ -60,4 +60,4 @@ RUN R -e 'pak::pkg_install("styler")'
 
 # start app
 COPY src ./
-CMD R -e 'require(remoter); remoter::server(port=6969, showmsg=TRUE)'
+CMD R -e 'require(remoter); remoter::server(port=6969)'
