@@ -39,6 +39,10 @@ RUN R -e 'pak::pkg_install("ids")'
 # ---------------------------------------------------
 FROM builder AS prod
 
+RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && chmod +x ./jq && cp jq /usr/bin
+RUN pip install awscli
+COPY aws_config /root/.aws/config
+
 # start app
 COPY src ./
 ENTRYPOINT ["Rscript", "init.r"]
