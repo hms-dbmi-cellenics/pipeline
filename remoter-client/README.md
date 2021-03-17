@@ -3,6 +3,14 @@ remoter-client
 
 This is a simple container running a remoter client to run R script.
 
+Setup
+-------------------------
+
+Inside the remoter-client folder run: 
+
+	docker build -t biomage-remoter-client .
+
+
 How to run (individually)
 -------------------------
 
@@ -18,4 +26,4 @@ is also available in the API repository spec folder.
 
 For example:
 
-    docker run --rm -ti remoter-client "$(cat sample_task_input.json)"
+    docker run --rm -ti biomage-remoter-client "$(cat sample_task_input.json)"
