@@ -158,13 +158,13 @@ jobs:
 
           if [ "${{ matrix.environment }}" = "production" ]; then
             SANDBOX_ID="default"
+            CHART_REF="master"
           fi
 
           if [ "${{ matrix.environment }}" = "staging" ]; then
             SANDBOX_ID="STAGING_SANDBOX_ID"
+            CHART_REF="${{ github.event.pull_request.head.sha }}"
           fi
-
-          CHART_REF="$GITHUB_SHA"
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
 
