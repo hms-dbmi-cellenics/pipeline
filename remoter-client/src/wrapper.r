@@ -16,8 +16,8 @@ load_config <- function() {
     )
 
     if(config$cluster_env == 'development') {
-        // TO-DO: fix hardcoded server.
-        //   We need to get it from init.r to take care of DOCKER_GATEWAY_HOST 
+        # TO-DO: fix hardcoded server.
+        #   We need to get it from init.r to take care of DOCKER_GATEWAY_HOST 
         config$aws_config[['endpoint']] <- 'http://host.docker.internal:4566'
         config$aws_config[['credentials']] <- list(
             creds = list(
