@@ -48,13 +48,13 @@ jobs:
         run: |-
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "This is a pull request, base ref and sha set to the target branch."
-            BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
+            BASE_REF="refs-pull-7-merge"
             BASE_SHA="ad9c5001ab4a3077790db4f04ac0b09cf5324683"
           fi
 
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "This is a push, base ref and sha set to the previous commit."
-            BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
+            BASE_REF="refs-pull-7-merge"
             BASE_SHA="ad9c5001ab4a3077790db4f04ac0b09cf5324683"
           fi
 
