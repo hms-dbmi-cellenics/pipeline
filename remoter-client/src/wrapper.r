@@ -22,7 +22,7 @@ load_config <- function() {
     )
 
     if(config$cluster_env == 'development') {
-        config$aws_config[['endpoint']] <- 'http://host.docker.internal:4566'
+        config$aws_config[['endpoint']] <- 'host.docker.internal'
         config$aws_account_id <- '000000000000'
 
         # This fixes a bug where paws would try to connect to InfraMock as if it was
@@ -45,27 +45,25 @@ pipeline_config <- load_config()
 
 reload_from_s3 <- function(experiment_id) {
     s3 <- paws::s3(config=pipeline_config$aws_config)
-
     message(pipeline_config$source_bucket)
     message(paste(experiment_id, "r.rds", sep = "/"))
-
     c(body, ...rest) %<-% s3$get_object(
         Bucket = pipeline_config$source_bucket,
         Key = paste(experiment_id, "r.rds", sep = "/")
     )
-
     obj <- readRDS(rawConnection(body))
     return(obj)
 }
 
 
 run_step <- function(task_name, scdata, config) {
+    
     switch(task_name,
         test_fn = {
             import::from("/src/test_fn.r", task)
         },
         cellSizeDistribution = {
-            import::from("/src/test_fn.r", task)
+            import::from("/src/cellSizeDistribution.r", task)
         },
         mitochondrialContent = {
             import::from("/src/test_fn.r", task)
@@ -87,7 +85,6 @@ run_step <- function(task_name, scdata, config) {
         },
         stop(paste("Invalid task name given:", task_name))
     )
-
     out <- task(scdata, config)
     return(out)
 }
