@@ -35,8 +35,8 @@ remoter::batch(addr = parsed$server, port = 6969, script = sprintf("wrapper(requ
 #sleep = Sys.getenv("REMOTER_DEBUG_SLEEP", "");
 #if (sleep != "") {
 #    sleep = as.integer(sleep)
-sleep = 30L
-    message('About to sleep ', sleep, ' seconds before exiting.')
-    Sys.sleep(sleep)
+#sleep = 30L
+#    message('About to sleep ', sleep, ' seconds before exiting.')
+#    Sys.sleep(sleep)
 #}
 message('Exiting...')

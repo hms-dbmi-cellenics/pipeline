@@ -12,7 +12,7 @@ load_config <- function() {
     )
 
     config[["aws_config"]] <- list(
-        region = config$aws_region,
+        region = config$aws_region
     )
 
     if(config$cluster_env == 'development') {
