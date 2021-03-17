@@ -39,6 +39,14 @@ RUN R -e 'pak::pkg_install("ids")'
 # ---------------------------------------------------
 FROM builder AS prod
 
+# add jq and aws cli so we can get identities using AWS IRSA roles
+#
+# see at https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html
+# for what IRSA roles are
+#
+# see at https://github.com/paws-r/paws/blob/main/docs/credentials.md for how PAWS
+# handles this
+#
 RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && chmod +x ./jq && cp jq /usr/bin
 RUN pip install awscli
 COPY aws_config /root/.aws/config
