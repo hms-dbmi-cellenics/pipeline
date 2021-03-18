@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: instance-config
+  namespace: {{.Release.Namespace}}
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
+data:
+  remoter-client: "{{ index .Values "remoter-client" "image" }}"
+  remoter-server: "{{ index .Values "remoter-server" "image" }}"

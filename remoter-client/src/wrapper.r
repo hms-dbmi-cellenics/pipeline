@@ -3,7 +3,7 @@ require("paws")
 require("zeallot")
 require("ids")
 
-load_config <- function() {
+load_config <- function(development_aws_server) {
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
         sandbox_id = Sys.getenv("SANDBOX_ID", "default"),
@@ -12,17 +12,17 @@ load_config <- function() {
     )
 
     config[["aws_config"]] <- list(
-        region = config$aws_region,
-        credentials = list(
+        region = config$aws_region
+    )
+
+    if(config$cluster_env == 'development') {
+        config$aws_config[['endpoint']] <- sprintf("http://%s:4566", development_aws_server) # DOCKER_GATEWAY_HOST
+        config$aws_config[['credentials']] <- list(
             creds = list(
                 access_key_id = "mock-access-key",
                 secret_access_key = "mock-secure-acces-key"
             )
         )
-    )
-
-    if(config$cluster_env == 'development') {
-        config$aws_config[['endpoint']] <- 'http://host.docker.internal:4566'
         config$aws_account_id <- '000000000000'
 
         # This fixes a bug where paws would try to connect to InfraMock as if it was
@@ -41,9 +41,8 @@ load_config <- function() {
     return(config)
 }
 
-pipeline_config <- load_config()
 
-reload_from_s3 <- function(experiment_id) {
+reload_from_s3 <- function(pipeline_config, experiment_id) {
     s3 <- paws::s3(config=pipeline_config$aws_config)
 
     message(pipeline_config$source_bucket)
@@ -92,7 +91,7 @@ run_step <- function(task_name, scdata, config) {
     return(out)
 }
 
-send_output_to_api <- function(input, output) {
+send_output_to_api <- function(pipeline_config, input, output) {
     c(config, plot_data = plotData) %<-% output
 
     # upload output
@@ -148,15 +147,19 @@ wrapper <- function(input_json) {
     c(
         experiment_id = experimentId,
         task_name = taskName,
-        config = config
+        config = config,
+        server = server
     ) %<-% input
+    input <- input[names(input) != "server"]
+
+    pipeline_config <- load_config(server)
 
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
 
         # assign it to the global environment so we can
         # persist it across runs of the wrapper
-        assign("scdata", reload_from_s3(experiment_id), pos = ".GlobalEnv")
+        assign("scdata", reload_from_s3(pipeline_config, experiment_id), pos = ".GlobalEnv")
 
         message("Single-cell data loaded.")
     }
@@ -169,7 +172,7 @@ wrapper <- function(input_json) {
     assign("scdata", data, pos = ".GlobalEnv")
 
     # send result to API
-    message_id <- send_output_to_api(input, rest_of_results)
+    message_id <- send_output_to_api(pipeline_config, input, rest_of_results)
 
     return(message_id)
 }

@@ -33,7 +33,16 @@ Resources:
             if task:
               task = f'\"{task}\"'
 
-            proc = subprocess.run(f"docker run --rm --name {event['name']}-{random_string(10)} {'-d -p 6969:6969' if event['detached'] else ''} {event['image']} {task}", shell=True, check=True)
+            docker_command = ' '.join([
+              "docker run --rm",
+              "__DOCKER_GATEWAY_HOST__",
+              f"--name {event['name']}-{random_string(10)}", 
+              f"{'-d -p 6969:6969' if event['detached'] else ''}", 
+              event['image'],
+              task 
+            ])
+
+            proc = subprocess.run(docker_command, shell=True, check=True)
 
             return proc.returncode
       Runtime: "python3.8"

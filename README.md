@@ -16,9 +16,10 @@ Inframock running.
 
 Afterwards, you can install and run local-runner.
 
-```
+```bash
 # cd ./local-runner
 # npm install
+# npm run build
 # npm start
 ```
 
@@ -35,3 +36,22 @@ Waiting for Docker events...
 ```
 
 Logs from pipelines run through the API will apear here.
+
+## Rebuiling the docker images
+
+```bash
+> npm run build
+```
+
+## Docker issues on Linux
+
+The remoter client and server do not have their own private network, and they communicate through the host
+using the special address `host.docker.internal`. This is not recognised by Docker on Linux. This address
+can be overriden by the environment variable `DOCKER_GATEWAY_HOST`:
+
+```bash
+$ DOCKER_GATEWAY_HOST="`hostname -I` |awk '{print $1}'`" npm start
+```
+
+**TODO**: Another OSX/Linux incompatibility is related to the aws development configuration, where OSX expects
+an url while Linux expects a host name.
