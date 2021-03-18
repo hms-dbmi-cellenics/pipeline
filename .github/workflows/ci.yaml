@@ -48,14 +48,22 @@ jobs:
         run: |-
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "This is a pull request, base ref and sha set to the target branch."
-            BASE_REF="refs-pull-7-merge"
-            BASE_SHA="ad9c5001ab4a3077790db4f04ac0b09cf5324683"
+            BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
+            BASE_SHA=${{ github.event.pull_request.base.sha }}
+            # If the CI build time gets in your way while working on a PR,
+            #  temporarily hardcode these values in was similar to this
+            #  BASE_REF="refs-pull-7-merge"
+            #  BASE_SHA="ad9c5001ab4a3077790db4f04ac0b09cf5324683"
           fi
 
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "This is a push, base ref and sha set to the previous commit."
-            BASE_REF="refs-pull-7-merge"
-            BASE_SHA="ad9c5001ab4a3077790db4f04ac0b09cf5324683"
+            BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
+            BASE_SHA="${{ github.event.before }}"
+            # If the CI build time gets in your way while working on a PR,
+            #  temporarily hardcode these values in was similar to this
+            #  BASE_REF="refs-pull-7-merge"
+            #  BASE_SHA="ad9c5001ab4a3077790db4f04ac0b09cf5324683"
           fi
 
           echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
