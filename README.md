@@ -1,8 +1,8 @@
 # Biomage Pipeline
+
 The Cellscope pipeline project for dependency-managed work processing.
 
-Getting started
----------------
+## Getting started
 
 The steps of the pipeline that are run through this project are started
 spontaneously on your machine as Docker containers, simulating Kubernetes
@@ -50,9 +50,6 @@ using the special address `host.docker.internal`. This is not recognised by Dock
 can be overriden by the environment variable `DOCKER_GATEWAY_HOST`:
 
 ```bash
-$ EXPORT DOCKER_GATEWAY_HOST=`docker network inspect --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'
-$ npm start
-``` 
-
-**TODO**: Another OSX/Linux incompatibility is related to the aws development configuration, where OSX expects
-an url while Linux expects a host name.
+EXPORT DOCKER_GATEWAY_HOST=`docker network inspect --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'
+npm start
+```
