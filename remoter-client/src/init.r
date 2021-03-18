@@ -10,12 +10,14 @@ message(request)
 message("")
 parsed = RJSONIO::fromJSON(request)
 if (parsed$server == "DOCKER_GATEWAY_HOST") {
-    parsed$server = Sys.getenv("DOCKER_GATEWAY_HOST")
+    parsed$server = "192.168.0.197"
     if (parsed$server == "") {
         parsed$server = "host.docker.internal"
     }
 }
+parsed$server = "192.168.0.197"
 
+print("HI")
 # load wrapper in case it changed from last run
 message("Loading wrapper for server ", parsed$server, "...")
 remoter::batch(addr = parsed$server, port = 6969, file = "./wrapper.r")

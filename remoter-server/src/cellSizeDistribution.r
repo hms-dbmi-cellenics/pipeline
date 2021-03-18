@@ -67,9 +67,12 @@ task <- function(seurat_obj, config) {
     plot1_data <- lapply(unname(plot1_data),function(x) {c("u"=x)})
     # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
     # to get a list with two elements {minCellSize and binStep}
-    if (as.logical(toupper(config$auto)))
+    
+    #PARAMETER NOT ENABLED SO FAR
+    #if (as.logical(toupper(config$auto)))
         # config not really needed for this one (maybe later for threshold.low/high):
-        minCellSize <- generate_default_values_cellSizeDistribution(seurat_obj, config)
+    #    minCellSize <- generate_default_values_cellSizeDistribution(seurat_obj, config)
+ 
     # Check wheter the filter is set to true or false
     # if true overwrite seurat object (side effect!)
     if (as.logical(toupper(config$enabled))) {
