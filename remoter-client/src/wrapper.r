@@ -43,7 +43,6 @@ load_config <- function(development_aws_server) {
 
 
 reload_from_s3 <- function(pipeline_config, experiment_id) {
-    print(pipeline_config$aws_config)
     s3 <- paws::s3(config=pipeline_config$aws_config)
     message(pipeline_config$source_bucket)
     message(paste(experiment_id, "r.rds", sep = "/"))
@@ -58,7 +57,6 @@ reload_from_s3 <- function(pipeline_config, experiment_id) {
 
 
 run_step <- function(task_name, scdata, config) {
-    print("4")
     switch(task_name,
         test_fn = {
             import::from("/src/test_fn.r", task)
@@ -87,7 +85,6 @@ run_step <- function(task_name, scdata, config) {
         stop(paste("Invalid task name given:", task_name))
     )
     out <- task(scdata, config)
-    print(out)
     return(out)
 }
 
@@ -163,17 +160,14 @@ wrapper <- function(input_json) {
 
         message("Single-cell data loaded.")
     }
-    print("1")
     # call function to run and update global variable
     c(
         data, ...rest_of_results
     ) %<-% run_step(task_name, scdata, config)
 
     assign("scdata", data, pos = ".GlobalEnv")
-    print("2")
     # send result to API
     message_id <- send_output_to_api(pipeline_config, input, rest_of_results)
-    print("3")
     return(message_id)
 }
 
