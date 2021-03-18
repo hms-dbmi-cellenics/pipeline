@@ -152,7 +152,7 @@ wrapper <- function(input_json) {
     ) %<-% input
     input <- input[names(input) != "server"]
 
-    pipeline_config <- load_config("192.168.0.197")
+    pipeline_config <- load_config(server)
 
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
