@@ -59,28 +59,28 @@ reload_from_s3 <- function(pipeline_config, experiment_id) {
 run_step <- function(task_name, scdata, config) {
     switch(task_name,
         test_fn = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         cellSizeDistribution = {
-            import::from("/src/cellSizeDistribution.r", task)
+            import::here("/src/cellSizeDistribution.r", task)
         },
         mitochondrialContent = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         classifier = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         numGenesVsNumUmis = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         doubletScores = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         dataIntegration = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         configureEmbedding = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         stop(paste("Invalid task name given:", task_name))
     )
