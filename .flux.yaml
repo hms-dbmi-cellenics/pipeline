@@ -5,12 +5,20 @@ metadata:
   labels:
     sandboxId: FILLED_IN_BY_CI
 ---
-apiVersion: v1
-kind: ConfigMap
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
 metadata:
-  name: image-urls
+  name: FILLED_IN_BY_CI
   namespace: FILLED_IN_BY_CI
+  annotations:
+    fluxcd.io/automated: "true"
+    filter.fluxcd.io/remoter-server: FILLED_IN_BY_CI
+    filter.fluxcd.io/remoter-client: FILLED_IN_BY_CI
   labels:
     sandboxId: FILLED_IN_BY_CI
-data:
-  dummy: FILLED_IN_BY_CI
+spec:
+  releaseName: FILLED_IN_BY_CI
+  chart:
+    git: git@github.com:biomage-ltd/pipeline
+    path: chart-infra/
+    ref: FILLED_IN_BY_CI
