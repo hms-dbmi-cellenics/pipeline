@@ -50,8 +50,9 @@ using the special address `host.docker.internal`. This is not recognised by Dock
 can be overriden by the environment variable `DOCKER_GATEWAY_HOST`:
 
 ```bash
-$ DOCKER_GATEWAY_HOST="`hostname -I` |awk '{print $1}'`" npm start
-```
+$ EXPORT DOCKER_GATEWAY_HOST=`docker network inspect --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'
+$ npm start
+``` 
 
 **TODO**: Another OSX/Linux incompatibility is related to the aws development configuration, where OSX expects
 an url while Linux expects a host name.
