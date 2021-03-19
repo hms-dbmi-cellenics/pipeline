@@ -56,25 +56,21 @@ task <- function(seurat_obj, config) {
     plot1_data  <- seurat_obj$nCount_RNA
     # plot 1: histgram of UMIs, hence input is all UMI values, e.g.
     # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
-    #               2204              20090               5884  ...
-    #names(plot1_data) <- rep("u", length(plot1_data))
-   
+    #               2204              20090               5884  ..   
     #    u    u    u    u    u    u
     # 3483 6019 3892 3729 4734 3244
     plot2_data <- order(seurat_obj$nCount_RNA)
-    #names(plot2_data) <- rep("rank", length(plot2_data))
     plot2_data <- unname(map2(plot1_data,plot2_data,function(x,y){c("u"=x,"rank"=y)}))
     plot1_data <- lapply(unname(plot1_data),function(x) {c("u"=x)})
     # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
     # to get a list with two elements {minCellSize and binStep}
     
-    #PARAMETER NOT ENABLED SO FAR
-    #if (as.logical(toupper(config$auto)))
-        # config not really needed for this one (maybe later for threshold.low/high):
-    #    minCellSize <- generate_default_values_cellSizeDistribution(seurat_obj, config)
- 
-    # Check wheter the filter is set to true or false
-    # if true overwrite seurat object (side effect!)
+    if (exists('auto', where=config)){
+        if (as.logical(toupper(config$auto)))
+            # config not really needed for this one (maybe later for threshold.low/high):
+            minCellSize <- generate_default_values_cellSizeDistribution(seurat_obj, config)
+    }
+
     if (as.logical(toupper(config$enabled))) {
         # Information regarding number of UMIs per cells is pre-computed during the 'CreateSeuratObject' function. 
         seurat_obj <- subset(seurat_obj, subset = nCount_RNA >= minCellSize)

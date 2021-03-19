@@ -39,6 +39,7 @@ generate_default_values_classifier <- function(seurat_obj, config) {
 task <- function(seurat_obj, config){
     # config$filterSettings = list(minProbability=0.82, bandwidth=-1, filterThreshold=-1)
     # Check wheter the filter is set to true or false
+    # For some reason the last children of named lists are computed as vectors, so we can't access them as recursive objects. 
     minProbability <- config$filterSettings[["minProbability"]]
     # THIS SLOT DOESNT EXIST ON LOCAL OBJECT.
     plot1_data_1  <- seurat_obj@meta.data$emptyDrops_FDR
@@ -47,8 +48,10 @@ task <- function(seurat_obj, config){
     plot1_data <- unname(purrr::map2(plot1_data_1,plot1_data_2,function(x,y){c("FDR"=x,"log_u"=y)}))
     # Check if it is required to compute sensible values. From the function 'generate_default_values_classifier', it is expected
     # to get a list with two elements {minProbabiliy and filterThreshold}.
-    if(as.logical(toupper(config$auto)))
-        filterSettings <- generate_default_values_classifier(seurat_obj, config)
+    if (exists('auto', where=config)){
+        if(as.logical(toupper(config$auto)))
+            filterSettings <- generate_default_values_classifier(seurat_obj, config)
+    }
     # TODO: get flag from here: seurat_obj@tools$flag_filtered <- FALSE
     if(!as.logical(toupper(config$enabled))) {
         # is.cell <- meta.data$emptyDrops_FDR <= 0.01

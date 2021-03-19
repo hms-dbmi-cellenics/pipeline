@@ -60,7 +60,7 @@ task <- function(scdata, config){
         if (as.logical(toupper(config$auto)))
             p.level <-  min(0.001, 1/ncol(scdata))
     }
-   # Check wheter the filter is set to true or false
+   # Check whether the filter is set to true or false
     if (as.logical(toupper(config$enabled))){
         # For now, we are going to suppor only gam as a linear model by robust estimation
         if (config$filterSettings$regressionType=="gam"){

@@ -46,11 +46,10 @@ task <- function(scdata, config){
     # Check if it is required to compute sensible values. From the function 'generate_default_values_doubletScores', it is expected
     # to get a list with only one element --> maxFraction.
 
-    #WARNING
-    #TODO: auto doesnt exist, we need to uncomment this when the parameter is set!!
-    #if (as.logical(toupper(config$auto)))
-    #    maxFraction <- generate_default_values_mitochondrialContent(scdata, config)
-    
+    if (exists('auto', where=config)){
+        if (as.logical(toupper(config$auto)))
+        maxFraction <- generate_default_values_mitochondrialContent(scdata, config)
+    }
     
     # Check whether the filter is set to true or false
     if (as.logical(toupper(config$enabled)))

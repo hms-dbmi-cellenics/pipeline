@@ -57,8 +57,7 @@ task <- function(scdata, config){
         config = config,
         plotData = list(
             # plot 1: histgram of doublet scores
-            # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
-            #              0.161              0.198              0.284  ...
+            #              [0.161,              0.198,              0.284,  ...]
             doubletFilterHistogram = plot1_data
         )
     )
