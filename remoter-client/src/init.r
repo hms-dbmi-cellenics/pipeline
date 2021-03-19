@@ -10,6 +10,7 @@ message(request)
 message("")
 parsed = RJSONIO::fromJSON(request)
 if (parsed$server == "host.docker.internal") {
+    parsed$server = Sys.getenv("DOCKER_GATEWAY_HOST")
     if (parsed$server == "") {
         parsed$server = "host.docker.internal"
     }
