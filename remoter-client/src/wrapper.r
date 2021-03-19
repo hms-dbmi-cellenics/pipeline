@@ -35,6 +35,7 @@ load_config <- function(development_aws_server) {
 
     config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, sep = "-")
     config[["results_bucket"]] <- paste("worker-results", config$cluster_env, sep = "-")
+    config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
     config[["sns_topic"]] <- paste("work-results", config$cluster_env, config$sandbox_id, sep = "-")
     config[["sns_topic"]] <- paste("arn:aws:sns", config$aws_region, config$aws_account_id, config$sns_topic, sep = ":")
 
@@ -88,7 +89,7 @@ run_step <- function(task_name, scdata, config) {
     return(out)
 }
 
-send_output_to_api <- function(pipeline_config, input, output) {
+send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     c(config, plot_data = plotData) %<-% output
 
     # upload output
@@ -97,6 +98,7 @@ send_output_to_api <- function(pipeline_config, input, output) {
     output <- RJSONIO::toJSON(
         list(
             config = config,
+            plotDataKeys = plot_data_keys,
             plotData = plot_data
         )
     )
@@ -137,6 +139,37 @@ send_output_to_api <- function(pipeline_config, input, output) {
     return(result$MessageId)
 }
 
+send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) { 
+    plot_data <- output$plotData
+
+    s3 <- paws::s3(config=pipeline_config$aws_config)
+    
+    plot_names <- names(plot_data)
+
+    plot_data_keys = list()
+
+    for(plot_data_name in names(plot_data)){
+        id <- ids::uuid()
+
+        plot_data_keys[[plot_data_name]] <- id
+
+        output <- RJSONIO::toJSON(
+            list(
+                plotData = plot_data[[plot_data_name]]
+            )
+        )
+
+        message("Uploading plotData to S3 bucket", pipeline_config$plot_data_bucket, " at key ", id, "...")
+        s3$put_object(
+            Bucket = pipeline_config$plot_data_bucket,
+            Key = id,
+            Body = charToRaw(output)
+        )
+    }
+
+    return(plot_data_keys)
+}
+
 
 wrapper <- function(input_json) {
     # Get data from state machine input.
@@ -166,8 +199,13 @@ wrapper <- function(input_json) {
     ) %<-% run_step(task_name, scdata, config)
 
     assign("scdata", data, pos = ".GlobalEnv")
+
+    # upload plot data result to S3
+    plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
+
     # send result to API
-    message_id <- send_output_to_api(pipeline_config, input, rest_of_results)
+    message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
+
     return(message_id)
 }
 

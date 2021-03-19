@@ -21,10 +21,7 @@ task <- function(input_data, input_config) {
     result <- list(
         data = input_data,
         config = config,
-        plotData = list(
-            plot1 = c(some_other_stuff(6), 2, 3),
-            plot2 = c(4, 5, 6)
-        )
+        plotData = list()
     )
 
     return(result)
