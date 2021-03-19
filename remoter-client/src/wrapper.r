@@ -56,7 +56,7 @@ reload_from_s3 <- function(pipeline_config, experiment_id) {
 }
 
 
-run_step <- function(task_name, scdata, config) {
+run_step <- function(task_name, scdata, config, sample_uuid) {
     switch(task_name,
         test_fn = {
             import::from("/src/test_fn.r", task)
@@ -84,7 +84,8 @@ run_step <- function(task_name, scdata, config) {
         },
         stop(paste("Invalid task name given:", task_name))
     )
-    out <- task(scdata, config)
+
+    out <- task(scdata, config, task_name, sample_uuid)
     return(out)
 }
 
@@ -163,7 +164,7 @@ wrapper <- function(input_json) {
     # call function to run and update global variable
     c(
         data, ...rest_of_results
-    ) %<-% run_step(task_name, scdata, config)
+    ) %<-% run_step(task_name, scdata, config, sample_uuid)
 
     assign("scdata", data, pos = ".GlobalEnv")
     # send result to API
