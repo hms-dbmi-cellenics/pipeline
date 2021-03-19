@@ -82,7 +82,6 @@ run_step <- function(task_name, scdata, config) {
         stop(paste("Invalid task name given:", task_name))
     )
     out <- task(scdata, config)
-    print(out)
     return(out)
 }
 
