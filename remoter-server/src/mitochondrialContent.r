@@ -32,6 +32,7 @@ generate_default_values_mitochondrialContent <- function(scdata, config) {
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
 task <- function(scdata, config){
+    print(config)
     # Check if the experiment has MT-content
     if (!"percent.mt"%in%colnames(scdata@meta.data)){
         #This return value breaks the step, no config data is returned!!!!
