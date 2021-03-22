@@ -53,13 +53,14 @@ task <- function(seurat_obj, config) {
     import::here(map2, .from = purrr)
     minCellSize <- as.numeric(config$filterSettings["minCellSize"])
     # extract plotting data of original data to return to plot slot later
-    plot1_data  <- seurat_obj$nCount_RNA
+    plot1_data  <- sort(seurat_obj$nCount_RNA, decreasing = TRUE)
     # plot 1: histgram of UMIs, hence input is all UMI values, e.g.
     # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
     #               2204              20090               5884  ..   
     #    u    u    u    u    u    u
     # 3483 6019 3892 3729 4734 3244
-    plot2_data <- order(seurat_obj$nCount_RNA)
+    
+    plot2_data <- seq_along(plot1_data)
     plot2_data <- unname(map2(plot1_data,plot2_data,function(x,y){c("u"=x,"rank"=y)}))
     plot1_data <- lapply(unname(plot1_data),function(x) {c("u"=x)})
     # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
