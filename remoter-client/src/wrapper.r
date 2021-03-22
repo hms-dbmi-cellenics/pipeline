@@ -56,36 +56,37 @@ reload_from_s3 <- function(pipeline_config, experiment_id) {
 }
 
 
-run_step <- function(task_name, scdata, config, sample_uuid) {
+run_step <- function(scdata, config, task_name, sample_id) {
+
     switch(task_name,
         test_fn = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         cellSizeDistribution = {
-            import::from("/src/cellSizeDistribution.r", task)
+            import::here("/src/cellSizeDistribution.r", task)
         },
         mitochondrialContent = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         classifier = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         numGenesVsNumUmis = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         doubletScores = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         dataIntegration = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         configureEmbedding = {
-            import::from("/src/test_fn.r", task)
+            import::here("/src/test_fn.r", task)
         },
         stop(paste("Invalid task name given:", task_name))
     )
 
-    out <- task(scdata, config, task_name, sample_uuid)
+    out <- task(scdata, config, task_name, sample_id)
     return(out)
 }
 
@@ -139,15 +140,18 @@ send_output_to_api <- function(pipeline_config, input, output) {
 }
 
 
-wrapper <- function(input_json) {
+wrapper <- function(input_json, sample_id) {
+
     # Get data from state machine input.
     input <- RJSONIO::fromJSON(input_json)
+
     c(
         experiment_id = experimentId,
         task_name = taskName,
         config = config,
         server = server
     ) %<-% input
+
     input <- input[names(input) != "server"]
 
     pipeline_config <- load_config(server)
@@ -161,15 +165,17 @@ wrapper <- function(input_json) {
 
         message("Single-cell data loaded.")
     }
+
     # call function to run and update global variable
     c(
         data, ...rest_of_results
-    ) %<-% run_step(task_name, scdata, config, sample_uuid)
+    ) %<-% run_step(scdata, config, task_name, sample_id)
 
     assign("scdata", data, pos = ".GlobalEnv")
     # send result to API
+
     message_id <- send_output_to_api(pipeline_config, input, rest_of_results)
     return(message_id)
 }
 
-message("Wrapper loaded.")
+message("New wrapper loaded.")
