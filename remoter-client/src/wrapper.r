@@ -59,23 +59,20 @@ reload_from_s3 <- function(pipeline_config, experiment_id) {
 run_step <- function(scdata, config, task_name, sample_id) {
 
     switch(task_name,
-        test_fn = {
-            import::here("/src/test_fn.r", task)
-        },
         cellSizeDistribution = {
             import::here("/src/cellSizeDistribution.r", task)
         },
         mitochondrialContent = {
-            import::here("/src/test_fn.r", task)
+            import::here("/src/mitochondrialContent.r", task)
         },
         classifier = {
-            import::here("/src/test_fn.r", task)
+            import::here("/src/classifier.r", task)
         },
         numGenesVsNumUmis = {
-            import::here("/src/test_fn.r", task)
+            import::here("/src/numGenesVsNumUmis.r", task)
         },
         doubletScores = {
-            import::here("/src/test_fn.r", task)
+            import::here("/src/doubletScores.r", task)
         },
         dataIntegration = {
             import::here("/src/test_fn.r", task)
