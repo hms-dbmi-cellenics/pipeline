@@ -50,7 +50,7 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
   return(tmp$nCount_RNA)
 }
 
-task <- function(seurat_obj, config, task_name, sample_uuid) {
+task <- function(seurat_obj, config, task_name, sample_id) {
     import::here(map2, .from = purrr)
     minCellSize <- as.numeric(config$filterSettings["minCellSize"])
     # extract plotting data of original data to return to plot slot later
@@ -83,8 +83,11 @@ task <- function(seurat_obj, config, task_name, sample_uuid) {
 
     plots <-list()
     plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+
+     # plot2 = list(u = seurat_obj$nCount_RNA, rank = order(seurat_obj$nCount_RNA))
     plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
 
+    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
         data = seurat_obj,
         config = config,
