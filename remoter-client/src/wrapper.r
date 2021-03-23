@@ -16,7 +16,7 @@ load_config <- function(development_aws_server) {
     )
 
     if(config$cluster_env == 'development') {
-        config$aws_config[['endpoint']] <- sprintf("http://%s:4566", development_aws_server) # DOCKER_GATEWAY_HOST
+        config$aws_config[['endpoint']] <- sprintf("http://192.168.43.241:4566", development_aws_server) # DOCKER_GATEWAY_HOST
         config$aws_config[['credentials']] <- list(
             creds = list(
                 access_key_id = "mock-access-key",
@@ -74,7 +74,7 @@ run_step <- function(task_name, scdata, config) {
             import::here("/src/doubletScores.r", task)
         },
         dataIntegration = {
-            import::here("/src/test_fn.r", task)
+            import::here("/src/dataIntegration.r", task)
         },
         configureEmbedding = {
             import::here("/src/test_fn.r", task)
@@ -82,6 +82,7 @@ run_step <- function(task_name, scdata, config) {
         stop(paste("Invalid task name given:", task_name))
     )
     out <- task(scdata, config)
+    print(out)
     return(out)
 }
 
