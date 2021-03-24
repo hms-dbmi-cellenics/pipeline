@@ -5,6 +5,8 @@
 # To separate cells with low MT-content from the ones that have a high MT-content what makes us think that are dead.  
 # This can be a useful first guess. The settings for such a filter can also contain a simple "probabilityThreshold" setting. 
 
+source('utils.r')
+
 # The most uses values in MT-content are between [0.1, 0.2]. There are not too much literature about how to compute
 # a threshold. For now, we will offer two methods:
 # --> Absolute threshold: In order to be not too extrictive the threshold is set to 0.1
@@ -31,7 +33,7 @@ generate_default_values_mitochondrialContent <- function(scdata, config) {
 #'                          * we are supposed to add more methods ....
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
-task <- function(scdata, config){
+task <- function(scdata, config, task_name, sample_id){
     print(config)
     # Check if the experiment has MT-content
     if (!"percent.mt"%in%colnames(scdata@meta.data)){
@@ -63,26 +65,29 @@ task <- function(scdata, config){
     # update config
     config$filterSettings$methodSettings[[config$filterSettings$method]][["maxFraction"]] <- maxFraction
     
+    plots <- list()
+
+    # plot 1: histgram of MT-content
+    # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
+    #              0.161              0.198              0.284  ...
+    plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+
+    # plot 2: There are two alternavitive:
+    #           - Scatter plot with UMIs in the x-axis and MT-content in the y-axis
+    #           --> code: plot2 = list(u=scdata$nCount_RNA.mt, "MT-content" = scdata$percent.mt)
+    #           - Barplot representing in the x-axis the log10(UMIs) and in the y-axis the MT-content. This option is the one 
+    #           that is shown in the mockup.
+    #           --> code: plot2 = list(log_10_UMIs=log10(scdata$nCount_RNA), MT_content =mscdata$percent.mt)
+    # We have decided to use the scatter plot, but I temporaly leave the other option in the comments. 
+    # Q: Should we return from the R side the cells that are going to be removed? For this plot it is interesting to color the
+    # cells that are going to be excluded. 
+    plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
+
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
         data = scdata.filtered, # scdata filter
         config = config,
-        plotData = list(
-            # plot 1: histgram of MT-content
-            # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
-            #              0.161              0.198              0.284  ...
-            mitochondrialFractionHistogram = plot1_data,
-            # plot 2: There are two alternavitive:
-            #           - Scatter plot with UMIs in the x-axis and MT-content in the y-axis
-            #           --> code: plot2 = list(u=scdata$nCount_RNA.mt, "MT-content" = scdata$percent.mt)
-            #           - Barplot representing in the x-axis the log10(UMIs) and in the y-axis the MT-content. This option is the one 
-            #           that is shown in the mockup.
-            #           --> code: plot2 = list(log_10_UMIs=log10(scdata$nCount_RNA), MT_content =mscdata$percent.mt)
-            # We have decided to use the scatter plot, but I temporaly leave the other option in the comments. 
-            # Q: Should we return from the R side the cells that are going to be removed? For this plot it is interesting to color the
-            # cells that are going to be excluded. 
-            mitochondrialFractionLogHistogram = plot2_data
-        )
+        plotData = plots
     )
     return(result)
 }

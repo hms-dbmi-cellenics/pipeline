@@ -5,6 +5,7 @@
 # To separate cells with low droplet score from the ones that have a high droplet score content what makes us think that the are mistakenly considered as a single cell but they are actully two or more.  
 # This can be a useful first guess. The settings for such a filter can also contain a simple "probabilityThreshold" setting. 
 
+source('utils.r')
 
 # The most uses values in doublet scores reporting in the scrublet paper [1] are around 0.25. There are not too much literature about how to compute
 # a threshold. For now, we will offer two methods:
@@ -28,7 +29,7 @@ generate_default_values_doubletScores <- function(scdata, config) {
 #'                  - binStep: Float. Bin size for the histogram
 #' @export return a list with the filtered seurat object by doublet score, the config and the plot values
 
-task <- function(scdata, config){
+task <- function(scdata, config, task_name, sample_id){
     # Check if the experiment has doubletScores
     if (!"doublet_scores"%in%colnames(scdata@meta.data)){
         message("Warning! No doubletScores scores has been computed for this experiment!")
@@ -51,15 +52,18 @@ task <- function(scdata, config){
     # update config
     config$filterSettings$probabilityThreshold <- probabilityThreshold
     plot1_data <- lapply(unname(scdata$doublet_scores),function(x) {c("doubletP"=x)})
+
+    plots <-list()
+
+    # plot 1: histgram of doublet scores
+    #              [0.161,              0.198,              0.284,  ...]
+    plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
         data = scdata.filtered,
         config = config,
-        plotData = list(
-            # plot 1: histgram of doublet scores
-            #              [0.161,              0.198,              0.284,  ...]
-            doubletFilterHistogram = plot1_data
-        )
+        plotData = plots
     )
     return(result)
 }

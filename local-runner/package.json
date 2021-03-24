@@ -11,6 +11,7 @@
     "dev": "nodemon src/app.js",
     "build": "docker build -t biomage-remoter-client ../remoter-client && docker build -t biomage-remoter-server ../remoter-server",
     "start": "node src/app.js",
+    "restart": "npm run build && npm start",
     "lint": "eslint ./src",
     "detect-secrets": "pip3 install detect-secrets && git diff --staged --name-only | xargs detect-secrets-hook --baseline .secrets.baseline"
   },
