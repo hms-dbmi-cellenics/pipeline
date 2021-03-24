@@ -26,28 +26,31 @@
 #   },
 
 task <- function(scdata, config,task_name,sample_id){
-    print(config)
+
     # Check wheter the filter is set to true or false
-    if (as.logical(toupper(config$enabled)))
-        # So far we only support Seurat V4
+    if (as.logical(toupper(config$enabled))){
+        # So far we only support Seurat V3
         scdata.integrated <- run_dataIntegration(scdata, config)
+            # Compute explained variance for the plot2
+        eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
+        varExplained = eigValues / sum(eigValues)
+        # As a short solution, we are going to store an intermediate slot for the numPCs, since this parameter is required when performing
+        # the computeEmdedding. The main reason to do not have in the config.configureEmbedding is that this parameter does not change in the configureEmbedding step.
+        scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+    }
     else
         scdata.integrated <- scdata
-    
-
-    # For now config is not updated
-    # config <- ...
-    # Compute explained variance for the plot2
-    eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
-    varExplained = eigValues / sum(eigValues)
-    print(varExplained)
-    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     plot1_data <- unname(purrr::map2(scdata.integrated@reductions$umap@cell.embeddings[, 1],scdata.integrated@reductions$umap@cell.embeddings[, 2],function(x,y){c("x"=x,"y"=y)}))
     plot2_data <- unname(purrr::map2(1:50,varExplained,function(x,y){c("PC"=x,"percentVariance"=y)}))
 
     plots <- list()
     plots[generate_plotuuid("", task_name, 0)] <- list(plot1_data)
-    plots[generate_plotuuid("", task_name, 1)] <- list(plot2_data)
+    plots[generate_plotuuid("", task_name, 1)] <- list(plot2_data)    
+
+    # For now config is not updated, since there is not new changes
+    # config <- ...
+
+    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
         data = scdata.integrated,
         config = config,
@@ -100,7 +103,7 @@ run_dataIntegration <- function(scdata, config){
     scdata <- Seurat::ScaleData(scdata, verbose = F)
 
     # HARDCODE numPCs to 50
-    scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object=scdata), verbose=FALSE)
+    scdata <- Seurat::RunPCA(scdata, npcs = 50, features = VariableFeatures(object=scdata), verbose=FALSE)
 
     # Compute embedding with default setting to get an overview of the performance of the bath correction
     scdata <- Seurat::RunUMAP(scdata, reduction='pca', dims = 1:numPCs, verbose = F, umap.method = "uwot-learn", min.dist = umap_min_distance, metric = umap_distance_metric)
