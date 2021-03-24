@@ -37,6 +37,8 @@
 #   }
 
 
+source('utils.r')
+
 #' @description Filters seurat object based on classifier filter
 #' @param config list containing the following information
 #'          - enable: true/false. Refering to apply or not the filter.
@@ -48,7 +50,8 @@
 #'                          - gam: for the gam option there is only one element: 
 #'                                - p.level: which refers to  confidence level for deviation from the main trend
 #' @export return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
-task <- function(scdata, config){
+
+task <- function(scdata, config, task_name, sample_id){
     # Check wheter the filter is set to true or false
     if (!as.logical(toupper(config$enabled)))
         return(scdata)
@@ -92,19 +95,20 @@ task <- function(scdata, config){
     plot1_data <- purrr::map2(plot1_data,unname(pb$lwr),function(x,y){append(x,c("lower_cutoff"=y))})
     plot1_data <- purrr::map2(plot1_data,unname(pb$upr),function(x,y){append(x,c("upper_cutoff"=y))})
 
+    # Scatter plot which is composed of:
+    # x-axis: log_10_UMIs
+    # y-axis: log_10_genes
+    # bands that are conformed with the upper_cutoff and the lower_cutoff. We can print a band or dotted lines. 
+    # Q: Should we return the point out the cells that are going to be excluded from the R side or this task can be done in 
+    # the UI side.  
+    plots <- list()
+    plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+
     # the result object will have to conform to this format: {data, config, plotData : {plot1}}
     result <- list(
         data = scdata.filtered,
         config = config,
-        plotData = list(
-            # Scatter plot which is composed of:
-            # x-axis: log_10_UMIs
-            # y-axis: log_10_genes
-            # bands that are conformed with the upper_cutoff and the lower_cutoff. We can print a band or dotted lines. 
-            # Q: Should we return the point out the cells that are going to be excluded from the R side or this task can be done in 
-            # the UI side.  
-            featuresvsUMIsscatterplot = plot1_data
-        )
+        plotData = plots
     )
 
     return(result)

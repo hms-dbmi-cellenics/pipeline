@@ -17,6 +17,7 @@
 #'                  - binStep: Integer. Bin size for the histogram
 #' @export return a list with the filtered seurat object by cell size ditribution, the config and the plot values
 
+source('utils.r')
 
 # CalculateBarcodeInflections calculates an adaptive inflection point ("knee")
 # of the barcode distribution for each sample group. This is
@@ -49,7 +50,7 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
   return(tmp$nCount_RNA)
 }
 
-task <- function(seurat_obj, config) {
+task <- function(seurat_obj, config, task_name, sample_id) {
     import::here(map2, .from = purrr)
     minCellSize <- as.numeric(config$filterSettings["minCellSize"])
     # extract plotting data of original data to return to plot slot later
@@ -79,20 +80,18 @@ task <- function(seurat_obj, config) {
     # update config
     config$filterSettings$minCellSize <- minCellSize
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
+
+    plots <-list()
+    plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+
+     # plot2 = list(u = seurat_obj$nCount_RNA, rank = order(seurat_obj$nCount_RNA))
+    plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
+
+    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
         data = seurat_obj,
         config = config,
-        plotData = list(
-            cellSizeDistributionHistogram = plot1_data,
-            # Q: are both plots updated for this filter?
-            # Q: what is the format of plot2?
-            # knee-plot: this is on a log-log scale, are logs calucated here or on the UI?
-            # cells are ordered on the x-axis according to the number of distinct UMIs observed. 
-            # The y-axis displays the number of distinct UMIs for each barcode (here barcodes are proxies for cells).
-            # cellRank_sorted.json: [{"u": 0, "rank": 17852}, {"u": 1, "rank": 17412},...]  -> this should be {"u": 11852, "rank": 0}, {"u": 15123, "rank": 1}
-            # plot2 = list(u = seurat_obj$nCount_RNA, rank = order(seurat_obj$nCount_RNA))
-            cellSizeDistributionKneePlot = plot2_data
-        )
+        plotData = plots
     )
 
     return(result)

@@ -13,6 +13,8 @@
 #'                  - filterThreshold: 
 #' @export return a list with the filtered seurat object by probabilities classifier, the config and the plot values
 
+source('utils.r')
+
 generate_default_values_classifier <- function(seurat_obj, config) {
    
         # HARDCODE
@@ -36,7 +38,7 @@ generate_default_values_classifier <- function(seurat_obj, config) {
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
 
-task <- function(seurat_obj, config){
+task <- function(seurat_obj, config, task_name, sample_id){
     # config$filterSettings = list(minProbability=0.82, bandwidth=-1, filterThreshold=-1)
     # Check wheter the filter is set to true or false
     # For some reason the last children of named lists are computed as vectors, so we can't access them as recursive objects. 
@@ -67,13 +69,14 @@ task <- function(seurat_obj, config){
     # update config
     config$filterSettings$minProbability <- minProbability
 
+    plots <-list()
+    plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
         data = seurat_obj.filtered,
         config = config,
-        plotData = list(
-            classifierEmptyDropsPlot = plot1_data
-        )
+        plotData = plots
     )
 
     return(result)

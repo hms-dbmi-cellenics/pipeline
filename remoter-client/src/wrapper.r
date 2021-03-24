@@ -35,6 +35,7 @@ load_config <- function(development_aws_server) {
 
     config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, sep = "-")
     config[["results_bucket"]] <- paste("worker-results", config$cluster_env, sep = "-")
+    config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
     config[["sns_topic"]] <- paste("work-results", config$cluster_env, config$sandbox_id, sep = "-")
     config[["sns_topic"]] <- paste("arn:aws:sns", config$aws_region, config$aws_account_id, config$sns_topic, sep = ":")
 
@@ -56,7 +57,8 @@ reload_from_s3 <- function(pipeline_config, experiment_id) {
 }
 
 
-run_step <- function(task_name, scdata, config) {
+run_step <- function(scdata, config, task_name, sample_id) {
+
     switch(task_name,
         cellSizeDistribution = {
             import::here("/src/cellSizeDistribution.r", task)
@@ -81,12 +83,11 @@ run_step <- function(task_name, scdata, config) {
         },
         stop(paste("Invalid task name given:", task_name))
     )
-    out <- task(scdata, config)
-    print(out)
+    out <- task(scdata, config, task_name, sample_id)
     return(out)
 }
 
-send_output_to_api <- function(pipeline_config, input, output) {
+send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     c(config, plot_data = plotData) %<-% output
 
     # upload output
@@ -95,6 +96,7 @@ send_output_to_api <- function(pipeline_config, input, output) {
     output <- RJSONIO::toJSON(
         list(
             config = config,
+            plotDataKeys = plot_data_keys,
             plotData = plot_data
         )
     )
@@ -135,16 +137,50 @@ send_output_to_api <- function(pipeline_config, input, output) {
     return(result$MessageId)
 }
 
+send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) { 
+    plot_data <- output$plotData
 
-wrapper <- function(input_json) {
+    s3 <- paws::s3(config=pipeline_config$aws_config)
+    
+    plot_names <- names(plot_data)
+
+    plot_data_keys = list()
+
+    for(plot_data_name in names(plot_data)){
+        id <- ids::uuid()
+
+        plot_data_keys[[plot_data_name]] <- id
+
+        output <- RJSONIO::toJSON(
+            list(
+                plotData = plot_data[[plot_data_name]]
+            )
+        )
+
+        message("Uploading plotData to S3 bucket", pipeline_config$plot_data_bucket, " at key ", id, "...")
+        s3$put_object(
+            Bucket = pipeline_config$plot_data_bucket,
+            Key = id,
+            Body = charToRaw(output)
+        )
+    }
+
+    return(plot_data_keys)
+}
+
+
+wrapper <- function(input_json, sample_id) {
+
     # Get data from state machine input.
     input <- RJSONIO::fromJSON(input_json)
+
     c(
         experiment_id = experimentId,
         task_name = taskName,
         config = config,
         server = server
     ) %<-% input
+
     input <- input[names(input) != "server"]
 
     pipeline_config <- load_config(server)
@@ -158,15 +194,21 @@ wrapper <- function(input_json) {
 
         message("Single-cell data loaded.")
     }
+
     # call function to run and update global variable
     c(
         data, ...rest_of_results
-    ) %<-% run_step(task_name, scdata, config)
+    ) %<-% run_step(scdata, config, task_name, sample_id)
 
     assign("scdata", data, pos = ".GlobalEnv")
+
+    # upload plot data result to S3
+    plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
+
     # send result to API
-    message_id <- send_output_to_api(pipeline_config, input, rest_of_results)
+    message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
+
     return(message_id)
 }
 
-message("Wrapper loaded.")
+message("New wrapper loaded.")
