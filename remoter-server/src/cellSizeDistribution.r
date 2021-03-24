@@ -75,7 +75,35 @@ task <- function(seurat_obj, config, task_name, sample_id) {
 
     if (as.logical(toupper(config$enabled))) {
         # Information regarding number of UMIs per cells is pre-computed during the 'CreateSeuratObject' function. 
-        seurat_obj <- subset(seurat_obj, subset = nCount_RNA >= minCellSize)
+        # this used to be the filter below which applies for all samples
+        # we had to change it for the current version where we also have to 
+        # keep all barcodes for all samples (filter doesn't apply there)
+        # once we ensure the input is only one sample, we can revert to the line below:
+        # seurat_obj <- subset(seurat_obj, subset = nCount_RNA >= minCellSize)
+        # subset(x, subset, cells = NULL, features = NULL, idents = NULL, ...)
+        # cells: Cell names or indices
+
+        # slighlty hacky version to filter only on the current sample_id
+        md <- seurat_obj@meta.data
+        # extract cell id that do not(!) belong to current sample (to not apply filter there)
+        barcode_names_non_sample <- md$barcode[-grep(sample_id, md$barcode)] 
+        # all barcodes that match threshold
+        barcode_names_keep_current_sample <- md$barcode[md$nCount_RNA >= minCellSize]
+        # combine the 2:
+        barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
+        # TODO: try(): make sure  barcodes_to_keep is not empty
+
+        seurat_obj <- subset(seurat_obj, cells = barcodes_to_keep)
+
+        # some tests:
+        # dim(seurat_obj)
+        # dim(tmp)
+        # head(seurat_obj@meta.data)
+        # table(seurat_obj@meta.data$orig.ident)
+        # table(tmp@meta.data$orig.ident)
+        # head(tmp@meta.data)
+        # tail(tmp@meta.data)
+
     }
     # update config
     config$filterSettings$minCellSize <- minCellSize
