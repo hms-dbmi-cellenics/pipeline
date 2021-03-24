@@ -76,14 +76,13 @@ run_step <- function(scdata, config, task_name, sample_id) {
             import::here("/src/doubletScores.r", task)
         },
         dataIntegration = {
-            import::here("/src/test_fn.r", task)
+            import::here("/src/dataIntegration.r", task)
         },
         configureEmbedding = {
             import::here("/src/test_fn.r", task)
         },
         stop(paste("Invalid task name given:", task_name))
     )
-
     out <- task(scdata, config, task_name, sample_id)
     return(out)
 }
