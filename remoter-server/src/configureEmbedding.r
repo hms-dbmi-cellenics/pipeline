@@ -36,10 +36,10 @@ task <- function(scdata, config, task_name, sample_id){
 
     # Check wheter the filter is set to true or false
     # Q: Can we disable the configureEmbedding?
-    #if (as.logical(toupper(config$enabled)))
-    scdata.embedding <- run_computeEmbedding(scdata, config)
-    #else
-    #    scdata.embedding <- scdata.embedding
+    if (is.null(config$enabled) || as.logical(toupper(config$enabled)))
+        scdata.embedding <- run_computeEmbedding(scdata, config)
+    else
+        scdata.embedding <- scdata.embedding
 
     cells_order <- rownames(scdata.embedding@meta.data)
 
