@@ -1,6 +1,6 @@
 generate_plotuuid <- function(sample_uuid, task_name, plot_idx) {
 
-  if(sample_id != "") {
+  if(sample_uuid != "") {
     return(paste(sample_uuid, task_name, plot_idx, sep="-"))
   }
 
