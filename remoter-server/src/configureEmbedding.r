@@ -32,7 +32,7 @@
 #    }
 #},
 
-task <- function(scdata, config){
+task <- function(scdata, config, task_name, sample_id){
 
     # Check wheter the filter is set to true or false
     # Q: Can we disable the configureEmbedding?
@@ -86,16 +86,17 @@ task <- function(scdata, config){
         function(x,y){append(x,list("doublet-score"=y))}
     )
 
+    plots <- list()
+    plots[generate_plotuuid("", task_name, 0)] <- embeddingPreviewByCellSets
+    plots[generate_plotuuid("", task_name, 1)] <- embeddingPreviewBySamples
+    plots[generate_plotuuid("", task_name, 2)] <- embeddingPreviewMitochondrialContent
+    plots[generate_plotuuid("", task_name, 3)] <- embeddingPreviewDoubletScore
+
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
         data = scdata.embedding,
         config = config,
-        plotData = list(
-                embeddingPreviewByCellSets=embeddingPreviewByCellSets,
-                embeddingPreviewBySamples=embeddingPreviewBySamples,
-                embeddingPreviewMitochondrialContent=embeddingPreviewMitochondrialContent,
-                embeddingPreviewDoubletScore=embeddingPreviewDoubletScore
-        )
+        plotData = plots
     )
 
     return(result)
