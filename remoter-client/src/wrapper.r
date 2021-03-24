@@ -78,7 +78,7 @@ run_step <- function(task_name, scdata, config) {
             import::here("/src/test_fn.r", task)
         },
         configureEmbedding = {
-            import::here("/src/test_fn.r", task)
+            import::here("/src/computeEmbedding.r", task)
         },
         stop(paste("Invalid task name given:", task_name))
     )
