@@ -35,7 +35,7 @@
 task <- function(scdata, config){
 
     # Check wheter the filter is set to true or false
-    # Q: Can we disable the computeEmbedding?
+    # Q: Can we disable the configureEmbedding?
     #if (as.logical(toupper(config$enabled)))
     scdata.embedding <- run_computeEmbedding(scdata, config)
     #else
