@@ -25,10 +25,9 @@
 #       }
 #   },
 
-task <- function(scdata, config){
+task <- function(scdata, config,task_name,sample_id){
     print(config)
     # Check wheter the filter is set to true or false
-    print("1")
     if (as.logical(toupper(config$enabled)))
         # So far we only support Seurat V4
         scdata.integrated <- run_dataIntegration(scdata, config)
@@ -45,14 +44,14 @@ task <- function(scdata, config){
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     plot1_data <- unname(purrr::map2(scdata.integrated@reductions$umap@cell.embeddings[, 1],scdata.integrated@reductions$umap@cell.embeddings[, 2],function(x,y){c("x"=x,"y"=y)}))
     plot2_data <- unname(purrr::map2(1:50,varExplained,function(x,y){c("PC"=x,"percentVariance"=y)}))
+
+    plots <- list()
+    plots[generate_plotuuid("", task_name, 0)] <- list(plot1_data)
+    plots[generate_plotuuid("", task_name, 1)] <- list(plot2_data)
     result <- list(
         data = scdata.integrated,
         config = config,
-        plotData = list(
-            # Plot1 --> embedding plot by UMAP 
-            sampleEmbedding = plot1_data,
-            dataIntegrationScreePlot = plot2_data
-        )
+        plotData = plots
     )
 
     return(result)
