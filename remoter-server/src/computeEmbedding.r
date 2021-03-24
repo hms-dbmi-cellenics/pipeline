@@ -35,13 +35,15 @@
 task <- function(scdata, config){
 
     # Check wheter the filter is set to true or false
-    if (as.logical(toupper(config$enabled)))
-        scdata.embedding <- run_computeEmbedding(scdata, config)
-    else
-        scdata.embedding <- scdata.embedding
+    # Q: Can we disable the computeEmbedding?
+    #if (as.logical(toupper(config$enabled)))
+    scdata.embedding <- run_computeEmbedding(scdata, config)
+    #else
+    #    scdata.embedding <- scdata.embedding
 
     cells_order <- rownames(scdata.embedding@meta.data)
 
+    # Create a generic pattern with the UMAP coordinates
     embeddingPreview <- unname(purrr::map2(
         scdata.embedding@reductions$umap@cell.embeddings[cells_order, 1],
         scdata.embedding@reductions$umap@cell.embeddings[cells_order, 2],
@@ -49,38 +51,40 @@ task <- function(scdata, config){
         )
     )
 
+    # Create plot for cellsets
     embeddingPreviewByCellSets <- purrr::map2(embeddingPreview,
         unname(scdata.embedding@active.ident[cells_order]),
         function(x,y){append(x,list("cluster"=paste("Cluster", y, sep = " ")))}
     )
-
+    # Adding color for cellsets
     embeddingPreviewByCellSets <- purrr::map2(embeddingPreviewByCellSets,
         unname(scdata.embedding@meta.data[cells_order, "color_active_ident"]),
         function(x,y){append(x,list("col"=y))}
     )
 
-
+    # Create plot for samples
     embeddingPreviewBySamples <- purrr::map2(embeddingPreview,
         unname(scdata.embedding@meta.data[cells_order, "type"]),
         function(x,y){append(x,list("sample"=y))}
     )
-
+    
+    # Adding color for samples
     embeddingPreviewBySamples <- purrr::map2(embeddingPreviewBySamples,
         unname(scdata.embedding@meta.data[cells_order, "color_samples"]),
         function(x,y){append(x,list("col"=y))}
     )
 
+    # Create plot for MT-content
     embeddingPreviewMitochondrialContent <- purrr::map2(embeddingPreview,
         unname(scdata.embedding@meta.data[cells_order, "percent.mt"]),
         function(x,y){append(x,list("mt-content"=y))}
     )
 
+    # Create plot for Doublet-score
     embeddingPreviewDoubletScore <- purrr::map2(embeddingPreview,
         unname(scdata.embedding@meta.data[cells_order, "doublet_scores"]),
         function(x,y){append(x,list("doublet-score"=y))}
     )
-
-
 
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
@@ -108,7 +112,11 @@ run_computeEmbedding <- function(scdata, config){
     #################
 
     # The threshold was selected in the dataIntegration step
-    pca_nPCs <- scdata@misc[["numPCs"]]
+    # Until we update the rds in S3 where the numPCs is stored in misc, we need to handle it by HARDCODE to 30
+    if ("numPCs" %in% names(scdata@misc))
+        pca_nPCs <- scdata@misc[["numPCs"]]
+    else
+        pca_nPCs <- 30
 
 
     if (config$embeddingSettings$method=="umap"){
@@ -117,8 +125,7 @@ run_computeEmbedding <- function(scdata, config){
         distanceMetric <- config$embeddingSettings$methodSettings$umap$distanceMetric
 
         message("Running embedding --> umap")
-
-        scdata <- RunUMAP(scdata, reduction='pca', dims = 1:pca_nPCs, verbose = F, umap.method = "uwot-learn", min.dist = minimumDistance, metric = distanceMetric)
+        scdata <- Seurat::RunUMAP(scdata, reduction='pca', dims = 1:pca_nPCs, verbose = F, umap.method = "uwot-learn", min.dist = minimumDistance, metric = distanceMetric)
 
 
     }
@@ -136,7 +143,7 @@ run_computeEmbedding <- function(scdata, config){
 
         message("Running embedding --> tsne")
         
-        scdata <- RunTSNE(scdata, reduction = 'pca', dims = 1:pca_nPCs, perplexity = perplexity, learning.rate = learningRate)
+        scdata <- Seurat::RunTSNE(scdata, reduction = 'pca', dims = 1:pca_nPCs, perplexity = perplexity, learning.rate = learningRate)
 
     }
 
@@ -145,16 +152,19 @@ run_computeEmbedding <- function(scdata, config){
     # Clustering part
     #################
 
+    message("Running clustering")
+
     if(config$clusteringSettings$method=="louvain"){
         clustering_method <- 1 #"Louvain"
-        clustering_resolution <- config$clusteringSettings$methodSettings[[clustering_method]]$resolution
+        clustering_resolution <- config$clusteringSettings$methodSettings[["louvain"]]["resolution"]
 
         # HARDCODE
         annoy.metric = "cosine"
-        scdata <- FindNeighbors(scdata, k.param = 20, annoy.metric = annoy.metric, verbose=FALSE)
-        scdata <- FindClusters(scdata, resolution=clustering_resolution, verbose = FALSE, algorithm = clustering_method)
+        scdata <- Seurat::FindNeighbors(scdata, k.param = 20, annoy.metric = annoy.metric, verbose=FALSE)
+        scdata <- Seurat::FindClusters(scdata, resolution=clustering_resolution, verbose = FALSE, algorithm = clustering_method)
 
     }
+
 
     ##########################
     # Coloring active ident
@@ -172,17 +182,18 @@ run_computeEmbedding <- function(scdata, config){
         "#fdc4bd","#1cae05","#7bd972","#e9700a","#d08f5d","#8bb9e1","#fde945","#a29d98","#1682fb","#9ad9e0","#d6cafe",
         "#8d8328","#b091a7","#647579","#1f8d11","#e7eafd","#b9660b","#a4a644","#fec24c","#b1168c","#188cc1","#7ab297",
         "#4468ae","#c949a6")
+
     }
     scdata$color_active_ident <- color_pool[as.numeric(scdata@active.ident)]
 
     ##########################
     # Coloring samples
     ###########################
-    remaining.colors <- scdata@misc[['color_pool']][-c(1:length(unique(scdata@meta.data$color_active_ident)))]
+    remaining.colors <- color_pool[-c(1:length(unique(scdata@meta.data$color_active_ident)))]
     if ("type"%in%colnames(scdata@meta.data)) # In that case we are in multisample experiment
-        scdata$color_samples <- remaining.colors[as.numeric(as.factor(scdata$type))]
+        scdata@meta.data[, "color_samples"] <- remaining.colors[as.numeric(as.factor(scdata$type))]
     else
-        scdata$color_samples <- remaining.colors[1]
+        scdata@meta.data[, "color_samples"] <- remaining.colors[1]
 
     return(scdata)
 }
