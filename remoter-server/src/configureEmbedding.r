@@ -32,14 +32,21 @@
 #    }
 #},
 
+
+source('utils.r')
+
 task <- function(scdata, config, task_name, sample_id){
 
     # Check wheter the filter is set to true or false
     # Q: Can we disable the configureEmbedding?
-    if (is.null(config$enabled) || as.logical(toupper(config$enabled)))
-        scdata.embedding <- run_computeEmbedding(scdata, config)
-    else
-        scdata.embedding <- scdata.embedding
+    if (is.null(config$enabled) || as.logical(toupper(config$enabled))){
+        scdata.embedding <- run_Embedding(scdata, config)
+        scdata.embedding <- run_Clustering(scdata.embedding, config)
+        scdata.embedding <- coloring_samples_and_cluster(scdata.embedding)
+
+    }else{
+        scdata.embedding <- scdata
+    }
 
     cells_order <- rownames(scdata.embedding@meta.data)
 
@@ -105,8 +112,7 @@ task <- function(scdata, config, task_name, sample_id){
 
 # This function covers
 #   - Compute embedding: t-SNE or UMAP
-#   - Clustering
-run_computeEmbedding <- function(scdata, config){
+run_Embedding <- function(scdata, config){
     
     #################
     # Embedding part
@@ -120,34 +126,50 @@ run_computeEmbedding <- function(scdata, config){
         pca_nPCs <- 30
 
 
-    if (config$embeddingSettings$method=="umap"){
-        
-        minimumDistance <- config$embeddingSettings$methodSettings$umap$minimumDistance
-        distanceMetric <- config$embeddingSettings$methodSettings$umap$distanceMetric
+    embed_method <- config$embeddingSettings$method
+    embed_settings <- config$embeddingSettings$methodSettings[[embed_method]]
 
+    if (embed_method == "umap"){
         message("Running embedding --> umap")
-        scdata <- Seurat::RunUMAP(scdata, reduction='pca', dims = 1:pca_nPCs, verbose = F, umap.method = "uwot-learn", min.dist = minimumDistance, metric = distanceMetric)
-
-
-    }
-
-    if (config$embeddingSettings$method=="tsne"){
-        
-        perplexity <- config$embeddingSettings$methodSettings$tsne$perplexity
-        learningRate <- config$embeddingSettings$methodSettings$tsne$learningRate
-        
+        # I get same embedding moving to Seurat default of 'uwot' with return.model = TRUE
+        # I think it makes sense to do this as uwot-learn is being deprecated
+        # seq_len avoids e.g. ndims=c(1,0) if user selects 0pcs (a bit more defensive)
+        # I'm gonna add a ticket to make sure UI can't ask for 0 or 1 PCs as this will cause error anyways
+        # please delete these comment
+        scdata <- Seurat::RunUMAP(scdata, 
+                                reduction = 'pca', 
+                                dims = seq_len(pca_nPCs), 
+                                verbose = FALSE, 
+                                min.dist = embed_settings$minimumDistance, 
+                                metric = embed_settings$distanceMetric, 
+                                return.model = TRUE)
+      
+    } else if (embed_method == "tsne"){
+      
         if (as.logical(toupper(config$auto))){
             perplexity <- min(30, ncol(scdata)/100)
             learningRate <- max(200, ncol(scdata)/12)
+          
+        }  else {
+            perplexity <- embed_settings$perplexity
+            learningRate <- embed_settings$learningRate
         }
-
-
+      
         message("Running embedding --> tsne")
-        
-        scdata <- Seurat::RunTSNE(scdata, reduction = 'pca', dims = 1:pca_nPCs, perplexity = perplexity, learning.rate = learningRate)
-
+      
+        scdata <- Seurat::RunTSNE(scdata,
+                                reduction = 'pca',
+                                dims = seq_len(pca_nPCs),
+                                perplexity = perplexity,
+                                learning.rate = learningRate)
+      
     }
 
+    return(scdata)
+
+}
+
+run_Clustering <- function(scdata, config){
 
     #################
     # Clustering part
@@ -166,6 +188,15 @@ run_computeEmbedding <- function(scdata, config){
 
     }
 
+    return(scdata)
+}
+
+
+# This function return a seurat object with two new slot in meta.data
+# - color_active_ident: since in the active ident should be the recent clusters we match a cluster to a color
+# - color_samples: matching color and samples
+
+coloring_samples_and_cluster <- function(scdata){
 
     ##########################
     # Coloring active ident
@@ -198,3 +229,5 @@ run_computeEmbedding <- function(scdata, config){
 
     return(scdata)
 }
+
+
