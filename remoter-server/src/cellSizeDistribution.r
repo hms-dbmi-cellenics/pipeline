@@ -54,7 +54,13 @@ task <- function(seurat_obj, config, task_name, sample_id) {
     import::here(map2, .from = purrr)
     minCellSize <- as.numeric(config$filterSettings["minCellSize"])
     # extract plotting data of original data to return to plot slot later
-    plot1_data  <- sort(seurat_obj$nCount_RNA, decreasing = TRUE)
+    
+    # slighlty hacky version to filter only on the current sample_id
+    md <- seurat_obj@meta.data
+    barcode_names_this_sample <- md$barcode[grep(sample_id, md$barcode)] 
+    tmp <- subset(seurat_obj, cells = barcode_names_this_sample)
+
+    plot1_data  <- sort(tmp$nCount_RNA, decreasing = TRUE)
     # plot 1: histgram of UMIs, hence input is all UMI values, e.g.
     # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
     #               2204              20090               5884  ..   
@@ -83,8 +89,6 @@ task <- function(seurat_obj, config, task_name, sample_id) {
         # subset(x, subset, cells = NULL, features = NULL, idents = NULL, ...)
         # cells: Cell names or indices
 
-        # slighlty hacky version to filter only on the current sample_id
-        md <- seurat_obj@meta.data
         # extract cell id that do not(!) belong to current sample (to not apply filter there)
         barcode_names_non_sample <- md$barcode[-grep(sample_id, md$barcode)] 
         # all barcodes that match threshold
