@@ -30,7 +30,7 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
   # is.null(Tool(seurat_obj, slot = "CalculateBarcodeInflections"))
   # Returns Seurat object with a new list in the `tools` slot,
   # `CalculateBarcodeInflections` including inflection point calculatio
-  seurat_obj_sample_subset <- CalculateBarcodeInflections(
+  seurat_obj_tmp <- CalculateBarcodeInflections(
                                         object = seurat_obj,
                                         barcode.column = "nCount_RNA",
                                         group.column = "orig.ident",
@@ -45,7 +45,7 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
   # returned is both the rank(s) as well as inflection point
   # orig.ident          nCount_RNA  rank
   # SeuratProject       1106        10722
-  sample_subset <- Tool(seurat_obj_sample_subset, slot = "CalculateBarcodeInflections")$inflection_points
+  sample_subset <- Tool(seurat_obj_tmp, slot = "CalculateBarcodeInflections")$inflection_points
   # extracting only inflection point(s)
   return(sample_subset$nCount_RNA)
 }
@@ -82,9 +82,8 @@ task <- function(seurat_obj, config, task_name, sample_id) {
     if (exists('auto', where=config)){
         if (as.logical(toupper(config$auto)))
             # config not really needed for this one (maybe later for threshold.low/high):
-            minCellSize <- generate_default_values_cellSizeDistribution(seurat_obj, config)
+            minCellSize <- generate_default_values_cellSizeDistribution(sample_subset, config)
     }
-
     if (as.logical(toupper(config$enabled))) {
         # Information regarding number of UMIs per cells is pre-computed during the 'CreateSeuratObject' function. 
         # this used to be the filter below which applies for all samples
