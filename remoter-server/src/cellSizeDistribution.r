@@ -30,7 +30,7 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
   # is.null(Tool(seurat_obj, slot = "CalculateBarcodeInflections"))
   # Returns Seurat object with a new list in the `tools` slot,
   # `CalculateBarcodeInflections` including inflection point calculatio
-  seurat_obj_tmp <- CalculateBarcodeInflections(
+  seurat_obj_sample_subset <- CalculateBarcodeInflections(
                                         object = seurat_obj,
                                         barcode.column = "nCount_RNA",
                                         group.column = "orig.ident",
@@ -45,22 +45,29 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
   # returned is both the rank(s) as well as inflection point
   # orig.ident          nCount_RNA  rank
   # SeuratProject       1106        10722
-  tmp <- Tool(seurat_obj_tmp, slot = "CalculateBarcodeInflections")$inflection_points
+  sample_subset <- Tool(seurat_obj_sample_subset, slot = "CalculateBarcodeInflections")$inflection_points
   # extracting only inflection point(s)
-  return(tmp$nCount_RNA)
+  return(sample_subset$nCount_RNA)
 }
 
 task <- function(seurat_obj, config, task_name, sample_id) {
+    print("CellSIZE")
+    print(sample_id)
+    print(config)
+    #The format of the sample_id is
+    # sample-WT1
+    # we need to get only the last part, in order to grep the object.
+    tmp_sample <- sub("sample-","",sample_id)
+
     import::here(map2, .from = purrr)
     minCellSize <- as.numeric(config$filterSettings["minCellSize"])
     # extract plotting data of original data to return to plot slot later
-    
     # slighlty hacky version to filter only on the current sample_id
-    md <- seurat_obj@meta.data
-    barcode_names_this_sample <- md$barcode[grep(sample_id, md$barcode)] 
-    tmp <- subset(seurat_obj, cells = barcode_names_this_sample)
+    obj_metadata <- seurat_obj@meta.data
+    barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+    sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
 
-    plot1_data  <- sort(tmp$nCount_RNA, decreasing = TRUE)
+    plot1_data  <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
     # plot 1: histgram of UMIs, hence input is all UMI values, e.g.
     # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
     #               2204              20090               5884  ..   
@@ -90,23 +97,22 @@ task <- function(seurat_obj, config, task_name, sample_id) {
         # cells: Cell names or indices
 
         # extract cell id that do not(!) belong to current sample (to not apply filter there)
-        barcode_names_non_sample <- md$barcode[-grep(sample_id, md$barcode)] 
+        barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),]) 
         # all barcodes that match threshold
-        barcode_names_keep_current_sample <- md$barcode[md$nCount_RNA >= minCellSize]
+        barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset@meta.data$nCount_RNA >= minCellSize,])
         # combine the 2:
         barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
         # TODO: try(): make sure  barcodes_to_keep is not empty
 
         seurat_obj <- subset(seurat_obj, cells = barcodes_to_keep)
-
+        
         # some tests:
-        # dim(seurat_obj)
-        # dim(tmp)
-        # head(seurat_obj@meta.data)
-        # table(seurat_obj@meta.data$orig.ident)
-        # table(tmp@meta.data$orig.ident)
-        # head(tmp@meta.data)
-        # tail(tmp@meta.data)
+        print("Objeto despues de:")
+        print(task_name)
+        print(dim(seurat_obj))
+        print("samplesubset")
+        print(dim(sample_subset))
+        
 
     }
     # update config
