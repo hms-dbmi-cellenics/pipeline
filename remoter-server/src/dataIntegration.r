@@ -26,6 +26,9 @@
 #   },
 
 task <- function(scdata, config,task_name,sample_id){
+    # Increase maxSize from the default of 500
+    options(future.globals.maxSize= 891289600)
+
     # Check wheter the filter is set to true or false
     if (as.logical(toupper(config$enabled))){
         # So far we only support Seurat V3
@@ -80,7 +83,6 @@ task <- function(scdata, config,task_name,sample_id){
 #   - To visualize the results of the batch effect, an UMAP with default setting has been made. 
 # Seurat V3 pipeline (see for other methods: https://satijalab.org/seurat/archive/v3.0/integration.html)
 run_dataIntegration <- function(scdata, config){
-    
     method <- config$dataIntegration$method
     nfeatures <- config$dataIntegration$methodSettings[[method]]$numGenes
     normalization <- config$dataIntegration$methodSettings[[method]]$normalisation
