@@ -79,7 +79,7 @@ run_step <- function(scdata, config, task_name, sample_id) {
             import::here("/src/dataIntegration.r", task)
         },
         configureEmbedding = {
-            import::here("/src/test_fn.r", task)
+            import::here("/src/configureEmbedding.r", task)
         },
         stop(paste("Invalid task name given:", task_name))
     )
@@ -169,16 +169,19 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
 }
 
 
-wrapper <- function(input_json, sample_id) {
+wrapper <- function(input_json) {
 
     # Get data from state machine input.
-    input <- RJSONIO::fromJSON(input_json)
+    input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
+
+    str(input)
 
     c(
         experiment_id = experimentId,
         task_name = taskName,
         config = config,
-        server = server
+        server = server,
+        sample_id = sampleUuid
     ) %<-% input
 
     input <- input[names(input) != "server"]
