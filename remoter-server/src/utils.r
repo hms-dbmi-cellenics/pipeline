@@ -7,3 +7,20 @@ generate_plotuuid <- function(sample_uuid, task_name, plot_idx) {
   return(paste(task_name, plot_idx, sep="-"))
 
 }
+
+#
+# Subset safe allows us to attempt to subset a seurat object even with an empty list
+# this function exists for the case when the user over-filters the object, and we need to return something
+# that'd allow the user to realize that they are filtering all the cells, while maintaining certain seurat functionality.
+# it's a questionable function and it should be questioned.
+#
+# IN seurat_obj: object to filter
+# IN cells: cell barcodes to subset the object with
+# 
+subset_safe <- function(seurat_obj,cells){
+  if(length(cells)>0){
+    return(subset(seurat_obj, cells = cells))
+  }else{
+    return(subset(seurat_obj,cells = colnames(seurat_obj)[1]))
+  }
+}

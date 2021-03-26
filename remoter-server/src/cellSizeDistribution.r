@@ -51,8 +51,7 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
 }
 
 task <- function(seurat_obj, config, task_name, sample_id) {
-    print("CellSIZE")
-    print(sample_id)
+    print(paste("Running",task_name,"config: ",sep=" "))
     print(config)
     #The format of the sample_id is
     # sample-WT1
@@ -60,9 +59,9 @@ task <- function(seurat_obj, config, task_name, sample_id) {
     tmp_sample <- sub("sample-","",sample_id)
 
     import::here(map2, .from = purrr)
-    minCellSize <- as.numeric(config$filterSettings["minCellSize"])
+    minCellSize <- as.numeric(config$filterSettings$minCellSize)
+
     # extract plotting data of original data to return to plot slot later
-    # slighlty hacky version to filter only on the current sample_id
     obj_metadata <- seurat_obj@meta.data
     barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
     sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
@@ -77,9 +76,9 @@ task <- function(seurat_obj, config, task_name, sample_id) {
     plot2_data <- seq_along(plot1_data)
     plot2_data <- unname(map2(plot1_data,plot2_data,function(x,y){c("u"=x,"rank"=y)}))
     plot1_data <- lapply(unname(plot1_data),function(x) {c("u"=x)})
+
     # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
-    # to get a list with two elements {minCellSize and binStep}
-    
+    # to get a list with two elements {minCellSize and binStep}   
     if (exists('auto', where=config)){
         if (as.logical(toupper(config$auto)))
             # config not really needed for this one (maybe later for threshold.low/high):
@@ -98,34 +97,27 @@ task <- function(seurat_obj, config, task_name, sample_id) {
 
         # extract cell id that do not(!) belong to current sample (to not apply filter there)
         barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),]) 
-        # all barcodes that match threshold
+        # all barcodes that match threshold in the subset data
         barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset@meta.data$nCount_RNA >= minCellSize,])
         # combine the 2:
         barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-        # TODO: try(): make sure  barcodes_to_keep is not empty
-
-        seurat_obj <- subset(seurat_obj, cells = barcodes_to_keep)
         
+        seurat_obj <- subset_safe(seurat_obj,barcodes_to_keep)
+
         # some tests:
-        print("Objeto despues de:")
-        print(task_name)
-        print(dim(seurat_obj))
-        print("samplesubset")
+        print("Sample subset")
         print(dim(sample_subset))
-        
-
+        print("Object after filter")
+        print(dim(seurat_obj))
     }
     # update config
     config$filterSettings$minCellSize <- minCellSize
-    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
 
+    #Populate plots list
     plots <-list()
     plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
-
-     # plot2 = list(u = seurat_obj$nCount_RNA, rank = order(seurat_obj$nCount_RNA))
     plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
 
-    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
         data = seurat_obj,
         config = config,

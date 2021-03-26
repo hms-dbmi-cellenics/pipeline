@@ -10,7 +10,7 @@ source('utils.r')
 # The most uses values in doublet scores reporting in the scrublet paper [1] are around 0.25. There are not too much literature about how to compute
 # a threshold. For now, we will offer two methods:
 # --> Absolute threshold: In order to be not too extrictive the threshold is set to 0.25
-generate_default_values_doubletScores <- function(scdata, config) {
+generate_default_values_doubletScores <- function(seurat_obj, config) {
 
     # HARDCODE
     threshold <- 0.25
@@ -29,11 +29,18 @@ generate_default_values_doubletScores <- function(scdata, config) {
 #'                  - binStep: Float. Bin size for the histogram
 #' @export return a list with the filtered seurat object by doublet score, the config and the plot values
 
-task <- function(scdata, config, task_name, sample_id){
+task <- function(seurat_obj, config, task_name, sample_id){
+    print(paste("Running",task_name,"config: ",sep=" "))
+    print(config)
+    #The format of the sample_id is
+    # sample-WT1
+    # we need to get only the last part, in order to grep the object.
+    tmp_sample <- sub("sample-","",sample_id)
+
     # Check if the experiment has doubletScores
-    if (!"doublet_scores"%in%colnames(scdata@meta.data)){
+    if (!"doublet_scores"%in%colnames(seurat_obj@meta.data)){
         message("Warning! No doubletScores scores has been computed for this experiment!")
-        return(scdata)
+        return(seurat_obj)
     }
     probabilityThreshold <- config$filterSettings[["probabilityThreshold"]]
 
@@ -41,17 +48,33 @@ task <- function(scdata, config, task_name, sample_id){
     # to get a value --> probabilityThreshold.
     if (exists('auto', where=config)){
         if (as.logical(toupper(config$auto)))
-            probabilityThreshold <- generate_default_values_doubletScores(scdata, config)
+            probabilityThreshold <- generate_default_values_doubletScores(seurat_obj, config)
     }
+
+    # extract plotting data of original data to return to plot slot later
+    obj_metadata <- seurat_obj@meta.data
+    barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+    sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
+
     # Check wheter the filter is set to true or false
-    if (as.logical(toupper(config$enabled)))
+    if (as.logical(toupper(config$enabled))){
+        # extract cell id that do not(!) belong to current sample (to not apply filter there)
+        barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),]) 
+        # all barcodes that match threshold in the subset data
+        barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset$doublet_scores <= probabilityThreshold,])
+        # combine the 2:
+        barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
         # Information regarding doublet score is pre-computed during the 'data-ingest'. 
-        scdata.filtered <- subset(scdata, subset = doublet_scores <= probabilityThreshold)
-    else
-        scdata.filtered <- scdata
+        seurat_obj.filtered <- subset_safe(seurat_obj,barcodes_to_keep)
+    }
+    else{
+        seurat_obj.filtered <- seurat_obj
+    }
+        
     # update config
     config$filterSettings$probabilityThreshold <- probabilityThreshold
-    plot1_data <- lapply(unname(scdata$doublet_scores),function(x) {c("doubletP"=x)})
+
+    plot1_data <- lapply(unname(sample_subset$doublet_scores),function(x) {c("doubletP"=x)})
 
     plots <-list()
 
@@ -61,11 +84,16 @@ task <- function(scdata, config, task_name, sample_id){
 
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
-        data = scdata.filtered,
+        data = seurat_obj.filtered,
         config = config,
         plotData = plots
     )
+    print("Sample subset")
+    print(dim(sample_subset))
+    print("Object after filter")
+    print(dim(seurat_obj.filtered))
     return(result)
+
 }
 
 

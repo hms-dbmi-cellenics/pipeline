@@ -34,6 +34,8 @@ generate_default_values_mitochondrialContent <- function(seurat_obj, config) {
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
 task <- function(seurat_obj, config, task_name, sample_id){
+    print(paste("Running",task_name,"config: ",sep=" "))
+    print(config)
     tmp_sample <- sub("sample-","",sample_id)
     # Check if the experiment has MT-content
     if (!"percent.mt"%in%colnames(seurat_obj@meta.data)){
@@ -42,14 +44,9 @@ task <- function(seurat_obj, config, task_name, sample_id){
         return(seurat_obj)
     }
     #The absolute threshold object is an atomic vector, not a list!
-    # TODO: The [[1]] is a temp fix because the maxFraction in config is for some unknown reason a list. We need a ticket and ask for a change in that.
-    maxFraction <- config$filterSettings$methodSettings[[config$filterSettings$method]][["maxFraction"]][[1]]
-    print("firstConfig")
-    print(config)
-    print("firstConfig")
+    maxFraction <- config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction
     # Check if it is required to compute sensible values. From the function 'generate_default_values_doubletScores', it is expected
     # to get a list with only one element --> maxFraction.
-
     #Computing the subset for the current sample
     obj_metadata <- seurat_obj@meta.data
     barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
@@ -59,7 +56,6 @@ task <- function(seurat_obj, config, task_name, sample_id){
         if (as.logical(toupper(config$auto)))
         maxFraction <- generate_default_values_mitochondrialContent(sample_subset, config)
     }
-    
     # Check whether the filter is set to true or false
     if (as.logical(toupper(config$enabled))){
         # extract cell id that do not(!) belong to current sample (to not apply filter there)
@@ -70,15 +66,14 @@ task <- function(seurat_obj, config, task_name, sample_id){
         barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
         # TODO: try(): make sure  barcodes_to_keep is not empty
         # Information regarding MT-content is pre-computed during the 'data-ingest'. 
-        seurat_obj.filtered <- subset(seurat_obj, cells = barcodes_to_keep)
+        seurat_obj.filtered <- subset_safe(seurat_obj, barcodes_to_keep)
     }else{
         seurat_obj.filtered <- seurat_obj
     }
     plot1_data <- lapply(unname(sample_subset$percent.mt),function(x) {c("fracMito"=x)})
     plot2_data <- unname(purrr::map2(sample_subset$percent.mt,sample_subset$nCount_RNA,function(x,y){c("cellSize"=y,"fracMito"=x)}))
-
     # update config
-    config$filterSettings$methodSettings[[config$filterSettings$method]][["maxFraction"]] <- maxFraction
+    config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- maxFraction
     
     plots <- list()
 
@@ -97,14 +92,14 @@ task <- function(seurat_obj, config, task_name, sample_id){
     # Q: Should we return from the R side the cells that are going to be removed? For this plot it is interesting to color the
     # cells that are going to be excluded. 
     plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
+
     # some tests:
-    print("Objeto despues de:")
-    print(task_name)
-    print(dim(seurat_obj))
-    print("samplesubset")
+    print("Sample subset")
     print(dim(sample_subset))
-    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
-    result <- list(
+    print("Object after filter")
+    print(dim(seurat_obj))
+
+    result <- list( 
         data = seurat_obj.filtered, # seurat_obj filter
         config = config,
         plotData = plots
