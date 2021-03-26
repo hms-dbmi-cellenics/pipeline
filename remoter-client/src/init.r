@@ -19,9 +19,9 @@ if (parsed$server == "host.docker.internal") {
 # Get sample ids
 parsed$sampleUuid <- Sys.getenv("SAMPLE_ID", '')
 
-if(parsed$sampleUuid != '') {
-    parsed$config <- parsed$config[[parsed$sampleUuid]]
-}
+# if(parsed$sampleUuid != '') {
+#     parsed$config <- parsed$config[[parsed$sampleUuid]]
+# }
 
 request <- RJSONIO::toJSON(parsed, collapse = '')
 

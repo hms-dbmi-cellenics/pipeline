@@ -26,8 +26,23 @@
 #   },
 
 task <- function(scdata, config,task_name,sample_id){
+
+    options(error=traceback)
+    
     # Increase maxSize from the default of 500
-    options(future.globals.maxSize= 891289600)
+    options(future.globals.maxSize= 850 * 1024^2)
+
+    message("scdata")
+    message(scdata)
+
+    message("config")
+    message(config)
+
+    message("taskName")
+    message(taskName)
+
+    message("sample_id")
+    message(sample_id)
 
     # Check wheter the filter is set to true or false
     if (as.logical(toupper(config$enabled))){
@@ -44,20 +59,38 @@ task <- function(scdata, config,task_name,sample_id){
         scdata.integrated <- scdata
 
     scdata.integrated <- colorObject(scdata.integrated)
+
     cells_order <- rownames(scdata.integrated@meta.data)
+
+    message("cells_order")
+    message(cells_order)
+
     plot1_data <- unname(purrr::map2(scdata.integrated@reductions$umap@cell.embeddings[, 1],scdata.integrated@reductions$umap@cell.embeddings[, 2],function(x,y){c("x"=x,"y"=y)}))
     
+    message("plot1_data@line67")
+    message(plot1_data)
+
     #Adding color and sample id
     plot1_data <- purrr::map2(plot1_data,
         unname(scdata.integrated@meta.data[cells_order, "type"]),
         function(x,y){append(x,list("sample"=y))}
     )
+
+    message("plot1_data@line76")
+    message(plot1_data)
+
     plot1_data <- purrr::map2(plot1_data,
         unname(scdata.integrated@meta.data[cells_order, "color_samples"]),
         function(x,y){append(x,list("col"=y))}
     )
 
+    message("plot1_data@line84")
+    message(plot1_data)
+
     plot2_data <- unname(purrr::map2(1:50,varExplained,function(x,y){c("PC"=x,"percentVariance"=y)}))
+
+    message("plot2_data@line88")
+    message(plot2_data)
 
     plots <- list()
     plots[generate_plotuuid("", task_name, 0)] <- list(plot1_data)
@@ -87,6 +120,15 @@ run_dataIntegration <- function(scdata, config){
     nfeatures <- config$dataIntegration$methodSettings[[method]]$numGenes
     normalization <- config$dataIntegration$methodSettings[[method]]$normalisation
     
+    message("method")
+    message(method)
+
+    message("nfeatures")
+    message(nfeatures)
+
+    message("normalization")
+    message(normalization)
+
     #Caps lock independent just in case anything goes wrong in dynamo or wherever. 
     if (toupper(normalization)=="LOGNORMALIZE"  | toupper(normalization)=="LOGNORMALISE") normalization<-"LogNormalize"
     # Q: Should be the numPCs input for the RunPCA? Since we are looking into the explained variance I suggest to RunPCA with 50 and only
@@ -116,14 +158,26 @@ run_dataIntegration <- function(scdata, config){
         scdata <-Seurat::FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = F)
     }
 
+    message("scdata@line158")
+    message(scdata)
+
     # Scale in order to compute PCA
     scdata <- Seurat::ScaleData(scdata, verbose = F)
+
+    message("scdata@line164")
+    message(scdata)
 
     # HARDCODE numPCs to 50
     scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object=scdata), verbose=FALSE)
 
+    message("scdata@line170")
+    message(scdata)
+
     # Compute embedding with default setting to get an overview of the performance of the bath correction
     scdata <- Seurat::RunUMAP(scdata, reduction='pca', dims = 1:numPCs, verbose = F, umap.method = "uwot-learn", min.dist = umap_min_distance, metric = umap_distance_metric)
+
+    message("scdata@line176")
+    message(scdata)
 
     return(scdata)
 }
