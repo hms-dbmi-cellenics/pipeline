@@ -125,9 +125,12 @@ run_dataIntegration <- function(seurat_obj, config){
             data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
             message("2")
             data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
+            message("Var features:")
+            message(str(Seurat::VariableFeatures(object=seurat_obj)))           
         }
         message("3")
         data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, verbose = FALSE)
+        print("ANCHORS")
         print(str(data.anchors))
         message("4")
         seurat_obj <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
