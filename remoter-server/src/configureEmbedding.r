@@ -54,50 +54,53 @@ task <- function(scdata, config, task_name, sample_id){
     embeddingPreview <- unname(purrr::map2(
         scdata.embedding@reductions$umap@cell.embeddings[cells_order, 1],
         scdata.embedding@reductions$umap@cell.embeddings[cells_order, 2],
-        function(x,y) {list("x"=x,"y"=y)}
+        function(x,y) {c("x"=x,"y"=y)}
         )
     )
 
     # Create plot for cellsets
     embeddingPreviewByCellSets <- purrr::map2(embeddingPreview,
         unname(scdata.embedding@active.ident[cells_order]),
-        function(x,y){append(x,list("cluster"=paste("Cluster", y, sep = " ")))}
+        function(x,y){append(x,c("cluster"=paste("Cluster", y, sep = " ")))}
     )
+
     # Adding color for cellsets
     embeddingPreviewByCellSets <- purrr::map2(embeddingPreviewByCellSets,
         unname(scdata.embedding@meta.data[cells_order, "color_active_ident"]),
-        function(x,y){append(x,list("col"=y))}
+        function(x,y){append(x,c("col"=y))}
     )
 
     # Create plot for samples
     embeddingPreviewBySamples <- purrr::map2(embeddingPreview,
         unname(scdata.embedding@meta.data[cells_order, "type"]),
-        function(x,y){append(x,list("sample"=y))}
+        function(x,y){append(x,c("sample"=y))}
     )
     
     # Adding color for samples
     embeddingPreviewBySamples <- purrr::map2(embeddingPreviewBySamples,
         unname(scdata.embedding@meta.data[cells_order, "color_samples"]),
-        function(x,y){append(x,list("col"=y))}
+        function(x,y){append(x,c("col"=y))}
     )
 
     # Create plot for MT-content
     embeddingPreviewMitochondrialContent <- purrr::map2(embeddingPreview,
         unname(scdata.embedding@meta.data[cells_order, "percent.mt"]),
-        function(x,y){append(x,list("mt-content"=y))}
+        function(x,y){append(x,c("mt-content"=y))}
     )
-
+    print(embeddingPreview)
     # Create plot for Doublet-score
     embeddingPreviewDoubletScore <- purrr::map2(embeddingPreview,
         unname(scdata.embedding@meta.data[cells_order, "doublet_scores"]),
-        function(x,y){append(x,list("doublet-score"=y))}
+        function(x,y){append(x,c("doublet-score"=y))}
     )
 
+    print(embeddingPreviewByCellSets)
+    print(embeddingPreviewBySamples)
     plots <- list()
-    plots[generate_plotuuid("", task_name, 0)] <- embeddingPreviewByCellSets
-    plots[generate_plotuuid("", task_name, 1)] <- embeddingPreviewBySamples
-    plots[generate_plotuuid("", task_name, 2)] <- embeddingPreviewMitochondrialContent
-    plots[generate_plotuuid("", task_name, 3)] <- embeddingPreviewDoubletScore
+    plots[generate_plotuuid("", task_name, 0)] <- list(embeddingPreviewByCellSets)
+    plots[generate_plotuuid("", task_name, 1)] <- list(embeddingPreviewBySamples)
+    plots[generate_plotuuid("", task_name, 2)] <- list(embeddingPreviewMitochondrialContent)
+    plots[generate_plotuuid("", task_name, 3)] <- list(embeddingPreviewDoubletScore)
 
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
