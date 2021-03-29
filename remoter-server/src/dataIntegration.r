@@ -110,13 +110,17 @@ run_dataIntegration <- function(seurat_obj, config){
         message("Data split:")
         message(str(data.split))
         for (i in 1:length(data.split)) {
+            message("1")
             data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
+            message("2")
             data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
         }
+        message("3")
         data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, verbose = FALSE)
-        
+        message("4")
         seurat_obj <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
         Seurat::DefaultAssay(seurat_obj) <- "integrated"
+        message("5")
     }else{
         # Else, we are in unisample experiment and we only need to normalize 
         seurat_obj <- Seurat::NormalizeData(seurat_obj, normalization.method = normalization, verbose = F)
@@ -125,6 +129,7 @@ run_dataIntegration <- function(seurat_obj, config){
 
     # Scale in order to compute PCA
     seurat_obj <- Seurat::ScaleData(seurat_obj, verbose = F)
+    message("6")
     message("Var features:")
     message(str(Seurat::VariableFeatures(object=seurat_obj)))
     # HARDCODE numPCs to 50
