@@ -35,15 +35,15 @@ source('utils.r')
 #' @export return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 
 task <- function(seurat_obj, config, task_name, sample_id){
-    print(paste("Running",task_name,"config: ",sep=" "))
+    print(paste("Running",task_name,sep=" "))
+    print("Config:")
     print(config)
+    print(paste0("Cells per sample before filter for sample ", sample_id))
+    print(table(seurat_obj$orig.ident))
     #The format of the sample_id is
     # sample-WT1
     # we need to get only the last part, in order to grep the object.
     tmp_sample <- sub("sample-","",sample_id)
-    # Check wheter the filter is set to true or false
-    if (!as.logical(toupper(config$enabled)))
-        return(seurat_obj)
 
     # For now, we can get direcly p.level, but when we add more methods need to be change
     p.level <- config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level
@@ -61,6 +61,11 @@ task <- function(seurat_obj, config, task_name, sample_id){
             #Subsetting this sample
             obj_metadata <- seurat_obj@meta.data
             barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+            if(length(barcode_names_this_sample)==0){
+                plots <- list()
+                plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
+                return(list(data = seurat_obj,config = config,plotData = plots)) 
+            }
             sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
             # We regress the molecules vs the genes. This information are stored in nCount_RNA and nFeature_RNA respectively
             df <- data.frame(molecules = sample_subset$nCount_RNA, genes = sample_subset$nFeature_RNA)
@@ -101,6 +106,9 @@ task <- function(seurat_obj, config, task_name, sample_id){
     plots <- list()
     plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
 
+    print(paste0("Cells per sample after filter for sample ", sample_id))
+    print(table(seurat_obj.filtered$orig.ident))
+    
     # the result object will have to conform to this format: {data, config, plotData : {plot1}}
     result <- list(
         data = seurat_obj.filtered,
@@ -108,10 +116,6 @@ task <- function(seurat_obj, config, task_name, sample_id){
         plotData = plots
     )
 
-    print("Sample subset")
-    print(dim(sample_subset))
-    print("Object after filter")
-    print(dim(seurat_obj))
     return(result)
 }
 

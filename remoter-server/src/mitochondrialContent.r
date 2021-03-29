@@ -34,8 +34,11 @@ generate_default_values_mitochondrialContent <- function(seurat_obj, config) {
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
 task <- function(seurat_obj, config, task_name, sample_id){
-    print(paste("Running",task_name,"config: ",sep=" "))
+    print(paste("Running",task_name,sep=" "))
+    print("Config:")
     print(config)
+    print(paste0("Cells per sample before filter for sample ", sample_id))
+    print(table(seurat_obj$orig.ident))
     tmp_sample <- sub("sample-","",sample_id)
     # Check if the experiment has MT-content
     if (!"percent.mt"%in%colnames(seurat_obj@meta.data)){
@@ -50,6 +53,12 @@ task <- function(seurat_obj, config, task_name, sample_id){
     #Computing the subset for the current sample
     obj_metadata <- seurat_obj@meta.data
     barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+    if(length(barcode_names_this_sample)==0){
+        plots <- list()
+        plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
+        plots[generate_plotuuid(sample_id, task_name, 1)] <- list()
+        return(list(data = seurat_obj,config = config,plotData = plots)) 
+    }
     sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
 
     if (exists('auto', where=config)){
@@ -94,10 +103,8 @@ task <- function(seurat_obj, config, task_name, sample_id){
     plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
 
     # some tests:
-    print("Sample subset")
-    print(dim(sample_subset))
-    print("Object after filter")
-    print(dim(seurat_obj))
+    print(paste0("Cells per sample after filter for sample ", sample_id))
+    print(table(seurat_obj.filtered$orig.ident))
 
     result <- list( 
         data = seurat_obj.filtered, # seurat_obj filter

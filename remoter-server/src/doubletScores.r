@@ -30,8 +30,11 @@ generate_default_values_doubletScores <- function(seurat_obj, config) {
 #' @export return a list with the filtered seurat object by doublet score, the config and the plot values
 
 task <- function(seurat_obj, config, task_name, sample_id){
-    print(paste("Running",task_name,"config: ",sep=" "))
+    print(paste("Running",task_name,sep=" "))
+    print("Config:")
     print(config)
+    print(paste0("Cells per sample before filter for sample ", sample_id))
+    print(table(seurat_obj$orig.ident))
     #The format of the sample_id is
     # sample-WT1
     # we need to get only the last part, in order to grep the object.
@@ -54,6 +57,11 @@ task <- function(seurat_obj, config, task_name, sample_id){
     # extract plotting data of original data to return to plot slot later
     obj_metadata <- seurat_obj@meta.data
     barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+    if(length(barcode_names_this_sample)==0){
+        plots <- list()
+        plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
+        return(list(data = seurat_obj,config = config,plotData = plots)) 
+    }
     sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
 
     # Check wheter the filter is set to true or false
@@ -81,6 +89,9 @@ task <- function(seurat_obj, config, task_name, sample_id){
     # plot 1: histgram of doublet scores
     #              [0.161,              0.198,              0.284,  ...]
     plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+    
+    print(paste0("Cells per sample after filter for sample ", sample_id))
+    print(table(seurat_obj.filtered$orig.ident))
 
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
@@ -88,10 +99,6 @@ task <- function(seurat_obj, config, task_name, sample_id){
         config = config,
         plotData = plots
     )
-    print("Sample subset")
-    print(dim(sample_subset))
-    print("Object after filter")
-    print(dim(seurat_obj.filtered))
     return(result)
 
 }

@@ -51,8 +51,11 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
 }
 
 task <- function(seurat_obj, config, task_name, sample_id) {
-    print(paste("Running",task_name,"config: ",sep=" "))
+    print(paste("Running",task_name,sep=" "))
+    print("Config:")
     print(config)
+    print(paste0("Cells per sample before filter for sample ", sample_id))
+    print(table(seurat_obj$orig.ident))
     #The format of the sample_id is
     # sample-WT1
     # we need to get only the last part, in order to grep the object.
@@ -64,8 +67,13 @@ task <- function(seurat_obj, config, task_name, sample_id) {
     # extract plotting data of original data to return to plot slot later
     obj_metadata <- seurat_obj@meta.data
     barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+    if(length(barcode_names_this_sample)==0){
+        plots <- list()
+        plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
+        plots[generate_plotuuid(sample_id, task_name, 1)] <- list()
+        return(list(data = seurat_obj,config = config,plotData = plots)) 
+    }
     sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
-
     plot1_data  <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
     # plot 1: histgram of UMIs, hence input is all UMI values, e.g.
     # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
@@ -93,7 +101,6 @@ task <- function(seurat_obj, config, task_name, sample_id) {
         # seurat_obj <- subset(seurat_obj, subset = nCount_RNA >= minCellSize)
         # subset(x, subset, cells = NULL, features = NULL, idents = NULL, ...)
         # cells: Cell names or indices
-
         # extract cell id that do not(!) belong to current sample (to not apply filter there)
         barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),]) 
         # all barcodes that match threshold in the subset data
@@ -101,14 +108,12 @@ task <- function(seurat_obj, config, task_name, sample_id) {
         # combine the 2:
         barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
         
-        seurat_obj <- subset_safe(seurat_obj,barcodes_to_keep)
-
-        # some tests:
-        print("Sample subset")
-        print(dim(sample_subset))
-        print("Object after filter")
-        print(dim(seurat_obj))
+        seurat_obj.filtered <- subset_safe(seurat_obj,barcodes_to_keep)
     }
+
+    print(paste0("Cells per sample after filter for sample ", sample_id))
+    print(table(seurat_obj.filtered$orig.ident))
+
     # update config
     config$filterSettings$minCellSize <- minCellSize
 
@@ -118,7 +123,7 @@ task <- function(seurat_obj, config, task_name, sample_id) {
     plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
 
     result <- list(
-        data = seurat_obj,
+        data = seurat_obj.filtered,
         config = config,
         plotData = plots
     )
