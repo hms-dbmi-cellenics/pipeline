@@ -128,6 +128,7 @@ run_dataIntegration <- function(seurat_obj, config){
         }
         message("3")
         data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, verbose = FALSE)
+        print(str(data.anchors))
         message("4")
         seurat_obj <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
         Seurat::DefaultAssay(seurat_obj) <- "integrated"
