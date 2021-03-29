@@ -25,35 +25,39 @@
 #       }
 #   },
 
-task <- function(scdata, config,task_name,sample_id){
+task <- function(seurat_obj, config,task_name,sample_id){
+    options(error=traceback)
+    # Increase maxSize from the default of 500
+    options(future.globals.maxSize= 1024 * 1024^2)
     # Check wheter the filter is set to true or false
     if (as.logical(toupper(config$enabled))){
         # So far we only support Seurat V3
-        scdata.integrated <- run_dataIntegration(scdata, config)
+        message("1")
+        seurat_obj.integrated <- run_dataIntegration(seurat_obj, config)
             # Compute explained variance for the plot2
-        eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
+        eigValues = (seurat_obj.integrated@reductions$pca@stdev)^2  ## EigenValues
         varExplained = eigValues / sum(eigValues)
         # As a short solution, we are going to store an intermediate slot for the numPCs, since this parameter is required when performing
         # the computeEmdedding. The main reason to do not have in the config.configureEmbedding is that this parameter does not change in the configureEmbedding step.
-        scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+        seurat_obj.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
     }
     else
-        scdata.integrated <- scdata
-
-    scdata.integrated <- colorObject(scdata.integrated)
-    cells_order <- rownames(scdata.integrated@meta.data)
-    plot1_data <- unname(purrr::map2(scdata.integrated@reductions$umap@cell.embeddings[, 1],scdata.integrated@reductions$umap@cell.embeddings[, 2],function(x,y){c("x"=x,"y"=y)}))
+        seurat_obj.integrated <- seurat_obj
+    message("2")
+    seurat_obj.integrated <- colorObject(seurat_obj.integrated)
+    cells_order <- rownames(seurat_obj.integrated@meta.data)
+    plot1_data <- unname(purrr::map2(seurat_obj.integrated@reductions$umap@cell.embeddings[, 1],seurat_obj.integrated@reductions$umap@cell.embeddings[, 2],function(x,y){c("x"=x,"y"=y)}))
     
     #Adding color and sample id
     plot1_data <- purrr::map2(plot1_data,
-        unname(scdata.integrated@meta.data[cells_order, "type"]),
+        unname(seurat_obj.integrated@meta.data[cells_order, "type"]),
         function(x,y){append(x,list("sample"=y))}
     )
     plot1_data <- purrr::map2(plot1_data,
-        unname(scdata.integrated@meta.data[cells_order, "color_samples"]),
+        unname(seurat_obj.integrated@meta.data[cells_order, "color_samples"]),
         function(x,y){append(x,list("col"=y))}
     )
-
+    message("3")
     plot2_data <- unname(purrr::map2(1:50,varExplained,function(x,y){c("PC"=x,"percentVariance"=y)}))
 
     plots <- list()
@@ -62,10 +66,10 @@ task <- function(scdata, config,task_name,sample_id){
 
     # For now config is not updated, since there is not new changes
     # config <- ...
-
+    message("4")
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
-        data = scdata.integrated,
+        data = seurat_obj.integrated,
         config = config,
         plotData = plots
     )
@@ -79,7 +83,7 @@ task <- function(scdata, config,task_name,sample_id){
 #   - Compute PCA analysis
 #   - To visualize the results of the batch effect, an UMAP with default setting has been made. 
 # Seurat V3 pipeline (see for other methods: https://satijalab.org/seurat/archive/v3.0/integration.html)
-run_dataIntegration <- function(scdata, config){
+run_dataIntegration <- function(seurat_obj, config){
     
     method <- config$dataIntegration$method
     nfeatures <- config$dataIntegration$methodSettings[[method]]$numGenes
@@ -98,32 +102,38 @@ run_dataIntegration <- function(scdata, config){
 
     # Currently, we only support Seurat V3 pipeline for the multisample integration
    if(method=="seuratv4"){
+        message("SEURAT OBJ:")
+        message(str(seurat_obj))
         #FIX FOR CURRENT DATASET!!!!!!
-        Seurat::DefaultAssay(scdata) <- "RNA"
-        data.split <- Seurat::SplitObject(scdata, split.by = "type")
+        Seurat::DefaultAssay(seurat_obj) <- "RNA"
+        data.split <- Seurat::SplitObject(seurat_obj, split.by = "type")
+        message("Data split:")
+        message(str(data.split))
         for (i in 1:length(data.split)) {
             data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
             data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
         }
         data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, verbose = FALSE)
-        scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
-        Seurat::DefaultAssay(scdata) <- "integrated"
+        
+        seurat_obj <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
+        Seurat::DefaultAssay(seurat_obj) <- "integrated"
     }else{
         # Else, we are in unisample experiment and we only need to normalize 
-        scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
-        scdata <-Seurat::FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = F)
+        seurat_obj <- Seurat::NormalizeData(seurat_obj, normalization.method = normalization, verbose = F)
+        seurat_obj <-Seurat::FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = nfeatures, verbose = F)
     }
 
     # Scale in order to compute PCA
-    scdata <- Seurat::ScaleData(scdata, verbose = F)
-
+    seurat_obj <- Seurat::ScaleData(seurat_obj, verbose = F)
+    message("Var features:")
+    message(str(Seurat::VariableFeatures(object=seurat_obj)))
     # HARDCODE numPCs to 50
-    scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object=scdata), verbose=FALSE)
+    seurat_obj <- Seurat::RunPCA(seurat_obj, npcs = 50, features = Seurat::VariableFeatures(object=seurat_obj), verbose=FALSE)
 
     # Compute embedding with default setting to get an overview of the performance of the bath correction
-    scdata <- Seurat::RunUMAP(scdata, reduction='pca', dims = 1:numPCs, verbose = F, umap.method = "uwot-learn", min.dist = umap_min_distance, metric = umap_distance_metric)
+    seurat_obj <- Seurat::RunUMAP(seurat_obj, reduction='pca', dims = 1:numPCs, verbose = F, umap.method = "uwot-learn", min.dist = umap_min_distance, metric = umap_distance_metric)
 
-    return(scdata)
+    return(seurat_obj)
 }
 
 colorObject <- function(data){
@@ -148,7 +158,7 @@ colorObject <- function(data){
     ##########################
     # Coloring samples
     ###########################
-    if ("type"%in%colnames(scdata@meta.data)) # In that case we are in multisample experiment
+    if ("type"%in%colnames(data@meta.data)) # In that case we are in multisample experiment
         data@meta.data[, "color_samples"] <- color_pool[as.numeric(as.factor(data$type))]
     else
         data@meta.data[, "color_samples"] <- color_pool[1]
