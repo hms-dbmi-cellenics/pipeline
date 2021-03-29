@@ -87,15 +87,12 @@ task <- function(scdata, config, task_name, sample_id){
         unname(scdata.embedding@meta.data[cells_order, "percent.mt"]),
         function(x,y){append(x,c("mt-content"=y))}
     )
-    print(embeddingPreview)
     # Create plot for Doublet-score
     embeddingPreviewDoubletScore <- purrr::map2(embeddingPreview,
         unname(scdata.embedding@meta.data[cells_order, "doublet_scores"]),
         function(x,y){append(x,c("doublet-score"=y))}
     )
 
-    print(embeddingPreviewByCellSets)
-    print(embeddingPreviewBySamples)
     plots <- list()
     plots[generate_plotuuid("", task_name, 0)] <- list(embeddingPreviewByCellSets)
     plots[generate_plotuuid("", task_name, 1)] <- list(embeddingPreviewBySamples)
