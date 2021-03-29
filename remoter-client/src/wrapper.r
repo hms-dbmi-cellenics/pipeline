@@ -61,13 +61,13 @@ run_step <- function(scdata, config, task_name, sample_id) {
 
     switch(task_name,
         cellSizeDistribution = {
-            import::here("/src/cellSizeDistribution.r", task)
+            import::here("/src/dataIntegration.r", task)
         },
         mitochondrialContent = {
             import::here("/src/mitochondrialContent.r", task)
         },
         classifier = {
-            import::here("/src/classifier.r", task)
+            import::here("/src/dataIntegration.r", task)
         },
         numGenesVsNumUmis = {
             import::here("/src/numGenesVsNumUmis.r", task)

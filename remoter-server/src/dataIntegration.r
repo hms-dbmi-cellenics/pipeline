@@ -24,8 +24,14 @@
 #           "excludeGeneCategories": []
 #       }
 #   },
-
+source('utils.r')
 task <- function(seurat_obj, config,task_name,sample_id){
+    print(sessionInfo())
+    config<- list()
+    config$enabled <- TRUE
+    config$dimensionalityReduction <- list()
+    config$dimensionalityReduction$numPCs <- 30
+
     options(error=traceback)
     # Increase maxSize from the default of 500
     options(future.globals.maxSize= 1024 * 1024^2)
@@ -85,15 +91,20 @@ task <- function(seurat_obj, config,task_name,sample_id){
 # Seurat V3 pipeline (see for other methods: https://satijalab.org/seurat/archive/v3.0/integration.html)
 run_dataIntegration <- function(seurat_obj, config){
     
-    method <- config$dataIntegration$method
-    nfeatures <- config$dataIntegration$methodSettings[[method]]$numGenes
-    normalization <- config$dataIntegration$methodSettings[[method]]$normalisation
+    #method <- config$dataIntegration$method
+    #nfeatures <- config$dataIntegration$methodSettings[[method]]$numGenes
+    #normalization <- config$dataIntegration$methodSettings[[method]]$normalisation
     
+    method <- "seuratv4"
+    nfeatures <- 2000
+    normalization <- "LogNormalize"
+
     #Caps lock independent just in case anything goes wrong in dynamo or wherever. 
     if (toupper(normalization)=="LOGNORMALIZE"  | toupper(normalization)=="LOGNORMALISE") normalization<-"LogNormalize"
     # Q: Should be the numPCs input for the RunPCA? Since we are looking into the explained variance I suggest to RunPCA with 50 and only
     # use this parameter for the data integration purpose.
-    numPCs <- config$dimensionalityReduction$numPCs
+    #numPCs <- config$dimensionalityReduction$numPCs
+    numPCs <- 30
 
     #HARDCODE
     # We require just to get an overview of the data-integration
