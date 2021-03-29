@@ -10,7 +10,7 @@ source('utils.r')
 # The most uses values in MT-content are between [0.1, 0.2]. There are not too much literature about how to compute
 # a threshold. For now, we will offer two methods:
 # --> Absolute threshold: In order to be not too extrictive the threshold is set to 0.1
-generate_default_values_mitochondrialContent <- function(scdata, config) {
+generate_default_values_mitochondrialContent <- function(seurat_obj, config) {
    
    if (config$filterSettings$method == "absolute_threshold")
         # HARDCODE
@@ -33,37 +33,56 @@ generate_default_values_mitochondrialContent <- function(scdata, config) {
 #'                          * we are supposed to add more methods ....
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
-task <- function(scdata, config, task_name, sample_id){
+task <- function(seurat_obj, config, task_name, sample_id){
+    print(paste("Running",task_name,sep=" "))
+    print("Config:")
     print(config)
+    print(paste0("Cells per sample before filter for sample ", sample_id))
+    print(table(seurat_obj$orig.ident))
+    tmp_sample <- sub("sample-","",sample_id)
     # Check if the experiment has MT-content
-    if (!"percent.mt"%in%colnames(scdata@meta.data)){
+    if (!"percent.mt"%in%colnames(seurat_obj@meta.data)){
         #This return value breaks the step, no config data is returned!!!!
         message("Warning! No MT-content has been computed for this experiment!")
-        return(scdata)
+        return(seurat_obj)
     }
     #The absolute threshold object is an atomic vector, not a list!
-    # TODO: The [[1]] is a temp fix because the maxFraction in config is for some unknown reason a list. We need a ticket and ask for a change in that.
-    maxFraction <- config$filterSettings$methodSettings[[config$filterSettings$method]][["maxFraction"]][[1]]
-    
+    maxFraction <- config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction
     # Check if it is required to compute sensible values. From the function 'generate_default_values_doubletScores', it is expected
     # to get a list with only one element --> maxFraction.
+    #Computing the subset for the current sample
+    obj_metadata <- seurat_obj@meta.data
+    barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+    if(length(barcode_names_this_sample)==0){
+        plots <- list()
+        plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
+        plots[generate_plotuuid(sample_id, task_name, 1)] <- list()
+        return(list(data = seurat_obj,config = config,plotData = plots)) 
+    }
+    sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
 
     if (exists('auto', where=config)){
         if (as.logical(toupper(config$auto)))
-        maxFraction <- generate_default_values_mitochondrialContent(scdata, config)
+        maxFraction <- generate_default_values_mitochondrialContent(sample_subset, config)
     }
-    
     # Check whether the filter is set to true or false
-    if (as.logical(toupper(config$enabled)))
+    if (as.logical(toupper(config$enabled))){
+        # extract cell id that do not(!) belong to current sample (to not apply filter there)
+        barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),]) 
+        # all barcodes that match threshold in the subset
+        barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset@meta.data$percent.mt <= maxFraction*100,])
+        # combine the 2:
+        barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
+        # TODO: try(): make sure  barcodes_to_keep is not empty
         # Information regarding MT-content is pre-computed during the 'data-ingest'. 
-        scdata.filtered <- subset(scdata, subset = percent.mt <= maxFraction*100)
-    else
-        scdata.filtered <- scdata
-    plot1_data <- lapply(unname(scdata$percent.mt),function(x) {c("fracMito"=x)})
-    plot2_data <- unname(purrr::map2(scdata$percent.mt,scdata$nCount_RNA,function(x,y){c("cellSize"=y,"fracMito"=x)}))
-
+        seurat_obj.filtered <- subset_safe(seurat_obj, barcodes_to_keep)
+    }else{
+        seurat_obj.filtered <- seurat_obj
+    }
+    plot1_data <- lapply(unname(sample_subset$percent.mt),function(x) {c("fracMito"=x)})
+    plot2_data <- unname(purrr::map2(sample_subset$percent.mt,sample_subset$nCount_RNA,function(x,y){c("cellSize"=y,"fracMito"=x)}))
     # update config
-    config$filterSettings$methodSettings[[config$filterSettings$method]][["maxFraction"]] <- maxFraction
+    config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- maxFraction
     
     plots <- list()
 
@@ -74,18 +93,21 @@ task <- function(scdata, config, task_name, sample_id){
 
     # plot 2: There are two alternavitive:
     #           - Scatter plot with UMIs in the x-axis and MT-content in the y-axis
-    #           --> code: plot2 = list(u=scdata$nCount_RNA.mt, "MT-content" = scdata$percent.mt)
+    #           --> code: plot2 = list(u=seurat_obj$nCount_RNA.mt, "MT-content" = seurat_obj$percent.mt)
     #           - Barplot representing in the x-axis the log10(UMIs) and in the y-axis the MT-content. This option is the one 
     #           that is shown in the mockup.
-    #           --> code: plot2 = list(log_10_UMIs=log10(scdata$nCount_RNA), MT_content =mscdata$percent.mt)
+    #           --> code: plot2 = list(log_10_UMIs=log10(seurat_obj$nCount_RNA), MT_content =mseurat_obj$percent.mt)
     # We have decided to use the scatter plot, but I temporaly leave the other option in the comments. 
     # Q: Should we return from the R side the cells that are going to be removed? For this plot it is interesting to color the
     # cells that are going to be excluded. 
     plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
 
-    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
-    result <- list(
-        data = scdata.filtered, # scdata filter
+    # some tests:
+    print(paste0("Cells per sample after filter for sample ", sample_id))
+    print(table(seurat_obj.filtered$orig.ident))
+
+    result <- list( 
+        data = seurat_obj.filtered, # seurat_obj filter
         config = config,
         plotData = plots
     )
