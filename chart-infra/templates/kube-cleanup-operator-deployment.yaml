@@ -27,8 +27,8 @@ spec:
       containers:
       - args:
         - --namespace={{.Release.Namespace}}
-        - -delete-successful-after=30m
-        - -delete-failed-after=30m
+        - --delete-successful-after=30m
+        - --delete-failed-after=30m
         image: quay.io/lwolf/kube-cleanup-operator
         imagePullPolicy: Always
         name: cleanup-operator
