@@ -18,7 +18,7 @@ source('utils.r')
 generate_default_values_classifier <- function(seurat_obj, config) {
    
         # HARDCODE
-        threshold <- 0.1
+        threshold <- 0.01
    
     return(threshold)
 }
@@ -59,7 +59,7 @@ task <- function(seurat_obj, config, task_name, sample_id){
   print(paste("Running",task_name,"config: ",sep=" "))
   print(config)
   print(paste0("Cells per sample before filter for sample ", sample_id))
-  print(table(seurat_obj$orig.ident))
+  print(table(seurat_obj$orig.ident, useNA="ifany"))
   #The format of the sample_id is
   # sample-WT1
   # we need to get only the last part, in order to grep the object.
@@ -71,27 +71,6 @@ task <- function(seurat_obj, config, task_name, sample_id){
   # For some reason the last children of named lists are computed as vectors, so we can't access them as recursive objects. 
   FDR <- as.numeric(config$filterSettings[["FDR"]])
   # THIS SLOT DOESNT EXIST ON LOCAL OBJECT.
-  if (is.null(seurat_obj@meta.data$emptyDrops_FDR)) {
-    print(paste("Running",task_name,"config: ",sep=" "))
-    print("Classify is enabled but has no classify data available: will dissable it: no filtering!")
-    # should this be json, i.e. "false" instead?
-    config$enabled <- FALSE
-    plot1_data <- list()
-  } else {
-
-    # extract plotting data of original data to return to plot slot later
-    obj_metadata <- seurat_obj@meta.data
-    barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
-    sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
-
-    plot1_data_1  <- seurat_obj@meta.data$emptyDrops_FDR
-    # TODO: should this be log, or is the UI taking this?
-    plot1_data_2  <- log10(seurat_obj@meta.data$nCount_RNA)
-    # plot(= plot1_data_1,plot1_data_2)
-    # plot(seurat_obj@meta.data$emptyDrops_FDR, seurat_obj@meta.data$nCount_RNA)
-
-    plot1_data <- unname(purrr::map2(plot1_data_1,plot1_data_2,function(x,y){c("FDR"=x,"log_u"=y)}))
-  }
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_classifier', it is expected
   # to get a list with two elements {minProbabiliy and filterThreshold}.
@@ -100,36 +79,63 @@ task <- function(seurat_obj, config, task_name, sample_id){
       FDR <- generate_default_values_classifier(seurat_obj, config)
   }
   # TODO: get flag from here: seurat_obj@tools$flag_filtered <- FALSE
-  if(!as.logical(toupper(config$enabled))) {
-    # is.cell <- meta.data$emptyDrops_FDR <= 0.01
-    # sum(is.cell, na.rm=TRUE) 
-    # table(Limited=meta.data$emptyDrops_Limited, Significant=is.cell)
-    # is.cell2<-is.cell
-    # is.cell2[is.na(is.cell2)]<-FALSE
-    # sce.filt<-sce[,is.cell2]
-    # Information regarding number of UMIs per cells is pre-computed during the 'CreateSeuratObject' function. 
-    # this used to be the filter below which applies for all samples
-    # we had to change it for the current version where we also have to 
-    # keep all barcodes for all samples (filter doesn't apply there)
-    # once we ensure the input is only one sample, we can revert to the line below:
-    # seurat_obj <- subset(seurat_obj, subset = nCount_RNA >= minCellSize)
-    # subset(x, subset, cells = NULL, features = NULL, idents = NULL, ...)
-    # cells: Cell names or indices
-    # extract cell id that do not(!) belong to current sample (to not apply filter there)
-    barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),])
-    # all barcodes that match threshold in the subset data
-    barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset@meta.data$emptyDrops_FDR <= FDR,])
-    # combine the 2:
-    barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
+  if(as.logical(toupper(config$enabled))) {
+    # check if filter data is actually available
+    if (is.null(seurat_obj@meta.data$emptyDrops_FDR)) {
+      print(paste("Running",task_name,"config: ",sep=" "))
+      print(paste0("Classify is enabled but classify data available: all good for filtering with FDR=", FDR))
+      # should this be json, i.e. "false" instead?
+      config$enabled <- FALSE
+      plot1_data <- list()
+    } else { # enabled and good data:
+      print("Classify is enabled but has no classify data available: will dissable it: no filtering!")
+      obj_metadata <- seurat_obj@meta.data
+      # extract plotting data of original data to return to plot slot later
+      barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+      sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
+      print("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval")
+      print(table(obj_metadata$orig.ident, cut(obj_metadata$emptyDrops_FDR, breaks = c(-Inf,0,0.0001,0.01,0.1,0.5,1,Inf)), useNA="ifany"))
+      print("How many barcodes should be filtered out for this sample (#FALSE):")
+      print(table(sample_subset$emptyDrops_FDR <= FDR))
 
-    seurat_obj <- subset_safe(seurat_obj,barcodes_to_keep)
-    # seurat_obj.filtered <- subset(seurat_obj, subset = emptyDrops_FDR <= FDR)
+      plot1_data_1  <- seurat_obj@meta.data$emptyDrops_FDR
+      # TODO: should this be log, or is the UI taking this?
+      plot1_data_2  <- log10(seurat_obj@meta.data$nCount_RNA)
+      # plot(= plot1_data_1,plot1_data_2)
+      # plot(seurat_obj@meta.data$emptyDrops_FDR, seurat_obj@meta.data$nCount_RNA)
+
+      plot1_data <- unname(purrr::map2(plot1_data_1,plot1_data_2,function(x,y){c("FDR"=x,"log_u"=y)}))
+      # is.cell <- meta.data$emptyDrops_FDR <= 0.01
+      # sum(is.cell, na.rm=TRUE) 
+      # table(Limited=meta.data$emptyDrops_Limited, Significant=is.cell)
+      # is.cell2<-is.cell
+      # is.cell2[is.na(is.cell2)]<-FALSE
+      # sce.filt<-sce[,is.cell2]
+      # Information regarding number of UMIs per cells is pre-computed during the 'CreateSeuratObject' function. 
+      # this used to be the filter below which applies for all samples
+      # we had to change it for the current version where we also have to 
+      # keep all barcodes for all samples (filter doesn't apply there)
+      # once we ensure the input is only one sample, we can revert to the line below:
+      # seurat_obj <- subset(seurat_obj, subset = nCount_RNA >= minCellSize)
+      # subset(x, subset, cells = NULL, features = NULL, idents = NULL, ...)
+      # cells: Cell names or indices
+      # extract cell id that do not(!) belong to current sample (to not apply filter there)
+      barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),])
+      # all barcodes that match threshold in the subset data
+      barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset@meta.data$emptyDrops_FDR <= FDR,])
+      # combine the 2:
+      barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
+
+      seurat_obj <- subset_safe(seurat_obj,barcodes_to_keep)
+      # seurat_obj.filtered <- subset(seurat_obj, subset = emptyDrops_FDR <= FDR)
+    }
   } else {
+    print("filter disabled: data not filtered!")
     seurat_obj <- seurat_obj
   }
 
   print(paste0("Cells per sample after filter for sample ", sample_id))
-  print(table(seurat_obj$orig.ident))
+  print(table(seurat_obj$orig.ident, useNA="ifany"))
 
   # update config
   config$filterSettings$FDR <- FDR
