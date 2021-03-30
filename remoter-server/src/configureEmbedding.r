@@ -221,11 +221,10 @@ coloring_samples_and_cluster <- function(scdata){
     ##########################
     # Coloring samples
     ###########################
-    remaining.colors <- color_pool[-c(1:length(unique(scdata@meta.data$color_active_ident)))]
     if ("type"%in%colnames(scdata@meta.data)) # In that case we are in multisample experiment
-        scdata@meta.data[, "color_samples"] <- remaining.colors[as.numeric(as.factor(scdata$type))]
+        scdata@meta.data[, "color_samples"] <- color_pool[as.numeric(as.factor(scdata$type))]
     else
-        scdata@meta.data[, "color_samples"] <- remaining.colors[1]
+        scdata@meta.data[, "color_samples"] <- color_pool[1]
 
     return(scdata)
 }
