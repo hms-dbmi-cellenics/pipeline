@@ -73,9 +73,11 @@ task <- function(seurat_obj, config, task_name, sample_id){
   # THIS SLOT DOESNT EXIST ON LOCAL OBJECT.
   if (is.null(seurat_obj@meta.data$emptyDrops_FDR)) {
     print(paste("Running",task_name,"config: ",sep=" "))
-    print("Classify is enabled but has no classify data available: no filtering!")
-      
-  }
+    print("Classify is enabled but has no classify data available: will dissable it: no filtering!")
+    # should this be json, i.e. "false" instead?
+    config$enabled <- FALSE
+    plot1_data <- list()
+  } else {
 
     # extract plotting data of original data to return to plot slot later
     obj_metadata <- seurat_obj@meta.data
@@ -89,66 +91,68 @@ task <- function(seurat_obj, config, task_name, sample_id){
     # plot(seurat_obj@meta.data$emptyDrops_FDR, seurat_obj@meta.data$nCount_RNA)
 
     plot1_data <- unname(purrr::map2(plot1_data_1,plot1_data_2,function(x,y){c("FDR"=x,"log_u"=y)}))
-    # Check if it is required to compute sensible values. From the function 'generate_default_values_classifier', it is expected
-    # to get a list with two elements {minProbabiliy and filterThreshold}.
-    if (exists('auto', where=config)){
-        if(as.logical(toupper(config$auto)))
-            filterSettings <- generate_default_values_classifier(seurat_obj, config)
-    }
-    # TODO: get flag from here: seurat_obj@tools$flag_filtered <- FALSE
-    if(!as.logical(toupper(config$enabled))) {
-        # is.cell <- meta.data$emptyDrops_FDR <= 0.01
-        # sum(is.cell, na.rm=TRUE) 
-        # table(Limited=meta.data$emptyDrops_Limited, Significant=is.cell)
-        # is.cell2<-is.cell
-        # is.cell2[is.na(is.cell2)]<-FALSE
-        # sce.filt<-sce[,is.cell2]
-        # Information regarding number of UMIs per cells is pre-computed during the 'CreateSeuratObject' function. 
-        # this used to be the filter below which applies for all samples
-        # we had to change it for the current version where we also have to 
-        # keep all barcodes for all samples (filter doesn't apply there)
-        # once we ensure the input is only one sample, we can revert to the line below:
-        # seurat_obj <- subset(seurat_obj, subset = nCount_RNA >= minCellSize)
-        # subset(x, subset, cells = NULL, features = NULL, idents = NULL, ...)
-        # cells: Cell names or indices
-        # extract cell id that do not(!) belong to current sample (to not apply filter there)
-        barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),])
-        # all barcodes that match threshold in the subset data
-        barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset@meta.data$emptyDrops_FDR <= FDR,])
-        # combine the 2:
-        barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-        
-        seurat_obj <- subset_safe(seurat_obj,barcodes_to_keep)
-        # seurat_obj.filtered <- subset(seurat_obj, subset = emptyDrops_FDR <= FDR)
-    } else {
-        seurat_obj <- seurat_obj
-    }
+  }
 
-    print(paste0("Cells per sample after filter for sample ", sample_id))
-    print(table(seurat_obj$orig.ident))
+  # Check if it is required to compute sensible values. From the function 'generate_default_values_classifier', it is expected
+  # to get a list with two elements {minProbabiliy and filterThreshold}.
+  if (exists('auto', where=config)){
+    if(as.logical(toupper(config$auto)))
+      FDR <- generate_default_values_classifier(seurat_obj, config)
+  }
+  # TODO: get flag from here: seurat_obj@tools$flag_filtered <- FALSE
+  if(!as.logical(toupper(config$enabled))) {
+    # is.cell <- meta.data$emptyDrops_FDR <= 0.01
+    # sum(is.cell, na.rm=TRUE) 
+    # table(Limited=meta.data$emptyDrops_Limited, Significant=is.cell)
+    # is.cell2<-is.cell
+    # is.cell2[is.na(is.cell2)]<-FALSE
+    # sce.filt<-sce[,is.cell2]
+    # Information regarding number of UMIs per cells is pre-computed during the 'CreateSeuratObject' function. 
+    # this used to be the filter below which applies for all samples
+    # we had to change it for the current version where we also have to 
+    # keep all barcodes for all samples (filter doesn't apply there)
+    # once we ensure the input is only one sample, we can revert to the line below:
+    # seurat_obj <- subset(seurat_obj, subset = nCount_RNA >= minCellSize)
+    # subset(x, subset, cells = NULL, features = NULL, idents = NULL, ...)
+    # cells: Cell names or indices
+    # extract cell id that do not(!) belong to current sample (to not apply filter there)
+    barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),])
+    # all barcodes that match threshold in the subset data
+    barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset@meta.data$emptyDrops_FDR <= FDR,])
+    # combine the 2:
+    barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
 
-    # update config
-    config$filterSettings$FDR <- FDR
+    seurat_obj <- subset_safe(seurat_obj,barcodes_to_keep)
+    # seurat_obj.filtered <- subset(seurat_obj, subset = emptyDrops_FDR <= FDR)
+  } else {
+    seurat_obj <- seurat_obj
+  }
 
-    #Populate plots list
-    plots <-list()
-    plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
-    # plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
-    # > head(plots[[1]])
-    # [[1]]
-    # FDR    log_u
-    # 0.000000 3.554852
+  print(paste0("Cells per sample after filter for sample ", sample_id))
+  print(table(seurat_obj$orig.ident))
 
-    # [[2]]
-    # FDR        log_u
-    # 0.0001120495 2.7176705030
+  # update config
+  config$filterSettings$FDR <- FDR
 
-    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
-    result <- list(
-        data = seurat_obj,
-        config = config,
-        plotData = plots
-    )
+  #Populate plots list
+  plots <-list()
+  plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+  # plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
+  # > head(plots[[1]])
+  # [[1]]
+  # FDR    log_u
+  # 0.000000 3.554852
 
-    return(result)
+  # [[2]]
+  # FDR        log_u
+  # 0.0001120495 2.7176705030
+
+  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
+  result <- list(
+                 data = seurat_obj,
+                 config = config,
+                 plotData = plots
+  )
+
+  return(result)
 }
