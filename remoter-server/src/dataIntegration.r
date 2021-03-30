@@ -26,6 +26,9 @@
 #   },
 
 task <- function(scdata, config,task_name,sample_id){
+    # increase maxSize from the default of 500
+    options(future.globals.maxSize= 1024 * 1024^2)
+    
     # Check wheter the filter is set to true or false
     if (as.logical(toupper(config$enabled))){
         # So far we only support Seurat V3
