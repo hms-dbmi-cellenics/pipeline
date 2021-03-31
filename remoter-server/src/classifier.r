@@ -116,20 +116,20 @@ task <- function(seurat_obj, config, task_name, sample_id){
       # combine the 2:
       barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
       seurat_obj <- subset_safe(seurat_obj,barcodes_to_keep)
+      # update config
+      config$filterSettings$FDR <- FDR
+      #Populate plots list
+      plots <-list()
+      plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
     }
   } else {
     print("filter disabled: data not filtered!")
+    plots<-list()
+    plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
     seurat_obj <- seurat_obj
   }
   print(paste0("Cells per sample after filter for sample ", sample_id))
   print(table(seurat_obj$orig.ident, useNA="ifany"))
-
-  # update config
-  config$filterSettings$FDR <- FDR
-
-  #Populate plots list
-  plots <-list()
-  plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
   # > head(plots[[1]])
   # [[1]]
   # FDR    log_u
