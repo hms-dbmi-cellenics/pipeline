@@ -109,6 +109,8 @@ task <- function(seurat_obj, config, task_name, sample_id) {
         barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
         
         seurat_obj.filtered <- subset_safe(seurat_obj,barcodes_to_keep)
+    }else{
+        seurat_obj.filtered <- seurat_obj
     }
 
     print(paste0("Cells per sample after filter for sample ", sample_id))
