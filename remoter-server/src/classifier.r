@@ -18,7 +18,7 @@ source('utils.r')
 generate_default_values_classifier <- function(seurat_obj, config) {
    
         # HARDCODE
-        threshold <- 0.1
+        threshold <- 0.01
    
     return(threshold)
 }
@@ -39,45 +39,111 @@ generate_default_values_classifier <- function(seurat_obj, config) {
 
 
 task <- function(seurat_obj, config, task_name, sample_id){
-    # config$filterSettings = list(minProbability=0.82, bandwidth=-1, filterThreshold=-1)
-    # Check wheter the filter is set to true or false
-    # For some reason the last children of named lists are computed as vectors, so we can't access them as recursive objects. 
-    minProbability <- config$filterSettings[["minProbability"]]
-    # THIS SLOT DOESNT EXIST ON LOCAL OBJECT.
-    plot1_data_1  <- seurat_obj@meta.data$emptyDrops_FDR
-    plot1_data_2  <- log10(seurat_obj$nCount_RNA)
+  # config$filterSettings = list(FDR=0.82, bandwidth=-1, filterThreshold=-1)
+  # As of 26/3/2021
+  # PlotUUID: classifierEmptyDropsPlot
+  # Labels & Inputs : 
+  # X-axis : cellSize, transformed with log10
+  # Y-axis : FDR of emptyDrops classifier [0,1]   
+  # Plot Data Schema
+  # Data point :
+  # { 
+  #    classifierP: classifier probability,
+  #    log_u: log cell size
+  # }
+  # Example :
+  # [
+  #    {"FDR": 0.994553522823595,
+  #     "log_u": 4.25168687816849},
+  # ...]
+  print(paste("Running",task_name,"config: ",sep=" "))
+  print(config)
+  print(paste0("Cells per sample before filter for sample ", sample_id))
+  print(table(seurat_obj$orig.ident, useNA="ifany"))
+  #The format of the sample_id is
+  # sample-WT1
+  # we need to get only the last part, in order to grep the object.
+  tmp_sample <- sub("sample-","",sample_id)
 
-    plot1_data <- unname(purrr::map2(plot1_data_1,plot1_data_2,function(x,y){c("FDR"=x,"log_u"=y)}))
-    # Check if it is required to compute sensible values. From the function 'generate_default_values_classifier', it is expected
-    # to get a list with two elements {minProbabiliy and filterThreshold}.
-    if (exists('auto', where=config)){
-        if(as.logical(toupper(config$auto)))
-            filterSettings <- generate_default_values_classifier(seurat_obj, config)
+  import::here(map2, .from = purrr)
+
+  # Check wheter the filter is set to true or false
+  # For some reason the last children of named lists are computed as vectors, so we can't access them as recursive objects. 
+  FDR <- as.numeric(config$filterSettings[["FDR"]])
+  # Check if it is required to compute sensible values. From the function 'generate_default_values_classifier', it is expected
+  # to get a list with two elements {minProbabiliy and filterThreshold}.
+  if (exists('auto', where=config)){
+    if(as.logical(toupper(config$auto)))
+      FDR <- generate_default_values_classifier(seurat_obj, config)
+  }
+  # TODO: get flag from here: seurat_obj@tools$flag_filtered <- FALSE
+  if(as.logical(toupper(config$enabled))) {
+    # check if filter data is actually available
+    if (is.null(seurat_obj@meta.data$emptyDrops_FDR)) {
+      print(paste("Running",task_name,"config: ",sep=" "))
+      print("Classify is enabled but has no classify data available: will dissable it: no filtering!")      
+      # should this be json, i.e. "false" instead?
+      config$enabled <- FALSE
+      plot1_data <- list()
+    } else { # enabled and good data:
+      print(paste0("Classify is enabled but classify data available: all good for filtering with FDR=", FDR))
+      obj_metadata <- seurat_obj@meta.data
+      # extract plotting data of original data to return to plot slot later
+      barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+      if(length(barcode_names_this_sample)==0){
+          plots <- list()
+          plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
+          return(list(data = seurat_obj,config = config,plotData = plots)) 
+      }
+      sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
+      print("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval")
+      print(table(obj_metadata$orig.ident, cut(obj_metadata$emptyDrops_FDR, breaks = c(-Inf,0,0.0001,0.01,0.1,0.5,1,Inf)), useNA="ifany"))
+      print("How many barcodes should be filtered out for this sample (#FALSE):")
+      print(table(sample_subset$emptyDrops_FDR <= FDR))
+
+      plot1_data_1  <- seurat_obj@meta.data$emptyDrops_FDR
+      # TODO: should this be log, or is the UI taking this?
+      plot1_data_2  <- log10(seurat_obj@meta.data$nCount_RNA)
+      # plot(= plot1_data_1,plot1_data_2)
+      # plot(seurat_obj@meta.data$emptyDrops_FDR, seurat_obj@meta.data$nCount_RNA)
+
+      plot1_data <- unname(purrr::map2(plot1_data_1,plot1_data_2,function(x,y){c("FDR"=x,"log_u"=y)}))
+      # cells: Cell names or indices
+      # extract cell id that do not(!) belong to current sample (to not apply filter there)
+      barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),])
+      # all barcodes that match threshold in the subset data
+      barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset@meta.data$emptyDrops_FDR <= FDR,])
+      # combine the 2:
+      barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
+      seurat_obj <- subset_safe(seurat_obj,barcodes_to_keep)
+      # update config
+      config$filterSettings$FDR <- FDR
+      #Populate plots list
+      plots <-list()
+      plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
     }
-    # TODO: get flag from here: seurat_obj@tools$flag_filtered <- FALSE
-    if(!as.logical(toupper(config$enabled))) {
-        # is.cell <- meta.data$emptyDrops_FDR <= 0.01
-        # sum(is.cell, na.rm=TRUE) 
-        # table(Limited=meta.data$emptyDrops_Limited, Significant=is.cell)
-        # is.cell2<-is.cell
-        # is.cell2[is.na(is.cell2)]<-FALSE
-        # sce.filt<-sce[,is.cell2]
-        seurat_obj.filtered <- subset(seurat_obj, subset = emptyDrops_FDR <= minProbability)
-    } else {
-        seurat_obj.filtered <- seurat_obj
-    }
-    # update config
-    config$filterSettings$minProbability <- minProbability
+  } else {
+    print("filter disabled: data not filtered!")
+    plots<-list()
+    plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
+    seurat_obj <- seurat_obj
+  }
+  print(paste0("Cells per sample after filter for sample ", sample_id))
+  print(table(seurat_obj$orig.ident, useNA="ifany"))
+  # > head(plots[[1]])
+  # [[1]]
+  # FDR    log_u
+  # 0.000000 3.554852
 
-    plots <-list()
-    plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+  # [[2]]
+  # FDR        log_u
+  # 0.0001120495 2.7176705030
+  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
+  result <- list(
+                 data = seurat_obj,
+                 config = config,
+                 plotData = plots
+  )
 
-    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
-    result <- list(
-        data = seurat_obj.filtered,
-        config = config,
-        plotData = plots
-    )
-
-    return(result)
+  return(result)
 }
