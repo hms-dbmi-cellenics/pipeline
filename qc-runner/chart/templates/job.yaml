@@ -32,10 +32,3 @@ spec:
             value: "{{ .Values.awsRegion }}"
           - name: ACTIVITY_ARN
             value: "{{ .Values.activityArn }}"
-        ports:
-        - containerPort: 6969
-        readinessProbe:
-          tcpSocket:
-            port: 6969
-          initialDelaySeconds: 15
-          timeoutSeconds: 15

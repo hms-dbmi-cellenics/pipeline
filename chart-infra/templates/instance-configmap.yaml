@@ -6,5 +6,4 @@ metadata:
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
 data:
-  remoter-client: "{{ index .Values "remoter-client" "image" }}"
-  remoter-server: "{{ index .Values "remoter-server" "image" }}"
+  qc-runner: "{{ index .Values "qc-runner" "image" }}"
