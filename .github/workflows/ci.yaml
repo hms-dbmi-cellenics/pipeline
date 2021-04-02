@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: ['remoter-server', 'remoter-client']
+        project: ['qc-runner']
     outputs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
       tag: ${{ steps.ref.outputs.tag }}
@@ -187,11 +187,9 @@ jobs:
           | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.chart.ref "$CHART_REF" \
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
-          | yq w -d1 - spec.values.remoter-server.image "$IMAGE_NAME-remoter-server" \
-          | yq w -d1 - spec.values.remoter-client.image "$IMAGE_NAME-remoter-client" \
+          | yq w -d1 - spec.values.qc-runner.image "$IMAGE_NAME-qc-runner" \
           | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/pipeline-role-${{ matrix.environment }}" \
-          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/remoter-server]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-remoter-server" \
-          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/remoter-client]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-remoter-client" \
+          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/qc-runner]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-qc-runner" \
           > $DEPLOYMENT_NAME.yaml
 
           cat $DEPLOYMENT_NAME.yaml
