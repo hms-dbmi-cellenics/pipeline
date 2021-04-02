@@ -227,17 +227,13 @@ init <- function() {
             workerName = pipeline_config$pod_name
         )
 
+        message('Input ', input, ' found')        
+        wrapper(input)
+
         states$send_task_success(
             taskToken = taskToken,
             output = '{}'
         )
-
-        message('Input ', input, ' found')
-        
-        wrapper(input)
-
-
-
     }
 
     message(result)
