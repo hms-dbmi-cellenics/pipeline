@@ -84,7 +84,7 @@ task <- function(seurat_obj, config, task_name, sample_id){
       print("Classify is enabled but has no classify data available: will dissable it: no filtering!")      
       # should this be json, i.e. "false" instead?
       config$enabled <- FALSE
-      plot1_data <- list()
+      plots <- list()
     } else { # enabled and good data:
       print(paste0("Classify is enabled but classify data available: all good for filtering with FDR=", FDR))
       obj_metadata <- seurat_obj@meta.data

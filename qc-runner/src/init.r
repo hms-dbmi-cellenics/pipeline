@@ -8,7 +8,9 @@ load_config <- function(development_aws_server) {
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
         sandbox_id = Sys.getenv("SANDBOX_ID", "default"),
         aws_account_id = Sys.getenv("AWS_ACCOUNT_ID", "242905224710"),
-        aws_region = Sys.getenv("AWS_DEFAULT_REGION", "eu-west-1")
+        aws_region = Sys.getenv("AWS_DEFAULT_REGION", "eu-west-1"),
+        pod_name = Sys.getenv("K8S_POD_NAME", "local"),
+        activity_arn = Sys.getenv("ACTIVITY_ARN", "")
     )
 
     config[["aws_config"]] <- list(
@@ -42,7 +44,6 @@ load_config <- function(development_aws_server) {
     return(config)
 }
 
-
 reload_from_s3 <- function(pipeline_config, experiment_id) {
     s3 <- paws::s3(config=pipeline_config$aws_config)
     message(pipeline_config$source_bucket)
@@ -56,9 +57,7 @@ reload_from_s3 <- function(pipeline_config, experiment_id) {
     return(obj)
 }
 
-
 run_step <- function(scdata, config, task_name, sample_id) {
-
     switch(task_name,
         cellSizeDistribution = {
             import::here("/src/cellSizeDistribution.r", task)
@@ -170,7 +169,6 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
 
 
 wrapper <- function(input_json) {
-
     # Get data from state machine input.
     input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
 
@@ -184,6 +182,11 @@ wrapper <- function(input_json) {
         sample_id = sampleUuid
     ) %<-% input
 
+    if (sample_id != "") {
+        config <- config[[sample_id]]
+        input$config <- config
+    }
+    
     input <- input[names(input) != "server"]
 
     pipeline_config <- load_config(server)
@@ -214,4 +217,40 @@ wrapper <- function(input_json) {
     return(message_id)
 }
 
-message("New wrapper loaded.")
+init <- function() {
+    pipeline_config <- load_config('host.docker.internal')
+    states <- paws::sfn(config=pipeline_config$aws_config)
+
+    repeat {
+        c(taskToken, input) %<-% states$get_activity_task(
+            activityArn = pipeline_config$activity_arn,
+            workerName = pipeline_config$pod_name
+        )
+
+        if(taskToken == "") {
+            message('No input received during last poll, shutting down...')
+            quit(0)
+        }
+
+        tryCatch(
+            expr = {
+                message('Input ', input, ' found')        
+                wrapper(input)
+
+                states$send_task_success(
+                    taskToken = taskToken,
+                    output = '{}'
+                )
+            },
+            error = function(e){ 
+                states$send_task_failure(
+                    taskToken = taskToken,
+                    error = 'R error',
+                    cause = e
+                )
+            }
+        )
+    }
+}
+
+init()

@@ -23,17 +23,12 @@ spec:
         image: "{{ .Values.image }}"
         env:
           - name: CLUSTER_ENV
-            value: "{{ .Values.clusterEnv }}" 
+            value: "{{ .Values.clusterEnv }}"
           - name: SANDBOX_ID
             value: "{{ .Values.sandboxId }}"
           - name: AWS_ACCOUNT_ID
             value: "{{ .Values.awsAccountId }}"
           - name: AWS_DEFAULT_REGION
             value: "{{ .Values.awsRegion }}"
-        ports:
-        - containerPort: 6969
-        readinessProbe:
-          tcpSocket:
-            port: 6969
-          initialDelaySeconds: 15
-          timeoutSeconds: 15
+          - name: ACTIVITY_ARN
+            value: "{{ .Values.activityArn }}"
