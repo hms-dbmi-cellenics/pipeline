@@ -227,6 +227,11 @@ init <- function() {
             workerName = pipeline_config$pod_name
         )
 
+        if(taskToken == '' || input == '') {
+            message('No input received, shutting down...')
+            quit(0)
+        }
+
         tryCatch(
             expr = {
                 message('Input ', input, ' found')        
@@ -246,8 +251,6 @@ init <- function() {
             }
         )
     }
-
-    message(result)
 }
 
 init()
