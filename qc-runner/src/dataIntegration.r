@@ -149,8 +149,8 @@ colorObject <- function(data){
     ##########################
     # Coloring samples
     ###########################
-    if ("type"%in%colnames(scdata@meta.data)) # In that case we are in multisample experiment
-        data@meta.data[, "color_samples"] <- color_pool[as.numeric(as.factor(data$type))]
+    if ("samples"%in%colnames(scdata@meta.data)) # In that case we are in multisample experiment
+        data@meta.data[, "color_samples"] <- color_pool[as.numeric(as.factor(data$samples))]
     else
         data@meta.data[, "color_samples"] <- color_pool[1]
     return(data)

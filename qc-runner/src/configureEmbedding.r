@@ -72,7 +72,7 @@ task <- function(scdata, config, task_name, sample_id){
 
     # Create plot for samples
     embeddingPreviewBySamples <- purrr::map2(embeddingPreview,
-        unname(scdata.embedding@meta.data[cells_order, "type"]),
+        unname(scdata.embedding@meta.data[cells_order, "samples"]),
         function(x,y){append(x,c("sample"=y))}
     )
     
@@ -222,8 +222,8 @@ coloring_samples_and_cluster <- function(scdata){
     # Coloring samples
     ###########################
     remaining.colors <- color_pool[-c(1:length(unique(scdata@meta.data$color_active_ident)))]
-    if ("type"%in%colnames(scdata@meta.data)) # In that case we are in multisample experiment
-        scdata@meta.data[, "color_samples"] <- remaining.colors[as.numeric(as.factor(scdata$type))]
+    if ("samples"%in%colnames(scdata@meta.data)) # In that case we are in multisample experiment
+        scdata@meta.data[, "color_samples"] <- remaining.colors[as.numeric(as.factor(scdata$samples))]
     else
         scdata@meta.data[, "color_samples"] <- remaining.colors[1]
 
