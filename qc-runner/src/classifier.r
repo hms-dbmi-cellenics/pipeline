@@ -90,7 +90,7 @@ task <- function(seurat_obj, config, task_name, sample_id){
       print(paste0("Classify is enabled but classify data available: all good for filtering with FDR=", FDR))
       obj_metadata <- seurat_obj@meta.data
       # extract plotting data of original data to return to plot slot later
-      barcode_names_this_sample <- get_sample_barcodes(obj_metadata, sample_id)
+      barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
       
       if(length(barcode_names_this_sample)==0){
           plots <- list()
