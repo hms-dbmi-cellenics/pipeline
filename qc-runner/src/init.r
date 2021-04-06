@@ -246,6 +246,7 @@ init <- function() {
                 )
             },
             error = function(e){ 
+                message("Error: ",e)
                 states$send_task_failure(
                     taskToken = taskToken,
                     error = 'R error',
