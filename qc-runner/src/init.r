@@ -192,17 +192,15 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
 wrapper <- function(input_json) {
     # Get data from state machine input.
     input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
-
+    
     str(input)
 
-    c(
-        experiment_id = experimentId,
-        task_name = taskName,
-        config = config,
-        server = server,
-        sample_id = sampleUuid,
-        upload_count_matrix = uploadCountMatrix
-    ) %<-% input
+    experiment_id = input$experimentId
+    task_name = input$taskName
+    config = input$config
+    server = input$server
+    upload_count_matrix = input$uploadCountMatrix
+    sample_id = input$sampleUuid
 
     if (sample_id != "") {
         config <- config[[sample_id]]
