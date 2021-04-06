@@ -61,7 +61,6 @@ task <- function(seurat_obj, config, task_name, sample_id){
             #Subsetting this sample
             obj_metadata <- seurat_obj@meta.data
             barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
-            
             if(length(barcode_names_this_sample)==0){
                 plots <- list()
                 plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
