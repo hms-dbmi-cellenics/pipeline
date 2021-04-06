@@ -59,6 +59,7 @@ task <- function(seurat_obj, config, task_name, sample_id){
   print(paste("Running",task_name,"config: ",sep=" "))
   print(config)
   print(paste0("Cells per sample before filter for sample ", sample_id))
+  
   print(table(seurat_obj$orig.ident, useNA="ifany"))
   #The format of the sample_id is
   # sample-WT1
@@ -69,7 +70,7 @@ task <- function(seurat_obj, config, task_name, sample_id){
 
   # Check wheter the filter is set to true or false
   # For some reason the last children of named lists are computed as vectors, so we can't access them as recursive objects. 
-  FDR <- as.numeric(config$filterSettings[["FDR"]])
+  FDR <- as.numeric(config$filterSettings[[tmp_sample]][["FDR"]])
   # Check if it is required to compute sensible values. From the function 'generate_default_values_classifier', it is expected
   # to get a list with two elements {minProbabiliy and filterThreshold}.
   if (exists('auto', where=config)){
@@ -89,7 +90,8 @@ task <- function(seurat_obj, config, task_name, sample_id){
       print(paste0("Classify is enabled but classify data available: all good for filtering with FDR=", FDR))
       obj_metadata <- seurat_obj@meta.data
       # extract plotting data of original data to return to plot slot later
-      barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+      barcode_names_this_sample <- get_sample_barcodes(obj_metadata, sample_id)
+      
       if(length(barcode_names_this_sample)==0){
           plots <- list()
           plots[generate_plotuuid(sample_id, task_name, 0)] <- list()

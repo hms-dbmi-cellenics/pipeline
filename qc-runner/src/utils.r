@@ -24,3 +24,16 @@ subset_safe <- function(seurat_obj,cells){
     return(subset(seurat_obj,cells = colnames(seurat_obj)[1]))
   }
 }
+
+
+get_sample_barcodes <- function(obj_metadata, sample_id) {
+  tmp_sample <- sub("sample-","",sample_id)
+  
+  barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
+  
+  # sample names not currently appended to cell ids for at least unisample
+  if (!length(barcode_names_this_sample)) 
+    barcode_names_this_sample <- row.names(obj_metadata)[obj_metadata$samples == sample_id]
+  
+  return(barcode_names_this_sample)
+}
