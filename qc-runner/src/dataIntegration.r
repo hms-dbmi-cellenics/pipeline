@@ -47,7 +47,7 @@ task <- function(scdata, config,task_name,sample_id){
     
     #Adding color and sample id
     plot1_data <- purrr::map2(plot1_data,
-        unname(scdata.integrated@meta.data[cells_order, "type"]),
+        unname(scdata.integrated@meta.data[cells_order, "samples"]),
         function(x,y){append(x,list("sample"=y))}
     )
     plot1_data <- purrr::map2(plot1_data,
