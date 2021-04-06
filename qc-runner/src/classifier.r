@@ -70,7 +70,7 @@ task <- function(seurat_obj, config, task_name, sample_id){
 
   # Check wheter the filter is set to true or false
   # For some reason the last children of named lists are computed as vectors, so we can't access them as recursive objects. 
-  FDR <- as.numeric(config$filterSettings[[tmp_sample]][["FDR"]])
+  FDR <- as.numeric(config$filterSettings[["FDR"]])
   # Check if it is required to compute sensible values. From the function 'generate_default_values_classifier', it is expected
   # to get a list with two elements {minProbabiliy and filterThreshold}.
   if (exists('auto', where=config)){

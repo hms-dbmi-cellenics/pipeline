@@ -21,7 +21,7 @@ load_config <- function(development_aws_server) {
     )
 
     if(config$cluster_env == 'development') {
-        config$aws_config[['endpoint']] <- sprintf("http://%s:4566", development_aws_server) # DOCKER_GATEWAY_HOST
+        config$aws_config[['endpoint']] <- sprintf("http://192.168.0.117:4566", development_aws_server) # DOCKER_GATEWAY_HOST
         config$aws_config[['credentials']] <- list(
             creds = list(
                 access_key_id = "mock-access-key",
@@ -230,7 +230,7 @@ init <- function() {
             workerName = pipeline_config$pod_name
         )
 
-        if(!length(taskToken) || taskToken == "") {
+        if(taskToken == "") {
             message('No input received during last poll, shutting down...')
             quit('no')
         }
