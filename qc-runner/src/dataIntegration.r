@@ -104,7 +104,7 @@ run_dataIntegration <- function(scdata, config){
    if(method=="seuratv4"){
         #FIX FOR CURRENT DATASET!!!!!!
         Seurat::DefaultAssay(scdata) <- "RNA"
-        data.split <- Seurat::SplitObject(scdata, split.by = "type")
+        data.split <- Seurat::SplitObject(scdata, split.by = "samples")
         for (i in 1:length(data.split)) {
             data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
             data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)

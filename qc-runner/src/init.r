@@ -3,6 +3,9 @@ require("paws")
 require("zeallot")
 require("ids")
 
+# if not attached can cause errors when accessing metadata
+require("Seurat")
+
 load_config <- function(development_aws_server) {
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
@@ -229,7 +232,7 @@ init <- function() {
 
         if(taskToken == "") {
             message('No input received during last poll, shutting down...')
-            quit(0)
+            quit('no')
         }
 
         tryCatch(
@@ -243,6 +246,7 @@ init <- function() {
                 )
             },
             error = function(e){ 
+                message("Error: ",e)
                 states$send_task_failure(
                     taskToken = taskToken,
                     error = 'R error',
