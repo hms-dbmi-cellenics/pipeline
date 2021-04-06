@@ -229,7 +229,7 @@ init <- function() {
 
         if(length(taskToken) == 0) {
             message('No input received during last poll, shutting down...')
-            quit(0)
+            quit('no')
         }
 
         tryCatch(
