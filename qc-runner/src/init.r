@@ -36,6 +36,7 @@ load_config <- function(development_aws_server) {
     }
 
     config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, sep = "-")
+    config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, sep = "-")
     config[["results_bucket"]] <- paste("worker-results", config$cluster_env, sep = "-")
     config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
     config[["sns_topic"]] <- paste("work-results", config$cluster_env, config$sandbox_id, sep = "-")
@@ -167,6 +168,26 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
     return(plot_data_keys)
 }
 
+upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
+
+    s3 <- paws::s3(config=pipeline_config$aws_config)
+
+    object_key <- paste0(experiment_id, '/r.rds')
+
+    count_matrix <- tempfile()
+    saveRDS(data, file=count_matrix)
+
+    message("Uploading updated count matrix to S3 bucket ", pipeline_config$processed_bucket, " at key ", object_key, "...")
+    s3$put_object(
+        Bucket = pipeline_config$processed_bucket,
+        Key = object_key,
+        Body = count_matrix
+    )
+
+    return(object_key)
+
+}
+
 
 wrapper <- function(input_json) {
     # Get data from state machine input.
@@ -179,7 +200,8 @@ wrapper <- function(input_json) {
         task_name = taskName,
         config = config,
         server = server,
-        sample_id = sampleUuid
+        sample_id = sampleUuid,
+        upload_count_matrix = uploadCountMatrix
     ) %<-% input
 
     if (sample_id != "") {
@@ -210,6 +232,12 @@ wrapper <- function(input_json) {
 
     # upload plot data result to S3
     plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
+
+    # Uplaod count matrix data
+    if(upload_count_matrix) {
+        object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
+        message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
+    }
 
     # send result to API
     message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
