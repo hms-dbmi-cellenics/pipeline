@@ -12,5 +12,7 @@ services:
       - ./remoter-server:/remoter-server:cached
       - ~/.aws:/root/.aws:cached
       - ./remoter-client/src:/remoter-server/client-scripts:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "6969:6969"
