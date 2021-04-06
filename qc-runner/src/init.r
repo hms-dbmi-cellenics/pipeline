@@ -227,7 +227,7 @@ init <- function() {
             workerName = pipeline_config$pod_name
         )
 
-        if(length(taskToken) == 0) {
+        if(!length(taskToken) || taskToken == "") {
             message('No input received during last poll, shutting down...')
             quit('no')
         }
