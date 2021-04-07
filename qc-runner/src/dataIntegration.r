@@ -115,6 +115,13 @@ run_dataIntegration <- function(scdata, config){
         scdata <-Seurat::FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = F)
     }
 
+    scdata <- FindVariableFeatures(scdata, selection.method = "vst", assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+    vars <- HVFInfo(object = scdata, assay = "RNA", selection.method = 'vst') # to create vars
+    annotations <- scdata@misc[["gene_annotations"]]
+    vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
+    vars$ENSEMBL <- rownames(vars)
+    scdata@misc[["gene_dispersion"]] <- vars
+
     # Scale in order to compute PCA
     scdata <- Seurat::ScaleData(scdata, verbose = F)
 
