@@ -97,8 +97,11 @@ run_dataIntegration <- function(scdata, config){
     umap_min_distance <- 0.3
     umap_distance_metric <- "euclidean"
 
+    # temporary to make sure we don't run integration if unisample
+    nsamples <- length(unique(scdata$samples))
+    
     # Currently, we only support Seurat V3 pipeline for the multisample integration
-   if(method=="seuratv4"){
+    if(nsamples > 1 && method=="seuratv4"){
         #FIX FOR CURRENT DATASET!!!!!!
         Seurat::DefaultAssay(scdata) <- "RNA"
         data.split <- Seurat::SplitObject(scdata, split.by = "samples")
