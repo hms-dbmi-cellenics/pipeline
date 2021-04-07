@@ -31,18 +31,15 @@ task <- function(scdata, config,task_name,sample_id){
     options(future.globals.maxSize= 32 * 1024 * 1024^2)
     
     # Check wheter the filter is set to true or false
-    if (as.logical(toupper(config$enabled))){
-        # So far we only support Seurat V3
-        scdata.integrated <- run_dataIntegration(scdata, config)
-            # Compute explained variance for the plot2
-        eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
-        varExplained = eigValues / sum(eigValues)
-        # As a short solution, we are going to store an intermediate slot for the numPCs, since this parameter is required when performing
-        # the computeEmdedding. The main reason to do not have in the config.configureEmbedding is that this parameter does not change in the configureEmbedding step.
-        scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
-    }
-    else
-        scdata.integrated <- scdata
+    # So far we only support Seurat V3
+    scdata.integrated <- run_dataIntegration(scdata, config)
+    # Compute explained variance for the plot2
+    eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
+    varExplained = eigValues / sum(eigValues)
+    # As a short solution, we are going to store an intermediate slot for the numPCs, since this parameter is required when performing
+    # the computeEmdedding. The main reason to do not have in the config.configureEmbedding is that this parameter does not change in the configureEmbedding step.
+    scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+
 
     scdata.integrated <- colorObject(scdata.integrated)
     cells_order <- rownames(scdata.integrated@meta.data)
@@ -50,7 +47,7 @@ task <- function(scdata, config,task_name,sample_id){
     
     #Adding color and sample id
     plot1_data <- purrr::map2(plot1_data,
-        unname(scdata.integrated@meta.data[cells_order, "type"]),
+        unname(scdata.integrated@meta.data[cells_order, "samples"]),
         function(x,y){append(x,list("sample"=y))}
     )
     plot1_data <- purrr::map2(plot1_data,
@@ -104,7 +101,7 @@ run_dataIntegration <- function(scdata, config){
    if(method=="seuratv4"){
         #FIX FOR CURRENT DATASET!!!!!!
         Seurat::DefaultAssay(scdata) <- "RNA"
-        data.split <- Seurat::SplitObject(scdata, split.by = "type")
+        data.split <- Seurat::SplitObject(scdata, split.by = "samples")
         for (i in 1:length(data.split)) {
             data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
             data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
@@ -152,8 +149,8 @@ colorObject <- function(data){
     ##########################
     # Coloring samples
     ###########################
-    if ("type"%in%colnames(scdata@meta.data)) # In that case we are in multisample experiment
-        data@meta.data[, "color_samples"] <- color_pool[as.numeric(as.factor(data$type))]
+    if ("samples"%in%colnames(scdata@meta.data)) # In that case we are in multisample experiment
+        data@meta.data[, "color_samples"] <- color_pool[as.numeric(as.factor(data$samples))]
     else
         data@meta.data[, "color_samples"] <- color_pool[1]
     return(data)

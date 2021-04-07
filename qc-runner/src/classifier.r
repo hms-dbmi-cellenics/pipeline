@@ -59,6 +59,7 @@ task <- function(seurat_obj, config, task_name, sample_id){
   print(paste("Running",task_name,"config: ",sep=" "))
   print(config)
   print(paste0("Cells per sample before filter for sample ", sample_id))
+  
   print(table(seurat_obj$orig.ident, useNA="ifany"))
   #The format of the sample_id is
   # sample-WT1
