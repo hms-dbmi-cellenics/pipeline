@@ -110,7 +110,11 @@ run_dataIntegration <- function(scdata, config){
             data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
         }
         data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, verbose = FALSE)
+
+        # @misc slots not preserved so transfer
+        misc <- scdata@misc
         scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
+        scdata@misc <- misc
         Seurat::DefaultAssay(scdata) <- "integrated"
     }else{
         # Else, we are in unisample experiment and we only need to normalize 
