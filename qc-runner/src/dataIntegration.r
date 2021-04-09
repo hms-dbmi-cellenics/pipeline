@@ -100,7 +100,7 @@ run_dataIntegration <- function(scdata, config){
     # temporary to make sure we don't run integration if unisample
     nsamples <- length(unique(scdata$samples))
     
-    # Currently, we only support Seurat V3 pipeline for the multisample integration
+    # Currently, we only support Seurat V4 pipeline for the multisample integration
     if(nsamples > 1 && method=="seuratv4"){
         #FIX FOR CURRENT DATASET!!!!!!
         Seurat::DefaultAssay(scdata) <- "RNA"
@@ -119,7 +119,6 @@ run_dataIntegration <- function(scdata, config){
     }else{
         # Else, we are in unisample experiment and we only need to normalize 
         scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
-        scdata <-Seurat::FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = F)
     }
 
     scdata <- FindVariableFeatures(scdata, selection.method = "vst", assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
