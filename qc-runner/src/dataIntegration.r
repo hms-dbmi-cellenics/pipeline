@@ -97,8 +97,11 @@ run_dataIntegration <- function(scdata, config){
     umap_min_distance <- 0.3
     umap_distance_metric <- "euclidean"
 
-    # Currently, we only support Seurat V3 pipeline for the multisample integration
-   if(method=="seuratv4"){
+    # temporary to make sure we don't run integration if unisample
+    nsamples <- length(unique(scdata$samples))
+    
+    # Currently, we only support Seurat V4 pipeline for the multisample integration
+    if(nsamples > 1 && method=="seuratv4"){
         #FIX FOR CURRENT DATASET!!!!!!
         Seurat::DefaultAssay(scdata) <- "RNA"
         data.split <- Seurat::SplitObject(scdata, split.by = "samples")
@@ -107,13 +110,23 @@ run_dataIntegration <- function(scdata, config){
             data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
         }
         data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, verbose = FALSE)
+
+        # @misc slots not preserved so transfer
+        misc <- scdata@misc
         scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
+        scdata@misc <- misc
         Seurat::DefaultAssay(scdata) <- "integrated"
     }else{
         # Else, we are in unisample experiment and we only need to normalize 
         scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
-        scdata <-Seurat::FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = F)
     }
+
+    scdata <- FindVariableFeatures(scdata, selection.method = "vst", assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+    vars <- HVFInfo(object = scdata, assay = "RNA", selection.method = 'vst') # to create vars
+    annotations <- scdata@misc[["gene_annotations"]]
+    vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
+    vars$ENSEMBL <- rownames(vars)
+    scdata@misc[["gene_dispersion"]] <- vars
 
     # Scale in order to compute PCA
     scdata <- Seurat::ScaleData(scdata, verbose = F)
