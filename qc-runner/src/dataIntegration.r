@@ -117,6 +117,7 @@ run_dataIntegration <- function(scdata, config){
         scdata@misc <- misc
         Seurat::DefaultAssay(scdata) <- "integrated"
     }else{
+        print('Only one sample detected.')
         # Else, we are in unisample experiment and we only need to normalize 
         scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
     }
