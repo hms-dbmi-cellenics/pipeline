@@ -5,3 +5,5 @@ sandboxId: FILLED_IN_BY_API
 clusterEnv: FILLED_IN_BY_API
 awsAccountId: FILLED_IN_BY_API 
 awsRegion: FILLED_IN_BY_API
+debugStep: FILLED_IN_BY_API
+debugPath: FILLED_IN_BY_API
