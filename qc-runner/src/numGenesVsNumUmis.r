@@ -98,7 +98,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
 
     # Downsample plotData
     # Handle when the number of remaining cells is less than the number of cells to downsample
-    num_cells_to_downsample <- min(num_cells_to_downsample, ncol(sample_subset)) is less than the 
+    num_cells_to_downsample <- min(num_cells_to_downsample, ncol(sample_subset))
     set.seed(123)
     cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
     cells_position_to_keep <- sort(cells_position_to_keep)
