@@ -29,7 +29,7 @@ generate_default_values_doubletScores <- function(seurat_obj, config) {
 #'                  - binStep: Float. Bin size for the histogram
 #' @export return a list with the filtered seurat object by doublet score, the config and the plot values
 
-task <- function(seurat_obj, config, task_name, sample_id){
+task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 5000){
     print(paste("Running",task_name,sep=" "))
     print("Config:")
     print(config)
@@ -83,6 +83,15 @@ task <- function(seurat_obj, config, task_name, sample_id){
     config$filterSettings$probabilityThreshold <- probabilityThreshold
 
     plot1_data <- lapply(unname(sample_subset$doublet_scores),function(x) {c("doubletP"=x)})
+
+
+    # Downsample plotData
+    # Handle when the number of remaining cells is less than the number of cells to downsample
+    num_cells_to_downsample <- min(num_cells_to_downsample, ncol(sample_subset))
+    set.seed(123)
+    cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
+    cells_position_to_keep <- sort(cells_position_to_keep)
+    plot1_data <- plot1_data[cells_position_to_keep]
 
     plots <-list()
 
