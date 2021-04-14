@@ -102,11 +102,11 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
       print("How many barcodes should be filtered out for this sample (#FALSE):")
       print(table(sample_subset$emptyDrops_FDR <= FDR))
 
-      plot1_data_1  <- seurat_obj@meta.data$emptyDrops_FDR
+      plot1_data_1  <- sample_subset@meta.data$emptyDrops_FDR
       # TODO: should this be log, or is the UI taking this?
-      plot1_data_2  <- log10(seurat_obj@meta.data$nCount_RNA)
+      plot1_data_2  <- log10(sample_subset@meta.data$nCount_RNA)
       # plot(= plot1_data_1,plot1_data_2)
-      # plot(seurat_obj@meta.data$emptyDrops_FDR, seurat_obj@meta.data$nCount_RNA)
+      # plot(sample_subset@meta.data$emptyDrops_FDR, sample_subset@meta.data$nCount_RNA)
 
       plot1_data <- unname(purrr::map2(plot1_data_1,plot1_data_2,function(x,y){c("FDR"=x,"log_u"=y)}))
       # cells: Cell names or indices
