@@ -53,3 +53,19 @@ can be overriden by the environment variable `DOCKER_GATEWAY_HOST`:
 EXPORT DOCKER_GATEWAY_HOST=`docker network inspect --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'
 npm start
 ```
+
+## Debugging locally
+
+To save the arguments (`config`, `scdata`, etc) to a task function, start the api:
+
+```bash
+# e.g. DEBUG_STEP=dataIntegration
+DEBUG_STEP=task_name DEBUG_PATH=/path/to/debug/folder npm start
+```
+
+When the pipeline in run, it will save the arguments to the specified `task_name` in `DEBUG_PATH`. You
+can load this into your R environment:
+
+```R
+list2env(readRDS('/path/to/debug/folder/{task_name}_{sample_id}.rds'), env=globalenv())
+```
