@@ -102,7 +102,7 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
     
     if (is_debug) {
         sample_str <- ifelse(sample_id == '', '', paste0('_', sample_id))
-        fname <- paste0(task_name, '_', sample_str, '.rds')
+        fname <- paste0(task_name, sample_str, '.rds')
         fpath_cont <- file.path('/debug', fname)
         fpath_host <- file.path(debug_config$path, fname)
         res <- list(scdata = scdata,
@@ -110,9 +110,9 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
                     task_name = task_name,
                     sample_id = sample_id)
         
-        sprintf('DEBUG_STEP = %s. Saving arguments.', task_name)
+        message(sprintf('⚠️ DEBUG_STEP = %s. Saving arguments.', task_name))
         saveRDS(res, fpath_cont)
-        sprintf("RUN list2env(readRDS('%s'), env=globalenv()) to restore environment.", fpath_host)
+        message(sprintf("⚠️ RUN list2env(readRDS('%s'), env=globalenv()) to restore environment.", fpath_host))
     }
 }
 
