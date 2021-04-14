@@ -82,11 +82,8 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     # 3483 6019 3892 3729 4734 3244
     
     plot2_data <- seq_along(plot1_data)
-    plot2_data <- unname(map2(plot1_data,plot2_data,function(x,y){c("u"=x,"rank"=y)}))
-    # Once the UI is updated and takes into account that the transformation is doing in the R side we can uncomment
-    # the following line and remove the previous one.
-    # plot1_data_transformed <- (log(plot1_data)/log(10))*2200
-    # plot2_data <- unname(map2(plot1_data_transformed,plot2_data,function(x,y){c("log_u"=x,"rank"=y)}))
+    plot1_data_transformed <- (log(plot1_data)/log(10))*2200
+    plot2_data <- unname(map2(plot1_data_transformed,plot2_data,function(x,y){c("log_u"=x,"rank"=y)}))
     plot1_data <- lapply(unname(plot1_data),function(x) {c("u"=x)})
 
     # Downsample plotData
