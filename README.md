@@ -63,7 +63,7 @@ To save the arguments (`config`, `scdata`, etc) to a task function, start the ap
 DEBUG_STEP=task_name DEBUG_PATH=/path/to/debug/folder npm start
 ```
 
-When the pipeline in run, it will save the arguments to the specified `task_name` in `DEBUG_PATH`. You
+When the pipeline is run, it will save the arguments to the specified `task_name` in `DEBUG_PATH`. You
 can load this into your R environment:
 
 ```R
