@@ -49,6 +49,7 @@ task <- function(scdata, config, task_name, sample_id){
     }
 
     cells_order <- rownames(scdata.embedding@meta.data)
+    cells_ids <- scdata@meta.data[cells_order,]$cells_id
 
     # Create a generic pattern with the UMAP coordinates
     embeddingPreview <- unname(purrr::map2(
@@ -69,6 +70,12 @@ task <- function(scdata, config, task_name, sample_id){
         unname(scdata.embedding@meta.data[cells_order, "color_active_ident"]),
         function(x,y){append(x,c("col"=y))}
     )
+
+    embeddingPreviewByCellSets <- purrr::map2(embeddingPreviewByCellSets,
+        cells_ids,
+        function(x,y){append(x,c("cell_id"=y))}
+    )
+
 
     # Create plot for samples
     embeddingPreviewBySamples <- purrr::map2(embeddingPreview,
