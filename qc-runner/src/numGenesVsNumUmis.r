@@ -33,7 +33,7 @@ source('utils.r')
 #'                                - p.level: which refers to  confidence level for deviation from the main trend
 #' @export return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 
-task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 5000){
+task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 5000, percent_downsample = 20){
     print(paste("Running",task_name,sep=" "))
     print("Config:")
     print(config)
@@ -98,7 +98,9 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
 
     # Downsample plotData
     # Handle when the number of remaining cells is less than the number of cells to downsample
-    num_cells_to_downsample <- min(num_cells_to_downsample, ncol(sample_subset))
+    num_cells_to_downsample <- min(max(percent_downsample / 100 * ncol(sample_subset), num_cells_to_downsample), ncol(sample_subset))
+          print(paste('num cells to downsample', num_cells_to_downsample))
+      print(paste('num cells in sample', ncol(sample_subset)))
     set.seed(123)
     cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
     cells_position_to_keep <- sort(cells_position_to_keep)

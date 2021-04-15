@@ -50,7 +50,7 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
   return(sample_subset$nCount_RNA)
 }
 
-task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 5000) {
+task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 6000, percent_downsample = 20) {
     print(paste("Running",task_name,sep=" "))
     print("Config:")
     print(config)
@@ -82,13 +82,15 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     # 3483 6019 3892 3729 4734 3244
     
     plot2_data <- seq_along(plot1_data)
-    plot1_data_transformed <- (log(plot1_data)/log(10))*2200
+    plot1_data_transformed <- log(plot1_data)
     plot2_data <- unname(map2(plot1_data_transformed,plot2_data,function(x,y){c("log_u"=x,"rank"=y)}))
     plot1_data <- lapply(unname(plot1_data),function(x) {c("u"=x)})
 
     # Downsample plotData
     # Handle when the number of remaining cells is less than the number of cells to downsample
-    num_cells_to_downsample <- min(num_cells_to_downsample, ncol(sample_subset))
+    num_cells_to_downsample <- min(max(percent_downsample / 100 * ncol(sample_subset), num_cells_to_downsample), ncol(sample_subset))
+          print(paste('num cells to downsample', num_cells_to_downsample))
+      print(paste('num cells in sample', ncol(sample_subset)))
     set.seed(123)
     cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
     cells_position_to_keep <- sort(cells_position_to_keep)
