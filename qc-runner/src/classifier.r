@@ -103,10 +103,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
       print(table(sample_subset$emptyDrops_FDR <= FDR))
 
       plot1_data_1  <- sample_subset@meta.data$emptyDrops_FDR
-      # TODO: should this be log, or is the UI taking this?
       plot1_data_2  <- log10(sample_subset@meta.data$nCount_RNA)
-      # plot(= plot1_data_1,plot1_data_2)
-      # plot(sample_subset@meta.data$emptyDrops_FDR, sample_subset@meta.data$nCount_RNA)
 
       plot1_data <- unname(purrr::map2(plot1_data_1,plot1_data_2,function(x,y){c("FDR"=x,"log_u"=y)}))
       # cells: Cell names or indices
@@ -122,9 +119,9 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
 
       # Downsample plotData
       # Handle when the number of remaining cells is less than the number of cells to downsample
-      num_cells_to_downsample <- min(max(percent_downsample / 100 * ncol(sample_subset), num_cells_to_downsample), ncol(sample_subset))
-      print(paste('num cells to downsample', num_cells_to_downsample))
-      print(paste('num cells in sample', ncol(sample_subset)))
+      num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), percent_downsample, num_cells_to_downsample)
+      print(paste('sample of size', ncol(sample_subset), 'downsampled to', num_cells_to_downsample, 'cells'))
+      
       set.seed(123)
       cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
       cells_position_to_keep <- sort(cells_position_to_keep)
