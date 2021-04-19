@@ -33,7 +33,7 @@ generate_default_values_mitochondrialContent <- function(seurat_obj, config) {
 #'                          * we are supposed to add more methods ....
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
-task <- function(seurat_obj, config, task_name, sample_id){
+task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 6000, percent_downsample = 20){
     print(paste("Running",task_name,sep=" "))
     print("Config:")
     print(config)
@@ -84,6 +84,17 @@ task <- function(seurat_obj, config, task_name, sample_id){
     # update config
     config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- maxFraction
     
+    # Downsample plotData
+    # Handle when the number of remaining cells is less than the number of cells to downsample
+      num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), percent_downsample, num_cells_to_downsample)
+      print(paste('sample of size', ncol(sample_subset), 'downsampled to', num_cells_to_downsample, 'cells'))
+      
+      set.seed(123)
+    cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
+    cells_position_to_keep <- sort(cells_position_to_keep)
+    plot1_data <- plot1_data[cells_position_to_keep]
+    plot2_data <- plot2_data[cells_position_to_keep]
+
     plots <- list()
 
     # plot 1: histgram of MT-content

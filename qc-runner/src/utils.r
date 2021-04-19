@@ -1,3 +1,7 @@
+#
+# Generate plot uuid as required by the UI
+# 
+
 generate_plotuuid <- function(sample_uuid, task_name, plot_idx) {
 
   if(sample_uuid != "") {
@@ -23,4 +27,13 @@ subset_safe <- function(seurat_obj,cells){
   }else{
     return(subset(seurat_obj,cells = colnames(seurat_obj)[1]))
   }
+}
+
+
+#
+# down sample plots
+# 
+
+downsample_plotdata <- function(ncol_sample, percent_downsample, min_number_of_cells) {
+  return(min(max(percent_downsample / 100 * ncol_sample, min_number_of_cells), ncol_sample))
 }

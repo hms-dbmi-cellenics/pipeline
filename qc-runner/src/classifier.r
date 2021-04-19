@@ -38,7 +38,7 @@ generate_default_values_classifier <- function(seurat_obj, config) {
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
 
-task <- function(seurat_obj, config, task_name, sample_id){
+task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 6000, percent_downsample = 20){
   # config$filterSettings = list(FDR=0.82, bandwidth=-1, filterThreshold=-1)
   # As of 26/3/2021
   # PlotUUID: classifierEmptyDropsPlot
@@ -102,11 +102,8 @@ task <- function(seurat_obj, config, task_name, sample_id){
       print("How many barcodes should be filtered out for this sample (#FALSE):")
       print(table(sample_subset$emptyDrops_FDR <= FDR))
 
-      plot1_data_1  <- seurat_obj@meta.data$emptyDrops_FDR
-      # TODO: should this be log, or is the UI taking this?
-      plot1_data_2  <- log10(seurat_obj@meta.data$nCount_RNA)
-      # plot(= plot1_data_1,plot1_data_2)
-      # plot(seurat_obj@meta.data$emptyDrops_FDR, seurat_obj@meta.data$nCount_RNA)
+      plot1_data_1  <- sample_subset@meta.data$emptyDrops_FDR
+      plot1_data_2  <- log10(sample_subset@meta.data$nCount_RNA)
 
       plot1_data <- unname(purrr::map2(plot1_data_1,plot1_data_2,function(x,y){c("FDR"=x,"log_u"=y)}))
       # cells: Cell names or indices
@@ -119,6 +116,17 @@ task <- function(seurat_obj, config, task_name, sample_id){
       seurat_obj <- subset_safe(seurat_obj,barcodes_to_keep)
       # update config
       config$filterSettings$FDR <- FDR
+
+      # Downsample plotData
+      # Handle when the number of remaining cells is less than the number of cells to downsample
+      num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), percent_downsample, num_cells_to_downsample)
+      print(paste('sample of size', ncol(sample_subset), 'downsampled to', num_cells_to_downsample, 'cells'))
+      
+      set.seed(123)
+      cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
+      cells_position_to_keep <- sort(cells_position_to_keep)
+      plot1_data <- plot1_data[cells_position_to_keep]
+
       #Populate plots list
       plots <-list()
       plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
