@@ -16,8 +16,10 @@ const setVarsInTemplate = (template) => {
   const varNames = ['DEBUG_STEP', 'DEBUG_PATH'];
   for (let ii = 0; ii < varNames.length; ii += 1) {
     const value = process.env[varNames[ii]] || '';
+    const replace = `__${varNames[ii]}__`;
+    const re = new RegExp(replace, 'g');
     // eslint-disable-next-line no-param-reassign
-    template = template.replace(`__${varNames[ii]}__`, value);
+    template = template.replace(re, value);
   }
   return template;
 };

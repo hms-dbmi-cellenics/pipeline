@@ -28,8 +28,6 @@ Resources:
 
           def handler(event, context):
 
-            debug_path = event.get('debugPath', '')
-
             docker_command = ' '.join([
               "docker run --rm",
               f"--name {event['name']}-{random_string(10)}", 

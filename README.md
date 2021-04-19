@@ -56,7 +56,7 @@ npm start
 
 ## Debugging locally
 
-To save the arguments (`config`, `scdata`, etc) to a task function, start the api:
+To save the arguments (`config`, `scdata`, etc) to a task function, specify DEBUG_STEP and DEBUG_PATH:
 
 ```bash
 # e.g. DEBUG_STEP=dataIntegration
@@ -64,8 +64,9 @@ DEBUG_STEP=task_name DEBUG_PATH=/path/to/debug/folder npm start
 ```
 
 When the pipeline is run, it will save the arguments to the specified `task_name` in `DEBUG_PATH`. You
-can load this into your R environment:
+can load these into your R environment:
 
 ```R
-list2env(readRDS('/path/to/debug/folder/{task_name}_{sample_id}.rds'), env=globalenv())
+# clicking the file in RStudio does this for you
+load('/path/to/debug/folder/{task_name}_{sample_id}.RData')
 ```

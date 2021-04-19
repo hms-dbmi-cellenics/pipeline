@@ -32,7 +32,3 @@ spec:
             value: "{{ .Values.awsRegion }}"
           - name: ACTIVITY_ARN
             value: "{{ .Values.activityArn }}"
-          - name: DEBUG_STEP
-            value: "{{ .Values.debugStep }}"
-          - name: DEBUG_PATH
-            value: "{{ .Values.debugPath }}"
