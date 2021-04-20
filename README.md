@@ -56,7 +56,8 @@ npm start
 
 ## Debugging locally
 
-To save the arguments (`config`, `scdata`, etc) to a task function, specify DEBUG_STEP and DEBUG_PATH:
+To save the arguments (`config`, `scdata`, etc) to a task function, specify DEBUG_STEP and DEBUG_PATH.
+You can also set `DEBUG_STEP=all` to save the arguments to all task functions:
 
 ```bash
 # e.g. DEBUG_STEP=dataIntegration
