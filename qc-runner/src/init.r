@@ -13,8 +13,13 @@ load_config <- function(development_aws_server) {
         aws_account_id = Sys.getenv("AWS_ACCOUNT_ID", "242905224710"),
         aws_region = Sys.getenv("AWS_DEFAULT_REGION", "eu-west-1"),
         pod_name = Sys.getenv("K8S_POD_NAME", "local"),
-        activity_arn = Sys.getenv("ACTIVITY_ARN", "")
+        activity_arn = Sys.getenv("ACTIVITY_ARN", ""),
+        debug_config = list(
+            step = Sys.getenv("DEBUG_STEP", ""),
+            path = Sys.getenv("DEBUG_PATH", "")
+        )
     )
+    
 
     config[["aws_config"]] <- list(
         region = config$aws_region
@@ -61,7 +66,7 @@ reload_from_s3 <- function(pipeline_config, experiment_id) {
     return(obj)
 }
 
-run_step <- function(scdata, config, task_name, sample_id) {
+run_step <- function(scdata, config, task_name, sample_id, debug_config) {
     switch(task_name,
         cellSizeDistribution = {
             import::here("/src/cellSizeDistribution.r", task)
@@ -86,9 +91,27 @@ run_step <- function(scdata, config, task_name, sample_id) {
         },
         stop(paste("Invalid task name given:", task_name))
     )
+    handle_debug(scdata, config, task_name, sample_id, debug_config)
     out <- task(scdata, config, task_name, sample_id)
     return(out)
 }
+
+
+handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
+    is_debug <- debug_config$step %in% c(task_name, 'all')
+    
+    if (is_debug) {
+        sample_str <- ifelse(sample_id == '', '', paste0('_', sample_id))
+        fname <- paste0(task_name, sample_str, '.RData')
+        fpath_cont <- file.path('/debug', fname)
+        fpath_host <- file.path(debug_config$path, fname)
+        
+        message(sprintf('⚠️ DEBUG_STEP = %s. Saving arguments.', task_name))
+        save(scdata, config, task_name, sample_id, file = fpath_cont)
+        message(sprintf("⚠️ RUN load('%s') to restore environment.", fpath_host))
+    }
+}
+
 
 send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     c(config, plot_data = plotData) %<-% output
@@ -213,6 +236,7 @@ wrapper <- function(input_json) {
     input <- input[names(input) != "server"]
 
     pipeline_config <- load_config(server)
+    debug_config <- pipeline_config$debug_config
 
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
@@ -227,7 +251,7 @@ wrapper <- function(input_json) {
     # call function to run and update global variable
     c(
         data, ...rest_of_results
-    ) %<-% run_step(scdata, config, task_name, sample_id)
+    ) %<-% run_step(scdata, config, task_name, sample_id, debug_config)
 
     assign("scdata", data, pos = ".GlobalEnv")
 
