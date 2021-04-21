@@ -98,7 +98,9 @@ run_step <- function(scdata, config, task_name, sample_id, debug_config) {
 
 
 handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
-    is_debug <- debug_config$step == task_name
+
+    is_debug <- debug_config$step %in% c(task_name, 'all')
+
     
     if (is_debug) {
         sample_str <- ifelse(sample_id == '', '', paste0('_', sample_id))

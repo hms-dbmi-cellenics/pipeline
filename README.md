@@ -56,7 +56,10 @@ npm start
 
 ## Debugging locally
 
-To save the arguments (`config`, `scdata`, etc) to a task function, specify DEBUG_STEP and DEBUG_PATH:
+
+To save the arguments (`config`, `scdata`, etc) to a task function, specify DEBUG_STEP and DEBUG_PATH.
+Available tasks include all those defined in `run_step` of  [init.r](qc-runner/src/init.r) as well as `DEBUG_STEP=all` 
+to save the arguments to all task functions:
 
 ```bash
 # e.g. DEBUG_STEP=dataIntegration
@@ -69,4 +72,9 @@ can load these into your R environment:
 ```R
 # clicking the file in RStudio does this for you
 load('/path/to/debug/folder/{task_name}_{sample_id}.RData')
+
+# if you need to load multiple tasks, you can load each into a seperate environment
+# you would when access objects using e.g. task_env$scdata
+task_env <- new.env()
+load('/path/to/debug/folder/{task_name}_{sample_id}.RData', envir = task_env)
 ```
