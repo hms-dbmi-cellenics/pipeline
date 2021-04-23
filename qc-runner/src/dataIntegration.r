@@ -123,8 +123,8 @@ run_dataIntegration <- function(scdata, config){
           misc <- scdata@misc
           scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
           scdata@misc <- misc
-        },
-        error = function(e){          # Specifying error message
+          Seurat::DefaultAssay(scdata) <- "integrated"
+        }, error = function(e){          # Specifying error message
           # ideally this should be passed to the UI as a error message:
           print(table(scdata$samples))
           print(e)
@@ -135,7 +135,6 @@ run_dataIntegration <- function(scdata, config){
           stop("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
         })
 
-        Seurat::DefaultAssay(scdata) <- "integrated"
     }else{
         print('Only one sample detected.')
         # Else, we are in unisample experiment and we only need to normalize 
