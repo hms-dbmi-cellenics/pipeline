@@ -5,6 +5,7 @@ require("ids")
 
 # if not attached can cause errors when accessing metadata
 require("Seurat")
+host_ip <- Sys.getenv("HOST_IP")
 
 load_config <- function(development_aws_server) {
     config <- list(
@@ -27,7 +28,7 @@ load_config <- function(development_aws_server) {
 
     # running in linux needs the IP of the host to work. If it is set as an environment variable (by makefile) honor it instead of the
     # provided parameter
-    development_aws_server = Sys.getenv("HOST_IP", development_aws_server)
+    if (host_ip != '') development_aws_server <- host_ip
 
     if(config$cluster_env == 'development') {
         config$aws_config[['endpoint']] <- sprintf("http://%s:4566", development_aws_server) # DOCKER_GATEWAY_HOST
@@ -275,7 +276,8 @@ wrapper <- function(input_json) {
 }
 
 init <- function() {
-    pipeline_config <- load_config('host.docker.internal')
+    
+    pipeline_config <- load_config(ifelse(host_ip == '', 'host.docker.internal', host_ip))
     states <- paws::sfn(config=pipeline_config$aws_config)
 
     repeat {
