@@ -30,7 +30,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: deployment-runner
-  namespace: {{ .Release.Namespace | replace "pipeline" "api" }}
+  namespace: {{ regexReplaceAll "^pipeline-" .Release.Namespace "api-" }}
 - kind: Group
   apiGroup: rbac.authorization.k8s.io
   name: state-machine-runner-group
