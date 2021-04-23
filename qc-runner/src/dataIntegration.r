@@ -115,7 +115,8 @@ run_dataIntegration <- function(scdata, config){
         # Note that this is a heuristic and was found to still fail for small data-sets
 
         # Try to integrate data (catch error most likely caused by too few cells)
-        tryCatch(expression = {
+
+        tryCatch({
           k.filter <- min(ceiling(sapply(data.split, ncol)/2), k.filter)
           data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, k.filter = k.filter, verbose = TRUE)
 
