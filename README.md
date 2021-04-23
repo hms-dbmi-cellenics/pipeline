@@ -46,17 +46,6 @@ Logs from pipelines run through the API will apear here.
 make build
 ```
 
-## Docker issues on Linux
-
-The remoter client and server do not have their own private network, and they communicate through the host
-using the special address `host.docker.internal`. This is not recognised by Docker on Linux. This address
-can be overriden by the environment variable `DOCKER_GATEWAY_HOST`:
-
-```bash
-export DOCKER_GATEWAY_HOST=`docker network inspect --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'
-make run
-```
-
 ## Debugging locally
 
 To save the arguments (`config`, `scdata`, etc) to a task function, specify DEBUG_STEP and DEBUG_PATH.
