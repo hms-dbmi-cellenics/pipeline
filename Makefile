@@ -7,11 +7,10 @@
 # Variables
 #--------------------------------------------------
 # If unix name is not Darwin assume we are on Linux and add this needed env variable
+# to be picked up by the R worker.
 # See README.md/Running on Docker issues, for more info
 ifneq ($(shell uname -s), Darwin)
-ifndef DOCKER_GATEWAY_HOST
-	export DOCKER_GATEWAY_HOST=`docker network inspect --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'
-endif
+	export HOST_IP=$(shell hostname -I | awk '{print $1}')
 endif
 #--------------------------------------------------
 # Targets
