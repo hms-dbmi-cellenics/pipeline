@@ -14,13 +14,16 @@ and read their logs as they are executing.
 For local development, you should already have Docker and Node.js installed, as well as
 Inframock running.
 
-Afterwards, you can install and run local-runner.
+Afterwards, you can install the pipeline dependencies with:
 
 ```bash
-# cd ./local-runner
-# npm install
-# npm run build
-# npm start
+make install
+```
+
+To build and run the pipeline:
+
+```bash
+make build && make run
 ```
 
 A similar message should appear:
@@ -40,18 +43,7 @@ Logs from pipelines run through the API will apear here.
 ## Rebuiling the docker images
 
 ```bash
-> npm run build
-```
-
-## Docker issues on Linux
-
-The remoter client and server do not have their own private network, and they communicate through the host
-using the special address `host.docker.internal`. This is not recognised by Docker on Linux. This address
-can be overriden by the environment variable `DOCKER_GATEWAY_HOST`:
-
-```bash
-EXPORT DOCKER_GATEWAY_HOST=`docker network inspect --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'
-npm start
+make build
 ```
 
 ## Debugging locally
