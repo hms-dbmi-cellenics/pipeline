@@ -1,4 +1,0 @@
-version: "3.2"
-  services:
-    localstack:
-      extra_hosts: - "host.docker.internal:host-gateway"
