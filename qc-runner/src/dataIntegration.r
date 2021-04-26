@@ -26,10 +26,11 @@
 #   },
 
 task <- function(scdata, config,task_name,sample_id){
+    # this options shows the callstack when an error is thrown
+    options(error = function() { traceback(3); if(!interactive()) quit("no", status = 1, runLast = FALSE) })
     # increase maxSize from the default of 500MB to 32GB
     # TODO: ask Marcell for his opinion
     options(future.globals.maxSize= 32 * 1024 * 1024^2)
-    
     # Check wheter the filter is set to true or false
     # So far we only support Seurat V3
     scdata.integrated <- run_dataIntegration(scdata, config)
@@ -39,7 +40,6 @@ task <- function(scdata, config,task_name,sample_id){
     # As a short solution, we are going to store an intermediate slot for the numPCs, since this parameter is required when performing
     # the computeEmdedding. The main reason to do not have in the config.configureEmbedding is that this parameter does not change in the configureEmbedding step.
     scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
-
 
     scdata.integrated <- colorObject(scdata.integrated)
     cells_order <- rownames(scdata.integrated@meta.data)
@@ -96,6 +96,8 @@ run_dataIntegration <- function(scdata, config){
     # We require just to get an overview of the data-integration
     umap_min_distance <- 0.3
     umap_distance_metric <- "euclidean"
+    # default for FindIntegrationAnchors
+    k.filter <- 200 
 
     # temporary to make sure we don't run integration if unisample
     nsamples <- length(unique(scdata$samples))
@@ -109,13 +111,31 @@ run_dataIntegration <- function(scdata, config){
             data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
             data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
         }
-        data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, verbose = FALSE)
+        # If Number of anchor cells is less than k.filter/2, there is likely to be an error:
+        # Note that this is a heuristic and was found to still fail for small data-sets
 
-        # @misc slots not preserved so transfer
-        misc <- scdata@misc
-        scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
-        scdata@misc <- misc
-        Seurat::DefaultAssay(scdata) <- "integrated"
+        # Try to integrate data (catch error most likely caused by too few cells)
+
+        tryCatch({
+          k.filter <- min(ceiling(sapply(data.split, ncol)/2), k.filter)
+          data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, k.filter = k.filter, verbose = TRUE)
+
+          # @misc slots not preserved so transfer
+          misc <- scdata@misc
+          scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
+          scdata@misc <- misc
+          Seurat::DefaultAssay(scdata) <- "integrated"
+        }, error = function(e){          # Specifying error message
+          # ideally this should be passed to the UI as a error message:
+          print(table(scdata$samples))
+          print(e)
+          print(paste("current k.filter:", k.filter))
+          # Should we still continue if data is not integrated? No, right now..
+          print("Current number of cells per sample: ")
+          print(table(scdata$samples))
+          stop("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
+        })
+
     }else{
         print('Only one sample detected.')
         # Else, we are in unisample experiment and we only need to normalize 
