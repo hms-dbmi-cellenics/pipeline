@@ -47,7 +47,6 @@ make build
 ```
 
 ## Debugging locally
-
 To save the arguments (`config`, `scdata`, etc) to a task function, specify DEBUG_STEP and DEBUG_PATH.
 Available tasks include all those defined in `run_step` of  [init.r](qc-runner/src/init.r) as well as `DEBUG_STEP=all` 
 to save the arguments to all task functions:

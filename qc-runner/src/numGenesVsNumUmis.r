@@ -34,6 +34,7 @@ source('utils.r')
 #' @export return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 
 task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 5000, percent_downsample = 20){
+    options(error=function() { traceback(2); if(!interactive()) quit("no", status = 1, runLast = FALSE) })
     print(paste("Running",task_name,sep=" "))
     print("Config:")
     print(config)
@@ -84,27 +85,30 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
             #Because we have subseted the object before creating the dataframes, and just selected the outlier values from that df
             #In the end we wil only remove values that are in the desired sample. 
             seurat_obj.filtered <- subset_safe(seurat_obj,colnames(seurat_obj)[!colnames(seurat_obj)%in%outliers])
+                #Similarly, when creating the plot from the df, we will just be using the values for the required sample.
+            plot1_data <- unname(purrr::map2(df$molecules,df$genes,function(x,y){c("log_molecules"=x,"log_genes"=y)}))
+            plot1_data <- purrr::map2(plot1_data,unname(pb$lwr),function(x,y){append(x,c("lower_cutoff"=y))})
+            plot1_data <- purrr::map2(plot1_data,unname(pb$upr),function(x,y){append(x,c("upper_cutoff"=y))})
+            # have downsampling done
+            
+            # Downsample plotData
+            # Handle when the number of remaining cells is less than the number of cells to downsample
+            num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), percent_downsample, num_cells_to_downsample)
+            print(paste('sample of size', ncol(sample_subset), 'downsampled to', num_cells_to_downsample, 'cells'))
+      
+            set.seed(123)
+            cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
+            cells_position_to_keep <- sort(cells_position_to_keep)
+            plot1_data <- plot1_data[cells_position_to_keep]
         }
     }else{
         seurat_obj.filtered <- seurat_obj
+        plot1_data <- list()
     }
     # update config
     config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]][["p.level"]] <- p.level
 
-    #Similarly, when creating the plot from the df, we will just be using the values for the required sample.
-    plot1_data <- unname(purrr::map2(df$molecules,df$genes,function(x,y){c("log_molecules"=x,"log_genes"=y)}))
-    plot1_data <- purrr::map2(plot1_data,unname(pb$lwr),function(x,y){append(x,c("lower_cutoff"=y))})
-    plot1_data <- purrr::map2(plot1_data,unname(pb$upr),function(x,y){append(x,c("upper_cutoff"=y))})
 
-    # Downsample plotData
-    # Handle when the number of remaining cells is less than the number of cells to downsample
-      num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), percent_downsample, num_cells_to_downsample)
-      print(paste('sample of size', ncol(sample_subset), 'downsampled to', num_cells_to_downsample, 'cells'))
-      
-      set.seed(123)
-    cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
-    cells_position_to_keep <- sort(cells_position_to_keep)
-    plot1_data <- plot1_data[cells_position_to_keep]
 
     # Scatter plot which is composed of:
     # x-axis: log_10_UMIs
