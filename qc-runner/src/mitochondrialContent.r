@@ -33,7 +33,7 @@ generate_default_values_mitochondrialContent <- function(seurat_obj, config) {
 #'                          * we are supposed to add more methods ....
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
-task <- function(seurat_obj, config, task_name, sample_id){
+task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 6000){
     print(paste("Running",task_name,sep=" "))
     print("Config:")
     print(config)
