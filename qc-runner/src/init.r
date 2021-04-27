@@ -25,6 +25,10 @@ load_config <- function(development_aws_server) {
         region = config$aws_region
     )
 
+    # running in linux needs the IP of the host to work. If it is set as an environment variable (by makefile) honor it instead of the
+    # provided parameter
+    development_aws_server = Sys.getenv("HOST_IP", development_aws_server)
+    
     if(config$cluster_env == 'development') {
         config$aws_config[['endpoint']] <- sprintf("http://%s:4566", development_aws_server) # DOCKER_GATEWAY_HOST
         config$aws_config[['credentials']] <- list(
@@ -271,6 +275,7 @@ wrapper <- function(input_json) {
 }
 
 init <- function() {
+    
     pipeline_config <- load_config('host.docker.internal')
     states <- paws::sfn(config=pipeline_config$aws_config)
 
