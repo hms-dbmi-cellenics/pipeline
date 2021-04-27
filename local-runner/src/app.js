@@ -13,7 +13,7 @@ AWS.config.update({
 });
 
 const setVarsInTemplate = (template) => {
-  const varNames = ['DEBUG_STEP', 'DEBUG_PATH', 'HOST_IP'];
+  const varNames = ['DEBUG_STEP', 'DEBUG_PATH'];
   for (let ii = 0; ii < varNames.length; ii += 1) {
     const value = process.env[varNames[ii]] || '';
     const replace = `__${varNames[ii]}__`;
