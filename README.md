@@ -55,6 +55,12 @@ to save the arguments to all task functions:
 # e.g. DEBUG_STEP=dataIntegration
 DEBUG_STEP=task_name DEBUG_PATH=/path/to/debug/folder npm start
 ```
+Note: `DEBUG_PATH` needs to be an absolute path (rather than relative), i.e. being in `pipeline/local-runner` this can be used 
+to populate the local subfolder `mydebug`:
+
+```bash
+DEBUG_STEP=all DEBUG_PATH=${PWD}/mydebug npm restart
+```
 
 When the pipeline is run, it will save the arguments to the specified `task_name` in `DEBUG_PATH`. You
 can load these into your R environment:
