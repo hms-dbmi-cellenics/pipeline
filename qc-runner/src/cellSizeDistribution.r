@@ -76,7 +76,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
 
     # umi histogram plot
-    numis <- sort(sample_subset$nCount_RNA)
+    numis <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
     plot1_data <- lapply(unname(numis),function(x) {c("u"=x)})
 
     # barcode ranks plot data
@@ -86,7 +86,6 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     ranks <- ranks[!dups]
     numis <- numis[!dups]
 
-    # we use first item to set max on kneeplot
     plot2_data <- unname(map2(log(numis), ranks, function(x,y) {c("log_u"=x, "rank"=y)}))
 
     # downsample plot data
