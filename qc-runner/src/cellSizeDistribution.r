@@ -75,26 +75,27 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     }
     sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
 
-    # umi histogram plot data
-    plot1_data <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
-    plot1_data <- lapply(unname(plot1_data),function(x) {c("u"=x)})
+    # umi histogram plot
+    numis <- sort(sample_subset$nCount_RNA)
+    plot1_data <- lapply(unname(numis),function(x) {c("u"=x)})
 
     # barcode ranks plot data
     # unique ranks maintains plot shape in case of downsampling
-    counts <- sample_subset[['RNA']]@counts
-    br.out <- DropletUtils::barcodeRanks(counts)
-    br.out <- br.out[!duplicated(br.out$rank), ]
-    br.out <- br.out[order(br.out$rank, decreasing = TRUE), ]
+    ranks <- rank(-numis)
+    dups <- duplicated(ranks)
+    ranks <- ranks[!dups]
+    numis <- numis[!dups]
 
-    plot2_data <- unname(map2(log(br.out$total), br.out$rank, function(x,y) {c("log_u"=x, "rank"=y)}))
+    # we use first item to set max on kneeplot
+    plot2_data <- unname(map2(log(numis), ranks, function(x,y) {c("log_u"=x, "rank"=y)}))
 
     # downsample plot data
     set.seed(123)
     nkeep1 <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-    nkeep2 <- downsample_plotdata(nrow(br.out), num_cells_to_downsample)
+    nkeep2 <- downsample_plotdata(length(ranks), num_cells_to_downsample)
 
     keep1 <- sort(sample(ncol(sample_subset), nkeep1))
-    keep2 <- sort(sample(nrow(br.out), nkeep2))
+    keep2 <- sort(sample(length(ranks), nkeep2))
 
     plot1_data <- plot1_data[keep1]
     plot2_data <- plot2_data[keep2]
