@@ -108,14 +108,14 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
                 # config not really needed for this one (maybe later for threshold.low/high):
                 
                 # HARDCODE Value. threshold.low [ Parameter for function CalculateBarcodeInflections. Description: Ignore barcodes of rank below this threshold in inflection calculation]
-                threshold.low = 1e2
+                threshold.low <- 1e2
                 # If there are less cells than the value threshold.low, the function CalculateBarcodeInflections fails. So we need to handle by not removing any cells, that is, 
                 # consider the minCellSize as the minimun UMIs in the dataset.
                 # This should be handled in a long-term by adding a different function for computing the default value. 
                 if(ncol(sample_subset)<threshold.low)
                     minCellSize <- min(sample_subset$nCount_RNA)
                 else
-                    minCellSize <- generate_default_values_cellSizeDistribution(sample_subset, config)
+                    minCellSize <- generate_default_values_cellSizeDistribution(sample_subset, config, threshold.low)
 
             }
     }
