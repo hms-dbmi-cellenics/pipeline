@@ -70,15 +70,14 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
 
   # Check wheter the filter is set to true or false
   # For some reason the last children of named lists are computed as vectors, so we can't access them as recursive objects. 
-  FDR <- as.numeric(config$filterSettings[["FDR"]])
+  FDR <- config$filterSettings$FDR
   # Check if it is required to compute sensible values. From the function 'generate_default_values_classifier', it is expected
   # to get a list with two elements {minProbabiliy and filterThreshold}.
-  if (exists('auto', where=config)){
-    if(as.logical(toupper(config$auto)))
+  if (isTRUE(config$auto)){
       FDR <- generate_default_values_classifier(seurat_obj, config)
   }
   # TODO: get flag from here: seurat_obj@tools$flag_filtered <- FALSE
-  if(as.logical(toupper(config$enabled))) {
+  if(config$enabled) {
     # check if filter data is actually available
     if (is.null(seurat_obj@meta.data$emptyDrops_FDR)) {
       print(paste("Running",task_name,"config: ",sep=" "))
@@ -100,17 +99,20 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
       print("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval")
       print(table(obj_metadata$orig.ident, cut(obj_metadata$emptyDrops_FDR, breaks = c(-Inf,0,0.0001,0.01,0.1,0.5,1,Inf)), useNA="ifany"))
       print("How many barcodes should be filtered out for this sample (#FALSE):")
-      print(table(sample_subset$emptyDrops_FDR <= FDR))
+      
+      # prevents filtering of NA FDRs if FDR=1
+      ed_fdr <- sample_subset$emptyDrops_FDR
+      ed_fdr[is.na(ed_fdr)] <- 1
+      print(table(ed_fdr <= FDR))
 
-      plot1_data_1  <- sample_subset@meta.data$emptyDrops_FDR
-      plot1_data_2  <- log10(sample_subset@meta.data$nCount_RNA)
+      numis <- log10(sample_subset@meta.data$nCount_RNA)
 
-      plot1_data <- unname(purrr::map2(plot1_data_1,plot1_data_2,function(x,y){c("FDR"=x,"log_u"=y)}))
+      plot1_data <- unname(purrr::map2(ed_fdr, numis, function(x,y){c("FDR"=x,"log_u"=y)}))
       # cells: Cell names or indices
       # extract cell id that do not(!) belong to current sample (to not apply filter there)
       barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),])
       # all barcodes that match threshold in the subset data
-      barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset@meta.data$emptyDrops_FDR <= FDR,])
+      barcode_names_keep_current_sample <-colnames(sample_subset[, ed_fdr <= FDR])
       # combine the 2:
       barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
       seurat_obj <- subset_safe(seurat_obj,barcodes_to_keep)
