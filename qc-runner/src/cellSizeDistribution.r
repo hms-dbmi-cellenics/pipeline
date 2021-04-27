@@ -23,7 +23,7 @@ source('utils.r')
 # of the barcode distribution for each sample group. This is
 # useful for determining a threshold for removing low-quality
 # samples.
-generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
+generate_default_values_cellSizeDistribution <- function(seurat_obj, config, threshold.low) {
   import::here(CalculateBarcodeInflections, .from = Seurat)
   import::here(Tool, .from = Seurat)
   # Q: should we check for precalculated values? e.g.:
@@ -35,7 +35,7 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
                                         barcode.column = "nCount_RNA",
                                         group.column = "orig.ident",
                                         # [HARDCODED]
-                                        threshold.low = 1e2,
+                                        threshold.low = threshold.low,
                                         threshold.high = NULL
   )
   # extracting the inflection point value which can serve as minCellSize threshold
@@ -103,7 +103,21 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     if (exists('auto', where=config)){
         if (as.logical(toupper(config$auto)))
             # config not really needed for this one (maybe later for threshold.low/high):
-            minCellSize <- generate_default_values_cellSizeDistribution(sample_subset, config)
+            if (exists('auto', where=config)){
+              if (as.logical(toupper(config$auto)))
+                # config not really needed for this one (maybe later for threshold.low/high):
+                
+                # HARDCODE Value. threshold.low [ Parameter for function CalculateBarcodeInflections. Description: Ignore barcodes of rank below this threshold in inflection calculation]
+                threshold.low = 1e2
+                # If there are less cells than the value threshold.low, the function CalculateBarcodeInflections fails. So we need to handle by not removing any cells, that is, 
+                # consider the minCellSize as the minimun UMIs in the dataset.
+                # This should be handled in a long-term by adding a different function for computing the default value. 
+                if(ncol(sample_subset)<threshold.low)
+                    minCellSize <- min(sample_subset$nCount_RNA)
+                else
+                    minCellSize <- generate_default_values_cellSizeDistribution(sample_subset, config)
+
+            }
     }
     if (as.logical(toupper(config$enabled))) {
         # Information regarding number of UMIs per cells is pre-computed during the 'CreateSeuratObject' function. 
