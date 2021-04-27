@@ -81,7 +81,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
 
     # barcode ranks plot data
     # unique average ranks maintain plot shape in case of downsampling
-    ranks <- rank(-numis, method = 'average')
+    ranks <- rank(-numis, ties.method = 'average')
     dups <- duplicated(ranks)
     ranks <- ranks[!dups]
     numis <- numis[!dups]
