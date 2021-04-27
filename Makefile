@@ -10,7 +10,7 @@
 # to be picked up by the R worker.
 # See README.md/Running on Docker issues, for more info
 ifneq ($(shell uname -s), Darwin)
-	export HOST_IP=$(shell hostname -I | awk '{print $$1}')
+	export HOST_IP=$(shell hostname -I | awk '{print $1}')
 endif
 #--------------------------------------------------
 # Targets
