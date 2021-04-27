@@ -38,7 +38,7 @@ generate_default_values_classifier <- function(seurat_obj, config) {
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
 
-task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 6000, percent_downsample = 20){
+task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 6000){
   # config$filterSettings = list(FDR=0.82, bandwidth=-1, filterThreshold=-1)
   # As of 26/3/2021
   # PlotUUID: classifierEmptyDropsPlot
@@ -119,7 +119,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
 
       # Downsample plotData
       # Handle when the number of remaining cells is less than the number of cells to downsample
-      num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), percent_downsample, num_cells_to_downsample)
+      num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
       print(paste('sample of size', ncol(sample_subset), 'downsampled to', num_cells_to_downsample, 'cells'))
       
       set.seed(123)

@@ -33,7 +33,7 @@ generate_default_values_mitochondrialContent <- function(seurat_obj, config) {
 #'                          * we are supposed to add more methods ....
 #' @export return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 
-task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 6000, percent_downsample = 20){
+task <- function(seurat_obj, config, task_name, sample_id){
     print(paste("Running",task_name,sep=" "))
     print("Config:")
     print(config)
@@ -53,7 +53,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     #Computing the subset for the current sample
     obj_metadata <- seurat_obj@meta.data
     barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
-    if(length(barcode_names_this_sample)==0){
+    if (length(barcode_names_this_sample)==0){
         plots <- list()
         plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
         plots[generate_plotuuid(sample_id, task_name, 1)] <- list()
@@ -76,7 +76,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
         # TODO: try(): make sure  barcodes_to_keep is not empty
         # Information regarding MT-content is pre-computed during the 'data-ingest'. 
         seurat_obj.filtered <- subset_safe(seurat_obj, barcodes_to_keep)
-    }else{
+    } else {
         seurat_obj.filtered <- seurat_obj
     }
     plot1_data <- lapply(unname(sample_subset$percent.mt),function(x) {c("fracMito"=x)})
@@ -86,10 +86,10 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     
     # Downsample plotData
     # Handle when the number of remaining cells is less than the number of cells to downsample
-      num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), percent_downsample, num_cells_to_downsample)
-      print(paste('sample of size', ncol(sample_subset), 'downsampled to', num_cells_to_downsample, 'cells'))
+    num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
+    print(paste('sample of size', ncol(sample_subset), 'downsampled to', num_cells_to_downsample, 'cells'))
       
-      set.seed(123)
+    set.seed(123)
     cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
     cells_position_to_keep <- sort(cells_position_to_keep)
     plot1_data <- plot1_data[cells_position_to_keep]

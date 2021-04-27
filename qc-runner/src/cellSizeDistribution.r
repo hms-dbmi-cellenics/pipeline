@@ -50,7 +50,7 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config) {
   return(sample_subset$nCount_RNA)
 }
 
-task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 6000, percent_downsample = 20) {
+task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 6000) {
     print(paste("Running",task_name,sep=" "))
     print("Config:")
     print(config)
@@ -74,29 +74,30 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
         return(list(data = seurat_obj,config = config,plotData = plots)) 
     }
     sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
-    plot1_data  <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
-    # plot 1: histgram of UMIs, hence input is all UMI values, e.g.
-    # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
-    #               2204              20090               5884  ..   
-    #    u    u    u    u    u    u
-    # 3483 6019 3892 3729 4734 3244
-    
-    plot2_data <- seq_along(plot1_data)
-    plot1_data_transformed <- log(plot1_data)
-    plot2_data <- unname(map2(plot1_data_transformed,plot2_data,function(x,y){c("log_u"=x,"rank"=y)}))
+
+    # umi histogram plot data
+    plot1_data <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
     plot1_data <- lapply(unname(plot1_data),function(x) {c("u"=x)})
 
-    # Downsample plotData
-    # Handle when the number of remaining cells is less than the number of cells to downsample
-    num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), percent_downsample, num_cells_to_downsample)
-    print(paste('sample of size', ncol(sample_subset), 'downsampled to', num_cells_to_downsample, 'cells'))
-    
-    set.seed(123)
-    cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
-    cells_position_to_keep <- sort(cells_position_to_keep)
-    plot1_data <- plot1_data[cells_position_to_keep]
-    plot2_data <- plot2_data[cells_position_to_keep]
+    # barcode ranks plot data
+    # unique ranks maintains plot shape in case of downsampling
+    counts <- sample_subset[['RNA']]@counts
+    br.out <- DropletUtils::barcodeRanks(counts)
+    br.out <- br.out[!duplicated(br.out$rank), ]
+    br.out <- br.out[order(br.out$rank, decreasing = TRUE), ]
 
+    plot2_data <- unname(map2(log(br.out$total), br.out$rank, function(x,y) {c("log_u"=x, "rank"=y)}))
+
+    # downsample plot data
+    set.seed(123)
+    nkeep1 <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
+    nkeep2 <- downsample_plotdata(nrow(br.out), num_cells_to_downsample)
+
+    keep1 <- sort(sample(ncol(sample_subset), nkeep1))
+    keep2 <- sort(sample(nrow(br.out), nkeep2))
+
+    plot1_data <- plot1_data[keep1]
+    plot2_data <- plot2_data[keep2]
 
     # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
     # to get a list with two elements {minCellSize and binStep}   
