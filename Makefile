@@ -18,7 +18,6 @@ endif
 install: 
 	@(cd ./local-runner && npm install)
 build: 
-	@echo $(HOST_IP)
 	@(cd ./local-runner && npm run build)
 run:
 	@(cd ./local-runner && npm start)
