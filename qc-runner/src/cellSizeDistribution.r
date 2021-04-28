@@ -101,12 +101,8 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
     # to get a list with two elements {minCellSize and binStep}   
     if (exists('auto', where=config)){
-        if (as.logical(toupper(config$auto)))
+        if (as.logical(toupper(config$auto))){
             # config not really needed for this one (maybe later for threshold.low/high):
-            if (exists('auto', where=config)){
-              if (as.logical(toupper(config$auto)))
-                # config not really needed for this one (maybe later for threshold.low/high):
-                
                 # HARDCODE Value. threshold.low [ Parameter for function CalculateBarcodeInflections. Description: Ignore barcodes of rank below this threshold in inflection calculation]
                 threshold.low <- 1e2
                 # If there are less cells than the value threshold.low, the function CalculateBarcodeInflections fails. So we need to handle by not removing any cells, that is, 
