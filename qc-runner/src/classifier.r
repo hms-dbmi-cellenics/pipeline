@@ -98,11 +98,12 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
       sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
       print("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval")
       print(table(obj_metadata$orig.ident, cut(obj_metadata$emptyDrops_FDR, breaks = c(-Inf,0,0.0001,0.01,0.1,0.5,1,Inf)), useNA="ifany"))
-      print("How many barcodes should be filtered out for this sample (#FALSE):")
       
       # prevents filtering of NA FDRs if FDR=1
       ed_fdr <- sample_subset$emptyDrops_FDR
       ed_fdr[is.na(ed_fdr)] <- 1
+      
+      print("How many barcodes should be filtered out for this sample (#FALSE):")
       print(table(ed_fdr <= FDR))
 
       numis <- log10(sample_subset@meta.data$nCount_RNA)
