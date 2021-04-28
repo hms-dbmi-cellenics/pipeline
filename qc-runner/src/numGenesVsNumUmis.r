@@ -34,7 +34,7 @@ source('utils.r')
 #' @export return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 
 
-task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 5000){
+task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsample = 6000){
     options(error=function() { traceback(2); if(!interactive()) quit("no", status = 1, runLast = FALSE) })
     print(paste("Running",task_name,sep=" "))
     print("Config:")
