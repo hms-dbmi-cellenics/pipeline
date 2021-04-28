@@ -133,7 +133,7 @@ run_dataIntegration <- function(scdata, config){
           # Should we still continue if data is not integrated? No, right now..
           print("Current number of cells per sample: ")
           print(table(scdata$samples))
-          print("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
+          warning("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
           # An ideal solution would be to launch an error to the UI, howerver, for now, we will skip the integration method. 
           print("Skipping integration step")
           scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
