@@ -33,19 +33,22 @@ const initStack = async () => {
     region: 'eu-west-1',
   });
 
+  const stackName = {
+    StackName: 'local-container-launcher',
+  }; 
   try {
-    await cf.deleteStack({
-      StackName: 'local-container-launcher',
-    }).promise();
+    await cf.deleteStack(stackName).promise();
+    await cf.waitFor('stackDeleteComplete', stackName).promise();
   } catch (e) {
     console.log('No previous stack found on InfraMock.');
   }
 
   const { StackId } = await cf.createStack({
-    StackName: 'local-container-launcher',
+    ...stackName,
     Capabilities: ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
     TemplateBody: setVarsInTemplate(data),
   }).promise();
+  await cf.waitFor('stackCreateComplete', stackName).promise();
 
   console.log('Stack with ARN', StackId, 'successfully created.');
 };

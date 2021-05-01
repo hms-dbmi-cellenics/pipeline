@@ -27,7 +27,10 @@ load_config <- function(development_aws_server) {
 
     # running in linux needs the IP of the host to work. If it is set as an environment variable (by makefile) honor it instead of the
     # provided parameter
-    development_aws_server = Sys.getenv("HOST_IP", development_aws_server)
+    overriden_server = Sys.getenv("HOST_IP", "")
+    if (overriden_server != "") {
+        development_aws_server = overriden_server
+    } 
     
     if(config$cluster_env == 'development') {
         config$aws_config[['endpoint']] <- sprintf("http://%s:4566", development_aws_server) # DOCKER_GATEWAY_HOST
