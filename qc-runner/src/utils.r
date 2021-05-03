@@ -34,6 +34,6 @@ subset_safe <- function(seurat_obj,cells){
 # down sample plots
 # 
 
-downsample_plotdata <- function(ncol_sample, percent_downsample, min_number_of_cells) {
-  return(min(max(percent_downsample / 100 * ncol_sample, min_number_of_cells), ncol_sample))
+downsample_plotdata <- function(ncol_sample, max_number_of_cells) {
+  return(min(max_number_of_cells, ncol_sample))
 }
