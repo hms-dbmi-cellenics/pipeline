@@ -284,6 +284,15 @@ init <- function() {
   pipeline_config <- load_config("host.docker.internal")
   states <- paws::sfn(config = pipeline_config$aws_config)
 
+  message(paste(list.files("/"), collapse = " "))
+  dir.create("/debug")
+  fname <- paste0("init_env", ".RData")
+  fpath_cont <- file.path("/debug", fname)
+  # fpath_host <- file.path(debug_config$path, fname)
+  message(sprintf("⚠️ DEBUG_STEP = %s. Saving environment.", fpath_cont))
+  save.image(file = fpath_cont)
+  # message(sprintf("⚠️ RUN load('%s') to restore environment.", fpath_host))
+
   repeat {
     c(taskToken, input) %<-% states$get_activity_task(
       activityArn = pipeline_config$activity_arn,
@@ -309,8 +318,8 @@ init <- function() {
           },
           error = function(e) {
             call.stack <- sys.calls() # is like a traceback within "withCallingHandlers"
-            dump.frames()
-            save.image(file = file.path("/debug", "last.dump.init.r.rda"))
+            # dump.frames()
+            # save.image(file = file.path("/debug", "last.dump.init.r.rda"))
             # global assign this variable to use outside this scope
             glob_cause <<- paste((limitedLabels(call.stack)), collapse = "\n")
           }
