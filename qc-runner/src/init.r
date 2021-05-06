@@ -284,15 +284,6 @@ init <- function() {
   pipeline_config <- load_config("host.docker.internal")
   states <- paws::sfn(config = pipeline_config$aws_config)
 
-  message(paste(list.files("/"), collapse = " "))
-  dir.create("/debug")
-  fname <- paste0("init_env", ".RData")
-  fpath_cont <- file.path("/debug", fname)
-  # fpath_host <- file.path(debug_config$path, fname)
-  message(sprintf("⚠️ DEBUG_STEP = %s. Saving environment.", fpath_cont))
-  save.image(file = fpath_cont)
-  # message(sprintf("⚠️ RUN load('%s') to restore environment.", fpath_host))
-
   repeat {
     c(taskToken, input) %<-% states$get_activity_task(
       activityArn = pipeline_config$activity_arn,
@@ -327,8 +318,11 @@ init <- function() {
       },
       error = function(e) {
         input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
-        error_txt <- paste0("R error at step ", input_parse$taskName, 
-                       "for sample ", input_parse$sampleUuid, "! : ", e$message)
+        sample_text <- ifelse(is.null(input_parse$sampleUuid), 
+                              "", 
+                              paste0("for sample ", input_parse$sampleUuid))
+        error_txt <- paste0("R error at filter step ", 
+                            input_parse$taskName, sample_text, "! : ", e$message)
         message(error_txt)
         message("Cause: ", glob_cause)
 
