@@ -1,8 +1,11 @@
-name: CI
+name: Build and deploy the pipeline to develop
 on:
   push:
     branches:
-      - master
+      - develop
+  pull_request:
+    branches:
+      - develop
 
 jobs:
   build-docker:
@@ -28,18 +31,15 @@ jobs:
           # This will take a ref like `refs/heads/master`
           # and turn it into `refs-heads-master`
           REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
-
           # the final tag is something like:
           # refs-heads-master-a4f8bc313dae
           # this is what we push to ECR
           echo "::set-output name=tag::$REF_ID-$GITHUB_SHA"
-
           # This will take a GitHub repo name like `biomage-ltd/iac`
           # and turns it into `iac`. This will be the name of the
           # ECR repository.
           IMAGE_REPO_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
           echo "::set-output name=repo-name::$IMAGE_REPO_NAME"
-
       - id: ref-previous
         name: Format docker tag and repository name for the previous pushed image.
         run: |-
@@ -52,7 +52,6 @@ jobs:
             #  BASE_REF="refs-pull-7-merge"
             #  BASE_SHA="ad9c5001ab4a3077790db4f04ac0b09cf5324683"
           fi
-
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "This is a push, base ref and sha set to the previous commit."
             BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
@@ -62,9 +61,7 @@ jobs:
             #  BASE_REF="refs-pull-7-merge"
             #  BASE_SHA="ad9c5001ab4a3077790db4f04ac0b09cf5324683"
           fi
-
           echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
-
       - id: set-up-creds
         name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -104,7 +101,6 @@ jobs:
           docker build --target builder \
             --cache-from=$PREVIOUS_IMAGE_NAME-builder \
             --tag $IMAGE_NAME-builder .
-
           docker build --target prod \
             --cache-from=$IMAGE_NAME-builder \
             --cache-from=$PREVIOUS_IMAGE_NAME \
@@ -118,7 +114,6 @@ jobs:
         run: |-
           echo Pushing image $IMAGE_NAME-builder to ECR.
           docker push $IMAGE_NAME-builder
-
           echo Pushing image $IMAGE_NAME to ECR.
           docker push $IMAGE_NAME
         env:
@@ -130,7 +125,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        environment: ['production', 'staging']
+        environment: ['develop', 'staging']
     steps:
       - id: checkout
         name: Check out source code
@@ -160,23 +155,18 @@ jobs:
           DEPLOYMENT_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
           echo "::set-output name=deployment-name::$DEPLOYMENT_NAME"
           echo "::set-output name=ref-dashed::$REF_DASHED"
-
-          if [ "${{ matrix.environment }}" = "production" ]; then
+          if [ "${{ matrix.environment }}" = "develop" ]; then
             SANDBOX_ID="default"
           fi
-
           if [ "${{ matrix.environment }}" = "staging" ]; then
             SANDBOX_ID="STAGING_SANDBOX_ID"
           fi
-
-          if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
             CHART_REF="$GITHUB_SHA"
           else
             CHART_REF="STAGING_CHART_REF"
           fi
-
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
-
           yq w -d1 .flux.yaml metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
           | yq w -d0 - metadata.name "$DEPLOYMENT_NAME-$SANDBOX_ID" \
           | yq w -d0 - metadata.labels.sandboxId "$SANDBOX_ID" \
@@ -185,10 +175,9 @@ jobs:
           | yq w -d1 - spec.chart.ref "$CHART_REF" \
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
           | yq w -d1 - spec.values.qc-runner.image "$IMAGE_NAME-qc-runner" \
-          | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/pipeline-role-${{ matrix.environment }}" \
+          | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/pipeline-role-staging" \
           | yq w -d1 - "metadata.annotations[filter.fluxcd.io/qc-runner]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-qc-runner" \
           > $DEPLOYMENT_NAME.yaml
-
           cat $DEPLOYMENT_NAME.yaml
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
@@ -204,16 +193,16 @@ jobs:
           enforce_admins: false
           retries: 8
 
-      - name: Push production deployment to iac for deployment
+      - name: Push develop deployment to iac
         if:
-          github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.environment == 'production'
+          github.ref == 'refs/heads/develop' && github.event_name == 'push' && matrix.environment == 'develop'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
           source_file: '${{ steps.fill-metadata.outputs.deployment-name }}.yaml'
           destination_repo: '${{ github.repository_owner }}/iac'
-          destination_folder: 'releases/${{ matrix.environment }}'
+          destination_folder: 'releases/staging'
           user_email: 'ci@biomage.net'
           user_name: 'Biomage CI/CD'
 
