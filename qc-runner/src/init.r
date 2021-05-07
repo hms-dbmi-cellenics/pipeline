@@ -312,25 +312,27 @@ init <- function() {
             # dump.frames()
             # save.image(file = file.path("/debug", "last.dump.init.r.rda"))
             # global assign this variable to use outside this scope
-            glob_cause <<- paste((limitedLabels(call.stack)), collapse = "\n")
+            cause <- paste((limitedLabels(call.stack)), collapse = "\n")
+            input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
+            sample_text <- ifelse(is.null(input_parse$sampleUuid), 
+                                "", 
+                                paste0(" for sample ", input_parse$sampleUuid))
+            error_txt <- paste0("R error at filter step ", 
+                                input_parse$taskName, sample_text, "! : ", e$message)
+            message(error_txt)
+            message("Cause: ", cause)
+
+            states$send_task_failure(
+                taskToken = taskToken,
+                error = error_txt,
+                cause = cause
+            )
+            message("Sent task failure to state machine task: ", taskToken)
           }
         )
       },
       error = function(e) {
-        input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
-        sample_text <- ifelse(is.null(input_parse$sampleUuid), 
-                              "", 
-                              paste0("for sample ", input_parse$sampleUuid))
-        error_txt <- paste0("R error at filter step ", 
-                            input_parse$taskName, sample_text, "! : ", e$message)
-        message(error_txt)
-        message("Cause: ", glob_cause)
-
-        states$send_task_failure(
-          taskToken = taskToken,
-          error = error_txt,
-          cause = glob_cause
-        )
+           print(paste("recovered from error:", e$message))
       }
     )
   }
