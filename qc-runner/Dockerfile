@@ -27,6 +27,7 @@ RUN R -e 'pak::pkg_install("Seurat")'
 RUN R -e 'pak::pkg_install("gprofiler2")'
 RUN R -e 'pak::pkg_install("sccore")'
 RUN R -e 'pak::pkg_install("GO.db")'
+RUN R -e 'pak::pkg_install("SeuratWrappers")'
 
 # install handy development stuff
 RUN R -e 'pak::pkg_install("zeallot")'
