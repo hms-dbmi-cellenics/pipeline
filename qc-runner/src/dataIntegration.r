@@ -162,14 +162,15 @@ run_dataIntegration <- function(scdata, config){
         active.reduction <- "pca"
     }
 
-    scdata@misc[["active.reduction"]] <- active.reduction
-
     scdata <- FindVariableFeatures(scdata, selection.method = "vst", assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
     vars <- HVFInfo(object = scdata, assay = "RNA", selection.method = 'vst') # to create vars
     annotations <- scdata@misc[["gene_annotations"]]
     vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
     vars$ENSEMBL <- rownames(vars)
     scdata@misc[["gene_dispersion"]] <- vars
+    
+    message("Current active reduction --> ", active.reduction)
+    scdata@misc[["active.reduction"]] <- active.reduction
 
     # Scale in order to compute PCA
     scdata <- Seurat::ScaleData(scdata, verbose = F)
