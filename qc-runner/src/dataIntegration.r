@@ -102,7 +102,7 @@ run_dataIntegration <- function(scdata, config){
     # temporary to make sure we don't run integration if unisample
     nsamples <- length(unique(scdata$samples))
     if(nsamples>1 && method!="noIntegration"){
-        if(method="seuratv4"){
+        if(method=="seuratv4"){
             # Currently, we only support Seurat V4 pipeline for the multisample integration
             #FIX FOR CURRENT DATASET!!!!!!
             Seurat::DefaultAssay(scdata) <- "RNA"
