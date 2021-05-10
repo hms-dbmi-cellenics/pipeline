@@ -119,8 +119,9 @@ run_dataIntegration <- function(scdata, config){
             # If Number of anchor cells is less than k.filter/2, there is likely to be an error:
             # Note that this is a heuristic and was found to still fail for small data-sets
 
-            # Try to integrate data (catch error most likely caused by too few cells)
+            active.reduction <- "pca"
 
+            # Try to integrate data (catch error most likely caused by too few cells)
             tryCatch({
             k.filter <- min(ceiling(sapply(data.split, ncol)/2), k.filter)
             data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, k.filter = k.filter, verbose = TRUE)
@@ -142,7 +143,6 @@ run_dataIntegration <- function(scdata, config){
             # An ideal solution would be to launch an error to the UI, howerver, for now, we will skip the integration method. 
             print("Skipping integration step")
             scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
-            active.reduction <- "pca"
             })            
         }else if(method=="fastMNN"){
             scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
