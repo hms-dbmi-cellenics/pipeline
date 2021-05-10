@@ -101,47 +101,52 @@ run_dataIntegration <- function(scdata, config){
 
     # temporary to make sure we don't run integration if unisample
     nsamples <- length(unique(scdata$samples))
-    
-    # Currently, we only support Seurat V4 pipeline for the multisample integration
-    if(nsamples > 1 && method=="seuratv4"){
-        #FIX FOR CURRENT DATASET!!!!!!
-        Seurat::DefaultAssay(scdata) <- "RNA"
-        data.split <- Seurat::SplitObject(scdata, split.by = "samples")
-        for (i in 1:length(data.split)) {
-            data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
-            data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
+    if(nsamples>1 && method!="noIntegration"){
+        if(method=="seuratv4"){
+            # Currently, we only support Seurat V4 pipeline for the multisample integration
+            #FIX FOR CURRENT DATASET!!!!!!
+            Seurat::DefaultAssay(scdata) <- "RNA"
+            data.split <- Seurat::SplitObject(scdata, split.by = "samples")
+            for (i in 1:length(data.split)) {
+                data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
+                data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
+            }
+            # If Number of anchor cells is less than k.filter/2, there is likely to be an error:
+            # Note that this is a heuristic and was found to still fail for small data-sets
+
+            # Try to integrate data (catch error most likely caused by too few cells)
+
+            tryCatch({
+            k.filter <- min(ceiling(sapply(data.split, ncol)/2), k.filter)
+            data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, k.filter = k.filter, verbose = TRUE)
+
+            # @misc slots not preserved so transfer
+            misc <- scdata@misc
+            scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
+            scdata@misc <- misc
+            Seurat::DefaultAssay(scdata) <- "integrated"
+            }, error = function(e){          # Specifying error message
+            # ideally this should be passed to the UI as a error message:
+            print(table(scdata$samples))
+            print(e)
+            print(paste("current k.filter:", k.filter))
+            # Should we still continue if data is not integrated? No, right now..
+            print("Current number of cells per sample: ")
+            print(table(scdata$samples))
+            warning("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
+            # An ideal solution would be to launch an error to the UI, howerver, for now, we will skip the integration method. 
+            print("Skipping integration step")
+            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
+            })            
+        }else if(method=="fastMNN"){
+            print('Skipping.')    
+            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)                
+        }else{
+            print('Failed to recognize integration method.')    
+            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
         }
-        # If Number of anchor cells is less than k.filter/2, there is likely to be an error:
-        # Note that this is a heuristic and was found to still fail for small data-sets
-
-        # Try to integrate data (catch error most likely caused by too few cells)
-
-        tryCatch({
-          k.filter <- min(ceiling(sapply(data.split, ncol)/2), k.filter)
-          data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, k.filter = k.filter, verbose = TRUE)
-
-          # @misc slots not preserved so transfer
-          misc <- scdata@misc
-          scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
-          scdata@misc <- misc
-          Seurat::DefaultAssay(scdata) <- "integrated"
-        }, error = function(e){          # Specifying error message
-          # ideally this should be passed to the UI as a error message:
-          print(table(scdata$samples))
-          print(e)
-          print(paste("current k.filter:", k.filter))
-          # Should we still continue if data is not integrated? No, right now..
-          print("Current number of cells per sample: ")
-          print(table(scdata$samples))
-          warning("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
-          # An ideal solution would be to launch an error to the UI, howerver, for now, we will skip the integration method. 
-          print("Skipping integration step")
-          scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
-
-        })
-
     }else{
-        print('Only one sample detected.')
+        print('Only one sample detected or method is non integrate.')
         # Else, we are in unisample experiment and we only need to normalize 
         scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
     }
