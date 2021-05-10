@@ -35,10 +35,10 @@ task <- function(scdata, config,task_name,sample_id){
     # So far we only support Seurat V3
     scdata.integrated <- run_dataIntegration(scdata, config)
     # Compute explained variance for the plot2
-    if (scdata@misc[["active.reduction"]]=="pca"){
+    if (scdata.integrated@misc[["active.reduction"]]=="pca"){
         eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
         varExplained = eigValues / sum(eigValues)
-    }else if (scdata@misc[["active.reduction"]]=="mnn"){
+    }else if (scdata.integrated@misc[["active.reduction"]]=="mnn"){
         varExplained = scdata.integrated@tools$RunFastMNN@metadata$pca.info$var.explained
     }
 
