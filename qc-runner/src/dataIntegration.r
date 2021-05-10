@@ -106,7 +106,7 @@ run_dataIntegration <- function(scdata, config){
 
     # temporary to make sure we don't run integration if unisample
     nsamples <- length(unique(scdata$samples))
-    if(nsamples>1 && method!="noIntegration"){
+    if(nsamples>1 && method!="unisample"){
         if(method=="seuratv4"){
             # Currently, we only support Seurat V4 pipeline for the multisample integration
             #FIX FOR CURRENT DATASET!!!!!!
@@ -144,7 +144,7 @@ run_dataIntegration <- function(scdata, config){
             print("Skipping integration step")
             scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
             })            
-        }else if(method=="fastMNN"){
+        }else if(method=="fastmnn"){
             scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
             scdata <- FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
             scdata <- RunFastMNN(object.list = SplitObject(scdata, split.by = "samples"), d = 50, get.variance=TRUE)
