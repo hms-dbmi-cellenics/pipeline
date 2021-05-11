@@ -39,12 +39,12 @@ Resources:
               f"-v __DEBUG_PATH__:/debug",
               event['image']
             ])
-
+            subprocess.run(f"echo {docker_command}", shell=True, check=True)
             proc = subprocess.run(docker_command, shell=True, check=True)
 
             return proc.returncode
       Runtime: "python3.8"
-      Timeout: "25"
+      Timeout: 25
   QualityControlActivity:
     Type: AWS::StepFunctions::Activity
     Properties: 
@@ -65,4 +65,4 @@ Resources:
 
             return proc.returncode
       Runtime: "python3.8"
-      Timeout: "25"
+      Timeout: 25
