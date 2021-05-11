@@ -111,7 +111,6 @@ run_dataIntegration <- function(scdata, config){
     if(nsamples>1 && method!="unisample"){
         if(method=="seuratv4"){
             # Currently, we only support Seurat V4 pipeline for the multisample integration
-
             data.split <- Seurat::SplitObject(scdata, split.by = "samples")
             for (i in 1:length(data.split)) {
                 data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
