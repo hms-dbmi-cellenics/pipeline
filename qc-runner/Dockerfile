@@ -28,6 +28,7 @@ RUN R -e 'pak::pkg_install("gprofiler2")'
 RUN R -e 'pak::pkg_install("sccore")'
 RUN R -e 'pak::pkg_install("GO.db")'
 RUN R -e "devtools::install_github('satijalab/seurat-wrappers')"
+RUN R -e 'pak::pkg_install("batchelor")'
 
 # install handy development stuff
 RUN R -e 'pak::pkg_install("zeallot")'
