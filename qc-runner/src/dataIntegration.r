@@ -148,7 +148,7 @@ run_dataIntegration <- function(scdata, config){
         }else if(method=="fastmnn"){
             scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
             scdata <- FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
-            scdata <- RunFastMNN(object.list = SplitObject(scdata, split.by = "samples"), d = 50, get.variance=TRUE)
+            scdata <- SeuratWrappers::RunFastMNN(object.list = SplitObject(scdata, split.by = "samples"), d = 50, get.variance=TRUE)
 
             active.reduction <- "mnn"             
         }else{
