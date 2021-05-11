@@ -39,7 +39,7 @@ task <- function(scdata, config,task_name,sample_id){
         eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
         varExplained = eigValues / sum(eigValues)
     }else if (scdata.integrated@misc[["active.reduction"]]=="mnn"){
-        varExplained = scdata.integrated@tools$RunFastMNN@metadata$pca.info$var.explained
+        varExplained = scdata.integrated@tools$`SeuratWrappers::RunFastMNN`@metadata$pca.info$var.explained
     }
 
     # As a short solution, we are going to store an intermediate slot for the numPCs, since this parameter is required when performing
