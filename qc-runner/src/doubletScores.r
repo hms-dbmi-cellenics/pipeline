@@ -69,7 +69,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
         # extract cell id that do not(!) belong to current sample (to not apply filter there)
         barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)),]) 
         # all barcodes that match threshold in the subset data
-        barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset$doublet_scores <= probabilityThreshold,])
+        barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[which(sample_subset$doublet_scores <= probabilityThreshold),])
         # combine the 2:
         barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
         # Information regarding doublet score is pre-computed during the 'data-ingest'. 
