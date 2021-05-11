@@ -149,7 +149,8 @@ run_dataIntegration <- function(scdata, config){
             scdata <- FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
             scdata <- SeuratWrappers::RunFastMNN(object.list = SplitObject(scdata, split.by = "samples"), d = 50, get.variance=TRUE)
 
-            active.reduction <- "mnn"             
+            active.reduction <- "mnn"
+                     
         }else{
             print('Failed to recognize integration method.')    
             scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
