@@ -34,7 +34,7 @@ task <- function(scdata, config,task_name,sample_id){
     # Check wheter the filter is set to true or false
     # So far we only support Seurat V3
     scdata.integrated <- run_dataIntegration(scdata, config)
-    # Compute explained variance for the plot2
+    # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
     if (scdata.integrated@misc[["active.reduction"]]=="pca"){
         eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
         varExplained = eigValues / sum(eigValues)
@@ -104,6 +104,7 @@ run_dataIntegration <- function(scdata, config){
     # default for FindIntegrationAnchors
     k.filter <- 200 
 
+    # By defatult, we need RNA assay to compute the integrated matrix.
     Seurat::DefaultAssay(scdata) <- "RNA"
 
     # temporary to make sure we don't run integration if unisample
@@ -116,10 +117,12 @@ run_dataIntegration <- function(scdata, config){
                 data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
                 data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
             }
+
+            # The active reduction in seuratv4 is pca
+            active.reduction <- "pca"
+
             # If Number of anchor cells is less than k.filter/2, there is likely to be an error:
             # Note that this is a heuristic and was found to still fail for small data-sets
-
-            active.reduction <- "pca"
 
             # Try to integrate data (catch error most likely caused by too few cells)
             tryCatch({
@@ -149,17 +152,21 @@ run_dataIntegration <- function(scdata, config){
             scdata <- FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
             scdata <- SeuratWrappers::RunFastMNN(object.list = SplitObject(scdata, split.by = "samples"), d = 50, get.variance=TRUE)
 
+            # The active reduction in fastmnn is mnn
             active.reduction <- "mnn"
                      
         }else{
             print('Failed to recognize integration method.')    
             scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
+            # By default we use pca as a active.reduction, since we are going to RunPCA regardless of the method
             active.reduction <- "pca"
         }
     }else{
         print('Only one sample detected or method is non integrate.')
         # Else, we are in unisample experiment and we only need to normalize 
         scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
+        
+        # The active reduction for unisample/noIntegration is mnn
         active.reduction <- "pca"
     }
 
@@ -170,6 +177,8 @@ run_dataIntegration <- function(scdata, config){
     vars$ENSEMBL <- rownames(vars)
     scdata@misc[["gene_dispersion"]] <- vars
     
+    # As the slot active.assay we need an active.reduction. However, we cannot stored it in the same level of the seurat
+    # objetct, we can only use the `misc` slot.
     message("Current active reduction --> ", active.reduction)
     scdata@misc[["active.reduction"]] <- active.reduction
 
