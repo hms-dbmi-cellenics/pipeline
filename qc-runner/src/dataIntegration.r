@@ -107,6 +107,9 @@ run_dataIntegration <- function(scdata, config){
     # By defatult, we need RNA assay to compute the integrated matrix.
     Seurat::DefaultAssay(scdata) <- "RNA"
 
+    # @misc slots not preserved so transfer
+    misc <- scdata@misc
+
     # temporary to make sure we don't run integration if unisample
     nsamples <- length(unique(scdata$samples))
     if(nsamples>1 && method!="unisample"){
@@ -129,10 +132,8 @@ run_dataIntegration <- function(scdata, config){
             k.filter <- min(ceiling(sapply(data.split, ncol)/2), k.filter)
             data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, k.filter = k.filter, verbose = TRUE)
 
-            # @misc slots not preserved so transfer
-            misc <- scdata@misc
             scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
-            scdata@misc <- misc
+
             Seurat::DefaultAssay(scdata) <- "integrated"
             }, error = function(e){          # Specifying error message
             # ideally this should be passed to the UI as a error message:
@@ -170,6 +171,7 @@ run_dataIntegration <- function(scdata, config){
         active.reduction <- "pca"
     }
 
+    scdata@misc <- misc
     scdata <- FindVariableFeatures(scdata, selection.method = "vst", assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
     vars <- HVFInfo(object = scdata, assay = "RNA", selection.method = 'vst') # to create vars
     annotations <- scdata@misc[["gene_annotations"]]
