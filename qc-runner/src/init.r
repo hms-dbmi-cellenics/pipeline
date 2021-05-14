@@ -281,41 +281,61 @@ wrapper <- function(input_json) {
 }
 
 init <- function() {
-    
-    pipeline_config <- load_config('host.docker.internal')
-    states <- paws::sfn(config=pipeline_config$aws_config)
+  pipeline_config <- load_config("host.docker.internal")
+  states <- paws::sfn(config = pipeline_config$aws_config)
 
-    repeat {
-        c(taskToken, input) %<-% states$get_activity_task(
-            activityArn = pipeline_config$activity_arn,
-            workerName = pipeline_config$pod_name
-        )
+  repeat {
+    c(taskToken, input) %<-% states$get_activity_task(
+      activityArn = pipeline_config$activity_arn,
+      workerName = pipeline_config$pod_name
+    )
 
-        if(is.null(taskToken) || !length(taskToken) || taskToken == "") {
-            message('No input received during last poll, shutting down...')
-            quit('no')
-        }
-
-        tryCatch(
-            expr = {
-                message('Input ', input, ' found')        
-                wrapper(input)
-
-                states$send_task_success(
-                    taskToken = taskToken,
-                    output = '{}'
-                )
-            },
-            error = function(e){ 
-                message("Error: ",e)
-                states$send_task_failure(
-                    taskToken = taskToken,
-                    error = 'R error',
-                    cause = e
-                )
-            }
-        )
+    if (is.null(taskToken) || !length(taskToken) || taskToken == "") {
+      message("No input received during last poll, shutting down...")
+      quit("no")
     }
+
+    tryCatch(
+      {
+        withCallingHandlers(
+          expr = {
+            message("Input ", input, " found")
+            wrapper(input)
+
+            states$send_task_success(
+              taskToken = taskToken,
+              output = "{}"
+            )
+          },
+          error = function(e) {
+            call.stack <- sys.calls() # is like a traceback within "withCallingHandlers"
+            # dump.frames()
+            # save.image(file = file.path("/debug", "last.dump.init.r.rda"))
+            # global assign this variable to use outside this scope
+            cause <- paste((limitedLabels(call.stack)), collapse = "\n")
+            input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
+            sample_text <- ifelse(is.null(input_parse$sampleUuid), 
+                                "", 
+                                paste0(" for sample ", input_parse$sampleUuid))
+            error_txt <- paste0("R error at filter step ", 
+                                input_parse$taskName, sample_text, "! : ", e$message)
+            message(error_txt)
+            message("Cause: ", cause)
+
+            states$send_task_failure(
+                taskToken = taskToken,
+                error = error_txt,
+                cause = cause
+            )
+            message("Sent task failure to state machine task: ", taskToken)
+          }
+        )
+      },
+      error = function(e) {
+           print(paste("recovered from error:", e$message))
+      }
+    )
+  }
 }
 
 init()
