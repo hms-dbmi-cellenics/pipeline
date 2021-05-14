@@ -142,7 +142,6 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
 
     # update config
     config$filterSettings$minCellSize <- minCellSize
-
     #Populate plots list
     plots <-list()
     plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
