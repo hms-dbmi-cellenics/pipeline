@@ -34,9 +34,14 @@ task <- function(scdata, config,task_name,sample_id){
     # Check wheter the filter is set to true or false
     # So far we only support Seurat V3
     scdata.integrated <- run_dataIntegration(scdata, config)
-    # Compute explained variance for the plot2
-    eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
-    varExplained = eigValues / sum(eigValues)
+    # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
+    if (scdata.integrated@misc[["active.reduction"]]=="pca"){
+        eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
+        varExplained = eigValues / sum(eigValues)
+    }else if (scdata.integrated@misc[["active.reduction"]]=="mnn"){
+        varExplained = scdata.integrated@tools$`SeuratWrappers::RunFastMNN`@metadata$pca.info$var.explained
+    }
+
     # As a short solution, we are going to store an intermediate slot for the numPCs, since this parameter is required when performing
     # the computeEmdedding. The main reason to do not have in the config.configureEmbedding is that this parameter does not change in the configureEmbedding step.
     scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
@@ -99,31 +104,36 @@ run_dataIntegration <- function(scdata, config){
     # default for FindIntegrationAnchors
     k.filter <- 200 
 
+    # By defatult, we need RNA assay to compute the integrated matrix.
+    Seurat::DefaultAssay(scdata) <- "RNA"
+
+    # @misc slots not preserved so transfer
+    misc <- scdata@misc
+
     # temporary to make sure we don't run integration if unisample
     nsamples <- length(unique(scdata$samples))
-    if(nsamples>1 && method!="noIntegration"){
+    if(nsamples>1 && method!="unisample"){
         if(method=="seuratv4"){
             # Currently, we only support Seurat V4 pipeline for the multisample integration
-            #FIX FOR CURRENT DATASET!!!!!!
-            Seurat::DefaultAssay(scdata) <- "RNA"
             data.split <- Seurat::SplitObject(scdata, split.by = "samples")
             for (i in 1:length(data.split)) {
                 data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
                 data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
             }
+
+            # The active reduction in seuratv4 is pca
+            active.reduction <- "pca"
+
             # If Number of anchor cells is less than k.filter/2, there is likely to be an error:
             # Note that this is a heuristic and was found to still fail for small data-sets
 
             # Try to integrate data (catch error most likely caused by too few cells)
-
             tryCatch({
             k.filter <- min(ceiling(sapply(data.split, ncol)/2), k.filter)
             data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, k.filter = k.filter, verbose = TRUE)
 
-            # @misc slots not preserved so transfer
-            misc <- scdata@misc
             scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
-            scdata@misc <- misc
+
             Seurat::DefaultAssay(scdata) <- "integrated"
             }, error = function(e){          # Specifying error message
             # ideally this should be passed to the UI as a error message:
@@ -138,25 +148,41 @@ run_dataIntegration <- function(scdata, config){
             print("Skipping integration step")
             scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
             })            
-        }else if(method=="fastMNN"){
-            print('Skipping.')    
-            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)                
+        }else if(method=="fastmnn"){
+            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
+            scdata <- FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
+            scdata <- SeuratWrappers::RunFastMNN(object.list = SplitObject(scdata, split.by = "samples"), d = 50, get.variance=TRUE)
+
+            # The active reduction in fastmnn is mnn
+            active.reduction <- "mnn"
+                     
         }else{
             print('Failed to recognize integration method.')    
             scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
+            # By default we use pca as a active.reduction, since we are going to RunPCA regardless of the method
+            active.reduction <- "pca"
         }
     }else{
         print('Only one sample detected or method is non integrate.')
         # Else, we are in unisample experiment and we only need to normalize 
         scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
+        
+        # The active reduction for unisample/noIntegration is mnn
+        active.reduction <- "pca"
     }
 
+    scdata@misc <- misc
     scdata <- FindVariableFeatures(scdata, selection.method = "vst", assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
     vars <- HVFInfo(object = scdata, assay = "RNA", selection.method = 'vst') # to create vars
     annotations <- scdata@misc[["gene_annotations"]]
     vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
     vars$ENSEMBL <- rownames(vars)
     scdata@misc[["gene_dispersion"]] <- vars
+    
+    # As the slot active.assay we need an active.reduction. However, we cannot stored it in the same level of the seurat
+    # objetct, we can only use the `misc` slot.
+    message("Current active reduction --> ", active.reduction)
+    scdata@misc[["active.reduction"]] <- active.reduction
 
     # Scale in order to compute PCA
     scdata <- Seurat::ScaleData(scdata, verbose = F)
@@ -165,7 +191,7 @@ run_dataIntegration <- function(scdata, config){
     scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object=scdata), verbose=FALSE)
 
     # Compute embedding with default setting to get an overview of the performance of the bath correction
-    scdata <- Seurat::RunUMAP(scdata, reduction='pca', dims = 1:numPCs, verbose = F, umap.method = "uwot-learn", min.dist = umap_min_distance, metric = umap_distance_metric)
+    scdata <- Seurat::RunUMAP(scdata, reduction=scdata@misc[["active.reduction"]], dims = 1:numPCs, verbose = F, umap.method = "uwot-learn", min.dist = umap_min_distance, metric = umap_distance_metric)
 
     return(scdata)
 }
