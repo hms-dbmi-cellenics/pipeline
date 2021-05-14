@@ -125,7 +125,7 @@ run_Embedding <- function(scdata, config){
     else
         pca_nPCs <- 30
 
-
+    active.reduction <- scdata@misc[["active.reduction"]] 
     embed_method <- config$embeddingSettings$method
     embed_settings <- config$embeddingSettings$methodSettings[[embed_method]]
 
@@ -137,7 +137,7 @@ run_Embedding <- function(scdata, config){
         # I'm gonna add a ticket to make sure UI can't ask for 0 or 1 PCs as this will cause error anyways
         # please delete these comment
         scdata <- Seurat::RunUMAP(scdata, 
-                                reduction = 'pca', 
+                                reduction = active.reduction, 
                                 dims = seq_len(pca_nPCs), 
                                 verbose = FALSE, 
                                 min.dist = embed_settings$minimumDistance, 
@@ -158,7 +158,7 @@ run_Embedding <- function(scdata, config){
         message("Running embedding --> tsne")
       
         scdata <- Seurat::RunTSNE(scdata,
-                                reduction = 'pca',
+                                reduction = active.reduction,
                                 dims = seq_len(pca_nPCs),
                                 perplexity = perplexity,
                                 learning.rate = learningRate)
@@ -176,6 +176,7 @@ run_Clustering <- function(scdata, config){
     #################
 
     message("Running clustering")
+    active.reduction <- scdata@misc[["active.reduction"]] 
 
     if(config$clusteringSettings$method=="louvain"){
         clustering_method <- 1 #"Louvain"
@@ -183,7 +184,7 @@ run_Clustering <- function(scdata, config){
 
         # HARDCODE
         annoy.metric = "cosine"
-        scdata <- Seurat::FindNeighbors(scdata, k.param = 20, annoy.metric = annoy.metric, verbose=FALSE)
+        scdata <- Seurat::FindNeighbors(scdata, k.param = 20, annoy.metric = annoy.metric, verbose=FALSE, reduction = active.reduction)
         scdata <- Seurat::FindClusters(scdata, resolution=clustering_resolution, verbose = FALSE, algorithm = clustering_method)
 
     }
