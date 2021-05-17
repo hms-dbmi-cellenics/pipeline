@@ -1,6 +1,7 @@
 library(RJSONIO)
 color_pool <- RJSONIO::fromJSON("data-ingest/color_pool.json")
 
+
 # This function crate the table information for samples. As input it requires the experiment id and the config.
 create_samples_table <- function(config, experimend_id) {
   # In samples_table we are going to add the core of the information
@@ -94,6 +95,46 @@ samples_sets <- function(){
   }
 
   return(cell_set)
+  
+# cell_sets fn for seurat metadata information
+meta_sets <- function() {
+  
+  meta_annotations <- read.csv("/output/metadata-cells.csv", sep='\t')
+  
+  cell_set_list <- list()
+  
+  # The first column is the cells_id, the rest is the metadata information
+  for (i in seq(2, ncol(meta_annotations))) {
+    key <- name <- colnames(meta_annotations)[i]
+    
+    cell_set = list(
+      "key" = key,
+      "name" = name,
+      "rootNode" = TRUE,
+      "children" = list(),
+      "type" = "metadataCategorical"
+      
+      
+    )
+    
+    annot <- meta_annotations[[i]]
+    
+    for (value in unique(annot)) {
+      view  <- meta_annotations[which(annot == value), 'cells_id']
+      cell_set$children <- c(
+        cell_set$children,
+        list(
+          "key" = paste(key, value, sep='-'),
+          "name" = value,
+          "color" = COLOR_POOL[1],
+          "cellIds" = view)
+      )
+      
+      COLOR_POOL <- COLOR_POOL[-1]
+    }
+    cell_set_list <- c(cell_set_list, cell_set)
+  }
+  return(cell_set_list)
 }
 
 
