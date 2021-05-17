@@ -46,9 +46,8 @@ task <- function(input,pipeline_config) {
     meta_key = file.path(project_id, "meta.json")
     message(paste("File: ",meta_key))
     c(body, ...rest) %<-% s3$get_object(
-    Bucket = pipeline_config$originals_bucket,
-    
-    Key = meta_key
+        Bucket = pipeline_config$originals_bucket,    
+        Key = meta_key
     )
     writeBin(body, con = "/input/meta.json")
 }
