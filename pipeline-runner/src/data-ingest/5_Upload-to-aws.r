@@ -1,4 +1,5 @@
-
+library(RJSONIO)
+color_pool <- RJSONIO::fromJSON("data-ingest/color_pool.json")
 
 # This function crate the table information for samples. As input it requires the experiment id and the config.
 create_samples_table <- function(config, experimend_id) {
@@ -71,6 +72,28 @@ create_samples_table <- function(config, experimend_id) {
     "experimentId" = experiment_id,
     "samples" = samples_table))
 
+}
+
+
+samples_sets <- function(){
+  sample_annotations <- read.csv("samples-cells.csv",sep="\t", col.names=c("Cells_ID","Value"),na.strings=c("None"))
+
+  cell_set = list("key"="sample", 
+                  "name"="Samples",
+                  "rootNode"=TRUE,
+                  "children"=list(),
+                  "type"="metadataCategorical")
+
+  samples <- unique(sample_annotations[,"Value"])
+
+  for (sample in samples){
+    view <- sample_annotations[sample_annotations["Value"]==sample,"Cells_ID"]
+    child <- list("key"=paste("sample-",sample,sep=""),"name"=sample,"color"=color_pool[1],"cellIds"=view)
+    color_pool <- color_pool[-1]
+    cell_set[["children"]] <- append(cell_set[["children"]],list(child))  
+  }
+
+  return(cell_set)
 }
 
 
