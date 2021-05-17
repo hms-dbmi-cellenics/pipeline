@@ -42,7 +42,7 @@ task <- function(input,pipeline_config) {
             writeBin(body, con = local_fpath)
         }
     }
-    #ownload meta.json
+    # download meta.json
     meta_key = file.path(project_id, "meta.json")
     message(paste("File: ",meta_key))
     c(body, ...rest) %<-% s3$get_object(

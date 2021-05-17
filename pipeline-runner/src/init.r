@@ -203,12 +203,12 @@ wrapper <- function(input_json) {
     pipeline_config <- load_config(server)
     process_name <- input$processName
 
-    if (process_name == 'gem2s') {
+    if (process_name == 'qc') {
+        message_id <- call_data_processing(task_name, input, pipeline_config)
+    } else if (process_name == 'gem2s') {
         message("entering Gem2s")
         message_id <- run_gem2s_step(task_name,input,pipeline_config) 
-    }else if(process_name == 'pipeline'){
-        message_id <- call_data_processing(task_name, input, pipeline_config)
-    }else{
+    } else {
         stop("Process name not recognized.")
     }
     
