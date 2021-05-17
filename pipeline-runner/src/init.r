@@ -235,67 +235,45 @@ init <- function() {
         }
         
         tryCatch(
+        {
+            withCallingHandlers(
             expr = {
-                message('Input ', input, ' found')        
+                message("Input ", input, " found")
                 wrapper(input)
-                
+
                 states$send_task_success(
                     taskToken = taskToken,
-                    output = '{}'
+                    output = "{}"
                 )
             },
-            error = function(e){ 
-                message("Error: ",e)
+            error = function(e) {
+                call.stack <- sys.calls() # is like a traceback within "withCallingHandlers"
+                # dump.frames()
+                # save.image(file = file.path("/debug", "last.dump.init.r.rda"))
+                # global assign this variable to use outside this scope
+                cause <- paste((limitedLabels(call.stack)), collapse = "\n")
+                input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
+                sample_text <- ifelse(is.null(input_parse$sampleUuid),
+                                    "",
+                                    paste0(" for sample ", input_parse$sampleUuid))
+                error_txt <- paste0("R error at filter step ",
+                                    input_parse$taskName, sample_text, "! : ", e$message)
+                message(error_txt)
+                message("Cause: ", cause)
+
                 states$send_task_failure(
                     taskToken = taskToken,
-                    error = 'R error',
-                    cause = e
+                    error = error_txt,
+                    cause = cause
                 )
-            }
+                message("Sent task failure to state machine task: ", taskToken)
+            })
+        },
+        error = function(e) {
+            print(paste("recovered from error:", e$message))
+        }
         )
     }
-
-    tryCatch(
-      {
-        withCallingHandlers(
-          expr = {
-            message("Input ", input, " found")
-            wrapper(input)
-
-            states$send_task_success(
-              taskToken = taskToken,
-              output = "{}"
-            )
-          },
-          error = function(e) {
-            call.stack <- sys.calls() # is like a traceback within "withCallingHandlers"
-            # dump.frames()
-            # save.image(file = file.path("/debug", "last.dump.init.r.rda"))
-            # global assign this variable to use outside this scope
-            cause <- paste((limitedLabels(call.stack)), collapse = "\n")
-            input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
-            sample_text <- ifelse(is.null(input_parse$sampleUuid), 
-                                "", 
-                                paste0(" for sample ", input_parse$sampleUuid))
-            error_txt <- paste0("R error at filter step ", 
-                                input_parse$taskName, sample_text, "! : ", e$message)
-            message(error_txt)
-            message("Cause: ", cause)
-
-            states$send_task_failure(
-                taskToken = taskToken,
-                error = error_txt,
-                cause = cause
-            )
-            message("Sent task failure to state machine task: ", taskToken)
-          }
-        )
-      },
-      error = function(e) {
-           print(paste("recovered from error:", e$message))
-      }
-    )
-  }
 }
 
 init()
