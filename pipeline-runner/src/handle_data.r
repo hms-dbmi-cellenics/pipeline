@@ -115,3 +115,22 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
     
     return(object_key)
 }
+
+
+put_item_in_dynamodb <- function(pipeline_config, table, item) {
+    
+    dynamodb <- paws::dynamodb(config=pipeline_config$aws_config)
+    dynamodb$put_item(
+        TableName = table,
+        Item = item)
+}
+
+put_file_in_s3 <- function(pipeline_config, bucket, file, key) {
+    
+    s3 <- paws::s3(config=pipeline_config$aws_config)
+    s3$put_object(
+        Bucket = bucket,
+        Key = key,
+        Body = file
+    )
+}
