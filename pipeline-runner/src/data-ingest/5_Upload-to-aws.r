@@ -1,105 +1,115 @@
-library(RJSONIO)
 color_pool <- RJSONIO::fromJSON("data-ingest/color_pool.json")
 
+# set to local dirs for interactive dev
+input_dir <- '/input'
+output_dir <- '/output'
 
-# This function crate the table information for samples. As input it requires the experiment id and the config.
+# creates the table information for samples
 create_samples_table <- function(config, experimend_id) {
   # In samples_table we are going to add the core of the information
   samples_table <- list()
-
-  # Getting flag_filtered information
-  df_prefiltered <- read.csv('/output/df_flag_filtered.txt', sep = '\t', row.names = 'samples')
+  
+  # flag_filtered information
+  df_prefiltered <- read.csv(file.path(output_dir, 'df_flag_filtered.txt'),
+                             sep = '\t',
+                             row.names = 'samples')
+  
   samples <- row.names(df_prefiltered)
-
   samples_table$ids = paste0("sample-", samples)
-
+  
   # For the current datasets it could happen that they are not in the gz format, so we leave the alternative tsv format.
   mime_options = c(
     "tsv" = "application/tsv",
     "gz" = "application/gzip",
     "mtx" = "application/mtx"
-    )
-
+  )
+  
   for (sample in samples) {
-
+    
     prefiltered <- df_prefiltered[sample, 'flag_filtered'] == 'Filtered'
-
+    
     # Identify datetime
     cdate <- mdate <- Sys.time()
     fnames <- list()
-
+    
     # files that are not hidden
     sample_files <- file.path(
       sample,
-      list.files(file.path('/input', sample))
+      list.files(file.path(input_dir, sample))
     )
-
+    
     # Iterate over each file to create the slot
     for (sample_file in sample_files) {
-
+      
       fext <- tail(strsplit(sample_file, '[.]')[[1]], 1)
-
+      
       fnames[[sample_file]] <- list(
         objectKey = '',
         name = sample_file,
-        size = file.info(file.path('/input',sample_file))$size,
-        mime = mime_options[fext],
+        size = file.info(file.path(input_dir, sample_file))$size,
+        mime = mime_options[[fext]],
         success = TRUE,
         error = FALSE
       )
     }
-
+    
     # Add the whole information to each sample
     samples_table[[paste0("sample-", sample)]] <- list(
-      "name" = sample,
-      "uuid" = uuid::UUIDgenerate(),
-      "species" = config$organism,
-      "type" = config$input$type,
-      "createdDate" = strftime(cdate, usetz = TRUE),
-      "lastModified" = strftime(mdate, usetz = TRUE),
-      "complete" = TRUE,
-      "error" = FALSE,
-      "fileNames" = sample_files,
-      "files" = fnames,
-      "preFiltered" = prefiltered
+      name = sample,
+      uuid = uuid::UUIDgenerate(),
+      species = config$organism,
+      type = config$input[['type']],
+      createdDate = strftime(cdate, usetz = TRUE),
+      lastModified = strftime(mdate, usetz = TRUE),
+      complete = TRUE,
+      error = FALSE,
+      fileNames = sample_files,
+      files = fnames,
+      preFiltered = prefiltered
     )
 
-
-
   }
-
-
+  
+  
   return(list(
     "experimentId" = experiment_id,
     "samples" = samples_table))
-
+  
 }
 
 
 samples_sets <- function(){
-  sample_annotations <- read.csv("samples-cells.csv",sep="\t", col.names=c("Cells_ID","Value"),na.strings=c("None"))
-
-  cell_set = list("key"="sample", 
-                  "name"="Samples",
-                  "rootNode"=TRUE,
-                  "children"=list(),
-                  "type"="metadataCategorical")
-
-  samples <- unique(sample_annotations[,"Value"])
-
-  for (sample in samples){
-    view <- sample_annotations[sample_annotations["Value"]==sample,"Cells_ID"]
-    child <- list("key"=paste("sample-",sample,sep=""),"name"=sample,"color"=color_pool[1],"cellIds"=view)
-    color_pool <- color_pool[-1]
-    cell_set[["children"]] <- append(cell_set[["children"]],list(child))  
-  }
-
-  return(cell_set)
+  sample_annotations <- read.csv(file.path(output_dir, "samples-cells.csv"), 
+                                 sep = "\t",
+                                 col.names = c("Cells_ID","Value"),
+                                 na.strings = "None")
   
+  cell_set <- list(key = "sample", 
+                  name = "Samples",
+                  rootNode = TRUE,
+                  children = list(),
+                  type = "metadataCategorical")
+  
+  samples <- unique(sample_annotations$Value)
+  
+  for (sample in samples) {
+    view <- sample_annotations[sample_annotations$Value == sample, "Cells_ID"]
+    child <- list(key = paste0("sample-", sample), 
+                  name = sample,
+                  color = color_pool[1],
+                  cellIds = view)
+    
+    color_pool <- color_pool[-1]
+    cell_set$children <- append(cell_set$children, child)  
+  }
+  
+  return(cell_set)
+}
+
 # cell_sets fn for seurat metadata information
 meta_sets <- function() {
   
-  meta_annotations <- read.csv("/output/metadata-cells.csv", sep='\t')
+  meta_annotations <- read.csv(file.path(output_dir, "metadata-cells.csv"), sep='\t')
   
   cell_set_list <- list()
   
@@ -121,42 +131,107 @@ meta_sets <- function() {
     
     for (value in unique(annot)) {
       view  <- meta_annotations[which(annot == value), 'cells_id']
-      cell_set$children <- c(
+      cell_set$children <- append(
         cell_set$children,
         list(
           "key" = paste(key, value, sep='-'),
           "name" = value,
-          "color" = COLOR_POOL[1],
+          "color" = color_pool[1],
           "cellIds" = view)
       )
       
-      COLOR_POOL <- COLOR_POOL[-1]
+      color_pool <- color_pool[-1]
     }
-    cell_set_list <- c(cell_set_list, cell_set)
+    cell_set_list <- append(cell_set_list, cell_set)
   }
   return(cell_set_list)
 }
 
 
-task <- function(experiment_id) {
+task <- function(input, pipeline_config) {
+  
+  
+  
+  # is this right?
+  experiment_id <- input$experimentId
+  
+  project_id <- input$projectId
+  sample_names <- input$sampleNames # extract sample names from samples object
+  sample_uuids <- input$sampleUuids
 
   # save experiment_id for record-keeping
-  writeLines(experiment_id, "/output/experiment_id.txt")
-
-
-  config <- jsonlite::fromJSON("/input/meta.json")
-
+  writeLines(experiment_id, file.path(output_dir, "experiment_id.txt"))
+  
+  
+  config <- RJSONIO::fromJSON(file.path(input_dir, "meta.json"))
+  
   # read config related with QC pipeline
-  config_dataProcessing <- jsonlite::fromJSON("/output/config_dataProcessing.json")
-
+  config_dataProcessing <- RJSONIO::fromJSON(file.path(output_dir, "config_dataProcessing.json"))
+  
   # Design cell_set scratchpad for DynamoDB
-  scratchpad = list(
-    "key" = "scratchpad",
-    "name" = "Scratchpad",
-    "rootNode" = TRUE,
-    "children" = c(),
-    "type" = "cellSets"
+  scratchpad <- list(
+    key = "scratchpad",
+    name = "Scratchpad",
+    rootNode = TRUE,
+    children = list(),
+    type = "cellSets"
   )
+  
+  # TODO: maybe we don't need samples_data
+  samples_data <- create_samples_table(config, experiment_id)
+  samples_set <- samples_sets()
+  
+  # Design cell_set meta_data for DynamoDB
+  cell_sets <- list(scratchpad = scratchpad, samples_set = samples_set)
+  
+  if ("metadata" %in% names(config))
+    cell_sets$meta_sets <- meta_sets()
+  
+  print(paste("Experiment name is", config$name))
+  
+  
+  experiment_data <- list(
+    apiVersion = "2.0.0-data-ingest-seurat-rds-automated",
+    experimentId = experiment_id,
+    experimentName = config$name,
+    meta = list(
+      organism = config$organism,
+      type = config$input[['type']]
+    ),
+    processingConfig = config_dataProcessing
+  )
+  
+  # experiment data to dynamodb
+  put_item_in_dynamodb(pipeline_config,
+                       table = pipeline_config$experiments_table,
+                       item = experiment_data)
+  
+  # samples data to dynamodb
+  put_item_in_dynamodb(pipeline_config,
+                       table = pipeline_config$samples_table,
+                       item = samples_data)
+  
+  
+  # cell sets file to s3
+  cell_sets_file <- tempfile()
+  cell_sets_data <- RJSONIO::toJSON(cell_sets)
+  write(cell_sets_data, cell_sets_file)
+  
+  put_file_in_s3(pipeline_config,
+                 bucket = pipeline_config$cell_sets_bucket,
+                 file = cell_sets_file,
+                 key = experiment_id)
+  
+  # seurat object to s3
+  put_file_in_s3(pipeline_config,
+                 bucket = pipeline_config$source_bucket,
+                 file = file.path(output_dir, 'experiment.rds'),
+                 key = file.path(experiment_id, 'r.rds'))
+  
+  cluster_env <- pipeline_config$cluster_env
+  print(sprintf("Experiment ID: %s uploaded to %s.", experiment_id, cluster_env))
+  
+  if (cluster_env == "production") 
+    print(sprintf("https://scp.biomage.net/experiments/%s/data-exploration", experiment_id))
 
-  samples_data = create_samples_table(config, experiment_id)
 }
