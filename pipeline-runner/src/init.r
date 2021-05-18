@@ -248,6 +248,7 @@ init <- function() {
                 message("Input ", input, " found")
                 wrapper(input)
 
+                message('Send task success')
                 states$send_task_success(
                     taskToken = taskToken,
                     output = "{}"

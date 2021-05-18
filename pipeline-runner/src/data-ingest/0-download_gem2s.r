@@ -7,7 +7,7 @@ task <- function(input,pipeline_config) {
     # you are receiving the full sample object instead of sample names
     project_id <- input$projectId
     sample_names <- input$sampleNames # extract sample names from samples object
-    sample_uuids <- input$sampleUuids
+    sample_uuids <- input$sampleIds
     message("download2")
     s3 <- paws::s3(config=pipeline_config$aws_config)
     message(pipeline_config$originals_bucket)
@@ -55,7 +55,6 @@ task <- function(input,pipeline_config) {
     exportJSON <- RJSONIO::toJSON(config)
     message('Created json config')
     message(exportJSON)
-    dir.create(file.path('/input'))
     write(exportJSON, "/input/meta.json")
     message('Written config json')
 }

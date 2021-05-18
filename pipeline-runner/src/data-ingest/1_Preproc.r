@@ -86,6 +86,14 @@ create_dataframe <- function(config){
   }else{
     samples <- config$samples
 
+    message("Input directories")
+    message(list.dirs("/input"))
+    print("Config:")
+    print(config)
+    print("Current working directory:")
+    print(getwd())
+    print("Experiment folder status:")
+    print(list.files(paste("/input",sep = "/"),all.files=TRUE,full.names=TRUE,recursive=TRUE))
     if (!all(samples%in%list.dirs("/input", full.names = F)))
       stop("Check samples to be used in the analysis, 
       since there are some of them that hasn't got a folder with the files: ",
