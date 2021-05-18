@@ -54,13 +54,17 @@ load_config <- function(development_aws_server) {
         
     }
     
+    config[["samples_table"]] <- paste("samples", config$cluster_env, sep = "-")
+    config[["experiments_table"]] <- paste("experiments", config$cluster_env, sep = "-")
     config[["originals_bucket"]] <- paste("biomage-originals", config$cluster_env, sep = "-")
     config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, sep = "-")
     config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, sep = "-")
     config[["results_bucket"]] <- paste("worker-results", config$cluster_env, sep = "-")
     config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
+    config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, sep = "-")
     config[["sns_topic"]] <- paste("work-results", config$cluster_env, config$sandbox_id, sep = "-")
     config[["sns_topic"]] <- paste("arn:aws:sns", config$aws_region, config$aws_account_id, config$sns_topic, sep = ":")
+    
     
     return(config)
 }
@@ -103,7 +107,7 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
 # projectId
 # pipeline_config as defined by load_config
 #
-run_gem2s_step <- function(task_name,input,pipeline_config){
+run_gem2s_step <- function(task_name, input, pipeline_config){
     print("GEM2S")
     switch(task_name,  
             downloadGem = {
@@ -124,10 +128,13 @@ run_gem2s_step <- function(task_name,input,pipeline_config){
             prepareExperiment = {
                 import::here("/src/data-ingest/4_Prepare_experiment.r", task)
             },
+            uploadToAWS = {
+                import::here("/src/data-ingest/5_Upload-to-aws.r", task)
+            },
             stop(paste("Invalid task name given:", task_name))
     )
     print("Starting task")
-    task(input,pipeline_config)
+    task(input, pipeline_config)
 }
 
 #
