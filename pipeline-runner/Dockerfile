@@ -43,7 +43,8 @@ RUN R -e 'BiocManager::install("scater")'
 RUN R -e 'BiocManager::install("bluster")'
 RUN R -e 'BiocManager::install("mbkmeans")'
 RUN R -e 'BiocManager::install("DropletUtils")'
-RUN R -e 'BiocManager::install("plger/scDblFinder",dependencies=TRUE)'
+RUN R -e 'BiocManager::install("BiocGenerics")'
+RUN R -e 'BiocManager::install("plger/scDblFinder")'
 
 # default BLAS/LAPACK issue: Seurat::FindIntegrationAnchors finds ~30 vs ~13,000 anchors
 # eventually move this up with other system installs
