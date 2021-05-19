@@ -36,6 +36,15 @@ RUN R -e 'pak::pkg_install("paws")'
 RUN R -e 'pak::pkg_install("import")'
 RUN R -e 'pak::pkg_install("ids")'
 
+#Install stuff for data-ingest
+RUN R -e 'chooseCRANmirror(ind=52); install.packages("BiocManager")'
+RUN R -e 'BiocManager::install("scran")'
+RUN R -e 'BiocManager::install("scater")'
+RUN R -e 'BiocManager::install("bluster")'
+RUN R -e 'BiocManager::install("mbkmeans")'
+RUN R -e 'BiocManager::install("DropletUtils")'
+RUN R -e 'BiocManager::install("plger/scDblFinder",dependencies=TRUE)'
+
 # default BLAS/LAPACK issue: Seurat::FindIntegrationAnchors finds ~30 vs ~13,000 anchors
 # eventually move this up with other system installs
 RUN apt-get update && apt-get -y install libatlas3-base
