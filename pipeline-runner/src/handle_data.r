@@ -132,7 +132,7 @@ send_dynamodb_item_to_api <- function(pipeline_config, table, item) {
         MessageAttributes = list(
             type = list(
                 DataType = "String",
-                StringValue = "PipelineResponse",
+                StringValue = "GEM2SResponse",
                 BinaryValue = NULL
             )
         )
