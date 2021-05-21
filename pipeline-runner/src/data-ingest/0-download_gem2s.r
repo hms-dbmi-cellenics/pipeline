@@ -43,14 +43,17 @@ task <- function(input,pipeline_config) {
         }
     }
     # download meta.json
-    # meta_key = file.path(project_id, "meta.json")
-    # message(paste("File: ",meta_key))
-    # c(body, ...rest) %<-% s3$get_object(
+    #meta_key = file.path(project_id, "meta.json")
+    #message(paste("File: ",meta_key))
+    #c(body, ...rest) %<-% s3$get_object(
     #     Bucket = pipeline_config$originals_bucket,    
     #     Key = meta_key
-    # )
-    # writeBin(body, con = "/input/meta.json")
-    config <- list(name = input$experimentName, samples = input$sampleNames, organism=input$organism, input = input$input)
+    #)
+    #writeBin(body, con = "/input/meta.json")
+    config <- list(name = input$experimentName, samples=input$sampleNames,
+    organism = input$organism,
+    input = list(type="10x")
+    )
 
     exportJSON <- RJSONIO::toJSON(config)
     message('Created json config')
