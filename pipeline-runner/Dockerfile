@@ -32,6 +32,8 @@ RUN R -e 'pak::pkg_install("batchelor")'
 
 # install handy development stuff
 RUN R -e 'pak::pkg_install("zeallot")'
+# next version pinning can be removed once release 0.3.11 is included by default in paws +0.1.11
+RUN R -e 'devtools::install_version("paws.common", version = "0.3.11")'
 RUN R -e 'pak::pkg_install("paws")'
 RUN R -e 'pak::pkg_install("import")'
 RUN R -e 'pak::pkg_install("ids")'
