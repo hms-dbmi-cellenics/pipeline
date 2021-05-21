@@ -125,18 +125,21 @@ task <- function(input,pipeline_config){
 
     message("Loading configuration...")
     config <- RJSONIO::fromJSON("/input/meta.json")
-
+    
     # Check which samples have been selected. Otherwiser we are going to use all of them. 
     if (length(config$samples)>0){
         samples <- config$samples
+        message("config$samples")
     }else{
         samples <- names(scdata_list)
+        message("scdata_list")
     }
     scdata_list <- scdata_list[samples]
+    message(samples)
 
     message("Creating Seurat Object...")
-    flag_filtered <- sapply(names(scdata_list), function(sample_name) adding_metrics_and_annotation(scdata_list[[sample_name]], sample_name, config))
-
+    flag_filtered <- sapply(samples, function(sample_name) adding_metrics_and_annotation(scdata_list[[sample_name]], sample_name, config))
+    message(flag_filtered)
     # Since we need to store the flag_filtered in the dynamoDB, we need to persist in a file just to be read in 5_Upload-to-aws.py
     df_flag_filtered <- data.frame(samples=samples, flag_filtered=ifelse(flag_filtered, "Filtered", "Unfiltered"))
     write.table(df_flag_filtered, "/output/df_flag_filtered.txt", col.names = TRUE, row.names = FALSE, sep = "\t", quote = FALSE)
