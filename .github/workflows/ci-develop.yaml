@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        project: ['qc-runner']
+        project: ['pipeline-runner']
     outputs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
       tag: ${{ steps.ref.outputs.tag }}
@@ -48,7 +48,7 @@ jobs:
             BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
             BASE_SHA=${{ github.event.pull_request.base.sha }}
             # If the CI build time gets in your way while working on a PR,
-            #  temporarily hardcode these values in was similar to this
+            #  temporarily hardcode these values in way similar to this
             #  BASE_REF="refs-pull-7-merge"
             #  BASE_SHA="ad9c5001ab4a3077790db4f04ac0b09cf5324683"
           fi
@@ -174,9 +174,9 @@ jobs:
           | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.chart.ref "$CHART_REF" \
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
-          | yq w -d1 - spec.values.qc-runner.image "$IMAGE_NAME-qc-runner" \
+          | yq w -d1 - spec.values.pipeline-runner.image "$IMAGE_NAME-pipeline-runner" \
           | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/pipeline-role-staging" \
-          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/qc-runner]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-qc-runner" \
+          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/pipeline-runner]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-pipeline-runner" \
           > $DEPLOYMENT_NAME.yaml
           cat $DEPLOYMENT_NAME.yaml
         env:

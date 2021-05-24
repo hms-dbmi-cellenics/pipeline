@@ -12,6 +12,8 @@ AWS.config.update({
   s3ForcePathStyle: true,
 });
 
+const isPipelineContainer = (name) => name.includes('qc') || name.includes('gem2s')
+
 const setVarsInTemplate = (template) => {
   const varNames = ['DEBUG_STEP', 'DEBUG_PATH', 'HOST_IP'];
   for (let ii = 0; ii < varNames.length; ii += 1) {
@@ -35,7 +37,7 @@ const initStack = async () => {
 
   const stackName = {
     StackName: 'local-container-launcher',
-  }; 
+  };
   try {
     await cf.deleteStack(stackName).promise();
     await cf.waitFor('stackDeleteComplete', stackName).promise();
@@ -68,7 +70,7 @@ const attachToExistingContainers = (docker, nameColorMap) => {
   docker.listContainers((err, containers) => {
     containers.forEach((info) => {
       const { Names: names, Id: id } = info;
-      const name = names.filter((n) => n.includes('pipeline'))[0];
+      const name = names.filter((n) => isPipelineContainer(n))[0];
 
       if (!name) {
         return;
@@ -91,7 +93,7 @@ const attachToNewContainers = (docker, emitter, nameColorMap) => {
   emitter.on('start', (message) => {
     const { id, Actor: { Attributes: { name } } } = message;
 
-    if (!name.includes('pipeline')) {
+    if (!isPipelineContainer(name)) {
       return;
     }
 
@@ -109,7 +111,7 @@ const attachToNewContainers = (docker, emitter, nameColorMap) => {
   const stopDieCallback = (message) => {
     const { Actor: { Attributes: { name } } } = message;
 
-    if (!name.includes('pipeline')) {
+    if (isPipelineContainer(name)) {
       return;
     }
 
