@@ -32,9 +32,21 @@ RUN R -e 'pak::pkg_install("batchelor")'
 
 # install handy development stuff
 RUN R -e 'pak::pkg_install("zeallot")'
+# next version pinning can be removed once release 0.3.11 is included by default in paws +0.1.11
+RUN R -e 'devtools::install_version("paws.common", version = "0.3.11")'
 RUN R -e 'pak::pkg_install("paws")'
 RUN R -e 'pak::pkg_install("import")'
 RUN R -e 'pak::pkg_install("ids")'
+
+#Install stuff for data-ingest
+RUN R -e 'chooseCRANmirror(ind=52); install.packages("BiocManager")'
+RUN R -e 'BiocManager::install("scran")'
+RUN R -e 'BiocManager::install("scater")'
+RUN R -e 'BiocManager::install("bluster")'
+RUN R -e 'BiocManager::install("mbkmeans")'
+RUN R -e 'BiocManager::install("DropletUtils")'
+RUN R -e 'BiocManager::install("BiocGenerics")'
+RUN R -e 'BiocManager::install("plger/scDblFinder")'
 
 # default BLAS/LAPACK issue: Seurat::FindIntegrationAnchors finds ~30 vs ~13,000 anchors
 # eventually move this up with other system installs
