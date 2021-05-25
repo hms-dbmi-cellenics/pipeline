@@ -100,7 +100,7 @@ samples_sets <- function(){
                   cellIds = view)
 
     color_pool <- color_pool[-1]
-    cell_set$children <- append(cell_set$children, child)
+    cell_set$children[[length(cell_set$children)+1]] <- child
   }
 
   return(cell_set)
@@ -176,10 +176,12 @@ task <- function(input, pipeline_config) {
   samples_set <- samples_sets()
 
   # Design cell_set meta_data for DynamoDB
-  cell_sets <- list(scratchpad = scratchpad, samples_set = samples_set)
+  cell_sets <- list(scratchpad,samples_set)
 
   if ("metadata" %in% names(config))
-    cell_sets$meta_sets <- meta_sets()
+    cell_sets <- append(cell_sets,meta_sets())
+  
+  cell_sets <- list(cellSets = cell_sets)
 
   print(paste("Experiment name is", config$name))
 

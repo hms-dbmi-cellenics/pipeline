@@ -6,12 +6,6 @@
 ##  - Preparing dataProcess json file
 ################################################
 
-suppressWarnings(library(Seurat))
-suppressWarnings(library(Matrix))
-suppressWarnings(library(dplyr))
-suppressWarnings(require(data.table))
-suppressWarnings(library(gprofiler2))
-
 set.seed(123)
 options(future.globals.maxSize= 1000 * 1024 ^ 2)
 source("test_object.r")
