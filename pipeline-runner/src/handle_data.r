@@ -98,7 +98,6 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
 }
 
 upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
-
     s3 <- paws::s3(config=pipeline_config$aws_config)
 
     object_key <- paste0(experiment_id, '/r.rds')
@@ -116,15 +115,40 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
     return(object_key)
 }
 
-
-send_dynamodb_item_to_api <- function(pipeline_config, table, item) {
-
+send_update_to_api <- function(pipeline_config, experiment_id, status_msg) {
     message("Sending to SNS topic ", pipeline_config$sns_topic)
     sns <- paws::sns(config=pipeline_config$aws_config)
 
     msg <- list(
+        status = status_msg,
+        experimentId = experiment_id
+    )
+
+    result <- sns$publish(
+        Message = RJSONIO::toJSON(msg),
+        TopicArn = pipeline_config$sns_topic,
+        MessageAttributes = list(
+            type = list(
+                DataType = "String",
+                StringValue = "GEM2SResponse",
+                BinaryValue = NULL
+            )
+        )
+    )
+
+    return(result$MessageId)
+}
+
+send_dynamodb_item_to_api <- function(pipeline_config, experiment_id, table, item) {
+    message("Sending to SNS topic ", pipeline_config$sns_topic)
+    sns <- paws::sns(config=pipeline_config$aws_config)
+
+    msg <- list(
+        status = "OK",
+        experimentId = experiment_id,
         item = item,
-        table = table)
+        table = table
+    )
 
     result <- sns$publish(
         Message = RJSONIO::toJSON(msg),
