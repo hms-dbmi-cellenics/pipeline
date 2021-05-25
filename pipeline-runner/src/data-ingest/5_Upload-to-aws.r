@@ -5,7 +5,7 @@ input_dir <- '/input'
 output_dir <- '/output'
 
 # creates the table information for samples
-create_samples_table <- function(config, experiment_id) {
+create_samples_table <- function(config, experiment_id, project_id) {
   # In samples_table we are going to add the core of the information
   samples_table <- list()
 
@@ -73,8 +73,9 @@ create_samples_table <- function(config, experiment_id) {
 
   return(list(
     "experimentId" = experiment_id,
-    "samples" = samples_table))
-
+    "samples" = samples_table,
+    "projectUuid" = project_id
+  ))
 }
 
 
@@ -172,7 +173,7 @@ task <- function(input, pipeline_config) {
   )
 
   # TODO: maybe we don't need samples_data
-  samples_data <- create_samples_table(config, experiment_id)
+  samples_data <- create_samples_table(config, experiment_id, project_id)
   samples_set <- samples_sets()
 
   # Design cell_set meta_data for DynamoDB
@@ -182,7 +183,6 @@ task <- function(input, pipeline_config) {
     cell_sets$meta_sets <- meta_sets()
 
   print(paste("Experiment name is", config$name))
-
 
   experiment_data <- list(
     apiVersion = "2.0.0-data-ingest-seurat-rds-automated",
@@ -194,17 +194,6 @@ task <- function(input, pipeline_config) {
     ),
     processingConfig = config_dataProcessing
   )
-
-
-  send_dynamodb_item_to_api(pipeline_config,
-                            table = pipeline_config$experiments_table,
-                            item = experiment_data)
-
-  # samples data to dynamodb
-  send_dynamodb_item_to_api(pipeline_config,
-                            table = pipeline_config$samples_table,
-                            item = samples_data)
-
 
   # cell sets file to s3
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
@@ -222,6 +211,17 @@ task <- function(input, pipeline_config) {
 
   cluster_env <- pipeline_config$cluster_env
   print(sprintf("Experiment ID: %s uploaded to %s.", experiment_id, cluster_env))
+
+  send_dynamodb_item_to_api(pipeline_config,
+                            experiment_id = experiment_id,
+                            table = pipeline_config$experiments_table,
+                            item = experiment_data)
+
+  # samples data to dynamodb
+  send_dynamodb_item_to_api(pipeline_config,
+                            experiment_id = experiment_id,
+                            table = pipeline_config$samples_table,
+                            item = samples_data)
 
   if (cluster_env == "production")
     print(sprintf("https://scp.biomage.net/experiments/%s/data-exploration", experiment_id))

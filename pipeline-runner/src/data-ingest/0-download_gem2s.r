@@ -3,7 +3,7 @@ require("paws")
 require("zeallot")
 require("ids")
 
-task <- function(input,pipeline_config) {
+task <- function(input, pipeline_config) {
     # you are receiving the full sample object instead of sample names
     project_id <- input$projectId
     sample_names <- input$sampleNames # extract sample names from samples object
@@ -60,4 +60,6 @@ task <- function(input,pipeline_config) {
     message(exportJSON)
     write(exportJSON, "/input/meta.json")
     message('Written config json')
+
+    send_update_to_api(pipeline_config, experiment_id = input$experimentId, status_msg = "OK")
 }
