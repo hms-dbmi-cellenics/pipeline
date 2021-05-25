@@ -134,7 +134,7 @@ run_gem2s_step <- function(task_name, input, pipeline_config){
     )
     print("Starting task")
     task(input, pipeline_config)
-    send_gem2s_update_to_api(pipeline_config, experiment_id = input$experimentId, status_msg = task_name)
+    send_gem2s_update_to_api(pipeline_config, experiment_id = input$experimentId, task_name = task_name)
 }
 
 #
