@@ -4,10 +4,6 @@
 ##  - Save an txt file with doublet scores per sample [doublet-scores-sampleName]
 ################################################
 
-suppressWarnings(library(Seurat))
-suppressWarnings(library(scDblFinder))
-
-
 # compute_doublet_scores function
 #' @description Save the result of doublets scores per sample. 
 #' @param scdata Raw sparse matrix with the counts for one sample.
@@ -19,7 +15,7 @@ compute_doublet_scores <- function(scdata, sample_name, min.features = 10) {
     library(scDblFinder)
     message("loaded")
     message("Sample --> ", sample_name, "...")
-    scdata_DS <- scDblFinder(scdata[, Matrix::colSums(scdata>0)>=min.features], dbr = NULL, trajectoryMode = FALSE)
+    scdata_DS <- scDblFinder::scDblFinder(scdata[, Matrix::colSums(scdata>0)>=min.features], dbr = NULL, trajectoryMode = FALSE)
     df_doublet_scores <- data.frame(Barcodes=rownames(scdata_DS@colData), doublet_scores=scdata_DS@colData$scDblFinder.score,
     doublet_class = scdata_DS@colData$scDblFinder.class)
 
