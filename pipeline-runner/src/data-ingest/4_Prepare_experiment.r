@@ -104,7 +104,7 @@ add_custom_config_per_sample <- function(step_fn, config, scdata){
 
   samples <- seurat_obj$samples
   
-  for(sample in samples){
+  for(sample in unique(samples)){
     # Downsample the seurat object to a unisample experiment
     scdata_sample <- scdata[, samples %in% sample]
     # Run the step fun with the unisample experiment and keep the config result
