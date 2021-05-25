@@ -115,7 +115,7 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
     return(object_key)
 }
 
-send_update_to_api <- function(pipeline_config, experiment_id, status_msg) {
+send_gem2s_update_to_api <- function(pipeline_config, experiment_id, status_msg) {
     message("Sending to SNS topic ", pipeline_config$sns_topic)
     sns <- paws::sns(config=pipeline_config$aws_config)
 
