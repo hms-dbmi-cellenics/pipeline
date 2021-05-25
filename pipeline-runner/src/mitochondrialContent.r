@@ -54,10 +54,10 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     obj_metadata <- seurat_obj@meta.data
     barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
     if (length(barcode_names_this_sample)==0){
-        plots <- list()
-        plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
-        plots[generate_plotuuid(sample_id, task_name, 1)] <- list()
-        return(list(data = seurat_obj,config = config,plotData = plots)) 
+        guidata <- list()
+        guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
+        guidata[generate_gui_uuid(sample_id, task_name, 1)] <- list()
+        return(list(data = seurat_obj,config = config,plotData = guidata)) 
     }
     sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
 
@@ -95,12 +95,12 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     plot1_data <- plot1_data[cells_position_to_keep]
     plot2_data <- plot2_data[cells_position_to_keep]
 
-    plots <- list()
+    guidata <- list()
 
     # plot 1: histgram of MT-content
     # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
     #              0.161              0.198              0.284  ...
-    plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+    guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
 
     # plot 2: There are two alternavitive:
     #           - Scatter plot with UMIs in the x-axis and MT-content in the y-axis
@@ -111,16 +111,26 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     # We have decided to use the scatter plot, but I temporaly leave the other option in the comments. 
     # Q: Should we return from the R side the cells that are going to be removed? For this plot it is interesting to color the
     # cells that are going to be excluded. 
-    plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
+    guidata[generate_gui_uuid(sample_id, task_name, 1)] <- list(plot2_data)
 
     # some tests:
     print(paste0("Cells per sample after filter for sample ", sample_id))
     print(table(seurat_obj.filtered$orig.ident))
+    
+    # populate with filter statistics
+    filter_stats <- list(
+      before = calc_filter_stats(seurat_obj, tmp_sample),
+      after = calc_filter_stats(seurat_obj.filtered, tmp_sample)
+    )
+    
+    guidata[generate_gui_uuid(sample_id, task_name, 1)] <- filter_stats
+    print("Filter statistics for sample before/after filter:")
+    str(filter_stats)
 
     result <- list( 
         data = seurat_obj.filtered, # seurat_obj filter
         config = config,
-        plotData = plots
+        plotData = guidata
     )
     return(result)
 }

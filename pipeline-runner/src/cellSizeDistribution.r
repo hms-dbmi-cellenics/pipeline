@@ -55,8 +55,8 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
   print("Config:")
   print(config)
   print(paste0("Cells per sample before filter for sample ", sample_id))
-  nbefore <- table(seurat_obj$orig.ident)
-  print(nbefore)
+  print(table(seurat_obj$orig.ident))
+  
   #The format of the sample_id is
   # sample-WT1
   # we need to get only the last part, in order to grep the object.
@@ -69,10 +69,10 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
   obj_metadata <- seurat_obj@meta.data
   barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
   if(length(barcode_names_this_sample)==0) {
-    plots <- list()
-    plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
-    plots[generate_plotuuid(sample_id, task_name, 1)] <- list()
-    return(list(data = seurat_obj,config = config,plotData = plots)) 
+    guidata <- list()
+    guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
+    guidata[generate_gui_uuid(sample_id, task_name, 1)] <- list()
+    return(list(data = seurat_obj,config = config,plotData = guidata)) 
   }
   sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
   
@@ -139,23 +139,31 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
   }
   
   print(paste0("Cells per sample after filter for sample ", sample_id))
-  nafter <- table(seurat_obj.filtered$orig.ident)
-  print(nafter)
+  print(table(seurat_obj.filtered$orig.ident))
   
   # update config
   config$filterSettings$minCellSize <- minCellSize
   
-  #Populate plots and data list with plots data
-  pdata <-list()
-  pdata[generate_pdata_uuid(sample_id, task_name, 0)] <- list(plot1_data)
-  pdata[generate_pdata_uuid(sample_id, task_name, 1)] <- list(plot2_data)
+  #Populate data for UI
+  guidata <-list()
+  guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
+  guidata[generate_gui_uuid(sample_id, task_name, 1)] <- list(plot2_data)
   
   # Populate with filter statistics
   filter_stats <- list(
     before = calc_filter_stats(seurat_obj, tmp_sample),
     after = calc_filter_stats(seurat_obj.filtered, tmp_sample)
   )
-  pdata[generate_pdata_uuid(sample_id, task_name, 3)] <- list(filter_stats)
+  guidata[generate_gui_uuid(sample_id, task_name, 3)] <- filter_stats
   
-  return(pdata)
+  print("Filter statistics for sample before/after filter:")
+  str(filter_stats)
+  
+  result <- list(
+    data = seurat_obj.filtered,
+    config = config,
+    plotData = guidata
+  )
+  
+  return(result)
 }

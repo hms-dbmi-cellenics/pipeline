@@ -1,7 +1,7 @@
 #
-# Generate plots and data uuid as required by the UI
+# Generate GUI plots and data uuid as required by the UI
 # 
-generate_pdata_uuid <- function(sample_uuid, task_name, item_idx) {
+generate_gui_uuid <- function(sample_uuid, task_name, item_idx) {
 
   if(sample_uuid != "") {
     return(paste(sample_uuid, task_name, item_idx, sep="-"))

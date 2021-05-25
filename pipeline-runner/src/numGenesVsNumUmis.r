@@ -63,9 +63,9 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
             obj_metadata <- seurat_obj@meta.data
             barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
             if(length(barcode_names_this_sample)==0){
-                plots <- list()
-                plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
-                return(list(data = seurat_obj,config = config,plotData = plots)) 
+                guidata <- list()
+                guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
+                return(list(data = seurat_obj,config = config,plotData = guidata)) 
             }
             sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
             # We regress the molecules vs the genes. This information are stored in nCount_RNA and nFeature_RNA respectively
@@ -117,17 +117,27 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     # bands that are conformed with the upper_cutoff and the lower_cutoff. We can print a band or dotted lines. 
     # Q: Should we return the point out the cells that are going to be excluded from the R side or this task can be done in 
     # the UI side.  
-    plots <- list()
-    plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+    guidata <- list()
+    guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
 
     print(paste0("Cells per sample after filter for sample ", sample_id))
     print(table(seurat_obj.filtered$orig.ident))
+    
+    # Populate with filter statistics
+    filter_stats <- list(
+      before = calc_filter_stats(seurat_obj, tmp_sample),
+      after = calc_filter_stats(seurat_obj.filtered, tmp_sample)
+    )
+    
+    guidata[generate_gui_uuid(sample_id, task_name, 1)] <- filter_stats
+    print("Filter statistics for sample before/after filter:")
+    str(filter_stats)
     
     # the result object will have to conform to this format: {data, config, plotData : {plot1}}
     result <- list(
         data = seurat_obj.filtered,
         config = config,
-        plotData = plots
+        plotData = guidata
     )
 
     return(result)
