@@ -15,7 +15,8 @@ create_samples_table <- function(config, experiment_id, project_id) {
                              row.names = 'samples')
 
   samples <- row.names(df_prefiltered)
-  samples_table$ids <- lapply(samples, function(x) paste0("sample-", x, sep = ""))
+  #samples_table$ids <- lapply(samples, function(x) paste0("sample-", x, sep = ""))
+  samples_table$ids <- list(samples)
 
   # For the current datasets it could happen that they are not in the gz format, so we leave the alternative tsv format.
   mime_options = c(
@@ -33,10 +34,8 @@ create_samples_table <- function(config, experiment_id, project_id) {
     fnames <- list()
 
     # files that are not hidden
-    sample_files <- file.path(
-      sample,
-      list.files(file.path(input_dir, sample))
-    )
+    sample_files <- list.files(file.path(input_dir, sample),full.names = FALSE)
+
 
     # Iterate over each file to create the slot
     for (sample_file in sample_files) {
@@ -52,13 +51,14 @@ create_samples_table <- function(config, experiment_id, project_id) {
         error = FALSE
       )
     }
-
+    sample_name = config$sampleNames[[match(sample,config$samples)]]
     # Add the whole information to each sample
-    samples_table[[paste0("sample-", sample)]] <- list(
-      name = sample,
-      uuid = uuid::UUIDgenerate(),
+    samples_table[[paste0(sample)]] <- list(
+      name = sample_name,
+      uuid = sample,
       species = config$organism,
-      type = config$input[['type']],
+      #type = config$input[['type']],
+      type= "10X Chromium",
       createdDate = strftime(cdate, usetz = TRUE),
       lastModified = strftime(mdate, usetz = TRUE),
       complete = TRUE,
@@ -95,7 +95,7 @@ samples_sets <- function(){
 
   for (sample in samples) {
     view <- sample_annotations[sample_annotations$Value == sample, "Cells_ID"]
-    child <- list(key = paste0("sample-", sample),
+    child <- list(key = paste0(sample),
                   name = sample,
                   color = color_pool[1],
                   cellIds = view)
@@ -220,10 +220,10 @@ task <- function(input, pipeline_config) {
                             item = experiment_data)
 
   # samples data to dynamodb
-  send_dynamodb_item_to_api(pipeline_config,
-                            experiment_id = experiment_id,
-                            table = pipeline_config$samples_table,
-                            item = samples_data)
+  # send_dynamodb_item_to_api(pipeline_config,
+  #                           experiment_id = experiment_id,
+  #                           table = pipeline_config$samples_table,
+  #                           item = samples_data)
 
   if (cluster_env == "production")
     print(sprintf("https://scp.biomage.net/experiments/%s/data-exploration", experiment_id))

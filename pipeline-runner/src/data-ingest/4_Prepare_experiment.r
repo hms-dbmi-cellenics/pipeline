@@ -365,6 +365,7 @@ task <- function(input,pipeline_config){
     )
 
     # Compute for multisample and unisample
+    print(unique(seurat_obj$samples))
     config.cellSizeDistribution <- add_custom_config_per_sample(cellSizeDistribution_config, config.cellSizeDistribution, seurat_obj, unique(seurat_obj$samples))
     config.numGenesVsNumUmis <- add_custom_config_per_sample(numGenesVsNumUmis_config, config.numGenesVsNumUmis, seurat_obj, unique(seurat_obj$samples))
     config.doubletScores <- add_custom_config_per_sample(doubletScores_config, config.doubletScores, seurat_obj, unique(seurat_obj$samples))
