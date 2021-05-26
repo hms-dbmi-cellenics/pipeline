@@ -4,81 +4,6 @@ color_pool <- RJSONIO::fromJSON("/src/data-ingest/color_pool.json")
 input_dir <- '/input'
 output_dir <- '/output'
 
-# creates the table information for samples
-create_samples_table <- function(config, experiment_id, project_id) {
-  # In samples_table we are going to add the core of the information
-  samples_table <- list()
-
-  # flag_filtered information
-  df_prefiltered <- read.csv(file.path(output_dir, 'df_flag_filtered.txt'),
-                             sep = '\t',
-                             row.names = 'samples')
-
-  samples <- row.names(df_prefiltered)
-  #samples_table$ids <- lapply(samples, function(x) paste0("sample-", x, sep = ""))
-  samples_table$ids <- list(samples)
-
-  # For the current datasets it could happen that they are not in the gz format, so we leave the alternative tsv format.
-  mime_options = c(
-    "tsv" = "application/tsv",
-    "gz" = "application/gzip",
-    "mtx" = "application/mtx"
-  )
-
-  for (sample in samples) {
-
-    prefiltered <- df_prefiltered[sample, 'flag_filtered'] == 'Filtered'
-
-    # Identify datetime
-    cdate <- mdate <- Sys.time()
-    fnames <- list()
-
-    # files that are not hidden
-    sample_files <- list.files(file.path(input_dir, sample),full.names = FALSE)
-
-
-    # Iterate over each file to create the slot
-    for (sample_file in sample_files) {
-
-      fext <- tail(strsplit(sample_file, '[.]')[[1]], 1)
-
-      fnames[[sample_file]] <- list(
-        objectKey = '',
-        name = sample_file,
-        size = file.info(file.path(input_dir, sample_file))$size,
-        mime = mime_options[[fext]],
-        success = TRUE,
-        error = FALSE
-      )
-    }
-    sample_name = config$sampleNames[[match(sample,config$samples)]]
-    # Add the whole information to each sample
-    samples_table[[paste0(sample)]] <- list(
-      name = sample_name,
-      uuid = sample,
-      species = config$organism,
-      #type = config$input[['type']],
-      type= "10X Chromium",
-      createdDate = strftime(cdate, usetz = TRUE),
-      lastModified = strftime(mdate, usetz = TRUE),
-      complete = TRUE,
-      error = FALSE,
-      fileNames = sample_files,
-      files = fnames,
-      preFiltered = prefiltered
-    )
-
-  }
-
-
-  return(list(
-    "experimentId" = experiment_id,
-    "samples" = samples_table,
-    "projectUuid" = project_id
-  ))
-}
-
-
 samples_sets <- function(){
   sample_annotations <- read.csv(file.path(output_dir, "samples-cells.csv"),
                                  sep = "\t",
@@ -172,8 +97,6 @@ task <- function(input, pipeline_config) {
     type = "cellSets"
   )
 
-  # TODO: maybe we don't need samples_data
-  samples_data <- create_samples_table(config, experiment_id, project_id)
   samples_set <- samples_sets()
 
   # Design cell_set meta_data for DynamoDB
@@ -218,12 +141,6 @@ task <- function(input, pipeline_config) {
                             experiment_id = experiment_id,
                             table = pipeline_config$experiments_table,
                             item = experiment_data)
-
-  # samples data to dynamodb
-  # send_dynamodb_item_to_api(pipeline_config,
-  #                           experiment_id = experiment_id,
-  #                           table = pipeline_config$samples_table,
-  #                           item = samples_data)
 
   if (cluster_env == "production")
     print(sprintf("https://scp.biomage.net/experiments/%s/data-exploration", experiment_id))
