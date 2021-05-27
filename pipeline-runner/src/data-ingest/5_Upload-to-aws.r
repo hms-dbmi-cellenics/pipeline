@@ -4,87 +4,12 @@ color_pool <- RJSONIO::fromJSON("/src/data-ingest/color_pool.json")
 input_dir <- '/input'
 output_dir <- '/output'
 
-# creates the table information for samples
-create_samples_table <- function(config, experiment_id, project_id) {
-  # In samples_table we are going to add the core of the information
-  samples_table <- list()
-
-  # flag_filtered information
-  df_prefiltered <- read.csv(file.path(output_dir, 'df_flag_filtered.txt'),
-                             sep = '\t',
-                             row.names = 'samples')
-
-  samples <- row.names(df_prefiltered)
-  samples_table$ids <- lapply(samples, function(x) paste0("sample-", x, sep = ""))
-
-  # For the current datasets it could happen that they are not in the gz format, so we leave the alternative tsv format.
-  mime_options = c(
-    "tsv" = "application/tsv",
-    "gz" = "application/gzip",
-    "mtx" = "application/mtx"
-  )
-
-  for (sample in samples) {
-
-    prefiltered <- df_prefiltered[sample, 'flag_filtered'] == 'Filtered'
-
-    # Identify datetime
-    cdate <- mdate <- Sys.time()
-    fnames <- list()
-
-    # files that are not hidden
-    sample_files <- file.path(
-      sample,
-      list.files(file.path(input_dir, sample))
-    )
-
-    # Iterate over each file to create the slot
-    for (sample_file in sample_files) {
-
-      fext <- tail(strsplit(sample_file, '[.]')[[1]], 1)
-
-      fnames[[sample_file]] <- list(
-        objectKey = '',
-        name = sample_file,
-        size = file.info(file.path(input_dir, sample_file))$size,
-        mime = mime_options[[fext]],
-        success = TRUE,
-        error = FALSE
-      )
-    }
-
-    # Add the whole information to each sample
-    samples_table[[paste0("sample-", sample)]] <- list(
-      name = sample,
-      uuid = uuid::UUIDgenerate(),
-      species = config$organism,
-      type = config$input[['type']],
-      createdDate = strftime(cdate, usetz = TRUE),
-      lastModified = strftime(mdate, usetz = TRUE),
-      complete = TRUE,
-      error = FALSE,
-      fileNames = sample_files,
-      files = fnames,
-      preFiltered = prefiltered
-    )
-
-  }
-
-
-  return(list(
-    "experimentId" = experiment_id,
-    "samples" = samples_table,
-    "projectUuid" = project_id
-  ))
-}
-
-
-samples_sets <- function(){
+samples_sets <- function(config){
   sample_annotations <- read.csv(file.path(output_dir, "samples-cells.csv"),
                                  sep = "\t",
                                  col.names = c("Cells_ID","Value"),
                                  na.strings = "None")
-
+  
   cell_set <- list(key = "sample",
                    name = "Samples",
                    rootNode = TRUE,
@@ -95,15 +20,14 @@ samples_sets <- function(){
 
   for (sample in samples) {
     view <- sample_annotations[sample_annotations$Value == sample, "Cells_ID"]
-    child <- list(key = paste0("sample-", sample),
-                  name = sample,
+    child <- list(key = paste0(sample),
+                  name = config$sampleNames[[match(sample,config$sampleIds)]],
                   color = color_pool[1],
                   cellIds = view)
 
     color_pool <- color_pool[-1]
     cell_set$children[[length(cell_set$children)+1]] <- child
   }
-
   return(cell_set)
 }
 
@@ -151,8 +75,6 @@ task <- function(input, pipeline_config) {
 
   experiment_id <- input$experimentId
   project_id <- input$projectId
-  sample_names <- input$sampleNames
-  sample_uuids <- input$sampleUuids
 
   # save experiment_id for record-keeping
   writeLines(experiment_id, file.path(output_dir, "experiment_id.txt"))
@@ -172,9 +94,7 @@ task <- function(input, pipeline_config) {
     type = "cellSets"
   )
 
-  # TODO: maybe we don't need samples_data
-  samples_data <- create_samples_table(config, experiment_id, project_id)
-  samples_set <- samples_sets()
+  samples_set <- samples_sets(input)
 
   # Design cell_set meta_data for DynamoDB
   cell_sets <- list(scratchpad,samples_set)
@@ -218,13 +138,6 @@ task <- function(input, pipeline_config) {
                             experiment_id = experiment_id,
                             table = pipeline_config$experiments_table,
                             item = experiment_data,
-                            task_name = "uploadToAWS")
-
-  # samples data to dynamodb
-  send_dynamodb_item_to_api(pipeline_config,
-                            experiment_id = experiment_id,
-                            table = pipeline_config$samples_table,
-                            item = samples_data,
                             task_name = "uploadToAWS")
 
   if (cluster_env == "production")
