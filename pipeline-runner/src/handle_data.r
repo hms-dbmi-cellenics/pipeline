@@ -144,7 +144,7 @@ send_dynamodb_item_to_api <- function(pipeline_config, experiment_id, table, ite
     sns <- paws::sns(config=pipeline_config$aws_config)
 
     msg <- list(
-        status = "OK",
+        taskName = task_name,
         experimentId = experiment_id,
         item = item,
         table = table

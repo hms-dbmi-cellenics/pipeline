@@ -217,14 +217,14 @@ task <- function(input, pipeline_config) {
   send_dynamodb_item_to_api(pipeline_config,
                             experiment_id = experiment_id,
                             table = pipeline_config$experiments_table,
-                            item = experiment_data
+                            item = experiment_data,
                             task_name = "uploadToAWS")
 
   # samples data to dynamodb
   send_dynamodb_item_to_api(pipeline_config,
                             experiment_id = experiment_id,
                             table = pipeline_config$samples_table,
-                            item = samples_data
+                            item = samples_data,
                             task_name = "uploadToAWS")
 
   if (cluster_env == "production")
