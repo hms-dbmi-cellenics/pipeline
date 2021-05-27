@@ -60,6 +60,4 @@ task <- function(input, pipeline_config) {
     message(exportJSON)
     write(exportJSON, "/input/meta.json")
     message('Written config json')
-
-    send_update_to_api(pipeline_config, experiment_id = input$experimentId, status_msg = "OK")
 }
