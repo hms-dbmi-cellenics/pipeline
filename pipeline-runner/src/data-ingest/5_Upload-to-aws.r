@@ -4,12 +4,12 @@ color_pool <- RJSONIO::fromJSON("/src/data-ingest/color_pool.json")
 input_dir <- '/input'
 output_dir <- '/output'
 
-samples_sets <- function(){
+samples_sets <- function(config){
   sample_annotations <- read.csv(file.path(output_dir, "samples-cells.csv"),
                                  sep = "\t",
                                  col.names = c("Cells_ID","Value"),
                                  na.strings = "None")
-
+  
   cell_set <- list(key = "sample",
                    name = "Samples",
                    rootNode = TRUE,
@@ -21,7 +21,7 @@ samples_sets <- function(){
   for (sample in samples) {
     view <- sample_annotations[sample_annotations$Value == sample, "Cells_ID"]
     child <- list(key = paste0(sample),
-                  name = sample,
+                  name = config$sampleNames[[match(sample,config$sampleIds)]],
                   color = color_pool[1],
                   cellIds = view)
 
@@ -76,8 +76,6 @@ task <- function(input, pipeline_config) {
 
   experiment_id <- input$experimentId
   project_id <- input$projectId
-  sample_names <- input$sampleNames
-  sample_uuids <- input$sampleUuids
 
   # save experiment_id for record-keeping
   writeLines(experiment_id, file.path(output_dir, "experiment_id.txt"))
@@ -97,7 +95,7 @@ task <- function(input, pipeline_config) {
     type = "cellSets"
   )
 
-  samples_set <- samples_sets()
+  samples_set <- samples_sets(input)
 
   # Design cell_set meta_data for DynamoDB
   cell_sets <- list(scratchpad,samples_set)
