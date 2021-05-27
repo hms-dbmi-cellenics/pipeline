@@ -91,14 +91,16 @@ numGenesVsNumUmis_config <- function(scdata, config){
 #                 }
 # }
 
-add_custom_config_per_sample <- function(step_fn, config, scdata, samples){
+add_custom_config_per_sample <- function(step_fn, config, scdata){
   
   # We upadte the config file, so to be able to access the raw config we create a copy
   config.raw <- config
+
+  samples <- seurat_obj$samples
   
-  for(sample in samples){
+  for(sample in unique(samples)){
     # Downsample the seurat object to a unisample experiment
-    scdata_sample <- subset(scdata, samples %in% sample)
+    scdata_sample <- scdata[, samples %in% sample]
     # Run the step fun with the unisample experiment and keep the config result
     result_config <- step_fn(scdata_sample, config.raw)
     # Inside the config of the samples we are not storing the auto and enable settings, so we remove them
@@ -365,9 +367,9 @@ task <- function(input,pipeline_config){
     )
 
     # Compute for multisample and unisample
-    config.cellSizeDistribution <- add_custom_config_per_sample(cellSizeDistribution_config, config.cellSizeDistribution, seurat_obj, unique(seurat_obj$samples))
-    config.numGenesVsNumUmis <- add_custom_config_per_sample(numGenesVsNumUmis_config, config.numGenesVsNumUmis, seurat_obj, unique(seurat_obj$samples))
-    config.doubletScores <- add_custom_config_per_sample(doubletScores_config, config.doubletScores, seurat_obj, unique(seurat_obj$samples))
+    config.cellSizeDistribution <- add_custom_config_per_sample(cellSizeDistribution_config, config.cellSizeDistribution, seurat_obj)
+    config.numGenesVsNumUmis <- add_custom_config_per_sample(numGenesVsNumUmis_config, config.numGenesVsNumUmis, seurat_obj)
+    config.doubletScores <- add_custom_config_per_sample(doubletScores_config, config.doubletScores, seurat_obj)
 
     # When we remove the steps from data-ingest we need to change here the default config. 
     # Save config for all steps. 
