@@ -3,7 +3,6 @@ require("paws")
 require("zeallot")
 require("ids")
 
-
 source("handle_data.r")
 source("utils.r")
 
@@ -135,6 +134,7 @@ run_gem2s_step <- function(task_name, input, pipeline_config){
     )
     print("Starting task")
     task(input, pipeline_config)
+    send_gem2s_update_to_api(pipeline_config, experiment_id = input$experimentId, task_name = task_name)
 }
 
 #
