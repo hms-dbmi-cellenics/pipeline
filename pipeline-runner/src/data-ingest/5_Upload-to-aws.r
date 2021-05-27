@@ -28,7 +28,6 @@ samples_sets <- function(config){
     color_pool <- color_pool[-1]
     cell_set$children[[length(cell_set$children)+1]] <- child
   }
-
   return(cell_set)
 }
 
