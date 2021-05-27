@@ -96,7 +96,7 @@ add_custom_config_per_sample <- function(step_fn, config, scdata){
   # We upadte the config file, so to be able to access the raw config we create a copy
   config.raw <- config
 
-  samples <- seurat_obj$samples
+  samples <- scdata$samples
   
   for(sample in unique(samples)){
     # Downsample the seurat object to a unisample experiment
