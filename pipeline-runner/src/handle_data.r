@@ -139,7 +139,7 @@ send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name) 
     return(result$MessageId)
 }
 
-send_dynamodb_item_to_api <- function(pipeline_config, experiment_id, table, item) {
+send_dynamodb_item_to_api <- function(pipeline_config, experiment_id, table, item, task_name) {
     message("Sending to SNS topic ", pipeline_config$sns_topic)
     sns <- paws::sns(config=pipeline_config$aws_config)
 
