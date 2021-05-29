@@ -41,6 +41,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     sns <- paws::sns(config=pipeline_config$aws_config)
 
     msg = list(
+        experimentId = input$experimentId,
         input = input,
         output = list(
             bucket = pipeline_config$results_bucket,
