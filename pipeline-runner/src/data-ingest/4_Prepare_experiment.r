@@ -396,6 +396,8 @@ task <- function(input,pipeline_config){
 
     message("Step 4 completed.")
     print(list.files(paste("/output",sep = "/"),all.files=TRUE,full.names=TRUE,recursive=TRUE))
+
+    return(list())
 }
 
 

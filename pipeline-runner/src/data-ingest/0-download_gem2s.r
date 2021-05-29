@@ -42,6 +42,7 @@ task <- function(input, pipeline_config) {
             writeBin(body, con = local_fpath)
         }
     }
+
     # download meta.json
     #meta_key = file.path(project_id, "meta.json")
     #message(paste("File: ",meta_key))
@@ -60,4 +61,6 @@ task <- function(input, pipeline_config) {
     message(exportJSON)
     write(exportJSON, "/input/meta.json")
     message('Written config json')
+
+    return(list())
 }
