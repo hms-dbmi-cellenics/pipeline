@@ -71,14 +71,14 @@ load_config <- function(development_aws_server) {
 #name changed from runstep
 run_processing_step <- function(scdata, config, task_name, sample_id, debug_config) {
     switch(task_name,
+           classifier = {
+               import::here("/src/classifier.r", task)
+           },
            cellSizeDistribution = {
                import::here("/src/cellSizeDistribution.r", task)
            },
            mitochondrialContent = {
                import::here("/src/mitochondrialContent.r", task)
-           },
-           classifier = {
-               import::here("/src/classifier.r", task)
            },
            numGenesVsNumUmis = {
                import::here("/src/numGenesVsNumUmis.r", task)
