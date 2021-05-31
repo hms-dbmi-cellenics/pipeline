@@ -6,12 +6,6 @@
 ##  - Preparing dataProcess json file
 ################################################
 
-suppressWarnings(library(Seurat))
-suppressWarnings(library(Matrix))
-suppressWarnings(library(dplyr))
-suppressWarnings(require(data.table))
-suppressWarnings(library(gprofiler2))
-
 set.seed(123)
 options(future.globals.maxSize= 1000 * 1024 ^ 2)
 source("test_object.r")
@@ -400,6 +394,8 @@ task <- function(input,pipeline_config){
 
     message("Step 4 completed.")
     print(list.files(paste("/output",sep = "/"),all.files=TRUE,full.names=TRUE,recursive=TRUE))
+
+    send_update_to_api(pipeline_config, experiment_id = input$experimentId, status_msg = "OK")
 }
 
 

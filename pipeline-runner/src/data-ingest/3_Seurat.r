@@ -5,14 +5,7 @@
 ##  - Create a file with flag_filtered
 ################################################
 
-suppressWarnings(library(Seurat))
-suppressWarnings(library(Matrix))
-suppressWarnings(library(dplyr))
-suppressWarnings(require(data.table))
-suppressWarnings(library(gprofiler2))
 source("help.r")
-
-
 
 
 ################################################
@@ -71,7 +64,9 @@ adding_metrics_and_annotation <- function(scdata, sample, config, min.cells = 3,
 
     message("[", sample, "] \t Adding emptyDrops...")
     file_ed <-  paste("/output/pre-emptydrops-", sample,".rds", sep = "")
-    
+
+    suppressWarnings(library(dplyr))
+
     if (file.exists(file_ed)) {
         seurat_obj@tools$flag_filtered <- FALSE
         message("\t \t getting emptyDrops results...")
@@ -145,5 +140,7 @@ task <- function(input,pipeline_config){
 
     message("Step 3 completed.")
     print(list.files(paste("/output",sep = "/"),all.files=TRUE,full.names=TRUE,recursive=TRUE))
+
+    send_update_to_api(pipeline_config, experiment_id = input$experimentId, status_msg = "OK")
 }
 

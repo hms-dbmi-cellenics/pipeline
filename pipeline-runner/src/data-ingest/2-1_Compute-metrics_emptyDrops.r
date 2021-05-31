@@ -4,10 +4,6 @@
 ##  - Save an rds with emptyDrops result per sample
 ################################################
 
-
-suppressWarnings(library(Seurat))
-suppressWarnings(library(DropletUtils))
-
 # compute_emptydrops function
 #' @description Save the result of emptyDrops per sample. 
 #' @param scdata Raw sparse matrix with the counts for one sample.
@@ -37,7 +33,7 @@ compute_emptydrops <- function(scdata, sample_name) {
     # if non-filtered, run emptyDrops and save results in file
     message("Found enough [", nr_barcodes_ambient, "] ambient barcodes, 
           so data is considered to be not filtered")
-    emptydrops_out <- emptyDrops(scdata, lower = threshold_emptydrops) 
+    emptydrops_out <- DropletUtils::emptyDrops(scdata, lower = threshold_emptydrops) 
 
     file_path <- paste("/output/pre-emptydrops-", sample_name, ".rds", sep = "")
     saveRDS(emptydrops_out, file = file_path, compress = FALSE)
@@ -67,5 +63,7 @@ task <- function(input,pipeline_config){
 
   message("Step 2-1 completed.") 
   print(list.files(paste("/output",sep = "/"),all.files=TRUE,full.names=TRUE,recursive=TRUE))
+
+  send_update_to_api(pipeline_config, experiment_id = input$experimentId, status_msg = "OK")
 }
 
