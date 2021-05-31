@@ -74,7 +74,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
         return(list(data = seurat_obj,config = config,plotData = guidata)) 
 
     }
-      sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
+    sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
 
     # umi histogram plot
     numis <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
@@ -132,7 +132,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
         barcode_names_keep_current_sample <-rownames(sample_subset@meta.data[sample_subset@meta.data$nCount_RNA >= minCellSize,])
         # combine the 2:
         barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-
+        
         seurat_obj.filtered <- subset_safe(seurat_obj,barcodes_to_keep)
     }else{
         seurat_obj.filtered <- seurat_obj
