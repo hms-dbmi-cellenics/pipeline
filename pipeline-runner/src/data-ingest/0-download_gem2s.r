@@ -52,9 +52,11 @@ task <- function(input, pipeline_config) {
     #writeBin(body, con = "/input/meta.json")
     config <- list(name = input$experimentName, samples=input$sampleIds,
     organism = input$organism,
-    metadata = input$metadata,
     input = list(type="10x")
     )
+    if("metadata" %in% names(input)){
+        config$metadata = input$metadata
+    }
 
     exportJSON <- RJSONIO::toJSON(config)
     message('Created json config')
