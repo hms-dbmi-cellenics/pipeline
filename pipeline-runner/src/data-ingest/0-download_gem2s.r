@@ -20,7 +20,7 @@ task <- function(input, pipeline_config) {
             message(gem_key)
             sample_name = sample_names[[match(sample,sample_uuids)]]
             #Preparing directories
-            local_dir <- file.path('/input',sample_name)
+            local_dir <- file.path('/input',sample)
             #unlink(local_dir, recursive = TRUE)
             dir.create('/input')
             dir.create(local_dir)
@@ -50,7 +50,7 @@ task <- function(input, pipeline_config) {
     #     Key = meta_key
     #)
     #writeBin(body, con = "/input/meta.json")
-    config <- list(name = input$experimentName, samples=input$sampleNames,
+    config <- list(name = input$experimentName, samples=input$sampleIds,
     organism = input$organism,
     input = list(type="10x")
     )
@@ -60,6 +60,4 @@ task <- function(input, pipeline_config) {
     message(exportJSON)
     write(exportJSON, "/input/meta.json")
     message('Written config json')
-
-    send_update_to_api(pipeline_config, experiment_id = input$experimentId, status_msg = "OK")
 }

@@ -63,7 +63,5 @@ task <- function(input,pipeline_config){
 
   message("Step 2-1 completed.") 
   print(list.files(paste("/output",sep = "/"),all.files=TRUE,full.names=TRUE,recursive=TRUE))
-
-  send_update_to_api(pipeline_config, experiment_id = input$experimentId, status_msg = "OK")
 }
 

@@ -4,6 +4,7 @@ color_pool <- RJSONIO::fromJSON("/src/data-ingest/color_pool.json")
 input_dir <- '/input'
 output_dir <- '/output'
 
+<<<<<<< HEAD
 # creates the table information for samples
 create_samples_table <- function(config, experiment_id, project_id) {
   # In samples_table we are going to add the core of the information
@@ -80,11 +81,14 @@ create_samples_table <- function(config, experiment_id, project_id) {
 
 
 samples_sets <- function(){
+=======
+samples_sets <- function(config){
+>>>>>>> develop
   sample_annotations <- read.csv(file.path(output_dir, "samples-cells.csv"),
                                  sep = "\t",
                                  col.names = c("Cells_ID","Value"),
                                  na.strings = "None")
-
+  
   cell_set <- list(key = "sample",
                    name = "Samples",
                    rootNode = TRUE,
@@ -95,15 +99,14 @@ samples_sets <- function(){
 
   for (sample in samples) {
     view <- sample_annotations[sample_annotations$Value == sample, "Cells_ID"]
-    child <- list(key = paste0("sample-", sample),
-                  name = sample,
+    child <- list(key = paste0(sample),
+                  name = config$sampleNames[[match(sample,config$sampleIds)]],
                   color = color_pool[1],
                   cellIds = view)
 
     color_pool <- color_pool[-1]
     cell_set$children[[length(cell_set$children)+1]] <- child
   }
-
   return(cell_set)
 }
 
@@ -151,8 +154,6 @@ task <- function(input, pipeline_config) {
 
   experiment_id <- input$experimentId
   project_id <- input$projectId
-  sample_names <- input$sampleNames
-  sample_uuids <- input$sampleUuids
 
   # save experiment_id for record-keeping
   writeLines(experiment_id, file.path(output_dir, "experiment_id.txt"))
@@ -172,9 +173,7 @@ task <- function(input, pipeline_config) {
     type = "cellSets"
   )
 
-  # TODO: maybe we don't need samples_data
-  samples_data <- create_samples_table(config, experiment_id, project_id)
-  samples_set <- samples_sets()
+  samples_set <- samples_sets(input)
 
   # Design cell_set meta_data for DynamoDB
   cell_sets <- list(scratchpad,samples_set)
@@ -217,13 +216,8 @@ task <- function(input, pipeline_config) {
   send_dynamodb_item_to_api(pipeline_config,
                             experiment_id = experiment_id,
                             table = pipeline_config$experiments_table,
-                            item = experiment_data)
-
-  # samples data to dynamodb
-  send_dynamodb_item_to_api(pipeline_config,
-                            experiment_id = experiment_id,
-                            table = pipeline_config$samples_table,
-                            item = samples_data)
+                            item = experiment_data,
+                            task_name = "uploadToAWS")
 
   if (cluster_env == "production")
     print(sprintf("https://scp.biomage.net/experiments/%s/data-exploration", experiment_id))
