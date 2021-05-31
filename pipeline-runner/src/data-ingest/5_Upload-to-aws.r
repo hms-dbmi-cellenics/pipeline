@@ -15,7 +15,7 @@ create_samples_table <- function(config, experiment_id, project_id) {
                              row.names = 'samples')
 
   samples <- row.names(df_prefiltered)
-  samples_table$ids = list(paste0("sample-", samples))
+  samples_table$ids = paste0("sample-", samples)
 
   # For the current datasets it could happen that they are not in the gz format, so we leave the alternative tsv format.
   mime_options = c(
