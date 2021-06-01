@@ -273,7 +273,7 @@ task <- function(input,pipeline_config){
         variables_metadata <- names(config$metadata)
         metadata_dynamo <- seurat_obj@meta.data[, c("cells_id", variables_metadata)]
 
-        message("saving multsiample info...")
+        message("saving metadata info...")
         write.table(
             metadata_dynamo,
             file = "/output/metadata-cells.csv",
@@ -397,6 +397,8 @@ task <- function(input,pipeline_config){
 
     message("Step 4 completed.")
     print(list.files(paste("/output",sep = "/"),all.files=TRUE,full.names=TRUE,recursive=TRUE))
+
+    return(list())
 }
 
 

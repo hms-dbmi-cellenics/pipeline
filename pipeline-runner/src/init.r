@@ -71,14 +71,14 @@ load_config <- function(development_aws_server) {
 #name changed from runstep
 run_processing_step <- function(scdata, config, task_name, sample_id, debug_config) {
     switch(task_name,
+           classifier = {
+               import::here("/src/classifier.r", task)
+           },
            cellSizeDistribution = {
                import::here("/src/cellSizeDistribution.r", task)
            },
            mitochondrialContent = {
                import::here("/src/mitochondrialContent.r", task)
-           },
-           classifier = {
-               import::here("/src/classifier.r", task)
            },
            numGenesVsNumUmis = {
                import::here("/src/numGenesVsNumUmis.r", task)
@@ -92,7 +92,7 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
            configureEmbedding = {
                import::here("/src/configureEmbedding.r", task)
            },
-           stop(paste("Invalid task name given:", task_name))
+           stop(paste("Invalid task name given: ", task_name))
     )
     handle_debug(scdata, config, task_name, sample_id, debug_config)
     out <- task(scdata, config, task_name, sample_id)
@@ -106,8 +106,7 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
 # projectId
 # pipeline_config as defined by load_config
 #
-run_gem2s_step <- function(task_name, input, pipeline_config){
-    print("GEM2S")
+run_gem2s_step <- function(task_name, input, pipeline_config) {
     switch(task_name,  
             downloadGem = {
                 import::here("/src/data-ingest/0-download_gem2s.r", task)
@@ -133,8 +132,21 @@ run_gem2s_step <- function(task_name, input, pipeline_config){
             stop(paste("Invalid task name given:", task_name))
     )
     print("Starting task")
-    task(input, pipeline_config)
-    send_gem2s_update_to_api(pipeline_config, experiment_id = input$experimentId, task_name = task_name)
+    data <- task(input, pipeline_config)
+    
+    return(data)
+}
+
+call_gem2s <- function(task_name, input, pipeline_config) {
+    experiment_id <- input$experimentId
+
+    data %<-% run_gem2s_step(task_name, input, pipeline_config)
+
+    assign("scdata", data, pos = ".GlobalEnv")
+
+    message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data)
+    
+    return(message_id)
 }
 
 #
@@ -183,7 +195,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
         message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
     }
-    
+
     # send result to API
     message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
     
@@ -213,8 +225,7 @@ wrapper <- function(input_json) {
     if (process_name == 'qc') {
         message_id <- call_data_processing(task_name, input, pipeline_config)
     } else if (process_name == 'gem2s') {
-        message("entering Gem2s")
-        message_id <- run_gem2s_step(task_name, input, pipeline_config) 
+        message_id <- call_gem2s(task_name, input, pipeline_config)
     } else {
         stop("Process name not recognized.")
     }
@@ -260,12 +271,15 @@ init <- function() {
                 # save.image(file = file.path("/debug", "last.dump.init.r.rda"))
                 # global assign this variable to use outside this scope
                 cause <- paste((limitedLabels(call.stack)), collapse = "\n")
+
                 input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
                 sample_text <- ifelse(is.null(input_parse$sampleUuid),
                                     "",
                                     paste0(" for sample ", input_parse$sampleUuid))
+
                 error_txt <- paste0("R error at filter step ",
                                     input_parse$taskName, sample_text, "! : ", e$message)
+                
                 message(error_txt)
                 message("Cause: ", cause)
 
@@ -274,6 +288,9 @@ init <- function() {
                     error = error_txt,
                     cause = cause
                 )
+
+                send_pipeline_fail_update(pipeline_config, input_parse$experimentId, input_parse$processName, "Error message placeholder")
+
                 message("Sent task failure to state machine task: ", taskToken)
             })
         },

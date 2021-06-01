@@ -36,7 +36,7 @@ meta_sets <- function() {
 
   meta_annotations <- read.csv(file.path(output_dir, "metadata-cells.csv"), sep='\t')
 
-  cell_set_list <- list()
+  cell_set_list <- c()
 
   # The first column is the cells_id, the rest is the metadata information
   for (i in seq(2, ncol(meta_annotations))) {
@@ -46,7 +46,7 @@ meta_sets <- function() {
       "key" = key,
       "name" = name,
       "rootNode" = TRUE,
-      "children" = list(),
+      "children" = c(),
       "type" = "metadataCategorical"
     )
 
@@ -54,18 +54,20 @@ meta_sets <- function() {
 
     for (value in unique(annot)) {
       view  <- meta_annotations[which(annot == value), 'cells_id']
-      cell_set$children <- append(
-        cell_set$children,
-        list(
-          "key" = paste(key, value, sep='-'),
-          "name" = value,
-          "color" = color_pool[1],
-          "cellIds" = view)
+      cell_set$children <- c(
+          cell_set$children,
+          list(
+            list(
+            "key" = paste(key, value, sep='-'),
+            "name" = value,
+            "color" = color_pool[1],
+            "cellIds" = view)
+          )
       )
 
       color_pool <- color_pool[-1]
     }
-    cell_set_list <- append(cell_set_list, cell_set)
+    cell_set_list <- c(cell_set_list, list(cell_set))
   }
   return(cell_set_list)
 }
@@ -80,7 +82,7 @@ task <- function(input, pipeline_config) {
   writeLines(experiment_id, file.path(output_dir, "experiment_id.txt"))
 
   # read experiment config
-  config <- RJSONIO::fromJSON(file.path(input_dir, "meta.json"))
+  config <- RJSONIO::fromJSON("/input/meta.json")
 
   # read config related to QC pipeline
   config_dataProcessing <- RJSONIO::fromJSON(file.path(output_dir, "config_dataProcessing.json"))
@@ -97,10 +99,10 @@ task <- function(input, pipeline_config) {
   samples_set <- samples_sets(input)
 
   # Design cell_set meta_data for DynamoDB
-  cell_sets <- list(scratchpad,samples_set)
+  cell_sets <- c(list(scratchpad), list(samples_set))
 
   if ("metadata" %in% names(config))
-    cell_sets <- append(cell_sets,meta_sets())
+    cell_sets <- c(cell_sets,meta_sets())
   
   cell_sets <- list(cellSets = cell_sets)
 
@@ -134,13 +136,13 @@ task <- function(input, pipeline_config) {
   cluster_env <- pipeline_config$cluster_env
   print(sprintf("Experiment ID: %s uploaded to %s.", experiment_id, cluster_env))
 
-  send_dynamodb_item_to_api(pipeline_config,
-                            experiment_id = experiment_id,
-                            table = pipeline_config$experiments_table,
-                            item = experiment_data,
-                            task_name = "uploadToAWS")
+  data <- list(
+    item = experiment_data,
+    table = pipeline_config$experiments_table
+  )
 
   if (cluster_env == "production")
     print(sprintf("https://scp.biomage.net/experiments/%s/data-exploration", experiment_id))
 
+  return(data)
 }

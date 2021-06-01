@@ -46,6 +46,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
         message("Warning! No MT-content has been computed for this experiment!")
         return(seurat_obj)
     }
+    
     #The absolute threshold object is an atomic vector, not a list!
     maxFraction <- config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction
     # Check if it is required to compute sensible values. From the function 'generate_default_values_doubletScores', it is expected
