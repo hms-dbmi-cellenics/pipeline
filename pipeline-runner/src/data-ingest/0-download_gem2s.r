@@ -54,6 +54,9 @@ task <- function(input, pipeline_config) {
     organism = input$organism,
     input = list(type="10x")
     )
+    if("metadata" %in% names(input)){
+        config$metadata = input$metadata
+    }
 
     exportJSON <- RJSONIO::toJSON(config)
     message('Created json config')
