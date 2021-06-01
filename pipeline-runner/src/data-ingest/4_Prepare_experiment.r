@@ -273,7 +273,7 @@ task <- function(input,pipeline_config){
         variables_metadata <- names(config$metadata)
         metadata_dynamo <- seurat_obj@meta.data[, c("cells_id", variables_metadata)]
 
-        message("saving multsiample info...")
+        message("saving metadata info...")
         write.table(
             metadata_dynamo,
             file = "/output/metadata-cells.csv",
@@ -350,7 +350,8 @@ task <- function(input,pipeline_config){
     config.dataIntegration <- list(auto="false", 
         dataIntegration = list( method = identified.method , 
                             methodSettings = list(seuratv4=list(numGenes=2000, normalisation="logNormalize"), 
-                                                unisample=list(numGenes=2000, normalisation="logNormalize"))),
+                                                unisample=list(numGenes=2000, normalisation="logNormalize"),
+                                                fastmnn=list(numGenes=2000, normalisation="logNormalize"))),
         dimensionalityReduction = list(method = "rpca", numPCs = 30, excludeGeneCategories = c())
     )
 
