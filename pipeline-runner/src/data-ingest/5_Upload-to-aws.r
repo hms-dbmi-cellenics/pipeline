@@ -136,13 +136,13 @@ task <- function(input, pipeline_config) {
   cluster_env <- pipeline_config$cluster_env
   print(sprintf("Experiment ID: %s uploaded to %s.", experiment_id, cluster_env))
 
-  send_dynamodb_item_to_api(pipeline_config,
-                            experiment_id = experiment_id,
-                            table = pipeline_config$experiments_table,
-                            item = experiment_data,
-                            task_name = "uploadToAWS")
+  data <- list(
+    item = experiment_data,
+    table = pipeline_config$experiments_table
+  )
 
   if (cluster_env == "production")
     print(sprintf("https://scp.biomage.net/experiments/%s/data-exploration", experiment_id))
 
+  return(data)
 }

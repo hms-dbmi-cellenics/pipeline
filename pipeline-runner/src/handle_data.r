@@ -40,7 +40,8 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     message("Sending to SNS topic ", pipeline_config$sns_topic)
     sns <- paws::sns(config=pipeline_config$aws_config)
 
-    msg <- list(
+    msg = list(
+        experimentId = input$experimentId,
         input = input,
         output = list(
             bucket = pipeline_config$results_bucket,
@@ -64,6 +65,57 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     )
 
     return(result$MessageId)
+}
+
+send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, data) {
+    message("Sending to SNS topic ", pipeline_config$sns_topic)
+    sns <- paws::sns(config=pipeline_config$aws_config)
+
+    msg = c(data, taskName = list(task_name), experimentId = list(experiment_id))
+
+    result <- sns$publish(
+        Message = RJSONIO::toJSON(msg),
+        TopicArn = pipeline_config$sns_topic,
+        MessageAttributes = list(
+            type = list(
+                DataType = "String",
+                StringValue = "GEM2SResponse",
+                BinaryValue = NULL
+            )
+        )
+    )
+
+    return(result$MessageId)
+}
+
+send_pipeline_fail_update <- function(pipeline_config, experiment_id, process_name, error_message) {
+    error_msg = list()
+    error_msg$experimentId = experiment_id
+    error_msg$response$error = error_message
+
+    sns <- paws::sns(config=pipeline_config$aws_config)
+
+    string_value = ""
+    if (process_name == 'qc') {
+        string_value = "PipelineResponse"
+    } else if (process_name == 'gem2s') {
+        string_value = "GEM2SResponse"
+    } else {
+        message(paste("Invalid process_name given: ", process_name))
+        return()
+    }
+
+    result <- sns$publish(
+                    Message = RJSONIO::toJSON(error_msg),
+                    TopicArn = pipeline_config$sns_topic,
+                    MessageAttributes = list(
+                        type = list(
+                            DataType = "String",
+                            StringValue = string_value,
+                            BinaryValue = NULL
+                        )
+                    )
+                )
 }
 
 send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
@@ -113,56 +165,6 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
     )
 
     return(object_key)
-}
-
-send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name) {
-    message("Sending to SNS topic ", pipeline_config$sns_topic)
-    sns <- paws::sns(config=pipeline_config$aws_config)
-
-    msg <- list(
-        taskName = task_name,
-        experimentId = experiment_id
-    )
-
-    result <- sns$publish(
-        Message = RJSONIO::toJSON(msg),
-        TopicArn = pipeline_config$sns_topic,
-        MessageAttributes = list(
-            type = list(
-                DataType = "String",
-                StringValue = "GEM2SResponse",
-                BinaryValue = NULL
-            )
-        )
-    )
-
-    return(result$MessageId)
-}
-
-send_dynamodb_item_to_api <- function(pipeline_config, experiment_id, table, item, task_name) {
-    message("Sending to SNS topic ", pipeline_config$sns_topic)
-    sns <- paws::sns(config=pipeline_config$aws_config)
-
-    msg <- list(
-        taskName = task_name,
-        experimentId = experiment_id,
-        item = item,
-        table = table
-    )
-
-    result <- sns$publish(
-        Message = RJSONIO::toJSON(msg),
-        TopicArn = pipeline_config$sns_topic,
-        MessageAttributes = list(
-            type = list(
-                DataType = "String",
-                StringValue = "GEM2SResponse",
-                BinaryValue = NULL
-            )
-        )
-    )
-
-    return(result$MessageId)
 }
 
 put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
