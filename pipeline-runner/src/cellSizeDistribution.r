@@ -146,7 +146,6 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     plots <-list()
     plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
     plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
-
     result <- list(
         data = seurat_obj.filtered,
         config = config,
