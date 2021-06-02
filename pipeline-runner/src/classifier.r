@@ -65,6 +65,9 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
   # sample-WT1
   # we need to get only the last part, in order to grep the object.
   tmp_sample <- sub("sample-","",sample_id)
+  
+  # get filter stats before filtering
+  before <- calc_filter_stats(seurat_obj, tmp_sample)
 
   import::here(map2, .from = purrr)
 
@@ -84,16 +87,16 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
       print("Classify is enabled but has no classify data available: will dissable it: no filtering!")      
       # should this be json, i.e. "false" instead?
       config$enabled <- FALSE
-      plots <- list()
+      guidata <- list()
     } else { # enabled and good data:
       print(paste0("Classify is enabled but classify data available: all good for filtering with FDR=", FDR))
       obj_metadata <- seurat_obj@meta.data
       # extract plotting data of original data to return to plot slot later
       barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
       if(length(barcode_names_this_sample)==0){
-          plots <- list()
-          plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
-          return(list(data = seurat_obj,config = config,plotData = plots)) 
+          guidata <- list()
+          guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
+          return(list(data = seurat_obj,config = config,plotData = guidata)) 
       }
       sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
       print("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval")
@@ -130,22 +133,31 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
       cells_position_to_keep <- sort(cells_position_to_keep)
       plot1_data <- plot1_data[cells_position_to_keep]
 
-      #Populate plots list
-      plots <-list()
-      plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
+      #Populate guidata list
+      guidata <-list()
+      guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
     }
   } else {
     print("filter disabled: data not filtered!")
-    plots<-list()
-    plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
+    guidata <- list()
+    guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
     seurat_obj <- seurat_obj
   }
   print(paste0("Cells per sample after filter for sample ", sample_id))
   print(table(seurat_obj$orig.ident, useNA="ifany"))
-  # > head(plots[[1]])
+  # > head(guidata[[1]])
   # [[1]]
   # FDR    log_u
   # 0.000000 3.554852
+  
+  # get filter stats after filtering
+  filter_stats <- list(
+    before = before,
+    after = calc_filter_stats(seurat_obj, tmp_sample)
+  )
+  guidata[generate_gui_uuid(sample_id, task_name, 1)] <- filter_stats
+  print("Filter statistics for sample before/after filter:")
+  str(filter_stats)
 
   # [[2]]
   # FDR        log_u
@@ -154,7 +166,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
   result <- list(
                  data = seurat_obj,
                  config = config,
-                 plotData = plots
+                 plotData = guidata
   )
 
   return(result)

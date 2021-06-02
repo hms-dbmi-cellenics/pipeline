@@ -94,10 +94,10 @@ task <- function(scdata, config, task_name, sample_id){
     )
 
     plots <- list()
-    plots[generate_plotuuid("", task_name, 0)] <- list(embeddingPreviewByCellSets)
-    plots[generate_plotuuid("", task_name, 1)] <- list(embeddingPreviewBySamples)
-    plots[generate_plotuuid("", task_name, 2)] <- list(embeddingPreviewMitochondrialContent)
-    plots[generate_plotuuid("", task_name, 3)] <- list(embeddingPreviewDoubletScore)
+    plots[generate_gui_uuid("", task_name, 0)] <- list(embeddingPreviewByCellSets)
+    plots[generate_gui_uuid("", task_name, 1)] <- list(embeddingPreviewBySamples)
+    plots[generate_gui_uuid("", task_name, 2)] <- list(embeddingPreviewMitochondrialContent)
+    plots[generate_gui_uuid("", task_name, 3)] <- list(embeddingPreviewDoubletScore)
 
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(

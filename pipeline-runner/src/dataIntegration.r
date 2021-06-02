@@ -63,8 +63,8 @@ task <- function(scdata, config,task_name,sample_id){
     plot2_data <- unname(purrr::map2(1:50,varExplained,function(x,y){c("PC"=x,"percentVariance"=y)}))
 
     plots <- list()
-    plots[generate_plotuuid("", task_name, 0)] <- list(plot1_data)
-    plots[generate_plotuuid("", task_name, 1)] <- list(plot2_data)    
+    plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
+    plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)    
 
     # For now config is not updated, since there is not new changes
     # config <- ...
