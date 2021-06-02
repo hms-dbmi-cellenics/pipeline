@@ -59,7 +59,7 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
 #' Calculates statistics before/after filter step
 #'
 #' @param seurat_obj \code{SeuratObject}
-#' @param tmp_sample sample name in \code{seurat_obj@orig.ident} to compute statistics for
+#' @param tmp_sample sample name in \code{seurat_obj$samples} to compute statistics for
 #'
 #' @return list with \itemize{
 #'   \item{"num_cells"}{Number of cells in sample}
@@ -71,7 +71,7 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
 calc_filter_stats <- function(seurat_obj, tmp_sample) {
   
   # subset to current sample
-  scdata <- seurat_obj[, seurat_obj$orig.ident == tmp_sample]
+  scdata <- seurat_obj[, seurat_obj$samples == tmp_sample]
   
   # number of counts per gene
   ncount <- Matrix::rowSums(scdata[['RNA']]@counts)
