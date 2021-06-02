@@ -1,14 +1,13 @@
 #
-# Generate plot uuid as required by the UI
+# Generate GUI plots and data uuid as required by the UI
 # 
-
-generate_plotuuid <- function(sample_uuid, task_name, plot_idx) {
+generate_gui_uuid <- function(sample_uuid, task_name, item_idx) {
 
   if(sample_uuid != "") {
-    return(paste(sample_uuid, task_name, plot_idx, sep="-"))
+    return(paste(sample_uuid, task_name, item_idx, sep="-"))
   }
 
-  return(paste(task_name, plot_idx, sep="-"))
+  return(paste(task_name, item_idx, sep="-"))
 
 }
 
@@ -54,4 +53,33 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
         save(seurat_obj, config, task_name, sample_id, num_cells_to_downsample, file = fpath_cont)
         message(sprintf("⚠️ RUN load('%s') to restore environment.", fpath_host))
     }
+}
+
+
+#' Calculates statistics before/after filter step
+#'
+#' @param seurat_obj \code{SeuratObject}
+#' @param tmp_sample sample name in \code{seurat_obj$samples} to compute statistics for
+#'
+#' @return list with \itemize{
+#'   \item{"num_cells"}{Number of cells in sample}
+#'   \item{"total_genes"}{Number of detected genes in sample}
+#'   \item{"median_genes"}{Median number of genes detected per cell}
+#'   \item{"median_umis"}{Median number of counts per cell}
+#' }
+#' 
+calc_filter_stats <- function(seurat_obj, tmp_sample) {
+  
+  # subset to current sample
+  scdata <- seurat_obj[, seurat_obj$samples == tmp_sample]
+  
+  # number of counts per gene
+  ncount <- Matrix::rowSums(scdata[['RNA']]@counts)
+  
+  list(
+    num_cells = ncol(scdata),
+    total_genes = sum(ncount > 0),
+    median_genes = median(scdata$nFeature_RNA),
+    median_umis = median(scdata$nCount_RNA)
+  )
 }

@@ -31,12 +31,12 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config, thr
   # Returns Seurat object with a new list in the `tools` slot,
   # `CalculateBarcodeInflections` including inflection point calculatio
   seurat_obj_tmp <- CalculateBarcodeInflections(
-                                        object = seurat_obj,
-                                        barcode.column = "nCount_RNA",
-                                        group.column = "orig.ident",
-                                        # [HARDCODED]
-                                        threshold.low = threshold.low,
-                                        threshold.high = NULL
+    object = seurat_obj,
+    barcode.column = "nCount_RNA",
+    group.column = "orig.ident",
+    # [HARDCODED]
+    threshold.low = threshold.low,
+    threshold.high = NULL
   )
   # extracting the inflection point value which can serve as minCellSize threshold
   # all other side effects to the scdate object will be discarded
@@ -68,10 +68,11 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     obj_metadata <- seurat_obj@meta.data
     barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)),]) 
     if(length(barcode_names_this_sample)==0){
-        plots <- list()
-        plots[generate_plotuuid(sample_id, task_name, 0)] <- list()
-        plots[generate_plotuuid(sample_id, task_name, 1)] <- list()
-        return(list(data = seurat_obj,config = config,plotData = plots)) 
+        guidata <- list()
+        guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
+        guidata[generate_gui_uuid(sample_id, task_name, 1)] <- list()
+        return(list(data = seurat_obj,config = config,plotData = guidata)) 
+
     }
     sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
 
@@ -142,14 +143,24 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
 
     # update config
     config$filterSettings$minCellSize <- minCellSize
-    #Populate plots list
-    plots <-list()
-    plots[generate_plotuuid(sample_id, task_name, 0)] <- list(plot1_data)
-    plots[generate_plotuuid(sample_id, task_name, 1)] <- list(plot2_data)
+    #Populate data for UI
+    guidata <-list()
+    guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
+    guidata[generate_gui_uuid(sample_id, task_name, 1)] <- list(plot2_data)
+
+    # Populate with filter statistics
+    filter_stats <- list(
+        before = calc_filter_stats(seurat_obj, tmp_sample),
+        after = calc_filter_stats(seurat_obj.filtered, tmp_sample)
+    )
+    guidata[generate_gui_uuid(sample_id, task_name, 3)] <- filter_stats
+    print("Filter statistics for sample before/after filter:")
+    str(filter_stats)
+
     result <- list(
         data = seurat_obj.filtered,
         config = config,
-        plotData = plots
+        plotData = guidata
     )
 
     return(result)
