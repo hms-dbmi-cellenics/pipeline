@@ -181,6 +181,13 @@ task <- function(input,pipeline_config){
     message("Stored pool")
     
     ################################################
+    ## Adding information regarding experiment and
+    ## ingestion
+    ################################################
+    seurat_obj@misc[["experimentId"]] <- input$experimentId
+    seurat_obj@misc[["ingestionDate"]] <- Sys.time()
+
+    ################################################
     ## Checking filtered data
     ################################################
 
