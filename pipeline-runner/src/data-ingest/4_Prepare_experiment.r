@@ -31,9 +31,7 @@ cellSizeDistribution_config <- function(seurat_obj, config) {
 doubletScores_config <- function(scdata, config){
 
     # Minimun score that has a singlet 
-    probabilityThreshold <-  max(scdata$doublet_scores[scdata$doublet_class=="singlet"])
-    print(probabilityThreshold)
-    print(typeof(probabilityThreshold))
+    probabilityThreshold <-  max(scdata$doublet_scores[scdata$doublet_class=="singlet"],na.rm=TRUE)
     # update config
     config$filterSettings$probabilityThreshold <- probabilityThreshold
 
@@ -111,7 +109,6 @@ add_custom_config_per_sample <- function(step_fn, config, scdata){
     # Update config with the unisample thresholds
     config[[paste("sample-", sample, sep = "")]] <- result_config
   }
-  
   return(config)
   
 }
