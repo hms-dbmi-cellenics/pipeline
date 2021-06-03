@@ -32,6 +32,8 @@ doubletScores_config <- function(scdata, config){
 
     # Minimun score that has a singlet 
     probabilityThreshold <-  max(scdata$doublet_scores[scdata$doublet_class=="singlet"])
+    print(probabilityThreshold)
+    print(typeof(probabilityThreshold))
     # update config
     config$filterSettings$probabilityThreshold <- probabilityThreshold
 
