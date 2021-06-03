@@ -124,7 +124,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
       after = calc_filter_stats(seurat_obj.filtered, tmp_sample)
     )
     
-    guidata[generate_gui_uuid(sample_id, task_name, 1)] <- filter_stats
+    guidata[generate_gui_uuid(sample_id, task_name, 2)] <- filter_stats
     print("Filter statistics for sample before/after filter:")
     str(filter_stats)
 
