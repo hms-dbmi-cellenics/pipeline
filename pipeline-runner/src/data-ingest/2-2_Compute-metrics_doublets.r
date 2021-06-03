@@ -24,6 +24,8 @@ compute_doublet_scores <- function(scdata, sample_name) {
         scdata <- scdata[, keep]
     }
 
+
+    set.seed(0)
     scdata_DS <- scDblFinder(scdata, dbr = NULL, trajectoryMode = FALSE)
     df_doublet_scores <- data.frame(Barcodes = rownames(scdata_DS@colData),
                                     doublet_scores = scdata_DS@colData$scDblFinder.score,

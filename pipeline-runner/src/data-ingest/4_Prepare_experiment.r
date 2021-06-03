@@ -107,7 +107,7 @@ add_custom_config_per_sample <- function(step_fn, config, scdata){
     result_config$auto <- NULL
     result_config$enabled <- NULL
     # Update config with the unisample thresholds
-    config[[paste("sample-", sample, sep = "")]] <- result_config
+    config[[sample]] <- result_config
   }
   
   return(config)
