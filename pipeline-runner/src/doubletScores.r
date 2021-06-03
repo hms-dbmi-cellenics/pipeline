@@ -10,7 +10,7 @@ source('utils.r')
 generate_default_values_doubletScores <- function(seurat_obj, sample) {
     
     # default doublet score based of scDblFinder classification
-    is.sample <- seurat_obj$samples %in% sample
+    is.sample <- seurat_obj$samples == sample
     is.singlet <- seurat_obj$doublet_class == "singlet"
     threshold <- max(seurat_obj$doublet_scores[is.sample & is.singlet], na.rm = TRUE)
     
