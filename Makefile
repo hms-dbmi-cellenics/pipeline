@@ -10,7 +10,8 @@
 # to be picked up by the R worker.
 # See README.md/Running on Docker issues, for more info
 ifneq ($(shell uname -s), Darwin)
-	export HOST_IP=$(shell hostname -I | awk '{print $$1}')
+    # Get the gateway address of the default bridge network
+	export HOST_IP=$(shell docker network inspect bridge --format='{{(index .IPAM.Config 0).Gateway}}')
 endif
 #--------------------------------------------------
 # Targets
