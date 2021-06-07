@@ -12,7 +12,7 @@ AWS.config.update({
   s3ForcePathStyle: true,
 });
 
-const isPipelineContainer = (name) => name.includes('qc') || name.includes('gem2s')
+const isPipelineContainer = (name) => name.includes('qc') || name.includes('gem2s');
 
 const setVarsInTemplate = (template) => {
   const varNames = ['DEBUG_STEP', 'DEBUG_PATH', 'HOST_IP'];
@@ -66,6 +66,18 @@ const generateRandomColor = (nameColorMap, name) => {
   return coloredName;
 };
 
+const attachToContainer = (docker, id, name, nameColorMap, isNew) => {
+  const coloredName = generateRandomColor(nameColorMap, name.replace('/', ''));
+  console.log(`Container with name ${coloredName} ${isNew ? 'started' : 'already running'}, attaching log...`);
+
+  docker.getContainer(id).attach(
+    { stream: true, stdout: true, stderr: true },
+    (err, stream) => {
+      stream.pipe(pt(`${coloredName} | `)).pipe(process.stdout);
+    },
+  );
+};
+
 const attachToExistingContainers = (docker, nameColorMap) => {
   docker.listContainers((err, containers) => {
     containers.forEach((info) => {
@@ -75,16 +87,7 @@ const attachToExistingContainers = (docker, nameColorMap) => {
       if (!name) {
         return;
       }
-
-      const coloredName = generateRandomColor(nameColorMap, name.replace('/', ''));
-      console.log('Container with name', coloredName, 'already running, attaching log...');
-
-      docker.getContainer(id).attach(
-        { stream: true, stdout: true, stderr: true },
-        (err, stream) => {
-          stream.pipe(pt(`${coloredName} | `)).pipe(process.stdout);
-        },
-      );
+      attachToContainer(docker, id, name, nameColorMap, false);
     });
   });
 };
@@ -96,16 +99,7 @@ const attachToNewContainers = (docker, emitter, nameColorMap) => {
     if (!isPipelineContainer(name)) {
       return;
     }
-
-    const coloredName = generateRandomColor(nameColorMap, name);
-    console.log('Container with name', coloredName, 'started, attaching log...');
-
-    docker.getContainer(id).attach(
-      { stream: true, stdout: true, stderr: true },
-      (err, stream) => {
-        stream.pipe(pt(`${coloredName} | `)).pipe(process.stdout);
-      },
-    );
+    attachToContainer(docker, id, name, nameColorMap, true);
   });
 
   const stopDieCallback = (message) => {
