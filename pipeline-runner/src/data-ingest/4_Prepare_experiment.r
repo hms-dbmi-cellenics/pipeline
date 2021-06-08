@@ -353,7 +353,7 @@ task <- function(input,pipeline_config){
     # BE CAREFUL! The method is based on config.json. For multisample only seuratv4, for unisample LogNormalize
     # hardcoded because unisample check is performed in dataIntegration 
     identified.method <- 'seuratv4'
-    config.dataIntegration <- list(auto="false", 
+    config.dataIntegration <- list(
         dataIntegration = list( method = identified.method , 
                             methodSettings = list(seuratv4=list(numGenes=2000, normalisation="logNormalize"), 
                                                 unisample=list(numGenes=2000, normalisation="logNormalize"),
@@ -361,7 +361,7 @@ task <- function(input,pipeline_config){
         dimensionalityReduction = list(method = "rpca", numPCs = 30, excludeGeneCategories = c())
     )
 
-    config.configureEmbedding <- list(auto="false", 
+    config.configureEmbedding <- list( 
         embeddingSettings = list(method = "umap", methodSettings = list(
                                     umap = list(minimumDistance=0.3, distanceMetric="euclidean"), 
                                     tsne = list(perplexity=min(30, ncol(seurat_obj)/100), learningRate=max(200, ncol(seurat_obj)/12))
