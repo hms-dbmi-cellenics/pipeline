@@ -7,14 +7,13 @@
 
 source('utils.r')
 
-# The most uses values in doublet scores reporting in the scrublet paper [1] are around 0.25. There are not too much literature about how to compute
-# a threshold. For now, we will offer two methods:
-# --> Absolute threshold: In order to be not too extrictive the threshold is set to 0.25
-generate_default_values_doubletScores <- function(seurat_obj, config) {
-
-    # HARDCODE
-    threshold <- 0.25
-
+generate_default_values_doubletScores <- function(seurat_obj, sample) {
+    
+    # default doublet score based of scDblFinder classification
+    is.sample <- seurat_obj$samples == sample
+    is.singlet <- seurat_obj$doublet_class == "singlet"
+    threshold <- max(seurat_obj$doublet_scores[is.sample & is.singlet], na.rm = TRUE)
+    
     return(threshold)
 }
 
@@ -51,7 +50,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     # to get a value --> probabilityThreshold.
     if (exists('auto', where=config)){
         if (as.logical(toupper(config$auto)))
-            probabilityThreshold <- generate_default_values_doubletScores(seurat_obj, config)
+            probabilityThreshold <- generate_default_values_doubletScores(seurat_obj, sample_id)
     }
 
     # extract plotting data of original data to return to plot slot later
@@ -126,7 +125,3 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     return(result)
 
 }
-
-
-# [1] Wolock SL, Lopez R, Klein AM. Scrublet: Computational Identification of Cell Doublets in Single-Cell Transcriptomic Data. 
-# Cell Syst. 2019 Apr 24;8(4):281-291.e9. doi: 10.1016/j.cels.2018.11.005. Epub 2019 Apr 3. PMID: 30954476; PMCID: PMC6625319.
