@@ -37,16 +37,9 @@ source('utils.r')
 
 task <- function(scdata, config, task_name, sample_id){
 
-    # Check wheter the filter is set to true or false
-    # Q: Can we disable the configureEmbedding?
-    if (is.null(config$enabled) || as.logical(toupper(config$enabled))){
-        scdata.embedding <- run_Embedding(scdata, config)
-        scdata.embedding <- run_Clustering(scdata.embedding, config)
-        scdata.embedding <- coloring_samples_and_cluster(scdata.embedding)
-
-    }else{
-        scdata.embedding <- scdata
-    }
+    scdata.embedding <- run_Embedding(scdata, config)
+    scdata.embedding <- run_Clustering(scdata.embedding, config)
+    scdata.embedding <- coloring_samples_and_cluster(scdata.embedding)
 
     cells_order <- rownames(scdata.embedding@meta.data)
 
@@ -145,15 +138,9 @@ run_Embedding <- function(scdata, config){
                                 return.model = TRUE)
       
     } else if (embed_method == "tsne"){
-      
-        if (as.logical(toupper(config$auto))){
-            perplexity <- min(30, ncol(scdata)/100)
-            learningRate <- max(200, ncol(scdata)/12)
-          
-        }  else {
-            perplexity <- embed_settings$perplexity
-            learningRate <- embed_settings$learningRate
-        }
+        
+        perplexity <- embed_settings$perplexity
+        learningRate <- embed_settings$learningRate
       
         message("Running embedding --> tsne")
       
