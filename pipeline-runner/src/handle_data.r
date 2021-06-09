@@ -187,7 +187,7 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
 #' @param key The name to assign to the file in the S3 bucket, e.g. `path/to/file`.
 put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
   
-  print(sprintf("Putting %s in %s", key, bucket))
+  print(sprintf("Putting %s in %s from object %s", key, bucket, object))
   
   s3 <- paws::s3(config=pipeline_config$aws_config)
   
