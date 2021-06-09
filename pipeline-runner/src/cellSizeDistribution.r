@@ -33,17 +33,17 @@ generate_default_values_cellSizeDistribution <- function(seurat_obj, config, thr
   seurat_obj_tmp <- CalculateBarcodeInflections(
     object = seurat_obj,
     barcode.column = "nCount_RNA",
-    group.column = "orig.ident",
+    group.column = "samples",
     # [HARDCODED]
     threshold.low = threshold.low,
     threshold.high = NULL
   )
   # extracting the inflection point value which can serve as minCellSize threshold
   # all other side effects to the scdate object will be discarded
-  # [TODO unittest]: this calculation assumes a single sample, i.e. only one group in orig.ident!
+  # [TODO unittest]: this calculation assumes a single sample, i.e. only one group in samples!
   # otherwise it will return multiple values for each group!
   # returned is both the rank(s) as well as inflection point
-  # orig.ident          nCount_RNA  rank
+  # samples          nCount_RNA  rank
   # SeuratProject       1106        10722
   sample_subset <- Tool(seurat_obj_tmp, slot = "CalculateBarcodeInflections")$inflection_points
   # extracting only inflection point(s)
@@ -55,7 +55,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     print("Config:")
     print(config)
     print(paste0("Cells per sample before filter for sample ", sample_id))
-    print(table(seurat_obj$orig.ident))
+    print(table(seurat_obj$samples))
     #The format of the sample_id is
     # sample-WT1
     # we need to get only the last part, in order to grep the object.
@@ -139,7 +139,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     }
 
     print(paste0("Cells per sample after filter for sample ", sample_id))
-    print(table(seurat_obj.filtered$orig.ident))
+    print(table(seurat_obj.filtered$samples))
 
     # update config
     config$filterSettings$minCellSize <- minCellSize

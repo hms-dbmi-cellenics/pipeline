@@ -38,7 +38,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     print("Config:")
     print(config)
     print(paste0("Cells per sample before filter for sample ", sample_id))
-    print(table(seurat_obj$orig.ident))
+    print(table(seurat_obj$samples))
     tmp_sample <- sub("sample-","",sample_id)
     # Check if the experiment has MT-content
     if (!"percent.mt"%in%colnames(seurat_obj@meta.data)){
@@ -116,7 +116,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
 
     # some tests:
     print(paste0("Cells per sample after filter for sample ", sample_id))
-    print(table(seurat_obj.filtered$orig.ident))
+    print(table(seurat_obj.filtered$samples))
     
     # populate with filter statistics
     filter_stats <- list(

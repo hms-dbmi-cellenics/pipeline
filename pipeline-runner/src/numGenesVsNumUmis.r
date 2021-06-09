@@ -40,7 +40,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     print("Config:")
     print(config)
     print(paste0("Cells per sample before filter for sample ", sample_id))
-    print(table(seurat_obj$orig.ident))
+    print(table(seurat_obj$samples))
     #The format of the sample_id is
     # sample-WT1
     # we need to get only the last part, in order to grep the object.
@@ -121,7 +121,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
 
     print(paste0("Cells per sample after filter for sample ", sample_id))
-    print(table(seurat_obj.filtered$orig.ident))
+    print(table(seurat_obj.filtered$samples))
     
     # Populate with filter statistics
     filter_stats <- list(

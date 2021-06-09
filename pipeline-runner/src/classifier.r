@@ -60,7 +60,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
   print(config)
   print(paste0("Cells per sample before filter for sample ", sample_id))
   
-  print(table(seurat_obj$orig.ident, useNA="ifany"))
+  print(table(seurat_obj$samples, useNA="ifany"))
   #The format of the sample_id is
   # sample-WT1
   # we need to get only the last part, in order to grep the object.
@@ -100,7 +100,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
       }
       sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
       print("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval")
-      print(table(obj_metadata$orig.ident, cut(obj_metadata$emptyDrops_FDR, breaks = c(-Inf,0,0.0001,0.01,0.1,0.5,1,Inf)), useNA="ifany"))
+      print(table(obj_metadata$samples, cut(obj_metadata$emptyDrops_FDR, breaks = c(-Inf,0,0.0001,0.01,0.1,0.5,1,Inf)), useNA="ifany"))
       
       # prevents filtering of NA FDRs if FDR=1
       ed_fdr <- sample_subset$emptyDrops_FDR
@@ -144,7 +144,7 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     seurat_obj <- seurat_obj
   }
   print(paste0("Cells per sample after filter for sample ", sample_id))
-  print(table(seurat_obj$orig.ident, useNA="ifany"))
+  print(table(seurat_obj$samples, useNA="ifany"))
   # > head(guidata[[1]])
   # [[1]]
   # FDR    log_u
