@@ -52,7 +52,7 @@ make build
  access it later from `$(pwd)/debug`.
 
 To save the parameters (`config`, `seurat_obj`, etc) to a data processing task function, specify DEBUG_STEP.
-Available tasks include all those defined in `run_step` of  [init.r](pipeline-runner/src/init.r#L72) as well as `DEBUG_STEP=all` 
+Available tasks include all those defined in `run_processing_step` of  [init.r](pipeline-runner/src/init.r#L72) as well as `DEBUG_STEP=all` 
 to save the parameters to all data processing task functions:
 
 ```bash
