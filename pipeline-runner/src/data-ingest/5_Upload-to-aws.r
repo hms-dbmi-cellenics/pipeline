@@ -128,7 +128,7 @@ task <- function(input, pipeline_config) {
                    key = experiment_id)
 
   # seurat object to s3
-  put_object_in_s3(pipeline_config,
+  put_object_in_s3_multipart(pipeline_config,
                    bucket = pipeline_config$source_bucket,
                    object = file.path(output_dir, 'experiment.rds'),
                    key = file.path(experiment_id, 'r.rds'))

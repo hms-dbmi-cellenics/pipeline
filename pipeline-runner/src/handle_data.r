@@ -179,3 +179,66 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
     )
 }
 
+#' Upload a file to S3 using multipart upload
+#'
+#' @param pipeline_config A Paws S3 config object, e.g. from `paws::s3()`.
+#' @param object The path to the file to be uploaded.
+#' @param bucket The name of the S3 bucket to be uploaded to, e.g. `my-bucket`.
+#' @param key The name to assign to the file in the S3 bucket, e.g. `path/to/file`.
+put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
+  
+  print(sprintf("Putting %s in %s from object %s", key, bucket, object))
+  
+  s3 <- paws::s3(config=pipeline_config$aws_config)
+  
+  multipart <- s3$create_multipart_upload(
+    Bucket = bucket,
+    Key = key
+  )
+  resp <- NULL
+  on.exit({
+    if (is.null(resp) || inherits(resp, "try-error")) {
+      s3$abort_multipart_upload(
+        Bucket = bucket,
+        Key = key,
+        UploadId = multipart$UploadId
+      )
+    }
+  })
+  resp <- try({
+    parts <- upload_multipart_parts(s3, bucket, object, key, multipart$UploadId)
+    s3$complete_multipart_upload(
+      Bucket = bucket,
+      Key = key,
+      MultipartUpload = list(Parts = parts),
+      UploadId = multipart$UploadId
+    )
+  })
+  return(resp)
+}
+
+upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
+  file_size <- file.size(object)
+  megabyte <- 2^20
+  part_size <- 5 * megabyte
+  num_parts <- ceiling(file_size / part_size)
+  
+  con <- base::file(object, open = "rb")
+  on.exit({
+    close(con)
+  })
+  parts <- list()
+  for (i in 1:num_parts) {
+    part <- readBin(con, what = "raw", n = part_size)
+    part_resp <- s3$upload_part(
+      Body = part,
+      Bucket = bucket,
+      Key = key,
+      PartNumber = i,
+      UploadId = upload_id
+    )
+    parts <- c(parts, list(list(ETag = part_resp$ETag, PartNumber = i)))
+  }
+  
+  return(parts)
+}
