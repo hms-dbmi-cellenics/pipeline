@@ -239,6 +239,6 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
     )
     parts <- c(parts, list(list(ETag = part_resp$ETag, PartNumber = i)))
   }
-  close(pb)
+  
   return(parts)
 }
