@@ -15,7 +15,7 @@ test_object <- function(scdata){
         expect_true(nrow(scdata@meta.data) == ncol(scdata))
         md <- scdata@meta.data
         expect_true("barcode" %in% colnames(md))
-        expect_true("orig.ident" %in% colnames(md))  
+        expect_true("samples" %in% colnames(md))  
         if(any(grepl("^mt-", annotations$name, ignore.case = T))){
             expect_true("percent.mt" %in% colnames(md))
         }
