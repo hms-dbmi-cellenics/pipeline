@@ -53,7 +53,7 @@ task <- function(input, pipeline_config) {
     #writeBin(body, con = "/input/meta.json")
     config <- list(name = input$experimentName, samples=input$sampleIds,
     organism = input$organism,
-    input = list(type="10x")
+    input = list(type=input$input$type)
     )
     if("metadata" %in% names(input)){
         config$metadata = input$metadata
