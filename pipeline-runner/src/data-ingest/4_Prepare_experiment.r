@@ -103,9 +103,6 @@ add_custom_config_per_sample <- function(step_fn, config, scdata){
     scdata_sample <- scdata[, samples %in% sample]
     # Run the step fun with the unisample experiment and keep the config result
     result_config <- step_fn(scdata_sample, config.raw)
-    # Inside the config of the samples we are not storing the auto and enable settings, so we remove them
-    result_config$auto <- NULL
-    result_config$enabled <- NULL
     # Update config with the unisample thresholds
     config[[sample]] <- result_config
   }
