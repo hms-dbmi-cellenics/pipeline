@@ -25,21 +25,23 @@
 #       }
 #   },
 
-task <- function(scdata, config,task_name,sample_id){
+task <- function(scdata, config, task_name, sample_id) {
     # this options shows the callstack when an error is thrown
     options(error = function() { traceback(3); if(!interactive()) quit("no", status = 1, runLast = FALSE) })
+    
     # increase maxSize from the default of 500MB to 32GB
-    # TODO: ask Marcell for his opinion
     options(future.globals.maxSize= 32 * 1024 * 1024^2)
-    # Check wheter the filter is set to true or false
-    # So far we only support Seurat V3
+    
     scdata.integrated <- run_dataIntegration(scdata, config)
+    
     # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
-    if (scdata.integrated@misc[["active.reduction"]]=="pca"){
-        eigValues = (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
-        varExplained = eigValues / sum(eigValues)
-    }else if (scdata.integrated@misc[["active.reduction"]]=="mnn"){
-        varExplained = scdata.integrated@tools$`SeuratWrappers::RunFastMNN`@metadata$pca.info$var.explained
+    red <- scdata.integrated@misc[["active.reduction"]]
+    if (red %in% c('pca', 'harmony')) {
+        eigValues <- (scdata.integrated@reductions$pca@stdev)^2  ## EigenValues
+        varExplained <- eigValues / sum(eigValues)
+        
+    } else if (red == 'mnn') {
+        varExplained <- scdata.integrated@tools$`SeuratWrappers::RunFastMNN`@metadata$pca.info$var.explained
     }
 
     # As a short solution, we are going to store an intermediate slot for the numPCs, since this parameter is required when performing
@@ -53,14 +55,14 @@ task <- function(scdata, config,task_name,sample_id){
     #Adding color and sample id
     plot1_data <- purrr::map2(plot1_data,
         unname(scdata.integrated@meta.data[cells_order, "samples"]),
-        function(x,y){append(x,list("sample"=y))}
+        function(x, y) {append(x,list("sample"=y))}
     )
     plot1_data <- purrr::map2(plot1_data,
         unname(scdata.integrated@meta.data[cells_order, "color_samples"]),
-        function(x,y){append(x,list("col"=y))}
+        function(x, y) {append(x,list("col"=y))}
     )
 
-    plot2_data <- unname(purrr::map2(1:50,varExplained,function(x,y){c("PC"=x,"percentVariance"=y)}))
+    plot2_data <- unname(purrr::map2(1:50, varExplained, function(x,y){c("PC"=x,"percentVariance"=y)}))
 
     plots <- list()
     plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
@@ -84,8 +86,10 @@ task <- function(scdata, config,task_name,sample_id){
 #   - Integrate the data using the variable "type" (in case of data integration method is selected) and normalize using LogNormalize method.
 #   - Compute PCA analysis
 #   - To visualize the results of the batch effect, an UMAP with default setting has been made. 
-# Seurat V3 pipeline (see for other methods: https://satijalab.org/seurat/archive/v3.0/integration.html)
-run_dataIntegration <- function(scdata, config){
+run_dataIntegration <- function(scdata, config) {
+    
+    # to prevent recomputation
+    have.hvf <- have.pca <- FALSE
     
     method <- config$dataIntegration$method
     nfeatures <- config$dataIntegration$methodSettings[[method]]$numGenes
@@ -112,13 +116,13 @@ run_dataIntegration <- function(scdata, config){
 
     # temporary to make sure we don't run integration if unisample
     nsamples <- length(unique(scdata$samples))
-    if(nsamples>1 && method!="unisample"){
-        if(method=="seuratv4"){
+    if (nsamples>1 && method != "unisample") {
+        if(method == "seuratv4"){
             # Currently, we only support Seurat V4 pipeline for the multisample integration
             data.split <- Seurat::SplitObject(scdata, split.by = "samples")
             for (i in 1:length(data.split)) {
-                data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = F)
-                data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
+                data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = FALSE)
+                data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], nfeatures = nfeatures, verbose = FALSE)
             }
 
             # The active reduction in seuratv4 is pca
@@ -129,50 +133,61 @@ run_dataIntegration <- function(scdata, config){
 
             # Try to integrate data (catch error most likely caused by too few cells)
             tryCatch({
-            k.filter <- min(ceiling(sapply(data.split, ncol)/2), k.filter)
-            data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, k.filter = k.filter, verbose = TRUE)
-
-            scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
-
-            Seurat::DefaultAssay(scdata) <- "integrated"
-            }, error = function(e){          # Specifying error message
-            # ideally this should be passed to the UI as a error message:
-            print(table(scdata$samples))
-            print(e)
-            print(paste("current k.filter:", k.filter))
-            # Should we still continue if data is not integrated? No, right now..
-            print("Current number of cells per sample: ")
-            print(table(scdata$samples))
-            warning("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
-            # An ideal solution would be to launch an error to the UI, howerver, for now, we will skip the integration method. 
-            print("Skipping integration step")
-            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
-            })            
-        }else if(method=="fastmnn"){
-            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
-            scdata <- FindVariableFeatures(scdata, selection.method = "vst", nfeatures = nfeatures, verbose = FALSE)
+                k.filter <- min(ceiling(sapply(data.split, ncol)/2), k.filter)
+                data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:numPCs, k.filter = k.filter, verbose = TRUE)
+    
+                scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:numPCs)
+    
+                Seurat::DefaultAssay(scdata) <- "integrated"
+            }, error = function(e) {          # Specifying error message
+                # ideally this should be passed to the UI as a error message:
+                print(table(scdata$samples))
+                print(e)
+                print(paste("current k.filter:", k.filter))
+                # Should we still continue if data is not integrated? No, right now..
+                print("Current number of cells per sample: ")
+                print(table(scdata$samples))
+                warning("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
+                # An ideal solution would be to launch an error to the UI, howerver, for now, we will skip the integration method. 
+                print("Skipping integration step")
+                scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
+            })      
+            
+        } else if (method == "fastmnn") {
+            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
+            scdata <- FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
             scdata <- SeuratWrappers::RunFastMNN(object.list = SplitObject(scdata, split.by = "samples"), d = 50, get.variance=TRUE)
-
-            # The active reduction in fastmnn is mnn
             active.reduction <- "mnn"
-                     
-        }else{
+            have.hvf <- TRUE
+            
+        } else if (method == 'harmony') {
+            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
+            scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
+            scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+            scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
+            scdata <- harmony::RunHarmony(scdata, group.by.vars = "samples")
+            active.reduction <- "harmony"
+            have.hvf <- have.pca <- TRUE
+            
+        } else {
             print('Failed to recognize integration method.')    
-            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
+            scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
             # By default we use pca as a active.reduction, since we are going to RunPCA regardless of the method
             active.reduction <- "pca"
         }
-    }else{
+    } else {
         print('Only one sample detected or method is non integrate.')
         # Else, we are in unisample experiment and we only need to normalize 
-        scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = F)
+        scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
         
         # The active reduction for unisample/noIntegration is mnn
         active.reduction <- "pca"
     }
 
     scdata@misc <- misc
-    scdata <- FindVariableFeatures(scdata, selection.method = "vst", assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+    
+    if (!have.hvf) scdata <- FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+    
     vars <- HVFInfo(object = scdata, assay = "RNA", selection.method = 'vst') # to create vars
     annotations <- scdata@misc[["gene_annotations"]]
     vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
@@ -185,13 +200,13 @@ run_dataIntegration <- function(scdata, config){
     scdata@misc[["active.reduction"]] <- active.reduction
 
     # Scale in order to compute PCA
-    scdata <- Seurat::ScaleData(scdata, verbose = F)
+    if (!have.pca) {
+        scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+        scdata <- Seurat::RunPCA(scdata, verbose=FALSE)
+    }
 
-    # HARDCODE numPCs to 50
-    scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object=scdata), verbose=FALSE)
-
-    # Compute embedding with default setting to get an overview of the performance of the bath correction
-    scdata <- Seurat::RunUMAP(scdata, reduction=scdata@misc[["active.reduction"]], dims = 1:numPCs, verbose = F, umap.method = "uwot-learn", min.dist = umap_min_distance, metric = umap_distance_metric)
+    # Compute embedding with default setting to get an overview of the performance of the batch correction
+    scdata <- Seurat::RunUMAP(scdata, reduction=scdata@misc[["active.reduction"]], dims = 1:numPCs, verbose = FALSE, umap.method = "uwot-learn", min.dist = umap_min_distance, metric = umap_distance_metric)
 
     return(scdata)
 }

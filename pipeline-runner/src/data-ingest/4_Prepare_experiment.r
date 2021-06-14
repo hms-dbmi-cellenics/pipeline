@@ -354,6 +354,7 @@ task <- function(input,pipeline_config){
         dataIntegration = list( method = identified.method , 
                             methodSettings = list(seuratv4=list(numGenes=2000, normalisation="logNormalize"), 
                                                 unisample=list(numGenes=2000, normalisation="logNormalize"),
+                                                harmony=list(numGenes=2000, normalisation="logNormalize"),
                                                 fastmnn=list(numGenes=2000, normalisation="logNormalize"))),
         dimensionalityReduction = list(method = "rpca", numPCs = 30, excludeGeneCategories = c())
     )
