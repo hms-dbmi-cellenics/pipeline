@@ -110,12 +110,13 @@ run_harmony <- function(scdata, config) {
     
     # grep in case misspelled
     if (grepl('lognorm', normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
-    
+
     scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
     scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
     scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
     scdata <- harmony::RunHarmony(scdata, group.by.vars = "samples")
+    scdata <- add_dispersions(scdata)
     scdata@misc[["active.reduction"]] <- 'harmony'
     
     # Compute embedding with default setting to get an overview of the performance of the batch correction
