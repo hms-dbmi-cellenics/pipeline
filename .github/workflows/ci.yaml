@@ -8,6 +8,7 @@ jobs:
   build-docker:
     name: Build Docker container
     runs-on: ubuntu-20.04
+    if: startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix/') # allow PRs to master for releases & hotfixes
     strategy:
       matrix:
         project: ['pipeline-runner']
