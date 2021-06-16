@@ -27,6 +27,7 @@ RUN R -e 'pak::pkg_install("Seurat")'
 RUN R -e 'pak::pkg_install("gprofiler2")'
 RUN R -e 'pak::pkg_install("sccore")'
 RUN R -e 'pak::pkg_install("GO.db")'
+RUN R -e 'pak::pkg_install("R.utils")'
 RUN R -e 'pak::pkg_install("satijalab/seurat-wrappers")'
 RUN R -e 'pak::pkg_install("batchelor")'
 
@@ -47,6 +48,8 @@ RUN R -e 'BiocManager::install("mbkmeans")'
 RUN R -e 'BiocManager::install("DropletUtils")'
 RUN R -e 'BiocManager::install("BiocGenerics")'
 RUN R -e 'BiocManager::install("plger/scDblFinder")'
+
+RUN R -e 'pak::pkg_install("immunogenomics/harmony")'
 
 # default BLAS/LAPACK issue: Seurat::FindIntegrationAnchors finds ~30 vs ~13,000 anchors
 # eventually move this up with other system installs
