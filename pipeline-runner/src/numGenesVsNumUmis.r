@@ -49,12 +49,6 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
     # For now, we can get direcly p.level, but when we add more methods need to be change
     p.level <- config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level
 
-    # Check if it is required to compute sensible values. Sensible values are based on the funciton "gene.vs.molecule.cell.filter" from the pagoda2 package
-    if (exists('auto', where=config)){
-        if (as.logical(toupper(config$auto)))
-            p.level <-  min(0.001, 1/ncol(seurat_obj))
-    }
-
    # Check whether the filter is set to true or false
     if (as.logical(toupper(config$enabled))){
         # For now, we are going to suppor only gam as a linear model by robust estimation
@@ -68,6 +62,13 @@ task <- function(seurat_obj, config, task_name, sample_id, num_cells_to_downsamp
                 return(list(data = seurat_obj,config = config,plotData = guidata)) 
             }
             sample_subset <- subset(seurat_obj, cells = barcode_names_this_sample)
+
+            # Check if it is required to compute sensible values. Sensible values are based on the funciton "gene.vs.molecule.cell.filter" from the pagoda2 package
+            if (exists('auto', where=config)){
+                if (as.logical(toupper(config$auto)))
+                    p.level <-  min(0.001, 1/ncol(sample_subset))
+            }
+
             # We regress the molecules vs the genes. This information are stored in nCount_RNA and nFeature_RNA respectively
             df <- data.frame(molecules = sample_subset$nCount_RNA, genes = sample_subset$nFeature_RNA)
             # We take log10 following the plot from the mock-up 
