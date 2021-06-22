@@ -67,13 +67,13 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
 
     # vector of task functions named by task name
     tasks <- list(
-        classifier = filter_emptydrops,
-        cellSizeDistribution = filter_low_cellsize,
-        mitochondrialContent = filter_high_mito,
-        numGenesVsNumUmis = filter_gene_umi_outlier,
-        doubletScores = filter_doublets,
-        dataIntegration = integrate_scdata,
-        configureEmbedding = embed_and_cluster
+        'classifier' = filter_emptydrops,
+        'cellSizeDistribution' = filter_low_cellsize,
+        'mitochondrialContent' = filter_high_mito,
+        'numGenesVsNumUmis' = filter_gene_umi_outlier,
+        'doubletScores' = filter_doublets,
+        'dataIntegration' = integrate_scdata,
+        'configureEmbedding' = embed_and_cluster
     )
 
     if (!task_name %in% names(tasks)) stop('Invalid task: ', task_name)
@@ -117,13 +117,13 @@ run_gem2s_step <- function(task_name, input, pipeline_config) {
 
     # list of task functions named by task name
     tasks <- list(
-        downloadGem = download_cellranger,
-        preproc = load_cellranger,
-        emptyDrops = run_emptydrops,
-        doubletScores = score_doublets,
-        createSeurat = create_seurat,
-        prepareExperiment = prepare_experiment,
-        uploadToAWS = upload_to_aws
+        'downloadGem' = download_cellranger,
+        'preproc' = load_cellranger,
+        'emptyDrops' = run_emptydrops,
+        'doubletScores' = score_doublets,
+        'createSeurat' = create_seurat,
+        'prepareExperiment' = prepare_experiment,
+        'uploadToAWS' = upload_to_aws
     )
 
     if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
