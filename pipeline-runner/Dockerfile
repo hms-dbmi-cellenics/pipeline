@@ -71,8 +71,9 @@ RUN pip install awscli
 COPY aws_config /root/.aws/config
 
 # start app
-COPY src ./
-ENTRYPOINT ["Rscript", "init.r"]
+ADD R ./R
+COPY init.R .
+ENTRYPOINT ["Rscript", "init.R"]
 
 
 # ---------------------------------------------------
@@ -90,5 +91,6 @@ RUN R -e 'pak::pkg_install("lintr")'
 RUN R -e 'pak::pkg_install("styler")'
 
 # start app
-COPY src ./
-ENTRYPOINT ["Rscript", "init.r"]
+ADD R ./R
+COPY init.R .
+ENTRYPOINT ["Rscript", "init.R"]
