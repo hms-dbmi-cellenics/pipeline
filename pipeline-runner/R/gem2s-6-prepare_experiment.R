@@ -2,7 +2,7 @@
 #  - Adding metadata: cellsId, color_pool and gene annotation
 #  - Preparing dataProcessing json file
 
-prepare_experiment <- function(input,pipeline_config){
+prepare_experiment <- function(input, pipeline_config) {
 
   # Merging Seurat object
   # --
@@ -11,25 +11,25 @@ prepare_experiment <- function(input,pipeline_config){
   config <- RJSONIO::fromJSON("/input/meta.json")
 
   # Check which samples have been selected. Otherwiser we are going to use all of them.
-  if (length(config$samples)>0){
+  if (length(config$samples) > 0) {
     samples <- config$samples
-  }else{
+  } else {
     samples <- gsub("\\..*", "", list.files("/output/rds_samples"))
   }
 
 
   message("Reloading samples rds for current experiment...")
-  seurat_obj_list <- list()
-  for (sample in samples){
-    seurat_obj_list[[sample]] <- readRDS(paste("/output/rds_samples/", sample,".rds", sep = ""))
+  scdata_list <- list()
+  for (sample in samples) {
+    scdata_list[[sample]] <- readRDS(paste("/output/rds_samples/", sample, ".rds", sep = ""))
   }
 
   # Merging samples and adding a prefix with the sample name. In pipeline we grep in barcodes to filter by sample.
-  if (length(seurat_obj_list)==1){
-    seurat_obj <- seurat_obj_list[[1]]
-    seurat_obj <- RenameCells(object = seurat_obj, add.cell.id = names(seurat_obj_list)[1])
-  }else{
-    seurat_obj <- merge(seurat_obj_list[[1]], y = seurat_obj_list[-1], add.cell.ids = c(samples))
+  if (length(scdata_list) == 1) {
+    scdata <- scdata_list[[1]]
+    scdata <- RenameCells(object = scdata, add.cell.id = names(scdata_list)[1])
+  } else {
+    scdata <- merge(scdata_list[[1]], y = scdata_list[-1], add.cell.ids = c(samples))
   }
 
 
@@ -38,8 +38,8 @@ prepare_experiment <- function(input,pipeline_config){
 
   message("Storing gene annotations...")
   organism <- config$organism
-  #annotations <- gprofiler2::gconvert(
-  #query = rownames(seurat_obj), organism = organism, target="ENSG", mthreshold = Inf, filter_na = FALSE)
+  # annotations <- gprofiler2::gconvert(
+  # query = rownames(scdata), organism = organism, target="ENSG", mthreshold = Inf, filter_na = FALSE)
   annotations <- read.delim("/output/features_annotations.tsv")
 
   # In order to avoid duplicated genes names, we are going to add the ENSEMBL ID for those
@@ -47,29 +47,29 @@ prepare_experiment <- function(input,pipeline_config){
   gname <- annotations$name
   # Keep original name in 'original_name' variable
   annotations$original_name <- gname
-  is.dup <- duplicated(gname) | duplicated(gname, fromLast=TRUE)
+  is.dup <- duplicated(gname) | duplicated(gname, fromLast = TRUE)
   annotations$name[is.dup] <- paste(gname[is.dup], annotations$input[is.dup], sep = " - ")
 
-  # Ensure index by rownames in seurat_obj
-  annotations <- annotations[match(rownames(seurat_obj), annotations$input), ]
+  # Ensure index by rownames in scdata
+  annotations <- annotations[match(rownames(scdata), annotations$input), ]
   rownames(annotations) <- annotations$input
 
-  seurat_obj@misc[["gene_annotations"]] <- annotations
+  scdata@misc[["gene_annotations"]] <- annotations
 
   message("Storing cells id...")
   # Keeping old version of ids starting from 0
-  seurat_obj$cells_id <- 0:(nrow(seurat_obj@meta.data)-1)
+  scdata$cells_id <- 0:(nrow(scdata@meta.data) - 1)
 
   message("Storing color pool...")
   # We store the color pool in a slot in order to be able to access it during configureEmbedding
-  seurat_obj@misc[["color_pool"]] <- get_color_pool()
+  scdata@misc[["color_pool"]] <- get_color_pool()
   message("Stored pool")
 
   # Adding information regarding experiment and ingestion
   # --
 
-  seurat_obj@misc[["experimentId"]] <- input$experimentId
-  seurat_obj@misc[["ingestionDate"]] <- Sys.time()
+  scdata@misc[["experimentId"]] <- input$experimentId
+  scdata@misc[["ingestionDate"]] <- Sys.time()
 
   # Checking filtered data
   # --
@@ -81,26 +81,26 @@ prepare_experiment <- function(input,pipeline_config){
   # Testing Seurat object before save
   # --
 
-  # test_object(seurat_obj)
+  # test_object(scdata)
 
   # Saving files
   # --
 
   message("saving R object...")
-  saveRDS(seurat_obj, file = "/output/experiment.rds", compress = FALSE)
+  saveRDS(scdata, file = "/output/experiment.rds", compress = FALSE)
 
   message("saving multsiample info...")
   write.table(
-    data.frame(Cells_ID=seurat_obj$cells_id, Value=seurat_obj$samples),
+    data.frame(Cells_ID = scdata$cells_id, Value = scdata$samples),
     file = "/output/samples-cells.csv",
     quote = F, col.names = F, row.names = F,
     sep = "\t"
   )
 
 
-  if("metadata" %in% names(config)){
+  if ("metadata" %in% names(config)) {
     variables_metadata <- names(config$metadata)
-    metadata_dynamo <- seurat_obj@meta.data[, c("cells_id", variables_metadata)]
+    metadata_dynamo <- scdata@meta.data[, c("cells_id", variables_metadata)]
 
     message("saving metadata info...")
     write.table(
@@ -112,84 +112,97 @@ prepare_experiment <- function(input,pipeline_config){
   }
 
   write.table(
-    colnames(seurat_obj),
+    colnames(scdata),
     file = "/output/r-out-cells.csv",
     quote = F, col.names = F, row.names = F,
     sep = "\t"
   )
 
   write.table(
-    seurat_obj@misc[["gene_annotations"]][seurat_obj@misc[["gene_annotations"]]$input%in%rownames(seurat_obj), ],
+    scdata@misc[["gene_annotations"]][scdata@misc[["gene_annotations"]]$input %in% rownames(scdata), ],
     file = "/output/r-out-annotations.csv",
     quote = F, col.names = F, row.names = F,
     sep = "\t"
   )
 
-  print(seurat_obj)
+  print(scdata)
 
   # DATA PROCESSING
   # --
 
-  #[HARDCODED]
+  # [HARDCODED]
   config.cellSizeDistribution <- list(
-    enabled="true",
-    auto="true",
-    filterSettings = list(minCellSize=1080, binStep = 200))
+    enabled = "true",
+    auto = "true",
+    filterSettings = list(minCellSize = 1080, binStep = 200)
+  )
 
   config.mitochondrialContent <- list(
-    enabled="true", auto="true",
+    enabled = "true", auto = "true",
     filterSettings = list(
       method = "absolute_threshold",
-      methodSettings = list(absolute_threshold=list(maxFraction=0.1, binStep=0.05))))
+      methodSettings = list(absolute_threshold = list(maxFraction = 0.1, binStep = 0.05))
+    )
+  )
 
   config.classifier <- list(
     enabled = tolower(as.character(!any_filtered)), # emptyDrops results not present
-    auto="true",
-    filterSettings = list(FDR=0.01))
+    auto = "true",
+    filterSettings = list(FDR = 0.01)
+  )
 
   config.numGenesVsNumUmis <- list(
-    enabled="true",
-    auto="true",
+    enabled = "true",
+    auto = "true",
     filterSettings = list(
       regressionType = "gam",
-      regressionTypeSettings = list("gam" = list(p.level=0.001))
-    ))
+      regressionTypeSettings = list("gam" = list(p.level = 0.001))
+    )
+  )
 
   config.doubletScores <- list(
-    enabled="true",
-    auto="true",
-    filterSettings = list(probabilityThreshold = 0.5, binStep = 0.05))
+    enabled = "true",
+    auto = "true",
+    filterSettings = list(probabilityThreshold = 0.5, binStep = 0.05)
+  )
 
   # BE CAREFUL! The method is based on config.json. For multisample only seuratv4, for unisample LogNormalize
   # hardcoded because unisample check is performed in dataIntegration
-  identified.method <- 'harmony'
+  identified.method <- "harmony"
   config.dataIntegration <- list(
     dataIntegration = list(
       method = identified.method,
       methodSettings = list(
-        seuratv4 = list(numGenes=2000, normalisation="logNormalize"),
-        unisample = list(numGenes=2000, normalisation="logNormalize"),
-        harmony = list(numGenes=2000, normalisation="logNormalize"),
-        fastmnn = list(numGenes=2000, normalisation="logNormalize"))),
-    dimensionalityReduction = list(method = "rpca", numPCs = 30, excludeGeneCategories = c()))
+        seuratv4 = list(numGenes = 2000, normalisation = "logNormalize"),
+        unisample = list(numGenes = 2000, normalisation = "logNormalize"),
+        harmony = list(numGenes = 2000, normalisation = "logNormalize"),
+        fastmnn = list(numGenes = 2000, normalisation = "logNormalize")
+      )
+    ),
+    dimensionalityReduction = list(method = "rpca", numPCs = 30, excludeGeneCategories = c())
+  )
 
   config.configureEmbedding <- list(
     embeddingSettings = list(
       method = "umap",
       methodSettings = list(
-        umap = list(minimumDistance = 0.3, distanceMetric="euclidean"),
-        tsne = list(perplexity = min(30, ncol(seurat_obj)/100),
-                    learningRate = max(200, ncol(seurat_obj)/12))
+        umap = list(minimumDistance = 0.3, distanceMetric = "euclidean"),
+        tsne = list(
+          perplexity = min(30, ncol(scdata) / 100),
+          learningRate = max(200, ncol(scdata) / 12)
+        )
       )
     ),
-    clusteringSettings = list(method = "louvain",
-                              methodSettings = list(louvain = list(resolution = 0.5)))
+    clusteringSettings = list(
+      method = "louvain",
+      methodSettings = list(louvain = list(resolution = 0.5))
+    )
   )
 
   # Compute for multisample and unisample
-  config.cellSizeDistribution <- add_custom_config_per_sample(cellSizeDistribution_config, config.cellSizeDistribution, seurat_obj)
-  config.numGenesVsNumUmis <- add_custom_config_per_sample(numGenesVsNumUmis_config, config.numGenesVsNumUmis, seurat_obj)
-  config.doubletScores <- add_custom_config_per_sample(doubletScores_config, config.doubletScores, seurat_obj)
+  config.cellSizeDistribution <- add_custom_config_per_sample(cellSizeDistribution_config, config.cellSizeDistribution, scdata)
+  config.numGenesVsNumUmis <- add_custom_config_per_sample(numGenesVsNumUmis_config, config.numGenesVsNumUmis, scdata)
+  config.doubletScores <- add_custom_config_per_sample(doubletScores_config, config.doubletScores, scdata)
 
   # When we remove the steps from data-ingest we need to change here the default config.
   # Save config for all steps.
@@ -210,19 +223,19 @@ prepare_experiment <- function(input,pipeline_config){
   exportJson <- gsub('\"true\"', "true", exportJson)
   exportJson <- gsub('\"false\"', "false", exportJson)
   # Tranform null into []
-  exportJson <- gsub('null', "[]", exportJson)
+  exportJson <- gsub("null", "[]", exportJson)
   message("config file...")
   write(exportJson, "/output/config_dataProcessing.json")
 
   message("Step 4 completed.")
-  print(list.files(paste("/output",sep = "/"),all.files=TRUE,full.names=TRUE,recursive=TRUE))
+  print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())
 }
 
 
-cellSizeDistribution_config <- function(seurat_obj, config) {
-  minCellSize <- generate_default_values_cellSizeDistribution(seurat_obj,config,1e2)
+cellSizeDistribution_config <- function(scdata, config) {
+  minCellSize <- generate_default_values_cellSizeDistribution(scdata, config, 1e2)
   # update config
   config$filterSettings$minCellSize <- minCellSize
 
@@ -236,10 +249,10 @@ cellSizeDistribution_config <- function(seurat_obj, config) {
 # (singlet our doublet) [ref: https://bioconductor.org/packages/release/bioc/vignettes/scDblFinder/inst/doc/2_scDblFinder.html#thresholding-and-local-calibration]
 # To set the auto value we are going to use as a threshold the maximun score that is given to a singlet.
 
-doubletScores_config <- function(scdata, config){
+doubletScores_config <- function(scdata, config) {
 
   # Minimun score that has a singlet
-  probabilityThreshold <-  max(scdata$doublet_scores[scdata$doublet_class=="singlet"],na.rm=TRUE)
+  probabilityThreshold <- max(scdata$doublet_scores[scdata$doublet_class == "singlet"], na.rm = TRUE)
   # update config
   config$filterSettings$probabilityThreshold <- probabilityThreshold
 
@@ -251,10 +264,10 @@ doubletScores_config <- function(scdata, config){
 # There are some config parameters that depends on the data it-self. In this file we are going to create the functions
 # that allow us to compute the best config parameter for Data Processing in the numGenesVsNumUmis step.
 
-numGenesVsNumUmis_config <- function(scdata, config){
+numGenesVsNumUmis_config <- function(scdata, config) {
 
   # Sensible values are based on the funciton "gene.vs.molecule.cell.filter" from the pagoda2 package
-  p.level <-  min(0.001, 1/ncol(scdata))
+  p.level <- min(0.001, 1 / ncol(scdata))
   # update config
   config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level <- p.level
 
@@ -296,14 +309,14 @@ numGenesVsNumUmis_config <- function(scdata, config){
 #                 }
 # }
 
-add_custom_config_per_sample <- function(step_fn, config, scdata){
+add_custom_config_per_sample <- function(step_fn, config, scdata) {
 
   # We upadte the config file, so to be able to access the raw config we create a copy
   config.raw <- config
 
   samples <- scdata$samples
 
-  for(sample in unique(samples)){
+  for (sample in unique(samples)) {
     # Downsample the seurat object to a unisample experiment
     scdata_sample <- scdata[, samples %in% sample]
     # Run the step fun with the unisample experiment and keep the config result
@@ -312,8 +325,4 @@ add_custom_config_per_sample <- function(step_fn, config, scdata){
     config[[sample]] <- result_config
   }
   return(config)
-
 }
-
-
-

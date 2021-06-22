@@ -9,9 +9,9 @@ run_emptydrops <- function(input, pipeline_config) {
   config <- RJSONIO::fromJSON("/input/meta.json")
 
   # Check which samples have been selected. Otherwiser we are going to use all of them.
-  if (length(config$samples)>0){
+  if (length(config$samples) > 0) {
     samples <- config$samples
-  }else{
+  } else {
     samples <- names(scdata_list)
   }
 
@@ -23,7 +23,7 @@ run_emptydrops <- function(input, pipeline_config) {
   }
 
   message("Step 2-1 completed.")
-  print(list.files(paste("/output",sep = "/"),all.files=TRUE,full.names=TRUE,recursive=TRUE))
+  print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())
 }
@@ -36,7 +36,6 @@ run_emptydrops <- function(input, pipeline_config) {
 #'
 #' @return
 compute_emptydrops <- function(scdata, sample_name) {
-
   message("Sample --> ", sample_name, "...")
 
   # [HARDCODE]
@@ -46,8 +45,8 @@ compute_emptydrops <- function(scdata, sample_name) {
   # are confidently considered to be empty to serve as training set
   # not necessary as of now: sce <- as.SingleCellExperiment(scdata)
   nr_barcodes_ambient <- sum(colSums(scdata) < threshold_emptydrops)
-  range(colSums(scdata) )
-  if (nr_barcodes_ambient < 50 ) {
+  range(colSums(scdata))
+  if (nr_barcodes_ambient < 50) {
     flag_filtered <- TRUE
     message("Found not enough [", nr_barcodes_ambient, "] ambient barcodes,
           so data is considered to be pre-filtered")
@@ -64,4 +63,3 @@ compute_emptydrops <- function(scdata, sample_name) {
     saveRDS(emptydrops_out, file = file_path, compress = FALSE)
   }
 }
-

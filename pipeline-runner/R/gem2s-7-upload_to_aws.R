@@ -1,7 +1,7 @@
 upload_to_aws <- function(input, pipeline_config) {
   # set to local dirs for interactive dev
-  input_dir <- '/input'
-  output_dir <- '/output'
+  input_dir <- "/input"
+  output_dir <- "/output"
 
   experiment_id <- input$experimentId
   project_id <- input$projectId
@@ -34,8 +34,9 @@ upload_to_aws <- function(input, pipeline_config) {
   # Design cell_set meta_data for DynamoDB
   cell_sets <- c(list(scratchpad), list(samples_set))
 
-  if ("metadata" %in% names(config))
+  if ("metadata" %in% names(config)) {
     cell_sets <- c(cell_sets, meta_sets(output_dir, color_pool))
+  }
 
   cell_sets <- list(cellSets = cell_sets)
 
@@ -47,7 +48,7 @@ upload_to_aws <- function(input, pipeline_config) {
     experimentName = config$name,
     meta = list(
       organism = config$organism,
-      type = config$input[['type']]
+      type = config$input[["type"]]
     ),
     processingConfig = config_dataProcessing
   )
@@ -56,15 +57,17 @@ upload_to_aws <- function(input, pipeline_config) {
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
 
   put_object_in_s3(pipeline_config,
-                   bucket = pipeline_config$cell_sets_bucket,
-                   object = charToRaw(cell_sets_data),
-                   key = experiment_id)
+    bucket = pipeline_config$cell_sets_bucket,
+    object = charToRaw(cell_sets_data),
+    key = experiment_id
+  )
 
   # seurat object to s3
   put_object_in_s3_multipart(pipeline_config,
-                             bucket = pipeline_config$source_bucket,
-                             object = file.path(output_dir, 'experiment.rds'),
-                             key = file.path(experiment_id, 'r.rds'))
+    bucket = pipeline_config$source_bucket,
+    object = file.path(output_dir, "experiment.rds"),
+    key = file.path(experiment_id, "r.rds")
+  )
 
   cluster_env <- pipeline_config$cluster_env
   print(sprintf("Experiment ID: %s uploaded to %s.", experiment_id, cluster_env))
@@ -74,23 +77,27 @@ upload_to_aws <- function(input, pipeline_config) {
     table = pipeline_config$experiments_table
   )
 
-  if (cluster_env == "production")
+  if (cluster_env == "production") {
     print(sprintf("https://scp.biomage.net/experiments/%s/data-exploration", experiment_id))
+  }
 
   return(data)
 }
 
 samples_sets <- function(config, output_dir, color_pool) {
   sample_annotations <- read.csv(file.path(output_dir, "samples-cells.csv"),
-                                 sep = "\t",
-                                 col.names = c("Cells_ID","Value"),
-                                 na.strings = "None")
+    sep = "\t",
+    col.names = c("Cells_ID", "Value"),
+    na.strings = "None"
+  )
 
-  cell_set <- list(key = "sample",
-                   name = "Samples",
-                   rootNode = TRUE,
-                   children = list(),
-                   type = "metadataCategorical")
+  cell_set <- list(
+    key = "sample",
+    name = "Samples",
+    rootNode = TRUE,
+    children = list(),
+    type = "metadataCategorical"
+  )
 
   samples <- unique(sample_annotations$Value)
 
@@ -102,7 +109,8 @@ samples_sets <- function(config, output_dir, color_pool) {
       key = paste0(sample),
       name = config$sampleNames[[match(sample, config$sampleIds)]],
       color = color_pool[i],
-      cellIds = view)
+      cellIds = view
+    )
   }
 
   return(cell_set)
@@ -111,8 +119,7 @@ samples_sets <- function(config, output_dir, color_pool) {
 
 # cell_sets fn for seurat metadata information
 meta_sets <- function(output_dir, color_pool) {
-
-  meta_annotations <- read.csv(file.path(output_dir, "metadata-cells.csv"), sep='\t')
+  meta_annotations <- read.csv(file.path(output_dir, "metadata-cells.csv"), sep = "\t")
 
   cell_set_list <- c()
 
@@ -120,7 +127,7 @@ meta_sets <- function(output_dir, color_pool) {
   for (i in seq(2, ncol(meta_annotations))) {
     key <- name <- colnames(meta_annotations)[i]
 
-    cell_set = list(
+    cell_set <- list(
       "key" = key,
       "name" = name,
       "rootNode" = TRUE,
@@ -133,18 +140,16 @@ meta_sets <- function(output_dir, color_pool) {
 
     for (i in seq_along(values)) {
       value <- values[i]
-      view  <- meta_annotations[which(annot == value), 'cells_id']
+      view <- meta_annotations[which(annot == value), "cells_id"]
 
       cell_set$children[[i]] <- list(
-        "key" = paste(key, value, sep='-'),
+        "key" = paste(key, value, sep = "-"),
         "name" = value,
         "color" = color_pool[i],
-        "cellIds" = view)
-
+        "cellIds" = view
+      )
     }
     cell_set_list <- c(cell_set_list, list(cell_set))
   }
   return(cell_set_list)
 }
-
-
