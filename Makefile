@@ -20,8 +20,9 @@ install:
 	@(cd ./local-runner && npm install)
 build: 
 	@(cd ./local-runner && npm run build)
-run:
+run: build run-only
+run-only:
 	@(cd ./local-runner && npm start)
-.PHONY: install build run help
+.PHONY: install build run run-only help
 help: ## Shows available targets
 	@fgrep -h "## " $(MAKEFILE_LIST) | fgrep -v fgrep | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-13s\033[0m %s\n", $$1, $$2}'
