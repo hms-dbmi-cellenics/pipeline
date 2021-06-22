@@ -7,7 +7,7 @@ upload_to_aws <- function(input, pipeline_config) {
   project_id <- input$projectId
 
   # save experiment_id for record-keeping
-  writeLines(experiment_id, file.path(output_dir, "/output/experiment_id.txt"))
+  writeLines(experiment_id, file.path(output_dir, "experiment_id.txt"))
 
   # read experiment config
   config <- RJSONIO::fromJSON(file.path(input_dir, "/meta.json"))
