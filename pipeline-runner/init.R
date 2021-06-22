@@ -271,8 +271,8 @@ init <- function() {
                 message(error_txt)
                 states$send_task_failure(
                     taskToken = taskToken,
-                    error = error_txt,
-                    cause = input_parse$taskName
+                    error = "We had an issue while processing your data.",
+                    cause = error_txt
                 )
 
                 send_pipeline_fail_update(pipeline_config, input_parse$experimentId, input_parse$processName, "Error message placeholder")

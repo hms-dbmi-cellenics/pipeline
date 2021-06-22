@@ -49,6 +49,8 @@ RUN R -e 'BiocManager::install("DropletUtils")'
 RUN R -e 'BiocManager::install("BiocGenerics")'
 RUN R -e 'BiocManager::install("plger/scDblFinder")'
 
+RUN R -e 'pak::pkg_install("immunogenomics/harmony")'
+
 # default BLAS/LAPACK issue: Seurat::FindIntegrationAnchors finds ~30 vs ~13,000 anchors
 # eventually move this up with other system installs
 RUN apt-get update && apt-get -y install libatlas3-base
