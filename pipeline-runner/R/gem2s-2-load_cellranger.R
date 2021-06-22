@@ -1,4 +1,3 @@
-# gem2s-1-load_cellranger.R
 #  - Read input folder {10x data}
 #  - Prepare rds with a list of raw counts matrix per sample to compute emptyDrops
 

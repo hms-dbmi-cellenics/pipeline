@@ -1,4 +1,3 @@
-# gem2s-5-prepare_experiment.R
 #  - Merging the samples for the current experiment
 #  - Adding metadata: cellsId, color_pool and gene annotation
 #  - Preparing dataProcessing json file

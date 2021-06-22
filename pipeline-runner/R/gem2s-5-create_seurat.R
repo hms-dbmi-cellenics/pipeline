@@ -1,4 +1,3 @@
-# gem2s-4-createSeurat.R
 #  - Create a seurat object per sample
 #  - Adding emtpyDrops,  scrublet and MT-content
 #  - Create a file with flag_filtered

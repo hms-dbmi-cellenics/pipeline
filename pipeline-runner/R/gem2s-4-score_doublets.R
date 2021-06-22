@@ -1,4 +1,3 @@
-# gem2s-3-doubletScores.R
 #  - Compute doublet scores per sample
 #  - Save an txt file with doublet scores per sample [doublet-scores-sampleName]
 

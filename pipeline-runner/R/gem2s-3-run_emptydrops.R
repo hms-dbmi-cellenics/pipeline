@@ -1,4 +1,3 @@
-# gem2s-2-run_emptydrops.R
 #  - Compute emptyDrops per sample
 #  - Save an rds with emptyDrops result per sample
 
