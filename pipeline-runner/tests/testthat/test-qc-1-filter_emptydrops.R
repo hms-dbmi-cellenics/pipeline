@@ -37,6 +37,15 @@ test_that("filter_emptydrops removes NA with threshold < 1", {
   expect_equal(ncol(out$data), 70)
 })
 
+test_that("filter_emptydrops is sample aware", {
+  scdata <- mock_scdata()
+  config <- mock_config()
+
+  # NA (empty) drops are in 123def only
+  out <- filter_emptydrops(scdata, config, '123abc')
+  expect_equal(ncol(out$data), 80)
+})
+
 
 test_that("if FDR=1 filter_emptydrops keeps everything", {
   scdata <- mock_scdata()
