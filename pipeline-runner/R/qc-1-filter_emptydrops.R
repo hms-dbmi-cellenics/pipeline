@@ -1,4 +1,4 @@
-# STEP 0. Classifier filter
+# STEP 1. Classifier filter
 #
 #
 
@@ -17,29 +17,8 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #' @examples
-filter_emptydrops <- function(scdata, config, task_name, sample_id, num_cells_to_downsample = 6000) {
-  # config$filterSettings = list(FDR=0.82, bandwidth=-1, filterThreshold=-1)
-  # As of 26/3/2021
-  # PlotUUID: classifierEmptyDropsPlot
-  # Labels & Inputs :
-  # X-axis : cellSize, transformed with log10
-  # Y-axis : FDR of emptyDrops classifier [0,1]   
-  # Plot Data Schema
-  # Data point :
-  # {
-  #    classifierP: classifier probability,
-  #    log_u: log cell size
-  # }
-  # Example :
-  # [
-  #    {"FDR": 0.994553522823595,
-  #     "log_u": 4.25168687816849},
-  # ...]
-  print(paste("Running", task_name, "config: ", sep = " "))
-  print(config)
-  print(paste0("Cells per sample before filter for sample ", sample_id))
+filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier', num_cells_to_downsample = 6000) {
 
-  print(table(scdata$samples, useNA = "ifany"))
   # The format of the sample_id is
   # sample-WT1
   # we need to get only the last part, in order to grep the object.
@@ -55,33 +34,31 @@ filter_emptydrops <- function(scdata, config, task_name, sample_id, num_cells_to
   }
   # TODO: get flag from here: scdata@tools$flag_filtered <- FALSE
   if (config$enabled) {
+
     # check if filter data is actually available
     if (is.null(scdata@meta.data$emptyDrops_FDR)) {
-      print(paste("Running", task_name, "config: ", sep = " "))
-      print("Classify is enabled but has no classify data available: will dissable it: no filtering!")
-      # should this be json, i.e. "false" instead?
+      message("Classify is enabled but has no classify data available: will dissable it: no filtering!")
       config$enabled <- FALSE
       guidata <- list()
+
     } else { # enabled and good data:
-      print(paste0("Classify is enabled but classify data available: all good for filtering with FDR=", FDR))
+      message("Classify is enabled: filtering with FDR=", FDR)
       obj_metadata <- scdata@meta.data
       # extract plotting data of original data to return to plot slot later
       barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
       if (length(barcode_names_this_sample) == 0) {
-        guidata <- list()
-        guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
-        return(list(data = scdata, config = config, plotData = guidata))
+        return(list(data = scdata, config = config, plotData = list()))
       }
       sample_subset <- subset(scdata, cells = barcode_names_this_sample)
-      print("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval")
+      message("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval)")
       print(table(obj_metadata$samples, cut(obj_metadata$emptyDrops_FDR, breaks = c(-Inf, 0, 0.0001, 0.01, 0.1, 0.5, 1, Inf)), useNA = "ifany"))
 
       # prevents filtering of NA FDRs if FDR=1
       ed_fdr <- sample_subset$emptyDrops_FDR
       ed_fdr[is.na(ed_fdr)] <- 1
 
-      print("How many barcodes should be filtered out for this sample (#FALSE):")
-      print(table(ed_fdr <= FDR))
+      message("Number of barcodes to filter for this sample: ",
+              sum(ed_fdr > FDR, na.rm = TRUE), '/', length(ed_fdr))
 
       numis <- log10(sample_subset@meta.data$nCount_RNA)
 
@@ -102,7 +79,6 @@ filter_emptydrops <- function(scdata, config, task_name, sample_id, num_cells_to
       # Downsample plotData
       # Handle when the number of remaining cells is less than the number of cells to downsample
       num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-      print(paste("sample of size", ncol(sample_subset), "downsampled to", num_cells_to_downsample, "cells"))
 
       set.seed(123)
       cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
@@ -111,34 +87,20 @@ filter_emptydrops <- function(scdata, config, task_name, sample_id, num_cells_to
 
       # Populate guidata list
       guidata <- list()
-      guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
+      guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
     }
   } else {
-    print("filter disabled: data not filtered!")
+    message("filter disabled: data not filtered!")
     guidata <- list()
-    guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
-    scdata <- scdata
   }
-  print(paste0("Cells per sample after filter for sample ", sample_id))
-  print(table(scdata$samples, useNA = "ifany"))
-  # > head(guidata[[1]])
-  # [[1]]
-  # FDR    log_u
-  # 0.000000 3.554852
 
   # get filter stats after filtering
   filter_stats <- list(
     before = before,
     after = calc_filter_stats(scdata, tmp_sample)
   )
-  guidata[generate_gui_uuid(sample_id, task_name, 1)] <- filter_stats
-  print("Filter statistics for sample before/after filter:")
-  str(filter_stats)
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
 
-  # [[2]]
-  # FDR        log_u
-  # 0.0001120495 2.7176705030
-  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
     data = scdata,
     config = config,

@@ -1,10 +1,6 @@
-# STEP 1. Cell size distribution filter
-filter_low_cellsize <- function(scdata, config, task_name, sample_id, num_cells_to_downsample = 6000) {
-  print(paste("Running", task_name, sep = " "))
-  print("Config:")
-  print(config)
-  print(paste0("Cells per sample before filter for sample ", sample_id))
-  print(table(scdata$samples))
+# STEP 2. Cell size distribution filter
+filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSizeDistribution', num_cells_to_downsample = 6000) {
+
   # The format of the sample_id is
   # sample-WT1
   # we need to get only the last part, in order to grep the object.
@@ -17,8 +13,6 @@ filter_low_cellsize <- function(scdata, config, task_name, sample_id, num_cells_
   barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
   if (length(barcode_names_this_sample) == 0) {
     guidata <- list()
-    guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
-    guidata[generate_gui_uuid(sample_id, task_name, 1)] <- list()
     return(list(data = scdata, config = config, plotData = guidata))
   }
   sample_subset <- subset(scdata, cells = barcode_names_this_sample)
@@ -89,24 +83,19 @@ filter_low_cellsize <- function(scdata, config, task_name, sample_id, num_cells_
     scdata.filtered <- scdata
   }
 
-  print(paste0("Cells per sample after filter for sample ", sample_id))
-  print(table(scdata.filtered$samples))
-
   # update config
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
   guidata <- list()
-  guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
-  guidata[generate_gui_uuid(sample_id, task_name, 1)] <- list(plot2_data)
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot2_data
 
   # Populate with filter statistics
   filter_stats <- list(
     before = calc_filter_stats(scdata, tmp_sample),
     after = calc_filter_stats(scdata.filtered, tmp_sample)
   )
-  guidata[generate_gui_uuid(sample_id, task_name, 3)] <- filter_stats
-  print("Filter statistics for sample before/after filter:")
-  str(filter_stats)
+  guidata[[generate_gui_uuid(sample_id, task_name, 3)]] <- filter_stats
 
   result <- list(
     data = scdata.filtered,

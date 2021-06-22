@@ -16,12 +16,8 @@
 #' @export
 #' @return a list with the filtered seurat object by doublet score, the config and the plot values
 #'
-filter_doublets <- function(scdata, config, task_name, sample_id, num_cells_to_downsample = 6000) {
-  print(paste("Running", task_name, sep = " "))
-  print("Config:")
-  print(config)
-  print(paste0("Cells per sample before filter for sample ", sample_id))
-  print(table(scdata$samples))
+filter_doublets <- function(scdata, config, sample_id, task_name = 'doubletScores', num_cells_to_downsample = 6000) {
+
   # The format of the sample_id is
   # sample-WT1
   # we need to get only the last part, in order to grep the object.
@@ -46,9 +42,7 @@ filter_doublets <- function(scdata, config, task_name, sample_id, num_cells_to_d
   obj_metadata <- scdata@meta.data
   barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
   if (length(barcode_names_this_sample) == 0) {
-    guidata <- list()
-    guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
-    return(list(data = scdata, config = config, plotData = guidata))
+    return(list(data = scdata, config = config, plotData = list()))
   }
   sample_subset <- subset(scdata, cells = barcode_names_this_sample)
 
@@ -77,11 +71,8 @@ filter_doublets <- function(scdata, config, task_name, sample_id, num_cells_to_d
     c("doubletP" = x)
   })
 
-
   # Downsample plotData
-  # Handle when the number of remaining cells is less than the number of cells to downsample
   num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-  print(paste("sample of size", ncol(sample_subset), "downsampled to", num_cells_to_downsample, "cells"))
 
   set.seed(123)
   cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
@@ -92,10 +83,7 @@ filter_doublets <- function(scdata, config, task_name, sample_id, num_cells_to_d
 
   # plot 1: histogram of doublet scores
   #              [0.161,              0.198,              0.284,  ...]
-  guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
-
-  print(paste0("Cells per sample after filter for sample ", sample_id))
-  print(table(scdata.filtered$samples))
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
 
   # populate with filter statistics
   filter_stats <- list(
@@ -103,9 +91,7 @@ filter_doublets <- function(scdata, config, task_name, sample_id, num_cells_to_d
     after = calc_filter_stats(scdata.filtered, tmp_sample)
   )
 
-  guidata[generate_gui_uuid(sample_id, task_name, 1)] <- filter_stats
-  print("Filter statistics for sample before/after filter:")
-  str(filter_stats)
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(

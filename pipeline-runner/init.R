@@ -2,6 +2,9 @@
 library(Seurat)
 library(zeallot)
 
+# increase maxSize from the default of 500MB to 32GB
+options(future.globals.maxSize = 32 * 1024 * 1024^2)
+
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
 
 load_config <- function(development_aws_server) {
@@ -60,7 +63,6 @@ load_config <- function(development_aws_server) {
     return(config)
 }
 
-#name changed from runstep
 run_processing_step <- function(scdata, config, task_name, sample_id, debug_config) {
 
     # vector of task functions named by task name
@@ -78,8 +80,28 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
 
     handle_debug(scdata, config, task_name, sample_id, debug_config)
 
+    # print info
     task <- tasks[[task_name]]
-    out <- task(scdata, config, task_name, sample_id)
+    message("Running: ", task_name)
+    message("Config:")
+    str(config)
+
+    # run task and time it
+    tstart <- Sys.time()
+    out <- task(scdata, config, sample_id, task_name)
+    ttask <- format(Sys.time()-tstart, digits = 2)
+    message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask)
+
+    # filter specific info
+    is.filter <- task_name %in% names(tasks)[1:5]
+    if (is.filter) {
+        message("Cells per sample before filter for sample: ", sample_id)
+        print(table(scdata$samples))
+
+        message("Cells per sample after filter for sample: ", sample_id)
+        print(table(out$data$samples))
+    }
+
     return(out)
 }
 

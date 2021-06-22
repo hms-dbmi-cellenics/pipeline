@@ -3,38 +3,10 @@
 # Compute embedding step where we run dimensional reduction technniques such as t-SNE and  UMAP. Moreover, the cluster analysis is
 # done also in this step.
 
-# NEED TO CHECK CONFIG SCHEMA
+embed_and_cluster <- function(scdata, config, sample_id, task_name = 'configureEmbedding') {
 
-# nPCs ?
-
-# "configureEmbedding": {
-#    "embeddingSettings": {
-#        "method": "umap",
-#        "methodSettings": {
-#            "umap": {
-#                "minimumDistance": 0.2,
-#                "distanceMetric": "euclidean"
-#            },
-#            "tsne": {
-#                "perplexity": 30,
-#                "learningRate": 200
-#            }
-#        }
-#    },
-#    "clusteringSettings": {
-#        "method": "louvain",
-#        "methodSettings": {
-#            "louvain": {
-#                "resolution": 0.5
-#            }
-#        }
-#    }
-# },
-
-
-embed_and_cluster <- function(scdata, config, task_name, sample_id) {
-  scdata.embedding <- run_Embedding(scdata, config)
-  scdata.embedding <- run_Clustering(scdata.embedding, config)
+  scdata.embedding <- run_embedding(scdata, config)
+  scdata.embedding <- run_clustering(scdata.embedding, config)
   scdata.embedding <- coloring_samples_and_cluster(scdata.embedding)
 
   cells_order <- rownames(scdata.embedding@meta.data)
@@ -119,11 +91,7 @@ embed_and_cluster <- function(scdata, config, task_name, sample_id) {
 
 # This function covers
 #   - Compute embedding: t-SNE or UMAP
-run_Embedding <- function(scdata, config) {
-
-  #################
-  # Embedding part
-  #################
+run_embedding <- function(scdata, config) {
 
   # The threshold was selected in the dataIntegration step
   # Until we update the rds in S3 where the numPCs is stored in misc, we need to handle it by HARDCODE to 30
@@ -169,11 +137,7 @@ run_Embedding <- function(scdata, config) {
   return(scdata)
 }
 
-run_Clustering <- function(scdata, config) {
-
-  #################
-  # Clustering part
-  #################
+run_clustering <- function(scdata, config) {
 
   message("Running clustering")
   active.reduction <- scdata@misc[["active.reduction"]]
@@ -198,9 +162,7 @@ run_Clustering <- function(scdata, config) {
 
 coloring_samples_and_cluster <- function(scdata) {
 
-  ##########################
   # Coloring active ident
-  ###########################
   if ("color_pool" %in% names(scdata@misc)) {
     color_pool <- scdata@misc[["color_pool"]]
   } else { # THIS SHOULD BE REMOVE ONCE THE EXPERIMENT HAS BEEN UPDATED WITH THE NEW VERSION OF THE DATA-INGEST
@@ -219,9 +181,7 @@ coloring_samples_and_cluster <- function(scdata) {
   }
   scdata$color_active_ident <- color_pool[as.numeric(scdata@active.ident)]
 
-  ##########################
   # Coloring samples
-  ###########################
   remaining.colors <- color_pool[-c(1:length(unique(scdata@meta.data$color_active_ident)))]
   if ("samples" %in% colnames(scdata@meta.data)) { # In that case we are in multisample experiment
     scdata@meta.data[, "color_samples"] <- remaining.colors[as.numeric(as.factor(scdata$samples))]

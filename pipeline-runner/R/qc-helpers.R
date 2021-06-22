@@ -32,7 +32,12 @@ subset_safe <- function(scdata, cells) {
 #
 
 downsample_plotdata <- function(ncol_sample, max_number_of_cells) {
-  return(min(max_number_of_cells, ncol_sample))
+  nkeep <- min(max_number_of_cells, ncol_sample)
+  if (nkeep < ncol_sample) {
+    message("sample of size ", ncol_sample, " downsampled to ", nkeep, " cells")
+  }
+
+  return(nkeep)
 }
 
 

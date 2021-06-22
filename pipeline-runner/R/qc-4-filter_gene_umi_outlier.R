@@ -1,16 +1,8 @@
 # STEP 4. Number of genes vs UMIs filter
 
 
-filter_gene_umi_outlier <- function(scdata, config, task_name, sample_id, num_cells_to_downsample = 6000) {
-  options(error = function() {
-    traceback(2)
-    if (!interactive()) quit("no", status = 1, runLast = FALSE)
-  })
-  print(paste("Running", task_name, sep = " "))
-  print("Config:")
-  print(config)
-  print(paste0("Cells per sample before filter for sample ", sample_id))
-  print(table(scdata$samples))
+filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numGenesVsNumUmis', num_cells_to_downsample = 6000) {
+
   # The format of the sample_id is
   # sample-WT1
   # we need to get only the last part, in order to grep the object.
@@ -34,9 +26,7 @@ filter_gene_umi_outlier <- function(scdata, config, task_name, sample_id, num_ce
       obj_metadata <- scdata@meta.data
       barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
       if (length(barcode_names_this_sample) == 0) {
-        guidata <- list()
-        guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
-        return(list(data = scdata, config = config, plotData = guidata))
+        return(list(data = scdata, config = config, plotData = list()))
       }
       sample_subset <- subset(scdata, cells = barcode_names_this_sample)
       # We regress the molecules vs the genes. This information are stored in nCount_RNA and nFeature_RNA respectively
@@ -74,7 +64,6 @@ filter_gene_umi_outlier <- function(scdata, config, task_name, sample_id, num_ce
       # Downsample plotData
       # Handle when the number of remaining cells is less than the number of cells to downsample
       num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-      print(paste("sample of size", ncol(sample_subset), "downsampled to", num_cells_to_downsample, "cells"))
 
       set.seed(123)
       cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
@@ -88,8 +77,6 @@ filter_gene_umi_outlier <- function(scdata, config, task_name, sample_id, num_ce
   # update config
   config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]][["p.level"]] <- p.level
 
-
-
   # Scatter plot which is composed of:
   # x-axis: log_10_UMIs
   # y-axis: log_10_genes
@@ -97,10 +84,7 @@ filter_gene_umi_outlier <- function(scdata, config, task_name, sample_id, num_ce
   # Q: Should we return the point out the cells that are going to be excluded from the R side or this task can be done in
   # the UI side.
   guidata <- list()
-  guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
-
-  print(paste0("Cells per sample after filter for sample ", sample_id))
-  print(table(scdata.filtered$samples))
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
 
   # Populate with filter statistics
   filter_stats <- list(
@@ -108,9 +92,7 @@ filter_gene_umi_outlier <- function(scdata, config, task_name, sample_id, num_ce
     after = calc_filter_stats(scdata.filtered, tmp_sample)
   )
 
-  guidata[generate_gui_uuid(sample_id, task_name, 1)] <- filter_stats
-  print("Filter statistics for sample before/after filter:")
-  str(filter_stats)
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1}}
   result <- list(

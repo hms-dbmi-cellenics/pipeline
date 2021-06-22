@@ -1,4 +1,4 @@
-# STEP 2. Mitochondrial content filter
+# STEP 3. Mitochondrial content filter
 
 # This is a simplest filter that looks at a threshold value for the mitochondrial content.
 # To separate cells with low MT-content from the ones that have a high MT-content what makes us think that are dead.
@@ -19,14 +19,11 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
-filter_high_mito <- function(scdata, config, task_name, sample_id, num_cells_to_downsample = 6000) {
-  print(paste("Running", task_name, sep = " "))
-  print("Config:")
-  print(config)
-  print(paste0("Cells per sample before filter for sample ", sample_id))
-  print(table(scdata$samples))
+filter_high_mito <- function(scdata, config, sample_id, task_name = 'mitochondrialContent', num_cells_to_downsample = 6000) {
+
   tmp_sample <- sub("sample-", "", sample_id)
   # Check if the experiment has MT-content
+
   if (!"percent.mt" %in% colnames(scdata@meta.data)) {
     # This return value breaks the step, no config data is returned!!!!
     message("Warning! No MT-content has been computed for this experiment!")
@@ -41,10 +38,7 @@ filter_high_mito <- function(scdata, config, task_name, sample_id, num_cells_to_
   obj_metadata <- scdata@meta.data
   barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
   if (length(barcode_names_this_sample) == 0) {
-    guidata <- list()
-    guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list()
-    guidata[generate_gui_uuid(sample_id, task_name, 1)] <- list()
-    return(list(data = scdata, config = config, plotData = guidata))
+    return(list(data = scdata, config = config, plotData = list()))
   }
   sample_subset <- subset(scdata, cells = barcode_names_this_sample)
 
@@ -79,7 +73,6 @@ filter_high_mito <- function(scdata, config, task_name, sample_id, num_cells_to_
   # Downsample plotData
   # Handle when the number of remaining cells is less than the number of cells to downsample
   num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-  print(paste("sample of size", ncol(sample_subset), "downsampled to", num_cells_to_downsample, "cells"))
 
   set.seed(123)
   cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
@@ -92,7 +85,7 @@ filter_high_mito <- function(scdata, config, task_name, sample_id, num_cells_to_
   # plot 1: histgram of MT-content
   # AAACCCAAGCGCCCAT-1 AAACCCAAGGTTCCGC-1 AAACCCACAGAGTTGG-1
   #              0.161              0.198              0.284  ...
-  guidata[generate_gui_uuid(sample_id, task_name, 0)] <- list(plot1_data)
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
 
   # plot 2: There are two alternavitive:
   #           - Scatter plot with UMIs in the x-axis and MT-content in the y-axis
@@ -103,11 +96,7 @@ filter_high_mito <- function(scdata, config, task_name, sample_id, num_cells_to_
   # We have decided to use the scatter plot, but I temporaly leave the other option in the comments.
   # Q: Should we return from the R side the cells that are going to be removed? For this plot it is interesting to color the
   # cells that are going to be excluded.
-  guidata[generate_gui_uuid(sample_id, task_name, 1)] <- list(plot2_data)
-
-  # some tests:
-  print(paste0("Cells per sample after filter for sample ", sample_id))
-  print(table(scdata.filtered$samples))
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot2_data
 
   # populate with filter statistics
   filter_stats <- list(
@@ -115,9 +104,7 @@ filter_high_mito <- function(scdata, config, task_name, sample_id, num_cells_to_
     after = calc_filter_stats(scdata.filtered, tmp_sample)
   )
 
-  guidata[generate_gui_uuid(sample_id, task_name, 2)] <- filter_stats
-  print("Filter statistics for sample before/after filter:")
-  str(filter_stats)
+  guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats
 
   result <- list(
     data = scdata.filtered, # scdata filter

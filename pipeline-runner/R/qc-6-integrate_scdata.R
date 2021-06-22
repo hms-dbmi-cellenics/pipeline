@@ -23,14 +23,7 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata, config, task_name, sample_id) {
-  # this options shows the callstack when an error is thrown
-  options(error = function() {
-    traceback(3)
-    if (!interactive()) quit("no", status = 1, runLast = FALSE)
-  })
-  # increase maxSize from the default of 500MB to 32GB
-  options(future.globals.maxSize = 32 * 1024 * 1024^2)
+integrate_scdata <- function(scdata, config, sample_id, task_name = 'dataIntegration') {
 
   # main function
   scdata.integrated <- run_dataIntegration(scdata, config)
