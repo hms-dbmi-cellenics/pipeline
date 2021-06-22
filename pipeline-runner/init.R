@@ -137,9 +137,6 @@ call_gem2s <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
 
     data %<-% run_gem2s_step(task_name, input, pipeline_config)
-
-    assign("scdata", data, pos = ".GlobalEnv")
-
     message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data)
 
     return(message_id)
