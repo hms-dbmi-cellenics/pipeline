@@ -129,7 +129,12 @@ run_gem2s_step <- function(task_name, input, pipeline_config) {
     if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
     message("Starting task: ", task_name)
     task <- tasks[[task_name]]
+
+    tstart <- Sys.time()
     data <- task(input, pipeline_config)
+    ttask <- format(Sys.time()-tstart, digits = 2)
+    message("⏱️ Time to complete ", task_name, ": ", ttask)
+
     return(data)
 }
 
