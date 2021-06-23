@@ -51,8 +51,8 @@ make build
 **TLDR**: save something inside `/debug` in a data processing or gem2s step to
  access it later from `$(pwd)/debug`.
 
-To save the parameters (`config`, `seurat_obj`, etc) to a data processing task function, specify DEBUG_STEP.
-Available tasks include all those defined in `run_processing_step` of  [init.r](pipeline-runner/src/init.r#L72) as well as `DEBUG_STEP=all` 
+To save the parameters (`config`, `seurat_obj`, etc) to a **data processing** task function, specify `DEBUG_STEP`.
+Available tasks include all task names listed in `run_processing_step` [init.R](pipeline-runner/init.R#L69) as well as `DEBUG_STEP=all` 
 to save the parameters to all data processing task functions:
 
 ```bash
