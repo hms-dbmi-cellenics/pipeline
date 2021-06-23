@@ -21,7 +21,7 @@ load_cellranger <- function(input, pipeline_config) {
   message("Exporting raw scdata for emptyDrops...")
   saveRDS(scdata_list, file = "/output/pre-doublet-scdata_list.rds", compress = FALSE)
 
-  message("Step 1 completed.")
+  message("Step 2 completed.")
   print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())

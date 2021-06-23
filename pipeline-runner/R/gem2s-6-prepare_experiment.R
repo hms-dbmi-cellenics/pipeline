@@ -2,6 +2,7 @@
 #  - Adding metadata: cellsId, color_pool and gene annotation
 #  - Preparing dataProcessing json file
 
+
 prepare_experiment <- function(input, pipeline_config) {
 
   # Merging Seurat object
@@ -227,7 +228,7 @@ prepare_experiment <- function(input, pipeline_config) {
   message("config file...")
   write(exportJson, "/output/config_dataProcessing.json")
 
-  message("Step 4 completed.")
+  message("Step 6 completed.")
   print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())

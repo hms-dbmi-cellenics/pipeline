@@ -22,7 +22,7 @@ run_emptydrops <- function(input, pipeline_config) {
     compute_emptydrops(scdata_list[[sample_name]], sample_name)
   }
 
-  message("Step 2-1 completed.")
+  message("Step 3 completed.")
   print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())

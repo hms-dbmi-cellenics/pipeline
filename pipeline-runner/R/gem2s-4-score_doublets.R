@@ -24,7 +24,7 @@ score_doublets <- function(input, pipeline_config) {
     compute_doublet_scores(scdata_list[[sample_name]], sample_name)
   }
 
-  message("Step 2-2 completed.")
+  message("Step 4 completed.")
   print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())

@@ -28,7 +28,7 @@ create_seurat <- function(input, pipeline_config) {
   df_flag_filtered <- data.frame(samples = samples, flag_filtered = ifelse(flag_filtered, "Filtered", "Unfiltered"))
   write.table(df_flag_filtered, "/output/df_flag_filtered.txt", col.names = TRUE, row.names = FALSE, sep = "\t", quote = FALSE)
 
-  message("Step 3 completed.")
+  message("Step 5 completed.")
   print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())
