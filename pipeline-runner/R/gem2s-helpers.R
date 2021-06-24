@@ -17,7 +17,20 @@ get_doublet_score <- function(sample) {
   return(as.data.frame(scores))
 }
 
-
+print_config <- function(step_number,step_name,input,pipeline_config,config){
+  message("------- Running step ",step_number," -------")
+  message("------- Download ",step_name," -------")
+  message("Step config:")
+  message(input)
+  message("Pipeline config")
+  message(pipeline_config)
+  print("Current working directory:")
+  print(getwd())
+  print("Experiment folder status:")
+  print(list.files(paste("/input", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
+  print("Current config (meta.json):")
+  print(config)
+}
 
 # check_config function
 #' @description Create metadata dataframe from config files

@@ -10,6 +10,8 @@ score_doublets <- function(input, pipeline_config) {
   message("Loading configuration...")
   config <- RJSONIO::fromJSON("/input/meta.json")
 
+  print_config(4,"Score Doublets",input,pipeline_config,config)
+
   # Check which samples have been selected. Otherwiser we are going to use all of them.
   if (length(config$samples) > 0) {
     samples <- config$samples
@@ -25,7 +27,6 @@ score_doublets <- function(input, pipeline_config) {
   }
 
   message("Step 4 completed.")
-  print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())
 }

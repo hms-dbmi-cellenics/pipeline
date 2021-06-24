@@ -4,13 +4,13 @@
 
 # LOADING SPARSE MATRIX AND CONFIGURATION
 create_seurat <- function(input, pipeline_config) {
-  # Loading the list with the raw sparse matrixs
-  print("Starting")
-  print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
   message("reloading old matrices...")
   scdata_list <- readRDS("/output/pre-doublet-scdata_list.rds")
+
   message("Loading configuration...")
   config <- RJSONIO::fromJSON("/input/meta.json")
+
+  print_config(5,"Create Seurat",input,pipeline_config,config)
 
   # Check which samples have been selected. Otherwiser we are going to use all of them.
   if (length(config$samples) > 0) {
@@ -19,17 +19,14 @@ create_seurat <- function(input, pipeline_config) {
     samples <- names(scdata_list)
   }
 
-
   scdata_list <- scdata_list[samples]
   message("Creating Seurat Object...")
+
   flag_filtered <- sapply(names(scdata_list), function(sample_name) adding_metrics_and_annotation(scdata_list[[sample_name]], sample_name, config))
-  message(flag_filtered)
-  # Since we need to store the flag_filtered in the dynamoDB, we need to persist in a file just to be read in 5_Upload-to-aws.py
   df_flag_filtered <- data.frame(samples = samples, flag_filtered = ifelse(flag_filtered, "Filtered", "Unfiltered"))
   write.table(df_flag_filtered, "/output/df_flag_filtered.txt", col.names = TRUE, row.names = FALSE, sep = "\t", quote = FALSE)
 
   message("Step 5 completed.")
-  print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())
 }

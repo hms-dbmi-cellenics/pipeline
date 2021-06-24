@@ -1,9 +1,6 @@
 # STEP 2. Cell size distribution filter
 filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSizeDistribution', num_cells_to_downsample = 6000) {
 
-  # The format of the sample_id is
-  # sample-WT1
-  # we need to get only the last part, in order to grep the object.
   tmp_sample <- sub("sample-", "", sample_id)
 
   minCellSize <- as.numeric(config$filterSettings$minCellSize)
@@ -50,7 +47,8 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   if (exists("auto", where = config)) {
     if (as.logical(toupper(config$auto))) {
       # config not really needed for this one (maybe later for threshold.low/high):
-      # HARDCODE Value. threshold.low [ Parameter for function CalculateBarcodeInflections. Description: Ignore barcodes of rank below this threshold in inflection calculation]
+      # HARDCODE Value. threshold.low 
+      # [ Parameter for function CalculateBarcodeInflections. Description: Ignore barcodes of rank below this threshold in inflection calculation]
       threshold.low <- 1e2
       # If there are less cells than the value threshold.low, the function CalculateBarcodeInflections fails. So we need to handle by not removing any cells, that is,
       # consider the minCellSize as the minimun UMIs in the dataset.
@@ -63,14 +61,7 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
     }
   }
   if (as.logical(toupper(config$enabled))) {
-    # Information regarding number of UMIs per cells is pre-computed during the 'CreateSeuratObject' function.
-    # this used to be the filter below which applies for all samples
-    # we had to change it for the current version where we also have to
-    # keep all barcodes for all samples (filter doesn't apply there)
-    # once we ensure the input is only one sample, we can revert to the line below:
-    # scdata <- subset(scdata, subset = nCount_RNA >= minCellSize)
-    # subset(x, subset, cells = NULL, features = NULL, idents = NULL, ...)
-    # cells: Cell names or indices
+
     # extract cell id that do not(!) belong to current sample (to not apply filter there)
     barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)), ])
     # all barcodes that match threshold in the subset data
@@ -128,10 +119,7 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
 # useful for determining a threshold for removing low-quality
 # samples.
 generate_default_values_cellSizeDistribution <- function(scdata, config, threshold.low) {
-  # Q: should we check for precalculated values? e.g.:
-  # is.null(Tool(scdata, slot = "CalculateBarcodeInflections"))
-  # Returns Seurat object with a new list in the `tools` slot,
-  # `CalculateBarcodeInflections` including inflection point calculatio
+  # `CalculateBarcodeInflections` including inflection point calculation
   scdata_tmp <- CalculateBarcodeInflections(
     object = scdata,
     barcode.column = "nCount_RNA",
@@ -140,13 +128,7 @@ generate_default_values_cellSizeDistribution <- function(scdata, config, thresho
     threshold.low = threshold.low,
     threshold.high = NULL
   )
-  # extracting the inflection point value which can serve as minCellSize threshold
-  # all other side effects to the scdate object will be discarded
-  # [TODO unittest]: this calculation assumes a single sample, i.e. only one group in samples!
-  # otherwise it will return multiple values for each group!
   # returned is both the rank(s) as well as inflection point
-  # samples          nCount_RNA  rank
-  # SeuratProject       1106        10722
   sample_subset <- Tool(scdata_tmp, slot = "CalculateBarcodeInflections")$inflection_points
   # extracting only inflection point(s)
   return(sample_subset$nCount_RNA)

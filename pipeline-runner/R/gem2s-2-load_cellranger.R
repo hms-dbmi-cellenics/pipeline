@@ -5,24 +5,17 @@ load_cellranger <- function(input, pipeline_config) {
   message("Loading configuration...")
   config <- RJSONIO::fromJSON("/input/meta.json")
 
-  print("Config:")
-  print(config)
-  print("Current working directory:")
-  print(getwd())
-  print("Experiment folder status:")
-  print(list.files(paste("/input", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
-
+  print_config(2,"Load Cellranger",input,pipeline_config,config)
 
   # We include in variable scdata_list all the sparse matrix per sample
   message("Creating raw dataframe...")
   scdata_list <- call_read10x(config)
 
-  # We store the raw scdata_list since for the emptyDrops since to compute the background we cannot remove any cells.
+  # We store the raw scdata_list for the emptyDrops, since to compute the background we cannot remove any cells.
   message("Exporting raw scdata for emptyDrops...")
   saveRDS(scdata_list, file = "/output/pre-doublet-scdata_list.rds", compress = FALSE)
 
   message("Step 2 completed.")
-  print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())
 }
@@ -44,8 +37,7 @@ load_cellranger <- function(input, pipeline_config) {
 #'
 #' @return TRUE if the design is correct FALSE otherwise
 check_10x_input <- function(samples) {
-
-  # pipeline always receives 10X V3 named files
+  #The UI will upload files with these names, regardless of actual Cellranger version. 
   fnames <- c("features.tsv.gz", "barcodes.tsv.gz", "matrix.mtx.gz")
   fpaths <- file.path("/input", samples, fnames)
   all(file.exists(fpaths))
@@ -77,15 +69,6 @@ call_read10x <- function(config) {
   } else {
     samples <- config$samples
 
-    message("Input directories")
-    message(list.dirs("/input"))
-    print("Config:")
-    print(config)
-    print("Current working directory:")
-    print(getwd())
-    print("Experiment folder status:")
-    print(list.files(paste("/input", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
-
     if (!all(samples %in% list.dirs("/input", full.names = FALSE))) {
       stop(
         "Check samples to be used in the analysis,
@@ -110,10 +93,7 @@ call_read10x <- function(config) {
 
     annotation_features <- list()
     # overall feature annotation is derived from input data saved in genes.tsv features.tsv.gz
-    # since each sample only carries a subset of annotation for it's expressed genes, the annotation for all samples is merged.
-    # this is an excerpt of features.tsv.gz
-    # ENSG00000237613 | FAM138A | Gene Expression
-    # ENSG00000186092 | OR4F5 | Gene Expression
+    # since each sample only carries a subset of annotation for its expressed genes, the annotation for all samples is merged.
     # More information about genes.tsv features.tsv.gz: https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices
 
     for (sample in samples) {
@@ -136,7 +116,6 @@ call_read10x <- function(config) {
     write.table(annotation_features_df, "/output/features_annotations.tsv", sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
   }
 
-  # So far, we haven't tested input format in table type.
   if (data_type == "table") {
     stop("data_type of table not yet implemented")
 
