@@ -233,7 +233,7 @@ cellSizeDistribution_config <- function(scdata, config) {
 # To set the auto value we are going to use as a threshold the maximun score that is given to a singlet.
 
 doubletScores_config <- function(scdata, config) {
-  # Minimum score that has a singlet
+  # Maximum score that has a singlet
   probabilityThreshold <- max(scdata$doublet_scores[scdata$doublet_class == "singlet"], na.rm = TRUE)
   config$filterSettings$probabilityThreshold <- probabilityThreshold
 
