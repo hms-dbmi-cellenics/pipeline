@@ -65,6 +65,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
       plot1_data <- unname(purrr::map2(ed_fdr, numis, function(x, y) {
         c("FDR" = x, "log_u" = y)
       }))
+
       # cells: Cell names or indices
       # extract cell id that do not(!) belong to current sample (to not apply filter there)
       barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)), ])
@@ -85,9 +86,12 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
       cells_position_to_keep <- sort(cells_position_to_keep)
       plot1_data <- plot1_data[cells_position_to_keep]
 
+      plot2_data <- get_bcranks_plot_data(sample_subset, num_cells_to_downsample, is.cellsize = FALSE)[[1]]
+
       # Populate guidata list
       guidata <- list()
       guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
+      guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot2_data
     }
   } else {
     message("filter disabled: data not filtered!")
@@ -99,7 +103,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
     before = before,
     after = calc_filter_stats(scdata, tmp_sample)
   )
-  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
+  guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats
 
   result <- list(
     data = scdata,

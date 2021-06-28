@@ -16,34 +16,7 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
     return(list(data = scdata, config = config, plotData = guidata))
   }
   sample_subset <- subset(scdata, cells = barcode_names_this_sample)
-
-  # umi histogram plot
-  numis <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
-  plot1_data <- lapply(unname(numis), function(x) {
-    c("u" = x)
-  })
-
-  # barcode ranks plot data
-  # unique average ranks maintain plot shape in case of downsampling
-  ranks <- rank(-numis, ties.method = "average")
-  dups <- duplicated(ranks)
-  ranks <- ranks[!dups]
-  numis <- numis[!dups]
-
-  plot2_data <- unname(purrr::map2(log(numis), ranks, function(x, y) {
-    c("log_u" = x, "rank" = y)
-  }))
-
-  # downsample plot data
-  set.seed(123)
-  nkeep1 <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-  nkeep2 <- downsample_plotdata(length(ranks), num_cells_to_downsample)
-
-  keep1 <- sort(sample(ncol(sample_subset), nkeep1))
-  keep2 <- sort(sample(length(ranks), nkeep2))
-
-  plot1_data <- plot1_data[keep1]
-  plot2_data <- plot2_data[keep2]
+  plot_data <- get_bcranks_plot_data(sample_subset, num_cells_to_downsample)
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
   # to get a list with two elements {minCellSize and binStep}
@@ -87,8 +60,8 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
   guidata <- list()
-  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
-  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot2_data
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data[[1]]
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[[2]]
 
   # Populate with filter statistics
   filter_stats <- list(
@@ -104,6 +77,76 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   )
 
   return(result)
+}
+
+get_bcranks_plot_data <- function(sample_subset, nmax, is.cellsize = TRUE) {
+
+  set.seed(123)
+  plot_data <- list()
+  numis <- unname(sample_subset$nCount_RNA)
+  ord <- order(numis, decreasing = TRUE)
+  numis <- numis[ord]
+
+  # umi histogram plot
+  if (is.cellsize) {
+    plot1_data <- lapply(numis, function(x) { c(u = x) })
+    nkeep1 <- downsample_plotdata(ncol(sample_subset), nmax)
+    keep1 <- sort(sample(ncol(sample_subset), nkeep1))
+    plot1_data <- list(plot1_data[keep1])
+    plot_data <- append(plot_data, plot1_data)
+  }
+
+  # barcode ranks plot data
+  # unique average ranks maintain plot shape in case of downsampling
+  ranks <- rank(-numis, ties.method = "average")
+  fdrs <- sample_subset$emptyDrops_FDR[ord]
+
+  dt <- data.table::data.table(rank = ranks, fdr = fdrs, log_u = log(numis))
+
+  dt <- dt[, .(avg_fdr = mean(fdr, na.rm = TRUE),
+               ndrops = .N,
+               log_u = log_u[1]), by = 'rank']
+
+  # example of what density kneeplot should look like
+  # plot_keep_density(dt)
+
+  # remove fdr specific columns for cell size filter
+  if (is.cellsize) dt[, c("avg_fdr", "ndrops") := NULL]
+  plot2_data <- list(apply(dt, 1, as.list))
+
+  plot_data <- append(plot_data, plot2_data)
+  return(plot_data)
+}
+
+plot_keep_density <- function(dt, thresh = 0.01) {
+
+  # bin into groups of 100 ranks
+  nbins <- round(nrow(dt)/100)
+  dt$bin <- as.numeric(cut(seq_len(nrow(dt)), nbins))
+
+  # calculate keep density per bin
+  kd <- dt[, .(keep_density = kdens(avg_fdr, thresh, ndrops)), by = 'bin']
+  res <- dt[kd, on = 'bin']
+  dens0 <- res$keep_density == 0
+
+  # smooth line
+  res$predict <- predict(loess(log_u~rank, data = res, span=0.02))
+
+  # plot
+  ggplot2::ggplot(res, ggplot2::aes(x = rank, y = predict, color = keep_density)) +
+    ggplot2::geom_line(size = 1) +
+    ggplot2::scale_color_distiller(direction = 1) +
+    ggplot2::scale_x_continuous(trans='log10') +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(legend.position = 'none') +
+    ggplot2::geom_line(data = res[dens0, ], color='gray', size = 1) +
+    ggplot2::theme(panel.border = element_rect(color = 'black', size = 0.1, fill = 'transparent')) +
+    ggplot2::xlab('cell rank') +
+    ggplot2::ylab('log UMIs in cell')
+}
+
+kdens <- function(avg_fdr, thresh, ndrops) {
+  sum((avg_fdr<thresh)*ndrops, na.rm = TRUE)/sum(ndrops)
 }
 
 
