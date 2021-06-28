@@ -35,7 +35,7 @@ check_config <- function(scdata, sample, config) {
   # Check if "metadata" exists on config. If it is TRUE, we have other metadata information that we are
   # going to include in our experiment.
   if ("metadata" %in% names(config)) {
-    rest_metadata <- as.data.frame(config$metadata)
+    rest_metadata <- as.data.frame(config$metadata, check.names = FALSE)
     rest_metadata$sample <- config$samples
     for (var in colnames(rest_metadata)) {
       metadata[, var] <- rest_metadata[, var][match(metadata$sample, rest_metadata$sample)]
