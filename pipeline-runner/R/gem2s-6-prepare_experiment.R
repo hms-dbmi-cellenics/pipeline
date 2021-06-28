@@ -196,7 +196,7 @@ prepare_experiment <- function(input, pipeline_config) {
     ),
     clusteringSettings = list(
       method = "louvain",
-      methodSettings = list(louvain = list(resolution = 0.5))
+      methodSettings = list(louvain = list(resolution = 0.8))
     )
   )
 
