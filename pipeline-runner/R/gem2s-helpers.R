@@ -18,8 +18,7 @@ get_doublet_score <- function(sample) {
 }
 
 print_config <- function(step_number,step_name,input,pipeline_config,config){
-  message("------- Running step ",step_number," -------")
-  message("------- Download ",step_name," -------")
+  message("------- Running step ", step_number, ": ", step_name, " -------")
   message("Step config:")
   message(input)
   message("Pipeline config")
