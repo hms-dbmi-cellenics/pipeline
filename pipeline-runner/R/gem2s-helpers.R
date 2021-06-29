@@ -24,12 +24,12 @@ print_config <- function(step_number,step_name,input,pipeline_config,config){
   message(input)
   message("Pipeline config")
   message(pipeline_config)
-  print("Current working directory:")
-  print(getwd())
-  print("Experiment folder status:")
-  print(list.files("/input", all.files = TRUE, full.names = TRUE, recursive = TRUE))
-  print("Current config (meta.json):")
-  print(config)
+  message("Current working directory:")
+  message(getwd())
+  message("Experiment folder status:")
+  message(list.files("/input", all.files = TRUE, full.names = TRUE, recursive = TRUE))
+  message("Current config (meta.json):")
+  message(config)
 }
 
 # check_config function
