@@ -16,8 +16,7 @@
 #' @export
 #' @return a list with the filtered seurat object by doublet score, the config and the plot values
 #'
-filter_doublets <- function(scdata, config, sample_id, task_name = 'doubletScores', num_cells_to_downsample = 6000) {
-
+filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScores", num_cells_to_downsample = 6000) {
   tmp_sample <- sub("sample-", "", sample_id)
 
   # Check if the experiment has doubletScores

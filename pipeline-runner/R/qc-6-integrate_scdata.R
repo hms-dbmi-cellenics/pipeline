@@ -20,7 +20,7 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata, config, sample_id, task_name = 'dataIntegration') {
+integrate_scdata <- function(scdata, config, sample_id, task_name = "dataIntegration") {
 
   # main function
   scdata.integrated <- run_dataIntegration(scdata, config)
@@ -33,7 +33,7 @@ integrate_scdata <- function(scdata, config, sample_id, task_name = 'dataIntegra
     varExplained <- eigValues / sum(eigValues)
   }
 
-  #This same numPCs will be used throughout the platform.
+  # This same numPCs will be used throughout the platform.
   scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
 
   scdata.integrated <- colorObject(scdata.integrated)

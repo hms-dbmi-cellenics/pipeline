@@ -19,8 +19,7 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
-filter_high_mito <- function(scdata, config, sample_id, task_name = 'mitochondrialContent', num_cells_to_downsample = 6000) {
-
+filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondrialContent", num_cells_to_downsample = 6000) {
   tmp_sample <- sub("sample-", "", sample_id)
 
   # Check if the experiment has MT-content
@@ -45,7 +44,7 @@ filter_high_mito <- function(scdata, config, sample_id, task_name = 'mitochondri
       maxFraction <- generate_default_values_mitochondrialContent(sample_subset, config)
     }
   }
-  
+
   if (as.logical(toupper(config$enabled))) {
     # extract cell id that do not(!) belong to current sample (to not apply filter there)
     barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)), ])

@@ -1,6 +1,5 @@
 # STEP 2. Cell size distribution filter
-filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSizeDistribution', num_cells_to_downsample = 6000) {
-
+filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
   tmp_sample <- sub("sample-", "", sample_id)
 
   minCellSize <- as.numeric(config$filterSettings$minCellSize)
@@ -47,7 +46,7 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   if (exists("auto", where = config)) {
     if (as.logical(toupper(config$auto))) {
       # config not really needed for this one (maybe later for threshold.low/high):
-      # HARDCODE Value. threshold.low 
+      # HARDCODE Value. threshold.low
       # [ Parameter for function CalculateBarcodeInflections. Description: Ignore barcodes of rank below this threshold in inflection calculation]
       threshold.low <- 1e2
       # If there are less cells than the value threshold.low, the function CalculateBarcodeInflections fails. So we need to handle by not removing any cells, that is,

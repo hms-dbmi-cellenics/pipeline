@@ -2,11 +2,11 @@ download_cellranger <- function(input, pipeline_config) {
   project_id <- input$projectId
   sample_names <- input$sampleNames
   sample_uuids <- input$sampleIds
-  
-  print_config(1,"Cellranger",input,pipeline_config,list())
-  
+
+  print_config(1, "Cellranger", input, pipeline_config, list())
+
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  
+
   fnames <- c("features.tsv.gz", "barcodes.tsv.gz", "matrix.mtx.gz")
   unlink("/input", recursive = TRUE)
 
@@ -51,9 +51,9 @@ download_cellranger <- function(input, pipeline_config) {
 
   message("META file (config):")
   message(exportJSON)
-  
+
   write(exportJSON, "/input/meta.json")
-  
+
   message("Step 1 complete")
   return(list())
 }

@@ -7,7 +7,7 @@ prepare_experiment <- function(input, pipeline_config) {
   message("Loading configuration...")
   config <- RJSONIO::fromJSON("/input/meta.json")
 
-  print_config(6,"Prepare experiment",input,pipeline_config,config) 
+  print_config(6, "Prepare experiment", input, pipeline_config, config)
 
   # Check which samples have been selected. Otherwiser we are going to use all of them.
   if (length(config$samples) > 0) {

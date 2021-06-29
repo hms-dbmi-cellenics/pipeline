@@ -12,7 +12,7 @@ upload_to_aws <- function(input, pipeline_config) {
   # read experiment config
   config <- RJSONIO::fromJSON(file.path(input_dir, "/meta.json"))
 
-  print_config(7,"Upload to AWS",input,pipeline_config,config)
+  print_config(7, "Upload to AWS", input, pipeline_config, config)
 
   # read config related to QC pipeline
   config_dataProcessing <- RJSONIO::fromJSON(file.path(output_dir, "config_dataProcessing.json"))

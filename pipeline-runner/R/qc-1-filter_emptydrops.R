@@ -15,8 +15,7 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #' @examples
-filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier', num_cells_to_downsample = 6000) {
-
+filter_emptydrops <- function(scdata, config, sample_id, task_name = "classifier", num_cells_to_downsample = 6000) {
   tmp_sample <- sub("sample-", "", sample_id)
 
   before <- calc_filter_stats(scdata, tmp_sample)
@@ -34,8 +33,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
       message("Classify is enabled but has no classify data available: will dissable it: no filtering!")
       config$enabled <- FALSE
       guidata <- list()
-
-    } else { 
+    } else {
       message("Classify is enabled: filtering with FDR=", FDR)
       obj_metadata <- scdata@meta.data
       # extract plotting data of original data to return to plot slot later
@@ -51,8 +49,10 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
       ed_fdr <- sample_subset$emptyDrops_FDR
       ed_fdr[is.na(ed_fdr)] <- 1
 
-      message("Number of barcodes to filter for this sample: ",
-              sum(ed_fdr > FDR, na.rm = TRUE), '/', length(ed_fdr))
+      message(
+        "Number of barcodes to filter for this sample: ",
+        sum(ed_fdr > FDR, na.rm = TRUE), "/", length(ed_fdr)
+      )
 
       numis <- log10(sample_subset@meta.data$nCount_RNA)
 

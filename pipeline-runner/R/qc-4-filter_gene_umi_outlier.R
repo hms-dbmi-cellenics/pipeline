@@ -2,6 +2,7 @@
 # This filter focuses on filter cells that are far from the behaviour of the relationship between the number of genes (it measures the number of
 # genes in a cell that has at least one count) and the number of UMIs/molecules (the total number of counts in a cell).
 #' @description Filters seurat object based on classifier filter
+#'
 #' @param config list containing the following information
 #'          - enable: true/false. Refering to apply or not the filter.
 #'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
@@ -10,13 +11,16 @@
 #'              - regressionType: String. Regression to be used: {gam}
 #'              - regressionTypeSettings: list with the config settings for all the regression type options
 #'                          - gam: for the gam option there is only one element:
+#' @param scdata
+#' @param sample_id
+#' @param task_name
+#' @param num_cells_to_downsample
 #'                                - p.level: which refers to  confidence level for deviation from the main trend
 #' @export
 #' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 
 
-filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numGenesVsNumUmis', num_cells_to_downsample = 6000) {
-
+filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
   tmp_sample <- sub("sample-", "", sample_id)
 
   p.level <- config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level
@@ -88,7 +92,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numG
   # Scatter plot which is composed of:
   # x-axis: log_10_UMIs
   # y-axis: log_10_genes
-  # bands that are conformed with the upper_cutoff and the lower_cutoff. 
+  # bands that are conformed with the upper_cutoff and the lower_cutoff.
   guidata <- list()
   guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
 
@@ -108,5 +112,3 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numG
 
   return(result)
 }
-
-

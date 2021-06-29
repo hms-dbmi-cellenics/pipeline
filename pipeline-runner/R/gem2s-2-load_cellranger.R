@@ -5,7 +5,7 @@ load_cellranger <- function(input, pipeline_config) {
   message("Loading configuration...")
   config <- RJSONIO::fromJSON("/input/meta.json")
 
-  print_config(2,"Load Cellranger",input,pipeline_config,config)
+  print_config(2, "Load Cellranger", input, pipeline_config, config)
 
   # We include in variable scdata_list all the sparse matrix per sample
   message("Creating raw dataframe...")
@@ -37,7 +37,7 @@ load_cellranger <- function(input, pipeline_config) {
 #'
 #' @return TRUE if the design is correct FALSE otherwise
 check_10x_input <- function(samples) {
-  #The UI will upload files with these names, regardless of actual Cellranger version. 
+  # The UI will upload files with these names, regardless of actual Cellranger version.
   fnames <- c("features.tsv.gz", "barcodes.tsv.gz", "matrix.mtx.gz")
   fpaths <- file.path("/input", samples, fnames)
   all(file.exists(fpaths))

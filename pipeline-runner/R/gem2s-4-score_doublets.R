@@ -10,7 +10,7 @@ score_doublets <- function(input, pipeline_config) {
   message("Loading configuration...")
   config <- RJSONIO::fromJSON("/input/meta.json")
 
-  print_config(4,"Score Doublets",input,pipeline_config,config)
+  print_config(4, "Score Doublets", input, pipeline_config, config)
 
   # Check which samples have been selected. Otherwiser we are going to use all of them.
   if (length(config$samples) > 0) {
