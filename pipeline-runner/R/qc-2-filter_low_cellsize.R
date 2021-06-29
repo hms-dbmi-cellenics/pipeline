@@ -100,6 +100,7 @@ get_bcranks_plot_data <- function(sample_subset, nmax, is.cellsize = TRUE) {
   # unique average ranks maintain plot shape in case of downsampling
   ranks <- rank(-numis, ties.method = "average")
   fdrs <- sample_subset$emptyDrops_FDR[ord]
+  fdrs[is.na(fdrs)] <- 1
 
   dt <- data.table::data.table(rank = ranks, fdr = fdrs, log_u = log(numis))
 
@@ -108,7 +109,7 @@ get_bcranks_plot_data <- function(sample_subset, nmax, is.cellsize = TRUE) {
                log_u = log_u[1]), by = 'rank']
 
   # example of what density kneeplot should look like
-  # plot_keep_density(dt)
+  plot_keep_density(dt)
 
   # remove fdr specific columns for cell size filter
   if (is.cellsize) dt[, c("avg_fdr", "ndrops") := NULL]
@@ -127,20 +128,48 @@ plot_keep_density <- function(dt, thresh = 0.01) {
   # calculate keep density per bin
   kd <- dt[, .(keep_density = kdens(avg_fdr, thresh, ndrops)), by = 'bin']
   res <- dt[kd, on = 'bin']
-  dens0 <- res$keep_density == 0
 
   # smooth line
   res$predict <- predict(loess(log_u~rank, data = res, span=0.02))
 
+  # fill regions
+  res$quality <- 'unknown'
+  kd <- res$keep_density
+  is.one <- res$keep_density == 1
+  is.zero <- res$keep_density == 0
+
+  cols <- c()
+
+  if (any(is.zero)) {
+    first_low <- head(which(is.zero), 1)
+    res$quality[first_low:nrow(res)] <- 'low'
+    cols <- c('red', cols)
+  }
+
+  if (any(is.one)) {
+    last_high <- tail(which(is.one), 1)
+    res$quality[1:last_high] <- 'high'
+    cols <- c('green', cols)
+  }
+
+  if (!all(is.one | is.zero)) {
+    cols <- c(cols, 'gray')
+  }
+
+
+  res$quality <- factor(res$quality)
+
+
   # plot
-  ggplot2::ggplot(res, ggplot2::aes(x = rank, y = predict, color = keep_density)) +
+  ggplot2::ggplot(res, aes(x=rank, y=predict, color = keep_density)) +
+    ggplot2::geom_ribbon(mapping = ggplot2::aes(x=rank, ymax=predict, ymin=0, fill = quality),alpha=0.3, inherit.aes = FALSE) +
+    ggplot2::scale_fill_manual(values = cols) +
     ggplot2::geom_line(size = 1) +
-    ggplot2::scale_color_distiller(direction = 1) +
+    ggplot2::scale_color_gradient(low = 'white', high = 'black') +
     ggplot2::scale_x_continuous(trans='log10') +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = 'none') +
-    ggplot2::geom_line(data = res[dens0, ], color='gray', size = 1) +
-    ggplot2::theme(panel.border = element_rect(color = 'black', size = 0.1, fill = 'transparent')) +
+    ggplot2::theme(panel.border = ggplot2::element_rect(color = 'black', size = 0.1, fill = 'transparent')) +
     ggplot2::xlab('cell rank') +
     ggplot2::ylab('log UMIs in cell')
 }
