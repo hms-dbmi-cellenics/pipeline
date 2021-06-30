@@ -30,8 +30,8 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   ranks <- ranks[!dups]
   numis <- numis[!dups]
 
-  plot2_data <- unname(purrr::map2(log(numis), ranks, function(x, y) {
-    c("log_u" = x, "rank" = y)
+  plot2_data <- unname(purrr::map2(numis, ranks, function(x, y) {
+    c("u" = x, "rank" = y)
   }))
 
   # downsample plot data
