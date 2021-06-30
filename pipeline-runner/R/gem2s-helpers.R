@@ -26,9 +26,9 @@ print_config <- function(step_number,step_name,input,pipeline_config,config){
   message("Current working directory:")
   message(getwd())
   message("Experiment folder status:")
-  message(list.files("/input", all.files = TRUE, full.names = TRUE, recursive = TRUE))
+  print(list.files("/input", all.files = TRUE, full.names = TRUE, recursive = TRUE))
   message("Current config (meta.json):")
-  message(config)
+  print(config)
 }
 
 # check_config function
