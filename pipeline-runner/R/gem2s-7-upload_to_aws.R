@@ -107,7 +107,7 @@ samples_sets <- function(config, output_dir, color_pool) {
 
     cell_set$children[[i]] <- list(
       key = paste0(sample),
-      name = toStrng(config$sampleNames[[match(sample, config$sampleIds)]]),
+      name = toString(config$sampleNames[[match(sample, config$sampleIds)]]),
       color = color_pool[i],
       cellIds = view
     )
