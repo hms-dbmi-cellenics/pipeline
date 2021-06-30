@@ -4,12 +4,10 @@
 
 
 prepare_experiment <- function(input, pipeline_config) {
-
-  # Merging Seurat object
-  # --
-
   message("Loading configuration...")
   config <- RJSONIO::fromJSON("/input/meta.json")
+
+  print_config(6, "Prepare experiment", input, pipeline_config, config)
 
   # Check which samples have been selected. Otherwiser we are going to use all of them.
   if (length(config$samples) > 0) {
@@ -17,7 +15,6 @@ prepare_experiment <- function(input, pipeline_config) {
   } else {
     samples <- gsub("\\..*", "", list.files("/output/rds_samples"))
   }
-
 
   message("Reloading samples rds for current experiment...")
   scdata_list <- list()
@@ -33,14 +30,8 @@ prepare_experiment <- function(input, pipeline_config) {
     scdata <- merge(scdata_list[[1]], y = scdata_list[-1], add.cell.ids = c(samples))
   }
 
-
-  # Adding metadata
-  # --
-
   message("Storing gene annotations...")
   organism <- config$organism
-  # annotations <- gprofiler2::gconvert(
-  # query = rownames(scdata), organism = organism, target="ENSG", mthreshold = Inf, filter_na = FALSE)
   annotations <- read.delim("/output/features_annotations.tsv")
 
   # In order to avoid duplicated genes names, we are going to add the ENSEMBL ID for those
@@ -66,26 +57,23 @@ prepare_experiment <- function(input, pipeline_config) {
   scdata@misc[["color_pool"]] <- get_color_pool()
   message("Stored pool")
 
-  # Adding information regarding experiment and ingestion
-  # --
-
   scdata@misc[["experimentId"]] <- input$experimentId
   scdata@misc[["ingestionDate"]] <- Sys.time()
 
-  # Checking filtered data
-  # --
+  # CHECK FILTERED DATA
+  # -
 
   df_flag_filtered <- read.delim("/output/df_flag_filtered.txt")
   any_filtered <- "Filtered" %in% df_flag_filtered$flag_filtered
   message("saved filtered flag")
 
-  # Testing Seurat object before save
-  # --
+  # TEST OBJECT
+  # -
 
   # test_object(scdata)
 
-  # Saving files
-  # --
+  # SAVING FILES
+  # -
 
   message("saving R object...")
   saveRDS(scdata, file = "/output/experiment.rds", compress = FALSE)
@@ -229,7 +217,6 @@ prepare_experiment <- function(input, pipeline_config) {
   write(exportJson, "/output/config_dataProcessing.json")
 
   message("Step 6 completed.")
-  print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())
 }
@@ -237,39 +224,26 @@ prepare_experiment <- function(input, pipeline_config) {
 
 cellSizeDistribution_config <- function(scdata, config) {
   minCellSize <- generate_default_values_cellSizeDistribution(scdata, config, 1e2)
-  # update config
   config$filterSettings$minCellSize <- minCellSize
-
   return(config)
 }
-
-# There are some config parameters that depends on the data it-self. In this file we are going to create the functions
-# that allow us to compute the best config parameter for Data Processing in the doubletScores step.
 
 # To identify intelligently the treshold we are going to use the logic inside scDblFinder, which creates a classification
 # (singlet our doublet) [ref: https://bioconductor.org/packages/release/bioc/vignettes/scDblFinder/inst/doc/2_scDblFinder.html#thresholding-and-local-calibration]
 # To set the auto value we are going to use as a threshold the maximun score that is given to a singlet.
 
 doubletScores_config <- function(scdata, config) {
-
-  # Minimun score that has a singlet
+  # Maximum score that has a singlet
   probabilityThreshold <- max(scdata$doublet_scores[scdata$doublet_class == "singlet"], na.rm = TRUE)
-  # update config
   config$filterSettings$probabilityThreshold <- probabilityThreshold
 
   return(config)
 }
 
 
-
-# There are some config parameters that depends on the data it-self. In this file we are going to create the functions
-# that allow us to compute the best config parameter for Data Processing in the numGenesVsNumUmis step.
-
 numGenesVsNumUmis_config <- function(scdata, config) {
-
   # Sensible values are based on the funciton "gene.vs.molecule.cell.filter" from the pagoda2 package
   p.level <- min(0.001, 1 / ncol(scdata))
-  # update config
   config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level <- p.level
 
   return(config)
