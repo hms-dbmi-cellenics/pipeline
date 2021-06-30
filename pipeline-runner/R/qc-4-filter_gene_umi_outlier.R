@@ -1,6 +1,29 @@
-# STEP 4. Number of genes vs UMIs filter
-
-
+#' STEP 4. Number of genes vs UMIs filter
+#'
+#' Eliminates cells based on a p value and a linear regression generated from numGenes vs numUmis
+#'
+#' This filter focuses on filter cells that are far from the behaviour of the relationship between the number of genes (it measures the number of
+#' genes in a cell that has at least one count) and the number of UMIs/molecules (the total number of counts in a cell).
+#'
+#'
+#' @param config list containing the following information
+#'          - enable: true/false. Refering to apply or not the filter.
+#'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
+#'          to call generate_default_values_numGenesVsNumUmis)
+#'          - filterSettings: slot with thresholds
+#'              - regressionType: String. Regression to be used: {gam}
+#'              - regressionTypeSettings: list with the config settings for all the regression type options
+#'                          - gam: for the gam option there is only one element:
+#'                          - p.level: which refers to  confidence level for deviation from the main trend
+#'
+#' @param scdata \code{SeuratObject}
+#' @param sample_id value in \code{scdata$samples} to apply filter for
+#' @param task_name name of task: \code{'numGenesVsNumUmis'}
+#' @param num_cells_to_downsample maximum number of cells for returned plots
+#' @export
+#'
+#' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
+#'
 filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numGenesVsNumUmis', num_cells_to_downsample = 6000) {
 
   # The format of the sample_id is
@@ -103,37 +126,3 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numG
 
   return(result)
 }
-
-
-# This filter focuses on filter cells that are far from the behaviour of the relationship between the number of genes (it measures the number of
-# genes in a cell that has at least one count) and the number of UMIs/molecules (the total number of counts in a cell).
-#' @Description Eliminates cells based on a p value and a linear regression generated from numGenes vs numUmis
-#' @param Config
-#    "numGenesVsNumUmis": {
-#        "filterSettings": {
-#            "regressionType": "gam",
-#             "regressionTypeSettings": {
-#                  "gam": {
-#                       "p.level": 0.001
-#                   }
-#               }
-#       },
-#       "enabled": true
-#       "auto": true
-#   }
-#
-
-
-
-#' @description Filters seurat object based on classifier filter
-#' @param config list containing the following information
-#'          - enable: true/false. Refering to apply or not the filter.
-#'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
-#'          to call generate_default_values_numGenesVsNumUmis)
-#'          - filterSettings: slot with thresholds
-#'              - regressionType: String. Regression to be used: {gam}
-#'              - regressionTypeSettings: list with the config settings for all the regression type options
-#'                          - gam: for the gam option there is only one element:
-#'                                - p.level: which refers to  confidence level for deviation from the main trend
-#' @export
-#' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
