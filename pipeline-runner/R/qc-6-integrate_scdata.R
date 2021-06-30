@@ -3,9 +3,6 @@
 # Data integration step where batch effect is corrected through data integration methods such as "Seurat V3".
 # The data integration step include the normalization and the PCA analysis.
 
-# NEED TO DISCUSS: function to compute default parameters
-# NEED TO CHECK CONFIG SCHEMA
-
 #   "dataIntegration": {
 #       "dataIntegration": {
 #           "method": "seuratv4",
@@ -23,7 +20,7 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata, config, sample_id, task_name = 'dataIntegration') {
+integrate_scdata <- function(scdata, config, sample_id, task_name = "dataIntegration") {
 
   # main function
   scdata.integrated <- run_dataIntegration(scdata, config)
@@ -36,8 +33,7 @@ integrate_scdata <- function(scdata, config, sample_id, task_name = 'dataIntegra
     varExplained <- eigValues / sum(eigValues)
   }
 
-  # As a short solution, we are going to store an intermediate slot for the numPCs, since this parameter is required when performing
-  # the computeEmdedding. The main reason to do not have in the config.configureEmbedding is that this parameter does not change in the configureEmbedding step.
+  # This same numPCs will be used throughout the platform.
   scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
 
   scdata.integrated <- colorObject(scdata.integrated)
@@ -69,9 +65,6 @@ integrate_scdata <- function(scdata, config, sample_id, task_name = 'dataIntegra
   plots <- list()
   plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
   plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
-
-  # For now config is not updated, since there is not new changes
-  # config <- ...
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(

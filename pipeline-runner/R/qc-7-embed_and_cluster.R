@@ -3,8 +3,7 @@
 # Compute embedding step where we run dimensional reduction technniques such as t-SNE and  UMAP. Moreover, the cluster analysis is
 # done also in this step.
 
-embed_and_cluster <- function(scdata, config, sample_id, task_name = 'configureEmbedding') {
-
+embed_and_cluster <- function(scdata, config, sample_id, task_name = "configureEmbedding") {
   scdata.embedding <- run_embedding(scdata, config)
   scdata.embedding <- run_clustering(scdata.embedding, config)
   scdata.embedding <- coloring_samples_and_cluster(scdata.embedding)
@@ -138,7 +137,6 @@ run_embedding <- function(scdata, config) {
 }
 
 run_clustering <- function(scdata, config) {
-
   message("Running clustering")
   active.reduction <- scdata@misc[["active.reduction"]]
 

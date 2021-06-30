@@ -1,6 +1,4 @@
 # STEP 1. Classifier filter
-#
-#
 
 #' @description Filters seurat object based on mitochondrialContent
 #' @param config list containing the following information
@@ -19,12 +17,8 @@
 #'
 filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier', num_cells_to_downsample = 6000) {
 
-  # The format of the sample_id is
-  # sample-WT1
-  # we need to get only the last part, in order to grep the object.
   tmp_sample <- sub("sample-", "", sample_id)
 
-  # get filter stats before filtering
   before <- calc_filter_stats(scdata, tmp_sample)
 
   FDR <- config$filterSettings$FDR
@@ -32,7 +26,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
   if (isTRUE(config$auto)) {
     FDR <- generate_default_values_classifier(scdata, config)
   }
-  # TODO: get flag from here: scdata@tools$flag_filtered <- FALSE
+
   if (config$enabled) {
 
     # check if filter data is actually available
@@ -40,8 +34,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
       message("Classify is enabled but has no classify data available: will dissable it: no filtering!")
       config$enabled <- FALSE
       guidata <- list()
-
-    } else { # enabled and good data:
+    } else {
       message("Classify is enabled: filtering with FDR=", FDR)
       obj_metadata <- scdata@meta.data
       # extract plotting data of original data to return to plot slot later
@@ -57,15 +50,16 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
       ed_fdr <- sample_subset$emptyDrops_FDR
       ed_fdr[is.na(ed_fdr)] <- 1
 
-      message("Number of barcodes to filter for this sample: ",
-              sum(ed_fdr > FDR, na.rm = TRUE), '/', length(ed_fdr))
+      message(
+        "Number of barcodes to filter for this sample: ",
+        sum(ed_fdr > FDR, na.rm = TRUE), "/", length(ed_fdr)
+      )
 
       numis <- log10(sample_subset@meta.data$nCount_RNA)
 
       plot1_data <- unname(purrr::map2(ed_fdr, numis, function(x, y) {
         c("FDR" = x, "log_u" = y)
       }))
-      # cells: Cell names or indices
       # extract cell id that do not(!) belong to current sample (to not apply filter there)
       barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)), ])
       # all barcodes that match threshold in the subset data
