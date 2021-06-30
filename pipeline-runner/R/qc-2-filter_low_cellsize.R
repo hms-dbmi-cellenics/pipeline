@@ -19,7 +19,7 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
 
   # umi histogram plot
   numis <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
-  plot1_data <- lapply(unname(numis), function(x) {
+  plot2_data <- lapply(unname(numis), function(x) {
     c("u" = x)
   })
 
@@ -30,17 +30,17 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   ranks <- ranks[!dups]
   numis <- numis[!dups]
 
-  plot2_data <- unname(purrr::map2(numis, ranks, function(x, y) {
+  plot1_data <- unname(purrr::map2(numis, ranks, function(x, y) {
     c("u" = x, "rank" = y)
   }))
 
   # downsample plot data
   set.seed(123)
-  nkeep1 <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-  nkeep2 <- downsample_plotdata(length(ranks), num_cells_to_downsample)
+  nkeep1 <- downsample_plotdata(length(ranks), num_cells_to_downsample)
+  nkeep2 <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
 
-  keep1 <- sort(sample(ncol(sample_subset), nkeep1))
-  keep2 <- sort(sample(length(ranks), nkeep2))
+  keep1 <- sort(sample(length(ranks), nkeep1))
+  keep2 <- sort(sample(ncol(sample_subset), nkeep2))
 
   plot1_data <- plot1_data[keep1]
   plot2_data <- plot2_data[keep2]
