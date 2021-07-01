@@ -6,7 +6,6 @@
 embed_and_cluster <- function(scdata, config, sample_id, task_name = 'configureEmbedding') {
 
   plots <- list()
-  plots[generate_gui_uuid("", task_name, 0)] <- list()
   plots[generate_gui_uuid("", task_name, 1)] <- list()
   plots[generate_gui_uuid("", task_name, 2)] <- list()
   plots[generate_gui_uuid("", task_name, 3)] <- list()
@@ -20,5 +19,4 @@ embed_and_cluster <- function(scdata, config, sample_id, task_name = 'configureE
 
   return(result)
 }
-
 
