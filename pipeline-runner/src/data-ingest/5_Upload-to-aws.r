@@ -21,7 +21,7 @@ samples_sets <- function(config){
   for (sample in samples) {
     view <- sample_annotations[sample_annotations$Value == sample, "Cells_ID"]
     child <- list(key = paste0(sample),
-                  name = config$sampleNames[[match(sample,config$sampleIds)]],
+                  name = toString(config$sampleNames[[match(sample,config$sampleIds)]]),
                   color = color_pool[1],
                   cellIds = view)
 
@@ -40,7 +40,7 @@ meta_sets <- function() {
 
   # The first column is the cells_id, the rest is the metadata information
   for (i in seq(2, ncol(meta_annotations))) {
-    key <- name <- colnames(meta_annotations)[i]
+    key <- name <- toString(colnames(meta_annotations)[i])
 
     cell_set = list(
       "key" = key,
@@ -54,6 +54,7 @@ meta_sets <- function() {
 
     for (value in unique(annot)) {
       view  <- meta_annotations[which(annot == value), 'cells_id']
+      value <- toString(value)
       cell_set$children <- c(
           cell_set$children,
           list(
