@@ -14,8 +14,9 @@
 #'                          * we are supposed to add more methods ....
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
-#' @examples
-filter_emptydrops <- function(scdata, config, sample_id, task_name = "classifier", num_cells_to_downsample = 6000) {
+#'
+filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier', num_cells_to_downsample = 6000) {
+
   tmp_sample <- sub("sample-", "", sample_id)
 
   before <- calc_filter_stats(scdata, tmp_sample)

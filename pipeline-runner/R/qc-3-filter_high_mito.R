@@ -1,10 +1,10 @@
-# STEP 3. Mitochondrial content filter
-
-# This is a simplest filter that looks at a threshold value for the mitochondrial content.
-# To separate cells with low MT-content from the ones that have a high MT-content what makes us think that are dead.
-# This can be a useful first guess. The settings for such a filter can also contain a simple "probabilityThreshold" setting.
-
-#' @description Filters seurat object based on mitochondrialContent
+#' STEP 3. Mitochondrial content filter
+#'
+#' This is a simplest filter that looks at a threshold value for the mitochondrial content.
+#'
+#' To separate cells with low MT-content from the ones that have a high MT-content what makes us think that are dead.
+#' This can be a useful first guess. The settings for such a filter can also contain a simple "probabilityThreshold" setting.
+#'
 #' @param config list containing the following information
 #'          - enable: true/false. Refering to apply or not the filter.
 #'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires

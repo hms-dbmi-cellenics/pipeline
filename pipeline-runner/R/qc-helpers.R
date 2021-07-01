@@ -73,8 +73,20 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
 #'
 calc_filter_stats <- function(scdata, tmp_sample) {
 
+  # in case no cells kept
+  is.sample <- scdata$samples == tmp_sample
+
+  if (!sum(is.sample)) {
+    return(list(
+      num_cells = 0,
+      total_genes = 0,
+      median_genes = 0,
+      median_umis = 0
+    ))
+  }
+
   # subset to current sample
-  scdata <- scdata[, scdata$samples == tmp_sample]
+  scdata <- scdata[, is.sample]
 
   # number of counts per gene
   ncount <- Matrix::rowSums(scdata[["RNA"]]@counts)
