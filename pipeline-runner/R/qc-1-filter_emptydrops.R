@@ -22,6 +22,9 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = "classifier
 
   FDR <- config$filterSettings$FDR
 
+  # default if no filtering happens
+  scdata.filtered <- scdata
+
   if (isTRUE(config$auto)) {
     FDR <- generate_default_values_classifier(scdata, config)
   }
@@ -62,10 +65,16 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = "classifier
       # extract cell id that do not(!) belong to current sample (to not apply filter there)
       barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)), ])
       # all barcodes that match threshold in the subset data
-      barcode_names_keep_current_sample <- colnames(sample_subset[, ed_fdr <= FDR])
+      keep <- ed_fdr <= FDR
+      barcode_names_keep_current_sample <- colnames(sample_subset[, keep])
+
+      # emptydrops removed in cell size filter to allow showing full kneeplot
+      remove <- colnames(sample_subset[, !keep])
+      scdata$filter_emptydrops[remove] <- TRUE
+
       # combine the 2:
       barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-      scdata <- subset_safe(scdata, barcodes_to_keep)
+      scdata.filtered <- subset_safe(scdata, barcodes_to_keep)
       # update config
       config$filterSettings$FDR <- FDR
 
@@ -90,7 +99,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = "classifier
   # get filter stats after filtering
   filter_stats <- list(
     before = before,
-    after = calc_filter_stats(scdata, tmp_sample)
+    after = calc_filter_stats(scdata.filtered, tmp_sample)
   )
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
 

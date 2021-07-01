@@ -5,7 +5,7 @@ library(zeallot)
 # increase maxSize from the default of 500MB to 32GB
 options(future.globals.maxSize = 32 * 1024 * 1024^2)
 
-for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
+for (f in list.files('R', '.R$', full.names = TRUE)) source(f, keep.source = TRUE)
 
 load_config <- function(development_aws_server) {
     config <- list(
@@ -174,6 +174,9 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         # assign it to the global environment so we can
         # persist it across runs of the wrapper
         assign("scdata", reload_scdata_from_s3(pipeline_config, experiment_id), pos = ".GlobalEnv")
+
+        # need for showing full kneeplot
+        scdata$filter_emptydrops <- FALSE
 
         message("Single-cell data loaded.")
     }

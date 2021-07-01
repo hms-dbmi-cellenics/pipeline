@@ -12,34 +12,44 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
     return(list(data = scdata, config = config, plotData = guidata))
   }
   sample_subset <- subset(scdata, cells = barcode_names_this_sample)
+  sample_numis <- sample_subset$nCount_RNA
+  ord <- order(sample_numis, decreasing = TRUE)
+  sample_numis <- sample_numis[ord]
 
-  # umi histogram plot
-  numis <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
-  plot2_data <- lapply(unname(numis), function(x) {
+  # barcode ranks plot --
+  # unique average ranks maintain plot shape in case of downsampling
+  ranks <- rank(-sample_numis, ties.method = "average")
+  dups <- duplicated(ranks)
+  ranks <- ranks[!dups]
+  plot_numis <- sample_numis[!dups]
+
+  plot2_data <- unname(purrr::map2(log(plot_numis), ranks, function(x, y) {
+    c("log_u" = x, "rank" = y)
+  }))
+
+  # downsample plot2 data
+  set.seed(123)
+  nkeep2 <- downsample_plotdata(length(ranks), num_cells_to_downsample)
+  keep2 <- sort(sample(length(ranks), nkeep2))
+  plot2_data <- plot2_data[keep2]
+
+  # now that have plot2 data filter emptydrops
+  remove_sample_idx <- sample_subset$filter_emptydrops
+  remove_sample_bcs <- colnames(sample_subset)[remove_sample_idx]
+  scdata <- scdata[, !colnames(scdata) %in% remove_sample_bcs]
+  sample_numis <- sample_numis[!remove_sample_idx[ord]]
+  sample_subset <- sample_subset[, !remove_sample_idx]
+
+  # umi histogram plot --
+  plot1_data <- lapply(unname(sample_numis), function(x) {
     c("u" = x)
   })
 
-  # barcode ranks plot data
-  # unique average ranks maintain plot shape in case of downsampling
-  ranks <- rank(-numis, ties.method = "average")
-  dups <- duplicated(ranks)
-  ranks <- ranks[!dups]
-  numis <- numis[!dups]
-
-  plot1_data <- unname(purrr::map2(numis, ranks, function(x, y) {
-    c("u" = x, "rank" = y)
-  }))
-
-  # downsample plot data
-  set.seed(123)
-  nkeep1 <- downsample_plotdata(length(ranks), num_cells_to_downsample)
-  nkeep2 <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-
-  keep1 <- sort(sample(length(ranks), nkeep1))
-  keep2 <- sort(sample(ncol(sample_subset), nkeep2))
-
+  # downsample plot1 data
+  nkeep1 <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
+  keep1 <- sort(sample(ncol(sample_subset), nkeep1))
   plot1_data <- plot1_data[keep1]
-  plot2_data <- plot2_data[keep2]
+
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
   # to get a list with two elements {minCellSize and binStep}
