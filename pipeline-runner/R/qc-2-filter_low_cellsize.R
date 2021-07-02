@@ -1,4 +1,21 @@
-# STEP 2. Cell size distribution filter
+#' STEP 2. Cell size distribution filter
+#'
+#' cell_size_distribution_filter function
+#'
+#' This is a simplest filter that looks at the shape of the cell size (# of UMIs per cell) distribution and looks for some local minima, minimum of second derivative, etc.
+#' To separate the large cell barcodes that correspond to real cells from the tail containing 'empty droplets'.
+#' This can be a useful first guess. The settings for such a filter can also contain a simple "min cell size" setting.
+#'
+#' @param config list containing the following information
+#'          - enable: true/false. Refering to apply or not the filter.
+#'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
+#'          to call generate_default_values_cellSizeDistribution)
+#'          - filterSettings: slot with thresholds
+#'                  - minCellSize: Integer. Threshold that contain the minimun number of UMIs per cell
+#'                  - binStep: Integer. Bin size for the histogram
+#' @export
+#' @return a list with the filtered seurat object by cell size ditribution, the config and the plot values
+#'
 filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
   tmp_sample <- sub("sample-", "", sample_id)
 
@@ -95,23 +112,6 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
 
   return(result)
 }
-
-
-# cell_size_distribution_filter function
-# This is a simplest filter that looks at the shape of the cell size (# of UMIs per cell) distribution and looks for some local minima, minimum of second derivative, etc.
-# To separate the large cell barcodes that correspond to real cells from the tail containing 'empty droplets'.
-# This can be a useful first guess. The settings for such a filter can also contain a simple "min cell size" setting.
-#
-#' @description Filters seurat object based on cell size distribution
-#' @param config list containing the following information
-#'          - enable: true/false. Refering to apply or not the filter.
-#'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
-#'          to call generate_default_values_cellSizeDistribution)
-#'          - filterSettings: slot with thresholds
-#'                  - minCellSize: Integer. Threshold that contain the minimun number of UMIs per cell
-#'                  - binStep: Integer. Bin size for the histogram
-#' @export
-#' @return a list with the filtered seurat object by cell size ditribution, the config and the plot values
 
 # CalculateBarcodeInflections calculates an adaptive inflection point ("knee")
 # of the barcode distribution for each sample group. This is
