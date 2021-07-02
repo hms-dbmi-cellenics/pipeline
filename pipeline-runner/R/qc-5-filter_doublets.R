@@ -1,10 +1,11 @@
-# STEP 5. Doublet score filter
-
-# This is a simplest filter that looks at a threshold value for the doublet scores.
-# To separate cells with low droplet score from the ones that have a high droplet score content what makes us think that the are mistakenly considered as a single cell but they are actully two or more.
-# This can be a useful first guess. The settings for such a filter can also contain a simple "probabilityThreshold" setting.
-
-#' @description Filters seurat object based on doubletScores scores
+#' STEP 5. Doublet score filter
+#'
+#' Filters seurat object based on doubletScores scores
+#'
+#' This is a simplest filter that looks at a threshold value for the doublet scores.
+#' To separate cells with low droplet score from the ones that have a high droplet score content what makes us think that the are mistakenly considered as a single cell but they are actully two or more.
+#' This can be a useful first guess. The settings for such a filter can also contain a simple "probabilityThreshold" setting.
+#'
 #' @param config list containing the following information
 #'          - enable: true/false. Refering to apply or not the filter.
 #'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
