@@ -1044,7 +1044,7 @@
     },
     "paws.common": {
       "Package": "paws.common",
-      "Version": "0.3.10",
+      "Version": "0.3.11",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "38cceefa81f793ca194e90f28c0bf804"
