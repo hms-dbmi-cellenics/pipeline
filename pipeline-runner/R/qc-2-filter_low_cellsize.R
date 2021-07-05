@@ -30,20 +30,20 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   ranks <- ranks[!dups]
   numis <- numis[!dups]
 
-  plot2_data <- unname(purrr::map2(log(numis), ranks, function(x, y) {
-    c("log_u" = x, "rank" = y)
+  plot0_data <- unname(purrr::map2(numis, ranks, function(x, y) {
+    c("u" = x, "rank" = y)
   }))
 
   # downsample plot data
   set.seed(123)
   nkeep1 <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-  nkeep2 <- downsample_plotdata(length(ranks), num_cells_to_downsample)
+  nkeep0 <- downsample_plotdata(length(ranks), num_cells_to_downsample)
 
   keep1 <- sort(sample(ncol(sample_subset), nkeep1))
-  keep2 <- sort(sample(length(ranks), nkeep2))
+  keep0 <- sort(sample(length(ranks), nkeep0))
 
   plot1_data <- plot1_data[keep1]
-  plot2_data <- plot2_data[keep2]
+  plot0_data <- plot0_data[keep0]
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
   # to get a list with two elements {minCellSize and binStep}
@@ -87,8 +87,8 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
   guidata <- list()
-  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
-  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot2_data
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot0_data
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot1_data
 
   # Populate with filter statistics
   filter_stats <- list(
