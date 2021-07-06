@@ -15,7 +15,7 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
 
   # umi histogram plot
   numis <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
-  plot2_data <- lapply(unname(numis), function(x) {
+  plot1_data <- lapply(unname(numis), function(x) {
     c("u" = x)
   })
 
