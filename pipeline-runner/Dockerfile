@@ -21,8 +21,6 @@ ARG GITHUB_PAT
 ENV GITHUB_PAT $GITHUB_PAT
 RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
-RUN R --version
-
 # install required R packages for the pipeline.
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
     R -e "remotes::install_github('rstudio/renv@0.13.2')"
