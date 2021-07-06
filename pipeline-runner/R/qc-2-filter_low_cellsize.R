@@ -11,10 +11,12 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   # extract plotting data of original data to return to plot slot later
   obj_metadata <- scdata@meta.data
   barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
+
   if (length(barcode_names_this_sample) == 0) {
     guidata <- list()
     return(list(data = scdata, config = config, plotData = guidata))
   }
+
   sample_subset <- subset(scdata, cells = barcode_names_this_sample)
   plot_data <- get_bcranks_plot_data(sample_subset, num_cells_to_downsample)
 
@@ -97,76 +99,47 @@ get_bcranks_plot_data <- function(sample_subset, nmax, is.cellsize = TRUE) {
   }
 
   # barcode ranks plot data
-  # unique average ranks maintain plot shape in case of downsampling
+  # unique rank/fdr
   ranks <- rank(-numis, ties.method = "average")
   fdrs <- sample_subset$emptyDrops_FDR[ord]
   fdrs[is.na(fdrs)] <- 1
 
-  dt <- data.table::data.table(rank = ranks, fdr = fdrs, log_u = log(numis))
+  dt <- data.table::data.table(rank = ranks, fdr = fdrs, u = numis)
+  dt <- dt[, .(ndrops = .N, u = u[1]), by = c('rank', 'fdr')]
 
-  dt <- dt[, .(avg_fdr = mean(fdr, na.rm = TRUE),
-               ndrops = .N,
-               log_u = log_u[1]), by = 'rank']
-
-  # example of what density kneeplot should look like
-  plot_keep_density(dt)
+  # example of what knee regions should look like
+  # plot_knee_regions(dt)
 
   # remove fdr specific columns for cell size filter
-  if (is.cellsize) dt[, c("avg_fdr", "ndrops") := NULL]
+  if (is.cellsize) dt[, c("fdr", "ndrops") := NULL]
   plot2_data <- list(apply(dt, 1, as.list))
 
   plot_data <- append(plot_data, plot2_data)
   return(plot_data)
 }
 
-plot_keep_density <- function(dt, thresh = 0.01) {
-
-  # bin into groups of 100 ranks
-  nbins <- round(nrow(dt)/100)
-  dt$bin <- as.numeric(cut(seq_len(nrow(dt)), nbins))
-
-  # calculate keep density per bin
-  kd <- dt[, .(keep_density = kdens(avg_fdr, thresh, ndrops)), by = 'bin']
-  res <- dt[kd, on = 'bin']
-
-  # smooth line
-  res$predict <- predict(loess(log_u~rank, data = res, span=0.02))
+plot_knee_regions <- function(dt, thresh = 0.01) {
 
   # fill regions
-  res$quality <- 'unknown'
-  kd <- res$keep_density
-  is.one <- res$keep_density == 1
-  is.zero <- res$keep_density == 0
+  dt$quality <- 'unknown'
+  lt.thresh <- dt$fdr < thresh
 
-  cols <- c()
+  amb.first <- which(!lt.thresh)[1]
+  amb.last <- tail(which(lt.thresh), 1)
 
-  if (any(is.zero)) {
-    first_low <- head(which(is.zero), 1)
-    res$quality[first_low:nrow(res)] <- 'low'
-    cols <- c('red', cols)
-  }
+  dt$quality[1:amb.first] <- 'good'
+  dt$quality[amb.last:nrow(dt)] <- 'low'
 
-  if (any(is.one)) {
-    last_high <- tail(which(is.one), 1)
-    res$quality[1:last_high] <- 'high'
-    cols <- c('green', cols)
-  }
-
-  if (!all(is.one | is.zero)) {
-    cols <- c(cols, 'gray')
-  }
-
-
+  cols <- c('green', 'red', 'gray')
   res$quality <- factor(res$quality)
 
-
   # plot
-  ggplot2::ggplot(res, aes(x=rank, y=predict, color = keep_density)) +
-    ggplot2::geom_ribbon(mapping = ggplot2::aes(x=rank, ymax=predict, ymin=0, fill = quality),alpha=0.3, inherit.aes = FALSE) +
+  ggplot2::ggplot(dt, aes(x=rank, y=u, fill = quality)) +
+    ggplot2::geom_ribbon(mapping = ggplot2::aes(x=rank, ymax=u, ymin=0, fill = quality),alpha=0.3, inherit.aes = FALSE) +
     ggplot2::scale_fill_manual(values = cols) +
     ggplot2::geom_line(size = 1) +
-    ggplot2::scale_color_gradient(low = 'white', high = 'black') +
     ggplot2::scale_x_continuous(trans='log10') +
+    ggplot2::scale_y_continuous(trans='log10') +
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = 'none') +
     ggplot2::theme(panel.border = ggplot2::element_rect(color = 'black', size = 0.1, fill = 'transparent')) +
@@ -174,9 +147,6 @@ plot_keep_density <- function(dt, thresh = 0.01) {
     ggplot2::ylab('log UMIs in cell')
 }
 
-kdens <- function(avg_fdr, thresh, ndrops) {
-  sum((avg_fdr<thresh)*ndrops, na.rm = TRUE)/sum(ndrops)
-}
 
 
 # cell_size_distribution_filter function
