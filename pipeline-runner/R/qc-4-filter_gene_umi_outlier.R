@@ -1,19 +1,34 @@
-# STEP 4. Number of genes vs UMIs filter
-
-
-filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numGenesVsNumUmis', num_cells_to_downsample = 6000) {
-
-  # The format of the sample_id is
-  # sample-WT1
-  # we need to get only the last part, in order to grep the object.
+#' STEP 4. Number of genes vs UMIs filter
+#'
+#' Eliminates cells based on a p value and a linear regression generated from numGenes vs numUmis
+#'
+#' This filter focuses on filter cells that are far from the behaviour of the relationship between the number of genes (it measures the number of
+#' genes in a cell that has at least one count) and the number of UMIs/molecules (the total number of counts in a cell).
+#'
+#' @param config list containing the following information
+#'          - enable: true/false. Refering to apply or not the filter.
+#'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
+#'          to call generate_default_values_numGenesVsNumUmis)
+#'          - filterSettings: slot with thresholds
+#'              - regressionType: String. Regression to be used: {gam}
+#'              - regressionTypeSettings: list with the config settings for all the regression type options
+#'                          - gam: for the gam option there is only one element:
+#'                             - p.level: which refers to  confidence level for deviation from the main trend
+#'
+#' @param scdata \code{SeuratObject}
+#' @param sample_id value in \code{scdata$samples} to apply filter for
+#' @param task_name name of task: \code{'numGenesVsNumUmis'}
+#' @param num_cells_to_downsample maximum number of cells for returned plots
+#' @export
+#'
+#' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
+#'
+filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
   tmp_sample <- sub("sample-", "", sample_id)
 
-  # For now, we can get direcly p.level, but when we add more methods need to be change
   p.level <- config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level
 
-  # Check whether the filter is set to true or false
   if (as.logical(toupper(config$enabled))) {
-    # For now, we are going to suppor only gam as a linear model by robust estimation
     if (config$filterSettings$regressionType == "gam") {
       # Subsetting this sample
       obj_metadata <- scdata@meta.data
@@ -22,6 +37,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numG
         return(list(data = scdata, config = config, plotData = list()))
       }
       sample_subset <- subset(scdata, cells = barcode_names_this_sample)
+
       # Check if it is required to compute sensible values. Sensible values are based on the funciton "gene.vs.molecule.cell.filter" from the pagoda2 package
       if (exists("auto", where = config)) {
         if (as.logical(toupper(config$auto))) {
@@ -62,7 +78,6 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numG
       # have downsampling done
 
       # Downsample plotData
-      # Handle when the number of remaining cells is less than the number of cells to downsample
       num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
 
       set.seed(123)
@@ -74,15 +89,13 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numG
     scdata.filtered <- scdata
     plot1_data <- list()
   }
-  # update config
+
   config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]][["p.level"]] <- p.level
 
   # Scatter plot which is composed of:
   # x-axis: log_10_UMIs
   # y-axis: log_10_genes
-  # bands that are conformed with the upper_cutoff and the lower_cutoff. We can print a band or dotted lines.
-  # Q: Should we return the point out the cells that are going to be excluded from the R side or this task can be done in
-  # the UI side.
+  # bands that are conformed with the upper_cutoff and the lower_cutoff.
   guidata <- list()
   guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
 
@@ -94,7 +107,6 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numG
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
 
-  # the result object will have to conform to this format: {data, config, plotData : {plot1}}
   result <- list(
     data = scdata.filtered,
     config = config,
@@ -103,37 +115,3 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = 'numG
 
   return(result)
 }
-
-
-# This filter focuses on filter cells that are far from the behaviour of the relationship between the number of genes (it measures the number of
-# genes in a cell that has at least one count) and the number of UMIs/molecules (the total number of counts in a cell).
-#' @Description Eliminates cells based on a p value and a linear regression generated from numGenes vs numUmis
-#' @param Config
-#    "numGenesVsNumUmis": {
-#        "filterSettings": {
-#            "regressionType": "gam",
-#             "regressionTypeSettings": {
-#                  "gam": {
-#                       "p.level": 0.001
-#                   }
-#               }
-#       },
-#       "enabled": true
-#       "auto": true
-#   }
-#
-
-
-
-#' @description Filters seurat object based on classifier filter
-#' @param config list containing the following information
-#'          - enable: true/false. Refering to apply or not the filter.
-#'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
-#'          to call generate_default_values_numGenesVsNumUmis)
-#'          - filterSettings: slot with thresholds
-#'              - regressionType: String. Regression to be used: {gam}
-#'              - regressionTypeSettings: list with the config settings for all the regression type options
-#'                          - gam: for the gam option there is only one element:
-#'                                - p.level: which refers to  confidence level for deviation from the main trend
-#' @export
-#' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values

@@ -1,12 +1,13 @@
 #  - Compute emptyDrops per sample
 #  - Save an rds with emptyDrops result per sample
-
 run_emptydrops <- function(input, pipeline_config) {
   message("reloading old matrices...")
   scdata_list <- readRDS("/output/pre-doublet-scdata_list.rds")
 
   message("Loading configuration...")
   config <- RJSONIO::fromJSON("/input/meta.json")
+
+  print_config(3, "Run Empty Drops", input, pipeline_config, config)
 
   # Check which samples have been selected. Otherwiser we are going to use all of them.
   if (length(config$samples) > 0) {
@@ -23,7 +24,6 @@ run_emptydrops <- function(input, pipeline_config) {
   }
 
   message("Step 3 completed.")
-  print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
 
   return(list())
 }
@@ -43,7 +43,6 @@ compute_emptydrops <- function(scdata, sample_name) {
   # threshold_emptydrops <- 2000 # use this to simulate unfiltered data
   # automatically checking if data contains enough (50) barcodes that
   # are confidently considered to be empty to serve as training set
-  # not necessary as of now: sce <- as.SingleCellExperiment(scdata)
   nr_barcodes_ambient <- sum(colSums(scdata) < threshold_emptydrops)
   range(colSums(scdata))
   if (nr_barcodes_ambient < 50) {

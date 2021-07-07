@@ -1,10 +1,11 @@
-# STEP 5. Doublet score filter
-
-# This is a simplest filter that looks at a threshold value for the doublet scores.
-# To separate cells with low droplet score from the ones that have a high droplet score content what makes us think that the are mistakenly considered as a single cell but they are actully two or more.
-# This can be a useful first guess. The settings for such a filter can also contain a simple "probabilityThreshold" setting.
-
-#' @description Filters seurat object based on doubletScores scores
+#' STEP 5. Doublet score filter
+#'
+#' Filters seurat object based on doubletScores scores
+#'
+#' This is a simplest filter that looks at a threshold value for the doublet scores.
+#' To separate cells with low droplet score from the ones that have a high droplet score content what makes us think that the are mistakenly considered as a single cell but they are actully two or more.
+#' This can be a useful first guess. The settings for such a filter can also contain a simple "probabilityThreshold" setting.
+#'
 #' @param config list containing the following information
 #'          - enable: true/false. Refering to apply or not the filter.
 #'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
@@ -16,11 +17,7 @@
 #' @export
 #' @return a list with the filtered seurat object by doublet score, the config and the plot values
 #'
-filter_doublets <- function(scdata, config, sample_id, task_name = 'doubletScores', num_cells_to_downsample = 6000) {
-
-  # The format of the sample_id is
-  # sample-WT1
-  # we need to get only the last part, in order to grep the object.
+filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScores", num_cells_to_downsample = 6000) {
   tmp_sample <- sub("sample-", "", sample_id)
 
   # Check if the experiment has doubletScores
@@ -46,9 +43,9 @@ filter_doublets <- function(scdata, config, sample_id, task_name = 'doubletScore
   }
   sample_subset <- subset(scdata, cells = barcode_names_this_sample)
 
-  # Check wheter the filter is set to true or false
+  # Check whether the filter is set to true or false
   if (as.logical(toupper(config$enabled))) {
-    # extract cell id that do not(!) belong to current sample (to not apply filter there)
+    # extract cells id that do not(!) belong to current sample (to not apply filter there)
     barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)), ])
     # all barcodes that match threshold in the subset data
     # treat NA doublet scores as defacto singlets
@@ -82,7 +79,6 @@ filter_doublets <- function(scdata, config, sample_id, task_name = 'doubletScore
   guidata <- list()
 
   # plot 1: histogram of doublet scores
-  #              [0.161,              0.198,              0.284,  ...]
   guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
 
   # populate with filter statistics
@@ -93,7 +89,6 @@ filter_doublets <- function(scdata, config, sample_id, task_name = 'doubletScore
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
 
-  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
     data = scdata.filtered,
     config = config,
@@ -103,7 +98,6 @@ filter_doublets <- function(scdata, config, sample_id, task_name = 'doubletScore
 }
 
 generate_default_values_doubletScores <- function(scdata, sample) {
-
   # default doublet score based of scDblFinder classification
   is.sample <- scdata$samples == sample
   is.singlet <- scdata$doublet_class == "singlet"
