@@ -1,60 +1,39 @@
 # Create builder step
 # pull official base image and use it as builder
-FROM r-base:4.0.2 AS builder
+FROM r-base:4.0.5 AS builder
 WORKDIR /src
 
 # install required debian packages for R installation
 ENV DEBIAN_FRONTEND noninteractive
 COPY requirements_debian.txt .
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update && \
+    apt-mark hold r-base-core r-base-dev && \
+    apt-get -y upgrade
 RUN cat requirements_debian.txt | xargs apt-get -y install --no-install-recommends
+
+# default BLAS/LAPACK issue: Seurat::FindIntegrationAnchors finds ~30 vs ~13,000 anchors
+RUN update-alternatives --set libblas.so.3-x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/atlas/libblas.so.3
+
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # add GitHub PAT if required for GitHub installations.
 ARG GITHUB_PAT
-ENV GITHUB_PAT ${GITHUB_PAT}
+ENV GITHUB_PAT $GITHUB_PAT
+RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
-# install pak for more streamlined installation of packages
-RUN R -e 'utils::install.packages("pak", repos = "https://r-lib.github.io/p/pak/dev/")'
+# install required R packages for the pipeline.
+RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
+    R -e "remotes::install_github('rstudio/renv@0.13.2')"
 
-# install required packages
-RUN R -e 'pak::pkg_install("remoter")'
-RUN R -e 'pak::pkg_install("devtools")'
-RUN R -e 'pak::pkg_install("BiocGenerics")'
-RUN R -e 'pak::pkg_install("RJSONIO")'
-RUN R -e 'devtools::install_version("spatstat", version = "1.64-1")'
-RUN R -e 'pak::pkg_install("Seurat")'
-RUN R -e 'pak::pkg_install("gprofiler2")'
-RUN R -e 'pak::pkg_install("sccore")'
-RUN R -e 'pak::pkg_install("GO.db")'
-RUN R -e 'pak::pkg_install("R.utils")'
-RUN R -e 'pak::pkg_install("satijalab/seurat-wrappers")'
-RUN R -e 'pak::pkg_install("batchelor")'
+# an initial lockfile is used to avoid frequent re-installs
+# use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
+COPY renv.lock.init .
+RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(lockfile='renv.lock.init')"
 
-# install handy development stuff
-RUN R -e 'pak::pkg_install("zeallot")'
-# next version pinning can be removed once release 0.3.11 is included by default in paws +0.1.11
-RUN R -e 'devtools::install_version("paws.common", version = "0.3.11")'
-RUN R -e 'pak::pkg_install("paws")'
-RUN R -e 'pak::pkg_install("import")'
-RUN R -e 'pak::pkg_install("ids")'
+# use renv::snapshot() while R dependency updates are quick to build
+COPY renv.lock .
+RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
 
-#Install stuff for data-ingest
-RUN R -e 'chooseCRANmirror(ind=52); install.packages("BiocManager")'
-RUN R -e 'BiocManager::install("scran")'
-RUN R -e 'BiocManager::install("scater")'
-RUN R -e 'BiocManager::install("bluster")'
-RUN R -e 'BiocManager::install("mbkmeans")'
-RUN R -e 'BiocManager::install("DropletUtils")'
-RUN R -e 'BiocManager::install("BiocGenerics")'
-RUN R -e 'BiocManager::install("plger/scDblFinder")'
-
-RUN R -e 'pak::pkg_install("immunogenomics/harmony")'
-
-# default BLAS/LAPACK issue: Seurat::FindIntegrationAnchors finds ~30 vs ~13,000 anchors
-# eventually move this up with other system installs
-RUN apt-get update && apt-get -y install libatlas3-base
-RUN update-alternatives --set libblas.so.3-x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/atlas/libblas.so.3
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -88,10 +67,6 @@ FROM builder AS dev
 # also install watchdog to automatically restart
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
-
-RUN R -e 'pak::pkg_install("languageserver")'
-RUN R -e 'pak::pkg_install("lintr")'
-RUN R -e 'pak::pkg_install("styler")'
 
 # start app
 ADD R ./R

@@ -104,16 +104,18 @@ jobs:
         run: |-
           docker build --target builder \
             --cache-from=$PREVIOUS_IMAGE_NAME-builder \
+            --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-builder .
 
           docker build --target prod \
             --cache-from=$IMAGE_NAME-builder \
             --cache-from=$PREVIOUS_IMAGE_NAME \
+            --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME .
         env:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
-
+          GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
       - id: push
         name: Push docker images to ECR
         run: |-
