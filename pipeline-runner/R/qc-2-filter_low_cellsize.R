@@ -62,8 +62,8 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
   guidata <- list()
-  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data[[1]]
-  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[[2]]
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data[['knee']]
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[['hist']]
 
   # Populate with filter statistics
   filter_stats <- list(
@@ -81,7 +81,7 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = 'cellSize
   return(result)
 }
 
-get_bcranks_plot_data <- function(sample_subset, nmax, is.cellsize = TRUE) {
+get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE) {
 
   set.seed(123)
   plot_data <- list()
@@ -112,7 +112,18 @@ get_bcranks_plot_data <- function(sample_subset, nmax, is.cellsize = TRUE) {
 
   # remove fdr specific columns for cell size filter
   if (is.cellsize) dt[, c("fdr", "ndrops") := NULL]
-  plot2_data <- list(apply(dt, 1, as.list))
+  knee_data <- unname(as.list(data.table::transpose(dt)))
+  knee_data <- lapply(knee_data, function(x) {names(x) <- names(dt); x})
+  plot_data[['knee']] <- knee_data
+
+  # umi histogram plot
+  if (is.cellsize) {
+    hist_data <- lapply(numis, function(x) { c(u = x) })
+    nhist <- downsample_plotdata(ncol(sample_subset), nmax)
+    keep <- sort(sample(ncol(sample_subset), nhist))
+    hist_data <- hist_data[keep]
+    plot_data[['hist']] <- hist_data
+  }
 
   plot_data <- append(plot_data, plot2_data)
   return(plot_data)

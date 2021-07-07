@@ -62,7 +62,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
 
       numis <- log10(sample_subset@meta.data$nCount_RNA)
 
-      plot1_data <- unname(purrr::map2(ed_fdr, numis, function(x, y) {
+      fdr_data <- unname(purrr::map2(ed_fdr, numis, function(x, y) {
         c("FDR" = x, "log_u" = y)
       }))
 
@@ -79,19 +79,19 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
 
       # Downsample plotData
       # Handle when the number of remaining cells is less than the number of cells to downsample
-      num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
+      nkeep <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
 
       set.seed(123)
-      cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
-      cells_position_to_keep <- sort(cells_position_to_keep)
-      plot1_data <- plot1_data[cells_position_to_keep]
+      keep <- sample(1:ncol(sample_subset), nkeep, replace = FALSE)
+      keep <- sort(keep)
+      fdr_data <- fdr_data[keep]
 
-      plot2_data <- get_bcranks_plot_data(sample_subset, num_cells_to_downsample, is.cellsize = FALSE)[[1]]
+      knee_data <- get_bcranks_plot_data(sample_subset, is.cellsize = FALSE)[['knee']]
 
       # Populate guidata list
       guidata <- list()
-      guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
-      guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot2_data
+      guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- fdr_data
+      guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- knee_data
     }
   } else {
     message("filter disabled: data not filtered!")
