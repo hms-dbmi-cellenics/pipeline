@@ -88,6 +88,19 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
   return(result)
 }
 
+#' Get Barcode Ranks Plot Data
+#'
+#' @param sample_subset \code{SeuratObject}
+#' @param nmax maximum number of value for histogram plot. Only applies if \code{is.cellsize}
+#'   is \code{TRUE}.
+#' @param is.cellsize is this for cellsize filter? Default (\code{TRUE}),
+#'   returns histogram plot data and knee plot data without fdr and ndrops values.
+#'
+#' @keywords internal
+#' @return Named list of plot data. Possible items are \code{'hist'} and \code{'knee'},
+#'   dependending on \code{is.cellsize}.
+#' @importFrom magrittr %>%
+#'
 get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE) {
 
   set.seed(123)
@@ -95,15 +108,6 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
   numis <- unname(sample_subset$nCount_RNA)
   ord <- order(numis, decreasing = TRUE)
   numis <- numis[ord]
-
-  # umi histogram plot
-  if (is.cellsize) {
-    plot1_data <- lapply(numis, function(x) { c(u = x) })
-    nkeep1 <- downsample_plotdata(ncol(sample_subset), nmax)
-    keep1 <- sort(sample(ncol(sample_subset), nkeep1))
-    plot1_data <- list(plot1_data[keep1])
-    plot_data <- append(plot_data, plot1_data)
-  }
 
   # barcode ranks plot data
   # unique rank/fdr
@@ -119,8 +123,7 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
 
   # remove fdr specific columns for cell size filter
   if (is.cellsize) dt[, c("fdr", "ndrops") := NULL]
-  knee_data <- unname(as.list(data.table::transpose(dt)))
-  knee_data <- lapply(knee_data, function(x) {names(x) <- names(dt); x})
+  knee_data <- dt %>% purrr::transpose() %>% purrr::simplify_all()
   plot_data[['knee']] <- knee_data
 
   # umi histogram plot
@@ -132,7 +135,6 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
     plot_data[['hist']] <- hist_data
   }
 
-  plot_data <- append(plot_data, plot2_data)
   return(plot_data)
 }
 
