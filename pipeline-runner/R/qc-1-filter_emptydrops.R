@@ -89,6 +89,8 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
   } else {
     message("filter disabled: data not filtered!")
     guidata <- list()
+    guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- list()
+    guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- list()
   }
 
   # get filter stats after filtering
@@ -96,6 +98,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
     before = before,
     after = calc_filter_stats(scdata, tmp_sample)
   )
+
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats
 
   result <- list(
