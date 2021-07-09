@@ -28,7 +28,6 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
   }
 
   if (config$enabled) {
-
     # check if filter data is actually available
     if (is.null(scdata@meta.data$emptyDrops_FDR)) {
       message("Classify is enabled but has no classify data available: will dissable it: no filtering!")
@@ -89,8 +88,6 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
   } else {
     message("filter disabled: data not filtered!")
     guidata <- list()
-    guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- list()
-    guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- list()
   }
 
   # get filter stats after filtering
