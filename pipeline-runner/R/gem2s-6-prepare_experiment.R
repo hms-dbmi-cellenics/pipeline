@@ -118,7 +118,6 @@ prepare_experiment <- function(input, pipeline_config) {
 
   # DATA PROCESSING
   # --
-
   # [HARDCODED]
   config.cellSizeDistribution <- list(
     enabled = "true",
@@ -187,6 +186,26 @@ prepare_experiment <- function(input, pipeline_config) {
       methodSettings = list(louvain = list(resolution = 0.8))
     )
   )
+
+  mitochondrial_config_to_duplicate <- list(
+    auto = "true",
+    filterSettings = list(
+      method = "absolute_threshold",
+      methodSettings = list(absolute_threshold = list(maxFraction = 0.1, binStep = 0.05))
+    )
+  )
+
+  classifier_config_to_duplicate <- list(
+    enabled = tolower(as.character(!any_filtered)), # emptyDrops results not present
+    auto = "true",
+    filterSettings = list(FDR = 0.01)
+  )
+
+  samples <- scdata$samples
+
+  # Add a copy of the same base config for each sample for classifier and mitochondrialContent
+  config.classifier <- duplicate_config_per_sample(classifier_config_to_duplicate, config.classifier, samples)
+  config.mitochondrialContent <- duplicate_config_per_sample(mitochondrial_config_to_duplicate, config.mitochondrialContent, samples)
 
   # Compute for multisample and unisample
   config.cellSizeDistribution <- add_custom_config_per_sample(cellSizeDistribution_config, config.cellSizeDistribution, scdata)
@@ -284,6 +303,18 @@ numGenesVsNumUmis_config <- function(scdata, config) {
 #                 }
 # }
 
+duplicate_config_per_sample <- function(step_config, config, samples) {
+  # # We upadte the config file, so to be able to access the raw config we create a copy
+  # config.raw <- config
+
+  for (sample in unique(samples)) {
+    config[[sample]] <- step_config
+    config[[sample]]$defaultFilterSettings <- step_config$filterSettings
+  }
+
+  return(config)
+}
+
 add_custom_config_per_sample <- function(step_fn, config, scdata) {
 
   # We upadte the config file, so to be able to access the raw config we create a copy
@@ -298,6 +329,10 @@ add_custom_config_per_sample <- function(step_fn, config, scdata) {
     result_config <- step_fn(scdata_sample, config.raw)
     # Update config with the unisample thresholds
     config[[sample]] <- result_config
+
+    # Add auto settings
+    config[[sample]]$defaultFilterSettings <- result_config$filterSettings
   }
+
   return(config)
 }
