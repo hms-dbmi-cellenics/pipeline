@@ -24,39 +24,14 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
   # extract plotting data of original data to return to plot slot later
   obj_metadata <- scdata@meta.data
   barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
+
   if (length(barcode_names_this_sample) == 0) {
     guidata <- list()
     return(list(data = scdata, config = config, plotData = guidata))
   }
+
   sample_subset <- subset(scdata, cells = barcode_names_this_sample)
-
-  # umi histogram plot
-  numis <- sort(sample_subset$nCount_RNA, decreasing = TRUE)
-  plot1_data <- lapply(unname(numis), function(x) {
-    c("u" = x)
-  })
-
-  # barcode ranks plot data
-  # unique average ranks maintain plot shape in case of downsampling
-  ranks <- rank(-numis, ties.method = "average")
-  dups <- duplicated(ranks)
-  ranks <- ranks[!dups]
-  numis <- numis[!dups]
-
-  plot0_data <- unname(purrr::map2(numis, ranks, function(x, y) {
-    c("u" = x, "rank" = y)
-  }))
-
-  # downsample plot data
-  set.seed(123)
-  nkeep1 <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-  nkeep0 <- downsample_plotdata(length(ranks), num_cells_to_downsample)
-
-  keep1 <- sort(sample(ncol(sample_subset), nkeep1))
-  keep0 <- sort(sample(length(ranks), nkeep0))
-
-  plot1_data <- plot1_data[keep1]
-  plot0_data <- plot0_data[keep0]
+  plot_data <- get_bcranks_plot_data(sample_subset, num_cells_to_downsample)
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
   # to get a list with two elements {minCellSize and binStep}
@@ -94,8 +69,8 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
   guidata <- list()
-  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot0_data
-  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot1_data
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data[['knee']]
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[['hist']]
 
   # Populate with filter statistics
   filter_stats <- list(
@@ -112,6 +87,103 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
 
   return(result)
 }
+
+#' Get Barcode Ranks Plot Data
+#'
+#' @param sample_subset \code{SeuratObject}
+#' @param nmax maximum number of value for histogram plot. Only applies if \code{is.cellsize}
+#'   is \code{TRUE}.
+#' @param is.cellsize is this for cellsize filter? Default (\code{TRUE}),
+#'   returns histogram plot data and knee plot data without fdr and ndrops values.
+#'
+#' @keywords internal
+#' @return Named list of plot data. Possible items are \code{'hist'} and \code{'knee'},
+#'   dependending on \code{is.cellsize}.
+#' @importFrom magrittr %>%
+#'
+get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE) {
+
+  set.seed(123)
+  plot_data <- list()
+  numis <- unname(sample_subset$nCount_RNA)
+  ord <- order(numis, decreasing = TRUE)
+  numis <- numis[ord]
+
+  # barcode ranks plot data
+  # unique rank/fdr
+  ranks <- rank(-numis, ties.method = "average")
+  fdrs <- sample_subset$emptyDrops_FDR[ord]
+  fdrs[is.na(fdrs)] <- 1
+
+  dt <- data.table::data.table(rank = ranks, fdr = fdrs, u = numis)
+  dt <- dt[, .(ndrops = .N, u = u[1]), by = c('rank', 'fdr')]
+
+  # example of what knee regions should look like
+  # plot_knee_regions(dt)
+
+  # remove fdr specific columns for cell size filter
+  if (is.cellsize) dt[, c("fdr", "ndrops") := NULL]
+  knee_data <- dt %>% purrr::transpose() %>% purrr::simplify_all()
+  plot_data[['knee']] <- knee_data
+
+  # umi histogram plot
+  if (is.cellsize) {
+    hist_data <- lapply(numis, function(x) { c(u = x) })
+    nhist <- downsample_plotdata(ncol(sample_subset), nmax)
+    keep <- sort(sample(ncol(sample_subset), nhist))
+    hist_data <- hist_data[keep]
+    plot_data[['hist']] <- hist_data
+  }
+
+  return(plot_data)
+}
+
+plot_knee_regions <- function(dt, thresh = 0.01) {
+
+  # fill regions
+  dt$quality <- 'unknown'
+  lt.thresh <- dt$fdr < thresh
+
+  amb.first <- which(!lt.thresh)[1]
+  amb.last <- tail(which(lt.thresh), 1)
+
+  dt$quality[1:amb.first] <- 'good'
+  dt$quality[amb.last:nrow(dt)] <- 'low'
+
+  cols <- c('green', 'red', 'gray')
+  res$quality <- factor(res$quality)
+
+  # plot
+  ggplot2::ggplot(dt, aes(x=rank, y=u, fill = quality)) +
+    ggplot2::geom_ribbon(mapping = ggplot2::aes(x=rank, ymax=u, ymin=0, fill = quality),alpha=0.3, inherit.aes = FALSE) +
+    ggplot2::scale_fill_manual(values = cols) +
+    ggplot2::geom_line(size = 1) +
+    ggplot2::scale_x_continuous(trans='log10') +
+    ggplot2::scale_y_continuous(trans='log10') +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(legend.position = 'none') +
+    ggplot2::theme(panel.border = ggplot2::element_rect(color = 'black', size = 0.1, fill = 'transparent')) +
+    ggplot2::xlab('cell rank') +
+    ggplot2::ylab('log UMIs in cell')
+}
+
+
+
+# cell_size_distribution_filter function
+# This is a simplest filter that looks at the shape of the cell size (# of UMIs per cell) distribution and looks for some local minima, minimum of second derivative, etc.
+# To separate the large cell barcodes that correspond to real cells from the tail containing 'empty droplets'.
+# This can be a useful first guess. The settings for such a filter can also contain a simple "min cell size" setting.
+#
+#' @description Filters seurat object based on cell size distribution
+#' @param config list containing the following information
+#'          - enable: true/false. Refering to apply or not the filter.
+#'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
+#'          to call generate_default_values_cellSizeDistribution)
+#'          - filterSettings: slot with thresholds
+#'                  - minCellSize: Integer. Threshold that contain the minimun number of UMIs per cell
+#'                  - binStep: Integer. Bin size for the histogram
+#' @export
+#' @return a list with the filtered seurat object by cell size ditribution, the config and the plot values
 
 # CalculateBarcodeInflections calculates an adaptive inflection point ("knee")
 # of the barcode distribution for each sample group. This is
