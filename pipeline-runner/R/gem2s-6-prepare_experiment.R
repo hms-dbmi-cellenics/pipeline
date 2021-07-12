@@ -304,9 +304,6 @@ numGenesVsNumUmis_config <- function(scdata, config) {
 # }
 
 duplicate_config_per_sample <- function(step_config, config, samples) {
-  # # We upadte the config file, so to be able to access the raw config we create a copy
-  # config.raw <- config
-
   for (sample in unique(samples)) {
     config[[sample]] <- step_config
     config[[sample]]$defaultFilterSettings <- step_config$filterSettings
