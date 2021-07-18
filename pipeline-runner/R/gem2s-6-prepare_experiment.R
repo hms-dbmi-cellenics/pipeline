@@ -174,7 +174,7 @@ prepare_experiment <- function(input, pipeline_config) {
     embeddingSettings = list(
       method = "umap",
       methodSettings = list(
-        umap = list(minimumDistance = 0.3, distanceMetric = "euclidean"),
+        umap = list(minimumDistance = 0.3, distanceMetric = "cosine"),
         tsne = list(
           perplexity = min(30, ncol(scdata) / 100),
           learningRate = max(200, ncol(scdata) / 12)
