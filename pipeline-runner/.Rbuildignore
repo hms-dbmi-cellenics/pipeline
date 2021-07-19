@@ -1,0 +1,4 @@
+^renv$
+^renv\.lock$
+^pipeline-runner\.Rproj$
+^\.Rproj\.user$

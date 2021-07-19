@@ -46,13 +46,34 @@ Logs from pipelines run through the API will apear here.
 make build
 ```
 
+## Local development and adding dependencies
+
+First make sure the project library is synchronized with the lockfile:
+
+```R
+# inside pipeline-runner folder
+renv::restore()
+```
+
+**NOTE**: To restore Bioconductor packages your R version needs to be the same as in the [Dockerfile](pipeline-runner/Dockerfile) (4.0.5).
+
+`install.packages(...)` and use them (e.g. `dplyr::left_join(...)`) as you normally would. Then, update the lockfile:
+
+```R
+renv::snapshot()
+```
+
+commit the changes to the lockfile (used to install dependencies in the Dockerfile). See [renv docs](https://rstudio.github.io/renv/) for more info.
+
+
+
 ## Debugging locally
 
 **TLDR**: save something inside `/debug` in a data processing or gem2s step to
  access it later from `$(pwd)/debug`.
 
-To save the parameters (`config`, `seurat_obj`, etc) to a data processing task function, specify DEBUG_STEP.
-Available tasks include all those defined in `run_processing_step` of  [init.r](pipeline-runner/src/init.r#L72) as well as `DEBUG_STEP=all` 
+To save the parameters (`config`, `seurat_obj`, etc) to a **data processing** task function, specify `DEBUG_STEP`.
+Available tasks include all task names listed in `run_processing_step` [init.R](pipeline-runner/init.R#L69) as well as `DEBUG_STEP=all` 
 to save the parameters to all data processing task functions:
 
 ```bash

@@ -1,9 +1,3 @@
-r-cran-rcpp
-r-cran-uuid
-r-cran-r6
-r-cran-checkmate
-r-cran-mime
-r-cran-jsonlite
 libcurl4-openssl-dev
 libssl-dev
 libxml2-dev
@@ -15,3 +9,4 @@ libgit2-dev
 libglpk-dev
 libxt-dev
 libcairo2-dev
+libatlas3-base

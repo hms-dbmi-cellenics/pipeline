@@ -8,7 +8,7 @@ an ARN for the activity and polls for tasks until they are exhausted, at which
 point it shuts down. Successful completions are relayed back to AWS, and failed
 executions are relayed back with the exception that was thrown in R.
 
-Task definitions for individual pipeline items are located under `src/`.
+Task definitions for individual pipeline items are located under `R/`.
 
 Development
 -----------
