@@ -189,6 +189,15 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # upload plot data result to S3
     plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
 
+    # update metadata cellSets after final task
+    if (task_name == 'configureEmbedding') {
+        message('Uploading cell sets to S3')
+        saveRDS(scdata, '/debug/scdata.rds')
+        saveRDS(experiment_id, '/debug/experiment_id.rds')
+        saveRDS(pipeline_config, '/debug/pipeline_config.rds')
+        create_cell_sets(scdata, experiment_id, pipeline_config)
+    }
+
     # Uplaod count matrix data
     if(upload_count_matrix) {
         object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
