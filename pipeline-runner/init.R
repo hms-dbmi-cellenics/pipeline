@@ -192,9 +192,6 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # update metadata cellSets after final task
     if (task_name == 'configureEmbedding') {
         message('Uploading cell sets to S3')
-        saveRDS(scdata, '/debug/scdata.rds')
-        saveRDS(experiment_id, '/debug/experiment_id.rds')
-        saveRDS(pipeline_config, '/debug/pipeline_config.rds')
         create_cell_sets(scdata, experiment_id, pipeline_config)
     }
 

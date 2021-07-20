@@ -63,10 +63,6 @@ create_seurat <- function(input, pipeline_config) {
 adding_metrics_and_annotation <- function(scdata, sample_id, sample_name, config, min.cells = 3, min.features = 10) {
   message("Converting into seurat object sample --> ", sample_id)
 
-  saveRDS(scdata, '/debug/scdata.rds')
-  saveRDS(sample_id, '/debug/sample_id.rds')
-  saveRDS(sample_name, '/debug/sample_name.rds')
-
   metadata <- check_config(scdata, sample_id, sample_name, config)
   scdata <- Seurat::CreateSeuratObject(scdata, assay = "RNA", min.cells = min.cells, min.features = min.features, meta.data = metadata, project = config$name)
 

@@ -50,7 +50,7 @@ check_config <- function(scdata, sample_id, sample_name, config) {
   # going to include in our experiment.
   if ("metadata" %in% names(config)) {
     rest_metadata <- as.data.frame(config$metadata)
-    rest_metadata <- rest_metadata[match(metadata$samples, config$samples), ]
+    rest_metadata <- rest_metadata[match(metadata$samples, config$samples),, drop = FALSE]
     metadata <- cbind(metadata, rest_metadata)
   }
 
