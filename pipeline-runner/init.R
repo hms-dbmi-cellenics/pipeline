@@ -6,6 +6,7 @@ library(zeallot)
 options(future.globals.maxSize = 32 * 1024 * 1024^2)
 
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
+library(magrittr)
 
 load_config <- function(development_aws_server) {
     config <- list(
