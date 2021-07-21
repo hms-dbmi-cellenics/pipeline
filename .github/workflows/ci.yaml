@@ -194,6 +194,8 @@ jobs:
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
 
+          which yq
+
           yq w -d1 .flux.yaml metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
           | yq w -d0 - metadata.name "$DEPLOYMENT_NAME-$SANDBOX_ID" \
           | yq w -d0 - metadata.labels.sandboxId "$SANDBOX_ID" \
