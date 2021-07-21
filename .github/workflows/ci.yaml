@@ -275,4 +275,3 @@ jobs:
           channel: pipelines
           status: FAILED
           color: danger
-
