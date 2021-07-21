@@ -173,6 +173,18 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
   )
 }
 
+get_object_from_s3 <- function(pipeline_config, bucket, key) {
+  print(sprintf("Getting %s from %s", key, bucket))
+
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+
+  c(body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = key
+  )
+  return(rawConnection(body))
+}
+
 #' Upload a file to S3 using multipart upload
 #'
 #' @param pipeline_config A Paws S3 config object, e.g. from `paws::s3()`.

@@ -1,13 +1,19 @@
-update_cell_sets <- function(scdata, experiment_id, pipeline_config) {
+update_cell_sets <- function(scdata, experiment_id, pipeline_config, overwrite_scratchpad = TRUE) {
 
     # Design cell_set scratchpad for DynamoDB
-    scratchpad <- list(
-        key = "scratchpad",
-        name = "Scratchpad",
-        rootNode = TRUE,
-        children = list(),
-        type = "cellSets"
-    )
+
+    if (overwrite_scratchpad) {
+        scratchpad <- list(
+            key = "scratchpad",
+            name = "Scratchpad",
+            rootNode = TRUE,
+            children = list(),
+            type = "cellSets"
+        )
+
+    } else {
+        scratchpad <- update_scratchpad(scdata, pipeline_config, experiment_id)
+    }
 
     color_pool <- get_color_pool()
     samples_set <- samples_sets(scdata, color_pool)
@@ -34,6 +40,30 @@ update_cell_sets <- function(scdata, experiment_id, pipeline_config) {
                      key = experiment_id
     )
 
+}
+
+update_scratchpad <- function(scdata, pipeline_config, experiment_id) {
+
+    # get previous scratchpad
+    con <- get_object_from_s3(
+        pipeline_config,
+        bucket = pipeline_config$cell_sets_bucket,
+        key = experiment_id)
+
+    cell_sets <- RJSONIO::readJSONStream(con)$cellSets
+    is.scratch <- which(sapply(cell_sets, `[[`, 'key') == 'scratchpad')
+    scratchpad <- cell_sets[[is.scratch]]
+
+    # intersect with current cells_id
+    cells_id <- scdata$cells_id
+    children <- scratchpad$children
+
+    for (i in seq_along(children)) {
+        children[[i]]$cellIds <- intersect(children[[i]]$cellIds, cells_id)
+    }
+
+    scratchpad$children <- children
+    return(scratchpad)
 }
 
 samples_sets <- function(scdata, color_pool) {
