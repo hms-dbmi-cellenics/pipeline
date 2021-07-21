@@ -29,6 +29,10 @@ upload_to_aws <- function(input, pipeline_config) {
     processingConfig = config_dataProcessing
   )
 
+  # need to create initial cell sets to preview plots
+  scdata <- readRDS(file.path(output_dir, "experiment.rds"))
+  update_cell_sets(scdata, experiment_id, pipeline_config)
+
   # seurat object to s3
   put_object_in_s3_multipart(pipeline_config,
     bucket = pipeline_config$source_bucket,

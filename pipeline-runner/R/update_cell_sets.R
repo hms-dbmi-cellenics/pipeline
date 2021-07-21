@@ -1,4 +1,4 @@
-create_cell_sets <- function(scdata, experiment_id, pipeline_config) {
+update_cell_sets <- function(scdata, experiment_id, pipeline_config) {
 
     # Design cell_set scratchpad for DynamoDB
     scratchpad <- list(

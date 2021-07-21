@@ -190,10 +190,10 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # upload plot data result to S3
     plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
 
-    # create and upload cellSets
+    # update and upload cellSets
     if (upload_cell_sets) {
         message('Uploading cell sets to S3')
-        create_cell_sets(scdata, experiment_id, pipeline_config)
+        update_cell_sets(scdata, experiment_id, pipeline_config)
     }
 
     # Uplaod count matrix data
