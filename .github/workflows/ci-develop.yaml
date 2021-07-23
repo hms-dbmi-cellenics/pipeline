@@ -116,6 +116,30 @@ jobs:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
           GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
+
+      - id: start-container
+        name: Start R container
+        run: |-
+          docker run --rm --name pipeline --entrypoint="Rscript" $R_IMAGE_NAME init.R
+          docker ps -a
+        env:
+          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+
+      - id: run-tests
+        name: Run tests and upload code coverage
+        run: |-
+          ci_env=`bash <(curl -s https://codecov.io/env)`
+
+          docker run $ci_env -e CI=true --entrypoint="Rscript" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME /bin/bash -c "
+            R devtools::test()
+            bash <(curl -s https://codecov.io/env)
+          "
+
+          docker run -v /home/runner/work/worker/worker/data:/data $ci_env -e CI=true --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME /bin/bash -c "
+            python3 -m pytest --cov=. --cov-report=xml
+            bash <(curl -s https://codecov.io/env)
+            "
+
       - id: push
         name: Push docker images to ECR
         run: |-
