@@ -3,6 +3,12 @@ on:
   push:
     branches:
       - master
+  release:
+    types:
+      - released
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build-docker:
