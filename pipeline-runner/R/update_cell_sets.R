@@ -42,6 +42,16 @@ update_cell_sets <- function(scdata, experiment_id, pipeline_config, overwrite_s
 
 }
 
+# pass named arguments
+# saved with current timestamp
+save_debug <- function(...) {
+    args <- list(...)
+    list2env(args, envir = environment())
+    fname <- paste0(Sys.time(), '.RData')
+    save(list = names(args),  file = file.path('/debug', fname))
+    message(sprintf('⚠ Saved %s to local-runner/debug', fname))
+}
+
 update_scratchpad <- function(scdata, pipeline_config, experiment_id) {
 
     # get previous scratchpad
