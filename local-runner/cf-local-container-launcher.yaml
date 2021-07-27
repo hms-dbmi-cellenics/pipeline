@@ -37,7 +37,7 @@ Resources:
               f"--env DEBUG_STEP=__DEBUG_STEP__",
               f"--env DEBUG_PATH=__DEBUG_PATH__",
               f"-v __DEBUG_PATH__:/debug",
-              f"-v __EXPID_DIR__:/worker/data",
+              f"-v __WORKER_DIR__:/worker/data",
               event['image']
             ])
             subprocess.run(f"echo {docker_command}", shell=True, check=True)

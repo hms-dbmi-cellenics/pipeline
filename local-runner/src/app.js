@@ -15,7 +15,7 @@ AWS.config.update({
 const isPipelineContainer = (name) => name.includes('qc') || name.includes('gem2s');
 
 const setVarsInTemplate = (template) => {
-  const varNames = ['DEBUG_STEP', 'DEBUG_PATH', 'HOST_IP', 'EXPID_DIR'];
+  const varNames = ['DEBUG_STEP', 'DEBUG_PATH', 'HOST_IP', 'WORKER_DIR'];
   for (let ii = 0; ii < varNames.length; ii += 1) {
     const value = process.env[varNames[ii]] || '';
     const replace = `__${varNames[ii]}__`;

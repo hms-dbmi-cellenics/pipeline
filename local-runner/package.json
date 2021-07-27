@@ -10,7 +10,7 @@
     "coverage": "jest --coverage --silent",
     "dev": "nodemon src/app.js",
     "build": "docker build --build-arg GITHUB_PAT=${GITHUB_API_TOKEN} -t biomage-pipeline-runner ../pipeline-runner",
-    "start": "EXPID_DIR=$(pwd)/../../worker/data DEBUG_PATH=$(pwd)/debug node src/app.js",
+    "start": "WORKER_DIR=$(pwd)/../../worker/data DEBUG_PATH=$(pwd)/debug node src/app.js",
     "restart": "npm run build && npm start",
     "lint": "eslint ./src",
     "detect-secrets": "pip3 install detect-secrets && git diff --staged --name-only | xargs detect-secrets-hook --baseline .secrets.baseline"
