@@ -2,74 +2,56 @@
 #  - Adding emtpyDrops,  scrublet and MT-content
 #  - Create a file with flag_filtered
 
-# LOADING SPARSE MATRIX AND CONFIGURATION
-create_seurat <- function(input, pipeline_config) {
-  message("reloading old matrices...")
-  scdata_list <- readRDS("/output/pre-doublet-scdata_list.rds")
+create_seurat <- function(input, pipeline_config, prev_out) {
+  # destructure previous output
+  counts_list <- prev_out$counts_list
+  config <- prev_out$config
+  annot <- prev_out$annot
 
-  message("Loading configuration...")
-  config <- RJSONIO::fromJSON("/input/meta.json")
+  samples <- names(counts_list)
 
-  print_config(5, "Create Seurat", input, pipeline_config, config)
-
-  # Check which samples have been selected. Otherwiser we are going to use all of them.
-  if (length(config$samples) > 0) {
-    samples <- config$samples
-  } else {
-    samples <- names(scdata_list)
-  }
-
-  scdata_list <- scdata_list[samples]
   message("Creating Seurat Object...")
-
-  flag_filtered <- sapply(names(scdata_list), function(sample_name) adding_metrics_and_annotation(scdata_list[[sample_name]], sample_name, config))
-  df_flag_filtered <- data.frame(samples = samples, flag_filtered = ifelse(flag_filtered, "Filtered", "Unfiltered"))
-  write.table(df_flag_filtered, "/output/df_flag_filtered.txt", col.names = TRUE, row.names = FALSE, sep = "\t", quote = FALSE)
+  scdata_list <- list()
+  for (sample in samples) {
+    message("\tConverting into seurat object sample --> ", sample)
+    construct_scdata(counts_list[[sample]], sample, annot, config)
+  }
 
   message("Step 5 completed.")
 
   return(list())
 }
 
-
-
-
-# GETTING METADATA AND ANNOTATION
-
-
-# adding_metrics_and_annotation function
-#' @description We are going to process one sample in a seurat object. For it, we need to do:
-#'  - Identify the possible metadata in the config file
-#'  - Create a seurat object with the input of an sparse matrix
-#'  - Annotate the gene in order to identify MT content in hsapiens and mmusculus
-#'  - Computing MT-content
-#'  - Getting scrublets
-#'  - Getting emptyDrops
-#'  - Identify flag_filtered
-#'  - Save the rds with the seurat object for 1 sample
-#' @param scdata Raw sparse matrix with the counts for one sample.
-#' @param sample_name Name of the sample that we are preparing.
-#' @param config Config of the project
+#' construct metadata for each SeuratObject
+#' @param counts matrix with barcodes as columns to assign metadata information
+#' @param sample name of the sample
+#' @param config configuration for experiment
 #'
-#' @return in the case that the input data was pre-filtered, we return a flag in order to disable the classifier filter.
-#' This flag is going to be store in the dynamoDB inside the samples-table.
-adding_metrics_and_annotation <- function(scdata, sample, config, min.cells = 3, min.features = 10) {
+#' @export
+#' @return dataframe with metadata information of the sample
+
+construct_metadata <- function(counts, sample, config) {
+  metadata <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
+
+  # Add "metadata" if exists in config
+  if ("metadata" %in% names(config)) {
+    rest_metadata <- as.data.frame(config$metadata)
+    rest_metadata <- rest_metadata[match(metadata$samples, config$samples),, drop = FALSE]
+    metadata <- cbind(metadata, rest_metadata)
+  }
+
+  return(metadata)
+}
+
+construct_scdata <- function(counts, sample, annot, config) {
   message("Converting into seurat object sample --> ", sample)
 
-  metadata <- check_config(scdata, sample, config)
-  scdata <- Seurat::CreateSeuratObject(scdata, assay = "RNA", min.cells = min.cells, min.features = min.features, meta.data = metadata, project = config$name)
+  metadata <- construct_metadata(counts, sample, config)
+  scdata <- Seurat::CreateSeuratObject(counts, meta.data = metadata, project = config$name)
 
-  organism <- config$organism
-
-  # message("[", sample, "] \t finding genome annotations for genes...")
-  # annotations <- gprofiler2::gconvert(
-  # query = rownames(scdata), organism = organism, target="ENSG", mthreshold = Inf, filter_na = FALSE)
-
-  annotations <- read.delim("/output/features_annotations.tsv")
-
-  if (any(grepl("^mt-", annotations$name, ignore.case = T))) {
+  if (any(grepl("^mt-", annot$name, ignore.case = TRUE))) {
     message("[", sample, "] \t Adding MT information...")
-    mt.features <- annotations$input[grep("^mt-", annotations$name, ignore.case = T)]
+    mt.features <- annot$input[grep("^mt-", annot$name, ignore.case = TRUE)]
     mt.features <- mt.features[mt.features %in% rownames(scdata)]
     if (length(mt.features)) {
       scdata <- PercentageFeatureSet(scdata, features = mt.features, col.name = "percent.mt")
@@ -91,7 +73,6 @@ adding_metrics_and_annotation <- function(scdata, sample, config, min.cells = 3,
   message("[", sample, "] \t Adding emptyDrops...")
   file_ed <- paste("/output/pre-emptydrops-", sample, ".rds", sep = "")
 
-  suppressWarnings(library(dplyr))
 
   if (file.exists(file_ed)) {
     scdata@tools$flag_filtered <- FALSE

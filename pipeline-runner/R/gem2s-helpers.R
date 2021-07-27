@@ -17,45 +17,7 @@ get_doublet_score <- function(sample) {
   return(as.data.frame(scores))
 }
 
-print_config <- function(step_number,step_name,input,pipeline_config,config){
-  message("------- Running step ", step_number, ": ", step_name, " -------")
-  message("Step config:")
-  message(input)
-  message("Pipeline config")
-  message(pipeline_config)
-  message("Current working directory:")
-  message(getwd())
-  message("Experiment folder status:")
-  print(list.files("/input", all.files = TRUE, full.names = TRUE, recursive = TRUE))
-  message("Current config (meta.json):")
-  print(config)
-}
 
-# check_config function
-#' @description Create metadata dataframe from config files
-#' @param scdata matrix with barcodes as columns to assign metadata information
-#' @param sample name of the sample to retrieve the metadata
-#' @param config config list from meta.json
-#'
-#' @export
-#' @return dataframe with metadata information of the sample
-
-check_config <- function(scdata, sample, config) {
-  metadata <- NULL
-  metadata <- data.frame(row.names = colnames(scdata), samples = rep(sample, ncol(scdata)))
-
-  # Check if "metadata" exists on config. If it is TRUE, we have other metadata information that we are
-  # going to include in our experiment.
-  if ("metadata" %in% names(config)) {
-    rest_metadata <- as.data.frame(config$metadata)
-    rest_metadata$sample <- config$samples
-    for (var in colnames(rest_metadata)) {
-      metadata[, var] <- rest_metadata[, var][match(metadata$sample, rest_metadata$sample)]
-    }
-  }
-
-  return(metadata)
-}
 
 get_color_pool <- function() {
   c(

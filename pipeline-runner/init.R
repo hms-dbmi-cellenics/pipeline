@@ -114,7 +114,7 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
 # pipeline_config as defined by load_config
 #
 
-run_gem2s_step <- function(task_name, input, pipeline_config) {
+run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
 
     # list of task functions named by task name
     tasks <- list(
@@ -132,7 +132,7 @@ run_gem2s_step <- function(task_name, input, pipeline_config) {
     task <- tasks[[task_name]]
 
     tstart <- Sys.time()
-    data <- task(input, pipeline_config)
+    data <- task(input, pipeline_config, prev_out)
     ttask <- format(Sys.time()-tstart, digits = 2)
     message("⏱️ Time to complete ", task_name, ": ", ttask)
 
@@ -142,7 +142,12 @@ run_gem2s_step <- function(task_name, input, pipeline_config) {
 call_gem2s <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
 
-    data %<-% run_gem2s_step(task_name, input, pipeline_config)
+    if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+
+    c(data, out) %<-% run_gem2s_step(task_name, input, pipeline_config, prev_out)
+
+    assign("prev_out", out, pos = ".GlobalEnv")
+
     message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data)
 
     return(message_id)
