@@ -1,12 +1,17 @@
 # if Seurat not attached can cause errors when accessing metadata
 library(Seurat)
 library(zeallot)
+library(tryCatchLog)
+library(futile.logger)
+library(magrittr)
 
 # increase maxSize from the default of 500MB to 32GB
 options(future.globals.maxSize = 32 * 1024 * 1024^2)
 
-for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
-library(magrittr)
+# show line numbers for tryCatchLog
+options(keep.source.pkgs = TRUE)
+
+for (f in list.files('R', '.R$', full.names = TRUE)) source(f, keep.source = TRUE)
 
 load_config <- function(development_aws_server) {
     config <- list(
@@ -179,6 +184,12 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message("Single-cell data loaded.")
     }
 
+    # update and upload cellSets
+    if (upload_cell_sets) {
+        message('Uploading cell sets to S3')
+        update_cell_sets(scdata, experiment_id, pipeline_config, overwrite_scratchpad = FALSE)
+    }
+
     # call function to run and update global variable
     c(
         data, ...rest_of_results
@@ -187,16 +198,29 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     assign("scdata", data, pos = ".GlobalEnv")
 
     # upload plot data result to S3
+    tstart <- Sys.time()
+
     plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
 
     # Uplaod count matrix data
     if(upload_count_matrix) {
         object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
         message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
+
+        # move scdata to worker (dev only)
+        if (pipeline_config$cluster_env == 'development') {
+            expid_path <- file.path('/worker/data', experiment_id)
+            dir.create(expid_path, showWarnings = FALSE)
+
+            saveRDS(scdata, file.path(expid_path, 'r.rds'))
+            saveRDS(experiment_id, '/worker/data/current_expid.rds')
+        }
     }
 
     # send result to API
     message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
+    ttask <- format(Sys.time()-tstart, digits = 2)
+    message("⏱️ Time to upload ", task_name, "objects for sample ", sample_id, ": ", ttask)
 
     return(message_id)
 }
@@ -240,6 +264,9 @@ init <- function() {
     pipeline_config <- load_config('host.docker.internal')
     states <- paws::sfn(config=pipeline_config$aws_config)
 
+    flog.layout(layout.simple)
+    flog.threshold(ERROR)
+
     repeat {
         c(taskToken, input) %<-% states$get_activity_task(
             activityArn = pipeline_config$activity_arn,
@@ -251,8 +278,7 @@ init <- function() {
             quit('no')
         }
 
-        tryCatch(
-            withErrorTracing({
+        tryCatchLog({
                 message("Input ", input, " found")
                 wrapper(input)
 
@@ -261,8 +287,10 @@ init <- function() {
                     taskToken = taskToken,
                     output = "{}"
                 )
-            }),
+        },
             error = function(e) {
+                flog.error("🚩 ---------")
+
                 input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
                 sample_text <- ifelse(is.null(input_parse$sampleUuid),
                                       "",
@@ -282,7 +310,9 @@ init <- function() {
 
                 message("Sent task failure to state machine task: ", taskToken)
                 message("recovered from error:", e$message)
-            })
+            },
+        write.error.dump.file = pipeline_config$cluster_env == 'development',
+        write.error.dump.folder = '/debug')
     }
 }
 
