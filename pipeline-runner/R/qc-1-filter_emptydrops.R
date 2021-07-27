@@ -27,12 +27,14 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
     FDR <- generate_default_values_classifier(scdata, config)
   }
 
+  # for plots and filter stats to be populated
+  guidata <- list()
+
   if (config$enabled) {
     # check if filter data is actually available
     if (is.null(scdata@meta.data$emptyDrops_FDR)) {
       message("Classify is enabled but has no classify data available: will dissable it: no filtering!")
       config$enabled <- FALSE
-      guidata <- list()
     } else {
       message("Classify is enabled: filtering with FDR=", FDR)
       obj_metadata <- scdata@meta.data
@@ -81,13 +83,15 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
       knee_data <- get_bcranks_plot_data(sample_subset, is.cellsize = FALSE)[['knee']]
 
       # Populate guidata list
-      guidata <- list()
       guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- fdr_data
       guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- knee_data
     }
   } else {
     message("filter disabled: data not filtered!")
-    guidata <- list()
+    # guidata is an empty list
+    guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- list()
+    guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- list()
+    guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- list()
   }
 
   # get filter stats after filtering
