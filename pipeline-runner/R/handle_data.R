@@ -163,7 +163,7 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
 }
 
 put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
-  print(sprintf("Putting %s in %s", key, bucket))
+  print(sprintf("\tPutting %s in %s", key, bucket))
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
   s3$put_object(

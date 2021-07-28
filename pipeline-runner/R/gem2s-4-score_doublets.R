@@ -9,11 +9,11 @@
 #' @export
 #'
 score_doublets <- function(input, pipeline_config, prev_out) {
+  message("Calculating probability of droplets being doublets...")
 
   counts_list <- prev_out$counts_list
   samples <- names(counts_list)
 
-  message("calculating probability of droplets being doublets...")
   scores <- list()
   for (sample in samples) {
     message("\tSample --> ", sample, "...")
@@ -25,7 +25,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = prev_out)
 
-  message("Step 4 completed.")
+  message("\tStep 4 completed.")
   return(res)
 }
 

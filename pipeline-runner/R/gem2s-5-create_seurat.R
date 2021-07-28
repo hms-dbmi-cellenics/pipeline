@@ -9,7 +9,7 @@
 #'
 create_seurat <- function(input, pipeline_config, prev_out) {
   message("Creating Seurat Objects...")
-  message("items in prev_out: ", paste(names(prev_out), collapse = ' - '))
+  message("\titems in prev_out: ", paste(names(prev_out), collapse = ' - '))
 
   # destructure previous output
   list2env(prev_out, envir = environment())
@@ -17,7 +17,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   samples <- names(counts_list)
   scdata_list <- list()
   for (sample in samples) {
-    message("Creating SeuratObject for sample --> ", sample)
+    message("\tCreating SeuratObject for sample --> ", sample)
 
     scdata_list[[sample]] <- construct_scdata(
       counts = counts_list[[sample]],
@@ -52,6 +52,7 @@ construct_scdata <- function(counts, doublet_score, edout, sample, annot, config
 
 # construct metadata for each SeuratObject
 construct_metadata <- function(counts, sample, config) {
+  message("\tConstructing metadata df...")
   metadata <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
 
   # Add "metadata" if exists in config

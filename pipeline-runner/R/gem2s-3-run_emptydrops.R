@@ -9,13 +9,13 @@
 #' @export
 #'
 run_emptydrops <- function(input, pipeline_config, prev_out) {
+  message("Testing if droplets are empty...")
 
   # destructure previous output
   counts_list <- prev_out$counts_list
   samples <- names(counts_list)
 
   edrops <- list()
-  message("testing if droplets are empty...")
   for (sample in samples) {
     message("\tSample: ", sample, "...")
     edrops[[sample]] <- compute_emptydrops(counts_list[[sample]])
@@ -26,7 +26,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = prev_out)
 
-  message("Step 3 completed.")
+  message("\tStep 3 completed.")
   return(res)
 }
 
@@ -37,7 +37,7 @@ compute_emptydrops <- function(counts) {
   nempty <- sum(colSums(counts) < 100)
 
   if (nempty < 50) {
-    message("Detected sample as filtered --> Skipping emptyDrops.")
+    message("\tDetected sample as filtered --> Skipping emptyDrops.")
     out <- NULL
   } else {
     out <- DropletUtils::emptyDrops(counts)
