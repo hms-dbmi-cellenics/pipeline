@@ -8,7 +8,6 @@
 #'
 #' @export
 #'
-#' @examples
 score_doublets <- function(input, pipeline_config, prev_out) {
 
   counts_list <- prev_out$counts_list

@@ -2,6 +2,11 @@
 #'
 #' @inheritParams download_cellranger
 #' @param prev_out  'output' slot from call to \code{score_doublets}
+#'
+#' @return \code{prev_out} with added slot 'scdata_list' containing \code{SeuratObject}'s for each sample.
+#'
+#' @export
+#'
 create_seurat <- function(input, pipeline_config, prev_out) {
   message("Creating Seurat Objects...")
   message("items in prev_out: ", paste(names(prev_out), collapse = ' - '))
