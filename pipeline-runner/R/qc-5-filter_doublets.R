@@ -18,7 +18,6 @@
 #' @return a list with the filtered seurat object by doublet score, the config and the plot values
 #'
 filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScores", num_cells_to_downsample = 6000) {
-  tmp_sample <- sub("sample-", "", sample_id)
 
   # Check if the experiment has doubletScores
   if (!"doublet_scores" %in% colnames(scdata@meta.data)) {
@@ -36,8 +35,8 @@ filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScore
   }
 
   # extract plotting data of original data to return to plot slot later
-  obj_metadata <- scdata@meta.data
-  barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
+  meta <- scdata@meta.data
+  barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
   if (length(barcode_names_this_sample) == 0) {
     return(list(data = scdata, config = config, plotData = list()))
   }
@@ -46,12 +45,12 @@ filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScore
   # Check whether the filter is set to true or false
   if (as.logical(toupper(config$enabled))) {
     # extract cells id that do not(!) belong to current sample (to not apply filter there)
-    barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)), ])
+    barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id, ]
     # all barcodes that match threshold in the subset data
     # treat NA doublet scores as defacto singlets
     doublet_scores <- sample_subset$doublet_scores
     doublet_scores[is.na(doublet_scores)] <- 0
-    barcode_names_keep_current_sample <- rownames(sample_subset@meta.data[doublet_scores <= probabilityThreshold, ])
+    barcode_names_keep_current_sample <- colnames(sample_subset)[doublet_scores <= probabilityThreshold]
     # combine the 2:
     barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
     # Information regarding doublet score is pre-computed during the 'data-ingest'.
@@ -83,8 +82,8 @@ filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScore
 
   # populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata, tmp_sample),
-    after = calc_filter_stats(scdata.filtered, tmp_sample)
+    before = calc_filter_stats(scdata, sample_id),
+    after = calc_filter_stats(scdata.filtered, sample_id)
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats

@@ -17,9 +17,7 @@
 #'
 filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier', num_cells_to_downsample = 6000) {
 
-  tmp_sample <- sub("sample-", "", sample_id)
-
-  before <- calc_filter_stats(scdata, tmp_sample)
+  before <- calc_filter_stats(scdata, sample_id)
 
   FDR <- config$filterSettings$FDR
 
@@ -37,15 +35,15 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
       config$enabled <- FALSE
     } else {
       message("Classify is enabled: filtering with FDR=", FDR)
-      obj_metadata <- scdata@meta.data
+      meta <- scdata@meta.data
       # extract plotting data of original data to return to plot slot later
-      barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
+      barcode_names_this_sample <- rownames(meta[meta$samples == sample_id, ])
       if (length(barcode_names_this_sample) == 0) {
         return(list(data = scdata, config = config, plotData = list()))
       }
       sample_subset <- subset(scdata, cells = barcode_names_this_sample)
       message("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval)")
-      print(table(obj_metadata$samples, cut(obj_metadata$emptyDrops_FDR, breaks = c(-Inf, 0, 0.0001, 0.01, 0.1, 0.5, 1, Inf)), useNA = "ifany"))
+      print(table(meta$samples, cut(meta$emptyDrops_FDR, breaks = c(-Inf, 0, 0.0001, 0.01, 0.1, 0.5, 1, Inf)), useNA = "ifany"))
 
       # prevents filtering of NA FDRs if FDR=1
       ed_fdr <- sample_subset$emptyDrops_FDR
@@ -62,7 +60,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
         c("FDR" = x, "log_u" = y)
       }))
       # extract cell id that do not(!) belong to current sample (to not apply filter there)
-      barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)), ])
+      barcode_names_non_sample <- rownames(meta[meta$samples != sample_id, ])
       # all barcodes that match threshold in the subset data
       barcode_names_keep_current_sample <- colnames(sample_subset[, ed_fdr <= FDR])
       # combine the 2:
@@ -97,7 +95,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
   # get filter stats after filtering
   filter_stats <- list(
     before = before,
-    after = calc_filter_stats(scdata, tmp_sample)
+    after = calc_filter_stats(scdata, sample_id)
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats
