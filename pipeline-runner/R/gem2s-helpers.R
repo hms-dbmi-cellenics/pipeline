@@ -1,24 +1,4 @@
 
-# get_doublet_score function
-#' @description Get the cells with its doublet scores computed previously through scrublet
-#' @param sample name of the sample to retrieve the doublet scores
-#'
-#' @export
-#' @return data.frame with barcodes and doublet scores
-
-get_doublet_score <- function(sample) {
-  scores <-
-    data.table::fread(
-      paste("/output/doublet-scores-", sample, ".csv", sep = ""),
-    )
-
-  colnames(scores) <- c("barcodes", "doublet_scores", "doublet_class")
-  rownames(scores) <- scores$barcodes
-  return(as.data.frame(scores))
-}
-
-
-
 get_color_pool <- function() {
   c(
     "#e377c2", "#8c564b", "#d62728", "#2ca02c", "#ff7f0e", "#1f77b4", "#f8e71c",

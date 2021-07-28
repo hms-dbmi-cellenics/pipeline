@@ -42,6 +42,7 @@ compute_doublet_scores <- function(counts) {
   set.seed(0)
   sce <- scDblFinder::scDblFinder(counts)
   dbl.df <- data.frame(
+    row.names = colnames(sce),
     barcodes = colnames(sce),
     doublet_class = sce$scDblFinder.class,
     doublet_scores = sce$scDblFinder.score

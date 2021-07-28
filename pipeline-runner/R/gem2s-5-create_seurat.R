@@ -1,20 +1,26 @@
-#  - Create a seurat object per sample
-#  - Adding emtpyDrops,  scrublet and MT-content
-#  - Create a file with flag_filtered
-
+#' Create a SeuratObject per sample
+#'
+#' @inheritParams download_cellranger
+#' @param prev_out  'output' slot from call to \code{score_doublets}
 create_seurat <- function(input, pipeline_config, prev_out) {
+  message("Creating Seurat Objects...")
+  message("items in prev_out: ", paste(names(prev_out), collapse = ' - '))
+
   # destructure previous output
-  counts_list <- prev_out$counts_list
-  config <- prev_out$config
-  annot <- prev_out$annot
+  list2env(prev_out, envir = environment())
 
   samples <- names(counts_list)
-
-  message("Creating Seurat Object...")
   scdata_list <- list()
   for (sample in samples) {
-    message("\tConverting into seurat object sample --> ", sample)
-    construct_scdata(counts_list[[sample]], sample, annot, config)
+    message("Converting into seurat object sample --> ", sample)
+
+    scdata_list[[sample]] <- construct_scdata(
+      counts = counts_list[[sample]],
+      doublet_score = doublet_scores[[sample]],
+      edout = edrops[[sample]],
+      sample = sample,
+      annot = annot,
+      config = config)
   }
 
   message("Step 5 completed.")
@@ -22,14 +28,19 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   return(list())
 }
 
-#' construct metadata for each SeuratObject
-#' @param counts matrix with barcodes as columns to assign metadata information
-#' @param sample name of the sample
-#' @param config configuration for experiment
-#'
-#' @export
-#' @return dataframe with metadata information of the sample
+# construct SeuratObject
+construct_scdata <- function(counts, doublet_score, edout, sample, annot, config) {
 
+  metadata <- construct_metadata(counts, sample, config)
+  scdata <- Seurat::CreateSeuratObject(counts, meta.data = metadata, project = config$name)
+  scdata <- add_mito(scdata, annot)
+  scdata <- add_dblscore(scdata, doublet_score)
+  scdata <- add_edrops(scdata, edout)
+
+  return(scdata)
+}
+
+# construct metadata for each SeuratObject
 construct_metadata <- function(counts, sample, config) {
   metadata <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
 
@@ -43,14 +54,11 @@ construct_metadata <- function(counts, sample, config) {
   return(metadata)
 }
 
-construct_scdata <- function(counts, sample, annot, config) {
-  message("Converting into seurat object sample --> ", sample)
-
-  metadata <- construct_metadata(counts, sample, config)
-  scdata <- Seurat::CreateSeuratObject(counts, meta.data = metadata, project = config$name)
+# add mitochondrial percent to SeuratObject
+add_mito <- function(scdata, annot) {
 
   if (any(grepl("^mt-", annot$name, ignore.case = TRUE))) {
-    message("[", sample, "] \t Adding MT information...")
+    message("\tAdding MT information...")
     mt.features <- annot$input[grep("^mt-", annot$name, ignore.case = TRUE)]
     mt.features <- mt.features[mt.features %in% rownames(scdata)]
     if (length(mt.features)) {
@@ -59,27 +67,18 @@ construct_scdata <- function(counts, sample, annot, config) {
   }
 
   if (is.null(scdata@meta.data$percent.mt)) scdata$percent.mt <- 0
+  return(scdata)
+}
 
-  message("[", sample, "] \t Getting scrublet results...")
-  scores <- get_doublet_score(sample)
-  rownames(scores) <- scores$barcodes
+# add emptyDrops result to SeuratObject
+add_edrops <- function(scdata, edout) {
 
-  idt <- scores$barcodes[scores$barcodes %in% rownames(scdata@meta.data)]
-  scdata@meta.data[idt, "doublet_scores"] <- scores[idt, "doublet_scores"]
-  # Doublet class is the classifications that scDblFinder does to set the threshold of doublet_scores
-  # (https://bioconductor.org/packages/release/bioc/vignettes/scDblFinder/inst/doc/2_scDblFinder.html#thresholding-and-local-calibration)
-  scdata@meta.data[idt, "doublet_class"] <- scores[idt, "doublet_class"]
+  scdata@tools$flag_filtered <- is.null(edout)
 
-  message("[", sample, "] \t Adding emptyDrops...")
-  file_ed <- paste("/output/pre-emptydrops-", sample, ".rds", sep = "")
+  if (!scdata@tools$flag_filtered) {
+    message("\tAdding emptyDrops scores...")
 
-
-  if (file.exists(file_ed)) {
-    scdata@tools$flag_filtered <- FALSE
-    message("\t \t getting emptyDrops results...")
-    emptydrops_out <- readRDS(file = file_ed)
-
-    emptydrops_out_df <- emptydrops_out %>%
+    edout <- emptydrops_out %>%
       as.data.frame() %>%
       rlang::set_names(~ paste0("emptyDrops_", .)) %>%
       tibble::rownames_to_column("barcode")
@@ -87,27 +86,25 @@ construct_scdata <- function(counts, sample, annot, config) {
     # adding emptydrops data to meta.data for later filtering (using left join)
     meta.data <- scdata@meta.data %>%
       tibble::rownames_to_column("barcode") %>%
-      dplyr::left_join(emptydrops_out_df)
+      dplyr::left_join(edout)
     rownames(meta.data) <- meta.data$barcode
 
-    message("\t \t Adding emptyDrops scores information...")
     scdata@meta.data <- meta.data
-    # previously (before joining into meta.data), results were just dumped as a additional slot
-    # leaving the code here in case bugs arise from above solution
-    # scdata@tools$CalculateEmptyDrops <- emptydrops_out
+
   } else {
-    # Later on, when creating the config file, the enable will look the value of flag_filtered to   deactivate the classifier filter
-    message("\t \t emptyDrops results not present, skipping...")
+    message("\temptyDrops results not present, skipping...")
     scdata@meta.data$emptyDrops_FDR <- NA
-    scdata@tools$flag_filtered <- TRUE
   }
 
-  if (!dir.exists("/output/rds_samples")) {
-    dir.create("/output/rds_samples")
-  }
+  return(scdata)
+}
 
-  message("[", sample, "] Saving R object...")
-  saveRDS(scdata, file = paste("/output/rds_samples/", sample, ".rds", sep = ""), compress = FALSE)
+# add scDblFinder result to SeuratObject
+add_dblscore <- function(scdata, score) {
+  message("\tAdding doublet scores...")
 
-  return(scdata@tools$flag_filtered)
+  idt <- scores$barcodes[scores$barcodes %in% rownames(scdata@meta.data)]
+  scdata@meta.data[idt, "doublet_scores"] <- scores[idt, "doublet_scores"]
+  scdata@meta.data[idt, "doublet_class"] <- scores[idt, "doublet_class"]
+  return(scdata)
 }
