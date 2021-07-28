@@ -12,7 +12,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   samples <- names(counts_list)
   scdata_list <- list()
   for (sample in samples) {
-    message("Converting into seurat object sample --> ", sample)
+    message("Creating SeuratObject for sample --> ", sample)
 
     scdata_list[[sample]] <- construct_scdata(
       counts = counts_list[[sample]],
@@ -23,9 +23,14 @@ create_seurat <- function(input, pipeline_config, prev_out) {
       config = config)
   }
 
-  message("Step 5 completed.")
 
-  return(list())
+  prev_out$scdata_list <- scdata_list
+  res <- list(
+    data = list(),
+    output = prev_out)
+
+  message("Step 5 completed.")
+  return(res)
 }
 
 # construct SeuratObject
