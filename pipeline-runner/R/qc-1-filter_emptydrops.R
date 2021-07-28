@@ -37,7 +37,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
       message("Classify is enabled: filtering with FDR=", FDR)
       meta <- scdata@meta.data
       # extract plotting data of original data to return to plot slot later
-      barcode_names_this_sample <- rownames(meta[meta$samples == sample_id, ])
+      barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
       if (length(barcode_names_this_sample) == 0) {
         return(list(data = scdata, config = config, plotData = list()))
       }
@@ -60,7 +60,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
         c("FDR" = x, "log_u" = y)
       }))
       # extract cell id that do not(!) belong to current sample (to not apply filter there)
-      barcode_names_non_sample <- rownames(meta[meta$samples != sample_id, ])
+      barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id]
       # all barcodes that match threshold in the subset data
       barcode_names_keep_current_sample <- colnames(sample_subset[, ed_fdr <= FDR])
       # combine the 2:

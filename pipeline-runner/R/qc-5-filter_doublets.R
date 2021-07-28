@@ -45,7 +45,7 @@ filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScore
   # Check whether the filter is set to true or false
   if (as.logical(toupper(config$enabled))) {
     # extract cells id that do not(!) belong to current sample (to not apply filter there)
-    barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id, ]
+    barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id]
     # all barcodes that match threshold in the subset data
     # treat NA doublet scores as defacto singlets
     doublet_scores <- sample_subset$doublet_scores

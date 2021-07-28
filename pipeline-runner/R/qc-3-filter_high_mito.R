@@ -46,7 +46,7 @@ filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondri
 
   if (as.logical(toupper(config$enabled))) {
     # extract cell id that do not(!) belong to current sample (to not apply filter there)
-    barcode_names_non_sample <- rownames(meta[-grep(tmp_sample, rownames(meta)), ])
+    barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id]
     # all barcodes that match threshold in the subset
     barcode_names_keep_current_sample <- colnames(sample_subset)[sample_subset$percent.mt <= maxFraction * 100]
     # combine the 2:
