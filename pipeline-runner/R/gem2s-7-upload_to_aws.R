@@ -13,37 +13,49 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   saveRDS(input, '/debug/input.rds')
   saveRDS(config, '/debug/config.rds')
 
-  message("\tConstructing cell sets ...")
+  message("Constructing cell sets ...")
   cell_sets <- get_cell_sets(scdata, input)
 
   # cell sets file to s3
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
 
   put_object_in_s3(pipeline_config,
-    bucket = pipeline_config$cell_sets_bucket,
-    object = charToRaw(cell_sets_data),
-    key = experiment_id
+                   bucket = pipeline_config$cell_sets_bucket,
+                   object = charToRaw(cell_sets_data),
+                   key = experiment_id
   )
 
   # seurat object to s3
-  message("\tUploading Seurat Object to S3 ...")
+  message("Uploading Seurat Object to S3 ...")
   fpath <- file.path(tempdir(), 'experiment.rds')
   saveRDS(scdata, fpath)
 
   put_object_in_s3_multipart(pipeline_config,
-    bucket = pipeline_config$source_bucket,
-    object = fpath,
-    key = file.path(experiment_id, "r.rds")
+                             bucket = pipeline_config$source_bucket,
+                             object = fpath,
+                             key = file.path(experiment_id, "r.rds")
   )
 
   cluster_env <- pipeline_config$cluster_env
 
-  data <- list(
-    item = experiment_data,
-    table = pipeline_config$experiments_table
+  experiment_data <- list(
+    apiVersion = "2.0.0-data-ingest-seurat-rds-automated",
+    experimentId = experiment_id,
+    experimentName = config$name,
+    meta = list(
+      organism = config$organism,
+      type = config$input[["type"]]
+    ),
+    processingConfig = config_dataProcessing
   )
 
-  return(data)
+  res <- list(
+    data = list(
+      item = experiment_data,
+      table = pipeline_config$experiments_table),
+    output = list())
+
+  return(res)
 }
 
 # creates initial cell sets object
@@ -68,7 +80,7 @@ get_cell_sets <- function(scdata, input) {
   cell_sets <- c(list(scratchpad), list(samples_set))
 
   # TODO: refactor meta_sets
-  if ("metadata" %in% names(config)) {
+  if ("metadata" %in% names(input)) {
     cell_sets <- c(cell_sets, meta_sets(output_dir, color_pool))
   }
 

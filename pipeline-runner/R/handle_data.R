@@ -163,7 +163,7 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
 }
 
 put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
-  print(sprintf("\tPutting %s in %s", key, bucket))
+  message(sprintf("Putting %s in %s", key, bucket))
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
   s3$put_object(
@@ -180,7 +180,7 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
 #' @param bucket The name of the S3 bucket to be uploaded to, e.g. `my-bucket`.
 #' @param key The name to assign to the file in the S3 bucket, e.g. `path/to/file`.
 put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
-  print(sprintf("Putting %s in %s from object %s", key, bucket, object))
+  message(sprintf("Putting %s in %s from object %s", key, bucket, object))
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
 

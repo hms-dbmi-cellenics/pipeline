@@ -16,7 +16,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 
   scores <- list()
   for (sample in samples) {
-    message("\tSample --> ", sample, "...")
+    message("Sample --> ", sample, "...")
     scores[[sample]] <- compute_doublet_scores(counts_list[[sample]])
   }
 
@@ -25,7 +25,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = prev_out)
 
-  message("\tStep 4 completed.")
+  message("Step 4 completed.")
   return(res)
 }
 

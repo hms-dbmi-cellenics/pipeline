@@ -19,14 +19,14 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   edrops <- prev_out$edrops
   samples <- names(scdata_list)
 
-  message("\tMerging Seurat Objects...")
+  message("Merging Seurat Objects...")
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
     scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
   }
 
-  message("\tDeduplicating gene annotations...")
+  message("Deduplicating gene annotations...")
   annot <- prev_out$annot
 
   # add ENSEMBL ID for genes that are duplicated (geneNameDuplicated-ENSEMBL)
@@ -42,18 +42,18 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   scdata@misc[["gene_annotations"]] <- annot
 
-  message("\tStoring cells id...")
+  message("Storing cells id...")
   # Keeping old version of ids starting from 0
   scdata$cells_id <- 0:(ncol(scdata) - 1)
 
-  message("\tStoring color pool...")
+  message("Storing color pool...")
   # We store the color pool in a slot in order to be able to access it during configureEmbedding
   scdata@misc[["color_pool"]] <- get_color_pool()
   scdata@misc[["experimentId"]] <- input$experimentId
   scdata@misc[["ingestionDate"]] <- Sys.time()
 
   # construct default QC config and update prev out
-  message("\tConstructing default QC configuration...")
+  message("Constructing default QC configuration...")
   any_filtered <- !(length(edrops) == length(samples))
   prev_out$scdata <- scdata
   prev_out$qc_config <- construct_qc_config(scdata, any_filtered)
@@ -62,7 +62,7 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = prev_out)
 
-  message("\tStep 6 completed.")
+  message("Step 6 completed.")
   return(res)
 }
 

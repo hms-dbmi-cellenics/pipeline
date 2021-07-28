@@ -9,7 +9,7 @@
 #'
 create_seurat <- function(input, pipeline_config, prev_out) {
   message("Creating Seurat Objects...")
-  message("\titems in prev_out: ", paste(names(prev_out), collapse = ' - '))
+  message("items in prev_out: ", paste(names(prev_out), collapse = ' - '))
 
   # destructure previous output
   list2env(prev_out, envir = environment())
@@ -17,7 +17,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   samples <- names(counts_list)
   scdata_list <- list()
   for (sample in samples) {
-    message("\tCreating SeuratObject for sample --> ", sample)
+    message("Creating SeuratObject for sample --> ", sample)
 
     scdata_list[[sample]] <- construct_scdata(
       counts = counts_list[[sample]],
@@ -52,7 +52,7 @@ construct_scdata <- function(counts, doublet_score, edout, sample, annot, config
 
 # construct metadata for each SeuratObject
 construct_metadata <- function(counts, sample, config) {
-  message("\tConstructing metadata df...")
+  message("Constructing metadata df...")
   metadata <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
 
   # Add "metadata" if exists in config
@@ -69,7 +69,7 @@ construct_metadata <- function(counts, sample, config) {
 add_mito <- function(scdata, annot) {
 
   if (any(grepl("^mt-", annot$name, ignore.case = TRUE))) {
-    message("\tAdding MT information...")
+    message("Adding MT information...")
     mt.features <- annot$input[grep("^mt-", annot$name, ignore.case = TRUE)]
     mt.features <- mt.features[mt.features %in% rownames(scdata)]
     if (length(mt.features)) {
@@ -87,7 +87,7 @@ add_edrops <- function(scdata, edout) {
   scdata@tools$flag_filtered <- is.null(edout)
 
   if (!scdata@tools$flag_filtered) {
-    message("\tAdding emptyDrops scores...")
+    message("Adding emptyDrops scores...")
 
     edout <- emptydrops_out %>%
       as.data.frame() %>%
@@ -103,7 +103,7 @@ add_edrops <- function(scdata, edout) {
     scdata@meta.data <- meta.data
 
   } else {
-    message("\temptyDrops results not present, skipping...")
+    message("emptyDrops results not present, skipping...")
     scdata@meta.data$emptyDrops_FDR <- NA
   }
 
@@ -112,10 +112,10 @@ add_edrops <- function(scdata, edout) {
 
 # add scDblFinder result to SeuratObject
 add_dblscore <- function(scdata, score) {
-  message("\tAdding doublet scores...")
+  message("Adding doublet scores...")
 
-  idt <- scores$barcodes[scores$barcodes %in% rownames(scdata@meta.data)]
-  scdata@meta.data[idt, "doublet_scores"] <- scores[idt, "doublet_scores"]
-  scdata@meta.data[idt, "doublet_class"] <- scores[idt, "doublet_class"]
+  idt <- score$barcodes[score$barcodes %in% rownames(scdata@meta.data)]
+  scdata@meta.data[idt, "doublet_scores"] <- score[idt, "doublet_scores"]
+  scdata@meta.data[idt, "doublet_class"] <- score[idt, "doublet_class"]
   return(scdata)
 }

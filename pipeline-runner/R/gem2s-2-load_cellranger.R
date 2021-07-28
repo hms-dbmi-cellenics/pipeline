@@ -21,7 +21,7 @@ load_cellranger <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = output)
 
-  message("\tStep 2 completed.")
+  message("Step 2 completed.")
   return(res)
 }
 
@@ -45,13 +45,13 @@ call_read10x <- function(config) {
     sample_fpaths <- list.files(sample_dir, full.names = TRUE)
     annot_fpath <- file.path(sample_dir, 'features.tsv.gz')
 
-    message("\tReading files --> ", paste(sample_fpaths, collapse = ' - '))
+    message("Reading files --> ", paste(sample_fpaths, collapse = ' - '))
 
     counts <- Seurat::Read10X(sample_dir, gene.column = 1)
     annot <- read.delim(annot_fpath, header = FALSE)
 
     message(
-      sprintf("\tSample %s has %s genes and %s droplets.", sample, nrow(counts), ncol(counts))
+      sprintf("Sample %s has %s genes and %s droplets.", sample, nrow(counts), ncol(counts))
     )
 
     counts_list[[sample]] <- counts

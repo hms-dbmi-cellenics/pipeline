@@ -132,11 +132,11 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
     task <- tasks[[task_name]]
 
     tstart <- Sys.time()
-    data <- task(input, pipeline_config, prev_out)
+    res <- task(input, pipeline_config, prev_out)
     ttask <- format(Sys.time()-tstart, digits = 2)
     message("⏱️ Time to complete ", task_name, ": ", ttask)
 
-    return(data)
+    return(res)
 }
 
 call_gem2s <- function(task_name, input, pipeline_config) {
@@ -257,7 +257,6 @@ init <- function() {
 
         tryCatch(
             withErrorTracing({
-                message("Input ", input, " found")
                 wrapper(input)
 
                 message('Send task success')
