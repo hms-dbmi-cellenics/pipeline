@@ -10,8 +10,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   config <- prev_out$config
   config_dataProcessing <- prev_out$qc_config
 
-  saveRDS(input, '/debug/input.rds')
-  saveRDS(config, '/debug/config.rds')
 
   message("Constructing cell sets ...")
   cell_sets <- get_cell_sets(scdata, input)
@@ -28,7 +26,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   # seurat object to s3
   message("Uploading Seurat Object to S3 ...")
   fpath <- file.path(tempdir(), 'experiment.rds')
-  saveRDS(scdata, fpath)
+  saveRDS(scdata, fpath, compress = FALSE)
 
   put_object_in_s3_multipart(pipeline_config,
                              bucket = pipeline_config$source_bucket,
@@ -44,7 +42,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     experimentName = config$name,
     meta = list(
       organism = config$organism,
-      type = config$input[["type"]]
+      type = config$input$type
     ),
     processingConfig = config_dataProcessing
   )
@@ -110,7 +108,7 @@ samples_sets <- function(input, scdata, color_pool) {
       key = paste0(sample),
       name = toString(input$sampleNames[[match(sample, input$sampleIds)]]),
       color = color_pool[i],
-      cellIds = cell_ids
+      cellIds = unname(cell_ids)
     )
   }
 

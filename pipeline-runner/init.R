@@ -128,7 +128,6 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
     )
 
     if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
-    message("Starting task: ", task_name)
     task <- tasks[[task_name]]
 
     tstart <- Sys.time()
@@ -215,11 +214,12 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 wrapper <- function(input_json) {
     # Get data from state machine input.
     input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
-
+    task_name <- input$taskName
+    message("------\nStarting task: ", task_name, '\n')
+    message("Input:")
     str(input)
 
     # common to gem2s and data processing
-    task_name <- input$taskName
     server <- input$server
     input <- input[names(input) != "server"]
     pipeline_config <- load_config(server)
@@ -259,7 +259,7 @@ init <- function() {
             withErrorTracing({
                 wrapper(input)
 
-                message('Send task success')
+                message('Send task success\n------\n')
                 states$send_task_success(
                     taskToken = taskToken,
                     output = "{}"
