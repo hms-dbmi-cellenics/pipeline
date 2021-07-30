@@ -147,7 +147,7 @@ construct_qc_config <- function(scdata, any_filtered) {
     dimensionalityReduction = list(
       method = "rpca",
       numPCs = 30,
-      excludeGeneCategories = c()))
+      excludeGeneCategories = list()))
 
 
   # embedding
