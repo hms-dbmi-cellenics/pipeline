@@ -40,6 +40,7 @@ prepare_experiment <- function(input, pipeline_config) {
   # Keep original name in 'original_name' variable
   annotations$original_name <- gname
   is.dup <- duplicated(gname) | duplicated(gname, fromLast = TRUE)
+  annotations$input <- gsub('_', '-', annotations$input)
   annotations$name[is.dup] <- paste(gname[is.dup], annotations$input[is.dup], sep = " - ")
 
   # Ensure index by rownames in scdata
