@@ -114,9 +114,7 @@ call_read10x <- function(config) {
     annotation_features_df <- annotation_features_df[, c(1, 2)]
     colnames(annotation_features_df) <- c("input", "name")
     write.table(annotation_features_df, "/output/features_annotations.tsv", sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
-  }
-
-  if (data_type == "table") {
+  }else if (data_type == "table") {
     stop("data_type of table not yet implemented")
 
     message("Loading table-type data set from ", path)
@@ -127,6 +125,8 @@ call_read10x <- function(config) {
         ncol(scdata$raw[[sample]]), " cells in sample ", sample, "."
       )
     }
+  }else{
+    stop("Undefined data_type. Check the input type parameter.")
   }
 
   return(scdata)
