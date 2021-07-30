@@ -61,7 +61,7 @@ get_cell_sets <- function(scdata, input) {
 
   scratchpad <- list(
     key = "scratchpad",
-    name = "Scratchpad",
+    name = "Custom cell sets",
     rootNode = TRUE,
     children = list(),
     type = "cellSets"
