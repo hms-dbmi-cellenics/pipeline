@@ -40,7 +40,7 @@ download_cellranger <- function(input, pipeline_config) {
     name = input$experimentName,
     samples = input$sampleIds,
     organism = input$organism,
-    input = list(type = input$input$type)
+    input = list(type = "10x")
   )
 
   if ("metadata" %in% names(input)) {
