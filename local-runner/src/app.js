@@ -17,8 +17,16 @@ const isPipelineContainer = (name) => name.includes('qc') || name.includes('gem2
 const setVarsInTemplate = (template) => {
   const varNames = ['DEBUG_STEP', 'DEBUG_PATH', 'HOST_IP', 'WORKER_DIR'];
   for (let ii = 0; ii < varNames.length; ii += 1) {
-    const value = process.env[varNames[ii]] || '';
-    const replace = `__${varNames[ii]}__`;
+    const varName = varNames[ii];
+    let value = process.env[varName] || '';
+
+    if (varName === 'WORKER_DIR' && value === '') {
+      console.log('WORKER_DIR not set. Assumming worker and pipeline repos in same folder.');
+      console.log('WORKER_DIR defaulting to ../../worker/data.');
+      value = '../../worker/data';
+    }
+
+    const replace = `__${varName}__`;
     const re = new RegExp(replace, 'g');
     // eslint-disable-next-line no-param-reassign
     template = template.replace(re, value);
