@@ -52,7 +52,7 @@ check_10x_input <- function(samples) {
 #' @return list with an element per sample with dgCMatrix with genes as rows and cells as column
 #'
 call_read10x <- function(config) {
-  data_type <- config$input["type"]
+  data_type <- "10x"
   scdata <- list()
 
   # Check config format. It requires to have a 'samples' key. For the multisample experiment, it needs to be the same
