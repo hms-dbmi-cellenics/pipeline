@@ -50,7 +50,7 @@ upload_to_aws <- function(input, pipeline_config) {
     experimentName = config$name,
     meta = list(
       organism = config$organism,
-      type = config$input[["type"]]
+      type = "10x"
     ),
     processingConfig = config_dataProcessing
   )
