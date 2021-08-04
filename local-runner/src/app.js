@@ -22,8 +22,14 @@ const setVarsInTemplate = (template) => {
 
     if (varName === 'WORKER_DIR' && value === '') {
       console.log('WORKER_DIR not set. Assumming worker and pipeline repos in same folder.');
-      console.log('WORKER_DIR defaulting to ../../worker/data.');
-      value = '../../worker/data';
+
+      // remove last two levels starting from local-runner directory
+      let basedir = process.env.LOCAL_DIR;
+      basedir = basedir.substring(0, basedir.lastIndexOf('/'));
+      basedir = basedir.substring(0, basedir.lastIndexOf('/'));
+
+      value = `${basedir}/worker/data`;
+      console.log(`WORKER_DIR defaulting to ${value}.`);
     }
 
     const replace = `__${varName}__`;

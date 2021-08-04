@@ -40,12 +40,11 @@ Waiting for Docker events...
 
 Logs from pipelines run through the API will apear here.
 
-If your `worker/` and `pipeline/` repos are not in the same folder, you need to export `WORKER_DIR` with the path from `pipeline/local-runner` to
+If your `worker/` and `pipeline/` repos are not in the same folder, you need to export `WORKER_DIR` with the absolute path to
 `worker/data` so that the pipeline can save the Seurat object and experiment id file into the worker:
 
 ```
-# e.g. if worker/ if one folder up from pipeline/
-WORKER_DIR=../../../worker/data make run
+WORKER_DIR=/path/to/worker/data make run
 ```
 
 ## Rebuiling the docker images
