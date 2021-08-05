@@ -184,11 +184,6 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message("Single-cell data loaded.")
     }
 
-    # update and upload cellSets
-    if (upload_cell_sets) {
-        message('Uploading cell sets to S3')
-        update_cell_sets(scdata, experiment_id, pipeline_config, overwrite_scratchpad = FALSE)
-    }
 
     # call function to run and update global variable
     c(
