@@ -131,11 +131,11 @@ jobs:
         run: |-
           ci_env=`bash <(curl -s https://codecov.io/env)`
           docker run $ci_env -e CI=true --entrypoint /bin/bash -v $(pwd):/app $IMAGE_NAME
-           | # exec tests
-           | R -e 'covr::codecov("/app")'
-           | # Your Codecov Uploader approach here
-           | # See more at https://docs.codecov.com/docs/codecov-uploader
-           | ./codecov
+          | # exec tests
+          | R -e 'covr::codecov("/app")'
+          | # Your Codecov Uploader approach here
+          | # See more at https://docs.codecov.com/docs/codecov-uploader
+          | ./codecov
 
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
