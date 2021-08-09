@@ -1487,13 +1487,6 @@
       "Repository": "CRAN",
       "Hash": "7243004a708d06d4716717fa1ff5b2fe"
     },
-    "tryCatchLog": {
-      "Package": "tryCatchLog",
-      "Version": "1.2.4",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "40927bf0c3ca3b93ac7974ebe97c25aa"
-    },
     "utf8": {
       "Package": "utf8",
       "Version": "1.2.1",
