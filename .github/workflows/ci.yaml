@@ -130,11 +130,10 @@ jobs:
         name: Generate codecov report
         run: |-
           ci_env=`bash <(curl -s https://codecov.io/env)`
-          docker run $ci_env -e CI=true $IMAGE_NAME bash
+          docker run $ci_env -e CI=true --entrypoint /bin/bash -v $(pwd):/app $IMAGE_NAME
            |----- inside docker container
            | # exec tests
-           | R -e 'install.packages("covr")'
-           | R -e 'covr::codecov()'
+           | R -e 'covr::codecov("/app")'
            | # Your Codecov Uploader approach here
            | # See more at https://docs.codecov.com/docs/codecov-uploader
            | ./codecov
