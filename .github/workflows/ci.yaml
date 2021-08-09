@@ -125,6 +125,22 @@ jobs:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
           GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
+
+      - id: codecov
+        name: Generate codecov report
+        run: |-
+          ci_env=`bash <(curl -s https://codecov.io/env)`
+          docker run $ci_env -e CI=true ...
+           |----- inside docker container
+           | # exec tests
+           | R -e 'install.packages("covr")'
+           | R -e 'covr::codecov()'
+           | # Your Codecov Uploader approach here
+           | # See more at https://docs.codecov.com/docs/codecov-uploader
+           | ./codecov
+       env:
+         IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+
       - id: push
         name: Push docker images to ECR
         run: |-
