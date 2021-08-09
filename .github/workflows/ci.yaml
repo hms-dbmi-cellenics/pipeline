@@ -139,9 +139,8 @@ jobs:
            | # See more at https://docs.codecov.com/docs/codecov-uploader
            | ./codecov
 
-          cat hello
-       env:
-         IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
 
       - id: push
         name: Push docker images to ECR
