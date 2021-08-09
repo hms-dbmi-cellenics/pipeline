@@ -195,22 +195,12 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # upload plot data result to S3
     tstart <- Sys.time()
 
-    plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
-
-    # move scdata to worker (direct for dev only)
-    if (upload_count_matrix & pipeline_config$cluster_env != 'development') {
+    # Upload count matrix data
+    if(upload_count_matrix) {
         object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
         message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
-
-    } 
-
-    if (upload_count_matrix & pipeline_config$cluster_env == 'development') {
-        expid_path <- file.path('/worker/data', experiment_id)
-        dir.create(expid_path, showWarnings = FALSE)
-        saveRDS(scdata, file.path(expid_path, 'r.rds'))
-        saveRDS(experiment_id, '/worker/data/current_expid.rds')
     }
-
+    
     # send result to API
     message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
     ttask <- format(Sys.time()-tstart, digits = 2)
