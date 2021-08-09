@@ -131,7 +131,6 @@ jobs:
         run: |-
           ci_env=`bash <(curl -s https://codecov.io/env)`
           docker run $ci_env -e CI=true --entrypoint /bin/bash -v $(pwd):/app $IMAGE_NAME
-           |----- inside docker container
            | # exec tests
            | R -e 'covr::codecov("/app")'
            | # Your Codecov Uploader approach here
