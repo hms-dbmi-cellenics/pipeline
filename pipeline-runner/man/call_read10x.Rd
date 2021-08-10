@@ -9,9 +9,6 @@ call_read10x(config)
 \arguments{
 \item{config}{experiment settings.}
 }
-\value{
-list with an element per sample with dgCMatrix with genes as rows and cells as column
-}
 \description{
 Cellranger outputs from V2 and V3 kits were renamed to look like V3 (features.tsv.gz).
 }
