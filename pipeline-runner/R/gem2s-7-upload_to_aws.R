@@ -20,7 +20,7 @@ upload_to_aws <- function(input, pipeline_config) {
   # Design cell_set scratchpad for DynamoDB
   scratchpad <- list(
     key = "scratchpad",
-    name = "Scratchpad",
+    name = "Custom cell sets",
     rootNode = TRUE,
     children = list(),
     type = "cellSets"
