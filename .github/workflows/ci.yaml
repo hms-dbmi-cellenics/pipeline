@@ -129,14 +129,20 @@ jobs:
       - id: codecov
         name: Generate codecov report
         run: |-
-          ci_env=`bash <(curl -s https://codecov.io/env)`
+          # ci_env=`bash <(curl -s https://codecov.io/env)`
           docker run $ci_env -e CI=true \
             --entrypoint /bin/bash \
-            -v $(pwd)/../:/app $IMAGE_NAME \
-            -c "ln -s /app/.git . && R -e 'covr::codecov(\"/app/pipeline-runner\")'"
+            -v $(pwd):/app $IMAGE_NAME \
+            -c "R -e 'cov <- covr::package_coverage(\"/app\"); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
 
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+
+      - id: upload-coverage
+        name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
 
       - id: push
         name: Push docker images to ECR
