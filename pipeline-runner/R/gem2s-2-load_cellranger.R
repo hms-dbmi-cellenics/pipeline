@@ -36,16 +36,16 @@ call_read10x <- function(config) {
   annot_list <- list()
 
   samples <- config$samples
-  message("Samples to include in the analysis: ", paste(samples, collapse = " - "))
+  message("Samples to include in the analysis:\n- ", paste(samples, collapse = "\n- "))
   message("Loading 10x data set from input folder.")
 
 
   for (sample in samples) {
     sample_dir <- file.path("/input", sample)
-    sample_fpaths <- list.files(sample_dir, full.names = TRUE)
+    sample_fpaths <- list.files(sample_dir)
     annot_fpath <- file.path(sample_dir, 'features.tsv.gz')
 
-    message("Reading files --> ", paste(sample_fpaths, collapse = ' - '))
+    message("Reading files from ", sample_dir, ' ---> ', paste(sample_fpaths, collapse = ' - '))
 
     counts <- Seurat::Read10X(sample_dir, gene.column = 1)
     annot <- read.delim(annot_fpath, header = FALSE)

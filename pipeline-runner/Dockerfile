@@ -32,7 +32,7 @@ RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(l
 
 # use renv::snapshot() while R dependency updates are quick to build
 COPY renv.lock .
-RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
+RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock', clean = TRUE)"
 
 
 # ---------------------------------------------------

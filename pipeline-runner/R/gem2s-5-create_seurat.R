@@ -8,6 +8,7 @@
 #' @export
 #'
 create_seurat <- function(input, pipeline_config, prev_out) {
+
   message("Creating Seurat Objects...")
   message("items in prev_out: ", paste(names(prev_out), collapse = ' - '))
 
@@ -39,10 +40,16 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 }
 
 # construct SeuratObject
-construct_scdata <- function(counts, doublet_score, edout, sample, annot, config) {
+construct_scdata <- function(counts, doublet_score, edout, sample, annot, config, min.cells = 3, min.features = 10) {
 
   metadata <- construct_metadata(counts, sample, config)
-  scdata <- Seurat::CreateSeuratObject(counts, meta.data = metadata, project = config$name)
+  scdata <- Seurat::CreateSeuratObject(
+    counts,
+    meta.data = metadata,
+    project = config$name,
+    min.cells = min.cells,
+    min.features = min.features)
+
   scdata <- add_mito(scdata, annot)
   scdata <- add_dblscore(scdata, doublet_score)
   scdata <- add_edrops(scdata, edout)
