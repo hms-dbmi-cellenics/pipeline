@@ -89,7 +89,7 @@ add_edrops <- function(scdata, edout) {
   if (!scdata@tools$flag_filtered) {
     message("Adding emptyDrops scores...")
 
-    edout <- emptydrops_out %>%
+    edout <- edout %>%
       as.data.frame() %>%
       rlang::set_names(~ paste0("emptyDrops_", .)) %>%
       tibble::rownames_to_column("barcode")
