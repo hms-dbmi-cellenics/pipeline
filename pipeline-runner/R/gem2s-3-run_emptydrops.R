@@ -34,7 +34,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
 #' @param counts dgCMatrix with counts for one sample.
 compute_emptydrops <- function(counts) {
   # check if filtered
-  nempty <- sum(colSums(counts) < 100)
+  nempty <- sum(Matrix::colSums(counts) < 100)
 
   if (nempty < 50) {
     message("Detected sample as filtered --> Skipping emptyDrops.")
