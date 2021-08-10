@@ -20,6 +20,8 @@ mock_scdata <- function() {
   # add samples
   scdata$samples <- rep(c("123abc", "123def"), each = 40)
   scdata <- Seurat::RenameCells(scdata, paste(scdata$samples, colnames(scdata), sep = ""))
+
+  scdata$emptyDrops_FDR <- NA
   return(scdata)
 }
 

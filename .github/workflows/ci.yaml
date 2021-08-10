@@ -125,6 +125,24 @@ jobs:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
           GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
+
+      - id: codecov
+        name: Generate codecov report
+        run: |-
+          docker run \
+            --entrypoint /bin/bash \
+            -v $(pwd):/app $IMAGE_NAME \
+            -c "R -e 'cov <- covr::package_coverage(\"/app\"); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
+
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+
+      - id: upload-coverage
+        name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./pipeline-runner/coverage.xml
+
       - id: push
         name: Push docker images to ECR
         run: |-
