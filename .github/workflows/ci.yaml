@@ -132,7 +132,7 @@ jobs:
           ci_env=`bash <(curl -s https://codecov.io/env)`
           docker run $ci_env -e CI=true \
             --entrypoint /bin/bash \
-            -v $(pwd):/app $IMAGE_NAME \
+            -v $(pwd)/../:/app $IMAGE_NAME \
             -c "ln -s /app/.git . && R -e 'covr::codecov(\"/app/pipeline-runner\")'"
 
         env:
