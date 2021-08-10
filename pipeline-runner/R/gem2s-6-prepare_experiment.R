@@ -34,10 +34,10 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   gname <- annot$name
   annot$original_name <- gname
   is.dup <- duplicated(gname) | duplicated(gname, fromLast = TRUE)
-  
-  #We need to convert the gene inputs from _ to - bc when we create the Seurat object we do this, and the match would return NA values if any of the inputs still has _. 
-  annotations$input <- gsub('_', '-', annotations$input)
-  annotations$name[is.dup] <- paste(gname[is.dup], annotations$input[is.dup], sep = " - ")
+
+  #We need to convert the gene inputs from _ to - bc when we create the Seurat object we do this, and the match would return NA values if any of the inputs still has _.
+  annot$input <- gsub('_', '-', annot$input)
+  annot$name[is.dup] <- paste(gname[is.dup], annot$input[is.dup], sep = " - ")
 
   # Ensure index by rownames in scdata
   annot <- annot[match(rownames(scdata), annot$input), ]
