@@ -11,13 +11,23 @@
 score_doublets <- function(input, pipeline_config, prev_out) {
   message("Calculating probability of droplets being doublets...")
 
+  edrops_list <- prev_out$edrops
   counts_list <- prev_out$counts_list
   samples <- names(counts_list)
 
   scores <- list()
   for (sample in samples) {
     message("Sample --> ", sample, "...")
-    scores[[sample]] <- compute_doublet_scores(counts_list[[sample]])
+    counts <- counts_list[[sample]]
+    edrops <- edrops_list[[sample]]
+
+    # scDblFinder expects empty droplets to be removed
+    if (!is.null(edrops)) {
+      keep <- which(edrops$FDR <= 0.001)
+      counts <- counts[, keep]
+    }
+
+    scores[[sample]] <- compute_doublet_scores(counts)
   }
 
   prev_out$doublet_scores <- scores

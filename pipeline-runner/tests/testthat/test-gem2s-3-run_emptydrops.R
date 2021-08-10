@@ -20,8 +20,12 @@ test_that("run_emptydrops is skipped when dataset is pre-filtered", {
 
 test_that("run_emptydrops runs when not pre-filtered", {
     counts <- mock_counts()
-    prev_out <- list(counts_list = list(sample1=counts))
+    prev_out <- list(counts_list = list(sample1=counts, sample2=counts))
     out <- run_emptydrops(NULL, NULL, prev_out)$output
+
+    # names of stored things are right
+    expect_named(out, c('counts_list', 'edrops'))
+    expect_named(out$edrops, c('sample1', 'sample2'))
 
     # emptyDrops stores something
     expect_s4_class(out$edrops$sample1, 'DFrame')
