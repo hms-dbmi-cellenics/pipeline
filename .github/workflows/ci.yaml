@@ -206,7 +206,7 @@ jobs:
           if [ "${{ matrix.environment }}" = "production" ]; then
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
-            KUBERNETES_ENV="staging"
+            KUBERNETES_ENV="production"
 
             SHORT_TAG_REF=${REF_DASHED/refs-tags-/}
             IMAGE_GLOB="glob:${IMAGE_TAG/$SHORT_TAG_REF/*}"
