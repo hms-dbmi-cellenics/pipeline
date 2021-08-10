@@ -12,6 +12,7 @@
 #'                                  - maxFraction: Float. maximun pct MT-content that we considere for a alive cell
 #'                                  - binStep: Float. Bin size for the histogram
 #'                          * we are supposed to add more methods ....
+#' @import data.table
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
