@@ -79,7 +79,7 @@ get_cell_sets <- function(scdata, input) {
 
   # TODO: refactor meta_sets
   if ("metadata" %in% names(input)) {
-    cell_sets <- c(cell_sets, meta_sets(output_dir, color_pool))
+    cell_sets <- c(cell_sets, meta_sets(input, scdata, color_pool))
   }
 
   cell_sets <- list(cellSets = cell_sets)
@@ -87,7 +87,6 @@ get_cell_sets <- function(scdata, input) {
 
 # cell_sets fn for seurat samples information
 samples_sets <- function(input, scdata, color_pool) {
-
 
   cell_set <- list(
     key = "sample",
@@ -97,16 +96,18 @@ samples_sets <- function(input, scdata, color_pool) {
     type = "metadataCategorical"
   )
 
-  cell_sample <- scdata$samples
-  samples <- unique(cell_sample)
+  cells_sample <- scdata$samples
+  sample_ids <- unlist(input$sampleIds)
+  sample_names <- unlist(input$sampleNames)
 
-  for (i in seq_along(samples)) {
-    sample <- samples[i]
-    cell_ids <- scdata$cells_id[cell_sample == sample]
+  for (i in seq_along(sample_ids)) {
+    sample_id <- sample_ids[i]
+    sample_name <- sample_names[i]
+    cell_ids <- scdata$cells_id[cells_sample == sample_id]
 
     cell_set$children[[i]] <- list(
-      key = paste0(sample),
-      name = toString(input$sampleNames[[match(sample, input$sampleIds)]]),
+      key = sample_id,
+      name = sample_name,
       color = color_pool[i],
       cellIds = unname(cell_ids)
     )
@@ -117,14 +118,14 @@ samples_sets <- function(input, scdata, color_pool) {
 
 
 # cell_sets fn for seurat metadata information
-meta_sets <- function(output_dir, color_pool) {
-  meta_annotations <- read.csv(file.path(output_dir, "metadata-cells.csv"), sep = "\t")
-
+meta_sets <- function(input, scdata, color_pool) {
   cell_set_list <- c()
+  meta <- lapply(input$metadata, unlist)
 
-  # The first column is the cells_id, the rest is the metadata information
-  for (i in seq(2, ncol(meta_annotations))) {
-    key <- name <- toString(colnames(meta_annotations)[i])
+  # names of metadata tracks
+  vars <- names(meta)
+  for (i in seq_along(vars)) {
+    key <- name <- vars[i]
 
     cell_set <- list(
       "key" = key,
@@ -134,18 +135,17 @@ meta_sets <- function(output_dir, color_pool) {
       "type" = "metadataCategorical"
     )
 
-    annot <- meta_annotations[[i]]
-    values <- unique(annot)
-
+    # values of current metadata track
+    values <- unique(meta[[i]])
     for (i in seq_along(values)) {
-      value <- toString(values[i])
-      view <- meta_annotations[which(annot == value), "cells_id"]
+      value <- values[i]
+      cell_ids <- scdata$cells_id[scdata[[var]] == value]
 
       cell_set$children[[i]] <- list(
         "key" = paste(key, value, sep = "-"),
         "name" = value,
         "color" = color_pool[i],
-        "cellIds" = view
+        "cellIds" = cell_ids
       )
     }
     cell_set_list <- c(cell_set_list, list(cell_set))
