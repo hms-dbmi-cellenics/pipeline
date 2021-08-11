@@ -63,10 +63,11 @@ construct_metadata <- function(counts, sample, config) {
   metadata <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
 
   # Add "metadata" if exists in config
-  if ("metadata" %in% names(config)) {
-    rest_metadata <- as.data.frame(config$metadata)
-    rest_metadata <- rest_metadata[match(metadata$samples, config$samples),, drop = FALSE]
-    metadata <- cbind(metadata, rest_metadata)
+  rest <- config$metadata
+  if (!is.null(rest)) {
+    rest <- lapply(rest, unlist)
+    rest <- data.frame(rest, row.names = config$sampleIds)
+    metadata[names(rest)] <- rest[sample, ]
   }
 
   return(metadata)
