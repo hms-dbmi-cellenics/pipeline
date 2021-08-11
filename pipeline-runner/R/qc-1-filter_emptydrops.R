@@ -18,10 +18,10 @@
 #'
 filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier', num_cells_to_downsample = 6000) {
 
-  before <- calc_filter_stats(scdata, sample_id)
+  # default if not filtered
+  scdata.filtered <- scdata
 
   FDR <- config$filterSettings$FDR
-
   if (isTRUE(config$auto)) {
     FDR <- generate_default_values_classifier(scdata, config)
   }
@@ -30,18 +30,22 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
   guidata <- list()
 
   if (config$enabled) {
+
     # check if filter data is actually available
     if (is.null(scdata@meta.data$emptyDrops_FDR)) {
       message("Classify is enabled but has no classify data available: will dissable it: no filtering!")
       config$enabled <- FALSE
+
     } else {
       message("Classify is enabled: filtering with FDR=", FDR)
       meta <- scdata@meta.data
+
       # extract plotting data of original data to return to plot slot later
       barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
       if (length(barcode_names_this_sample) == 0) {
         return(list(data = scdata, config = config, plotData = list()))
       }
+
       sample_subset <- subset(scdata, cells = barcode_names_this_sample)
       message("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval)")
       print(table(meta$samples, cut(meta$emptyDrops_FDR, breaks = c(-Inf, 0, 0.0001, 0.01, 0.1, 0.5, 1, Inf)), useNA = "ifany"))
@@ -66,7 +70,7 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
       barcode_names_keep_current_sample <- colnames(sample_subset[, ed_fdr <= FDR])
       # combine the 2:
       barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-      scdata <- subset_safe(scdata, barcodes_to_keep)
+      scdata.filtered <- subset_safe(scdata, barcodes_to_keep)
       # update config
       config$filterSettings$FDR <- FDR
 
@@ -95,14 +99,14 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
 
   # get filter stats after filtering
   filter_stats <- list(
-    before = before,
-    after = calc_filter_stats(scdata, sample_id)
+    before = calc_filter_stats(scdata, sample_id),
+    after = calc_filter_stats(scdata.filtered, sample_id)
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats
 
   result <- list(
-    data = scdata,
+    data = scdata.filtered,
     config = config,
     plotData = guidata
   )
