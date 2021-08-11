@@ -70,7 +70,9 @@ commit the changes to the lockfile (used to install dependencies in the Dockerfi
 ## Debugging locally
 
 **TLDR**: save something inside `/debug` in a data processing or gem2s step to
- access it later from `$(pwd)/debug`.
+ access it later from `./local-runner/debug`.
+
+ **TLDR2**: if the pipeline throws an error, `tryCatchLog` will save a [dump file](https://github.com/aryoda/tryCatchLog#how-do-i-perform-a-post-mortem-analysis-of-my-crashed-r-script) in  `./local-runner/debug` that can be used for inspecting the workspace and object values along the call stack.
 
 To save the parameters (`config`, `seurat_obj`, etc) to a **data processing** task function, specify `DEBUG_STEP`.
 Available tasks include all task names listed in `run_processing_step` [init.R](pipeline-runner/init.R#L69) as well as `DEBUG_STEP=all` 
