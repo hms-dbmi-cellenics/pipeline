@@ -153,11 +153,11 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   saveRDS(data, file = count_matrix)
 
   message("Uploading updated count matrix to S3 bucket ", pipeline_config$processed_bucket, " at key ", object_key, "...")
-  s3$put_object(
-    Bucket = pipeline_config$processed_bucket,
-    Key = object_key,
-    Body = count_matrix
-  )
+  put_object_in_s3_multipart(
+    pipeline_config,
+    bucket = pipeline_config$processed_bucket,
+    object = count_matrix,
+    key = object_key)
 
   return(object_key)
 }
