@@ -228,7 +228,7 @@ wrapper <- function(input_json) {
     message("------\nStarting task: ", task_name, '\n')
     message("Input:")
     str(input)
-    message('\n')
+    message("")
 
     # common to gem2s and data processing
     server <- input$server
