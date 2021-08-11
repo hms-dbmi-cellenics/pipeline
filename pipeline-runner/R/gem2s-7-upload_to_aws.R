@@ -77,7 +77,6 @@ get_cell_sets <- function(scdata, input) {
   # Design cell_set meta_data for DynamoDB
   cell_sets <- c(list(scratchpad), list(samples_set))
 
-  # TODO: refactor meta_sets
   if ("metadata" %in% names(input)) {
     cell_sets <- c(cell_sets, meta_sets(input, scdata, color_pool))
   }
