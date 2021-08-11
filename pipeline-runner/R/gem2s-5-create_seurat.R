@@ -18,7 +18,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   samples <- names(counts_list)
   scdata_list <- list()
   for (sample in samples) {
-    message("Creating SeuratObject for sample --> ", sample)
+    message("\nCreating SeuratObject for sample --> ", sample)
 
     scdata_list[[sample]] <- construct_scdata(
       counts = counts_list[[sample]],

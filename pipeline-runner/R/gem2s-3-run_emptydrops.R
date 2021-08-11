@@ -17,7 +17,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
 
   edrops <- list()
   for (sample in samples) {
-    message("Sample: ", sample, "...")
+    message("\nSample --> ", sample)
     edrops[[sample]] <- compute_emptydrops(counts_list[[sample]])
   }
 

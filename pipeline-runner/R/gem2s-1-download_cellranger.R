@@ -18,11 +18,12 @@ download_cellranger <- function(input, pipeline_config, prev_out = list()) {
   unlink("/input", recursive = TRUE)
 
   for (sample in sample_uuids) {
+    message("\nSample --> ", sample)
+
     for (cr_fname in cr_fnames) {
       gem_key <- file.path(project_id, sample, cr_fname)
 
-      message("GEM key")
-      message(gem_key)
+      message("GEM key: ", gem_key)
 
       sample_name <- sample_names[[match(sample, sample_uuids)]]
       # Preparing directories

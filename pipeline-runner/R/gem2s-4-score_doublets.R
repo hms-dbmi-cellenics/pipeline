@@ -17,7 +17,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 
   scores <- list()
   for (sample in samples) {
-    message("Sample --> ", sample, "...")
+    message("\nSample --> ", sample)
     counts <- counts_list[[sample]]
     edrops <- edrops_list[[sample]]
 

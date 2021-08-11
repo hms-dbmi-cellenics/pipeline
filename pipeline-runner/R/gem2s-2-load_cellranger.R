@@ -45,7 +45,8 @@ call_read10x <- function(config) {
     sample_fpaths <- list.files(sample_dir)
     annot_fpath <- file.path(sample_dir, 'features.tsv.gz')
 
-    message("Reading files from ", sample_dir, ' ---> ', paste(sample_fpaths, collapse = ' - '))
+    message("\nSample --> ", sample)
+    message("Reading files from ", sample_dir, ' --> ', paste(sample_fpaths, collapse = ' - '))
 
     counts <- Seurat::Read10X(sample_dir, gene.column = 1)
     annot <- read.delim(annot_fpath, header = FALSE)
