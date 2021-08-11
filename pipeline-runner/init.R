@@ -193,6 +193,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     assign("scdata", data, pos = ".GlobalEnv")
 
     # upload plot data result to S3
+    plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
     tstart <- Sys.time()
 
     # Upload count matrix data
@@ -200,7 +201,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
         message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
     }
-    
+
     # send result to API
     message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
     ttask <- format(Sys.time()-tstart, digits = 2)
