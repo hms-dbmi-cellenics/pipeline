@@ -97,7 +97,7 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
     tstart <- Sys.time()
     out <- task(scdata, config, sample_id, task_name)
     ttask <- format(Sys.time()-tstart, digits = 2)
-    message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask)
+    message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask, '\n')
 
     # filter specific info
     is.filter <- task_name %in% names(tasks)[1:5]
@@ -139,7 +139,7 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
     tstart <- Sys.time()
     res <- task(input, pipeline_config, prev_out)
     ttask <- format(Sys.time()-tstart, digits = 2)
-    message("⏱️ Time to complete ", task_name, ": ", ttask)
+    message("⏱️ Time to complete ", task_name, ": ", ttask, '\n')
 
     return(res)
 }
@@ -228,6 +228,7 @@ wrapper <- function(input_json) {
     message("------\nStarting task: ", task_name, '\n')
     message("Input:")
     str(input)
+    message('\n')
 
     # common to gem2s and data processing
     server <- input$server

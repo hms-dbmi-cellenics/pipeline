@@ -21,7 +21,7 @@ load_cellranger <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = output)
 
-  message("Step 2 completed.")
+  message("\nStep 2 completed.")
   return(res)
 }
 

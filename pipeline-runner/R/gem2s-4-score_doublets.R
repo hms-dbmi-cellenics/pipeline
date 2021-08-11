@@ -35,7 +35,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = prev_out)
 
-  message("Step 4 completed.")
+  message("\nStep 4 completed.")
   return(res)
 }
 

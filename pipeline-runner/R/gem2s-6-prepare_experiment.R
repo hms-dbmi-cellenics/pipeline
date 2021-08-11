@@ -65,7 +65,7 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = prev_out)
 
-  message("Step 6 completed.")
+  message("\nStep 6 completed.")
   return(res)
 }
 

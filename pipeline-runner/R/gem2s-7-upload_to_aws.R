@@ -53,6 +53,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       table = pipeline_config$experiments_table),
     output = list())
 
+  message("\nStep 7 completed.")
   return(res)
 }
 
@@ -138,7 +139,7 @@ meta_sets <- function(input, scdata, color_pool) {
     values <- unique(meta[[i]])
     for (i in seq_along(values)) {
       value <- values[i]
-      cell_ids <- scdata$cells_id[scdata[[var]] == value]
+      cell_ids <- scdata$cells_id[scdata[[key]] == value]
 
       cell_set$children[[i]] <- list(
         "key" = paste(key, value, sep = "-"),

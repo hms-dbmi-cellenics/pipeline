@@ -59,6 +59,6 @@ download_cellranger <- function(input, pipeline_config, prev_out = list()) {
     data = list(),
     ouput = prev_out)
 
-  message("Step 1 complete")
+  message("\nStep 1 complete")
   return(res)
 }
