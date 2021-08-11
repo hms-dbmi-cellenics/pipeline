@@ -23,7 +23,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 
     # scDblFinder expects empty droplets to be removed
     if (!is.null(edrops)) {
-      keep <- which(edrops$FDR <= 0.001)
+      keep <- which(edrops$FDR <= gem2s$max.edrops.fdr)
       counts <- counts[, keep]
     }
 

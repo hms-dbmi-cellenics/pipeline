@@ -12,6 +12,7 @@ options(future.globals.maxSize = 32 * 1024 * 1024^2)
 options(keep.source.pkgs = TRUE)
 
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f, keep.source = TRUE)
+load('R/sysdata.rda') # constants
 
 load_config <- function(development_aws_server) {
     config <- list(
