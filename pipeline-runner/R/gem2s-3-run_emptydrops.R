@@ -26,7 +26,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = prev_out)
 
-  message("\nStep 3 completed.")
+  message("\nRunning of emptydrops step complete.")
   return(res)
 }
 

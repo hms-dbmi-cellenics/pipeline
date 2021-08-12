@@ -21,7 +21,7 @@ load_cellranger_files <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = output)
 
-  message("\nStep 2 completed.")
+  message("\nLoading of cellranger files step complete.")
   return(res)
 }
 

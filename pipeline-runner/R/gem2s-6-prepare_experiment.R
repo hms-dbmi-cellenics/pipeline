@@ -65,7 +65,7 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = prev_out)
 
-  message("\nStep 6 completed.")
+  message("\nPreperation for AWS upload step complete.")
   return(res)
 }
 

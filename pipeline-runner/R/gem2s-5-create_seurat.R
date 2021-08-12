@@ -35,7 +35,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
     data = list(),
     output = prev_out)
 
-  message("\nStep 5 completed.")
+  message("\nCreation of Seurat objects step complete.")
   return(res)
 }
 
