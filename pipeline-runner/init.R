@@ -124,8 +124,8 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
 
     # list of task functions named by task name
     tasks <- list(
-        'downloadGem' = download_cellranger,
-        'preproc' = load_cellranger,
+        'downloadGem' = download_cellranger_files,
+        'preproc' = load_cellranger_files,
         'emptyDrops' = run_emptydrops,
         'doubletScores' = score_doublets,
         'createSeurat' = create_seurat,

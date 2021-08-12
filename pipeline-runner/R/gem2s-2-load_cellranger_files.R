@@ -9,7 +9,7 @@
 #' }
 #' @export
 #'
-load_cellranger <- function(input, pipeline_config, prev_out) {
+load_cellranger_files <- function(input, pipeline_config, prev_out) {
   message("Loading cellranger output ...")
 
   # destructure previous output

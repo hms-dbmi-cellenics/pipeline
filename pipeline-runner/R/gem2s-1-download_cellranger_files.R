@@ -7,7 +7,7 @@
 #' @return list where 'output' slot has config used by \code{load_cellranger}
 #' @export
 #'
-download_cellranger <- function(input, pipeline_config, prev_out = list()) {
+download_cellranger_files <- function(input, pipeline_config, prev_out = list()) {
   project_id <- input$projectId
   sample_names <- input$sampleNames
   sample_uuids <- input$sampleIds
