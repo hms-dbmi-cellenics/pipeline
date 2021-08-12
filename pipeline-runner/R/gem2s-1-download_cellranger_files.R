@@ -14,14 +14,14 @@ download_cellranger_files <- function(input, pipeline_config, prev_out = list())
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
-  cr_fnames <- c("features.tsv.gz", "barcodes.tsv.gz", "matrix.mtx.gz")
+  cellranger_fnames <- c("features.tsv.gz", "barcodes.tsv.gz", "matrix.mtx.gz")
   unlink("/input", recursive = TRUE)
 
   for (sample in sample_uuids) {
     message("\nSample --> ", sample)
 
-    for (cr_fname in cr_fnames) {
-      gem_key <- file.path(project_id, sample, cr_fname)
+    for (cellranger_fname in cellranger_fnames) {
+      gem_key <- file.path(project_id, sample, cellranger_fname)
 
       message("GEM key: ", gem_key)
 
@@ -30,7 +30,7 @@ download_cellranger_files <- function(input, pipeline_config, prev_out = list())
       local_dir <- file.path("/input", sample)
       dir.create("/input")
       dir.create(local_dir)
-      local_fpath <- file.path(local_dir, cr_fname)
+      local_fpath <- file.path(local_dir, cellranger_fname)
 
       # Download the file and store the output in a variable
       c(body, ...rest) %<-% s3$get_object(
