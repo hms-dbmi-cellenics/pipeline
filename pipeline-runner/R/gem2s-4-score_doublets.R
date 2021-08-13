@@ -52,6 +52,9 @@ compute_doublet_scores <- function(scdata, sample_name) {
     scdata <- scdata[, keep]
   }
 
+  # also filter low UMI as per scDblFinder:::.checkSCE()
+  ntot <- Matrix::colSums(scdata)
+  scdata <- scdata[, ntot > 200]
 
   set.seed(0)
   scdata_DS <- scDblFinder(scdata, dbr = NULL, trajectoryMode = FALSE)
