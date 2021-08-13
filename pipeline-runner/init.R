@@ -197,6 +197,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     assign("scdata", data, pos = ".GlobalEnv")
 
     # upload plot data result to S3
+    plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
     tstart <- Sys.time()
     plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
 
