@@ -27,6 +27,10 @@ score_doublets <- function(input, pipeline_config, prev_out) {
       counts <- counts[, keep]
     }
 
+    # also filter low UMI as per scDblFinder:::.checkSCE()
+    ntot <- Matrix::colSums(counts)
+    counts <- counts[, ntot > 200]
+
     scores[[sample]] <- compute_doublet_scores(counts)
   }
 
