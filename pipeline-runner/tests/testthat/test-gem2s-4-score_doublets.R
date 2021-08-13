@@ -1,6 +1,6 @@
-mock_counts <- function() {
+mock_counts <- function(...) {
     set.seed(0)
-    sce <- scDblFinder::mockDoubletSCE()
+    sce <- scDblFinder::mockDoubletSCE(...)
     sce@assays@data$counts
 }
 
