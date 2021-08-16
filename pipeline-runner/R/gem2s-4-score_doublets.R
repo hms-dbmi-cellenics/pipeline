@@ -56,12 +56,12 @@ compute_sample_doublet_scores <- function(sample_counts) {
 
   set.seed(0)
   sce <- scDblFinder::scDblFinder(sample_counts)
-  dbl.df <- data.frame(
+  doublet_res <- data.frame(
     row.names = colnames(sce),
     barcodes = colnames(sce),
     doublet_class = sce$scDblFinder.class,
     doublet_scores = sce$scDblFinder.score
   )
 
-  return(dbl.df)
+  return(doublet_res)
 }
