@@ -20,20 +20,20 @@ score_doublets <- function(input, pipeline_config, prev_out) {
   scores <- list()
   for (sample in samples) {
     message("\nSample --> ", sample)
-    counts <- counts_list[[sample]]
-    edrops <- edrops_list[[sample]]
+    sample_counts <- counts_list[[sample]]
+    sample_edrops <- edrops_list[[sample]]
 
     # scDblFinder expects empty droplets to be removed
-    if (!is.null(edrops)) {
-      keep <- which(edrops$FDR <= gem2s$max.edrops.fdr)
-      counts <- counts[, keep]
+    if (!is.null(sample_edrops)) {
+      keep <- which(sample_edrops$FDR <= gem2s$max.edrops.fdr)
+      sample_counts <- sample_counts[, keep]
     }
 
     # also filter low UMI as per scDblFinder:::.checkSCE()
-    ntot <- Matrix::colSums(counts)
-    counts <- counts[, ntot > 200]
+    ntot <- Matrix::colSums(sample_counts)
+    sample_counts <- sample_counts[, ntot > 200]
 
-    scores[[sample]] <- compute_doublet_scores(counts)
+    scores[[sample]] <- compute_sample_doublet_scores(sample_counts)
   }
 
   prev_out$doublet_scores <- scores
@@ -48,14 +48,14 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 
 #' Compute doublets scores per sample.
 #'
-#' @param scdata Raw sparse matrix with the counts for one sample.
+#' @param sample_counts Sparse matrix with the counts for one sample.
 #'
 #' @return data.frame with doublet scores and assigned classes
 #'
-compute_doublet_scores <- function(counts) {
+compute_sample_doublet_scores <- function(sample_counts) {
 
   set.seed(0)
-  sce <- scDblFinder::scDblFinder(counts)
+  sce <- scDblFinder::scDblFinder(sample_counts)
   dbl.df <- data.frame(
     row.names = colnames(sce),
     barcodes = colnames(sce),
