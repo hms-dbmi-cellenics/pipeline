@@ -12,6 +12,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   message("Creating Seurat Objects...")
   message("items in prev_out: ", paste(names(prev_out), collapse = ' - '))
 
+  # NOTE: edrops is not required
   check_names <- c('counts_list', 'doublet_scores', 'annot', 'config')
   check_prev_out(prev_out, check_names)
 
