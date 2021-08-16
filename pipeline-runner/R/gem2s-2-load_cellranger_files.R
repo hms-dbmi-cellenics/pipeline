@@ -14,6 +14,7 @@ load_cellranger_files <- function(input, pipeline_config, prev_out) {
 
   # destructure previous output
   config <- prev_out$config
+  if (is.null(config)) stop ('prev_out$config is missing.')
 
   output <- c(prev_out, call_read10x(config))
 

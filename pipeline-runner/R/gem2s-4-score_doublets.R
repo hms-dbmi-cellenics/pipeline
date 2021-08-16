@@ -13,6 +13,8 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 
   edrops_list <- prev_out$edrops
   counts_list <- prev_out$counts_list
+  if (is.null(counts_list)) stop('counts_list is empty.')
+
   samples <- names(counts_list)
 
   scores <- list()
