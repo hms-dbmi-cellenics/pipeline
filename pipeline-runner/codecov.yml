@@ -14,4 +14,6 @@ coverage:
         # this allows a 5% drop from the previous base commit coverage
         threshold: 3%
 
-    patch: off                   # measuring the coverage of new changes
+    patch:                      # measuring the coverage of new changes
+      default:
+        enabled: no
