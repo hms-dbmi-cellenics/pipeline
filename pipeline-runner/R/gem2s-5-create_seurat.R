@@ -23,7 +23,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
     scdata_list[[sample]] <- construct_scdata(
       counts = counts_list[[sample]],
       doublet_score = doublet_scores[[sample]],
-      edout = edrops[[sample]],
+      edrops_out = edrops[[sample]],
       sample = sample,
       annot = annot,
       config = config)
@@ -40,7 +40,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 }
 
 # construct SeuratObject
-construct_scdata <- function(counts, doublet_score, edout, sample, annot, config, min.cells = 3, min.features = 10) {
+construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, config, min.cells = 3, min.features = 10) {
 
   metadata <- construct_metadata(counts, sample, config)
   scdata <- Seurat::CreateSeuratObject(
@@ -52,7 +52,7 @@ construct_scdata <- function(counts, doublet_score, edout, sample, annot, config
 
   scdata <- add_mito(scdata, annot)
   scdata <- add_dblscore(scdata, doublet_score)
-  scdata <- add_edrops(scdata, edout)
+  scdata <- add_edrops(scdata, edrops_out)
 
   return(scdata)
 }
