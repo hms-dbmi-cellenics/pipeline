@@ -6,10 +6,11 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   project_id <- input$projectId
 
   # destructure what need from prev_out
+  check_prev_out(prev_out, c('scdata', 'config', 'qc_config'))
+
   scdata <- prev_out$scdata
   config <- prev_out$config
   config_dataProcessing <- prev_out$qc_config
-
 
   message("Constructing cell sets ...")
   cell_sets <- get_cell_sets(scdata, input)

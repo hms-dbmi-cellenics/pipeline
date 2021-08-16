@@ -11,10 +11,11 @@
 score_doublets <- function(input, pipeline_config, prev_out) {
   message("Calculating probability of droplets being doublets...")
 
+  # NOTE: edrops is not required
+  check_prev_out(prev_out, 'counts_list')
+
   edrops_list <- prev_out$edrops
   counts_list <- prev_out$counts_list
-  if (is.null(counts_list)) stop('counts_list is empty.')
-
   samples <- names(counts_list)
 
   scores <- list()

@@ -12,6 +12,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
   message("Testing if droplets are empty...")
 
   # destructure previous output
+  check_prev_out(prev_out, 'counts_list')
   counts_list <- prev_out$counts_list
   samples <- names(counts_list)
 

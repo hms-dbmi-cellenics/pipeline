@@ -14,6 +14,7 @@
 #'
 prepare_experiment <- function(input, pipeline_config, prev_out) {
   message("Preparing experiment ...")
+  check_prev_out(prev_out, c('scdata_list', 'annot'))
 
   scdata_list <- prev_out$scdata_list
   edrops <- prev_out$edrops
