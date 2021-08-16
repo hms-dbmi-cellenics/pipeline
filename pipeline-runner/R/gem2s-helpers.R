@@ -1,4 +1,4 @@
-check_prev_out(prev_out, check_names) {
+check_prev_out <- function(prev_out, check_names) {
   for (check_name in check_names) {
     if (check_name %in% names(prev_out)) next()
 
