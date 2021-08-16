@@ -18,7 +18,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
   edrops <- list()
   for (sample in samples) {
     message("\nSample --> ", sample)
-    edrops[[sample]] <- compute_emptydrops(counts_list[[sample]])
+    edrops[[sample]] <- compute_sample_edrops(counts_list[[sample]])
   }
 
   prev_out$edrops <- edrops
@@ -31,17 +31,17 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
 }
 
 
-#' @param counts dgCMatrix with counts for one sample.
-compute_emptydrops <- function(counts) {
+#' @param sample_counts dgCMatrix with counts for one sample.
+compute_sample_edrops <- function(sample_counts) {
   # check if filtered
-  nempty <- sum(Matrix::colSums(counts) < gem2s$max.empty.counts)
+  nempty <- sum(Matrix::colSums(sample_counts) < gem2s$max.empty.counts)
 
   if (nempty < gem2s$max.empty.drops) {
     message("Detected sample as filtered --> Skipping emptyDrops.")
-    out <- NULL
+    sample_edrops <- NULL
   } else {
-    out <- DropletUtils::emptyDrops(counts)
+    sample_edrops <- DropletUtils::emptyDrops(sample_counts)
   }
 
-  return(out)
+  return(sample_edrops)
 }
