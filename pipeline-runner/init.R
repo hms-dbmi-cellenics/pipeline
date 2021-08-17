@@ -209,7 +209,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # send result to API
     message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
     ttask <- format(Sys.time()-tstart, digits = 2)
-    message("⏱️ Time to upload ", task_name, "objects for sample ", sample_id, ": ", ttask)
+    message("⏱️ Time to upload ", task_name, " objects for sample ", sample_id, ": ", ttask)
 
     return(message_id)
 }
