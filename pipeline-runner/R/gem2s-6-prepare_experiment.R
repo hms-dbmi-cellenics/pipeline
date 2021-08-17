@@ -22,7 +22,7 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   message("Merging Seurat Objects...")
   scdata <- merge_scdatas(scdata_list)
-  scdata <- add_metadata(scdata, prev_out$annot)
+  scdata <- add_metadata(scdata, prev_out$annot, input$experimentId)
   prev_out$scdata <- scdata
 
   # construct default QC config and update prev out
@@ -49,7 +49,7 @@ merge_scdatas <- function(scdata_list) {
   return(scdata)
 }
 
-add_metadata <- function(scdata, annot) {
+add_metadata <- function(scdata, annot, experiment_id) {
 
   # Ensure index by rownames in scdata
   annot <- annot[match(rownames(scdata), annot$input), ]
@@ -62,7 +62,7 @@ add_metadata <- function(scdata, annot) {
   message("Storing color pool...")
   # We store the color pool in a slot in order to be able to access it during configureEmbedding
   scdata@misc[["color_pool"]] <- get_color_pool()
-  scdata@misc[["experimentId"]] <- input$experimentId
+  scdata@misc[["experimentId"]] <- experiment_id
   scdata@misc[["ingestionDate"]] <- Sys.time()
 
   return(scdata)
