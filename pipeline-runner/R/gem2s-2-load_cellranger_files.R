@@ -11,9 +11,9 @@
 #'
 load_cellranger_files <- function(input, pipeline_config, prev_out) {
   message("Loading cellranger output ...")
+  check_prev_out(prev_out, 'config')
 
   # destructure previous output
-  check_prev_out(prev_out, 'config')
   config <- prev_out$config
 
   output <- c(prev_out, call_read10x(config))

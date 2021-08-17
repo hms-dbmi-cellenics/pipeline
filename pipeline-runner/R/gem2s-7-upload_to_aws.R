@@ -1,13 +1,13 @@
 
 upload_to_aws <- function(input, pipeline_config, prev_out) {
   message('Uploading to AWS ...')
+  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores', 'scdata_list', 'scdata', 'qc_config')
+  check_prev_out(prev_out, ccheck_names)
 
   experiment_id <- input$experimentId
   project_id <- input$projectId
 
   # destructure what need from prev_out
-  check_prev_out(prev_out, c('scdata', 'config', 'qc_config'))
-
   scdata <- prev_out$scdata
   config <- prev_out$config
   config_dataProcessing <- prev_out$qc_config

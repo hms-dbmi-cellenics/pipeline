@@ -10,13 +10,12 @@
 create_seurat <- function(input, pipeline_config, prev_out) {
 
   message("Creating Seurat Objects...")
-  message("items in prev_out: ", paste(names(prev_out), collapse = ' - '))
 
   # NOTE: edrops is not required
-  check_names <- c('counts_list', 'doublet_scores', 'annot', 'config')
+  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores')
   check_prev_out(prev_out, check_names)
 
-  # destructure previous output
+  # destructure previous output: config, counts_list, annot, and doublet_scores
   list2env(prev_out, envir = environment())
 
   samples <- names(counts_list)
