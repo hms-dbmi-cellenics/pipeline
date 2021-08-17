@@ -18,32 +18,38 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   check_prev_out(prev_out, check_names)
 
   scdata_list <- prev_out$scdata_list
-  edrops <- prev_out$edrops
   samples <- names(scdata_list)
 
   message("Merging Seurat Objects...")
+  scdata <- merge_scdatas(scdata_list)
+  scdata <- add_metadata(scdata, prev_out$annot)
+  prev_out$scdata <- scdata
+
+  # construct default QC config and update prev out
+  message("Constructing default QC configuration...")
+  any_filtered <- !(length(prev_out$edrops) == length(samples))
+  prev_out$qc_config <- construct_qc_config(scdata, any_filtered)
+
+  res <- list(
+    data = list(),
+    output = prev_out)
+
+  message("\nPreperation for AWS upload step complete.")
+  return(res)
+}
+
+merge_scdatas <- function(scdata_list) {
+
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
     scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
   }
 
-  message("Deduplicating gene annotations...")
-  annot <- prev_out$annot
+  return(scdata)
+}
 
-  # add ENSEMBL ID for genes that are duplicated (geneNameDuplicated-ENSEMBL)
-  # original name kept in 'original_name' column
-  gname <- annot$name
-  annot$original_name <- gname
-  is.dup <- duplicated(gname) | duplicated(gname, fromLast = TRUE)
-
-  #We need to convert the gene inputs from _ to - bc when we create the Seurat object we do this, and the match would return NA values if any of the inputs still has _.
-  annot$input <- gsub('_', '-', annot$input)
-  annot$name[is.dup] <- paste(gname[is.dup], annot$input[is.dup], sep = " - ")
-
-  # Ensure index by rownames in scdata
-  annot <- annot[match(rownames(scdata), annot$input), ]
-  rownames(annot) <- annot$input
+add_metadata <- function(scdata, annot) {
 
   scdata@misc[["gene_annotations"]] <- annot
 
@@ -57,17 +63,6 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   scdata@misc[["experimentId"]] <- input$experimentId
   scdata@misc[["ingestionDate"]] <- Sys.time()
 
-  # construct default QC config and update prev out
-  message("Constructing default QC configuration...")
-  any_filtered <- !(length(edrops) == length(samples))
-  prev_out$scdata <- scdata
-  prev_out$qc_config <- construct_qc_config(scdata, any_filtered)
-
-  res <- list(
-    data = list(),
-    output = prev_out)
-
-  message("\nPreperation for AWS upload step complete.")
-  return(res)
+  return(scdata)
 }
 

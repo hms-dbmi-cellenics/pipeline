@@ -59,9 +59,32 @@ call_read10x <- function(config) {
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annot
   }
+
+  annot <- format_annot(annot_list)
+
+  return(list(counts_list = counts_list, annot = annot))
+}
+
+format_annot <- function(annot_list) {
   annot <- unique(do.call("rbind", annot_list))
   annot <- annot[, c(1, 2)]
   colnames(annot) <- c("input", "name")
 
-  return(list(counts_list = counts_list, annot = annot))
+  message("Deduplicating gene annotations...")
+
+  # add ENSEMBL ID for genes that are duplicated (geneNameDuplicated-ENSEMBL)
+  # original name kept in 'original_name' column
+  gname <- annot$name
+  annot$original_name <- gname
+  is.dup <- duplicated(gname) | duplicated(gname, fromLast = TRUE)
+
+  #We need to convert the gene inputs from _ to - bc when we create the Seurat object we do this, and the match would return NA values if any of the inputs still has _.
+  annot$input <- gsub('_', '-', annot$input)
+  annot$name[is.dup] <- paste(gname[is.dup], annot$input[is.dup], sep = " - ")
+
+  # Ensure index by rownames in scdata
+  annot <- annot[match(rownames(scdata), annot$input), ]
+  rownames(annot) <- annot$input
+
+  return(annot)
 }
