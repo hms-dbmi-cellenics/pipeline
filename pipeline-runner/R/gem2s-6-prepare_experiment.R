@@ -51,6 +51,8 @@ merge_scdatas <- function(scdata_list) {
 
 add_metadata <- function(scdata, annot) {
 
+  # Ensure index by rownames in scdata
+  annot <- annot[match(rownames(scdata), annot$input), ]
   scdata@misc[["gene_annotations"]] <- annot
 
   message("Storing cells id...")

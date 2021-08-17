@@ -82,9 +82,6 @@ format_annot <- function(annot_list) {
   annot$input <- gsub('_', '-', annot$input)
   annot$name[is.dup] <- paste(gname[is.dup], annot$input[is.dup], sep = " - ")
 
-  # Ensure index by rownames in scdata
-  annot <- annot[match(rownames(scdata), annot$input), ]
   rownames(annot) <- annot$input
-
   return(annot)
 }
