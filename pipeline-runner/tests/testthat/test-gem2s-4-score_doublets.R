@@ -8,7 +8,9 @@ mock_counts <- function(...) {
 test_that("score_doublets returns expected columns", {
     counts <- mock_counts()
 
-    prev_out <- list(counts_list = list(sample1=counts))
+    prev_out <- list(counts_list = list(sample1=counts),
+                     config = list(),
+                     annot = list())
     out <- score_doublets(NULL, NULL, prev_out)$output
 
     expect_setequal(colnames(out$doublet_scores$sample1),
@@ -22,6 +24,8 @@ test_that("score_doublets filters cells to avoid warning of extremely low read c
 
     expect_warning(scDblFinder:::.checkSCE(counts), 'extremely low read counts')
 
-    prev_out <- list(counts_list = list(sample1=counts))
+    prev_out <- list(counts_list = list(sample1=counts),
+                     config = list(),
+                     annot = list())
     expect_warning(score_doublets(NULL, NULL, prev_out)$output, NA)
 })
