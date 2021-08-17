@@ -20,5 +20,7 @@ test_that("format_annot deduplicates name column", {
         sample1 = data.frame(ENSID = 1:6, SYMBOL = paste0('gene', c(1, 1:5)))
     )
 
+    annot <- format_annot(annot_list)
+
     expect_true(length(annot$name) == length(unique(annot$name)))
 })
