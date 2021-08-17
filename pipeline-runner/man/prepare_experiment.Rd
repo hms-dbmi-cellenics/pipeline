@@ -7,6 +7,10 @@
 prepare_experiment(input, pipeline_config, prev_out)
 }
 \arguments{
+\item{input}{The input object from the request}
+
+\item{pipeline_config}{result of \code{load_config}}
+
 \item{prev_out}{'output' slot from call to \code{create_seurat}}
 }
 \value{

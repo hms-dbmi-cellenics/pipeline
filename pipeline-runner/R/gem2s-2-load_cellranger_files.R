@@ -1,6 +1,6 @@
 #' Read input folder of 10x data
 #'
-#' @inheritParams download_cellranger
+#' @inheritParams download_cellranger_files
 #' @param prev_out list with experiment configuration settings
 #'
 #' @return list with 'output' slot containing \itemize{

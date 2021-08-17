@@ -1,6 +1,6 @@
 #' Compute doublet score for count matrices
 #'
-#' @inheritParams download_cellranger
+#' @inheritParams download_cellranger_files
 #' @param prev_out 'output' slot from call to \code{run_emptydrops}
 #'
 #' @return \code{prev_out} with added slot 'doublet_scores' containing result of call to

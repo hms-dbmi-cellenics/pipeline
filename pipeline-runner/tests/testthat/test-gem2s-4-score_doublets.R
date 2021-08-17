@@ -27,5 +27,25 @@ test_that("score_doublets filters cells to avoid warning of extremely low read c
     prev_out <- list(counts_list = list(sample1=counts),
                      config = list(),
                      annot = list())
-    expect_warning(score_doublets(NULL, NULL, prev_out)$output, NA)
+    expect_warning(score_doublets(NULL, NULL, prev_out), NA)
+})
+
+
+test_that("score_doublets fails if prev_out is missing 'config', 'counts_list', or 'annot'", {
+    counts <- mock_counts()
+    prev_out <- list(counts_list = list(sample1=counts),
+                     config = list(),
+                     annot = list())
+
+    prev_out$config <- NULL
+    expect_error(score_doublets(NULL, NULL, prev_out), 'config is missing')
+
+    prev_out$config <- list()
+    prev_out$annot <- NULL
+    expect_error(score_doublets(NULL, NULL, prev_out), 'annot is missing')
+
+    prev_out$annot <- data.frame()
+    prev_out$counts_list <- NULL
+    expect_error(score_doublets(NULL, NULL, prev_out), 'counts_list is missing')
+
 })

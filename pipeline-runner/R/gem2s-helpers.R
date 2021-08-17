@@ -2,7 +2,7 @@ check_prev_out <- function(prev_out, check_names) {
   for (check_name in check_names) {
     if (check_name %in% names(prev_out)) next()
 
-    stop(check_name, 'is missing from prev_out but is required.')
+    stop(check_name, ' is missing from prev_out but is required.')
   }
 }
 

@@ -7,6 +7,10 @@
 load_cellranger_files(input, pipeline_config, prev_out)
 }
 \arguments{
+\item{input}{The input object from the request}
+
+\item{pipeline_config}{result of \code{load_config}}
+
 \item{prev_out}{list with experiment configuration settings}
 }
 \value{
