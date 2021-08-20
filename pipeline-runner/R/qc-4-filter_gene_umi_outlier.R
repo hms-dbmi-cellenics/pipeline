@@ -25,7 +25,7 @@
 #'
 filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
   tmp_sample <- sub("sample-", "", sample_id)
-
+  stop()
   p.level <- config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level
 
   if (as.logical(toupper(config$enabled))) {
