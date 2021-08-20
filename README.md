@@ -1,3 +1,4 @@
+[![codecov](https://codecov.io/gh/biomage-ltd/pipeline/branch/master/graph/badge.svg?token=kQ19q1EenW)](https://codecov.io/gh/biomage-ltd/pipeline)
 # Biomage Pipeline
 
 The Cellscope pipeline project for dependency-managed work processing.
