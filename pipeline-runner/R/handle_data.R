@@ -66,7 +66,15 @@ send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, 
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
 
-  msg <- c(data, taskName = list(task_name), experimentId = list(experiment_id))
+  # Right now data is an empty list
+  msg <- list(
+    data = data,
+    taskName = task_name,
+    experimentId = experiment_id,
+    response = list(
+      error = FALSE
+    )
+  )
 
   result <- sns$publish(
     Message = RJSONIO::toJSON(msg),
