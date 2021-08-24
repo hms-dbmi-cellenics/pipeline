@@ -1,5 +1,6 @@
 
 upload_to_aws <- function(input, pipeline_config, prev_out) {
+  saveRDS(list(input=input, pipeline_config = pipeline_config, prev_out= prev_out), '/debug/upload_to_aws.rds')
   message('Uploading to AWS ...')
   check_names <- c('config', 'counts_list', 'annot', 'doublet_scores', 'scdata_list', 'scdata', 'qc_config')
   check_prev_out(prev_out, check_names)
@@ -146,7 +147,7 @@ meta_sets <- function(input, scdata, color_pool) {
         "key" = paste(key, value, sep = "-"),
         "name" = value,
         "color" = color_pool[i],
-        "cellIds" = cell_ids
+        "cellIds" = unname(cell_ids)
       )
     }
     cell_set_list <- c(cell_set_list, list(cell_set))
