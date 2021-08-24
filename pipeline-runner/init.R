@@ -14,13 +14,35 @@ options(keep.source.pkgs = TRUE)
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f, keep.source = TRUE)
 
 load_config <- function(development_aws_server) {
+    label_path <- "/etc/podinfo/labels"
+    activity_arn <- NA
+
+    repeat {
+        if(file.exists(label_path)) {
+            labels <- read.csv(label_path, sep="=", row.names=1, header=FALSE)
+            activity_arn <- labels["activityArn", ]
+        }
+
+        if(is.na(activity_arn)) {
+            activity_arn <- Sys.getenv("ACTIVITY_ARN", unset = NA)
+        }
+
+        if(is.na(activity_arn)) {
+            message("No activity ARN label set yet, waiting...")
+            Sys.sleep(5)
+        } else {
+            message(paste("Welcome to Biomage R pipeline, activity arn", activity_arn))
+            break
+        }
+    }
+
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
         sandbox_id = Sys.getenv("SANDBOX_ID", "default"),
         aws_account_id = Sys.getenv("AWS_ACCOUNT_ID", "242905224710"),
         aws_region = Sys.getenv("AWS_DEFAULT_REGION", "eu-west-1"),
         pod_name = Sys.getenv("K8S_POD_NAME", "local"),
-        activity_arn = Sys.getenv("ACTIVITY_ARN", ""),
+        activity_arn = activity_arn,
         debug_config = list(
             step = Sys.getenv("DEBUG_STEP", ""),
             path = Sys.getenv("DEBUG_PATH", "")
@@ -251,6 +273,7 @@ init <- function() {
 
     flog.layout(layout.simple)
     flog.threshold(ERROR)
+
 
     repeat {
         c(taskToken, input) %<-% states$get_activity_task(
