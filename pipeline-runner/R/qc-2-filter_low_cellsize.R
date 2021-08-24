@@ -17,13 +17,12 @@
 #' @return a list with the filtered seurat object by cell size ditribution, the config and the plot values
 #'
 filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
-  tmp_sample <- sub("sample-", "", sample_id)
 
   minCellSize <- as.numeric(config$filterSettings$minCellSize)
 
   # extract plotting data of original data to return to plot slot later
-  obj_metadata <- scdata@meta.data
-  barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
+  meta <- scdata@meta.data
+  barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
 
   if (length(barcode_names_this_sample) == 0) {
     guidata <- list()
@@ -54,9 +53,9 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
   if (as.logical(toupper(config$enabled))) {
 
     # extract cell id that do not(!) belong to current sample (to not apply filter there)
-    barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)), ])
+    barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id]
     # all barcodes that match threshold in the subset data
-    barcode_names_keep_current_sample <- rownames(sample_subset@meta.data[sample_subset@meta.data$nCount_RNA >= minCellSize, ])
+    barcode_names_keep_current_sample <- colnames(sample_subset)[sample_subset$nCount_RNA >= minCellSize]
     # combine the 2:
     barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
 
@@ -74,8 +73,8 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
 
   # Populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata, tmp_sample),
-    after = calc_filter_stats(scdata.filtered, tmp_sample)
+    before = calc_filter_stats(scdata, sample_id),
+    after = calc_filter_stats(scdata.filtered, sample_id)
   )
   guidata[[generate_gui_uuid(sample_id, task_name, 3)]] <- filter_stats
 

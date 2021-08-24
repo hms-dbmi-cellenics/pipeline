@@ -12,6 +12,7 @@ options(future.globals.maxSize = 32 * 1024 * 1024^2)
 options(keep.source.pkgs = TRUE)
 
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f, keep.source = TRUE)
+load('R/sysdata.rda') # constants
 
 load_config <- function(development_aws_server) {
     config <- list(
@@ -96,7 +97,7 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
     tstart <- Sys.time()
     out <- task(scdata, config, sample_id, task_name)
     ttask <- format(Sys.time()-tstart, digits = 2)
-    message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask)
+    message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask, '\n')
 
     # filter specific info
     is.filter <- task_name %in% names(tasks)[1:5]
@@ -119,12 +120,12 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
 # pipeline_config as defined by load_config
 #
 
-run_gem2s_step <- function(task_name, input, pipeline_config) {
+run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
 
     # list of task functions named by task name
     tasks <- list(
-        'downloadGem' = download_cellranger,
-        'preproc' = load_cellranger,
+        'downloadGem' = download_cellranger_files,
+        'preproc' = load_cellranger_files,
         'emptyDrops' = run_emptydrops,
         'doubletScores' = score_doublets,
         'createSeurat' = create_seurat,
@@ -133,21 +134,24 @@ run_gem2s_step <- function(task_name, input, pipeline_config) {
     )
 
     if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
-    message("Starting task: ", task_name)
     task <- tasks[[task_name]]
 
     tstart <- Sys.time()
-    data <- task(input, pipeline_config)
+    res <- task(input, pipeline_config, prev_out)
     ttask <- format(Sys.time()-tstart, digits = 2)
-    message("⏱️ Time to complete ", task_name, ": ", ttask)
+    message("⏱️ Time to complete ", task_name, ": ", ttask, '\n')
 
-    return(data)
+    return(res)
 }
 
 call_gem2s <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
 
-    data %<-% run_gem2s_step(task_name, input, pipeline_config)
+    if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+
+    c(data, task_out) %<-% run_gem2s_step(task_name, input, pipeline_config, prev_out)
+    assign("prev_out", task_out, pos = ".GlobalEnv")
+
     message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data)
 
     return(message_id)
@@ -193,8 +197,8 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     assign("scdata", data, pos = ".GlobalEnv")
 
     # upload plot data result to S3
-    plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
     tstart <- Sys.time()
+    plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
 
     # Upload count matrix data
     if(upload_count_matrix) {
@@ -205,7 +209,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # send result to API
     message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
     ttask <- format(Sys.time()-tstart, digits = 2)
-    message("⏱️ Time to upload ", task_name, "objects for sample ", sample_id, ": ", ttask)
+    message("⏱️ Time to upload ", task_name, " objects for sample ", sample_id, ": ", ttask)
 
     return(message_id)
 }
@@ -220,11 +224,13 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 wrapper <- function(input_json) {
     # Get data from state machine input.
     input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
-
+    task_name <- input$taskName
+    message("------\nStarting task: ", task_name, '\n')
+    message("Input:")
     str(input)
+    message("")
 
     # common to gem2s and data processing
-    task_name <- input$taskName
     server <- input$server
     input <- input[names(input) != "server"]
     pipeline_config <- load_config(server)
@@ -264,10 +270,9 @@ init <- function() {
         }
 
         tryCatchLog({
-                message("Input ", input, " found")
                 wrapper(input)
 
-                message('Send task success')
+                message('Send task success\n------\n')
                 states$send_task_success(
                     taskToken = taskToken,
                     output = "{}"

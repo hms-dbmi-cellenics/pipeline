@@ -4,12 +4,12 @@
 \alias{calc_filter_stats}
 \title{Calculates statistics before/after filter step}
 \usage{
-calc_filter_stats(scdata, tmp_sample)
+calc_filter_stats(scdata, sample_id)
 }
 \arguments{
 \item{scdata}{\code{SeuratObject}}
 
-\item{tmp_sample}{sample name in \code{scdata$samples} to compute statistics for}
+\item{sample_id}{sample name in \code{scdata$samples} to compute statistics for}
 }
 \value{
 list with \itemize{

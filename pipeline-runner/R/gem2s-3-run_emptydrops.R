@@ -1,64 +1,48 @@
-#  - Compute emptyDrops per sample
-#  - Save an rds with emptyDrops result per sample
-run_emptydrops <- function(input, pipeline_config) {
-  message("reloading old matrices...")
-  scdata_list <- readRDS("/output/pre-doublet-scdata_list.rds")
+#' Run emptyDrops from DropletUtils
+#'
+#' @inheritParams download_cellranger_files
+#' @param prev_out 'output' slot from call to \code{load_cellranger}
+#'
+#' @return \code{prev_out} with added slot 'edrops' containing result of call to
+#'   \code{\link[DropletUtils]{emptyDrops}} for each sample.
+#'
+#' @export
+#'
+run_emptydrops <- function(input, pipeline_config, prev_out) {
+  message("Testing if droplets are empty...")
+  check_prev_out(prev_out, c('config', 'counts_list', 'annot'))
 
-  message("Loading configuration...")
-  config <- RJSONIO::fromJSON("/input/meta.json")
+  # destructure previous output
+  counts_list <- prev_out$counts_list
+  samples <- names(counts_list)
 
-  print_config(3, "Run Empty Drops", input, pipeline_config, config)
-
-  # Check which samples have been selected. Otherwiser we are going to use all of them.
-  if (length(config$samples) > 0) {
-    samples <- config$samples
-  } else {
-    samples <- names(scdata_list)
+  edrops <- list()
+  for (sample in samples) {
+    message("\nSample --> ", sample)
+    edrops[[sample]] <- compute_sample_edrops(counts_list[[sample]])
   }
 
-  scdata_list <- scdata_list[samples]
+  prev_out$edrops <- edrops
+  res <- list(
+    data = list(),
+    output = prev_out)
 
-  message("calculating probability of barcodes being background noise...")
-  for (sample_name in names(scdata_list)) {
-    compute_emptydrops(scdata_list[[sample_name]], sample_name)
-  }
-
-  message("Step 3 completed.")
-
-  return(list())
+  message("\nRunning of emptydrops step complete.")
+  return(res)
 }
 
 
-# compute_emptydrops function
-#' @description Save the result of emptyDrops per sample.
-#' @param scdata Raw sparse matrix with the counts for one sample.
-#' @param sample_name Name of the sample that we are preparing.
-#'
-#' @return
-compute_emptydrops <- function(scdata, sample_name) {
-  message("Sample --> ", sample_name, "...")
+#' @param sample_counts dgCMatrix with counts for one sample.
+compute_sample_edrops <- function(sample_counts) {
+  # check if filtered
+  num_empty_drops <- sum(Matrix::colSums(sample_counts) < gem2s$max.empty.counts)
 
-  # [HARDCODE]
-  threshold_emptydrops <- 100
-  # threshold_emptydrops <- 2000 # use this to simulate unfiltered data
-  # automatically checking if data contains enough (50) barcodes that
-  # are confidently considered to be empty to serve as training set
-  nr_barcodes_ambient <- sum(colSums(scdata) < threshold_emptydrops)
-  range(colSums(scdata))
-  if (nr_barcodes_ambient < 50) {
-    flag_filtered <- TRUE
-    message("Found not enough [", nr_barcodes_ambient, "] ambient barcodes,
-          so data is considered to be pre-filtered")
-    message("Smallest nr of UMI for any barcode: ", min(colSums(scdata)))
-    message("EmptyDrops filter will not be applied")
+  if (num_empty_drops < gem2s$max.empty.drops) {
+    message("Detected sample as filtered --> Skipping emptyDrops.")
+    sample_edrops <- NULL
   } else {
-    flag_filtered <- FALSE
-    # if non-filtered, run emptyDrops and save results in file
-    message("Found enough [", nr_barcodes_ambient, "] ambient barcodes,
-          so data is considered to be not filtered")
-    emptydrops_out <- DropletUtils::emptyDrops(scdata, lower = threshold_emptydrops)
-
-    file_path <- paste("/output/pre-emptydrops-", sample_name, ".rds", sep = "")
-    saveRDS(emptydrops_out, file = file_path, compress = FALSE)
+    sample_edrops <- DropletUtils::emptyDrops(sample_counts)
   }
+
+  return(sample_edrops)
 }
