@@ -4,7 +4,6 @@
       name: "{{ .Release.Name }}-server"
       labels:
         type: 'pipeline'
-        experimentId: "{{ .Values.experimentId }}"
         sandboxId: "{{ .Values.sandboxId }}"
     spec:
       restartPolicy: Always
