@@ -19,7 +19,7 @@ buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
     }
 
     activity_arn <- sprintf("arn:aws:states:%s:%s:activity:%s", aws_region, aws_account_id, activity_id)
-    message("Build activity ARN: ", activity_arn)
+    message("Built activity ARN: ", activity_arn)
     return(activity_arn)
 }
 
@@ -49,8 +49,6 @@ load_config <- function(development_aws_server) {
             break
         }
     }
-
-    activity_arn = ""
 
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
