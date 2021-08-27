@@ -11,6 +11,6 @@ spec:
     matchLabels:
       sandboxId: "{{ .Values.sandboxId }}"
     matchExpressions:
-      - {key: activityArn, operator: DoesNotExist}
+      - {key: activityId, operator: DoesNotExist}
   template:
     {{ template "pipeline.pod-template" . }}
