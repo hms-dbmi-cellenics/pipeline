@@ -13,14 +13,28 @@ options(keep.source.pkgs = TRUE)
 
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f, keep.source = TRUE)
 
+buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
+    if(is.na(activity_id)) {
+        return(NA)
+    }
+
+    activity_arn <- sprintf("arn:aws:states:%s:%s:activity:%s", aws_region, aws_account_id, activity_id)
+    message("Build activity ARN: ", activity_arn)
+    return(activity_arn)
+}
+
 load_config <- function(development_aws_server) {
     label_path <- "/etc/podinfo/labels"
+    aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", "242905224710")
+    aws_region <- Sys.getenv("AWS_DEFAULT_REGION", "eu-west-1")
+
     activity_arn <- NA
 
     repeat {
         if(file.exists(label_path)) {
             labels <- read.csv(label_path, sep="=", row.names=1, header=FALSE)
-            activity_arn <- labels["activityArn", ]
+            activity_id <- labels["activityId", ]
+            activity_arn <- buildActivityArn(aws_region, aws_account_id, activity_id)
         }
 
         if(is.na(activity_arn)) {
@@ -36,11 +50,13 @@ load_config <- function(development_aws_server) {
         }
     }
 
+    activity_arn = ""
+
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
         sandbox_id = Sys.getenv("SANDBOX_ID", "default"),
-        aws_account_id = Sys.getenv("AWS_ACCOUNT_ID", "242905224710"),
-        aws_region = Sys.getenv("AWS_DEFAULT_REGION", "eu-west-1"),
+        aws_account_id = aws_account_id,
+        aws_region = aws_region,
         pod_name = Sys.getenv("K8S_POD_NAME", "local"),
         activity_arn = activity_arn,
         debug_config = list(
