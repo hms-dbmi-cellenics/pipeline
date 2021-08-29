@@ -16,8 +16,6 @@
             value: "{{ .Values.clusterEnv }}"
           - name: SANDBOX_ID
             value: "{{ .Values.sandboxId }}"
-          - name: AWS_ACCOUNT_ID
-            value: "{{ .Values.awsAccountId }}"
           - name: AWS_DEFAULT_REGION
             value: "{{ .Values.awsRegion }}"
         volumeMounts:
