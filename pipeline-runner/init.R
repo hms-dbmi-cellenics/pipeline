@@ -283,17 +283,24 @@ wrapper <- function(input_json) {
 #
 init <- function() {
     pipeline_config <- load_config('host.docker.internal')
+    message("Loaded pipeline config")
     states <- paws::sfn(config=pipeline_config$aws_config)
+    message("Loaded step function")
 
     flog.layout(layout.simple)
     flog.threshold(ERROR)
 
+    message("Waiting for tasks")
 
     repeat {
+        message("Received task ", pipeline_config)
+        message("Worker name ", pipeline_config$pod_name)
         c(taskToken, input) %<-% states$get_activity_task(
             activityArn = pipeline_config$activity_arn,
             workerName = pipeline_config$pod_name
         )
+        message("Task token ", taskToken)
+        message("Input ", input)
 
         if(is.null(taskToken) || !length(taskToken) || taskToken == "") {
             message('No input received during last poll, shutting down...')
