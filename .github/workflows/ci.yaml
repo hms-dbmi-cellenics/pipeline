@@ -81,7 +81,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -238,8 +238,9 @@ jobs:
           | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.chart.ref "$CHART_REF" \
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
-          | yq w -d1 - spec.values.clusterEnv "$CLUSTER_ENV" \
-          | yq w -d1 - spec.values.awsAccountId "${{ steps.setup-aws.outputs.aws-account-id }}" \
+          | yq w -d1 - spec.values.clusterEnv "$KUBERNETES_ENV" \
+          | yq w -d1 - spec.values.awsAccountId \"${{ steps.setup-aws.outputs.aws-account-id }}\" \
+          | yq w -d1 - spec.values.awsRegion "${{ secrets.AWS_DEFAULT_REGION }}" \
           | yq w -d1 - spec.values.pipelineRunner.image "$IMAGE_NAME-pipeline-runner" \
           | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \

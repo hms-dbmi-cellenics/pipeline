@@ -25,8 +25,8 @@ buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
 
 load_config <- function(development_aws_server) {
     label_path <- "/etc/podinfo/labels"
-    aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", "242905224710")
-    aws_region <- Sys.getenv("AWS_DEFAULT_REGION", "eu-west-1")
+    aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset="242905224710")
+    aws_region <- Sys.getenv("AWS_DEFAULT_REGION", unset="eu-west-1")
 
     activity_arn <- NA
 
