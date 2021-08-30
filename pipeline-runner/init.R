@@ -293,13 +293,10 @@ init <- function() {
     message("Waiting for tasks")
 
     repeat {
-        message("Received task ", pipeline_config)
-        message("Worker name ", pipeline_config$pod_name)
         c(taskToken, input) %<-% states$get_activity_task(
             activityArn = pipeline_config$activity_arn,
             workerName = pipeline_config$pod_name
         )
-        message("Task token ", taskToken)
         message("Input ", input)
 
         if(is.null(taskToken) || !length(taskToken) || taskToken == "") {
