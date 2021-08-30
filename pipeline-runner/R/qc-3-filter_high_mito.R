@@ -20,7 +20,6 @@
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
 filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondrialContent", num_cells_to_downsample = 6000) {
-  tmp_sample <- sub("sample-", "", sample_id)
 
   # Check if the experiment has MT-content
   if (!"percent.mt" %in% colnames(scdata@meta.data)) {
@@ -32,8 +31,8 @@ filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondri
   maxFraction <- config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction
 
   # Computing the subset for the current sample
-  obj_metadata <- scdata@meta.data
-  barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
+  meta <- scdata@meta.data
+  barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
   if (length(barcode_names_this_sample) == 0) {
     return(list(data = scdata, config = config, plotData = list()))
   }
@@ -47,9 +46,9 @@ filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondri
 
   if (as.logical(toupper(config$enabled))) {
     # extract cell id that do not(!) belong to current sample (to not apply filter there)
-    barcode_names_non_sample <- rownames(obj_metadata[-grep(tmp_sample, rownames(obj_metadata)), ])
+    barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id]
     # all barcodes that match threshold in the subset
-    barcode_names_keep_current_sample <- rownames(sample_subset@meta.data[sample_subset@meta.data$percent.mt <= maxFraction * 100, ])
+    barcode_names_keep_current_sample <- colnames(sample_subset)[sample_subset$percent.mt <= maxFraction * 100]
     # combine the 2:
     barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
 
@@ -84,8 +83,8 @@ filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondri
 
   # populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata, tmp_sample),
-    after = calc_filter_stats(scdata.filtered, tmp_sample)
+    before = calc_filter_stats(scdata, sample_id),
+    after = calc_filter_stats(scdata.filtered, sample_id)
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats

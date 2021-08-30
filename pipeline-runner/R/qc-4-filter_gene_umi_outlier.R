@@ -24,15 +24,14 @@
 #' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 #'
 filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
-  tmp_sample <- sub("sample-", "", sample_id)
 
   p.level <- config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level
 
   if (as.logical(toupper(config$enabled))) {
     if (config$filterSettings$regressionType == "gam") {
       # Subsetting this sample
-      obj_metadata <- scdata@meta.data
-      barcode_names_this_sample <- rownames(obj_metadata[grep(tmp_sample, rownames(obj_metadata)), ])
+      meta <- scdata@meta.data
+      barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
       if (length(barcode_names_this_sample) == 0) {
         return(list(data = scdata, config = config, plotData = list()))
       }
@@ -101,8 +100,8 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numG
 
   # Populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata, tmp_sample),
-    after = calc_filter_stats(scdata.filtered, tmp_sample)
+    before = calc_filter_stats(scdata, sample_id),
+    after = calc_filter_stats(scdata.filtered, sample_id)
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats

@@ -62,7 +62,7 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
 #' Calculates statistics before/after filter step
 #'
 #' @param scdata \code{SeuratObject}
-#' @param tmp_sample sample name in \code{scdata$samples} to compute statistics for
+#' @param sample_id sample name in \code{scdata$samples} to compute statistics for
 #'
 #' @return list with \itemize{
 #'   \item{"num_cells"}{Number of cells in sample}
@@ -71,10 +71,10 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
 #'   \item{"median_umis"}{Median number of counts per cell}
 #' }
 #'
-calc_filter_stats <- function(scdata, tmp_sample) {
+calc_filter_stats <- function(scdata, sample_id) {
 
   # in case no cells kept
-  is.sample <- scdata$samples == tmp_sample
+  is.sample <- scdata$samples == sample_id
 
   if (!sum(is.sample)) {
     return(list(
