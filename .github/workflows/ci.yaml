@@ -224,7 +224,7 @@ jobs:
             SANDBOX_ID="STAGING_SANDBOX_ID"
             CHART_REF="STAGING_CHART_REF"
             KUBERNETES_ENV="staging"
-            REPLICA_COUNT="1"
+            REPLICA_COUNT="2"
             IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
           fi
 
