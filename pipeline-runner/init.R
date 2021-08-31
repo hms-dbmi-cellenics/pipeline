@@ -20,7 +20,6 @@ buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
     }
 
     activity_arn <- sprintf("arn:aws:states:%s:%s:activity:%s", aws_region, aws_account_id, activity_id)
-    message("Built activity ARN: ", activity_arn)
     return(activity_arn)
 }
 
@@ -303,7 +302,6 @@ init <- function() {
             activityArn = pipeline_config$activity_arn,
             workerName = pipeline_config$pod_name
         )
-        message("Input ", input)
 
         if(is.null(taskToken) || !length(taskToken) || taskToken == "") {
             message('No input received during last poll, shutting down...')
