@@ -31,12 +31,14 @@ load_config <- function(development_aws_server) {
     activity_arn <- NA
 
     repeat {
+        # if /etc/podinfo/labels exists we are running in a remote aws pod
         if(file.exists(label_path)) {
             labels <- read.csv(label_path, sep="=", row.names=1, header=FALSE)
             activity_id <- labels["activityId", ]
             activity_arn <- buildActivityArn(aws_region, aws_account_id, activity_id)
         }
 
+        # if we didn't find an activity in podinfo try to get the from the env (means we are running locally)
         if(is.na(activity_arn)) {
             activity_arn <- Sys.getenv("ACTIVITY_ARN", unset = NA)
         }
