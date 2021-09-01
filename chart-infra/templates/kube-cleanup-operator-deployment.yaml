@@ -27,9 +27,10 @@ spec:
       containers:
       - args:
         - --namespace={{.Release.Namespace}}
+        # delete orphaned pods after 1s, so successfully run
+        # workers wont linger around
         - --legacy-mode=false
-        - --delete-successful-after=30m
-        - --delete-failed-after=30m
+        - --delete-orphaned-pods-after=1s
         image: quay.io/lwolf/kube-cleanup-operator
         imagePullPolicy: Always
         name: cleanup-operator

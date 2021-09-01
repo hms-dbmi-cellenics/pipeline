@@ -81,7 +81,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -207,7 +207,7 @@ jobs:
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="production"
-
+            REPLICA_COUNT="4"
             SHORT_TAG_REF=${REF_DASHED/refs-tags-/}
             IMAGE_GLOB="glob:${IMAGE_TAG/$SHORT_TAG_REF/*}"
           fi
@@ -216,6 +216,7 @@ jobs:
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
+            REPLICA_COUNT="4"
             IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
           fi
 
@@ -223,6 +224,7 @@ jobs:
             SANDBOX_ID="STAGING_SANDBOX_ID"
             CHART_REF="STAGING_CHART_REF"
             KUBERNETES_ENV="staging"
+            REPLICA_COUNT="2"
             IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
           fi
 
@@ -231,12 +233,17 @@ jobs:
 
           yq w -d1 .flux.yaml metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
           | yq w -d0 - metadata.name "$DEPLOYMENT_NAME-$SANDBOX_ID" \
-          | yq w -d0 - metadata.labels.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - metadata.name "$DEPLOYMENT_NAME" \
+          | yq w -d0 - metadata.labels.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.chart.ref "$CHART_REF" \
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
-          | yq w -d1 - spec.values.pipeline-runner.image "$IMAGE_NAME-pipeline-runner" \
+          | yq w -d1 - spec.values.clusterEnv "$KUBERNETES_ENV" \
+          | yq w -d1 - spec.values.awsAccountId --tag '!!str' "${{ steps.setup-aws.outputs.aws-account-id }}" \
+          | yq w -d1 - spec.values.awsRegion "${{ secrets.AWS_DEFAULT_REGION }}" \
+          | yq w -d1 - spec.values.pipelineRunner.image "$IMAGE_NAME-pipeline-runner" \
+          | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
+          | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \
           | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/pipeline-role-$KUBERNETES_ENV" \
           | yq w -d1 - "metadata.annotations[filter.fluxcd.io/pipeline-runner]" "glob:$IMAGE_GLOB-pipeline-runner" \
           > $DEPLOYMENT_NAME.yaml
