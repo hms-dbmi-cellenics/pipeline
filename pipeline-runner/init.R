@@ -144,6 +144,25 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
     return(res)
 }
 
+run_vis2s_step <- function(task_name, input, pipeline_config, prev_out) {
+
+    # list of task functions named by task name
+    tasks <- list(
+        'downloadSpaceranger' = download_spaceranger_files,
+        'processSpaceranger' = process_spaceranger_files
+    )
+
+    if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
+    task <- tasks[[task_name]]
+
+    tstart <- Sys.time()
+    res <- task(input, pipeline_config, prev_out)
+    ttask <- format(Sys.time()-tstart, digits = 2)
+    message("⏱️ Time to complete ", task_name, ": ", ttask, '\n')
+
+    return(res)
+}
+
 call_gem2s <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
 
@@ -157,6 +176,27 @@ call_gem2s <- function(task_name, input, pipeline_config) {
     return(message_id)
 }
 
+
+call_vis2s <- function(task_name, input, pipeline_config) {
+    experiment_id <- input$experimentId
+    upload_count_matrix <- input$uploadCountMatrix
+
+    if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+
+    c(data, task_out) %<-% run_vis2s_step(task_name, input, pipeline_config, prev_out)
+    assign("prev_out", task_out, pos = ".GlobalEnv")
+
+    if(upload_count_matrix) {
+
+        # INITIAL SUPPORT FOR ONE SAMPLE
+        scdata <- prev_out$scdata_list[[1]]
+
+        object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
+        message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
+    }
+
+    return(message_id)
+}
 #
 # call_data_processing
 # Runs step @task_name of the data processing pipeline, send plot data to s3 and output message to api.
@@ -239,6 +279,8 @@ wrapper <- function(input_json) {
     if (process_name == 'qc') {
         message_id <- call_data_processing(task_name, input, pipeline_config)
     } else if (process_name == 'gem2s') {
+        message_id <- call_gem2s(task_name, input, pipeline_config)
+    } else if (process_name == 'vis2s') {
         message_id <- call_gem2s(task_name, input, pipeline_config)
     } else {
         stop("Process name not recognized.")
