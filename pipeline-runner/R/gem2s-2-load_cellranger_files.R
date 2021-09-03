@@ -69,7 +69,8 @@ format_annot <- function(annot_list) {
   annot <- unique(do.call("rbind", annot_list))
   annot <- annot[, c(1, 2)]
   colnames(annot) <- c("input", "name")
-
+  
+  library(dplyr)
   annot <- annot %>% group_by(input) %>% mutate(input = if(n( ) > 1) {paste0(input,"-",name)} else {paste0(input)})
 
   message("Deduplicating gene annotations...")
