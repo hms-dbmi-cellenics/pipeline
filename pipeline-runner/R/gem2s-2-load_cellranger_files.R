@@ -70,6 +70,8 @@ format_annot <- function(annot_list) {
   annot <- annot[, c(1, 2)]
   colnames(annot) <- c("input", "name")
 
+  annot <- annot %>% group_by(input) %>% mutate(input = if(n( ) > 1) {paste0(input,"-",name)} else {paste0(input)})
+
   message("Deduplicating gene annotations...")
 
   # add ENSEMBL ID for genes that are duplicated (geneNameDuplicated-ENSEMBL)
