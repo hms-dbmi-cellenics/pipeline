@@ -35,7 +35,7 @@ format_cell_sets_object <- function (cell_sets,type,color_pool) {
   for(i in unique(cell_sets$cluster)){
     cells <- cell_sets[cell_sets$cluster==i,"cell_ids"]
     new_set <- list(
-      key=paste0("key","-",i),
+      key=paste0(key,"-",i),
       name=paste0("Cluster ",i),
       rootNode=FALSE,
       type="cellSets",
@@ -56,7 +56,7 @@ update_sets_through_api <- function(cell_sets_object,apiUrl,expId,cellSetKey){
     encode="json",
     httr::add_headers(
       "Content-Type"= "application/boschni-json-merger+json",
-      "Authorization"= "Bearer eyJraWQiOiJ2TytRZ1lud0lnOU5pT2Y3azJTNEFEY2xvaDBwVlNUbkNNdDJMOU8xQU1RPSIsImFsZyI6IlJTMjU2In0.eyJhdF9oYXNoIjoiN0tFQUFkeVE1dVpBcDhCNHFuZDRzUSIsInN1YiI6ImI3MjM0YmVjLTE4OGQtNDAzMS1iYWRmLWQ2NGM1NDg5ZjgyYSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuZXUtd2VzdC0xLmFtYXpvbmF3cy5jb21cL2V1LXdlc3QtMV9zVlFMMTVZeHUiLCJjb2duaXRvOnVzZXJuYW1lIjoiYjcyMzRiZWMtMTg4ZC00MDMxLWJhZGYtZDY0YzU0ODlmODJhIiwiYXVkIjoiMWR1N2FoOXByaXNvN3A1b2F2aGEyaTluamgiLCJldmVudF9pZCI6IjViZDE3MzdlLTJhMWMtNGM2MC1hNTU1LTg0OTYxMzcwN2Q4NSIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNjMxMTE5MTMzLCJuYW1lIjoiT2xpdmVyIiwiZXhwIjoxNjMxMTMwNzg1LCJpYXQiOjE2MzExMjcxODUsImVtYWlsIjoib2xpdmVyQGJpb21hZ2UubmV0In0.S5rpbxhnOcuyjzKir6Rbu3lIsWGyThxo0Y2fc__aS1WNQLPGOwiTJ46tpxIFp877ir_ltRemVnP07IE_bKaiuJ9Bn_0KqHhiU2ka2Wp8L925-uKuqJqFLs4e7_-EKdVUThg91x370fLxaO3pfYfOezN9kMPjmvjBi3OzyAKai8-xg-dv9tjJH-YR7XaeB2dxexPUyiH3bMjsqdz1BjBCqRqj7ZQ9MeOYTTcGtzFHV4-uXof0TcfuqNV3DsgwTlV9COmYSTRjRfgljDOxcnGqpCO9vQhxIqdvMUkIDUPjLI46PQjJwlIe2Fg5y_p42qNC44Fgf4EEgqC14NhneluLRg"))
+      "Authorization"= ""))
 }
 
 
