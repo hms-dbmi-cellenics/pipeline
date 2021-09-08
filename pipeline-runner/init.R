@@ -51,14 +51,15 @@ load_config <- function(development_aws_server) {
             break
         }
     }
-
+    sandbox <- Sys.getenv("SANDBOX_ID", "default")
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
-        sandbox_id = Sys.getenv("SANDBOX_ID", "default"),
+        sandbox_id = sandbox,
         aws_account_id = aws_account_id,
         aws_region = aws_region,
         pod_name = Sys.getenv("K8S_POD_NAME", "local"),
         activity_arn = activity_arn,
+        api_url = paste0("http://api-",sandbox,".api-",sandbox,".svc.cluster.local:3000"),
         debug_config = list(
             step = Sys.getenv("DEBUG_STEP", ""),
             path = Sys.getenv("DEBUG_PATH", "")
@@ -75,6 +76,7 @@ load_config <- function(development_aws_server) {
     }
 
     if(config$cluster_env == 'development') {
+        config$api_url <- "http://host.docker.internal:3000"
         config$aws_config[['endpoint']] <- sprintf("http://%s:4566", development_aws_server) # DOCKER_GATEWAY_HOST
         config$aws_config[['credentials']] <- list(
             creds = list(
@@ -214,6 +216,8 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         input$config <- config
     }
 
+    #need this for embed_and_cluster
+    config$api_url <- pipeline_config$api_url
 
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
