@@ -32,7 +32,7 @@ format_cell_sets_object <- function (cell_sets,type,color_pool) {
 
   #careful with capital l on type for the key.
   cell_sets_object <- list(key=key,name=name,rootNode=TRUE,type="cellSets",children=list())
-  for(i in unique(cell_sets$cluster)){
+  for(i in sort(unique(cell_sets$cluster))){
     cells <- cell_sets[cell_sets$cluster==i,"cell_ids"]
     new_set <- list(
       key=paste0(key,"-",i),
