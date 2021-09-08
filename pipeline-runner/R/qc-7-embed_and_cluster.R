@@ -51,7 +51,7 @@ format_cell_sets_object <- function (cell_sets,type,color_pool) {
 update_sets_through_api <- function(cell_sets_object,apiUrl,expId,cellSetKey){
   httr::PATCH(
     paste0(apiUrl,"/v1/experiments/",expId,"/cellSets"),
-    body = list(list("$match"=list(query=paste0("$[?(@.key == ",cellSetKey,")]"),"$remove"=TRUE)),list("$prepend"=cell_sets_object)),
+    body = list(list("$match"=list(query=paste0("$[?(@.key == \"",cellSetKey,"\")]"),"$remove"=TRUE)),list("$prepend"=cell_sets_object)),
     encode="json",
     httr::add_headers(
       "Content-Type"= "application/boschni-json-merger+json",
