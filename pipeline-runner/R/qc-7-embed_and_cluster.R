@@ -49,9 +49,8 @@ format_cell_sets_object <- function (cell_sets,type,color_pool) {
 }
 
 update_sets_through_api <- function(cell_sets_object,apiUrl,expId,cellSetKey){
-  message(expId)
   httr::PATCH(
-    paste0("http://localhost:3000","/v1/experiments/",expId,"/cellSets"),
+    paste0(apiUrl,"/v1/experiments/",expId,"/cellSets"),
     body = list("$match"=list(query=paste0("$[?(@.key == ",cellSetKey,")]"),"$remove"=TRUE),"$prepend"=cell_sets_object),
     encode="json",
     httr::add_headers(
