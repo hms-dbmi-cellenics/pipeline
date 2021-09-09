@@ -134,6 +134,7 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
 
     # run task and time it
     tstart <- Sys.time()
+
     out <- task(scdata, config, sample_id, task_name)
     ttask <- format(Sys.time()-tstart, digits = 2)
     message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask, '\n')
@@ -191,7 +192,7 @@ call_gem2s <- function(task_name, input, pipeline_config) {
     c(data, task_out) %<-% run_gem2s_step(task_name, input, pipeline_config, prev_out)
     assign("prev_out", task_out, pos = ".GlobalEnv")
 
-    message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data)
+    message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input$authJWT)
 
     return(message_id)
 }
@@ -218,6 +219,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
     #need this for embed_and_cluster
     config$api_url <- pipeline_config$api_url
+    config$auth_JWT <- input$authJWT
 
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
