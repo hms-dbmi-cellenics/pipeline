@@ -190,16 +190,14 @@ plot_knee_regions <- function(dt, thresh = 0.01) {
 # samples.
 generate_default_values_cellSizeDistribution <- function(scdata, config, threshold.low) {
   # `CalculateBarcodeInflections` including inflection point calculation
-  scdata_tmp <- CalculateBarcodeInflections(
+  scdata_tmp <- Seurat::CalculateBarcodeInflections(
     object = scdata,
     barcode.column = "nCount_RNA",
-    group.column = "samples",
-    # [HARDCODED]
-    threshold.low = threshold.low,
-    threshold.high = NULL
+    group.column = "samples"
   )
+
   # returned is both the rank(s) as well as inflection point
-  sample_subset <- Tool(scdata_tmp, slot = "CalculateBarcodeInflections")$inflection_points
+  sample_subset <- Seurat::Tool(scdata_tmp, slot = "CalculateBarcodeInflections")$inflection_points
   # extracting only inflection point(s)
   return(sample_subset$nCount_RNA)
 }
