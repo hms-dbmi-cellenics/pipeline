@@ -5,12 +5,10 @@
 
 embed_and_cluster <- function(scdata, config, sample_id, task_name = 'configureEmbedding') {
   message("starting clusters")
-  req <- list()
   type <- config$clusteringSettings$method
   methodSettings <- config$clusteringSettings$methodSettings[[type]]
-  req$body <- list(type=type, config=list(resolution=methodSettings$resolution))
   message("Running clustering")
-  res <- runClusters(req,scdata)
+  res <- runClusters(type,methodSettings$resolution,scdata)
   message("formatting cellsets")
   formated_cell_sets <- format_cell_sets_object(res,type,scdata@misc$color_pool)
   message("udating through api")
@@ -48,10 +46,10 @@ format_cell_sets_object <- function (cell_sets,type,color_pool) {
   return(cell_sets_object)
 }
 
-update_sets_through_api <- function(cell_sets_object,apiUrl,expId,cellSetKey){
+update_sets_through_api <- function(cell_sets_object,api_url,experiment_id,cell_set_key){
   httr::PATCH(
-    paste0(apiUrl,"/v1/experiments/",expId,"/cellSets"),
-    body = list(list("$match"=list(query=paste0("$[?(@.key == ",cellSetKey,")]"),"$remove"=TRUE)),list("$prepend"=cell_sets_object)),
+    paste0(api_url,"/v1/experiments/",experiment_id,"/cellSets"),
+    body = list(list("$match"=list(query=paste0("$[?(@.key == ",cell_set_key,")]"),"$remove"=TRUE)),list("$prepend"=cell_sets_object)),
     encode="json",
     httr::add_headers(
       "Content-Type"= "application/boschni-json-merger+json",

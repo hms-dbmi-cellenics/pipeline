@@ -99,12 +99,9 @@ calc_filter_stats <- function(scdata, sample_id) {
   )
 }
 
-runClusters <- function(req, data) {
-  resol <- req$body$config$resolution
-  type <- req$body$type
-
-  data <- getClusters(type, resol, data)
-  res_col <- paste0(data@active.assay, "_snn_res.",toString(resol))
+runClusters <- function(type,resolution, data) {
+  data <- getClusters(type, resolution, data)
+  res_col <- paste0(data@active.assay, "_snn_res.",toString(resolution))
   # In the meta data slot the clustering is stored with the resolution used to calculate it
   # RNA_snn_res.#resolution
   df <- data.frame(cluster = data@meta.data[, res_col], cell_ids = data@meta.data$cells_id)
