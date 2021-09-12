@@ -12,7 +12,8 @@ embed_and_cluster <- function(scdata, config, sample_id, task_name = 'configureE
   message("formatting cellsets")
   formated_cell_sets <- format_cell_sets_object(res,type,scdata@misc$color_pool)
   message("udating through api")
-  update_sets_through_api(formated_cell_sets,config$api_url,scdata@misc$experimentId,type)
+
+  update_sets_through_api(formated_cell_sets,config$api_url,scdata@misc$experimentId,type,config$auth_JWT)
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
@@ -52,8 +53,8 @@ update_sets_through_api <- function(cell_sets_object,api_url,experiment_id,cell_
     body = list(list("$match"=list(query=paste0("$[?(@.key == ",cell_set_key,")]"),"$remove"=TRUE)),list("$prepend"=cell_sets_object)),
     encode="json",
     httr::add_headers(
-      "Content-Type"= "application/boschni-json-merger+json",
-      "Authorization"= ""))
+      "Content-Type" = "application/boschni-json-merger+json",
+      "Authorization"= auth_JWT))
 }
 
 

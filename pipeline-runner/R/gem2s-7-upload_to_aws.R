@@ -52,7 +52,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     data = list(
       item = experiment_data,
       table = pipeline_config$experiments_table),
-    output = list())
+    output = list()
+  )
 
   message("\nUpload to AWS step complete.")
   return(res)
