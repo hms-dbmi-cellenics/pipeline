@@ -145,25 +145,22 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
 }
 
 upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
-  s3 <- paws::s3(config = pipeline_config$aws_config)
 
   object_key <- paste0(experiment_id, "/r.rds")
 
   count_matrix <- tempfile()
   saveRDS(data, file = count_matrix)
 
+  message("Count matrix file size : ", format(object.size(count_matrix)))
   message("Uploading updated count matrix to S3 bucket ", pipeline_config$processed_bucket, " at key ", object_key, "...")
-  s3$put_object(
-    Bucket = pipeline_config$processed_bucket,
-    Key = object_key,
-    Body = count_matrix
-  )
+
+  put_object_in_s3_multipart(pipeline_config, pipeline_config$processed_bucket, count_matrix, object_key)
 
   return(object_key)
 }
 
 put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
-  print(sprintf("Putting %s in %s", key, bucket))
+  message(sprintf("Putting %s in %s", key, bucket))
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
   s3$put_object(
@@ -180,7 +177,7 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
 #' @param bucket The name of the S3 bucket to be uploaded to, e.g. `my-bucket`.
 #' @param key The name to assign to the file in the S3 bucket, e.g. `path/to/file`.
 put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
-  print(sprintf("Putting %s in %s from object %s", key, bucket, object))
+  message(sprintf("Putting %s in %s from object %s", key, bucket, object))
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
 

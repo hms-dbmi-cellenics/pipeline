@@ -1,65 +1,68 @@
-#  - Compute doublet scores per sample
-#  - Save an txt file with doublet scores per sample [doublet-scores-sampleName]
+#' Compute doublet score for count matrices
+#'
+#' @inheritParams download_cellranger_files
+#' @param prev_out 'output' slot from call to \code{run_emptydrops}
+#'
+#' @return \code{prev_out} with added slot 'doublet_scores' containing result of call to
+#'   \code{\link{compute_doublet_scores}} for each sample.
+#'
+#' @export
+#'
+score_doublets <- function(input, pipeline_config, prev_out) {
+  message("Calculating probability of droplets being doublets...")
 
-score_doublets <- function(input, pipeline_config) {
-  print(list.files(paste("/output", sep = "/"), all.files = TRUE, full.names = TRUE, recursive = TRUE))
-  message("reloading old matrices...")
+  # NOTE: edrops is not required
+  check_prev_out(prev_out, c('config', 'counts_list', 'annot'))
 
-  scdata_list <- readRDS("/output/pre-doublet-scdata_list.rds")
+  edrops_list <- prev_out$edrops
+  counts_list <- prev_out$counts_list
+  samples <- names(counts_list)
 
-  message("Loading configuration...")
-  config <- RJSONIO::fromJSON("/input/meta.json")
+  scores <- list()
+  for (sample in samples) {
+    message("\nSample --> ", sample)
+    sample_counts <- counts_list[[sample]]
+    sample_edrops <- edrops_list[[sample]]
 
-  print_config(4, "Score Doublets", input, pipeline_config, config)
+    # scDblFinder expects empty droplets to be removed
+    if (!is.null(sample_edrops)) {
+      keep <- which(sample_edrops$FDR <= gem2s$max.edrops.fdr)
+      sample_counts <- sample_counts[, keep]
+    }
 
-  # Check which samples have been selected. Otherwiser we are going to use all of them.
-  if (length(config$samples) > 0) {
-    samples <- config$samples
-  } else {
-    samples <- names(scdata_list)
+    # also filter low UMI as per scDblFinder:::.checkSCE()
+    ntot <- Matrix::colSums(sample_counts)
+    sample_counts <- sample_counts[, ntot > 200]
+
+    scores[[sample]] <- compute_sample_doublet_scores(sample_counts)
   }
 
-  scdata_list <- scdata_list[samples]
+  prev_out$doublet_scores <- scores
+  res <- list(
+    data = list(),
+    output = prev_out)
 
-  message("calculating probability of barcodes being doublets...")
-  for (sample_name in names(scdata_list)) {
-    compute_doublet_scores(scdata_list[[sample_name]], sample_name)
-  }
-
-  message("Step 4 completed.")
-
-  return(list())
+  message("\nScoring doublets step complete.")
+  return(res)
 }
 
 
-# compute_doublet_scores function
-#' @description Save the result of doublets scores per sample.
-#' @param scdata Raw sparse matrix with the counts for one sample.
-#' @param sample_name Name of the sample that we are preparing.
+#' Compute doublets scores per sample.
 #'
-#' @return
-compute_doublet_scores <- function(scdata, sample_name) {
-  message("loading scd")
-  library(scDblFinder)
-  message("loaded")
-  message("Sample --> ", sample_name, "...")
-
-
-  edpath <- paste0("/output/pre-emptydrops-", sample_name, ".rds")
-  if (file.exists(edpath)) {
-    edout <- readRDS(edpath)
-    keep <- which(edout$FDR <= 0.001)
-    scdata <- scdata[, keep]
-  }
-
+#' @param sample_counts Sparse matrix with the counts for one sample.
+#'
+#' @return data.frame with doublet scores and assigned classes
+#'
+compute_sample_doublet_scores <- function(sample_counts) {
 
   set.seed(0)
-  scdata_DS <- scDblFinder(scdata, dbr = NULL, trajectoryMode = FALSE)
-  df_doublet_scores <- data.frame(
-    Barcodes = rownames(scdata_DS@colData),
-    doublet_scores = scdata_DS@colData$scDblFinder.score,
-    doublet_class = scdata_DS@colData$scDblFinder.class
+  sce <- scDblFinder::scDblFinder(sample_counts)
+  doublet_res <- data.frame(
+    row.names = colnames(sce),
+    barcodes = colnames(sce),
+    doublet_class = sce$scDblFinder.class,
+    doublet_scores = sce$scDblFinder.score
   )
 
-  write.table(df_doublet_scores, file = paste("/output/doublet-scores-", sample_name, ".csv", sep = ""), row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+  return(doublet_res)
 }

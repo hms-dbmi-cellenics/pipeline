@@ -12,15 +12,53 @@ options(future.globals.maxSize = 32 * 1024 * 1024^2)
 options(keep.source.pkgs = TRUE)
 
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f, keep.source = TRUE)
+load('R/sysdata.rda') # constants
+
+buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
+    if(is.na(activity_id)) {
+        return(NA)
+    }
+
+    activity_arn <- sprintf("arn:aws:states:%s:%s:activity:%s", aws_region, aws_account_id, activity_id)
+    return(activity_arn)
+}
 
 load_config <- function(development_aws_server) {
+    label_path <- "/etc/podinfo/labels"
+    aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset="242905224710")
+    aws_region <- Sys.getenv("AWS_DEFAULT_REGION", unset="eu-west-1")
+
+    activity_arn <- NA
+
+    repeat {
+        # if /etc/podinfo/labels exists we are running in a remote aws pod
+        if(file.exists(label_path)) {
+            labels <- read.csv(label_path, sep="=", row.names=1, header=FALSE)
+            activity_id <- labels["activityId", ]
+            activity_arn <- buildActivityArn(aws_region, aws_account_id, activity_id)
+        }
+
+        # if we didn't find an activity in podinfo try to get the from the env (means we are running locally)
+        if(is.na(activity_arn)) {
+            activity_arn <- Sys.getenv("ACTIVITY_ARN", unset = NA)
+        }
+
+        if(is.na(activity_arn)) {
+            message("No activity ARN label set yet, waiting...")
+            Sys.sleep(5)
+        } else {
+            message(paste("Welcome to Biomage R pipeline, activity arn", activity_arn))
+            break
+        }
+    }
+
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
         sandbox_id = Sys.getenv("SANDBOX_ID", "default"),
-        aws_account_id = Sys.getenv("AWS_ACCOUNT_ID", "242905224710"),
-        aws_region = Sys.getenv("AWS_DEFAULT_REGION", "eu-west-1"),
+        aws_account_id = aws_account_id,
+        aws_region = aws_region,
         pod_name = Sys.getenv("K8S_POD_NAME", "local"),
-        activity_arn = Sys.getenv("ACTIVITY_ARN", ""),
+        activity_arn = activity_arn,
         debug_config = list(
             step = Sys.getenv("DEBUG_STEP", ""),
             path = Sys.getenv("DEBUG_PATH", "")
@@ -96,7 +134,7 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
     tstart <- Sys.time()
     out <- task(scdata, config, sample_id, task_name)
     ttask <- format(Sys.time()-tstart, digits = 2)
-    message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask)
+    message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask, '\n')
 
     # filter specific info
     is.filter <- task_name %in% names(tasks)[1:5]
@@ -119,12 +157,12 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
 # pipeline_config as defined by load_config
 #
 
-run_gem2s_step <- function(task_name, input, pipeline_config) {
+run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
 
     # list of task functions named by task name
     tasks <- list(
-        'downloadGem' = download_cellranger,
-        'preproc' = load_cellranger,
+        'downloadGem' = download_cellranger_files,
+        'preproc' = load_cellranger_files,
         'emptyDrops' = run_emptydrops,
         'doubletScores' = score_doublets,
         'createSeurat' = create_seurat,
@@ -133,21 +171,24 @@ run_gem2s_step <- function(task_name, input, pipeline_config) {
     )
 
     if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
-    message("Starting task: ", task_name)
     task <- tasks[[task_name]]
 
     tstart <- Sys.time()
-    data <- task(input, pipeline_config)
+    res <- task(input, pipeline_config, prev_out)
     ttask <- format(Sys.time()-tstart, digits = 2)
-    message("⏱️ Time to complete ", task_name, ": ", ttask)
+    message("⏱️ Time to complete ", task_name, ": ", ttask, '\n')
 
-    return(data)
+    return(res)
 }
 
 call_gem2s <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
 
-    data %<-% run_gem2s_step(task_name, input, pipeline_config)
+    if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+
+    c(data, task_out) %<-% run_gem2s_step(task_name, input, pipeline_config, prev_out)
+    assign("prev_out", task_out, pos = ".GlobalEnv")
+
     message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data)
 
     return(message_id)
@@ -193,8 +234,8 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     assign("scdata", data, pos = ".GlobalEnv")
 
     # upload plot data result to S3
-    plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
     tstart <- Sys.time()
+    plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
 
     # Upload count matrix data
     if(upload_count_matrix) {
@@ -205,7 +246,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # send result to API
     message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
     ttask <- format(Sys.time()-tstart, digits = 2)
-    message("⏱️ Time to upload ", task_name, "objects for sample ", sample_id, ": ", ttask)
+    message("⏱️ Time to upload ", task_name, " objects for sample ", sample_id, ": ", ttask)
 
     return(message_id)
 }
@@ -220,11 +261,13 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 wrapper <- function(input_json) {
     # Get data from state machine input.
     input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
-
+    task_name <- input$taskName
+    message("------\nStarting task: ", task_name, '\n')
+    message("Input:")
     str(input)
+    message("")
 
     # common to gem2s and data processing
-    task_name <- input$taskName
     server <- input$server
     input <- input[names(input) != "server"]
     pipeline_config <- load_config(server)
@@ -247,10 +290,14 @@ wrapper <- function(input_json) {
 #
 init <- function() {
     pipeline_config <- load_config('host.docker.internal')
+    message("Loaded pipeline config")
     states <- paws::sfn(config=pipeline_config$aws_config)
+    message("Loaded step function")
 
     flog.layout(layout.simple)
     flog.threshold(ERROR)
+
+    message("Waiting for tasks")
 
     repeat {
         c(taskToken, input) %<-% states$get_activity_task(
@@ -264,10 +311,9 @@ init <- function() {
         }
 
         tryCatchLog({
-                message("Input ", input, " found")
                 wrapper(input)
 
-                message('Send task success')
+                message('Send task success\n------\n')
                 states$send_task_success(
                     taskToken = taskToken,
                     output = "{}"
