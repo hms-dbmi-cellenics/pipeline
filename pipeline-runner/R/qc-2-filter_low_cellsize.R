@@ -46,7 +46,7 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
       if (ncol(sample_subset) < threshold.low) {
         minCellSize <- min(sample_subset$nCount_RNA)
       } else {
-        minCellSize <- generate_default_values_cellSizeDistribution(sample_subset, config, threshold.low)
+        minCellSize <- generate_default_values_cellSizeDistribution(sample_subset, config)
       }
     }
   }
@@ -188,16 +188,17 @@ plot_knee_regions <- function(dt, thresh = 0.01) {
 # of the barcode distribution for each sample group. This is
 # useful for determining a threshold for removing low-quality
 # samples.
-generate_default_values_cellSizeDistribution <- function(scdata, config, threshold.low) {
+generate_default_values_cellSizeDistribution <- function(scdata, config) {
   # `CalculateBarcodeInflections` including inflection point calculation
+  threshold.low <- if(ncol(scdata)<=200) NULL else 100
   scdata_tmp <- Seurat::CalculateBarcodeInflections(
     object = scdata,
     barcode.column = "nCount_RNA",
-    group.column = "samples"
+    group.column = "samples",
+    threshold.low = threshold.low
   )
-
   # returned is both the rank(s) as well as inflection point
-  sample_subset <- Seurat::Tool(scdata_tmp, slot = "CalculateBarcodeInflections")$inflection_points
   # extracting only inflection point(s)
+  sample_subset <- Seurat::Tool(scdata_tmp, slot = "Seurat::CalculateBarcodeInflections")$inflection_points
   return(sample_subset$nCount_RNA)
 }
