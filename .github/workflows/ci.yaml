@@ -212,7 +212,7 @@ jobs:
             KUBERNETES_ENV="production"
             REPLICA_COUNT="4"
             SHORT_TAG_REF=${REF_DASHED/refs-tags-/}
-            IMAGE_GLOB="glob:${IMAGE_TAG/$SHORT_TAG_REF/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$SHORT_TAG_REF/*}"
             MEMORY_REQUEST="29Gi"
           fi
 
@@ -221,7 +221,7 @@ jobs:
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="2"
-            IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
             MEMORY_REQUEST="29Gi"
           fi
 
@@ -230,7 +230,7 @@ jobs:
             CHART_REF="STAGING_CHART_REF"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="2"
-            IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
             MEMORY_REQUEST="4Gi"
           fi
 
