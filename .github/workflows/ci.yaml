@@ -35,6 +35,9 @@ jobs:
           # and turn it into `refs-heads-master`
           REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
 
+          echo THIS BUILD HOTFIX/RELEASE IS RUNNING!! WOOT!
+          
+
           # the final tag is something like:
           # refs-heads-master-a4f8bc313dae
           # this is what we push to ECR
@@ -210,14 +213,16 @@ jobs:
             REPLICA_COUNT="4"
             SHORT_TAG_REF=${REF_DASHED/refs-tags-/}
             IMAGE_GLOB="glob:${IMAGE_TAG/$SHORT_TAG_REF/*}"
+            MEMORY_REQUEST="29Gi"
           fi
 
           if [ "${{ matrix.environment }}" = "develop" ]; then
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
-            REPLICA_COUNT="4"
+            REPLICA_COUNT="2"
             IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
+            MEMORY_REQUEST="29Gi"
           fi
 
           if [ "${{ matrix.environment }}" = "staging" ]; then
@@ -226,6 +231,7 @@ jobs:
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="2"
             IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
+            MEMORY_REQUEST="4Gi"
           fi
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
@@ -243,6 +249,7 @@ jobs:
           | yq w -d1 - spec.values.awsRegion "${{ secrets.AWS_DEFAULT_REGION }}" \
           | yq w -d1 - spec.values.pipelineRunner.image "$IMAGE_NAME-pipeline-runner" \
           | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
+          | yq w -d1 - spec.values.memoryRequest "$MEMORY_REQUEST" \
           | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \
           | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/pipeline-role-$KUBERNETES_ENV" \
           | yq w -d1 - "metadata.annotations[filter.fluxcd.io/pipeline-runner]" "glob:$IMAGE_GLOB-pipeline-runner" \

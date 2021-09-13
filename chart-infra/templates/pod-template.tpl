@@ -25,7 +25,7 @@
           mountPath: /etc/podinfo
         resources:
           requests:
-            memory: "29Gi"
+            memory: "{{ .Values.memoryRequest }}"
       volumes:
       - name: podinfo
         downwardAPI:
