@@ -35,6 +35,9 @@ jobs:
           # and turn it into `refs-heads-master`
           REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
 
+          echo THIS BUILD HOTFIX/RELEASE IS RUNNING!! WOOT!
+          
+
           # the final tag is something like:
           # refs-heads-master-a4f8bc313dae
           # this is what we push to ECR
