@@ -5,15 +5,15 @@
 
 embed_and_cluster <- function(scdata, config, sample_id, task_name = "configureEmbedding") {
   message("starting clusters")
-  type <- config$clusteringSettings$method
-  methodSettings <- config$clusteringSettings$methodSettings[[type]]
+  clustering_method <- config$clusteringSettings$method
+  methodSettings <- config$clusteringSettings$methodSettings[[clustering_method]]
   message("Running clustering")
-  cellSets <- runClusters(type, methodSettings$resolution, scdata)
+  cellSets <- runClusters(clustering_method, methodSettings$resolution, scdata)
   message("formatting cellsets")
-  formated_cell_sets <- format_cell_sets_object(cellSets, type, scdata@misc$color_pool)
+  formated_cell_sets <- format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
   message("udating through api")
 
-  update_sets_through_api(formated_cell_sets, config$api_url, scdata@misc$experimentId, type, config$auth_JWT)
+  update_sets_through_api(formated_cell_sets, config$api_url, scdata@misc$experimentId, clustering_method, config$auth_JWT)
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
