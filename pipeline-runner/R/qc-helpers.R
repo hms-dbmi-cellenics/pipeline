@@ -99,8 +99,8 @@ calc_filter_stats <- function(scdata, sample_id) {
   )
 }
 
-runClusters <- function(type,resolution, data) {
-  data <- getClusters(type, resolution, data)
+runClusters <- function(clustering_method,resolution, data) {
+  data <- getClusters(clustering_method, resolution, data)
   res_col <- paste0(data@active.assay, "_snn_res.",toString(resolution))
   # In the meta data slot the clustering is stored with the resolution used to calculate it
   # RNA_snn_res.#resolution
@@ -111,9 +111,9 @@ runClusters <- function(type,resolution, data) {
 }
 
 
-getClusters <- function(type, resolution, data) {
+getClusters <- function(clustering_method, resolution, data) {
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
-  algorithm <- list("louvain" = 1, "leiden" = 4)[[type]]
+  algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]
   # To run clustering, we need to identify the active.reduction that is used in FindNeighbors.
   if ("active.reduction" %in% names(data@misc)) {
     active.reduction <- data@misc[["active.reduction"]]
@@ -121,7 +121,7 @@ getClusters <- function(type, resolution, data) {
     active.reduction <- "pca"
   }
 
-  if (type == "leiden") {
+  if (clustering_method == "leiden") {
     # emulate FindClusters, which overwrites seurat_clusters slot and meta.data column
     g <- getSNNiGraph(data)
     clus_res <- igraph::cluster_leiden(g, "modularity", resolution_parameter = resolution)
