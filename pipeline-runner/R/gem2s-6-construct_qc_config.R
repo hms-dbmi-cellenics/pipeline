@@ -19,7 +19,7 @@ construct_qc_config <- function(scdata, any_filtered) {
 
     # cell size
     config.cellSizeDistribution <- list(
-        enabled = !any_filtered,
+        enabled = FALSE,
         auto = TRUE,
         filterSettings = list(minCellSize = 1080, binStep = 200))
 
