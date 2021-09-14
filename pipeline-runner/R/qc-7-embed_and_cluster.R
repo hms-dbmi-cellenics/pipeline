@@ -47,7 +47,7 @@ format_cell_sets_object <- function(cell_sets, clustering_method, color_pool) {
 }
 
 update_sets_through_api <- function(cell_sets_object, api_url, experiment_id, cell_set_key, auth_JWT) {
-  httr_query <- paste0("$[?(@.key == ", cell_set_key, ")]")
+  httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
   httr::PATCH(
     paste0(api_url, "/v1/experiments/", experiment_id, "/cellSets"),
