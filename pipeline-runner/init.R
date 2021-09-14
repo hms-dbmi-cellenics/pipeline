@@ -66,6 +66,11 @@ load_config <- function(development_aws_server) {
         )
     )
 
+    # temporary fix, in the future it would be good to unify the api app names for production / staging
+    if(config$cluster_env == 'production') {
+        config$api_url <- paste0("http://api.api-",sandbox,".svc.cluster.local:3000"),
+    }
+
     config[["aws_config"]] <- list(region = config$aws_region)
 
     # running in linux needs the IP of the host to work. If it is set as an environment variable (by makefile) honor it instead of the
