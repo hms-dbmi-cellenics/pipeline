@@ -46,6 +46,10 @@ merge_scdatas <- function(scdata_list) {
     scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
   }
 
+  # shuffle to prevent plot effects
+  set.seed(0)
+  scdata <- scdata[, sample(ncol(scdata))]
+
   return(scdata)
 }
 
