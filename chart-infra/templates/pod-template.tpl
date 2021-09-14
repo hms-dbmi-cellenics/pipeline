@@ -26,6 +26,7 @@
         resources:
           requests:
             memory: "{{ .Values.memoryRequest }}"
+            cpu: "2"
       volumes:
       - name: podinfo
         downwardAPI:
