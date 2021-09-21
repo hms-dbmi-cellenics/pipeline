@@ -11,8 +11,8 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 
   message("Creating Seurat Objects...")
 
-  # NOTE: edrops is not required
-  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores')
+  # NOTE: edrops can be empty list
+  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores', 'edrops')
   check_prev_out(prev_out, check_names)
 
   # destructure previous output: config, counts_list, annot, and doublet_scores
