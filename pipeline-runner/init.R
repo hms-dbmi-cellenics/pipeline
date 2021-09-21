@@ -51,19 +51,25 @@ load_config <- function(development_aws_server) {
             break
         }
     }
-
+    sandbox <- Sys.getenv("SANDBOX_ID", "default")
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
-        sandbox_id = Sys.getenv("SANDBOX_ID", "default"),
+        sandbox_id = sandbox,
         aws_account_id = aws_account_id,
         aws_region = aws_region,
         pod_name = Sys.getenv("K8S_POD_NAME", "local"),
         activity_arn = activity_arn,
+        api_url = paste0("http://api-",sandbox,".api-",sandbox,".svc.cluster.local:3000"),
         debug_config = list(
             step = Sys.getenv("DEBUG_STEP", ""),
             path = Sys.getenv("DEBUG_PATH", "")
         )
     )
+
+    # temporary fix, in the future it would be good to unify the api app names for production / staging
+    if(config$cluster_env == 'production') {
+        config$api_url <- paste0("http://api.api-",sandbox,".svc.cluster.local:3000")
+    }
 
     config[["aws_config"]] <- list(region = config$aws_region)
 
@@ -75,6 +81,7 @@ load_config <- function(development_aws_server) {
     }
 
     if(config$cluster_env == 'development') {
+        config$api_url <- "http://host.docker.internal:3000"
         config$aws_config[['endpoint']] <- sprintf("http://%s:4566", development_aws_server) # DOCKER_GATEWAY_HOST
         config$aws_config[['credentials']] <- list(
             creds = list(
@@ -132,6 +139,7 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
 
     # run task and time it
     tstart <- Sys.time()
+
     out <- task(scdata, config, sample_id, task_name)
     ttask <- format(Sys.time()-tstart, digits = 2)
     message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask, '\n')
@@ -189,7 +197,7 @@ call_gem2s <- function(task_name, input, pipeline_config) {
     c(data, task_out) %<-% run_gem2s_step(task_name, input, pipeline_config, prev_out)
     assign("prev_out", task_out, pos = ".GlobalEnv")
 
-    message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data)
+    message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input$authJWT)
 
     return(message_id)
 }
@@ -214,6 +222,9 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         input$config <- config
     }
 
+    #need this for embed_and_cluster
+    config$api_url <- pipeline_config$api_url
+    config$auth_JWT <- input$authJWT
 
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")

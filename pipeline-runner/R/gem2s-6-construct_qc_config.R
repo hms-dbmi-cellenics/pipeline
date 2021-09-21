@@ -19,7 +19,7 @@ construct_qc_config <- function(scdata, any_filtered) {
 
     # cell size
     config.cellSizeDistribution <- list(
-        enabled = !any_filtered,
+        enabled = FALSE,
         auto = TRUE,
         filterSettings = list(minCellSize = 1080, binStep = 200))
 
@@ -113,7 +113,7 @@ construct_qc_config <- function(scdata, any_filtered) {
 
 
 get_cellsize_config <- function(scdata, config) {
-    minCellSize <- generate_default_values_cellSizeDistribution(scdata, config, 1e2)
+    minCellSize <- generate_default_values_cellSizeDistribution(scdata, config)
     config$filterSettings$minCellSize <- minCellSize
     return(config)
 }

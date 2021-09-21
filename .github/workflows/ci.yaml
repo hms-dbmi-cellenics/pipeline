@@ -212,7 +212,7 @@ jobs:
             KUBERNETES_ENV="production"
             REPLICA_COUNT="4"
             SHORT_TAG_REF=${REF_DASHED/refs-tags-/}
-            IMAGE_GLOB="glob:${IMAGE_TAG/$SHORT_TAG_REF/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$SHORT_TAG_REF/*}"
             MEMORY_REQUEST="29Gi"
           fi
 
@@ -221,7 +221,7 @@ jobs:
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="2"
-            IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
             MEMORY_REQUEST="29Gi"
           fi
 
@@ -230,7 +230,7 @@ jobs:
             CHART_REF="STAGING_CHART_REF"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="2"
-            IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
             MEMORY_REQUEST="4Gi"
           fi
 
@@ -252,7 +252,7 @@ jobs:
           | yq w -d1 - spec.values.memoryRequest "$MEMORY_REQUEST" \
           | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \
           | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/pipeline-role-$KUBERNETES_ENV" \
-          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/pipeline-runner]" "glob:$IMAGE_GLOB-pipeline-runner" \
+          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/pipelineRunner]" "glob:$IMAGE_GLOB-pipeline-runner" \
           > $DEPLOYMENT_NAME.yaml
 
           cat $DEPLOYMENT_NAME.yaml
@@ -262,9 +262,9 @@ jobs:
 
       - id: disable-admin-enforcement
         name: Temporarily disable admin enforcement
-        uses: benjefferies/branch-protection-bot@master
+        uses: benjefferies/branch-protection-bot@1.0.7
         with:
-          access-token: ${{ secrets.API_TOKEN_GITHUB }}
+          access_token: ${{ secrets.API_TOKEN_GITHUB }}
           owner: biomage-ltd
           repo: iac
           enforce_admins: false
@@ -307,10 +307,10 @@ jobs:
 
       - id: enable-admin-enforcement
         name: Re-enable admin enforcement
-        uses: benjefferies/branch-protection-bot@master
+        uses: benjefferies/branch-protection-bot@1.0.7
         if: always()
         with:
-          access-token: ${{ secrets.API_TOKEN_GITHUB }}
+          access_token: ${{ secrets.API_TOKEN_GITHUB }}
           owner: biomage-ltd
           repo: iac
           enforce_admins: true
