@@ -53,6 +53,22 @@ test_that("format_annot deduplicates name column", {
 })
 
 
+test_that("format_annot removes duplicated input (Ensembl IDs) column", {
+
+    ensids <- c(1, 1:4)
+    annot_list <- list(
+        sample1 = data.frame(ENSID = ensids, SYMBOL = paste0('gene', 1:5))
+    )
+
+    annot <- pipeline:::format_annot(annot_list)
+
+    expect_equal(
+        length(unique(ensids)),
+        length(annot$input)
+    )
+})
+
+
 test_that("load_cellranger loads a count matrix", {
 
     counts <- mock_counts()
