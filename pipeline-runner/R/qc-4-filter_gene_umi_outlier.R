@@ -48,7 +48,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numG
   if (config$enabled && length(sample_barcodes)) {
 
     # subset this sample
-    sample_subset <- subset(scdata, cells = sample_barcodes)
+    sample_subset <- scdata[, sample_barcodes]
 
     # regress log10 molecules vs genes
     data <- data.frame(
@@ -67,7 +67,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numG
     is.outlier <- data$log_genes > preds[, 'upr'] | data$log_genes < preds[, 'lwr']
     outliers <- rownames(data)[is.outlier]
 
-    keep <- setdiff(colnames(scdata), outliers)
+    keep <- setdiff(row.names(data), outliers)
     scdata.filtered <- subset_safe(scdata, keep)
 
     # get evenly spaced predictions for plotting lines
