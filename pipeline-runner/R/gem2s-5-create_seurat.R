@@ -11,8 +11,8 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 
   message("Creating Seurat Objects...")
 
-  # NOTE: edrops is not required
-  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores')
+  # NOTE: edrops can be empty list
+  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores', 'edrops')
   check_prev_out(prev_out, check_names)
 
   # destructure previous output: config, counts_list, annot, and doublet_scores
@@ -99,7 +99,7 @@ add_mito <- function(scdata, annot) {
     mt.features <- annot$input[grep("^mt-", annot$name, ignore.case = TRUE)]
     mt.features <- mt.features[mt.features %in% rownames(scdata)]
     if (length(mt.features)) {
-      scdata <- PercentageFeatureSet(scdata, features = mt.features, col.name = "percent.mt")
+      scdata <- Seurat::PercentageFeatureSet(scdata, features = mt.features, col.name = "percent.mt")
     }
   }
 
