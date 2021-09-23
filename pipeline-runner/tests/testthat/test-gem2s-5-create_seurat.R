@@ -5,6 +5,48 @@ mock_counts <- function() {
     )
 }
 
+mock_doublet_scores <- function(counts) {
+
+    doublet_scores <- runif(ncol(counts))
+    doublet_class <- ifelse(doublet_scores < 0.8, 'singlet', 'doublet')
+
+    data.frame(
+        row.names = colnames(counts),
+        barcodes = colnames(counts),
+        doublet_class = doublet_class,
+        doublet_scores = doublet_scores
+    )
+}
+
+mock_prev_out <- function(samples = 'sample_a', counts = NULL) {
+
+    if (is.null(counts)) {
+        counts <- DropletUtils:::simCounts()
+        colnames(counts) <- paste0('cell', seq_len(ncol(counts)))
+    }
+
+    eout <- DropletUtils::emptyDrops(counts)
+
+    counts_list <- list()
+    edrops <- list()
+    doublet_scores <- list()
+
+    for (sample in samples) {
+        counts_list[[sample]] <- counts
+        edrops[[sample]] <- eout
+        doublet_scores[[sample]] <- mock_doublet_scores(counts)
+    }
+
+    list(
+        counts_list = counts_list,
+        edrops = edrops,
+        doublet_scores = doublet_scores,
+        annot = data.frame(name = row.names(counts), input = row.names(counts)),
+        config = list(name = 'project name')
+    )
+}
+
+
 
 test_that("construct_metadata works with syntactically invalid column names", {
 
@@ -64,47 +106,7 @@ test_that("result of get_metadata_lookups can be used to access syntactically in
         expect_true(seurat_key %in% colnames(scdata@meta.data))
         expect_true(all(scdata[[seurat_key]] == val))
     }
-
-mock_doublet_scores <- function(counts) {
-
-    doublet_scores <- runif(ncol(counts))
-    doublet_class <- ifelse(doublet_scores < 0.8, 'singlet', 'doublet')
-
-    data.frame(
-        row.names = colnames(counts),
-        barcodes = colnames(counts),
-        doublet_class = doublet_class,
-        doublet_scores = doublet_scores
-    )
-}
-
-mock_prev_out <- function(samples = 'sample_a', counts = NULL) {
-
-    if (is.null(counts)) {
-        counts <- DropletUtils:::simCounts()
-        colnames(counts) <- paste0('cell', seq_len(ncol(counts)))
-    }
-
-    eout <- DropletUtils::emptyDrops(counts)
-
-    counts_list <- list()
-    edrops <- list()
-    doublet_scores <- list()
-
-    for (sample in samples) {
-        counts_list[[sample]] <- counts
-        edrops[[sample]] <- eout
-        doublet_scores[[sample]] <- mock_doublet_scores(counts)
-    }
-
-    list(
-        counts_list = counts_list,
-        edrops = edrops,
-        doublet_scores = doublet_scores,
-        annot = data.frame(name = row.names(counts), input = row.names(counts)),
-        config = list(name = 'project name')
-    )
-}
+})
 
 
 test_that("create_seurat works without emptyDrops result", {
