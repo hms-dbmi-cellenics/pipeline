@@ -101,5 +101,14 @@ test_that("filter_gene_umi_outlier return the appropriate plot data", {
     # has the right names
     expect_equal(names(points_data[[1]]), c('log_molecules', 'log_genes'))
     expect_equal(names(lines_data[[1]]), c('log_molecules', 'lower_cutoff', 'upper_cutoff'))
-
 })
+
+
+test_that("filter_gene_umi_outlier skips if no barcodes for this sample", {
+    scdata <- mock_scdata(with_outlier = TRUE)
+    config <- mock_config()
+    out <- filter_gene_umi_outlier(scdata, config, 'not a sample')
+
+    expect_equal(ncol(out$data), ncol(scdata))
+})
+

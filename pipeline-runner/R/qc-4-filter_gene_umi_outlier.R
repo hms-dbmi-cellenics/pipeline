@@ -25,8 +25,6 @@
 #'
 filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
 
-  # save(scdata, config, sample_id, task_name, num_cells_to_downsample, file = '/debug/gene_umi.rda')
-
   type <- config$filterSettings$regressionType
 
   # get p.level and update in config
