@@ -35,12 +35,3 @@ test_that("samples_sets adds cells to correct sample", {
     expect_equal(res$children[[key.123abc]]$cellIds, unname(ids.123abc))
     expect_equal(res$children[[key.123def]]$cellIds, unname(ids.123def))
 })
-
-
-test_that("cellsize filter is disabled by default and classifier if not pre-filtered", {
-    scdata <- mock_scdata()
-
-    qc_config <- construct_qc_config(scdata, any_filtered = FALSE)
-    expect_false(qc_config$cellSizeDistribution$enabled)
-    expect_true(qc_config$classifier$enabled)
-})
