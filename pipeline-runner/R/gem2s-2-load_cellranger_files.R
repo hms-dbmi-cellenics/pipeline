@@ -50,6 +50,11 @@ call_read10x <- function(config) {
     message("Reading files from ", sample_dir, ' --> ', paste(sample_fpaths, collapse = ' - '))
 
     counts <- Seurat::Read10X(sample_dir, gene.column = 1)
+
+    if(length(names(counts))){
+      counts <- do.call(rbind,counts)
+    }
+
     annot <- read.delim(annot_fpath, header = FALSE)
 
     message(
