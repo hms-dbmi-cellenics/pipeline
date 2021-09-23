@@ -68,8 +68,16 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numG
     keep <- setdiff(row.names(data), outliers)
     scdata.filtered <- subset_safe(scdata, keep)
 
-    # get evenly spaced predictions for plotting lines
-    xrange <- range(data$log_molecules)
+    # downsample for plot data
+    nkeep <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
+
+    set.seed(123)
+    keep_rows <- sample(nrow(data), nkeep)
+    keep_rows <- sort(keep_rows)
+    downsampled_data <- data[keep_rows, ]
+
+    # get evenly spaced predictions on downsampled data for plotting lines
+    xrange <- range(downsampled_data$log_molecules)
     newdata <- data.frame(log_molecules = seq(xrange[1], xrange[2], length.out = 10))
     line_preds <- predict(fit, newdata, interval = "prediction", level = 1 - p.level)
 
@@ -77,14 +85,8 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numG
       dplyr::select(-fit) %>%
       dplyr::rename(lower_cutoff = lwr, upper_cutoff = upr)
 
-    # downsample plot data
-    nkeep <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-
-    set.seed(123)
-    keep_rows <- sample(nrow(data), nkeep)
-    keep_rows <- sort(keep_rows)
     plot_data <- list(
-      pointsData = purrr::transpose(data[keep_rows, ]),
+      pointsData = purrr::transpose(downsampled_data),
       linesData = purrr::transpose(line_preds)
     )
   }
