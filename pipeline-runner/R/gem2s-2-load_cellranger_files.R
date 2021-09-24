@@ -50,6 +50,14 @@ call_read10x <- function(config, input_dir) {
     message("Reading files from ", sample_dir, ' --> ', paste(sample_fpaths, collapse = ' - '))
 
     counts <- Seurat::Read10X(sample_dir, gene.column = 1)
+
+    if(is(counts, 'list')) {
+      slot <- 'Gene Expression'
+      # questionable: grab first slot if no gene expression
+      if (!slot %in% names(counts)) slot <- names(counts)[1]
+      counts <- counts[[slot]]
+    }
+
     annot <- read.delim(annot_fpath, header = FALSE)
 
     message(
