@@ -85,7 +85,7 @@ construct_metadata <- function(counts, sample, config) {
   if (!is.null(rest)) {
     rest <- lapply(rest, unlist)
     rest <- data.frame(rest, row.names = config$samples, check.names = FALSE)
-    metadata <- cbind(metadata, rest[sample, ])
+    metadata[names(rest)] <- rest[sample, ]
   }
 
   return(metadata)
