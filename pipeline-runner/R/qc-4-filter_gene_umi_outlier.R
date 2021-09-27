@@ -63,9 +63,8 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numG
 
     # filter outliers above/below cutoff bands
     is.outlier <- data$log_genes > preds[, 'upr'] | data$log_genes < preds[, 'lwr']
-    outliers <- rownames(data)[is.outlier]
+    keep <- rownames(data)[!is.outlier]
 
-    keep <- setdiff(row.names(data), outliers)
     scdata.filtered <- subset_safe(scdata, keep)
 
     # downsample for plot data
