@@ -79,13 +79,12 @@ get_metadata_lookups <- function(metadata) {
 construct_metadata <- function(counts, sample, config) {
   message("Constructing metadata df...")
   metadata <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
-
   # Add "metadata" if exists in config
   rest <- config$metadata
   if (!is.null(rest)) {
     rest <- lapply(rest, unlist)
     rest <- data.frame(rest, row.names = config$samples, check.names = FALSE)
-    metadata <- cbind(metadata, rest[sample, ])
+    metadata[names(rest)] <- rest[sample, ]
   }
 
   return(metadata)
