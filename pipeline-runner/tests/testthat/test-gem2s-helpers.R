@@ -28,3 +28,13 @@ test_that("check_input passes with multiple metadata columns", {
     expect_silent(check_input(input))
 })
 
+
+test_that("check_input passes without metadata", {
+  input <- list(
+    sampleNames = list('WT1', 'WT2'))
+
+  expect_silent(check_input(input))
+})
+
+
+
