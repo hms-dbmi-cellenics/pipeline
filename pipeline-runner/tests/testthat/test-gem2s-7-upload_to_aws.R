@@ -42,8 +42,6 @@ mock_scdata <- function(metadata = NULL) {
 }
 
 
-
-
 test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
     scdata <- mock_scdata()
     config <- mock_config()
@@ -118,6 +116,7 @@ test_that("get_cell_sets adds a single metadata column", {
     }
 })
 
+
 test_that("get_cell_sets adds two metadata columns", {
 
     metadata <-  list(Group1 = list('Hello', 'WT2'), Group2 = list('WT', 'WT'))
@@ -159,6 +158,7 @@ test_that("get_cell_sets without metadata matches snapshot", {
     cell_sets <- get_cell_sets(scdata, config)
     expect_snapshot(str(cell_sets))
 })
+
 
 test_that("get_cell_sets with two metadata groups matches snapshot", {
     metadata <- list(Group1 = list('Hello', 'WT2'), Group2 = list('WT', 'WT'))
