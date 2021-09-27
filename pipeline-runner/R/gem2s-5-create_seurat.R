@@ -46,6 +46,9 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, config, min.cells = 3, min.features = 10) {
 
   metadata <- construct_metadata(counts, sample, config)
+  lookups <- get_metadata_lookups(metadata)
+  colnames(metadata) <- lookups
+
   scdata <- Seurat::CreateSeuratObject(
     counts,
     meta.data = metadata,
@@ -53,23 +56,34 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
     min.cells = min.cells,
     min.features = min.features)
 
-  scdata <- add_mito(scdata, annot)
-  scdata <- add_dblscore(scdata, doublet_score)
-  scdata <- add_edrops(scdata, edrops_out)
+  scdata@misc$metadata_lookups <- lookups
+
+  scdata <- scdata %>%
+    add_mito(annot) %>%
+    add_dblscore(doublet_score) %>%
+    add_edrops(edrops_out)
 
   return(scdata)
 }
+
+# to find invalid metadata column names in SeuratObject (e.g. 'TRUE')
+get_metadata_lookups <- function(metadata) {
+  user_values <- names(metadata)
+  lookups <- make.names(colnames(metadata), unique = TRUE)
+  names(lookups) <- user_values
+  return(lookups)
+}
+
 
 # construct metadata for each SeuratObject
 construct_metadata <- function(counts, sample, config) {
   message("Constructing metadata df...")
   metadata <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
-
   # Add "metadata" if exists in config
   rest <- config$metadata
   if (!is.null(rest)) {
     rest <- lapply(rest, unlist)
-    rest <- data.frame(rest, row.names = config$samples)
+    rest <- data.frame(rest, row.names = config$samples, check.names = FALSE)
     metadata[names(rest)] <- rest[sample, ]
   }
 

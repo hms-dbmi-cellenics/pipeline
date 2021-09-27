@@ -125,13 +125,18 @@ meta_sets <- function(input, scdata, color_pool) {
   meta <- lapply(input$metadata, unlist)
 
   # names of metadata tracks
-  vars <- names(meta)
-  for (i in seq_along(vars)) {
-    key <- name <- vars[i]
+  keys <- names(meta)
+
+  # corresponding names stored in seurat object meta.data
+  seurat_keys <- scdata@misc$metadata_lookups[[keys]]
+
+  for (i in seq_along(keys)) {
+    key <- keys[i]
+    seurat_key <- seurat_keys[i]
 
     cell_set <- list(
       "key" = key,
-      "name" = name,
+      "name" = key,
       "rootNode" = TRUE,
       "children" = c(),
       "type" = "metadataCategorical"
@@ -141,7 +146,7 @@ meta_sets <- function(input, scdata, color_pool) {
     values <- unique(meta[[i]])
     for (i in seq_along(values)) {
       value <- values[i]
-      cell_ids <- scdata$cells_id[scdata[[key]] == value]
+      cell_ids <- scdata$cells_id[scdata[[seurat_key]] == value]
 
       cell_set$children[[i]] <- list(
         "key" = paste(key, value, sep = "-"),
