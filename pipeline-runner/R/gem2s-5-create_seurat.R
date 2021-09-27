@@ -83,9 +83,6 @@ construct_metadata <- function(counts, sample, config) {
   rest <- config$metadata
   if (!is.null(rest)) {
     rest <- lapply(rest, unlist)
-    if(length(rest[[1]]) != length(config$samples)){
-        stop("Unequal amount of metadata names and samples.")
-    }
     rest <- data.frame(rest, row.names = config$samples, check.names = FALSE)
     metadata[names(rest)] <- rest[sample, ]
   }
