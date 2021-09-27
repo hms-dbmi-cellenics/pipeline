@@ -184,17 +184,6 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
     return(res)
 }
 
-check_input <- function(input) {
-
-    # check that metadata items length is same as number of samples
-    metadata <- input$metadata
-
-    if (length(metadata)) {
-        nsamples <- length(input$sampleNames)
-        nmeta <- sapply(metadata, length)
-        if (!all(nmeta == nsamples)) stop ('Sample number and metadata length')
-    }
-}
 
 call_gem2s <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
