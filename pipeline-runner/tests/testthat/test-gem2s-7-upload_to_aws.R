@@ -1,14 +1,15 @@
-mock_config <- function() {
+mock_config <- function(metadata = NULL) {
     config <- list(
         sampleNames = list('WT1', 'WT2'),
-        sampleIds = list('123abc', '123def')
+        sampleIds = list('123abc', '123def'),
+        metadata = metadata
     )
 
     return(config)
 }
 
 
-mock_scdata <- function() {
+mock_scdata <- function(metadata = NULL) {
     pbmc_raw <- read.table(
         file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
         as.is = TRUE)
@@ -18,7 +19,25 @@ mock_scdata <- function() {
     scdata$cells_id <- seq(0, ncol(scdata)-1)
 
     # add samples
+    samples <- c('123abc', '123def')
     scdata$samples <- rep(c('123abc', '123def'), each = 40)
+
+    keys <- names(metadata)
+    for (i in seq_along(keys)) {
+
+        key <- keys[i]
+        vals <- unlist(metadata[[i]])
+
+        scdata@meta.data[[key]] <- NA
+        scdata@meta.data[[key]][scdata$samples == samples[1]] <- vals[1]
+        scdata@meta.data[[key]][scdata$samples == samples[2]] <- vals[2]
+    }
+
+    lookups <- make.names(keys)
+    names(lookups) <- keys
+
+    scdata@misc$metadata_lookups <- lookups
+
     return(scdata)
 }
 
@@ -75,30 +94,10 @@ test_that("get_cell_sets adds correct cell ids for each sample", {
 })
 
 
-test_that("get_cell_sets without metadata matches initial snapshot", {
-    scdata <- mock_scdata()
-    config <- mock_config()
-
-    cell_sets <- get_cell_sets(scdata, config)$cellSets[[1]]
-    expect_equal(cell_sets$type, 'cellSets')
-    expect_true(cell_sets$rootNode)
-
-    expect_snapshot(cell_sets)
-})
-
-
 test_that("get_cell_sets adds a single metadata column", {
-    scdata <- mock_scdata()
-    config <- mock_config()
-
-    # mockup metadata and lookups
-    config$metadata <- list(Group = list('Hello', 'WT2'))
-
-    scdata$Group <- NA
-    scdata$Group[scdata$samples == '123abc'] <- 'Hello'
-    scdata$Group[scdata$samples == '123def'] <- 'WT2'
-
-    scdata@misc <- list(metadata_lookups = c(Group = 'Group'))
+    metadata <- list(Group = list('Hello', 'WT2'))
+    scdata <- mock_scdata(metadata)
+    config <- mock_config(metadata)
 
     cell_sets <- get_cell_sets(scdata, config)
 
@@ -120,19 +119,11 @@ test_that("get_cell_sets adds a single metadata column", {
 })
 
 test_that("get_cell_sets adds two metadata columns", {
-    scdata <- mock_scdata()
-    config <- mock_config()
 
-    # mockup metadata and lookups
-    config$metadata <- list(Group1 = list('Hello', 'WT2'),
-                            Group2 = list('WT', 'WT'))
+    metadata <-  list(Group1 = list('Hello', 'WT2'), Group2 = list('WT', 'WT'))
+    scdata <- mock_scdata(metadata)
+    config <- mock_config(metadata)
 
-    scdata$Group1 <- NA
-    scdata$Group1[scdata$samples == '123abc'] <- 'Hello'
-    scdata$Group1[scdata$samples == '123def'] <- 'WT2'
-    scdata$Group2 <- 'WT'
-
-    scdata@misc <- list(metadata_lookups = c(Group1 = 'Group1', Group2 = 'Group2'))
     cell_sets <- get_cell_sets(scdata, config)
 
     # have as keys
@@ -147,19 +138,10 @@ test_that("get_cell_sets adds two metadata columns", {
 
 
 test_that("get_cell_sets uses unique colors for each cell set", {
-    scdata <- mock_scdata()
-    config <- mock_config()
+    metadata <- list(Group1 = list('Hello', 'WT2'), Group2 = list('WT', 'WT'))
+    scdata <- mock_scdata(metadata)
+    config <- mock_config(metadata)
 
-    # mockup metadata and lookups
-    config$metadata <- list(Group1 = list('Hello', 'WT2'),
-                            Group2 = list('WT', 'WT'))
-
-    scdata$Group1 <- NA
-    scdata$Group1[scdata$samples == '123abc'] <- 'Hello'
-    scdata$Group1[scdata$samples == '123def'] <- 'WT2'
-    scdata$Group2 <- 'WT'
-
-    scdata@misc <- list(metadata_lookups = c(Group1 = 'Group1', Group2 = 'Group2'))
     cell_sets <- get_cell_sets(scdata, config)
 
     flat_cell_sets <- unlist(cell_sets)
@@ -167,4 +149,25 @@ test_that("get_cell_sets uses unique colors for each cell set", {
     colors <- unname(colors)
 
     expect_equal(unique(colors), colors)
+})
+
+
+test_that("get_cell_sets without metadata matches snapshot", {
+    scdata <- mock_scdata()
+    config <- mock_config()
+
+    cell_sets <- get_cell_sets(scdata, config)
+    expect_snapshot(str(cell_sets))
+})
+
+test_that("get_cell_sets with two metadata groups matches snapshot", {
+    metadata <- list(Group1 = list('Hello', 'WT2'), Group2 = list('WT', 'WT'))
+
+    scdata <- mock_scdata(metadata)
+    config <- mock_config(metadata)
+
+    scdata@misc <- list(metadata_lookups = c(Group1 = 'Group1', Group2 = 'Group2'))
+    cell_sets <- get_cell_sets(scdata, config)
+
+    expect_snapshot(str(cell_sets))
 })
