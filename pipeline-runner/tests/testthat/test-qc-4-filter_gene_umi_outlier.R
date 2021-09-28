@@ -3,9 +3,9 @@ mock_config <- function() {
         auto = TRUE,
         enabled = TRUE,
         filterSettings = list(
-            regressionType = 'gam',
+            regressionType = 'linear',
             regressionTypeSettings = list(
-                gam = list(p.level = 0.1)
+                linear = list(p.level = 0.1)
             )
         )
     )
@@ -32,12 +32,12 @@ mock_scdata <- function(with_outlier = FALSE) {
 }
 
 
-test_that("filter_gene_umi_outlier updates gam p.level in config if auto", {
+test_that("filter_gene_umi_outlier updates linear p.level in config if auto", {
     scdata <- mock_scdata()
     config <- mock_config()
-    config$filterSettings$regressionTypeSettings$gam$p.level <- 1
+    config$filterSettings$regressionTypeSettings$linear$p.level <- 1
     out <- filter_gene_umi_outlier(scdata, config, '123def')
-    new <- out$config$filterSettings$regressionTypeSettings$gam$p.level
+    new <- out$config$filterSettings$regressionTypeSettings$linear$p.level
 
     expect_lt(new, 1)
 })
@@ -49,14 +49,17 @@ test_that("filter_gene_umi_outlier is sample specific", {
     scdata <- mock_scdata(with_outlier = TRUE)
     config <- mock_config()
 
-    out1 <- filter_gene_umi_outlier(scdata, config, '123abc')
-    out2 <- filter_gene_umi_outlier(scdata, config, '123def')
-    expect_lt(ncol(out1$data), ncol(out2$data))
-
-    # didn't filter other sample
     barcodes1 <- colnames(scdata)[scdata$samples == '123abc']
     barcodes2 <- colnames(scdata)[scdata$samples == '123def']
 
+    out1 <- filter_gene_umi_outlier(scdata, config, '123abc')
+    out2 <- filter_gene_umi_outlier(scdata, config, '123def')
+
+    # filtered something
+    expect_lt(ncol(out1$data), ncol(scdata))
+    expect_lt(ncol(out2$data), ncol(scdata))
+
+    # didn't filter other sample
     expect_true(all(barcodes1 %in% colnames(out2$data)))
     expect_true(all(barcodes2 %in% colnames(out1$data)))
 
@@ -118,5 +121,10 @@ test_that("filter_gene_umi_outlier skips if no barcodes for this sample", {
     out <- filter_gene_umi_outlier(scdata, config, 'not a sample')
 
     expect_equal(ncol(out$data), ncol(scdata))
+})
+
+
+test_that("filter_gene_umi_outlier works with spline fit", {
+    message('TODO')
 })
 
