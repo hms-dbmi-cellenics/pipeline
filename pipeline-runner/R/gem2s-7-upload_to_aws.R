@@ -128,8 +128,9 @@ meta_sets <- function(input, scdata, color_pool) {
   keys <- names(meta)
 
   # corresponding names stored in seurat object meta.data
-  seurat_keys <- scdata@misc$metadata_lookups[[keys]]
+  seurat_keys <- scdata@misc$metadata_lookups[keys]
 
+  color_index <- 1
   for (i in seq_along(keys)) {
     key <- keys[i]
     seurat_key <- seurat_keys[i]
@@ -144,16 +145,20 @@ meta_sets <- function(input, scdata, color_pool) {
 
     # values of current metadata track
     values <- unique(meta[[i]])
-    for (i in seq_along(values)) {
-      value <- values[i]
+
+    for (j in seq_along(values)) {
+      value <- values[j]
       cell_ids <- scdata$cells_id[scdata[[seurat_key]] == value]
 
-      cell_set$children[[i]] <- list(
+      cell_set$children[[j]] <- list(
         "key" = paste(key, value, sep = "-"),
         "name" = value,
-        "color" = color_pool[i],
+        "color" = color_pool[color_index],
         "cellIds" = unname(cell_ids)
       )
+
+      color_index <- color_index + 1
+
     }
     cell_set_list <- c(cell_set_list, list(cell_set))
   }
