@@ -8,9 +8,6 @@
 #' @export
 #'
 create_seurat <- function(input, pipeline_config, prev_out) {
-
-  save(input, pipeline_config, prev_out, file = '/debug/create_seurat.rda')
-
   message("Creating Seurat Objects...")
 
   # NOTE: edrops can be empty list
