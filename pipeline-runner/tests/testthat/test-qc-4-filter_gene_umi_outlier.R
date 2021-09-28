@@ -52,6 +52,14 @@ test_that("filter_gene_umi_outlier is sample specific", {
     out1 <- filter_gene_umi_outlier(scdata, config, '123abc')
     out2 <- filter_gene_umi_outlier(scdata, config, '123def')
     expect_lt(ncol(out1$data), ncol(out2$data))
+
+    # didn't filter other sample
+    barcodes1 <- colnames(scdata)[scdata$samples == '123abc']
+    barcodes2 <- colnames(scdata)[scdata$samples == '123def']
+
+    expect_true(all(barcodes1 %in% colnames(out2$data)))
+    expect_true(all(barcodes2 %in% colnames(out1$data)))
+
 })
 
 test_that("filter_gene_umi_outlier can filter cells", {
