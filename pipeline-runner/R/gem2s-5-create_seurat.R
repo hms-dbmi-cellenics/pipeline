@@ -9,6 +9,8 @@
 #'
 create_seurat <- function(input, pipeline_config, prev_out) {
 
+  save(input, pipeline_config, prev_out, file = '/debug/create_seurat.rda')
+
   message("Creating Seurat Objects...")
 
   # NOTE: edrops can be empty list
@@ -46,8 +48,6 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, config, min.cells = 3, min.features = 10) {
 
   metadata <- construct_metadata(counts, sample, config)
-  lookups <- get_metadata_lookups(metadata)
-  colnames(metadata) <- lookups
 
   scdata <- Seurat::CreateSeuratObject(
     counts,
@@ -55,8 +55,6 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
     project = config$name,
     min.cells = min.cells,
     min.features = min.features)
-
-  scdata@misc$metadata_lookups <- lookups
 
   scdata <- scdata %>%
     add_mito(annot) %>%
@@ -66,19 +64,15 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
   return(scdata)
 }
 
-# to find invalid metadata column names in SeuratObject (e.g. 'TRUE')
-get_metadata_lookups <- function(metadata) {
-  user_values <- names(metadata)
-  lookups <- make.names(colnames(metadata), unique = TRUE)
-  names(lookups) <- user_values
-  return(lookups)
-}
 
+
+# NOTE: any changes here must be reflected in meta_sets
 
 # construct metadata for each SeuratObject
 construct_metadata <- function(counts, sample, config) {
   message("Constructing metadata df...")
   metadata <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
+
   # Add "metadata" if exists in config
   rest <- config$metadata
   if (!is.null(rest)) {
@@ -86,6 +80,9 @@ construct_metadata <- function(counts, sample, config) {
     rest <- data.frame(rest, row.names = config$samples, check.names = FALSE)
     metadata[names(rest)] <- rest[sample, ]
   }
+
+  # make syntactically valid column names
+  colnames(metadata) <- make.names(colnames(metadata), unique = TRUE)
 
   return(metadata)
 }

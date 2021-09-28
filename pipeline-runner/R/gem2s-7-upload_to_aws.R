@@ -1,5 +1,7 @@
 
 upload_to_aws <- function(input, pipeline_config, prev_out) {
+
+  save(input, pipeline_config, prev_out, file='/debug/upload_to_aws.rda')
   message('Uploading to AWS ...')
   check_names <- c('config', 'counts_list', 'annot', 'doublet_scores', 'scdata_list', 'scdata', 'qc_config')
   check_prev_out(prev_out, check_names)
@@ -127,8 +129,8 @@ meta_sets <- function(input, scdata, color_pool) {
   # names of metadata tracks
   keys <- names(meta)
 
-  # corresponding names stored in seurat object meta.data
-  seurat_keys <- scdata@misc$metadata_lookups[keys]
+  # same values used in construct_metadata
+  seurat_keys <- make.names(c('samples', keys), unique = TRUE)
 
   color_index <- 1
   for (i in seq_along(keys)) {
