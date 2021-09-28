@@ -34,11 +34,6 @@ mock_scdata <- function(config) {
         scdata@meta.data[names(rest)] <- rest[scdata$samples, ]
     }
 
-    lookups <- make.names(keys)
-    names(lookups) <- keys
-
-    scdata@misc$metadata_lookups <- lookups
-
     return(scdata)
 }
 

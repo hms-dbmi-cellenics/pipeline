@@ -128,7 +128,7 @@ meta_sets <- function(input, scdata, color_pool) {
   keys <- names(meta)
 
   # same values used in construct_metadata
-  seurat_keys <- make.names(c('samples', keys), unique = TRUE)
+  seurat_keys <- make.names(c('samples', keys), unique = TRUE)[-1]
 
   color_index <- 1
   for (i in seq_along(keys)) {
