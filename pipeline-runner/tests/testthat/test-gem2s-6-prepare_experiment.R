@@ -43,7 +43,7 @@ mock_prev_out <- function(samples = 'sample_a', counts = NULL) {
         edrops = edrops,
         doublet_scores = doublet_scores,
         annot = data.frame(name = row.names(counts), input = row.names(counts)),
-        config = list(name = 'project name', experimentId = '1234')
+        config = list(name = 'project name')
     )
 
     # call create_seurat to get prev_out to pass to prepare_experiment
@@ -88,4 +88,14 @@ test_that("prepare_experiment adds 0 indexed cell_ids and other metadata to scda
     added_ids <- unname(scdata$cells_id)
     expected_ids <- seq(0, ncol(scdata)-1)
     expect_equal(added_ids, expected_ids)
+})
+
+
+test_that("prepare_experiment generates qc_config that matches snapshot", {
+  prev_out <- mock_prev_out()
+  input <- list(experimentId = '1234')
+  task_out <- prepare_experiment(input, NULL, prev_out)$output
+
+  expect_snapshot(str(task_out$qc_config))
+
 })
