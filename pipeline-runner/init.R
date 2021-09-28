@@ -76,7 +76,7 @@ load_config <- function(development_aws_server) {
     }
 
     if(config$cluster_env == 'development') {
-        config$api_url <- "http://host.docker.internal:3000"
+        config$api_url <- sprintf("http://%s:3000", development_aws_server)
         config$aws_config[['endpoint']] <- sprintf("http://%s:4566", development_aws_server) # DOCKER_GATEWAY_HOST
         config$aws_config[['credentials']] <- list(
             creds = list(
