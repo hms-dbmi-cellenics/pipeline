@@ -9,7 +9,7 @@ mock_config <- function(metadata = NULL) {
 }
 
 
-mock_scdata <- function(metadata = NULL) {
+mock_scdata <- function(config = NULL) {
     pbmc_raw <- read.table(
         file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
         as.is = TRUE)
@@ -22,15 +22,16 @@ mock_scdata <- function(metadata = NULL) {
     samples <- c('123abc', '123def')
     scdata$samples <- rep(c('123abc', '123def'), each = 40)
 
-    keys <- names(metadata)
-    for (i in seq_along(keys)) {
+    # add metadata
+    rest <- config$metadata
+    keys <- c('samples', names(rest))
+    metadata <- data.frame(row.names = colnames(scdata), samples = scdata$samples)
 
-        key <- keys[i]
-        vals <- unlist(metadata[[i]])
-
-        scdata@meta.data[[key]] <- NA
-        scdata@meta.data[[key]][scdata$samples == samples[1]] <- vals[1]
-        scdata@meta.data[[key]][scdata$samples == samples[2]] <- vals[2]
+    # Add "metadata" if exists in config
+    if (!is.null(rest)) {
+        rest <- lapply(rest, unlist)
+        rest <- data.frame(rest, row.names = samples, check.names = FALSE)
+        scdata@meta.data[names(rest)] <- rest[scdata$samples, ]
     }
 
     lookups <- make.names(keys)
@@ -54,8 +55,8 @@ test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
 
 
 test_that("get_cell_sets adds correct cell ids for each sample", {
-    scdata <- mock_scdata()
     config <- mock_config()
+    scdata <- mock_scdata()
 
     cell_sets <- get_cell_sets(scdata, config)
     sets_key <- sapply(cell_sets$cellSets, `[[`, 'key')
@@ -73,8 +74,8 @@ test_that("get_cell_sets adds correct cell ids for each sample", {
 
 
 test_that("get_cell_sets adds correct cell ids for each sample", {
-    scdata <- mock_scdata()
     config <- mock_config()
+    scdata <- mock_scdata()
 
     cell_sets <- get_cell_sets(scdata, config)
     sets_key <- sapply(cell_sets$cellSets, `[[`, 'key')
@@ -94,8 +95,8 @@ test_that("get_cell_sets adds correct cell ids for each sample", {
 
 test_that("get_cell_sets adds a single metadata column", {
     metadata <- list(Group = list('Hello', 'WT2'))
-    scdata <- mock_scdata(metadata)
     config <- mock_config(metadata)
+    scdata <- mock_scdata(config)
 
     cell_sets <- get_cell_sets(scdata, config)
 
@@ -120,8 +121,8 @@ test_that("get_cell_sets adds a single metadata column", {
 test_that("get_cell_sets adds two metadata columns", {
 
     metadata <-  list(Group1 = list('Hello', 'WT2'), Group2 = list('WT', 'WT'))
-    scdata <- mock_scdata(metadata)
     config <- mock_config(metadata)
+    scdata <- mock_scdata(config)
 
     cell_sets <- get_cell_sets(scdata, config)
 
@@ -138,8 +139,8 @@ test_that("get_cell_sets adds two metadata columns", {
 
 test_that("get_cell_sets uses unique colors for each cell set", {
     metadata <- list(Group1 = list('Hello', 'WT2'), Group2 = list('WT', 'WT'))
-    scdata <- mock_scdata(metadata)
     config <- mock_config(metadata)
+    scdata <- mock_scdata(config)
 
     cell_sets <- get_cell_sets(scdata, config)
 
@@ -163,8 +164,8 @@ test_that("get_cell_sets without metadata matches snapshot", {
 test_that("get_cell_sets with two metadata groups matches snapshot", {
     metadata <- list(Group1 = list('Hello', 'WT2'), Group2 = list('WT', 'WT'))
 
-    scdata <- mock_scdata(metadata)
     config <- mock_config(metadata)
+    scdata <- mock_scdata(config)
 
     scdata@misc <- list(metadata_lookups = c(Group1 = 'Group1', Group2 = 'Group2'))
     cell_sets <- get_cell_sets(scdata, config)
