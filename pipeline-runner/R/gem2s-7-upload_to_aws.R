@@ -124,10 +124,11 @@ meta_sets <- function(input, scdata, color_pool) {
   cell_set_list <- c()
   meta <- lapply(input$metadata, unlist)
 
-  # names of metadata tracks
+  # user-supplied metadata track names
   keys <- names(meta)
 
-  # same values used in construct_metadata
+  # syntactically valid metadata names as stored in scdata
+  # same names as used in construct_metadata including internal 'samples' column (dropped)
   seurat_keys <- make.names(c('samples', keys), unique = TRUE)[-1]
 
   color_index <- 1
