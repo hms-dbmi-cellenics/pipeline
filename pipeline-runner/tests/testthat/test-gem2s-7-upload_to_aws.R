@@ -9,7 +9,7 @@ mock_config <- function(metadata = NULL) {
 }
 
 
-mock_scdata <- function(config = NULL) {
+mock_scdata <- function(config) {
     pbmc_raw <- read.table(
         file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
         as.is = TRUE)
@@ -19,7 +19,7 @@ mock_scdata <- function(config = NULL) {
     scdata$cells_id <- seq(0, ncol(scdata)-1)
 
     # add samples
-    samples <- c('123abc', '123def')
+    samples <- unlist(config$sampleIds)
     scdata$samples <- rep(samples, each = 40)
 
     # add metadata
@@ -44,8 +44,8 @@ mock_scdata <- function(config = NULL) {
 
 
 test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
-    scdata <- mock_scdata()
     config <- mock_config()
+    scdata <- mock_scdata(config)
 
     cell_sets <- get_cell_sets(scdata, config)
     keys <- sapply(cell_sets$cellSets, `[[`, 'key')
@@ -56,7 +56,7 @@ test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
 
 test_that("get_cell_sets adds correct cell ids for each sample", {
     config <- mock_config()
-    scdata <- mock_scdata()
+    scdata <- mock_scdata(config)
 
     cell_sets <- get_cell_sets(scdata, config)
     sets_key <- sapply(cell_sets$cellSets, `[[`, 'key')
@@ -75,7 +75,7 @@ test_that("get_cell_sets adds correct cell ids for each sample", {
 
 test_that("get_cell_sets adds correct cell ids for each sample", {
     config <- mock_config()
-    scdata <- mock_scdata()
+    scdata <- mock_scdata(config)
 
     cell_sets <- get_cell_sets(scdata, config)
     sets_key <- sapply(cell_sets$cellSets, `[[`, 'key')
@@ -153,8 +153,8 @@ test_that("get_cell_sets uses unique colors for each cell set", {
 
 
 test_that("get_cell_sets without metadata matches snapshot", {
-    scdata <- mock_scdata()
     config <- mock_config()
+    scdata <- mock_scdata(config)
 
     cell_sets <- get_cell_sets(scdata, config)
     expect_snapshot(str(cell_sets))
