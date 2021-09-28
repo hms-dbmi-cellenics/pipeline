@@ -20,7 +20,7 @@ mock_scdata <- function(config = NULL) {
 
     # add samples
     samples <- c('123abc', '123def')
-    scdata$samples <- rep(c('123abc', '123def'), each = 40)
+    scdata$samples <- rep(samples, each = 40)
 
     # add metadata
     rest <- config$metadata
