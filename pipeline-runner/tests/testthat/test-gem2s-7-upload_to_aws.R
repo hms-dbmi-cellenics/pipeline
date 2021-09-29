@@ -14,31 +14,27 @@ mock_scdata <- function(config) {
         file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
         as.is = TRUE)
 
-    scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
-
-    scdata$cells_id <- seq(0, ncol(scdata)-1)
-
+    # construct metadata
     # add samples
     samples <- unlist(config$sampleIds)
-    scdata$samples <- rep(samples, each = 40)
 
-    # add metadata
     rest <- config$metadata
     keys <- c('samples', names(rest))
-    metadata <- data.frame(row.names = colnames(scdata), samples = scdata$samples)
+    metadata <- data.frame(row.names = colnames(pbmc_raw), samples = rep(samples, each = 40))
 
     # Add "metadata" if exists in config
     if (!is.null(rest)) {
         rest <- lapply(rest, unlist)
         rest <- data.frame(rest, row.names = samples, check.names = FALSE)
-        scdata@meta.data[names(rest)] <- rest[scdata$samples, ]
+        metadata[names(rest)] <- rest[metadata$samples, ]
     }
 
-    lookups <- make.names(keys)
-    names(lookups) <- keys
+    # make syntactically valid
+    colnames(metadata) <- make.names(colnames(metadata), unique = TRUE)
 
-    scdata@misc$metadata_lookups <- lookups
+    scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw, meta.data = metadata)
 
+    scdata$cells_id <- seq(0, ncol(scdata)-1)
     return(scdata)
 }
 
@@ -112,6 +108,30 @@ test_that("get_cell_sets adds a single metadata column", {
     for (group_name in group_names) {
         group_cells <- group_set$children[[which(group_names == group_name)]]$cellIds
         expected_cells <- unname(scdata$cells_id)[scdata$Group == group_name]
+
+        expect_equal(group_cells, expected_cells)
+    }
+})
+
+
+test_that("get_cell_sets uses user-supplied syntactically invalid metadata column names", {
+    metadata <- list('TRUE' = list('Hello', 'WT2'))
+    config <- mock_config(metadata)
+    scdata <- mock_scdata(config)
+
+    cell_sets <- get_cell_sets(scdata, config)
+
+    # have TRUE as a key
+    keys <- sapply(cell_sets$cellSets, `[[`, 'key')
+    expect_true('TRUE' %in% keys)
+
+    group_set <- cell_sets$cellSets[[which(keys == 'TRUE')]]
+    group_names <- sapply(group_set$children, `[[`, 'name')
+
+    # cell ids are correct for each child
+    for (group_name in group_names) {
+        group_cells <- group_set$children[[which(group_names == group_name)]]$cellIds
+        expected_cells <- unname(scdata$cells_id)[scdata$TRUE. == group_name]
 
         expect_equal(group_cells, expected_cells)
     }
