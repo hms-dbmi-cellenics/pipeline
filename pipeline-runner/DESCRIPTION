@@ -18,7 +18,10 @@ Suggests:
     testthat (>= 3.0.0)
 Imports:
     data.table,
-    covr
+    covr,
+    batchelor,
+    ResidualMatrix
 Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)
+    

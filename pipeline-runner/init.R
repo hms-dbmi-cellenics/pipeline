@@ -1,5 +1,7 @@
 # if Seurat not attached can cause errors when accessing metadata
+# also run_fastmnn will fail with `could not find function "VariableFeatures<-"`
 library(Seurat)
+
 library(zeallot)
 library(tryCatchLog)
 library(futile.logger)

@@ -11,7 +11,7 @@ mock_scdata <- function() {
 }
 
 
-test_that("harmony integration works", {
+test_that("harmony integration runs", {
     scdata <- mock_scdata()
     config <- list(dimensionalityReduction = list(numPCs = 2),
                    dataIntegration = list(method = 'harmony', methodSettings = list(harmony = list(numGenes = 10, normalisation = 'logNormalize'))))
@@ -19,3 +19,18 @@ test_that("harmony integration works", {
     scdata <- run_dataIntegration(scdata, config)
     expect_s4_class(scdata, 'Seurat')
 })
+
+
+test_that("fastmnn integration runs", {
+    # without get: could not find function "VariableFeatures<-"
+    require(Seurat)
+
+    scdata <- mock_scdata()
+    config <- list(dimensionalityReduction = list(numPCs = 2),
+                   dataIntegration = list(method = 'fastmnn', methodSettings = list(fastmnn = list(numGenes = 10, normalisation = 'logNormalize'))))
+
+    scdata <- run_dataIntegration(scdata, config)
+    expect_s4_class(scdata, 'Seurat')
+})
+
+
