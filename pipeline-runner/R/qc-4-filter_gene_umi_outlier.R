@@ -25,7 +25,7 @@
 #'
 filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
 
-  p.level <- as.numeric(config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level)
+  p.level <- suppressWarnings(as.numeric(config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level))
   if(is.na(p.level)) stop("P-level couldnt be interpreted as a number.")
   if (as.logical(toupper(config$enabled))) {
     if (config$filterSettings$regressionType == "gam") {
