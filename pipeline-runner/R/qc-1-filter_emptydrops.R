@@ -16,7 +16,9 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
-filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier', num_cells_to_downsample = 6000) {
+filter_emptydrops <- function(scdata, config, sample_id, cells_id,task_name = 'classifier', num_cells_to_downsample = 6000) {
+  print(cells_id)
+  scdata <- subset_ids(scdata,cells_id)
 
   # default if not filtered
   scdata.filtered <- scdata
@@ -105,8 +107,11 @@ filter_emptydrops <- function(scdata, config, sample_id, task_name = 'classifier
 
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats
 
+  remaining_ids <- scdata.filtered@meta.data$cells_id
+
   result <- list(
-    data = scdata.filtered,
+    data = scdata,
+    remaining_ids = remaining_ids,
     config = config,
     plotData = guidata
   )

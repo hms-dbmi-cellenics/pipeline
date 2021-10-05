@@ -1,4 +1,14 @@
 #
+# subset_ids subsets a seurat object with the cell ids
+#
+subset_ids <- function(scdata,cells_id) {
+  meta_data_subset <- scdata@meta.data[match(cells_id,scdata@meta.data$cells_id),]
+  current_cells <- rownames(meta_data_subset)
+  scdata <- subset(scdata,cells=current_cells)
+  return(scdata)
+}
+
+#
 # Generate GUI plots and data uuid as required by the UI
 #
 generate_gui_uuid <- function(sample_uuid, task_name, item_idx) {

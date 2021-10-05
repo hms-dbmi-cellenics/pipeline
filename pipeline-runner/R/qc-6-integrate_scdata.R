@@ -20,8 +20,8 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata, config, sample_id, task_name = "dataIntegration") {
-
+integrate_scdata <- function(scdata, config, sample_id, cells_id,task_name = "dataIntegration") {
+  scdata <- subset_ids(scdata,cells_id)
   # main function
   scdata.integrated <- run_dataIntegration(scdata, config)
 
@@ -69,6 +69,7 @@ integrate_scdata <- function(scdata, config, sample_id, task_name = "dataIntegra
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
     data = scdata.integrated,
+    remaining_ids = scdata.integrated@meta.data$cells_ids,
     config = config,
     plotData = plots
   )

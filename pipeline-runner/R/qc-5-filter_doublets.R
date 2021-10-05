@@ -17,8 +17,8 @@
 #' @export
 #' @return a list with the filtered seurat object by doublet score, the config and the plot values
 #'
-filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScores", num_cells_to_downsample = 6000) {
-
+filter_doublets <- function(scdata, config, sample_id, cells_id,task_name = "doubletScores", num_cells_to_downsample = 6000) {
+  scdata <- subset_ids(scdata,cells_id)
   # Check if the experiment has doubletScores
   if (!"doublet_scores" %in% colnames(scdata@meta.data)) {
     message("Warning! No doubletScores scores has been computed for this experiment!")
@@ -88,8 +88,11 @@ filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScore
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
 
+  remaining_ids <- scdata.filtered@meta.data$cells_id
+
   result <- list(
-    data = scdata.filtered,
+    data = scdata,
+    remaining_ids = remaining_ids,
     config = config,
     plotData = guidata
   )

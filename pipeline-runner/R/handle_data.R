@@ -1,3 +1,12 @@
+upload_cells_id <- function(pipeline_config,object_key,cells_id){
+  object_data <- tempfile()
+  saveRDS(cells_id, file = object_data)
+  put_object_in_s3(pipeline_config,pipeline_config$cells_id_bucket,upload_cells_id,object_key)
+  
+  return(object_key)
+}
+
+
 reload_scdata_from_s3 <- function(pipeline_config, experiment_id) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
   message(pipeline_config$source_bucket)
@@ -6,6 +15,19 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id) {
   c(body, ...rest) %<-% s3$get_object(
     Bucket = pipeline_config$source_bucket,
     Key = paste(experiment_id, "r.rds", sep = "/")
+  )
+  obj <- readRDS(rawConnection(body))
+  return(obj)
+}
+
+load_cells_id_from_s3 <- function(pipeline_config,task_name,experiment_id) {
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+  message(pipeline_config$cells_id_bucket)
+  message(paste(experiment_id, "r.rds", sep = "/"))
+
+  c(body, ...rest) %<-% s3$get_object(
+    Bucket = pipeline_config$cells_id_bucket,
+    Key = paste(experiment_id, paste0(task_name,".rds"), sep = "/")
   )
   obj <- readRDS(rawConnection(body))
   return(obj)

@@ -16,8 +16,8 @@
 #' @export
 #' @return a list with the filtered seurat object by cell size ditribution, the config and the plot values
 #'
-filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
-
+filter_low_cellsize <- function(scdata, config,sample_id,cells_id ,task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
+  scdata <- subset_ids(scdata,cells_id)
   minCellSize <- as.numeric(config$filterSettings$minCellSize)
 
   # extract plotting data of original data to return to plot slot later
@@ -28,7 +28,6 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
     guidata <- list()
     return(list(data = scdata, config = config, plotData = guidata))
   }
-
   sample_subset <- subset(scdata, cells = barcode_names_this_sample)
   plot_data <- get_bcranks_plot_data(sample_subset, num_cells_to_downsample)
 
@@ -63,14 +62,12 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
   } else {
     scdata.filtered <- scdata
   }
-
   # update config
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
   guidata <- list()
   guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data[['knee']]
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[['hist']]
-
   # Populate with filter statistics
   filter_stats <- list(
     before = calc_filter_stats(scdata, sample_id),
@@ -78,8 +75,10 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
   )
   guidata[[generate_gui_uuid(sample_id, task_name, 3)]] <- filter_stats
 
+  remaining_ids <- scdata.filtered@meta.data$cells_id
   result <- list(
-    data = scdata.filtered,
+    data = scdata,
+    remaining_ids = remaining_ids,
     config = config,
     plotData = guidata
   )

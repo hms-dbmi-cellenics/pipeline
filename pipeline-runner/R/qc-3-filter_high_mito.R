@@ -19,8 +19,8 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
-filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondrialContent", num_cells_to_downsample = 6000) {
-
+filter_high_mito <- function(scdata, config, sample_id, cells_id,task_name = "mitochondrialContent", num_cells_to_downsample = 6000) {
+  scdata <- subset_ids(scdata,cells_id)
   # Check if the experiment has MT-content
   if (!"percent.mt" %in% colnames(scdata@meta.data)) {
     # This return value breaks the step, no config data is returned!!!!
@@ -51,8 +51,11 @@ filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondri
     barcode_names_keep_current_sample <- colnames(sample_subset)[sample_subset$percent.mt <= maxFraction * 100]
     # combine the 2:
     barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-
+    tstart <- Sys.time()
     scdata.filtered <- subset_safe(scdata, barcodes_to_keep)
+    ttask <- format(Sys.time()-tstart, digits = 2)
+    print("Time to subset_safe")
+    print(ttask)
   } else {
     scdata.filtered <- scdata
   }
@@ -89,8 +92,11 @@ filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondri
 
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats
 
+  remaining_ids <- scdata.filtered@meta.data$cells_id
+
   result <- list(
-    data = scdata.filtered,
+    data = scdata,
+    remaining_ids = remaining_ids,
     config = config,
     plotData = guidata
   )

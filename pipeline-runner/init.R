@@ -100,6 +100,7 @@ load_config <- function(development_aws_server) {
     config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, sep = "-")
     config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, sep = "-")
     config[["results_bucket"]] <- paste("worker-results", config$cluster_env, sep = "-")
+    config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, sep = "-")
     config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
     config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, sep = "-")
     config[["sns_topic"]] <- paste("work-results", config$cluster_env, config$sandbox_id, sep = "-")
@@ -109,19 +110,7 @@ load_config <- function(development_aws_server) {
     return(config)
 }
 
-run_processing_step <- function(scdata, config, task_name, sample_id, debug_config) {
-
-    # vector of task functions named by task name
-    tasks <- list(
-        'classifier' = filter_emptydrops,
-        'cellSizeDistribution' = filter_low_cellsize,
-        'mitochondrialContent' = filter_high_mito,
-        'numGenesVsNumUmis' = filter_gene_umi_outlier,
-        'doubletScores' = filter_doublets,
-        'dataIntegration' = integrate_scdata,
-        'configureEmbedding' = embed_and_cluster
-    )
-
+run_processing_step <- function(scdata, config, tasks,task_name, cells_id,sample_id, debug_config) {
     if (!task_name %in% names(tasks)) stop('Invalid task: ', task_name)
 
     handle_debug(scdata, config, task_name, sample_id, debug_config)
@@ -135,7 +124,7 @@ run_processing_step <- function(scdata, config, task_name, sample_id, debug_conf
     # run task and time it
     tstart <- Sys.time()
 
-    out <- task(scdata, config, sample_id, task_name)
+    out <- task(scdata, config, sample_id, cells_id,task_name)
     ttask <- format(Sys.time()-tstart, digits = 2)
     message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask, '\n')
 
@@ -205,7 +194,7 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 # IN pipeline_config: json str, environment config resulting from the load_config function
 #
 call_data_processing <- function(task_name, input, pipeline_config) {
-
+    saveRDS(list(task_name,input,pipeline_config),"/debug/debug_current.rds")
     experiment_id <- input$experimentId
     config <- input$config
     upload_count_matrix <- input$uploadCountMatrix
@@ -216,6 +205,16 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         config <- config[[sample_id]]
         input$config <- config
     }
+    # vector of task functions named by task name
+    tasks <- list(
+        'classifier' = filter_emptydrops,
+        'cellSizeDistribution' = filter_low_cellsize,
+        'mitochondrialContent' = filter_high_mito,
+        'numGenesVsNumUmis' = filter_gene_umi_outlier,
+        'doubletScores' = filter_doublets,
+        'dataIntegration' = integrate_scdata,
+        'configureEmbedding' = embed_and_cluster
+    )
 
     #need this for embed_and_cluster
     config$api_url <- pipeline_config$api_url
@@ -231,13 +230,43 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message("Single-cell data loaded.")
     }
 
+    saveRDS(scdata,"/debug/current_scdata.rds")
+
+    if (!exists("cells_id")) {
+        message("No filtered cell ids have been loaded, loading from S3...")
+        if(task_name == names(tasks)[1]){
+            print("entre")
+            assign("cells_id", 0:(ncol(scdata) - 1), pos = ".GlobalEnv")
+        }else if(task_name %in% names(tasks)){
+            assign("cells_id", load_cells_id_from_s3(pipeline_config,task_name,experiment_id), pos = ".GlobalEnv")
+        }else{
+            stop("Invalid task name given: ", task_name)
+        }
+        message("Cells id loaded.")
+    }
+
 
     # call function to run and update global variable
     c(
-        data, ...rest_of_results
-    ) %<-% run_processing_step(scdata, config, task_name, sample_id, debug_config)
+        data,remaining_ids,...rest_of_results
+    ) %<-% run_processing_step(scdata, config, tasks,task_name, cells_id,sample_id, debug_config)
 
-    assign("scdata", data, pos = ".GlobalEnv")
+    #assign("scdata", data, pos = ".GlobalEnv")
+
+    print("Comparison between cell ids")
+    print(all(cells_id == remaining_ids))
+
+    if(task_name != names(tasks)[length(tasks)]){
+        next_task <- names(tasks)[[match(task_name,names(tasks))]]
+        object_key <- paste0(experiment_id,"/",next_task)
+        upload_cells_id(pipeline_config,object_key,cells_id)
+
+        upload_cells_id <- tempfile()
+        saveRDS(cells_id, file = upload_cells_id)
+        put_object_in_s3(pipeline_config,pipeline_config$cells_id_bucket,upload_cells_id,paste0(experiment_id,"/",next_task))
+    }
+
+    assign("cells_id", remaining_ids, pos = ".GlobalEnv")
 
     # upload plot data result to S3
     tstart <- Sys.time()
