@@ -51,11 +51,7 @@ filter_high_mito <- function(scdata, config, sample_id, cells_id,task_name = "mi
     barcode_names_keep_current_sample <- colnames(sample_subset)[sample_subset$percent.mt <= maxFraction * 100]
     # combine the 2:
     barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-    tstart <- Sys.time()
     scdata.filtered <- subset_safe(scdata, barcodes_to_keep)
-    ttask <- format(Sys.time()-tstart, digits = 2)
-    print("Time to subset_safe")
-    print(ttask)
   } else {
     scdata.filtered <- scdata
   }

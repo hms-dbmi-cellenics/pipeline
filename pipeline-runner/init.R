@@ -194,7 +194,6 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 # IN pipeline_config: json str, environment config resulting from the load_config function
 #
 call_data_processing <- function(task_name, input, pipeline_config) {
-    saveRDS(list(task_name,input,pipeline_config),"/debug/debug_current.rds")
     experiment_id <- input$experimentId
     config <- input$config
     upload_count_matrix <- input$uploadCountMatrix
@@ -230,8 +229,6 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message("Single-cell data loaded.")
     }
 
-    saveRDS(scdata,"/debug/current_scdata.rds")
-
     if (!exists("cells_id")) {
         message("No filtered cell ids have been loaded, loading from S3...")
         if(task_name == names(tasks)[1]){
@@ -245,13 +242,10 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message("Cells id loaded.")
     }
 
-
     # call function to run and update global variable
     c(
         data,remaining_ids,...rest_of_results
     ) %<-% run_processing_step(scdata, config, tasks,task_name, cells_id,sample_id, debug_config)
-
-    #assign("scdata", data, pos = ".GlobalEnv")
 
     print("Comparison between cell ids")
     print(all(cells_id == remaining_ids))
@@ -270,6 +264,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
     # Upload count matrix data
     if(upload_count_matrix) {
+        assign("scdata", data, pos = ".GlobalEnv")
         object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
         message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
     }
