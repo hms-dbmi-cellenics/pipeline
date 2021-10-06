@@ -69,7 +69,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id,task_name = "da
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
     data = scdata.integrated,
-    remaining_ids = scdata.integrated@meta.data$cells_ids,
+    remaining_ids = cells_id,
     config = config,
     plotData = plots
   )

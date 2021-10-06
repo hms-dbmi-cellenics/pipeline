@@ -1,8 +1,8 @@
 upload_cells_id <- function(pipeline_config,object_key,cells_id){
   object_data <- tempfile()
   saveRDS(cells_id, file = object_data)
-  put_object_in_s3(pipeline_config,pipeline_config$cells_id_bucket,upload_cells_id,object_key)
-  
+  put_object_in_s3(pipeline_config,pipeline_config$cells_id_bucket,object_data,object_key)
+
   return(object_key)
 }
 

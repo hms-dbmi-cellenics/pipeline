@@ -257,13 +257,9 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     print(all(cells_id == remaining_ids))
 
     if(task_name != names(tasks)[length(tasks)]){
-        next_task <- names(tasks)[[match(task_name,names(tasks))]]
+        next_task <- names(tasks)[[match(task_name,names(tasks))+1]]
         object_key <- paste0(experiment_id,"/",next_task)
         upload_cells_id(pipeline_config,object_key,cells_id)
-
-        upload_cells_id <- tempfile()
-        saveRDS(cells_id, file = upload_cells_id)
-        put_object_in_s3(pipeline_config,pipeline_config$cells_id_bucket,upload_cells_id,paste0(experiment_id,"/",next_task))
     }
 
     assign("cells_id", remaining_ids, pos = ".GlobalEnv")
