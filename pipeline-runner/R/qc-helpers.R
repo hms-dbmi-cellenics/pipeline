@@ -1,4 +1,17 @@
 #
+# Returns the positions to keep based on scdata and number of cells to keep
+#
+get_positions_to_keep <- function(scdata,num_cells_to_downsample){
+  # Downsample plotData
+  num_cells_to_downsample <- downsample_plotdata(ncol(scdata), num_cells_to_downsample)
+  set.seed(123)
+  cells_position_to_keep <- sample(1:ncol(scdata), num_cells_to_downsample, replace = FALSE)
+  cells_position_to_keep <- sort(cells_position_to_keep)
+
+  return(cells_position_to_keep)
+}
+
+#
 # subset_ids subsets a seurat object with the cell ids
 #
 subset_ids <- function(scdata,cells_id) {
@@ -81,12 +94,9 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
 #'   \item{"median_umis"}{Median number of counts per cell}
 #' }
 #'
-calc_filter_stats <- function(scdata, sample_id) {
+calc_filter_stats <- function(scdata) {
 
-  # in case no cells kept
-  is.sample <- scdata$samples == sample_id
-
-  if (!sum(is.sample)) {
+  if (!nrow(scdata)) {
     return(list(
       num_cells = 0,
       total_genes = 0,
@@ -94,9 +104,6 @@ calc_filter_stats <- function(scdata, sample_id) {
       median_umis = 0
     ))
   }
-
-  # subset to current sample
-  scdata <- scdata[, is.sample]
 
   # number of counts per gene
   ncount <- Matrix::rowSums(scdata[["RNA"]]@counts)

@@ -17,19 +17,19 @@
 #' @return a list with the filtered seurat object by cell size ditribution, the config and the plot values
 #'
 filter_low_cellsize <- function(scdata, config,sample_id,cells_id ,task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
-  scdata <- subset_ids(scdata,cells_id)
-  minCellSize <- as.numeric(config$filterSettings$minCellSize)
+  cells_id.sample <- cells_id[[sample_id]]
 
-  # extract plotting data of original data to return to plot slot later
-  meta <- scdata@meta.data
-  barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
-
-  if (length(barcode_names_this_sample) == 0) {
+  if (length(cells_id.sample) == 0) {
     guidata <- list()
     return(list(data = scdata, config = config, plotData = guidata))
   }
-  sample_subset <- subset(scdata, cells = barcode_names_this_sample)
-  plot_data <- get_bcranks_plot_data(sample_subset, num_cells_to_downsample)
+
+  scdata.sample <- subset_ids(scdata,cells_id.sample)
+
+  minCellSize <- as.numeric(config$filterSettings$minCellSize)
+
+  # extract plotting data of original data to return to plot slot later
+  plot_data <- get_bcranks_plot_data(scdata.sample, num_cells_to_downsample)
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
   # to get a list with two elements {minCellSize and binStep}
@@ -42,26 +42,20 @@ filter_low_cellsize <- function(scdata, config,sample_id,cells_id ,task_name = "
       # If there are less cells than the value threshold.low, the function CalculateBarcodeInflections fails. So we need to handle by not removing any cells, that is,
       # consider the minCellSize as the minimun UMIs in the dataset.
       # This should be handled in a long-term by adding a different function for computing the default value.
-      if (ncol(sample_subset) < threshold.low) {
-        minCellSize <- min(sample_subset$nCount_RNA)
+      if (ncol(scdata.sample) < threshold.low) {
+        minCellSize <- min(scdata.sample$nCount_RNA)
       } else {
-        minCellSize <- generate_default_values_cellSizeDistribution(sample_subset, config)
+        minCellSize <- generate_default_values_cellSizeDistribution(scdata.sample, config)
       }
     }
   }
+
   if (as.logical(toupper(config$enabled))) {
-
-    # extract cell id that do not(!) belong to current sample (to not apply filter there)
-    barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id]
-    # all barcodes that match threshold in the subset data
-    barcode_names_keep_current_sample <- colnames(sample_subset)[sample_subset$nCount_RNA >= minCellSize]
-    # combine the 2:
-    barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-
-    scdata.filtered <- subset_safe(scdata, barcodes_to_keep)
+    remaining_ids <- scdata.sample@meta.data$cells_id[scdata.sample$nCount_RNA >= minCellSize]
   } else {
-    scdata.filtered <- scdata
+    remaining_ids <- cells_id.sample
   }
+
   # update config
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
@@ -70,15 +64,16 @@ filter_low_cellsize <- function(scdata, config,sample_id,cells_id ,task_name = "
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[['hist']]
   # Populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata, sample_id),
-    after = calc_filter_stats(scdata.filtered, sample_id)
+    before = calc_filter_stats(scdata.sample),
+    after = calc_filter_stats(subset_ids(scdata.sample,remaining_ids))
   )
   guidata[[generate_gui_uuid(sample_id, task_name, 3)]] <- filter_stats
 
-  remaining_ids <- scdata.filtered@meta.data$cells_id
+  cells_id[[sample_id]] <- remaining_ids
+
   result <- list(
     data = scdata,
-    remaining_ids = remaining_ids,
+    new_ids = cells_id,
     config = config,
     plotData = guidata
   )

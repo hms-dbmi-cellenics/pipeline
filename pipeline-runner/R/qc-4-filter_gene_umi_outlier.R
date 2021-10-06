@@ -24,32 +24,32 @@
 #' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 #'
 filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
-  scdata <- subset_ids(scdata,cells_id)
+  cells_id.sample <- cells_id[[sample_id]]
+
+  if (length(cells_id.sample) == 0) {
+    guidata <- list()
+    return(list(data = scdata, config = config, plotData = guidata))
+  }
+
+  scdata.sample <- subset_ids(scdata,cells_id.sample)
+  
   p.level <- config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level
 
   if (as.logical(toupper(config$enabled))) {
     if (config$filterSettings$regressionType == "gam") {
-      # Subsetting this sample
-      meta <- scdata@meta.data
-      barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
-      if (length(barcode_names_this_sample) == 0) {
-        return(list(data = scdata, config = config, plotData = list()))
-      }
-      sample_subset <- subset(scdata, cells = barcode_names_this_sample)
-
       # Check if it is required to compute sensible values. Sensible values are based on the funciton "gene.vs.molecule.cell.filter" from the pagoda2 package
       if (exists("auto", where = config)) {
         if (as.logical(toupper(config$auto))) {
-          p.level <- min(0.001, 1 / ncol(scdata))
+          p.level <- min(0.001, 1 / ncol(scdata.sample))
         }
       }
 
       # We regress the molecules vs the genes. This information are stored in nCount_RNA and nFeature_RNA respectively
-      df <- data.frame(molecules = sample_subset$nCount_RNA, genes = sample_subset$nFeature_RNA)
+      df <- data.frame(molecules = scdata.sample$nCount_RNA, genes = scdata.sample$nFeature_RNA)
       # We take log10 following the plot from the mock-up
       df <- log10(df)
       # Rename the rows to be able to identify the valid cells
-      rownames(df) <- colnames(sample_subset)
+      rownames(df) <- colnames(scdata.sample)
       df <- df[order(df$molecules, decreasing = FALSE), ]
       m <- MASS::rlm(genes ~ molecules, data = df)
       # Get the interval based on p.level paramter
@@ -57,14 +57,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_nam
         interval = "prediction",
         level = 1 - p.level, type = "response"
       )))
-      # Define the outliers those that are below the lower confidence band and above the upper one.
-      outliers <- rownames(df)[df$genes > pb$upr | df$genes < pb$lwr]
 
-      # Keep the ones that are not outlier
-      # Because we have subseted the object before creating the dataframes, and just selected the outlier values from that df
-      # In the end we wil only remove values that are in the desired sample.
-      scdata.filtered <- subset_safe(scdata, colnames(scdata)[!colnames(scdata) %in% outliers])
-      # Similarly, when creating the plot from the df, we will just be using the values for the required sample.
       plot1_data <- unname(purrr::map2(df$molecules, df$genes, function(x, y) {
         c("log_molecules" = x, "log_genes" = y)
       }))
@@ -74,18 +67,15 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_nam
       plot1_data <- purrr::map2(plot1_data, unname(pb$upr), function(x, y) {
         append(x, c("upper_cutoff" = y))
       })
-      # have downsampling done
+      plot1_data <- plot1_data[get_positions_to_keep(scdata,num_cells_to_downsample)]
+      
+      # Define the outliers those that are below the lower confidence band and above the upper one.
+      outliers <- rownames(df)[df$genes > pb$upr | df$genes < pb$lwr]
 
-      # Downsample plotData
-      num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-
-      set.seed(123)
-      cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
-      cells_position_to_keep <- sort(cells_position_to_keep)
-      plot1_data <- plot1_data[cells_position_to_keep]
+      remaining_ids <- scdata.sample@meta.data[!colnames(scdata.sample) %in% outliers,"cells_id"]
     }
   } else {
-    scdata.filtered <- scdata
+    remaining_ids <- cells_id.sample
     plot1_data <- list()
   }
 
@@ -106,11 +96,11 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_nam
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
 
-  remaining_ids <- scdata.filtered@meta.data$cells_id
+  cells_id[[sample_id]] <- remaining_ids
 
   result <- list(
     data = scdata,
-    remaining_ids = remaining_ids,
+    new_ids = cells_id,
     config = config,
     plotData = guidata
   )
