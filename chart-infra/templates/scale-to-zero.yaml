@@ -30,4 +30,5 @@ spec:
           restartPolicy: Never
           serviceAccountName: cleanup-operator
           serviceAccount: cleanup-operator
+  successfulJobsHistoryLimit: 1
 {{- end }}
