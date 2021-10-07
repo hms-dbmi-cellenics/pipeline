@@ -2,7 +2,6 @@ upload_cells_id <- function(pipeline_config,object_key,cells_id){
   object_data <- tempfile()
   saveRDS(cells_id, file = object_data)
   put_object_in_s3(pipeline_config,pipeline_config$cells_id_bucket,object_data,object_key)
-
   return(object_key)
 }
 
@@ -22,16 +21,24 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id) {
 
 load_cells_id_from_s3 <- function(pipeline_config,task_name,experiment_id) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  s3$list_objects("biomage-filtered-cells-development",Prefix=paste0(experiment_id,"/",task_name))
+  object_list <- s3$list_objects("biomage-filtered-cells-development",Prefix=paste0(experiment_id,"/",task_name,"/"))
   message(pipeline_config$cells_id_bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
-
-  c(body, ...rest) %<-% s3$get_object(
-    Bucket = pipeline_config$cells_id_bucket,
-    Key = paste(experiment_id, paste0(task_name,".rds"), sep = "/")
-  )
-  obj <- readRDS(rawConnection(body))
-  return(obj)
+  cells_id <- list()
+  message("Total of ",length(object_list$Contents)," samples.")
+  for(object in object_list$Contents){
+      key <- object$Key
+      sample_id <- tools::file_path_sans_ext(basename(key))
+      c(body, ...rest) %<-% s3$get_object(
+          Bucket = pipeline_config$cells_id_bucket,
+          Key = key)
+      id_file <- tempfile()
+      writeBin(body, con = id_file)
+      cells_id.sample <- readRDS(id_file)
+      cells_id[[sample_id]] <- cells_id.sample
+      message("Sample ",sample_id," with ",length(cells_id.sample), " cells")
+  }
+  return(cells_id)
 }
 
 send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
