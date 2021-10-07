@@ -1,3 +1,11 @@
+generate_first_step_ids <- function(scdata){
+  cells_id <- list()
+  for(sample_id in unique(scdata$samples)){
+    cells_id[[sample_id]] <- scdata@meta.data[scdata$samples == sample_id,"cells_id"]
+  }
+  return(cells_id)
+}
+
 #
 # Returns the positions to keep based on scdata and number of cells to keep
 #

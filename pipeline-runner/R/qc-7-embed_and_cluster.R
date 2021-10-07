@@ -4,9 +4,9 @@
 # done also in this step.
 
 embed_and_cluster <- function(scdata, config, sample_id, cells_id,task_name = "configureEmbedding") {
-  saveRDS(list(scdata=scdata,config=config,sample_id=sample_id,cells_id=cells_id,task_name="configureEmbedding"),"/debug/debug_clusters.rds")
-  message("starting clusters")
-  scdata <- subset_ids(scdata,cells_id)
+  message("starting clusters")  
+  flat_cells_id <- unname(unlist(cells_id))
+  scdata <- subset_ids(scdata,flat_cells_id)
   clustering_method <- config$clusteringSettings$method
   methodSettings <- config$clusteringSettings$methodSettings[[clustering_method]]
   message("Running clustering")
@@ -20,7 +20,7 @@ embed_and_cluster <- function(scdata, config, sample_id, cells_id,task_name = "c
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
     data = scdata,
-    remaining_ids = scdata@meta.data$cells_ids,
+    new_ids = cells_id,
     config = config,
     plotData = list()
   )

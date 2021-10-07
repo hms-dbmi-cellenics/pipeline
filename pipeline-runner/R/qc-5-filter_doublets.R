@@ -68,8 +68,8 @@ filter_doublets <- function(scdata, config, sample_id, cells_id,task_name = "dou
 
   # populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata, sample_id),
-    after = calc_filter_stats(scdata.filtered, sample_id)
+    before = calc_filter_stats(scdata.sample),
+    after = calc_filter_stats(subset_ids(scdata.sample,remaining_ids))
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
@@ -95,7 +95,7 @@ generate_default_values_doubletScores <- function(scdata) {
 }
 
 generate_doublets_plot_data <- function(scdata,num_cells_to_downsample){
-  plot1_data <- lapply(unname(scdata.sample$doublet_scores), function(x) {
+  plot1_data <- lapply(unname(scdata$doublet_scores), function(x) {
     c("doubletP" = x)
   })
 

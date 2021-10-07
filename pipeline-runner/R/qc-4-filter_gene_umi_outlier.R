@@ -25,7 +25,7 @@
 #'
 filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
-
+  print(length(cells_id.sample))
   if (length(cells_id.sample) == 0) {
     guidata <- list()
     return(list(data = scdata, config = config, plotData = guidata))
@@ -67,8 +67,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_nam
       plot1_data <- purrr::map2(plot1_data, unname(pb$upr), function(x, y) {
         append(x, c("upper_cutoff" = y))
       })
-      plot1_data <- plot1_data[get_positions_to_keep(scdata,num_cells_to_downsample)]
-      
+      plot1_data <- plot1_data[get_positions_to_keep(scdata.sample,num_cells_to_downsample)]
       # Define the outliers those that are below the lower confidence band and above the upper one.
       outliers <- rownames(df)[df$genes > pb$upr | df$genes < pb$lwr]
 
@@ -90,8 +89,8 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_nam
 
   # Populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata, sample_id),
-    after = calc_filter_stats(scdata.filtered, sample_id)
+    before = calc_filter_stats(scdata.sample),
+    after = calc_filter_stats(subset_ids(scdata.sample,remaining_ids))
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats

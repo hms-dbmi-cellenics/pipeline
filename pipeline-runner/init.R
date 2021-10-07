@@ -128,16 +128,6 @@ run_processing_step <- function(scdata, config, tasks,task_name, cells_id,sample
     ttask <- format(Sys.time()-tstart, digits = 2)
     message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask, '\n')
 
-    # filter specific info
-    is.filter <- task_name %in% names(tasks)[1:5]
-    if (is.filter) {
-        message("Cells per sample before filter for sample: ", sample_id)
-        print(table(scdata$samples))
-
-        message("Cells per sample after filter for sample: ", sample_id)
-        print(table(out$data$samples))
-    }
-
     return(out)
 }
 
@@ -232,8 +222,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     if (!exists("cells_id")) {
         message("No filtered cell ids have been loaded, loading from S3...")
         if(task_name == names(tasks)[1]){
-            print("entre")
-            assign("cells_id", 0:(ncol(scdata) - 1), pos = ".GlobalEnv")
+            assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
         }else if(task_name %in% names(tasks)){
             assign("cells_id", load_cells_id_from_s3(pipeline_config,task_name,experiment_id), pos = ".GlobalEnv")
         }else{
@@ -242,21 +231,23 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message("Cells id loaded.")
     }
 
+
     # call function to run and update global variable
     c(
-        data,remaining_ids,...rest_of_results
+        data,new_ids,...rest_of_results
     ) %<-% run_processing_step(scdata, config, tasks,task_name, cells_id,sample_id, debug_config)
 
     print("Comparison between cell ids")
-    print(all(cells_id == remaining_ids))
+    print(paste0("Old ids length ",length(cells_id[[sample_id]])))
+    print(paste0("New ids length ",length(new_ids[[sample_id]])))
+
+    assign("cells_id", new_ids, pos = ".GlobalEnv")
 
     if(task_name != names(tasks)[length(tasks)]){
         next_task <- names(tasks)[[match(task_name,names(tasks))+1]]
-        object_key <- paste0(experiment_id,"/",next_task)
+        object_key <- paste0(experiment_id,"/",next_task,"/",sample_id,".rds")
         upload_cells_id(pipeline_config,object_key,cells_id)
     }
-
-    assign("cells_id", remaining_ids, pos = ".GlobalEnv")
 
     # upload plot data result to S3
     tstart <- Sys.time()

@@ -17,101 +17,86 @@
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
 filter_emptydrops <- function(scdata, config, sample_id, cells_id,task_name = 'classifier', num_cells_to_downsample = 6000) {
-  print(cells_id)
-  scdata <- subset_ids(scdata,cells_id)
+  cells_id.sample <- cells_id[[sample_id]]
 
-  # default if not filtered
-  scdata.filtered <- scdata
+  if (length(cells_id.sample) == 0) {
+    guidata <- list()
+    return(list(data = scdata, config = config, plotData = guidata))
+  }
+
+  scdata.sample <- subset_ids(scdata,cells_id.sample)
 
   FDR <- config$filterSettings$FDR
   if (isTRUE(config$auto)) {
-    FDR <- generate_default_values_classifier(scdata, config)
+    FDR <- generate_default_values_classifier(scdata.sample, config)
   }
 
   # for plots and filter stats to be populated
   guidata <- list()
 
+  # check if filter data is actually available
+  if (is.null(scdata@meta.data$emptyDrops_FDR)) {
+        message("Classify is enabled but has no classify data available: will dissable it: no filtering!")
+        config$enabled <- FALSE
+  }
+
   if (config$enabled) {
+    message("Classify is enabled: filtering with FDR=", FDR)
+    meta <- scdata.sample@meta.data
 
-    # check if filter data is actually available
-    if (is.null(scdata@meta.data$emptyDrops_FDR)) {
-      message("Classify is enabled but has no classify data available: will dissable it: no filtering!")
-      config$enabled <- FALSE
+    message("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval)")
+    print(table(meta$samples, cut(meta$emptyDrops_FDR, breaks = c(-Inf, 0, 0.0001, 0.01, 0.1, 0.5, 1, Inf)), useNA = "ifany"))
 
-    } else {
-      message("Classify is enabled: filtering with FDR=", FDR)
-      meta <- scdata@meta.data
+    # prevents filtering of NA FDRs if FDR=1
+    ed_fdr <- scdata.sample$emptyDrops_FDR
+    ed_fdr[is.na(ed_fdr)] <- 1
 
-      # extract plotting data of original data to return to plot slot later
-      barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
-      if (length(barcode_names_this_sample) == 0) {
-        return(list(data = scdata, config = config, plotData = list()))
-      }
+    message(
+      "Number of barcodes to filter for this sample: ",
+      sum(ed_fdr > FDR, na.rm = TRUE), "/", length(ed_fdr)
+    )
 
-      sample_subset <- subset(scdata, cells = barcode_names_this_sample)
-      message("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval)")
-      print(table(meta$samples, cut(meta$emptyDrops_FDR, breaks = c(-Inf, 0, 0.0001, 0.01, 0.1, 0.5, 1, Inf)), useNA = "ifany"))
+    numis <- log10(scdata.sample@meta.data$nCount_RNA)
 
-      # prevents filtering of NA FDRs if FDR=1
-      ed_fdr <- sample_subset$emptyDrops_FDR
-      ed_fdr[is.na(ed_fdr)] <- 1
+    fdr_data <- unname(purrr::map2(ed_fdr, numis, function(x, y) {
+      c("FDR" = x, "log_u" = y)
+    }))
+    fdr_data <- fdr_data[get_positions_to_keep(scdata.sample,num_cells_to_downsample)]
 
-      message(
-        "Number of barcodes to filter for this sample: ",
-        sum(ed_fdr > FDR, na.rm = TRUE), "/", length(ed_fdr)
-      )
+    remaining_ids <- scdata.sample@meta.data$cells_id[ed_fdr <= FDR]
+    
+    # update config
+    config$filterSettings$FDR <- FDR
 
-      numis <- log10(sample_subset@meta.data$nCount_RNA)
+    # Downsample plotData
+    knee_data <- get_bcranks_plot_data(scdata.sample, is.cellsize = FALSE)[['knee']]
 
-      fdr_data <- unname(purrr::map2(ed_fdr, numis, function(x, y) {
-        c("FDR" = x, "log_u" = y)
-      }))
-      # extract cell id that do not(!) belong to current sample (to not apply filter there)
-      barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id]
-      # all barcodes that match threshold in the subset data
-      barcode_names_keep_current_sample <- colnames(sample_subset[, ed_fdr <= FDR])
-      # combine the 2:
-      barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-      scdata.filtered <- subset_safe(scdata, barcodes_to_keep)
-      # update config
-      config$filterSettings$FDR <- FDR
-
-      # Downsample plotData
-      # Handle when the number of remaining cells is less than the number of cells to downsample
-      nkeep <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-
-      set.seed(123)
-      keep <- sample(1:ncol(sample_subset), nkeep, replace = FALSE)
-      keep <- sort(keep)
-      fdr_data <- fdr_data[keep]
-
-      knee_data <- get_bcranks_plot_data(sample_subset, is.cellsize = FALSE)[['knee']]
-
-      # Populate guidata list
-      guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- fdr_data
-      guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- knee_data
-    }
+    # Populate guidata list
+    guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- fdr_data
+    guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- knee_data
+    
   } else {
     message("filter disabled: data not filtered!")
     # guidata is an empty list
     guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- list()
     guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- list()
     guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- list()
+    remaining_ids <- cells_id.sample
   }
 
   # get filter stats after filtering
   filter_stats <- list(
-    before = calc_filter_stats(scdata, sample_id),
-    after = calc_filter_stats(scdata.filtered, sample_id)
+    before = calc_filter_stats(scdata.sample),
+    after = calc_filter_stats(subset_ids(scdata.sample,remaining_ids))
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats
 
-  remaining_ids <- scdata.filtered@meta.data$cells_id
+  cells_id[[sample_id]] <- remaining_ids
 
   result <- list(
     data = scdata,
-    remaining_ids = remaining_ids,
+    new_ids = cells_id,
     config = config,
     plotData = guidata
   )
