@@ -72,6 +72,14 @@ rules:
   - list
   - watch
   - delete
+- verbs:
+  - get
+  - patch
+  apiGroups:
+  - apps
+  resources:
+  - deployments
+  - deployments/scale
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
