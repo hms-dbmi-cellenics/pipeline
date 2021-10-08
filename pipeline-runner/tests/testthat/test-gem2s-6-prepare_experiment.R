@@ -56,7 +56,7 @@ test_that("prepare_experiment merges multiple SeuratObjects", {
   prev_out <- mock_prev_out(samples = c('a', 'b', 'c'))
   scdata_list <- prev_out$scdata_list
 
-  task_out <- prepare_experiment(NULL, NULL, prev_out)$output
+  task_out <- expect_warning(prepare_experiment(NULL, NULL, prev_out)$output)
 
   scdata <- task_out$scdata
 
