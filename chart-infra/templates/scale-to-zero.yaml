@@ -7,7 +7,7 @@ metadata:
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
 spec:
-  schedule: '*/5 * * * *'
+  schedule: '*/15 * * * *'
   concurrencyPolicy: Replace
   jobTemplate:
     metadata:
