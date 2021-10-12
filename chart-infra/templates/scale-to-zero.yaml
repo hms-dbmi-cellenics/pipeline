@@ -1,0 +1,34 @@
+{{- if and (eq .Values.clusterEnv "staging") (ne .Values.sandboxId "default") }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: pipeline-scale-down-job
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
+spec:
+  schedule: '*/15 * * * *'
+  concurrencyPolicy: Replace
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          labels:
+            sandboxId: "{{ .Values.sandboxId }}"
+        spec:
+          containers:
+            - name: service-scheduled-job
+              image: 'bitnami/kubectl:latest'
+              args:
+                - scale
+                - '--replicas=0'
+                - deploy
+                - pipeline
+              resources: {}
+          restartPolicy: Never
+          serviceAccountName: cleanup-operator
+          serviceAccount: cleanup-operator
+  successfulJobsHistoryLimit: 1
+{{- end }}
