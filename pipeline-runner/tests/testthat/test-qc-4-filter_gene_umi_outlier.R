@@ -77,6 +77,23 @@ test_that("filter_gene_umi_outlier can filter cells", {
     expect_lt(ncol(out$data), nstart)
 })
 
+test_that("filter_gene_umi_outlier uses linear if regressionType is gam (legacy)", {
+
+    # single outlier in single sample
+    scdata <- mock_scdata(with_outlier = TRUE)
+    config <- mock_config()
+    nstart <- ncol(scdata)
+    scdata$samples <- '123abc'
+
+    out1 <- filter_gene_umi_outlier(scdata, config, '123abc')
+    expect_lt(ncol(out1$data), nstart)
+
+
+    config$filterSettings$regressionType <- 'gam'
+    out2 <- filter_gene_umi_outlier(scdata, config, '123abc')
+    expect_identical(out1$data, out2$data)
+})
+
 test_that("filter_gene_umi_outlier can be disabled", {
 
     # single outlier in single sample

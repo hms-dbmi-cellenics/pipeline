@@ -57,8 +57,8 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, task_name = "numG
 
     data <- data[order(data$log_molecules), ]
 
-    if (type == 'linear') fit <- MASS::rlm(log_genes ~ log_molecules, data = data)
-    else if (type == 'spline') fit <- lm(log_genes ~ splines::bs(log_molecules), data = data)
+    if (type == 'spline') fit <- lm(log_genes ~ splines::bs(log_molecules), data = data)
+    else fit <- MASS::rlm(log_genes ~ log_molecules, data = data)
 
     # get the interval based on p.level parameter
     preds <- suppressWarnings(predict(fit, interval = "prediction", level = 1 - p.level))
