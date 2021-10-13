@@ -348,7 +348,7 @@ init <- function() {
                     cause = error_txt
                 )
 
-                send_pipeline_fail_update(pipeline_config, input_parse$experimentId, input_parse$processName, "Error message placeholder")
+                send_pipeline_fail_update(pipeline_config, input_parse, "Error message placeholder")
 
                 message("Sent task failure to state machine task: ", taskToken)
                 message("recovered from error:", e$message)

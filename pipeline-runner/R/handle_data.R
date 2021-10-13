@@ -83,11 +83,15 @@ send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, 
   return(result$MessageId)
 }
 
-send_pipeline_fail_update <- function(pipeline_config, experiment_id, process_name, error_message) {
-  error_msg <- list()
-  error_msg$experimentId <- experiment_id
-  error_msg$response$error <- error_message
+send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
+  process_name <- input$processName
 
+  error_msg <- list()
+
+  # todo - remove the duplicate experiment id from input response
+  error_msg$experimentId <- input$experimentId
+  error_msg$response$error <- process_name
+  error_msg$input <- input
   sns <- paws::sns(config = pipeline_config$aws_config)
 
   string_value <- ""
