@@ -166,7 +166,7 @@ test_that("Gene UMI filter works if input is a a float-interpretable string", {
     config$auto <- FALSE
     out_number <- filter_gene_umi_outlier(scdata, config, '123def')
 
-    config$filterSettings$regressionTypeSettings$gam$p.level <- "0.1"
+    config$filterSettings$regressionTypeSettings$linear$p.level <- "0.1"
     out_string <- filter_gene_umi_outlier(scdata, config, '123def')
 
     expect_lt(ncol(out_number$data),nstart)
@@ -177,7 +177,7 @@ test_that("Gene UMI filter throws error if input is a non float-interpretable st
     scdata <- mock_scdata()
     config <- mock_config()
     config$auto <- FALSE
-    config$filterSettings$regressionTypeSettings$gam$p.level <- "asd"
+    config$filterSettings$regressionTypeSettings$linear$p.level <- "asd"
 
     expect_error(filter_gene_umi_outlier(scdata, config, '123def'))
 })
