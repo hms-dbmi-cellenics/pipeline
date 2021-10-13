@@ -6,6 +6,7 @@ construct_qc_config <- function(scdata, any_filtered) {
     # classifier
     config.classifier <- list(
         enabled = !any_filtered,
+        prefiltered = any_filtered,
         auto = TRUE,
         filterSettings = list(FDR = 0.01))
 
