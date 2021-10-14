@@ -32,8 +32,8 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_nam
 
   scdata.sample <- subset_ids(scdata,cells_id.sample)
 
-  p.level <- config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level
-
+  p.level <- suppressWarnings(as.numeric(config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level))
+  if(is.na(p.level)) stop("P-level couldnt be interpreted as a number.")
   if (as.logical(toupper(config$enabled))) {
     if (config$filterSettings$regressionType == "gam") {
       # Check if it is required to compute sensible values. Sensible values are based on the funciton "gene.vs.molecule.cell.filter" from the pagoda2 package

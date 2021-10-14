@@ -163,10 +163,13 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
     return(res)
 }
 
+
 call_gem2s <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
 
     if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+
+    check_input(input)
 
     c(data, task_out) %<-% run_gem2s_step(task_name, input, pipeline_config, prev_out)
     assign("prev_out", task_out, pos = ".GlobalEnv")

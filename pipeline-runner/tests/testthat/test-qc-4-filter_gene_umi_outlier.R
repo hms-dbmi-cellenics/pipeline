@@ -102,3 +102,26 @@ test_that("filter_gene_umi_outlier return the appropriate plot data", {
     # is numeric
     expect_equal(class(pdat[[1]]), 'numeric')
 })
+
+test_that("Gene UMI filter works if input is a a float-interpretable string", {
+    scdata <- mock_scdata()
+    config <- mock_config()
+    nstart <- ncol(scdata)
+    config$auto <- FALSE
+    out_number <- filter_gene_umi_outlier(scdata, config, '123def')
+
+    config$filterSettings$regressionTypeSettings$gam$p.level <- "0.1"
+    out_string <- filter_gene_umi_outlier(scdata, config, '123def')
+
+    expect_lt(ncol(out_number$data),nstart)
+    expect_equal(ncol(out_number$data),ncol(out_string$data))
+})
+
+test_that("Gene UMI filter throws error if input is a non float-interpretable string", {
+    scdata <- mock_scdata()
+    config <- mock_config()
+    config$auto <- FALSE
+    config$filterSettings$regressionTypeSettings$gam$p.level <- "asd"
+
+    expect_error(filter_gene_umi_outlier(scdata, config, '123def'))
+})
