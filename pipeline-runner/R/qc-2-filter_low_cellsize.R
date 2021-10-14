@@ -55,7 +55,6 @@ filter_low_cellsize <- function(scdata, config,sample_id,cells_id ,task_name = "
   } else {
     remaining_ids <- cells_id.sample
   }
-
   # update config
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI

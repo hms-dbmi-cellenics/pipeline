@@ -20,6 +20,7 @@ mock_scdata <- function() {
         as.is = TRUE)
 
     scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
+    scdata$cells_id <- 0:(ncol(scdata) - 1)
 
     # add samples
     scdata$samples <- rep(c('123abc', '123def'), each = 40)
@@ -30,9 +31,11 @@ mock_scdata <- function() {
 
 test_that("filter_gene_umi_outlier updates gam p.level in config if auto", {
     scdata <- mock_scdata()
+    cells_id <- mock_ids()
     config <- mock_config()
+
     config$filterSettings$regressionTypeSettings$gam$p.level <- 1
-    out <- filter_gene_umi_outlier(scdata, config, '123def')
+    out <- filter_gene_umi_outlier(scdata, config, '123def',cells_id)
     new <- out$config$filterSettings$regressionTypeSettings$gam$p.level
 
     expect_lt(new, 1)
@@ -40,29 +43,42 @@ test_that("filter_gene_umi_outlier updates gam p.level in config if auto", {
 
 test_that("filter_gene_umi_outlier can filter cells", {
     scdata <- mock_scdata()
+    cells_id <- mock_ids()
     config <- mock_config()
     nstart <- ncol(scdata)
 
-    out <- filter_gene_umi_outlier(scdata, config, '123def')
-    expect_lt(ncol(out$data), nstart)
+    out <- filter_gene_umi_outlier(scdata, config, '123def',cells_id)
+    expect_equal(ncol(out$data), nstart)
+    expect_lt(length(out$new_ids$`123def`),length(cells_id$`123def`))
 })
 
 test_that("filter_gene_umi_outlier is sample specific", {
     scdata <- mock_scdata()
+    cells_id <- mock_ids()
     config <- mock_config()
 
-    out1 <- filter_gene_umi_outlier(scdata, config, '123abc')
-    out2 <- filter_gene_umi_outlier(scdata, config, '123def')
-    expect_lt(ncol(out2$data), ncol(out1$data))
+    out1 <- filter_gene_umi_outlier(scdata, config, '123abc',cells_id)
+
+    expect_equal(length(out1$new_ids$`123def`),length(cells_id$`123def`))
+
+    out2 <- filter_gene_umi_outlier(scdata, config, '123def',cells_id)
+
+    expect_equal(length(out2$new_ids$`123abc`),length(cells_id$`123abc`))
+    expect_lt(length(out2$new_ids$`123def`),length(cells_id$`123def`))
+
+    expect_lt(length(out2$new_ids$`123def`), length(out1$new_ids$`123abc`))
 })
 
 test_that("filter_gene_umi_outlier can be disabled", {
     scdata <- mock_scdata()
+    cells_id <- mock_ids()
     config <- mock_config()
     nstart <- ncol(scdata)
     config$enabled <- FALSE
 
-    out <- filter_gene_umi_outlier(scdata, config, '123def')
+    out <- filter_gene_umi_outlier(scdata, config, '123def',cells_id)
+    expect_equal(out$new_ids$`123abc`,0:39)
+    expect_equal(out$new_ids$`123def`,40:79)
     expect_equal(ncol(out$data), nstart)
 })
 
@@ -70,9 +86,10 @@ test_that("filter_gene_umi_outlier can be disabled", {
 
 test_that("filter_gene_umi_outlier return the appropriate plot data", {
     scdata <- mock_scdata()
+    cells_id <- mock_ids()
     config <- mock_config()
 
-    out <- filter_gene_umi_outlier(scdata, config, '123def')
+    out <- filter_gene_umi_outlier(scdata, config, '123def',cells_id)
     pdat <- out$plotData[[1]]
 
     # one value per cell

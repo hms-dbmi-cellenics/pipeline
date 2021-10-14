@@ -25,7 +25,7 @@ get_positions_to_keep <- function(scdata,num_cells_to_downsample){
 subset_ids <- function(scdata,cells_id) {
   meta_data_subset <- scdata@meta.data[match(cells_id,scdata@meta.data$cells_id),]
   current_cells <- rownames(meta_data_subset)
-  scdata <- subset(scdata,cells=current_cells)
+  scdata <- subset_safe(scdata,cells=current_cells)
   return(scdata)
 }
 

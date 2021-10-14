@@ -25,14 +25,13 @@
 #'
 filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
-  print(length(cells_id.sample))
   if (length(cells_id.sample) == 0) {
     guidata <- list()
     return(list(data = scdata, config = config, plotData = guidata))
   }
 
   scdata.sample <- subset_ids(scdata,cells_id.sample)
-  
+
   p.level <- config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level
 
   if (as.logical(toupper(config$enabled))) {
