@@ -1,3 +1,7 @@
+mock_ids <- function(){
+    return(list("123abc" = 0:39,"123def" = 40:79))
+}
+
 mock_config <- function() {
     config <- list(
         auto = TRUE,
@@ -105,23 +109,27 @@ test_that("filter_gene_umi_outlier return the appropriate plot data", {
 
 test_that("Gene UMI filter works if input is a a float-interpretable string", {
     scdata <- mock_scdata()
+    cells_id <- mock_ids()
     config <- mock_config()
     nstart <- ncol(scdata)
     config$auto <- FALSE
-    out_number <- filter_gene_umi_outlier(scdata, config, '123def')
+
+    out_number <- filter_gene_umi_outlier(scdata, config, '123def',cells_id)
 
     config$filterSettings$regressionTypeSettings$gam$p.level <- "0.1"
-    out_string <- filter_gene_umi_outlier(scdata, config, '123def')
+    out_string <- filter_gene_umi_outlier(scdata, config, '123def',cells_id)
 
-    expect_lt(ncol(out_number$data),nstart)
-    expect_equal(ncol(out_number$data),ncol(out_string$data))
+    expect_equal(ncol(out_number$data),nstart)
+    expect_equal(out_string$new_ids$`123def`,out_number$new_ids$`123def`)
+
 })
 
 test_that("Gene UMI filter throws error if input is a non float-interpretable string", {
     scdata <- mock_scdata()
+    cells_id <- mock_ids()
     config <- mock_config()
     config$auto <- FALSE
     config$filterSettings$regressionTypeSettings$gam$p.level <- "asd"
 
-    expect_error(filter_gene_umi_outlier(scdata, config, '123def'))
+    expect_error(filter_gene_umi_outlier(scdata, config, '123def',cells_id))
 })

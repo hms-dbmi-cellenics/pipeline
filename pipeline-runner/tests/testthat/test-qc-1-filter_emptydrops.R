@@ -1,3 +1,5 @@
+source("qc_mock.R")
+
 mock_config <- function() {
   config <- list(
     auto = FALSE,
@@ -9,7 +11,6 @@ mock_config <- function() {
 
   return(config)
 }
-
 
 mock_scdata <- function() {
   pbmc_raw <- read.table(
@@ -30,6 +31,7 @@ mock_scdata <- function() {
 }
 
 test_that("Initial cells_id are correct",{
+  scdata <- mock_scdata()
   cells_id <- generate_first_step_ids(scdata)
   expect_equal(cells_id$`123abc`,0:39)
   expect_equal(cells_id$`123def`,40:79)

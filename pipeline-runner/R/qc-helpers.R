@@ -1,3 +1,11 @@
+#' Title
+#'
+#' @param scdata
+#'
+#' @return
+#' @export
+#'
+#' @examples
 generate_first_step_ids <- function(scdata){
   cells_id <- list()
   for(sample_id in unique(scdata$samples)){

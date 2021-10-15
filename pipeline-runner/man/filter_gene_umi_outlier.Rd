@@ -8,6 +8,7 @@ filter_gene_umi_outlier(
   scdata,
   config,
   sample_id,
+  cells_id,
   task_name = "numGenesVsNumUmis",
   num_cells_to_downsample = 6000
 )

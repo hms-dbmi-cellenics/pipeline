@@ -8,6 +8,7 @@ filter_doublets(
   scdata,
   config,
   sample_id,
+  cells_id,
   task_name = "doubletScores",
   num_cells_to_downsample = 6000
 )

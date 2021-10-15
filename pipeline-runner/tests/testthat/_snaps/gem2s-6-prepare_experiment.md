@@ -42,8 +42,9 @@
         .. .. .. ..$ absolute_threshold:List of 2
         .. .. .. .. ..$ maxFraction: num 0.1
         .. .. .. .. ..$ binStep    : num 0.05
-       $ classifier          :List of 4
+       $ classifier          :List of 5
         ..$ enabled       : logi TRUE
+        ..$ prefiltered   : logi FALSE
         ..$ auto          : logi TRUE
         ..$ filterSettings:List of 1
         .. ..$ FDR: num 0.01
