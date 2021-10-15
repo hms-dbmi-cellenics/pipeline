@@ -6,13 +6,19 @@ upload_cells_id <- function(pipeline_config,object_key,cells_id){
 }
 
 
-reload_scdata_from_s3 <- function(pipeline_config, experiment_id) {
+reload_scdata_from_s3 <- function(pipeline_config, experiment_id,task_name,tasks) {
+  #If the task is after data integration, we need to get scdata from processed_matrix
+  if(match(task_name,names(tasks))>6){
+    bucket <- pipeline_config$processed_bucket
+  }else{
+    bucket <- pipeline_config$source_bucket
+  }
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  message(pipeline_config$source_bucket)
+  message(bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
 
   c(body, ...rest) %<-% s3$get_object(
-    Bucket = pipeline_config$source_bucket,
+    Bucket = bucket,
     Key = paste(experiment_id, "r.rds", sep = "/")
   )
   obj <- readRDS(rawConnection(body))
