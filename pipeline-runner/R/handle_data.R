@@ -243,6 +243,8 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
   return(resp)
 }
 
+# The limit for part numbers is 10000, so we have a limit on 50GB objects.
+# This can be improved by changing the number of megabytes in the part_size parameter
 upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
   file_size <- file.size(object)
   megabyte <- 2^20
