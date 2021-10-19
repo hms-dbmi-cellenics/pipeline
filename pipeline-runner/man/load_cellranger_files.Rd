@@ -4,7 +4,7 @@
 \alias{load_cellranger_files}
 \title{Read input folder of 10x data}
 \usage{
-load_cellranger_files(input, pipeline_config, prev_out)
+load_cellranger_files(input, pipeline_config, prev_out, input_dir = "/input")
 }
 \arguments{
 \item{input}{The input object from the request}

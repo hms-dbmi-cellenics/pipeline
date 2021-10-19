@@ -6,6 +6,18 @@ check_prev_out <- function(prev_out, check_names) {
   }
 }
 
+check_input <- function(input) {
+
+  # check that metadata items length is same as number of samples
+  metadata <- input$metadata
+
+  if (length(metadata)) {
+    nsamples <- length(input$sampleNames)
+    nmeta <- sapply(metadata, length)
+    if (!all(nmeta == nsamples)) stop ('Sample number differs from metadata length.')
+  }
+}
+
 
 get_color_pool <- function() {
   c(

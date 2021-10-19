@@ -4,7 +4,7 @@
 \alias{call_read10x}
 \title{Calls Read10X}
 \usage{
-call_read10x(config)
+call_read10x(config, input_dir)
 }
 \arguments{
 \item{config}{experiment settings.}
