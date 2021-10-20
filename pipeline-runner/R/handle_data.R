@@ -8,7 +8,9 @@ upload_cells_id <- function(pipeline_config,object_key,cells_id){
 
 reload_scdata_from_s3 <- function(pipeline_config, experiment_id,task_name,tasks) {
   #If the task is after data integration, we need to get scdata from processed_matrix
-  if(match(task_name,names(tasks))>6){
+  task_names <- names(tasks)
+  integration_index <- which(task_names == 'dataIntegration')
+  if(match(task_name, task_names) > integration_index){
     bucket <- pipeline_config$processed_bucket
   }else{
     bucket <- pipeline_config$source_bucket

@@ -38,7 +38,7 @@ filter_high_mito <- function(scdata, config, sample_id, cells_id,task_name = "mi
 
   maxFraction <- config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction
 
-  plot_data <- generate_MT_plot_data(scdata.sample)
+  plot_data <- generate_mito_plot_data(scdata.sample)
 
   if (exists("auto", where = config)) {
     if (as.logical(toupper(config$auto))) {
