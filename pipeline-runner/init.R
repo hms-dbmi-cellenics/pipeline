@@ -66,11 +66,6 @@ load_config <- function(development_aws_server) {
         )
     )
 
-    # temporary fix, in the future it would be good to unify the api app names for production / staging
-    if(config$cluster_env == 'production') {
-        config$api_url <- paste0("http://api.api-",sandbox,".svc.cluster.local:3000")
-    }
-
     config[["aws_config"]] <- list(region = config$aws_region)
 
     # running in linux needs the IP of the host to work. If it is set as an environment variable (by makefile) honor it instead of the
@@ -81,7 +76,7 @@ load_config <- function(development_aws_server) {
     }
 
     if(config$cluster_env == 'development') {
-        config$api_url <- "http://host.docker.internal:3000"
+        config$api_url <- sprintf("http://%s:3000", development_aws_server)
         config$aws_config[['endpoint']] <- sprintf("http://%s:4566", development_aws_server) # DOCKER_GATEWAY_HOST
         config$aws_config[['credentials']] <- list(
             creds = list(
@@ -189,10 +184,13 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
     return(res)
 }
 
+
 call_gem2s <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
 
     if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+
+    check_input(input)
 
     c(data, task_out) %<-% run_gem2s_step(task_name, input, pipeline_config, prev_out)
     assign("prev_out", task_out, pos = ".GlobalEnv")

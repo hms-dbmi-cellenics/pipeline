@@ -124,14 +124,21 @@ meta_sets <- function(input, scdata, color_pool) {
   cell_set_list <- c()
   meta <- lapply(input$metadata, unlist)
 
-  # names of metadata tracks
-  vars <- names(meta)
-  for (i in seq_along(vars)) {
-    key <- name <- vars[i]
+  # user-supplied metadata track names
+  keys <- names(meta)
+
+  # syntactically valid metadata names as stored in scdata
+  # same names as used in construct_metadata including internal 'samples' column (dropped)
+  seurat_keys <- make.names(c('samples', keys), unique = TRUE)[-1]
+
+  color_index <- 1
+  for (i in seq_along(keys)) {
+    key <- keys[i]
+    seurat_key <- seurat_keys[i]
 
     cell_set <- list(
       "key" = key,
-      "name" = name,
+      "name" = key,
       "rootNode" = TRUE,
       "children" = c(),
       "type" = "metadataCategorical"
@@ -139,16 +146,20 @@ meta_sets <- function(input, scdata, color_pool) {
 
     # values of current metadata track
     values <- unique(meta[[i]])
-    for (i in seq_along(values)) {
-      value <- values[i]
-      cell_ids <- scdata$cells_id[scdata[[key]] == value]
 
-      cell_set$children[[i]] <- list(
+    for (j in seq_along(values)) {
+      value <- values[j]
+      cell_ids <- scdata$cells_id[scdata[[seurat_key]] == value]
+
+      cell_set$children[[j]] <- list(
         "key" = paste(key, value, sep = "-"),
         "name" = value,
-        "color" = color_pool[i],
+        "color" = color_pool[color_index],
         "cellIds" = unname(cell_ids)
       )
+
+      color_index <- color_index + 1
+
     }
     cell_set_list <- c(cell_set_list, list(cell_set))
   }

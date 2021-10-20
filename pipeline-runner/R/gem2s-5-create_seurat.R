@@ -8,11 +8,10 @@
 #' @export
 #'
 create_seurat <- function(input, pipeline_config, prev_out) {
-
   message("Creating Seurat Objects...")
 
-  # NOTE: edrops is not required
-  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores')
+  # NOTE: edrops can be empty list
+  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores', 'edrops')
   check_prev_out(prev_out, check_names)
 
   # destructure previous output: config, counts_list, annot, and doublet_scores
@@ -46,6 +45,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, config, min.cells = 3, min.features = 10) {
 
   metadata <- construct_metadata(counts, sample, config)
+
   scdata <- Seurat::CreateSeuratObject(
     counts,
     meta.data = metadata,
@@ -53,12 +53,17 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
     min.cells = min.cells,
     min.features = min.features)
 
-  scdata <- add_mito(scdata, annot)
-  scdata <- add_dblscore(scdata, doublet_score)
-  scdata <- add_edrops(scdata, edrops_out)
+  scdata <- scdata %>%
+    add_mito(annot) %>%
+    add_dblscore(doublet_score) %>%
+    add_edrops(edrops_out)
 
   return(scdata)
 }
+
+
+
+# NOTE: any changes here must be reflected in meta_sets
 
 # construct metadata for each SeuratObject
 construct_metadata <- function(counts, sample, config) {
@@ -69,9 +74,12 @@ construct_metadata <- function(counts, sample, config) {
   rest <- config$metadata
   if (!is.null(rest)) {
     rest <- lapply(rest, unlist)
-    rest <- data.frame(rest, row.names = config$samples)
+    rest <- data.frame(rest, row.names = config$samples, check.names = FALSE)
     metadata[names(rest)] <- rest[sample, ]
   }
+
+  # make syntactically valid column names
+  colnames(metadata) <- make.names(colnames(metadata), unique = TRUE)
 
   return(metadata)
 }
@@ -84,7 +92,7 @@ add_mito <- function(scdata, annot) {
     mt.features <- annot$input[grep("^mt-", annot$name, ignore.case = TRUE)]
     mt.features <- mt.features[mt.features %in% rownames(scdata)]
     if (length(mt.features)) {
-      scdata <- PercentageFeatureSet(scdata, features = mt.features, col.name = "percent.mt")
+      scdata <- Seurat::PercentageFeatureSet(scdata, features = mt.features, col.name = "percent.mt")
     }
   }
 

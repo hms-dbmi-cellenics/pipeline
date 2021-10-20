@@ -9,14 +9,14 @@
 #' }
 #' @export
 #'
-load_cellranger_files <- function(input, pipeline_config, prev_out) {
+load_cellranger_files <- function(input, pipeline_config, prev_out, input_dir = '/input') {
   message("Loading cellranger output ...")
   check_prev_out(prev_out, 'config')
 
   # destructure previous output
   config <- prev_out$config
 
-  output <- c(prev_out, call_read10x(config))
+  output <- c(prev_out, call_read10x(config, input_dir))
 
   res <- list(
     data = list(),
@@ -32,7 +32,7 @@ load_cellranger_files <- function(input, pipeline_config, prev_out) {
 #'
 #' @param config experiment settings.
 #'
-call_read10x <- function(config) {
+call_read10x <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
 
@@ -42,7 +42,7 @@ call_read10x <- function(config) {
 
 
   for (sample in samples) {
-    sample_dir <- file.path("/input", sample)
+    sample_dir <- file.path(input_dir, sample)
     sample_fpaths <- list.files(sample_dir)
     annot_fpath <- file.path(sample_dir, 'features.tsv.gz')
 
@@ -50,6 +50,14 @@ call_read10x <- function(config) {
     message("Reading files from ", sample_dir, ' --> ', paste(sample_fpaths, collapse = ' - '))
 
     counts <- Seurat::Read10X(sample_dir, gene.column = 1)
+
+    if(is(counts, 'list')) {
+      slot <- 'Gene Expression'
+      # questionable: grab first slot if no gene expression
+      if (!slot %in% names(counts)) slot <- names(counts)[1]
+      counts <- counts[[slot]]
+    }
+
     annot <- read.delim(annot_fpath, header = FALSE)
 
     message(
