@@ -33,8 +33,8 @@ mock_scdata <- function() {
 test_that("Initial cells_id are correct",{
   scdata <- mock_scdata()
   cells_id <- generate_first_step_ids(scdata)
-  expect_equal(cells_id$`123abc`,0:39)
-  expect_equal(cells_id$`123def`,40:79)
+  expect_equal(unique(cells_id$`123abc`),0:39)
+  expect_equal(unique(cells_id$`123def`),40:79)
 })
 
 test_that("filter_emptydrops removes NA with threshold < 1", {

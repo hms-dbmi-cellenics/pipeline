@@ -132,6 +132,16 @@ calc_filter_stats <- function(scdata) {
   )
 }
 
+#' Title
+#'
+#' @param clustering_method
+#' @param resolution
+#' @param data
+#'
+#' @return
+#' @export
+#'
+#' @examples
 runClusters <- function(clustering_method,resolution, data) {
   data <- getClusters(clustering_method, resolution, data)
   res_col <- paste0(data@active.assay, "_snn_res.",toString(resolution))
@@ -144,6 +154,16 @@ runClusters <- function(clustering_method,resolution, data) {
 }
 
 
+#' Get Clusters
+#'
+#' @param clustering_method
+#' @param resolution
+#' @param data
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getClusters <- function(clustering_method, resolution, data) {
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]
@@ -163,11 +183,11 @@ getClusters <- function(clustering_method, resolution, data) {
     clusters <- clusters[colnames(data)]
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters - 1)
   } else {
-    graph.name <- paste0(DefaultAssay(data), "_snn")
+    graph.name <- paste0(Seurat::DefaultAssay(data), "_snn")
     if (!graph.name %in% names(data)) {
       data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
     }
-    data <- FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm)
+    data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm)
   }
   return(data)
 }

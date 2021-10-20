@@ -16,6 +16,6 @@ test_that("harmony integration works", {
     config <- list(dimensionalityReduction = list(numPCs = 2),
                    dataIntegration = list(method = 'harmony', methodSettings = list(harmony = list(numGenes = 10, normalisation = 'logNormalize'))))
 
-    scdata <- run_dataIntegration(scdata, config)
+    scdata <- suppressWarnings(run_dataIntegration(scdata, config))
     expect_s4_class(scdata, 'Seurat')
 })

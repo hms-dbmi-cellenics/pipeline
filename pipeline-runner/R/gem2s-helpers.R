@@ -18,7 +18,6 @@ check_input <- function(input) {
   }
 }
 
-
 get_color_pool <- function() {
   c(
     "#e377c2", "#8c564b", "#d62728", "#2ca02c", "#ff7f0e", "#1f77b4", "#f8e71c",
