@@ -27,7 +27,7 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id,task_name,tasks
   return(obj)
 }
 
-load_cells_id_from_s3 <- function(pipeline_config,task_name,experiment_id) {
+load_cells_id_from_s3 <- function(pipeline_config,task_name,experiment_id,samples) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
   object_list <- s3$list_objects("biomage-filtered-cells-development",Prefix=paste0(experiment_id,"/",task_name,"/"))
   message(pipeline_config$cells_id_bucket)
@@ -37,6 +37,7 @@ load_cells_id_from_s3 <- function(pipeline_config,task_name,experiment_id) {
   for(object in object_list$Contents){
       key <- object$Key
       sample_id <- tools::file_path_sans_ext(basename(key))
+      if (!sample_id %in% samples) stop("The samples in s3 don't match the samples in the object. Pipeline needs to rerun.")
       c(body, ...rest) %<-% s3$get_object(
           Bucket = pipeline_config$cells_id_bucket,
           Key = key)
