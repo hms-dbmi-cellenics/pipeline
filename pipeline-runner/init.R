@@ -240,9 +240,9 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         data,new_ids,...rest_of_results
     ) %<-% run_processing_step(scdata, config, tasks,task_name, cells_id,sample_id, debug_config)
 
-    print("Comparison between cell ids")
-    print(paste0("Old ids length ",length(cells_id[[sample_id]])))
-    print(paste0("New ids length ",length(new_ids[[sample_id]])))
+    message("Comparison between cell ids")
+    message("Old ids length ",length(cells_id[[sample_id]]))
+    message("New ids length ",length(new_ids[[sample_id]]))
 
     assign("cells_id", new_ids, pos = ".GlobalEnv")
 
