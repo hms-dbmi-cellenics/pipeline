@@ -246,7 +246,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
     assign("cells_id", new_ids, pos = ".GlobalEnv")
 
-    if(task_name != names(tasks)[length(tasks)]){
+    if(task_name != tail(names(tasks),1)){
         next_task <- names(tasks)[[match(task_name,names(tasks))+1]]
         object_key <- paste0(experiment_id,"/",next_task,"/",sample_id,".rds")
         upload_cells_id(pipeline_config,object_key,cells_id)
