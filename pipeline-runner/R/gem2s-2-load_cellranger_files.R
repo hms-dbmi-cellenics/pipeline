@@ -9,9 +9,9 @@
 #' }
 #' @export
 #'
-load_cellranger_files <- function(input, pipeline_config, prev_out, input_dir = '/input') {
+load_cellranger_files <- function(input, pipeline_config, prev_out, input_dir = "/input") {
   message("Loading cellranger output ...")
-  check_prev_out(prev_out, 'config')
+  check_prev_out(prev_out, "config")
 
   # destructure previous output
   config <- prev_out$config
@@ -20,7 +20,8 @@ load_cellranger_files <- function(input, pipeline_config, prev_out, input_dir = 
 
   res <- list(
     data = list(),
-    output = output)
+    output = output
+  )
 
   message("\nLoading of cellranger files step complete.")
   return(res)
@@ -44,15 +45,15 @@ call_read10x <- function(config, input_dir) {
   for (sample in samples) {
     sample_dir <- file.path(input_dir, sample)
     sample_fpaths <- list.files(sample_dir)
-    annot_fpath <- file.path(sample_dir, 'features.tsv.gz')
+    annot_fpath <- file.path(sample_dir, "features.tsv.gz")
 
     message("\nSample --> ", sample)
-    message("Reading files from ", sample_dir, ' --> ', paste(sample_fpaths, collapse = ' - '))
+    message("Reading files from ", sample_dir, " --> ", paste(sample_fpaths, collapse = " - "))
 
     counts <- Seurat::Read10X(sample_dir, gene.column = 1)
 
-    if(is(counts, 'list')) {
-      slot <- 'Gene Expression'
+    if (is(counts, "list")) {
+      slot <- "Gene Expression"
       # questionable: grab first slot if no gene expression
       if (!slot %in% names(counts)) slot <- names(counts)[1]
       counts <- counts[[slot]]
@@ -86,8 +87,8 @@ format_annot <- function(annot_list) {
   annot$original_name <- gname
   is.dup <- duplicated(gname) | duplicated(gname, fromLast = TRUE)
 
-  #We need to convert the gene inputs from _ to - bc when we create the Seurat object we do this, and the match would return NA values if any of the inputs still has _.
-  annot$input <- gsub('_', '-', annot$input)
+  # We need to convert the gene inputs from _ to - bc when we create the Seurat object we do this, and the match would return NA values if any of the inputs still has _.
+  annot$input <- gsub("_", "-", annot$input)
   annot$name[is.dup] <- paste(gname[is.dup], annot$input[is.dup], sep = " - ")
 
   annot <- annot[!duplicated(annot$input), ]

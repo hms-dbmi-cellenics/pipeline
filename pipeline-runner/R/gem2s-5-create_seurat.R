@@ -11,7 +11,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   message("Creating Seurat Objects...")
 
   # NOTE: edrops can be empty list
-  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores', 'edrops')
+  check_names <- c("config", "counts_list", "annot", "doublet_scores", "edrops")
   check_prev_out(prev_out, check_names)
 
   # destructure previous output: config, counts_list, annot, and doublet_scores
@@ -28,14 +28,16 @@ create_seurat <- function(input, pipeline_config, prev_out) {
       edrops_out = edrops[[sample]],
       sample = sample,
       annot = annot,
-      config = config)
+      config = config
+    )
   }
 
 
   prev_out$scdata_list <- scdata_list
   res <- list(
     data = list(),
-    output = prev_out)
+    output = prev_out
+  )
 
   message("\nCreation of Seurat objects step complete.")
   return(res)
@@ -43,7 +45,6 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 
 # construct SeuratObject
 construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, config, min.cells = 3, min.features = 10) {
-
   metadata <- construct_metadata(counts, sample, config)
 
   scdata <- Seurat::CreateSeuratObject(
@@ -51,7 +52,8 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
     meta.data = metadata,
     project = config$name,
     min.cells = min.cells,
-    min.features = min.features)
+    min.features = min.features
+  )
 
   scdata <- scdata %>%
     add_mito(annot) %>%
@@ -86,7 +88,6 @@ construct_metadata <- function(counts, sample, config) {
 
 # add mitochondrial percent to SeuratObject
 add_mito <- function(scdata, annot) {
-
   if (any(grepl("^mt-", annot$name, ignore.case = TRUE))) {
     message("Adding MT information...")
     mt.features <- annot$input[grep("^mt-", annot$name, ignore.case = TRUE)]
@@ -102,7 +103,6 @@ add_mito <- function(scdata, annot) {
 
 # add emptyDrops result to SeuratObject
 add_edrops <- function(scdata, edout) {
-
   scdata@tools$flag_filtered <- is.null(edout)
 
   if (!scdata@tools$flag_filtered) {
@@ -120,7 +120,6 @@ add_edrops <- function(scdata, edout) {
     rownames(meta.data) <- meta.data$barcode
 
     scdata@meta.data <- meta.data
-
   } else {
     message("emptyDrops results not present, skipping...")
     scdata@meta.data$emptyDrops_FDR <- NA

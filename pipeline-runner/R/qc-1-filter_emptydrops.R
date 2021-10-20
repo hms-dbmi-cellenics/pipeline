@@ -16,14 +16,14 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
-filter_emptydrops <- function(scdata, config, sample_id, cells_id,task_name = 'classifier', num_cells_to_downsample = 6000) {
+filter_emptydrops <- function(scdata, config, sample_id, cells_id, task_name = "classifier", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
 
   if (length(cells_id.sample) == 0) {
     return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata,cells_id.sample)
+  scdata.sample <- subset_ids(scdata, cells_id.sample)
 
   FDR <- config$filterSettings$FDR
   if (isTRUE(config$auto)) {
@@ -35,8 +35,8 @@ filter_emptydrops <- function(scdata, config, sample_id, cells_id,task_name = 'c
 
   # check if filter data is actually available
   if (is.null(scdata@meta.data$emptyDrops_FDR)) {
-        message("Classify is enabled but has no classify data available: will dissable it: no filtering!")
-        config$enabled <- FALSE
+    message("Classify is enabled but has no classify data available: will dissable it: no filtering!")
+    config$enabled <- FALSE
   }
 
   if (config$enabled) {
@@ -60,20 +60,19 @@ filter_emptydrops <- function(scdata, config, sample_id, cells_id,task_name = 'c
     fdr_data <- unname(purrr::map2(ed_fdr, numis, function(x, y) {
       c("FDR" = x, "log_u" = y)
     }))
-    fdr_data <- fdr_data[get_positions_to_keep(scdata.sample,num_cells_to_downsample)]
+    fdr_data <- fdr_data[get_positions_to_keep(scdata.sample, num_cells_to_downsample)]
 
     remaining_ids <- scdata.sample@meta.data$cells_id[ed_fdr <= FDR]
-    
+
     # update config
     config$filterSettings$FDR <- FDR
 
     # Downsample plotData
-    knee_data <- get_bcranks_plot_data(scdata.sample, is.cellsize = FALSE)[['knee']]
+    knee_data <- get_bcranks_plot_data(scdata.sample, is.cellsize = FALSE)[["knee"]]
 
     # Populate guidata list
     guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- fdr_data
     guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- knee_data
-    
   } else {
     message("filter disabled: data not filtered!")
     # guidata is an empty list
@@ -86,7 +85,7 @@ filter_emptydrops <- function(scdata, config, sample_id, cells_id,task_name = 'c
   # get filter stats after filtering
   filter_stats <- list(
     before = calc_filter_stats(scdata.sample),
-    after = calc_filter_stats(subset_ids(scdata.sample,remaining_ids))
+    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats

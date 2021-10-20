@@ -20,9 +20,9 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata, config, sample_id, cells_id,task_name = "dataIntegration") {
+integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "dataIntegration") {
   flat_cells_id <- unname(unlist(cells_id))
-  scdata <- subset_ids(scdata,flat_cells_id)
+  scdata <- subset_ids(scdata, flat_cells_id)
   # main function
   scdata.integrated <- run_dataIntegration(scdata, config)
   # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
@@ -66,7 +66,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id,task_name = "da
   plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
   plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
 
-  
+
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
     data = scdata.integrated,

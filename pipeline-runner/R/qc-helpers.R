@@ -6,9 +6,9 @@
 #' @export
 #'
 #' @examples
-generate_first_step_ids <- function(scdata){
+generate_first_step_ids <- function(scdata) {
   cells_id <- list()
-  for(sample_id in unique(scdata$samples)){
+  for (sample_id in unique(scdata$samples)) {
     cells_id[[sample_id]] <- scdata$cells_id[scdata$samples == sample_id]
   }
   return(cells_id)
@@ -17,7 +17,7 @@ generate_first_step_ids <- function(scdata){
 #
 # Returns the positions to keep based on scdata and number of cells to keep
 #
-get_positions_to_keep <- function(scdata,num_cells_to_downsample){
+get_positions_to_keep <- function(scdata, num_cells_to_downsample) {
   # Downsample plotData
   num_cells_to_downsample <- downsample_plotdata(ncol(scdata), num_cells_to_downsample)
   set.seed(123)
@@ -30,10 +30,10 @@ get_positions_to_keep <- function(scdata,num_cells_to_downsample){
 #
 # subset_ids subsets a seurat object with the cell ids
 #
-subset_ids <- function(scdata,cells_id) {
-  meta_data_subset <- scdata@meta.data[match(cells_id,scdata@meta.data$cells_id),]
+subset_ids <- function(scdata, cells_id) {
+  meta_data_subset <- scdata@meta.data[match(cells_id, scdata@meta.data$cells_id), ]
   current_cells <- rownames(meta_data_subset)
-  scdata <- subset_safe(scdata,cells=current_cells)
+  scdata <- subset_safe(scdata, cells = current_cells)
   return(scdata)
 }
 
@@ -111,7 +111,6 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
 #' }
 #'
 calc_filter_stats <- function(scdata) {
-
   if (!nrow(scdata)) {
     return(list(
       num_cells = 0,
@@ -142,9 +141,9 @@ calc_filter_stats <- function(scdata) {
 #' @export
 #'
 #' @examples
-runClusters <- function(clustering_method,resolution, data) {
+runClusters <- function(clustering_method, resolution, data) {
   data <- getClusters(clustering_method, resolution, data)
-  res_col <- paste0(data@active.assay, "_snn_res.",toString(resolution))
+  res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   # In the meta data slot the clustering is stored with the resolution used to calculate it
   # RNA_snn_res.#resolution
   df <- data.frame(cluster = data@meta.data[, res_col], cell_ids = data@meta.data$cells_id)

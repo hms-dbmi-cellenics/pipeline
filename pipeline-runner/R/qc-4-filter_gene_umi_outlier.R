@@ -23,16 +23,16 @@
 #'
 #' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 #'
-filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
+filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
   if (length(cells_id.sample) == 0) {
-    return(list(data = scdata,new_ids = cells_id, config = config, plotData = list()))
+    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata,cells_id.sample)
+  scdata.sample <- subset_ids(scdata, cells_id.sample)
 
   p.level <- suppressWarnings(as.numeric(config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level))
-  if(is.na(p.level)) stop("P-level couldnt be interpreted as a number.")
+  if (is.na(p.level)) stop("P-level couldnt be interpreted as a number.")
   if (as.logical(toupper(config$enabled))) {
     if (config$filterSettings$regressionType == "gam") {
       # Check if it is required to compute sensible values. Sensible values are based on the funciton "gene.vs.molecule.cell.filter" from the pagoda2 package
@@ -65,11 +65,11 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_nam
       plot1_data <- purrr::map2(plot1_data, unname(pb$upr), function(x, y) {
         append(x, c("upper_cutoff" = y))
       })
-      plot1_data <- plot1_data[get_positions_to_keep(scdata.sample,num_cells_to_downsample)]
+      plot1_data <- plot1_data[get_positions_to_keep(scdata.sample, num_cells_to_downsample)]
       # Define the outliers those that are below the lower confidence band and above the upper one.
       outliers <- rownames(df)[df$genes > pb$upr | df$genes < pb$lwr]
 
-      remaining_ids <- scdata.sample@meta.data[!colnames(scdata.sample) %in% outliers,"cells_id"]
+      remaining_ids <- scdata.sample@meta.data[!colnames(scdata.sample) %in% outliers, "cells_id"]
     }
   } else {
     remaining_ids <- cells_id.sample
@@ -88,7 +88,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id,task_nam
   # Populate with filter statistics
   filter_stats <- list(
     before = calc_filter_stats(scdata.sample),
-    after = calc_filter_stats(subset_ids(scdata.sample,remaining_ids))
+    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats

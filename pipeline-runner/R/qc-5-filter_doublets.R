@@ -17,14 +17,14 @@
 #' @export
 #' @return a list with the filtered seurat object by doublet score, the config and the plot values
 #'
-filter_doublets <- function(scdata, config, sample_id, cells_id,task_name = "doubletScores", num_cells_to_downsample = 6000) {
+filter_doublets <- function(scdata, config, sample_id, cells_id, task_name = "doubletScores", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
 
   if (length(cells_id.sample) == 0) {
-    return(list(data = scdata, new_ids = cells_id,config = config, plotData = list()))
+    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata,cells_id.sample)
+  scdata.sample <- subset_ids(scdata, cells_id.sample)
 
   # Check if the experiment has doubletScores
   if (!"doublet_scores" %in% colnames(scdata@meta.data)) {
@@ -43,7 +43,7 @@ filter_doublets <- function(scdata, config, sample_id, cells_id,task_name = "dou
     }
   }
 
-  plot1_data <- generate_doublets_plot_data(scdata.sample,num_cells_to_downsample)
+  plot1_data <- generate_doublets_plot_data(scdata.sample, num_cells_to_downsample)
 
   # Check whether the filter is set to true or false
   if (as.logical(toupper(config$enabled))) {
@@ -52,8 +52,7 @@ filter_doublets <- function(scdata, config, sample_id, cells_id,task_name = "dou
     doublet_scores <- scdata.sample$doublet_scores
     doublet_scores[is.na(doublet_scores)] <- 0
     remaining_ids <- scdata.sample@meta.data$cells_id[doublet_scores <= probabilityThreshold]
-  }
-  else {
+  } else {
     remaining_ids <- cells_id.sample
   }
 
@@ -68,7 +67,7 @@ filter_doublets <- function(scdata, config, sample_id, cells_id,task_name = "dou
   # populate with filter statistics
   filter_stats <- list(
     before = calc_filter_stats(scdata.sample),
-    after = calc_filter_stats(subset_ids(scdata.sample,remaining_ids))
+    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
@@ -93,12 +92,12 @@ generate_default_values_doubletScores <- function(scdata) {
   return(threshold)
 }
 
-generate_doublets_plot_data <- function(scdata,num_cells_to_downsample){
+generate_doublets_plot_data <- function(scdata, num_cells_to_downsample) {
   plot1_data <- lapply(unname(scdata$doublet_scores), function(x) {
     c("doubletP" = x)
   })
 
-  plot1_data <- plot1_data[get_positions_to_keep(scdata,num_cells_to_downsample)]
+  plot1_data <- plot1_data[get_positions_to_keep(scdata, num_cells_to_downsample)]
 
   return(plot1_data)
 }

@@ -16,14 +16,14 @@
 #' @export
 #' @return a list with the filtered seurat object by cell size ditribution, the config and the plot values
 #'
-filter_low_cellsize <- function(scdata, config,sample_id,cells_id ,task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
+filter_low_cellsize <- function(scdata, config, sample_id, cells_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
 
   if (length(cells_id.sample) == 0) {
     return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata,cells_id.sample)
+  scdata.sample <- subset_ids(scdata, cells_id.sample)
 
   minCellSize <- as.numeric(config$filterSettings$minCellSize)
 
@@ -59,12 +59,12 @@ filter_low_cellsize <- function(scdata, config,sample_id,cells_id ,task_name = "
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
   guidata <- list()
-  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data[['knee']]
-  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[['hist']]
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data[["knee"]]
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[["hist"]]
   # Populate with filter statistics
   filter_stats <- list(
     before = calc_filter_stats(scdata.sample),
-    after = calc_filter_stats(subset_ids(scdata.sample,remaining_ids))
+    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
   )
   guidata[[generate_gui_uuid(sample_id, task_name, 3)]] <- filter_stats
 
@@ -94,7 +94,6 @@ filter_low_cellsize <- function(scdata, config,sample_id,cells_id ,task_name = "
 #' @importFrom magrittr %>%
 #'
 get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE) {
-
   set.seed(123)
   plot_data <- list()
   numis <- unname(sample_subset$nCount_RNA)
@@ -108,23 +107,27 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
   fdrs[is.na(fdrs)] <- 1
 
   dt <- data.table::data.table(rank = ranks, fdr = fdrs, u = numis)
-  dt <- dt[, .(ndrops = .N, u = u[1]), by = c('rank', 'fdr')]
+  dt <- dt[, .(ndrops = .N, u = u[1]), by = c("rank", "fdr")]
 
   # example of what knee regions should look like
   # plot_knee_regions(dt)
 
   # remove fdr specific columns for cell size filter
   if (is.cellsize) dt[, c("fdr", "ndrops") := NULL]
-  knee_data <- dt %>% purrr::transpose() %>% purrr::simplify_all()
-  plot_data[['knee']] <- knee_data
+  knee_data <- dt %>%
+    purrr::transpose() %>%
+    purrr::simplify_all()
+  plot_data[["knee"]] <- knee_data
 
   # umi histogram plot
   if (is.cellsize) {
-    hist_data <- lapply(numis, function(x) { c(u = x) })
+    hist_data <- lapply(numis, function(x) {
+      c(u = x)
+    })
     nhist <- downsample_plotdata(ncol(sample_subset), nmax)
     keep <- sort(sample(ncol(sample_subset), nhist))
     hist_data <- hist_data[keep]
-    plot_data[['hist']] <- hist_data
+    plot_data[["hist"]] <- hist_data
   }
 
   return(plot_data)
@@ -133,30 +136,30 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
 plot_knee_regions <- function(dt, thresh = 0.01) {
 
   # fill regions
-  dt$quality <- 'unknown'
+  dt$quality <- "unknown"
   lt.thresh <- dt$fdr < thresh
 
   amb.first <- which(!lt.thresh)[1]
   amb.last <- tail(which(lt.thresh), 1)
 
-  dt$quality[1:amb.first] <- 'good'
-  dt$quality[amb.last:nrow(dt)] <- 'low'
+  dt$quality[1:amb.first] <- "good"
+  dt$quality[amb.last:nrow(dt)] <- "low"
 
-  cols <- c('green', 'red', 'gray')
+  cols <- c("green", "red", "gray")
   res$quality <- factor(res$quality)
 
   # plot
-  ggplot2::ggplot(dt, aes(x=rank, y=u, fill = quality)) +
-    ggplot2::geom_ribbon(mapping = ggplot2::aes(x=rank, ymax=u, ymin=0, fill = quality),alpha=0.3, inherit.aes = FALSE) +
+  ggplot2::ggplot(dt, aes(x = rank, y = u, fill = quality)) +
+    ggplot2::geom_ribbon(mapping = ggplot2::aes(x = rank, ymax = u, ymin = 0, fill = quality), alpha = 0.3, inherit.aes = FALSE) +
     ggplot2::scale_fill_manual(values = cols) +
     ggplot2::geom_line(size = 1) +
-    ggplot2::scale_x_continuous(trans='log10') +
-    ggplot2::scale_y_continuous(trans='log10') +
+    ggplot2::scale_x_continuous(trans = "log10") +
+    ggplot2::scale_y_continuous(trans = "log10") +
     ggplot2::theme_minimal() +
-    ggplot2::theme(legend.position = 'none') +
-    ggplot2::theme(panel.border = ggplot2::element_rect(color = 'black', size = 0.1, fill = 'transparent')) +
-    ggplot2::xlab('cell rank') +
-    ggplot2::ylab('log UMIs in cell')
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::theme(panel.border = ggplot2::element_rect(color = "black", size = 0.1, fill = "transparent")) +
+    ggplot2::xlab("cell rank") +
+    ggplot2::ylab("log UMIs in cell")
 }
 
 
@@ -183,7 +186,7 @@ plot_knee_regions <- function(dt, thresh = 0.01) {
 # samples.
 generate_default_values_cellSizeDistribution <- function(scdata, config) {
   # `CalculateBarcodeInflections` including inflection point calculation
-  threshold.low <- if(ncol(scdata)<=200) NULL else 100
+  threshold.low <- if (ncol(scdata) <= 200) NULL else 100
   scdata_tmp <- Seurat::CalculateBarcodeInflections(
     object = scdata,
     barcode.column = "nCount_RNA",

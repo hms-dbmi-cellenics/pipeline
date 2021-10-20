@@ -19,15 +19,15 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
-filter_high_mito <- function(scdata, config, sample_id, cells_id,task_name = "mitochondrialContent", num_cells_to_downsample = 6000) {
+filter_high_mito <- function(scdata, config, sample_id, cells_id, task_name = "mitochondrialContent", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
 
   if (length(cells_id.sample) == 0) {
     return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata,cells_id.sample)
-  
+  scdata.sample <- subset_ids(scdata, cells_id.sample)
+
   # Check if the experiment has MT-content
   if (!"percent.mt" %in% colnames(scdata@meta.data)) {
     message("Warning! No MT-content has been computed for this experiment!")
@@ -72,7 +72,7 @@ filter_high_mito <- function(scdata, config, sample_id, cells_id,task_name = "mi
   # populate with filter statistics
   filter_stats <- list(
     before = calc_filter_stats(scdata.sample),
-    after = calc_filter_stats(subset_ids(scdata.sample,remaining_ids))
+    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats
@@ -101,7 +101,7 @@ generate_default_values_mitochondrialContent <- function(scdata, config) {
   return(threshold)
 }
 
-generate_mito_plot_data <- function(scdata){
+generate_mito_plot_data <- function(scdata) {
   plot1_data <- lapply(unname(scdata$percent.mt), function(x) {
     c("fracMito" = x)
   })
@@ -109,6 +109,6 @@ generate_mito_plot_data <- function(scdata){
     c("cellSize" = y, "fracMito" = x)
   }))
 
-  plot_data <- list(plot1_data = plot1_data,plot2_data = plot2_data)
+  plot_data <- list(plot1_data = plot1_data, plot2_data = plot2_data)
   return(plot_data)
 }
