@@ -102,7 +102,7 @@ generate_default_values_mitochondrialContent <- function(scdata, config) {
   return(threshold)
 }
 
-generate_MT_plot_data <- function(scdata){
+generate_mito_plot_data <- function(scdata){
   plot1_data <- lapply(unname(scdata$percent.mt), function(x) {
     c("fracMito" = x)
   })
