@@ -23,8 +23,7 @@ filter_high_mito <- function(scdata, config, sample_id, cells_id,task_name = "mi
   cells_id.sample <- cells_id[[sample_id]]
 
   if (length(cells_id.sample) == 0) {
-    guidata <- list()
-    return(list(data = scdata, config = config, plotData = guidata))
+    return(list(data = scdata, config = config, plotData = list()))
   }
 
   scdata.sample <- subset_ids(scdata,cells_id.sample)

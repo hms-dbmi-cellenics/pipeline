@@ -20,8 +20,7 @@ filter_low_cellsize <- function(scdata, config,sample_id,cells_id ,task_name = "
   cells_id.sample <- cells_id[[sample_id]]
 
   if (length(cells_id.sample) == 0) {
-    guidata <- list()
-    return(list(data = scdata, config = config, plotData = guidata))
+    return(list(data = scdata, config = config, plotData = list()))
   }
 
   scdata.sample <- subset_ids(scdata,cells_id.sample)
@@ -55,6 +54,7 @@ filter_low_cellsize <- function(scdata, config,sample_id,cells_id ,task_name = "
   } else {
     remaining_ids <- cells_id.sample
   }
+
   # update config
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
