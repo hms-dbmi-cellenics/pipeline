@@ -197,7 +197,7 @@ call_gem2s <- function(task_name, input, pipeline_config) {
     c(data, task_out) %<-% run_gem2s_step(task_name, input, pipeline_config, prev_out)
     assign("prev_out", task_out, pos = ".GlobalEnv")
 
-    message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input$authJWT)
+    message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
 
     return(message_id)
 }

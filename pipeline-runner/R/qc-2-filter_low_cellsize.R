@@ -19,7 +19,6 @@
 filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
 
   minCellSize <- as.numeric(config$filterSettings$minCellSize)
-
   # extract plotting data of original data to return to plot slot later
   meta <- scdata@meta.data
   barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
