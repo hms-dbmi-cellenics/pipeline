@@ -20,7 +20,7 @@ filter_emptydrops <- function(scdata, config, sample_id, cells_id,task_name = 'c
   cells_id.sample <- cells_id[[sample_id]]
 
   if (length(cells_id.sample) == 0) {
-    return(list(data = scdata, config = config, plotData = list()))
+    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
   }
 
   scdata.sample <- subset_ids(scdata,cells_id.sample)
