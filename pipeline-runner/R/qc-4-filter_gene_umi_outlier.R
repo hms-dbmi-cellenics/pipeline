@@ -10,9 +10,9 @@
 #'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
 #'          to call generate_default_values_numGenesVsNumUmis)
 #'          - filterSettings: slot with thresholds
-#'              - regressionType: String. Regression to be used: {gam}
+#'              - regressionType: String. Regression to be used: {linear or spline}
 #'              - regressionTypeSettings: list with the config settings for all the regression type options
-#'                          - gam: for the gam option there is only one element:
+#'                          - linear and spline: for each there is only one element:
 #'                             - p.level: which refers to  confidence level for deviation from the main trend
 #'
 #' @param scdata \code{SeuratObject}
@@ -23,6 +23,7 @@
 #'
 #' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 #'
+#'
 filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
   if (length(cells_id.sample) == 0) {
@@ -31,66 +32,74 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
 
   scdata.sample <- subset_ids(scdata, cells_id.sample)
 
-  p.level <- suppressWarnings(as.numeric(config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level))
-  if (is.na(p.level)) stop("P-level couldnt be interpreted as a number.")
-  if (as.logical(toupper(config$enabled))) {
-    if (config$filterSettings$regressionType == "gam") {
-      # Check if it is required to compute sensible values. Sensible values are based on the funciton "gene.vs.molecule.cell.filter" from the pagoda2 package
-      if (exists("auto", where = config)) {
-        if (as.logical(toupper(config$auto))) {
-          p.level <- min(0.001, 1 / ncol(scdata.sample))
-        }
-      }
+  type <- config$filterSettings$regressionType
 
-      # We regress the molecules vs the genes. This information are stored in nCount_RNA and nFeature_RNA respectively
-      df <- data.frame(molecules = scdata.sample$nCount_RNA, genes = scdata.sample$nFeature_RNA)
-      # We take log10 following the plot from the mock-up
-      df <- log10(df)
-      # Rename the rows to be able to identify the valid cells
-      rownames(df) <- colnames(scdata.sample)
-      df <- df[order(df$molecules, decreasing = FALSE), ]
-      m <- MASS::rlm(genes ~ molecules, data = df)
-      # Get the interval based on p.level paramter
-      suppressWarnings(pb <- data.frame(predict(m,
-        interval = "prediction",
-        level = 1 - p.level, type = "response"
-      )))
+  # get p.level and update in config
+  # defaults from "gene.vs.molecule.cell.filter" in pagoda2
+  if (safeTRUE(config$auto))
+    p.level <- min(0.001, 1 / ncol(scdata.sample))
+  else
+    p.level <- config$filterSettings$regressionTypeSettings[[type]]$p.level
 
-      plot1_data <- unname(purrr::map2(df$molecules, df$genes, function(x, y) {
-        c("log_molecules" = x, "log_genes" = y)
-      }))
-      plot1_data <- purrr::map2(plot1_data, unname(pb$lwr), function(x, y) {
-        append(x, c("lower_cutoff" = y))
-      })
-      plot1_data <- purrr::map2(plot1_data, unname(pb$upr), function(x, y) {
-        append(x, c("upper_cutoff" = y))
-      })
-      plot1_data <- plot1_data[get_positions_to_keep(scdata.sample, num_cells_to_downsample)]
-      # Define the outliers those that are below the lower confidence band and above the upper one.
-      outliers <- rownames(df)[df$genes > pb$upr | df$genes < pb$lwr]
+  p.level <- suppressWarnings(as.numeric(p.level))
+  if(is.na(p.level)) stop("p.level couldnt be interpreted as a number.")
 
-      remaining_ids <- scdata.sample@meta.data[!colnames(scdata.sample) %in% outliers, "cells_id"]
-    }
+  config$filterSettings$regressionTypeSettings[[type]]$p.level <- p.level
+
+  # regress log10 molecules vs genes
+  fit.data <- data.frame(
+    log_molecules = log10(scdata.sample$nCount_RNA),
+    log_genes = log10(scdata.sample$nFeature_RNA),
+    row.names = scdata.sample$cells_id
+  )
+
+  fit.data <- fit.data[order(fit.data$log_molecules), ]
+
+  if (type == 'spline') fit <- lm(log_genes ~ splines::bs(log_molecules), data = fit.data)
+  else fit <- MASS::rlm(log_genes ~ log_molecules, data = fit.data)
+
+  if (safeTRUE(config$enabled)) {
+    # get the interval based on p.level parameter
+    preds <- suppressWarnings(predict(fit, interval = "prediction", level = 1 - p.level))
+
+    # filter outliers above/below cutoff bands
+    is.outlier <- fit.data$log_genes > preds[, 'upr'] | fit.data$log_genes < preds[, 'lwr']
+    remaining_ids <- rownames(fit.data)[!is.outlier]
+
   } else {
-    remaining_ids <- cells_id.sample
-    plot1_data <- list()
+    remaining_ids <- rownames(fit.data)
   }
 
-  config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]][["p.level"]] <- p.level
+  # downsample for plot data
+  nkeep <- downsample_plotdata(ncol(scdata.sample), num_cells_to_downsample)
 
-  # Scatter plot which is composed of:
-  # x-axis: log_10_UMIs
-  # y-axis: log_10_genes
-  # bands that are conformed with the upper_cutoff and the lower_cutoff.
-  guidata <- list()
-  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot1_data
+  set.seed(123)
+  keep_rows <- sample(nrow(fit.data), nkeep)
+  keep_rows <- sort(keep_rows)
+  downsampled_data <- fit.data[keep_rows, ]
 
-  # Populate with filter statistics
+  # get evenly spaced predictions on downsampled data for plotting lines
+  xrange <- range(downsampled_data$log_molecules)
+  newdata <- data.frame(log_molecules = seq(xrange[1], xrange[2], length.out = 10))
+  line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = 1 - p.level))
+
+  line_preds <- cbind(newdata, line_preds) %>%
+    dplyr::select(-fit) %>%
+    dplyr::rename(lower_cutoff = lwr, upper_cutoff = upr)
+
+  plot_data <- list(
+    pointsData = purrr::transpose(downsampled_data),
+    linesData = purrr::transpose(line_preds)
+  )
+
+  # Populate with filter statistics and plot data
   filter_stats <- list(
     before = calc_filter_stats(scdata.sample),
     after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
   )
 
+  guidata <- list()
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
 
   cells_id[[sample_id]] <- remaining_ids

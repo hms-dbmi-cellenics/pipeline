@@ -190,3 +190,8 @@ getClusters <- function(clustering_method, resolution, data) {
   }
   return(data)
 }
+
+
+safeTRUE <- function(x) {
+  isTRUE(as.logical(x))
+}

@@ -60,8 +60,11 @@ construct_qc_config <- function(scdata, any_filtered) {
     enabled = TRUE,
     auto = TRUE,
     filterSettings = list(
-      regressionType = "gam",
-      regressionTypeSettings = list("gam" = list(p.level = 0.001))
+      regressionType = "linear",
+      regressionTypeSettings = list(
+        "linear" = list(p.level = 0.001),
+        "spline" = list(p.level = 0.001)
+      )
     )
   )
 
