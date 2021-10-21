@@ -29,6 +29,7 @@ mock_scdata <- function(with_outlier = FALSE) {
     }
 
     scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
+    scdata$cells_id <- 0:(ncol(scdata)-1)
 
     # add samples
     scdata$samples <- rep(c('123abc', '123def'), each = 40)
@@ -39,8 +40,9 @@ mock_scdata <- function(with_outlier = FALSE) {
 test_that("filter_gene_umi_outlier updates linear p.level in config if auto", {
     scdata <- mock_scdata()
     config <- mock_config()
+    cells_id <- mock_ids()
     config$filterSettings$regressionTypeSettings$linear$p.level <- 1
-    out <- filter_gene_umi_outlier(scdata, config, '123def')
+    out <- filter_gene_umi_outlier(scdata, config, '123def', cells_id)
     new <- out$config$filterSettings$regressionTypeSettings$linear$p.level
 
   expect_lt(new, 1)
@@ -52,21 +54,21 @@ test_that("filter_gene_umi_outlier is sample specific", {
     # one outlier in first sample
     scdata <- mock_scdata(with_outlier = TRUE)
     config <- mock_config()
+    cells_id <- mock_ids()
 
-    barcodes1 <- colnames(scdata)[scdata$samples == '123abc']
-    barcodes2 <- colnames(scdata)[scdata$samples == '123def']
+    cell_ids1 <- scdata$cells_id[scdata$samples == '123abc']
+    cell_ids2 <- scdata$cells_id[scdata$samples == '123def']
 
-    out1 <- filter_gene_umi_outlier(scdata, config, '123abc')
-    out2 <- filter_gene_umi_outlier(scdata, config, '123def')
+    out1 <- filter_gene_umi_outlier(scdata, config, '123abc', cells_id)
+    out2 <- filter_gene_umi_outlier(scdata, config, '123def', cells_id)
 
     # filtered something
-    expect_lt(ncol(out1$data), ncol(scdata))
-    expect_lt(ncol(out2$data), ncol(scdata))
+    expect_lt(length(out1$new_ids$`123abc`), length(cells_id$`123abc`))
+    expect_lt(length(out2$new_ids$`123def`), length(cells_id$`123def`))
 
     # didn't filter other sample
-    expect_true(all(barcodes1 %in% colnames(out2$data)))
-    expect_true(all(barcodes2 %in% colnames(out1$data)))
-
+    expect_true(all(cell_ids1 %in% out2$new_ids$`123abc`))
+    expect_true(all(cell_ids2 %in% out1$new_ids$`123def`))
 })
 
 test_that("filter_gene_umi_outlier can filter cells", {
@@ -74,11 +76,12 @@ test_that("filter_gene_umi_outlier can filter cells", {
     # single outlier in single sample
     scdata <- mock_scdata(with_outlier = TRUE)
     config <- mock_config()
+    cells_id <- mock_ids()
     nstart <- ncol(scdata)
     scdata$samples <- '123abc'
 
-    out <- filter_gene_umi_outlier(scdata, config, '123abc')
-    expect_lt(ncol(out$data), nstart)
+    out <- filter_gene_umi_outlier(scdata, config, '123abc', cells_id)
+    expect_lt(length(unlist(out$new_ids)), nstart)
 })
 
 test_that("filter_gene_umi_outlier uses linear if regressionType is gam (legacy)", {
@@ -86,16 +89,17 @@ test_that("filter_gene_umi_outlier uses linear if regressionType is gam (legacy)
     # single outlier in single sample
     scdata <- mock_scdata(with_outlier = TRUE)
     config <- mock_config()
+    cells_id <- mock_ids()
     nstart <- ncol(scdata)
     scdata$samples <- '123abc'
 
-    out1 <- filter_gene_umi_outlier(scdata, config, '123abc')
-    expect_lt(ncol(out1$data), nstart)
+    out1 <- filter_gene_umi_outlier(scdata, config, '123abc', cells_id)
+    expect_lt(length(unlist(out1$new_ids)), nstart)
 
 
     config$filterSettings$regressionType <- 'gam'
-    out2 <- filter_gene_umi_outlier(scdata, config, '123abc')
-    expect_identical(out1$data, out2$data)
+    out2 <- filter_gene_umi_outlier(scdata, config, '123abc', cells_id)
+    expect_identical(out1$new_ids, out2$new_ids)
 })
 
 test_that("filter_gene_umi_outlier can be disabled", {
