@@ -59,23 +59,29 @@
         ..$ enabled       : logi TRUE
         ..$ auto          : logi TRUE
         ..$ filterSettings:List of 2
-        .. ..$ regressionType        : chr "gam"
-        .. ..$ regressionTypeSettings:List of 1
-        .. .. ..$ gam:List of 1
+        .. ..$ regressionType        : chr "linear"
+        .. ..$ regressionTypeSettings:List of 2
+        .. .. ..$ linear:List of 1
+        .. .. .. ..$ p.level: num 0.001
+        .. .. ..$ spline:List of 1
         .. .. .. ..$ p.level: num 0.001
         ..$ sample_a      :List of 4
         .. ..$ enabled              : logi TRUE
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 2
-        .. .. ..$ regressionType        : chr "gam"
-        .. .. ..$ regressionTypeSettings:List of 1
-        .. .. .. ..$ gam:List of 1
+        .. .. ..$ regressionType        : chr "linear"
+        .. .. ..$ regressionTypeSettings:List of 2
+        .. .. .. ..$ linear:List of 1
         .. .. .. .. ..$ p.level: num 0.00013
+        .. .. .. ..$ spline:List of 1
+        .. .. .. .. ..$ p.level: num 0.001
         .. ..$ defaultFilterSettings:List of 2
-        .. .. ..$ regressionType        : chr "gam"
-        .. .. ..$ regressionTypeSettings:List of 1
-        .. .. .. ..$ gam:List of 1
+        .. .. ..$ regressionType        : chr "linear"
+        .. .. ..$ regressionTypeSettings:List of 2
+        .. .. .. ..$ linear:List of 1
         .. .. .. .. ..$ p.level: num 0.00013
+        .. .. .. ..$ spline:List of 1
+        .. .. .. .. ..$ p.level: num 0.001
        $ doubletScores       :List of 4
         ..$ enabled       : logi TRUE
         ..$ auto          : logi TRUE

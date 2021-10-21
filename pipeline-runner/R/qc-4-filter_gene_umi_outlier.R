@@ -26,6 +26,7 @@
 #'
 filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
+
   if (length(cells_id.sample) == 0) {
     return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
   }
@@ -64,10 +65,10 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
 
     # filter outliers above/below cutoff bands
     is.outlier <- fit.data$log_genes > preds[, 'upr'] | fit.data$log_genes < preds[, 'lwr']
-    remaining_ids <- rownames(fit.data)[!is.outlier]
-
+    remaining_ids <- as.numeric(rownames(fit.data)[!is.outlier])
+    remaining_ids <- remaining_ids[order(remaining_ids)]
   } else {
-    remaining_ids <- rownames(fit.data)
+    remaining_ids <- cells_id.sample
   }
 
   # downsample for plot data
