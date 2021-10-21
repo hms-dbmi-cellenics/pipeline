@@ -3,9 +3,9 @@ mock_config <- function() {
         auto = TRUE,
         enabled = TRUE,
         filterSettings = list(
-            regressionType = 'linear',
+            regressionType = 'gam',
             regressionTypeSettings = list(
-                linear = list(p.level = 0.1)
+                gam = list(p.level = 0.1)
             )
         )
     )
@@ -14,98 +14,55 @@ mock_config <- function() {
 }
 
 
-mock_scdata <- function(with_outlier = FALSE) {
+mock_scdata <- function() {
     pbmc_raw <- read.table(
         file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
         as.is = TRUE)
-
-    if (with_outlier) {
-        pbmc_raw[, 1] <- 0
-        pbmc_raw[1:10, 1] <- 20
-    }
 
     scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
     # add samples
     scdata$samples <- rep(c('123abc', '123def'), each = 40)
+    scdata <- Seurat::RenameCells(scdata, paste(scdata$samples, colnames(scdata), sep = ''))
     return(scdata)
 }
 
 
-test_that("filter_gene_umi_outlier updates linear p.level in config if auto", {
+test_that("filter_gene_umi_outlier updates gam p.level in config if auto", {
     scdata <- mock_scdata()
     config <- mock_config()
-    config$filterSettings$regressionTypeSettings$linear$p.level <- 1
+    config$filterSettings$regressionTypeSettings$gam$p.level <- 1
     out <- filter_gene_umi_outlier(scdata, config, '123def')
-    new <- out$config$filterSettings$regressionTypeSettings$linear$p.level
+    new <- out$config$filterSettings$regressionTypeSettings$gam$p.level
 
     expect_lt(new, 1)
 })
 
-
-test_that("filter_gene_umi_outlier is sample specific", {
-
-    # one outlier in first sample
-    scdata <- mock_scdata(with_outlier = TRUE)
-    config <- mock_config()
-
-    barcodes1 <- colnames(scdata)[scdata$samples == '123abc']
-    barcodes2 <- colnames(scdata)[scdata$samples == '123def']
-
-    out1 <- filter_gene_umi_outlier(scdata, config, '123abc')
-    out2 <- filter_gene_umi_outlier(scdata, config, '123def')
-
-    # filtered something
-    expect_lt(ncol(out1$data), ncol(scdata))
-    expect_lt(ncol(out2$data), ncol(scdata))
-
-    # didn't filter other sample
-    expect_true(all(barcodes1 %in% colnames(out2$data)))
-    expect_true(all(barcodes2 %in% colnames(out1$data)))
-
-})
-
 test_that("filter_gene_umi_outlier can filter cells", {
-
-    # single outlier in single sample
-    scdata <- mock_scdata(with_outlier = TRUE)
+    scdata <- mock_scdata()
     config <- mock_config()
     nstart <- ncol(scdata)
-    scdata$samples <- '123abc'
 
-    out <- filter_gene_umi_outlier(scdata, config, '123abc')
+    out <- filter_gene_umi_outlier(scdata, config, '123def')
     expect_lt(ncol(out$data), nstart)
 })
 
-test_that("filter_gene_umi_outlier uses linear if regressionType is gam (legacy)", {
-
-    # single outlier in single sample
-    scdata <- mock_scdata(with_outlier = TRUE)
+test_that("filter_gene_umi_outlier is sample specific", {
+    scdata <- mock_scdata()
     config <- mock_config()
-    nstart <- ncol(scdata)
-    scdata$samples <- '123abc'
 
     out1 <- filter_gene_umi_outlier(scdata, config, '123abc')
-    expect_lt(ncol(out1$data), nstart)
-
-
-    config$filterSettings$regressionType <- 'gam'
-    out2 <- filter_gene_umi_outlier(scdata, config, '123abc')
-    expect_identical(out1$data, out2$data)
+    out2 <- filter_gene_umi_outlier(scdata, config, '123def')
+    expect_lt(ncol(out2$data), ncol(out1$data))
 })
 
 test_that("filter_gene_umi_outlier can be disabled", {
-
-    # single outlier in single sample
-    scdata <- mock_scdata(with_outlier = TRUE)
+    scdata <- mock_scdata()
     config <- mock_config()
     nstart <- ncol(scdata)
-    scdata$samples <- '123abc'
-
-    # disabled
     config$enabled <- FALSE
 
-    out <- filter_gene_umi_outlier(scdata, config, '123abc')
+    out <- filter_gene_umi_outlier(scdata, config, '123def')
     expect_equal(ncol(out$data), nstart)
 })
 
@@ -116,47 +73,17 @@ test_that("filter_gene_umi_outlier return the appropriate plot data", {
     config <- mock_config()
 
     out <- filter_gene_umi_outlier(scdata, config, '123def')
-    plot_data <- out$plotData[[1]]
-
-    # points and lines data
-    expect_equal(names(plot_data), c('pointsData', 'linesData'))
+    pdat <- out$plotData[[1]]
 
     # one value per cell
-    points_data <- plot_data$pointsData
-    lines_data <- plot_data$linesData
-    expect_equal(length(points_data), sum(scdata$samples == '123def'))
+    expect_equal(length(pdat), sum(scdata$samples == '123def'))
 
     # has the right names
-    expect_equal(names(points_data[[1]]), c('log_molecules', 'log_genes'))
-    expect_equal(names(lines_data[[1]]), c('log_molecules', 'lower_cutoff', 'upper_cutoff'))
-})
+    expected_names <- c('log_molecules', 'log_genes', 'lower_cutoff', 'upper_cutoff' )
+    expect_equal(names(pdat[[1]]), expected_names)
 
-
-test_that("filter_gene_umi_outlier skips if no barcodes for this sample", {
-    scdata <- mock_scdata(with_outlier = TRUE)
-    config <- mock_config()
-    out <- filter_gene_umi_outlier(scdata, config, 'not a sample')
-
-    expect_equal(ncol(out$data), ncol(scdata))
-})
-
-
-test_that("filter_gene_umi_outlier gives different results with spline fit", {
-    # single outlier in single sample
-    scdata <- mock_scdata(with_outlier = TRUE)
-    config <- mock_config()
-    nstart <- ncol(scdata)
-    scdata$samples <- '123abc'
-
-    out1 <- filter_gene_umi_outlier(scdata, config, '123abc')
-    expect_lt(ncol(out1$data), nstart)
-
-    config$filterSettings$regressionType <- 'spline'
-
-    out2 <- filter_gene_umi_outlier(scdata, config, '123abc')
-
-    expect_true(!identical(out1$plotData, out2$plotData))
-    expect_true(!identical(out1$data, out2$data))
+    # is numeric
+    expect_equal(class(pdat[[1]]), 'numeric')
 })
 
 test_that("Gene UMI filter works if input is a a float-interpretable string", {
@@ -166,7 +93,7 @@ test_that("Gene UMI filter works if input is a a float-interpretable string", {
     config$auto <- FALSE
     out_number <- filter_gene_umi_outlier(scdata, config, '123def')
 
-    config$filterSettings$regressionTypeSettings$linear$p.level <- "0.1"
+    config$filterSettings$regressionTypeSettings$gam$p.level <- "0.1"
     out_string <- filter_gene_umi_outlier(scdata, config, '123def')
 
     expect_lt(ncol(out_number$data),nstart)
@@ -177,7 +104,7 @@ test_that("Gene UMI filter throws error if input is a non float-interpretable st
     scdata <- mock_scdata()
     config <- mock_config()
     config$auto <- FALSE
-    config$filterSettings$regressionTypeSettings$linear$p.level <- "asd"
+    config$filterSettings$regressionTypeSettings$gam$p.level <- "asd"
 
     expect_error(filter_gene_umi_outlier(scdata, config, '123def'))
 })
