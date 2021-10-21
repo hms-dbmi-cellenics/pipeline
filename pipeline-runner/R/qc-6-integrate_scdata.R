@@ -204,7 +204,7 @@ run_fastmnn <- function(scdata, config) {
 
   # @misc slots not preserved so transfer
   misc <- scdata@misc
-  scdata <- SeuratWrappers::RunFastMNN(object.list = SplitObject(scdata, split.by = "samples"), d = 50, get.variance = TRUE)
+  scdata <- SeuratWrappers::RunFastMNN(object.list = Seurat::SplitObject(scdata, split.by = "samples"), d = 50, get.variance = TRUE)
   scdata@misc <- misc
   scdata@misc[["active.reduction"]] <- "mnn"
 
