@@ -52,8 +52,11 @@ construct_qc_config <- function(scdata, any_filtered) {
         enabled = TRUE,
         auto = TRUE,
         filterSettings = list(
-            regressionType = "gam",
-            regressionTypeSettings = list("gam" = list(p.level = 0.001))))
+            regressionType = "linear",
+            regressionTypeSettings = list("linear" = list(p.level = 0.001),
+                                          "spline" = list(p.level = 0.001))
+            )
+        )
 
     config.numGenesVsNumUmis <- add_custom_config_per_sample(get_gene_umi_config, config.numGenesVsNumUmis, scdata)
 
