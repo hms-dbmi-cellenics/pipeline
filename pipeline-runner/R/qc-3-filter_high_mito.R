@@ -92,7 +92,6 @@ filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondri
     config = config,
     plotData = guidata
   )
-  stop('FAILURE!!')
   return(result)
 }
 
