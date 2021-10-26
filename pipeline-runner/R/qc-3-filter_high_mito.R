@@ -37,7 +37,7 @@ filter_high_mito <- function(scdata, config, sample_id, task_name = "mitochondri
     return(list(data = scdata, config = config, plotData = list()))
   }
   sample_subset <- subset(scdata, cells = barcode_names_this_sample)
-  
+
   if (exists("auto", where = config)) {
     if (as.logical(toupper(config$auto))) {
       maxFraction <- generate_default_values_mitochondrialContent(sample_subset, config)
