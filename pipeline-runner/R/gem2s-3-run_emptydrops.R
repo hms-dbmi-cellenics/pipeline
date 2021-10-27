@@ -15,6 +15,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
   # destructure previous output
   counts_list <- prev_out$counts_list
   samples <- names(counts_list)
+
   edrops <- list()
   for (sample in samples) {
     message("\nSample --> ", sample)
