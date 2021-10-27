@@ -10,20 +10,21 @@ pipeline_config <- list(
     aws_config = NULL
 )
 
+mock_sns <- function(){
+    return(
+        list(publish=function(){
+            return(list(MessageId = 'ok'))
+        }
+    ))
+}
 
-send_gem2s_update_to_api(pipeline_config,
-                         experiment_id = 'dfgdfg',
-                         task_name = 'dsfdsdf',
-                         data = 1:5,
-                         input = 'blah')
+test_that("send_gem2s_update_to_api completes successfully", {
+    stub(send_gem2s_update_to_api, 'paws::sns', mock_sns)
 
-
-test_that("filter_gene_umi_outlier updates gam p.level in config if auto", {
-    scdata <- mock_scdata()
-    config <- mock_config()
-    config$filterSettings$regressionTypeSettings$gam$p.level <- 1
-    out <- filter_gene_umi_outlier(scdata, config, '123def')
-    new <- out$config$filterSettings$regressionTypeSettings$gam$p.level
-
-    expect_lt(new, 1)
+    response <- send_gem2s_update_to_api(pipeline_config,
+                            experiment_id = 'dfgdfg',
+                            task_name = 'dsfdsdf',
+                            data = 1:5,
+                            input = list(auth_JWT='ayylmao'))
+    expect_true(response$MessageId=='ok')
 })
