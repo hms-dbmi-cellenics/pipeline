@@ -30,7 +30,8 @@ spec:
         # delete orphaned pods after 1s, so successfully run
         # workers wont linger around
         - --legacy-mode=false
-        - --delete-orphaned-pods-after=1s
+        # wait up to 6 minutes to avoid removing pods which are in containerCreating but are already assigned
+        - --delete-orphaned-pods-after=3600s
         image: quay.io/lwolf/kube-cleanup-operator
         imagePullPolicy: Always
         name: cleanup-operator
