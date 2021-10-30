@@ -10,7 +10,8 @@ data:
     route:
       routes:
         - match:
-            - receiver: "cleanup"
+          - namespace: "{{ .Release.Namespace }}
+            receiver: "cleanup"
     receivers:
       - name: "cleanup"
         webhook:
