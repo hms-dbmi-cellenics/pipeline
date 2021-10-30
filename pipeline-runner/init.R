@@ -309,15 +309,10 @@ init <- function() {
     message("Waiting for tasks")
 
     repeat {
-        tryCatch( {
-            c(taskToken, input) %<-% states$get_activity_task(
-                activityArn = pipeline_config$activity_arn,
-                workerName = pipeline_config$pod_name
-            )
-        }, error = function(e) {
-            message("Error trying to get activity, exiting peacefully")
-            quit('no', 0)
-        })
+        c(taskToken, input) %<-% states$get_activity_task(
+            activityArn = pipeline_config$activity_arn,
+            workerName = pipeline_config$pod_name
+        )
 
         if(is.null(taskToken) || !length(taskToken) || taskToken == "") {
             message('No input received during last poll, shutting down...')
