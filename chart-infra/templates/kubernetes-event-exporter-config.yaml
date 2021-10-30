@@ -10,7 +10,10 @@ data:
     route:
       routes:
         - match:
-          - namespace: "{{ .Release.Namespace }}
+          - namespace: "{{ .Release.Namespace }}"
+            kind: "Pod"
+            labels:
+              type: "pipeline"
             receiver: "cleanup"
     receivers:
       - name: "cleanup"
