@@ -1,6 +1,5 @@
 
 mock_sns <- function(config) {
-    print('hello mock!')
     return(
         list(publish = function (Message, TopicArn, MessageAttributes) {
             return (list(MessageId = 'ok'))
