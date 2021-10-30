@@ -17,17 +17,4 @@ data:
           endpoint: "https://api-{{ .Values.sandboxId }}.scp-staging.biomage.net/v1/kubernetesEvents"
           headers:
             User-Agent: kube-event-exporter 1.0
-          layout:
-            eventType: "kubernetes-event"
-            createdAt: "{{ .GetTimestampMs }}"
-            details:
-              message: "{{ .Message }}"
-              reason: "{{ .Reason }}"
-              type: "{{ .Type }}"
-              count: "{{ .Count }}"
-              kind: "{{ .InvolvedObject.Kind }}"
-              name: "{{ .InvolvedObject.Name }}"
-              namespace: "{{ .Namespace }}"
-              component: "{{ .Source.Component }}"
-              host: "{{ .Source.Host }}"
-              labels: "{{ toJson .InvolvedObject.Labels}}"
+
