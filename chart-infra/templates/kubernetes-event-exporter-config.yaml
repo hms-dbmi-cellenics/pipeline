@@ -5,7 +5,7 @@ metadata:
   namespace: {{.Release.Namespace}}
 data:
   config.yaml: |
-    logLevel: error
+    logLevel: info
     logFormat: json
     route:
       routes:
