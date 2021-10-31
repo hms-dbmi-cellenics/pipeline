@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: event-exporter-cfg
+  namespace: {{.Release.Namespace}}
+data:
+  config.yaml: |
+    logLevel: info
+    logFormat: json
+    route:
+      routes:
+        - match:
+          - kind: "Pod"
+            receiver: "cleanup"
+    receivers:
+      - name: "cleanup"
+        webhook:
+          endpoint: "https://api-{{ .Values.sandboxId }}.scp-staging.biomage.net/v1/kubernetesEvents"
+          headers:
+            User-Agent: kube-event-exporter 1.0
+
