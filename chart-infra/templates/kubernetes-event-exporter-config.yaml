@@ -11,8 +11,6 @@ data:
       routes:
         - match:
           - kind: "Pod"
-            labels:
-              type: "pipeline"
             receiver: "cleanup"
     receivers:
       - name: "cleanup"
