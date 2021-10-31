@@ -11,7 +11,7 @@ spec:
         app: event-exporter
         version: v1
     spec:
-      serviceAccountName: cleanup-operator
+      serviceAccountName: event-exporter
       containers:
         - name: event-exporter
           image: ghcr.io/opsgenie/kubernetes-event-exporter:v0.10

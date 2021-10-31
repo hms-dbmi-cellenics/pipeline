@@ -10,12 +10,10 @@ data:
     route:
       routes:
         - match:
-          - namespace: "{{ .Release.Namespace }}"
-          - reason: "BackOff"
           - kind: "Pod"
             labels:
               type: "pipeline"
-          - receiver: "cleanup"
+            receiver: "cleanup"
     receivers:
       - name: "cleanup"
         webhook:
