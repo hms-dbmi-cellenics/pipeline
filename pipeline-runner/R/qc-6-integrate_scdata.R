@@ -24,6 +24,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   flat_cells_id <- unname(unlist(cells_id))
   scdata <- subset_ids(scdata, flat_cells_id)
   # main function
+  set.seed(42)
   scdata.integrated <- run_dataIntegration(scdata, config)
   # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
   if (scdata.integrated@misc[["active.reduction"]] == "mnn") {
