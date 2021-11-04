@@ -77,6 +77,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
 
   msg <- list(
     experimentId = input$experimentId,
+    taskName = input$taskName,
     input = input,
     output = list(
       bucket = pipeline_config$results_bucket,
