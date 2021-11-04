@@ -217,7 +217,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
         # assign it to the global environment so we can
         # persist it across runs of the wrapper
-        assign("scdata", reload_scdata_from_s3(pipeline_config, experiment_id,task_name,tasks), pos = ".GlobalEnv")
+        assign("scdata", reload_scdata_from_s3(pipeline_config, experiment_id, task_name, tasks), pos = ".GlobalEnv")
 
         message("Single-cell data loaded.")
     }
