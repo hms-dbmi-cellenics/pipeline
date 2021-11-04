@@ -2,7 +2,7 @@ check_prev_out <- function(prev_out, check_names) {
   for (check_name in check_names) {
     if (check_name %in% names(prev_out)) next()
 
-    stop(check_name, ' is missing from prev_out but is required.')
+    stop(check_name, " is missing from prev_out but is required.")
   }
 }
 
@@ -14,10 +14,9 @@ check_input <- function(input) {
   if (length(metadata)) {
     nsamples <- length(input$sampleNames)
     nmeta <- sapply(metadata, length)
-    if (!all(nmeta == nsamples)) stop ('Sample number differs from metadata length.')
+    if (!all(nmeta == nsamples)) stop("Sample number differs from metadata length.")
   }
 }
-
 
 get_color_pool <- function() {
   c(

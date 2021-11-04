@@ -57,7 +57,8 @@ download_cellranger_files <- function(input, pipeline_config, prev_out = list())
   prev_out$config <- config
   res <- list(
     data = list(),
-    ouput = prev_out)
+    ouput = prev_out
+  )
 
   message("\nDownloading of cellranger files step complete.")
   return(res)

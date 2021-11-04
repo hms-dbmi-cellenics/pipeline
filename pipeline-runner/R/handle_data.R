@@ -1,14 +1,54 @@
-reload_scdata_from_s3 <- function(pipeline_config, experiment_id) {
+upload_cells_id <- function(pipeline_config, object_key, cells_id) {
+  object_data <- tempfile()
+  saveRDS(cells_id, file = object_data)
+  put_object_in_s3(pipeline_config, pipeline_config$cells_id_bucket, object_data, object_key)
+  return(object_key)
+}
+
+
+reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
+  # If the task is after data integration, we need to get scdata from processed_matrix
+  task_names <- names(tasks)
+  integration_index <- which(task_names == "dataIntegration")
+  if (match(task_name, task_names) > integration_index) {
+    bucket <- pipeline_config$processed_bucket
+  } else {
+    bucket <- pipeline_config$source_bucket
+  }
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  message(pipeline_config$source_bucket)
+  message(bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
 
   c(body, ...rest) %<-% s3$get_object(
-    Bucket = pipeline_config$source_bucket,
+    Bucket = bucket,
     Key = paste(experiment_id, "r.rds", sep = "/")
   )
   obj <- readRDS(rawConnection(body))
   return(obj)
+}
+
+load_cells_id_from_s3 <- function(pipeline_config, task_name, experiment_id, samples) {
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+  object_list <- s3$list_objects("biomage-filtered-cells-development", Prefix = paste0(experiment_id, "/", task_name, "/"))
+  message(pipeline_config$cells_id_bucket)
+  message(paste(experiment_id, "r.rds", sep = "/"))
+  cells_id <- list()
+  message("Total of ", length(object_list$Contents), " samples.")
+  for (object in object_list$Contents) {
+    key <- object$Key
+    sample_id <- tools::file_path_sans_ext(basename(key))
+    if (!sample_id %in% samples) stop("The samples in s3 don't match the samples in the object. Pipeline needs to rerun.")
+    c(body, ...rest) %<-% s3$get_object(
+      Bucket = pipeline_config$cells_id_bucket,
+      Key = key
+    )
+    id_file <- tempfile()
+    writeBin(body, con = id_file)
+    cells_id.sample <- readRDS(id_file)
+    cells_id[[sample_id]] <- cells_id.sample
+    message("Sample ", sample_id, " with ", length(cells_id.sample), " cells")
+  }
+  return(cells_id)
 }
 
 send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
@@ -146,7 +186,6 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
 }
 
 upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
-
   object_key <- paste0(experiment_id, "/r.rds")
 
   count_matrix <- tempfile()
@@ -208,6 +247,8 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
   return(resp)
 }
 
+# The limit for part numbers is 10000, so we have a limit on 50GB objects.
+# This can be increased by changing the number of megabytes in the part_size parameter
 upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
   file_size <- file.size(object)
   megabyte <- 2^20

@@ -4,7 +4,7 @@
 \alias{calc_filter_stats}
 \title{Calculates statistics before/after filter step}
 \usage{
-calc_filter_stats(scdata, sample_id)
+calc_filter_stats(scdata)
 }
 \arguments{
 \item{scdata}{\code{SeuratObject}}

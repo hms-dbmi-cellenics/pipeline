@@ -8,6 +8,7 @@ filter_high_mito(
   scdata,
   config,
   sample_id,
+  cells_id,
   task_name = "mitochondrialContent",
   num_cells_to_downsample = 6000
 )

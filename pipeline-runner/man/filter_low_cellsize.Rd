@@ -8,6 +8,7 @@ filter_low_cellsize(
   scdata,
   config,
   sample_id,
+  cells_id,
   task_name = "cellSizeDistribution",
   num_cells_to_downsample = 6000
 )

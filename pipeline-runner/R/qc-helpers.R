@@ -1,3 +1,42 @@
+#' Title
+#'
+#' @param scdata
+#'
+#' @return
+#' @export
+#'
+#' @examples
+generate_first_step_ids <- function(scdata) {
+  cells_id <- list()
+  for (sample_id in unique(scdata$samples)) {
+    cells_id[[sample_id]] <- scdata$cells_id[scdata$samples == sample_id]
+  }
+  return(cells_id)
+}
+
+#
+# Returns the positions to keep based on scdata and number of cells to keep
+#
+get_positions_to_keep <- function(scdata, num_cells_to_downsample) {
+  # Downsample plotData
+  num_cells_to_downsample <- downsample_plotdata(ncol(scdata), num_cells_to_downsample)
+  set.seed(123)
+  cells_position_to_keep <- sample(1:ncol(scdata), num_cells_to_downsample, replace = FALSE)
+  cells_position_to_keep <- sort(cells_position_to_keep)
+
+  return(cells_position_to_keep)
+}
+
+#
+# subset_ids subsets a seurat object with the cell ids
+#
+subset_ids <- function(scdata, cells_id) {
+  meta_data_subset <- scdata@meta.data[match(cells_id, scdata@meta.data$cells_id), ]
+  current_cells <- rownames(meta_data_subset)
+  scdata <- subset_safe(scdata, cells = current_cells)
+  return(scdata)
+}
+
 #
 # Generate GUI plots and data uuid as required by the UI
 #
@@ -71,12 +110,8 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
 #'   \item{"median_umis"}{Median number of counts per cell}
 #' }
 #'
-calc_filter_stats <- function(scdata, sample_id) {
-
-  # in case no cells kept
-  is.sample <- scdata$samples == sample_id
-
-  if (!sum(is.sample)) {
+calc_filter_stats <- function(scdata) {
+  if (!nrow(scdata)) {
     return(list(
       num_cells = 0,
       total_genes = 0,
@@ -84,9 +119,6 @@ calc_filter_stats <- function(scdata, sample_id) {
       median_umis = 0
     ))
   }
-
-  # subset to current sample
-  scdata <- scdata[, is.sample]
 
   # number of counts per gene
   ncount <- Matrix::rowSums(scdata[["RNA"]]@counts)
@@ -99,9 +131,19 @@ calc_filter_stats <- function(scdata, sample_id) {
   )
 }
 
-runClusters <- function(clustering_method,resolution, data) {
+#' Title
+#'
+#' @param clustering_method
+#' @param resolution
+#' @param data
+#'
+#' @return
+#' @export
+#'
+#' @examples
+runClusters <- function(clustering_method, resolution, data) {
   data <- getClusters(clustering_method, resolution, data)
-  res_col <- paste0(data@active.assay, "_snn_res.",toString(resolution))
+  res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   # In the meta data slot the clustering is stored with the resolution used to calculate it
   # RNA_snn_res.#resolution
   df <- data.frame(cluster = data@meta.data[, res_col], cell_ids = data@meta.data$cells_id)
@@ -111,6 +153,16 @@ runClusters <- function(clustering_method,resolution, data) {
 }
 
 
+#' Get Clusters
+#'
+#' @param clustering_method
+#' @param resolution
+#' @param data
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getClusters <- function(clustering_method, resolution, data) {
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]
@@ -130,11 +182,16 @@ getClusters <- function(clustering_method, resolution, data) {
     clusters <- clusters[colnames(data)]
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters - 1)
   } else {
-    graph.name <- paste0(DefaultAssay(data), "_snn")
+    graph.name <- paste0(Seurat::DefaultAssay(data), "_snn")
     if (!graph.name %in% names(data)) {
       data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
     }
-    data <- FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm)
+    data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm)
   }
   return(data)
+}
+
+
+safeTRUE <- function(x) {
+  isTRUE(as.logical(x))
 }
