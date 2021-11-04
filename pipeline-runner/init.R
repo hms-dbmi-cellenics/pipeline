@@ -124,7 +124,7 @@ run_processing_step <- function(scdata, config, tasks,task_name, cells_id,sample
     # run task and time it
     tstart <- Sys.time()
 
-    out <- task(scdata, config, sample_id, cells_id,task_name)
+    out <- task(scdata, config, sample_id, cells_id, task_name)
     ttask <- format(Sys.time()-tstart, digits = 2)
     message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask, '\n')
 
