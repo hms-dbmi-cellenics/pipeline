@@ -17,63 +17,47 @@
 #' @export
 #' @return a list with the filtered seurat object by doublet score, the config and the plot values
 #'
-filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScores", num_cells_to_downsample = 6000) {
+filter_doublets <- function(scdata, config, sample_id, cells_id, task_name = "doubletScores", num_cells_to_downsample = 6000) {
+  cells_id.sample <- cells_id[[sample_id]]
+
+  if (length(cells_id.sample) == 0) {
+    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
+  }
+
+  scdata.sample <- subset_ids(scdata, cells_id.sample)
 
   # Check if the experiment has doubletScores
   if (!"doublet_scores" %in% colnames(scdata@meta.data)) {
     message("Warning! No doubletScores scores has been computed for this experiment!")
-    return(scdata)
+    guidata <- list()
+    return(list(data = scdata, config = config, plotData = guidata))
   }
+
   probabilityThreshold <- config$filterSettings[["probabilityThreshold"]]
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_doubletScores', it is expected
   # to get a value --> probabilityThreshold.
   if (exists("auto", where = config)) {
     if (as.logical(toupper(config$auto))) {
-      probabilityThreshold <- generate_default_values_doubletScores(scdata, sample_id)
+      probabilityThreshold <- generate_default_values_doubletScores(scdata.sample)
     }
   }
 
-  # extract plotting data of original data to return to plot slot later
-  meta <- scdata@meta.data
-  barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
-  if (length(barcode_names_this_sample) == 0) {
-    return(list(data = scdata, config = config, plotData = list()))
-  }
-  sample_subset <- subset(scdata, cells = barcode_names_this_sample)
+  plot1_data <- generate_doublets_plot_data(scdata.sample, num_cells_to_downsample)
 
   # Check whether the filter is set to true or false
   if (as.logical(toupper(config$enabled))) {
-    # extract cells id that do not(!) belong to current sample (to not apply filter there)
-    barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id]
     # all barcodes that match threshold in the subset data
     # treat NA doublet scores as defacto singlets
-    doublet_scores <- sample_subset$doublet_scores
+    doublet_scores <- scdata.sample$doublet_scores
     doublet_scores[is.na(doublet_scores)] <- 0
-    barcode_names_keep_current_sample <- colnames(sample_subset)[doublet_scores <= probabilityThreshold]
-    # combine the 2:
-    barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-    # Information regarding doublet score is pre-computed during the 'data-ingest'.
-    scdata.filtered <- subset_safe(scdata, barcodes_to_keep)
-  }
-  else {
-    scdata.filtered <- scdata
+    remaining_ids <- scdata.sample@meta.data$cells_id[doublet_scores <= probabilityThreshold]
+  } else {
+    remaining_ids <- cells_id.sample
   }
 
   # update config
   config$filterSettings$probabilityThreshold <- probabilityThreshold
-
-  plot1_data <- lapply(unname(sample_subset$doublet_scores), function(x) {
-    c("doubletP" = x)
-  })
-
-  # Downsample plotData
-  num_cells_to_downsample <- downsample_plotdata(ncol(sample_subset), num_cells_to_downsample)
-
-  set.seed(123)
-  cells_position_to_keep <- sample(1:ncol(sample_subset), num_cells_to_downsample, replace = FALSE)
-  cells_position_to_keep <- sort(cells_position_to_keep)
-  plot1_data <- plot1_data[cells_position_to_keep]
 
   guidata <- list()
 
@@ -82,25 +66,38 @@ filter_doublets <- function(scdata, config, sample_id, task_name = "doubletScore
 
   # populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata, sample_id),
-    after = calc_filter_stats(scdata.filtered, sample_id)
+    before = calc_filter_stats(scdata.sample),
+    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
 
+  cells_id[[sample_id]] <- remaining_ids
+
   result <- list(
-    data = scdata.filtered,
+    data = scdata,
+    new_ids = cells_id,
     config = config,
     plotData = guidata
   )
+  stop('TEST CRASH PIPELINE!!')
   return(result)
 }
 
-generate_default_values_doubletScores <- function(scdata, sample) {
+generate_default_values_doubletScores <- function(scdata) {
   # default doublet score based of scDblFinder classification
-  is.sample <- scdata$samples == sample
   is.singlet <- scdata$doublet_class == "singlet"
-  threshold <- max(scdata$doublet_scores[is.sample & is.singlet], na.rm = TRUE)
+  threshold <- max(scdata$doublet_scores[is.singlet], na.rm = TRUE)
 
   return(threshold)
+}
+
+generate_doublets_plot_data <- function(scdata, num_cells_to_downsample) {
+  plot1_data <- lapply(unname(scdata$doublet_scores), function(x) {
+    c("doubletP" = x)
+  })
+
+  plot1_data <- plot1_data[get_positions_to_keep(scdata, num_cells_to_downsample)]
+
+  return(plot1_data)
 }

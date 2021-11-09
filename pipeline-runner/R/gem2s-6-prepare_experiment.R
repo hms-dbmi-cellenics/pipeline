@@ -14,7 +14,7 @@
 #'
 prepare_experiment <- function(input, pipeline_config, prev_out) {
   message("Preparing experiment ...")
-  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores', 'scdata_list')
+  check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list")
   check_prev_out(prev_out, check_names)
 
   scdata_list <- prev_out$scdata_list
@@ -32,14 +32,14 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   res <- list(
     data = list(),
-    output = prev_out)
+    output = prev_out
+  )
 
   message("\nPreperation for AWS upload step complete.")
   return(res)
 }
 
 merge_scdatas <- function(scdata_list) {
-
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
@@ -67,4 +67,3 @@ add_metadata <- function(scdata, annot, experiment_id) {
 
   return(scdata)
 }
-

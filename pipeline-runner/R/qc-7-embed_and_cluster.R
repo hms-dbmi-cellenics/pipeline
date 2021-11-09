@@ -3,8 +3,10 @@
 # Compute embedding step where we run dimensional reduction technniques such as t-SNE and  UMAP. Moreover, the cluster analysis is
 # done also in this step.
 
-embed_and_cluster <- function(scdata, config, sample_id, task_name = "configureEmbedding") {
+embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name = "configureEmbedding") {
   message("starting clusters")
+  flat_cells_id <- unname(unlist(cells_id))
+  scdata <- subset_ids(scdata, flat_cells_id)
   clustering_method <- config$clusteringSettings$method
   methodSettings <- config$clusteringSettings$methodSettings[[clustering_method]]
   message("Running clustering")
@@ -18,6 +20,7 @@ embed_and_cluster <- function(scdata, config, sample_id, task_name = "configureE
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
     data = scdata,
+    new_ids = cells_id,
     config = config,
     plotData = list()
   )

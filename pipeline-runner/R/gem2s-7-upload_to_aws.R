@@ -1,7 +1,7 @@
 
 upload_to_aws <- function(input, pipeline_config, prev_out) {
-  message('Uploading to AWS ...')
-  check_names <- c('config', 'counts_list', 'annot', 'doublet_scores', 'scdata_list', 'scdata', 'qc_config')
+  message("Uploading to AWS ...")
+  check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list", "scdata", "qc_config")
   check_prev_out(prev_out, check_names)
 
   experiment_id <- input$experimentId
@@ -19,20 +19,21 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
 
   put_object_in_s3(pipeline_config,
-                   bucket = pipeline_config$cell_sets_bucket,
-                   object = charToRaw(cell_sets_data),
-                   key = experiment_id
+    bucket = pipeline_config$cell_sets_bucket,
+    object = charToRaw(cell_sets_data),
+    key = experiment_id
   )
 
   # seurat object to s3
   message("Uploading Seurat Object to S3 ...")
-  fpath <- file.path(tempdir(), 'experiment.rds')
+  fpath <- file.path(tempdir(), "experiment.rds")
   saveRDS(scdata, fpath, compress = FALSE)
 
+  # can only upload up to 50Gb because part numbers can be any number from 1 to 10,000, inclusive.
   put_object_in_s3_multipart(pipeline_config,
-                             bucket = pipeline_config$source_bucket,
-                             object = fpath,
-                             key = file.path(experiment_id, "r.rds")
+    bucket = pipeline_config$source_bucket,
+    object = fpath,
+    key = file.path(experiment_id, "r.rds")
   )
 
   cluster_env <- pipeline_config$cluster_env
@@ -51,7 +52,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   res <- list(
     data = list(
       item = experiment_data,
-      table = pipeline_config$experiments_table),
+      table = pipeline_config$experiments_table
+    ),
     output = list()
   )
 
@@ -61,7 +63,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
 # creates initial cell sets object
 get_cell_sets <- function(scdata, input) {
-
   scratchpad <- list(
     key = "scratchpad",
     name = "Custom cell sets",
@@ -89,7 +90,6 @@ get_cell_sets <- function(scdata, input) {
 
 # cell_sets fn for seurat samples information
 samples_sets <- function(input, scdata, color_pool) {
-
   cell_set <- list(
     key = "sample",
     name = "Samples",
@@ -129,7 +129,7 @@ meta_sets <- function(input, scdata, color_pool) {
 
   # syntactically valid metadata names as stored in scdata
   # same names as used in construct_metadata including internal 'samples' column (dropped)
-  seurat_keys <- make.names(c('samples', keys), unique = TRUE)[-1]
+  seurat_keys <- make.names(c("samples", keys), unique = TRUE)[-1]
 
   color_index <- 1
   for (i in seq_along(keys)) {
@@ -159,7 +159,6 @@ meta_sets <- function(input, scdata, color_pool) {
       )
 
       color_index <- color_index + 1
-
     }
     cell_set_list <- c(cell_set_list, list(cell_set))
   }

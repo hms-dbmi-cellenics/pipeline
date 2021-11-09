@@ -12,7 +12,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
   message("Calculating probability of droplets being doublets...")
 
   # NOTE: edrops is not required
-  check_prev_out(prev_out, c('config', 'counts_list', 'annot'))
+  check_prev_out(prev_out, c("config", "counts_list", "annot"))
 
   edrops_list <- prev_out$edrops
   counts_list <- prev_out$counts_list
@@ -40,7 +40,8 @@ score_doublets <- function(input, pipeline_config, prev_out) {
   prev_out$doublet_scores <- scores
   res <- list(
     data = list(),
-    output = prev_out)
+    output = prev_out
+  )
 
   message("\nScoring doublets step complete.")
   return(res)
@@ -54,7 +55,6 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 #' @return data.frame with doublet scores and assigned classes
 #'
 compute_sample_doublet_scores <- function(sample_counts) {
-
   set.seed(0)
   sce <- scDblFinder::scDblFinder(sample_counts)
   doublet_res <- data.frame(
