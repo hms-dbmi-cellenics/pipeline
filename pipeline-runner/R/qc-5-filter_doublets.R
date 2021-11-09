@@ -80,6 +80,7 @@ filter_doublets <- function(scdata, config, sample_id, cells_id, task_name = "do
     config = config,
     plotData = guidata
   )
+  stop("TEST FAIL")
   return(result)
 }
 
