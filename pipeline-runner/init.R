@@ -332,8 +332,11 @@ init <- function() {
         }
 
         tryCatchLog({
+                input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
                 wrapper(input)
-
+                if(input_parse$taskName == "mitochondrialContent"){
+                    stop("TEST STOPPING!!!")
+                }
                 message('Send task success\n------\n')
                 states$send_task_success(
                     taskToken = taskToken,
@@ -358,7 +361,7 @@ init <- function() {
                     cause = error_txt
                 )
 
-                send_pipeline_fail_update(pipeline_config, input_parse$experimentId, input_parse$processName, error_txt)
+                send_pipeline_fail_update(pipeline_config, input_parse, error_txt)
 
                 message("Sent task failure to state machine task: ", taskToken)
                 message("recovered from error:", e$message)
