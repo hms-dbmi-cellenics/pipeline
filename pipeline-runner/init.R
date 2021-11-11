@@ -332,11 +332,6 @@ init <- function() {
         }
 
         tryCatchLog({
-                input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
-                message("current step name ", input_parse$taskName)
-                if(input_parse$taskName == "mitochondrialContent"){
-                    stop("TEST STOPPING!!!")
-                }
                 wrapper(input)
 
                 message('Send task success\n------\n')
