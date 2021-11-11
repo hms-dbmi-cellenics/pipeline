@@ -16,21 +16,19 @@
 #' @export
 #' @return a list with the filtered seurat object by cell size ditribution, the config and the plot values
 #'
-filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
+filter_low_cellsize <- function(scdata, config, sample_id, cells_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
+  cells_id.sample <- cells_id[[sample_id]]
+
+  if (length(cells_id.sample) == 0) {
+    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
+  }
+
+  scdata.sample <- subset_ids(scdata, cells_id.sample)
 
   minCellSize <- as.numeric(config$filterSettings$minCellSize)
 
   # extract plotting data of original data to return to plot slot later
-  meta <- scdata@meta.data
-  barcode_names_this_sample <- rownames(meta)[meta$samples == sample_id]
-
-  if (length(barcode_names_this_sample) == 0) {
-    guidata <- list()
-    return(list(data = scdata, config = config, plotData = guidata))
-  }
-
-  sample_subset <- subset(scdata, cells = barcode_names_this_sample)
-  plot_data <- get_bcranks_plot_data(sample_subset, num_cells_to_downsample)
+  plot_data <- get_bcranks_plot_data(scdata.sample, num_cells_to_downsample)
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
   # to get a list with two elements {minCellSize and binStep}
@@ -43,43 +41,38 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
       # If there are less cells than the value threshold.low, the function CalculateBarcodeInflections fails. So we need to handle by not removing any cells, that is,
       # consider the minCellSize as the minimun UMIs in the dataset.
       # This should be handled in a long-term by adding a different function for computing the default value.
-      if (ncol(sample_subset) < threshold.low) {
-        minCellSize <- min(sample_subset$nCount_RNA)
+      if (ncol(scdata.sample) < threshold.low) {
+        minCellSize <- min(scdata.sample$nCount_RNA)
       } else {
-        minCellSize <- generate_default_values_cellSizeDistribution(sample_subset, config)
+        minCellSize <- generate_default_values_cellSizeDistribution(scdata.sample, config)
       }
     }
   }
+
   if (as.logical(toupper(config$enabled))) {
-
-    # extract cell id that do not(!) belong to current sample (to not apply filter there)
-    barcode_names_non_sample <- rownames(meta)[meta$samples != sample_id]
-    # all barcodes that match threshold in the subset data
-    barcode_names_keep_current_sample <- colnames(sample_subset)[sample_subset$nCount_RNA >= minCellSize]
-    # combine the 2:
-    barcodes_to_keep <- union(barcode_names_non_sample, barcode_names_keep_current_sample)
-
-    scdata.filtered <- subset_safe(scdata, barcodes_to_keep)
+    remaining_ids <- scdata.sample@meta.data$cells_id[scdata.sample$nCount_RNA >= minCellSize]
   } else {
-    scdata.filtered <- scdata
+    remaining_ids <- cells_id.sample
   }
 
   # update config
   config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
   guidata <- list()
-  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data[['knee']]
-  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[['hist']]
-
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data[["knee"]]
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[["hist"]]
   # Populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata, sample_id),
-    after = calc_filter_stats(scdata.filtered, sample_id)
+    before = calc_filter_stats(scdata.sample),
+    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
   )
   guidata[[generate_gui_uuid(sample_id, task_name, 3)]] <- filter_stats
 
+  cells_id[[sample_id]] <- remaining_ids
+
   result <- list(
-    data = scdata.filtered,
+    data = scdata,
+    new_ids = cells_id,
     config = config,
     plotData = guidata
   )
@@ -101,7 +94,6 @@ filter_low_cellsize <- function(scdata, config, sample_id, task_name = "cellSize
 #' @importFrom magrittr %>%
 #'
 get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE) {
-
   set.seed(123)
   plot_data <- list()
   numis <- unname(sample_subset$nCount_RNA)
@@ -115,23 +107,27 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
   fdrs[is.na(fdrs)] <- 1
 
   dt <- data.table::data.table(rank = ranks, fdr = fdrs, u = numis)
-  dt <- dt[, .(ndrops = .N, u = u[1]), by = c('rank', 'fdr')]
+  dt <- dt[, .(ndrops = .N, u = u[1]), by = c("rank", "fdr")]
 
   # example of what knee regions should look like
   # plot_knee_regions(dt)
 
   # remove fdr specific columns for cell size filter
   if (is.cellsize) dt[, c("fdr", "ndrops") := NULL]
-  knee_data <- dt %>% purrr::transpose() %>% purrr::simplify_all()
-  plot_data[['knee']] <- knee_data
+  knee_data <- dt %>%
+    purrr::transpose() %>%
+    purrr::simplify_all()
+  plot_data[["knee"]] <- knee_data
 
   # umi histogram plot
   if (is.cellsize) {
-    hist_data <- lapply(numis, function(x) { c(u = x) })
+    hist_data <- lapply(numis, function(x) {
+      c(u = x)
+    })
     nhist <- downsample_plotdata(ncol(sample_subset), nmax)
     keep <- sort(sample(ncol(sample_subset), nhist))
     hist_data <- hist_data[keep]
-    plot_data[['hist']] <- hist_data
+    plot_data[["hist"]] <- hist_data
   }
 
   return(plot_data)
@@ -140,30 +136,30 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
 plot_knee_regions <- function(dt, thresh = 0.01) {
 
   # fill regions
-  dt$quality <- 'unknown'
+  dt$quality <- "unknown"
   lt.thresh <- dt$fdr < thresh
 
   amb.first <- which(!lt.thresh)[1]
   amb.last <- tail(which(lt.thresh), 1)
 
-  dt$quality[1:amb.first] <- 'good'
-  dt$quality[amb.last:nrow(dt)] <- 'low'
+  dt$quality[1:amb.first] <- "good"
+  dt$quality[amb.last:nrow(dt)] <- "low"
 
-  cols <- c('green', 'red', 'gray')
+  cols <- c("green", "red", "gray")
   res$quality <- factor(res$quality)
 
   # plot
-  ggplot2::ggplot(dt, aes(x=rank, y=u, fill = quality)) +
-    ggplot2::geom_ribbon(mapping = ggplot2::aes(x=rank, ymax=u, ymin=0, fill = quality),alpha=0.3, inherit.aes = FALSE) +
+  ggplot2::ggplot(dt, aes(x = rank, y = u, fill = quality)) +
+    ggplot2::geom_ribbon(mapping = ggplot2::aes(x = rank, ymax = u, ymin = 0, fill = quality), alpha = 0.3, inherit.aes = FALSE) +
     ggplot2::scale_fill_manual(values = cols) +
     ggplot2::geom_line(size = 1) +
-    ggplot2::scale_x_continuous(trans='log10') +
-    ggplot2::scale_y_continuous(trans='log10') +
+    ggplot2::scale_x_continuous(trans = "log10") +
+    ggplot2::scale_y_continuous(trans = "log10") +
     ggplot2::theme_minimal() +
-    ggplot2::theme(legend.position = 'none') +
-    ggplot2::theme(panel.border = ggplot2::element_rect(color = 'black', size = 0.1, fill = 'transparent')) +
-    ggplot2::xlab('cell rank') +
-    ggplot2::ylab('log UMIs in cell')
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::theme(panel.border = ggplot2::element_rect(color = "black", size = 0.1, fill = "transparent")) +
+    ggplot2::xlab("cell rank") +
+    ggplot2::ylab("log UMIs in cell")
 }
 
 
@@ -190,7 +186,7 @@ plot_knee_regions <- function(dt, thresh = 0.01) {
 # samples.
 generate_default_values_cellSizeDistribution <- function(scdata, config) {
   # `CalculateBarcodeInflections` including inflection point calculation
-  threshold.low <- if(ncol(scdata)<=200) NULL else 100
+  threshold.low <- if (ncol(scdata) <= 200) NULL else 100
   scdata_tmp <- Seurat::CalculateBarcodeInflections(
     object = scdata,
     barcode.column = "nCount_RNA",

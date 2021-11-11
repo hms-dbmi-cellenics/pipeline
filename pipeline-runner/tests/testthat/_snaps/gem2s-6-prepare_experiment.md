@@ -42,8 +42,9 @@
         .. .. .. ..$ absolute_threshold:List of 2
         .. .. .. .. ..$ maxFraction: num 0.1
         .. .. .. .. ..$ binStep    : num 0.05
-       $ classifier          :List of 4
+       $ classifier          :List of 5
         ..$ enabled       : logi TRUE
+        ..$ prefiltered   : logi FALSE
         ..$ auto          : logi TRUE
         ..$ filterSettings:List of 1
         .. ..$ FDR: num 0.01
@@ -58,23 +59,29 @@
         ..$ enabled       : logi TRUE
         ..$ auto          : logi TRUE
         ..$ filterSettings:List of 2
-        .. ..$ regressionType        : chr "gam"
-        .. ..$ regressionTypeSettings:List of 1
-        .. .. ..$ gam:List of 1
+        .. ..$ regressionType        : chr "linear"
+        .. ..$ regressionTypeSettings:List of 2
+        .. .. ..$ linear:List of 1
+        .. .. .. ..$ p.level: num 0.001
+        .. .. ..$ spline:List of 1
         .. .. .. ..$ p.level: num 0.001
         ..$ sample_a      :List of 4
         .. ..$ enabled              : logi TRUE
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 2
-        .. .. ..$ regressionType        : chr "gam"
-        .. .. ..$ regressionTypeSettings:List of 1
-        .. .. .. ..$ gam:List of 1
+        .. .. ..$ regressionType        : chr "linear"
+        .. .. ..$ regressionTypeSettings:List of 2
+        .. .. .. ..$ linear:List of 1
         .. .. .. .. ..$ p.level: num 0.00013
+        .. .. .. ..$ spline:List of 1
+        .. .. .. .. ..$ p.level: num 0.001
         .. ..$ defaultFilterSettings:List of 2
-        .. .. ..$ regressionType        : chr "gam"
-        .. .. ..$ regressionTypeSettings:List of 1
-        .. .. .. ..$ gam:List of 1
+        .. .. ..$ regressionType        : chr "linear"
+        .. .. ..$ regressionTypeSettings:List of 2
+        .. .. .. ..$ linear:List of 1
         .. .. .. .. ..$ p.level: num 0.00013
+        .. .. .. ..$ spline:List of 1
+        .. .. .. .. ..$ p.level: num 0.001
        $ doubletScores       :List of 4
         ..$ enabled       : logi TRUE
         ..$ auto          : logi TRUE

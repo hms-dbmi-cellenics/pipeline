@@ -10,7 +10,7 @@
 #'
 run_emptydrops <- function(input, pipeline_config, prev_out) {
   message("Testing if droplets are empty...")
-  check_prev_out(prev_out, c('config', 'counts_list', 'annot'))
+  check_prev_out(prev_out, c("config", "counts_list", "annot"))
 
   # destructure previous output
   counts_list <- prev_out$counts_list
@@ -25,7 +25,8 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
   prev_out$edrops <- edrops
   res <- list(
     data = list(),
-    output = prev_out)
+    output = prev_out
+  )
 
   message("\nRunning of emptydrops step complete.")
   return(res)
