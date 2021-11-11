@@ -130,8 +130,9 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
   error_msg <- list()
 
   # TODO - REMOVE THE DUPLICATE EXPERIMETN ID FROM INPUT RESPONSE
-  
+
   error_msg$experimentId <- input$experimentId
+  error_msg$taskName <- input$taskName
   error_msg$response$error <- process_name
   error_msg$input <- input
   sns <- paws::sns(config = pipeline_config$aws_config)
