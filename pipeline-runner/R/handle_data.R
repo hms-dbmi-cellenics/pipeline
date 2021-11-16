@@ -103,11 +103,11 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   return(result$MessageId)
 }
 
-send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, data, auth_JWT) {
+send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input) {
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
-
-  msg <- c(data, taskName = list(task_name), experimentId = list(experiment_id), authJWT = list(auth_JWT))
+  # TODO -REMOVE DUPLICATE AUTHJWT IN RESPONSE
+  msg <- c(data, taskName = list(task_name), experimentId = list(experiment_id), authJWT = list(input$auth_JWT), input = list(input))
 
   result <- sns$publish(
     Message = RJSONIO::toJSON(msg),
@@ -124,11 +124,17 @@ send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, 
   return(result$MessageId)
 }
 
-send_pipeline_fail_update <- function(pipeline_config, experiment_id, process_name, error_message) {
-  error_msg <- list()
-  error_msg$experimentId <- experiment_id
-  error_msg$response$error <- error_message
+send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
+  process_name <- input$processName
 
+  error_msg <- list()
+
+  # TODO - REMOVE THE DUPLICATE EXPERIMETN ID FROM INPUT RESPONSE
+
+  error_msg$experimentId <- input$experimentId
+  error_msg$taskName <- input$taskName
+  error_msg$response$error <- process_name
+  error_msg$input <- input
   sns <- paws::sns(config = pipeline_config$aws_config)
 
   string_value <- ""
