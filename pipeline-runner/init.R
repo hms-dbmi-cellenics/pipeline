@@ -113,6 +113,7 @@ load_config <- function(development_aws_server) {
 run_processing_step <- function(scdata, config, tasks,task_name, cells_id,sample_id, debug_config) {
     if (!task_name %in% names(tasks)) stop('Invalid task: ', task_name)
 
+
     handle_debug(scdata, config, task_name, sample_id, debug_config)
 
     # print info
@@ -235,11 +236,10 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message("Cells id loaded.")
     }
 
-
     # call function to run and update global variable
     c(
         data,new_ids,...rest_of_results
-    ) %<-% run_processing_step(scdata, config, tasks,task_name, cells_id,sample_id, debug_config)
+    ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
 
     message("Comparison between cell ids")
     message("Old ids length ",length(cells_id[[sample_id]]))

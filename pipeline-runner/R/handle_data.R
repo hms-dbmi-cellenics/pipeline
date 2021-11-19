@@ -44,9 +44,9 @@ load_cells_id_from_s3 <- function(pipeline_config, task_name, experiment_id, sam
     )
     id_file <- tempfile()
     writeBin(body, con = id_file)
-    cells_id.sample <- readRDS(id_file)
-    cells_id[[sample_id]] <- cells_id.sample
-    message("Sample ", sample_id, " with ", length(cells_id.sample), " cells")
+    sample <- readRDS(id_file)
+    cells_id[[sample_id]] <- sample[[sample_id]]
+    message("Sample ", sample_id, " with ", lengths(cells_id[[sample_id]]), " cells")
   }
   return(cells_id)
 }
