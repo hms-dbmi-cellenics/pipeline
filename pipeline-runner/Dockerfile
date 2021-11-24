@@ -35,12 +35,6 @@ RUN R -e "renv::restore(lockfile='renv.lock.init')"
 COPY renv.lock .
 RUN R -e "renv::restore(lockfile='renv.lock', clean = TRUE)"
 
-# move library and delete renv
-RUN mv /src/renv/library/R-4.0/x86_64-pc-linux-gnu /src/library && \
-    rm -rf /src/renv* && \
-    rm /src/.Rprofile && \
-    echo ".libPaths(c('/src/library', .libPaths()))" >> /usr/lib/R/etc/Rprofile.site
-
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
