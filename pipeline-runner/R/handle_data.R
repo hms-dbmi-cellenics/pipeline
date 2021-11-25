@@ -40,7 +40,14 @@ load_cells_id_from_s3 <- function(pipeline_config, task_name, experiment_id, sam
     key <- object$Key
     sample_id <- tools::file_path_sans_ext(basename(key))
     message("Sample ID in object list ", sample_id)
-    if (!sample_id %in% samples) stop("The samples in s3 don't match the samples in the object. Pipeline needs to rerun.")
+    if (!sample_id %in% samples) {
+      message("Sample ID", sample_id, " no longer present in rds, removing it.")
+      s3$delete_object(
+        Bucket = pipeline_config$cells_id_bucket,
+        Key = key
+      )
+      next
+    }
     c(body, ...rest) %<-% s3$get_object(
       Bucket = pipeline_config$cells_id_bucket,
       Key = key
@@ -49,7 +56,7 @@ load_cells_id_from_s3 <- function(pipeline_config, task_name, experiment_id, sam
     writeBin(body, con = id_file)
     sample <- readRDS(id_file)
     cells_id[[sample_id]] <- sample[[sample_id]]
-    message("Sample ", sample_id, " with ", lengths(cells_id[[sample_id]]), " cells")
+    message("Sample ", sample_id, " with ", length(cells_id[[sample_id]]), " cells")
   }
   return(cells_id)
 }
