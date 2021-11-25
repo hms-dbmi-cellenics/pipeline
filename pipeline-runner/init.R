@@ -226,10 +226,11 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     if (!exists("cells_id")) {
         message("No filtered cell ids have been loaded, loading from S3...")
         if(task_name == names(tasks)[1]){
+            remove_cell_ids(pipeline_config, experiment_id)
             assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
         }else if(task_name %in% names(tasks)){
             samples <- unique(scdata$samples)
-            assign("cells_id", load_cells_id_from_s3(pipeline_config,task_name,experiment_id,samples), pos = ".GlobalEnv")
+            assign("cells_id", load_cells_id_from_s3(pipeline_config, task_name, experiment_id, samples), pos = ".GlobalEnv")
         }else{
             stop("Invalid task name given: ", task_name)
         }

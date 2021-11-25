@@ -14,6 +14,32 @@ generate_first_step_ids <- function(scdata) {
   return(cells_id)
 }
 
+remove_cell_ids <- function(pipeline_config, experiment_id) {
+  tasks <- list(
+      'classifier',
+      'cellSizeDistribution',
+      'mitochondrialContent',
+      'numGenesVsNumUmis',
+      'doubletScores',
+      'dataIntegration',
+      'configureEmbedding'
+    )
+  keys_to_remove <- list()
+
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+  for (task_name in tasks) {
+    object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
+    for (object in object_list$Contents) {
+      keys_to_remove <- append(keys_to_remove, object$Key)
+      s3$delete_object(
+        Bucket = pipeline_config$cells_id_bucket,
+        Key = object$Key
+      )
+    }
+  }
+  message("Cell ids keys deleted: ", keys_to_remove)
+}
+
 #
 # Returns the positions to keep based on scdata and number of cells to keep
 #
