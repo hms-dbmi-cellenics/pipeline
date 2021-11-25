@@ -34,9 +34,12 @@ load_cells_id_from_s3 <- function(pipeline_config, task_name, experiment_id, sam
   message(paste(experiment_id, "r.rds", sep = "/"))
   cells_id <- list()
   message("Total of ", length(object_list$Contents), " samples.")
+  message("List contents: ", object_list$Contents)
+  message("Samples: ", samples)
   for (object in object_list$Contents) {
     key <- object$Key
     sample_id <- tools::file_path_sans_ext(basename(key))
+    message("Sample ID in object list ", sample_id)
     if (!sample_id %in% samples) stop("The samples in s3 don't match the samples in the object. Pipeline needs to rerun.")
     c(body, ...rest) %<-% s3$get_object(
       Bucket = pipeline_config$cells_id_bucket,
