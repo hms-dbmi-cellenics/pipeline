@@ -29,7 +29,7 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
 
 load_cells_id_from_s3 <- function(pipeline_config, task_name, experiment_id, samples) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  object_list <- s3$list_objects("biomage-filtered-cells-development", Prefix = paste0(experiment_id, "/", task_name, "/"))
+  object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
   message(pipeline_config$cells_id_bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
   cells_id <- list()
