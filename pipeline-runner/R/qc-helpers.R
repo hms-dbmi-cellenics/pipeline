@@ -16,7 +16,6 @@ generate_first_step_ids <- function(scdata) {
 
 remove_cell_ids <- function(pipeline_config, experiment_id) {
   tasks <- list(
-      'classifier',
       'cellSizeDistribution',
       'mitochondrialContent',
       'numGenesVsNumUmis',
@@ -24,23 +23,20 @@ remove_cell_ids <- function(pipeline_config, experiment_id) {
       'dataIntegration',
       'configureEmbedding'
     )
-  objects_to_remove <- list()
+  keys_to_remove <- list()
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
   for (task_name in tasks) {
     object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
     for (object in object_list$Contents) {
-      object_key <- list(Key=object$Key)
-      objects_to_remove <- append(objects_to_remove, list(object_key))
+      keys_to_remove <- append(keys_to_remove, object$Key)
+      s3$delete_object(
+        Bucket = pipeline_config$cells_id_bucket,
+        Key = object$Key
+      )
     }
   }
-  s3$delete_objects(
-    Bucket = pipeline_config$cells_id_bucket,
-    Delete = list(
-      Objects = objects_to_remove
-    )
-  )
-  message("Cell ids keys deleted: ", objects_to_remove)
+  message("Cell ids keys deleted: ", keys_to_remove)
 }
 
 #
