@@ -34,10 +34,11 @@ load_cells_id_from_s3 <- function(pipeline_config, task_name, experiment_id, sam
   message(paste(experiment_id, "r.rds", sep = "/"))
   cells_id <- list()
   message("Total of ", length(object_list$Contents), " samples.")
+
   for (object in object_list$Contents) {
     key <- object$Key
     sample_id <- tools::file_path_sans_ext(basename(key))
-    message("Sample ID in object list ", sample_id)
+
     if (!sample_id %in% samples) {
       message("Unexpected filtered ids object for sample ", sample_id, ". Filtered cell ids' objects for removed samples
       should be removed in the first step of the QC pipeline after gem2s is triggered (due to sample removal).
