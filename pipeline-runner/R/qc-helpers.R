@@ -16,7 +16,6 @@ generate_first_step_ids <- function(scdata) {
 
 remove_cell_ids <- function(pipeline_config, experiment_id) {
   tasks <- list(
-      'classifier',
       'cellSizeDistribution',
       'mitochondrialContent',
       'numGenesVsNumUmis',
