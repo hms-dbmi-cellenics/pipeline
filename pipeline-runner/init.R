@@ -168,7 +168,10 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
 call_gem2s <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
 
-    if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+    if (!exists("prev_out")) {
+        remove_cell_ids(pipeline_config, experiment_id)
+        assign("prev_out", NULL, pos = ".GlobalEnv")
+    }
 
     check_input(input)
 
@@ -226,7 +229,6 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     if (!exists("cells_id")) {
         message("No filtered cell ids have been loaded, loading from S3...")
         if(task_name == names(tasks)[1]){
-            remove_cell_ids(pipeline_config, experiment_id)
             assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
         }else if(task_name %in% names(tasks)){
             samples <- unique(scdata$samples)
