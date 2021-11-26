@@ -1,3 +1,28 @@
+remove_cell_ids <- function(pipeline_config, experiment_id) {
+  tasks <- list(
+      'cellSizeDistribution',
+      'mitochondrialContent',
+      'numGenesVsNumUmis',
+      'doubletScores',
+      'dataIntegration',
+      'configureEmbedding'
+    )
+  keys_to_remove <- list()
+
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+  for (task_name in tasks) {
+    object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
+    for (object in object_list$Contents) {
+      keys_to_remove <- append(keys_to_remove, object$Key)
+      s3$delete_object(
+        Bucket = pipeline_config$cells_id_bucket,
+        Key = object$Key
+      )
+    }
+  }
+  message("Cell ids keys deleted: ", keys_to_remove)
+}
+
 upload_cells_id <- function(pipeline_config, object_key, cells_id) {
   object_data <- tempfile()
   saveRDS(cells_id, file = object_data)
@@ -9,7 +34,7 @@ upload_cells_id <- function(pipeline_config, object_key, cells_id) {
 reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
   # If the task is after data integration, we need to get scdata from processed_matrix
   task_names <- names(tasks)
-  integration_index <- which(task_names == "dataIntegration")
+  integration_index <- match("dataIntegration",task_names)
   if (match(task_name, task_names) > integration_index) {
     bucket <- pipeline_config$processed_bucket
   } else {
@@ -27,37 +52,42 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   return(obj)
 }
 
-load_cells_id_from_s3 <- function(pipeline_config, task_name, experiment_id, samples) {
+load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, samples) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
   object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
   message(pipeline_config$cells_id_bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
   cells_id <- list()
   message("Total of ", length(object_list$Contents), " samples.")
+  task_names <- names(tasks)
+  integration_index <- match("dataIntegration",task_names)
+  
+  if (match(task_name, task_names) <= integration_index) {
+    for (object in object_list$Contents) {
+      key <- object$Key
+      sample_id <- tools::file_path_sans_ext(basename(key))
 
-  for (object in object_list$Contents) {
-    key <- object$Key
-    sample_id <- tools::file_path_sans_ext(basename(key))
+      if (!sample_id %in% samples) {
+        message("Unexpected filtered ids object for sample ", sample_id, ". Filtered cell ids' objects for removed samples
+        should be removed in the first step of the QC pipeline after gem2s is triggered (due to sample removal).
+        Removing it now.")
+        s3$delete_object(
+          Bucket = pipeline_config$cells_id_bucket,
+          Key = key
+        )
+        next
+      }
 
-    if (!sample_id %in% samples) {
-      message("Unexpected filtered ids object for sample ", sample_id, ". Filtered cell ids' objects for removed samples
-      should be removed in the first step of the QC pipeline after gem2s is triggered (due to sample removal).
-      Removing it now.")
-      s3$delete_object(
+      c(body, ...rest) %<-% s3$get_object(
         Bucket = pipeline_config$cells_id_bucket,
         Key = key
       )
-      next
-    }
-    c(body, ...rest) %<-% s3$get_object(
-      Bucket = pipeline_config$cells_id_bucket,
-      Key = key
-    )
-    id_file <- tempfile()
-    writeBin(body, con = id_file)
-    sample <- readRDS(id_file)
-    cells_id[[sample_id]] <- sample[[sample_id]]
-    message("Sample ", sample_id, " with ", length(cells_id[[sample_id]]), " cells")
+      id_file <- tempfile()
+      writeBin(body, con = id_file)
+      sample <- readRDS(id_file)
+      cells_id[[sample_id]] <- sample[[sample_id]]
+      message("Sample ", sample_id, " with ", length(cells_id[[sample_id]]), " cells")
+    }    
   }
   return(cells_id)
 }

@@ -232,7 +232,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
             assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
         }else if(task_name %in% names(tasks)){
             samples <- unique(scdata$samples)
-            assign("cells_id", load_cells_id_from_s3(pipeline_config, task_name, experiment_id, samples), pos = ".GlobalEnv")
+            assign("cells_id", load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples), pos = ".GlobalEnv")
         }else{
             stop("Invalid task name given: ", task_name)
         }
