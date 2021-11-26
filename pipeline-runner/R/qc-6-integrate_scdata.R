@@ -51,6 +51,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
       append(x, list("sample" = y))
     }
   )
+
   plot1_data <- purrr::map2(
     plot1_data,
     unname(scdata.integrated@meta.data[cells_order, "color_samples"]),
@@ -59,7 +60,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
     }
   )
 
-  plot2_data <- unname(purrr::map2(1:50, varExplained, function(x, y) {
+  plot2_data <- unname(purrr::map2(1:min(50,length(varExplained)), varExplained, function(x, y) {
     c("PC" = x, "percentVariance" = y)
   }))
 
