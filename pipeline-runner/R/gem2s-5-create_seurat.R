@@ -88,9 +88,10 @@ construct_metadata <- function(counts, sample, config) {
 
 # add mitochondrial percent to SeuratObject
 add_mito <- function(scdata, annot) {
-  if (any(grepl("^mt-", annot$name, ignore.case = TRUE))) {
+  mt_regex <- "^mt[-:]"
+  if (any(grepl(mt_regex, annot$name, ignore.case = TRUE))) {
     message("Adding MT information...")
-    mt.features <- annot$input[grep("^mt-", annot$name, ignore.case = TRUE)]
+    mt.features <- annot$input[grep(mt_regex, annot$name, ignore.case = TRUE)]
     mt.features <- mt.features[mt.features %in% rownames(scdata)]
     if (length(mt.features)) {
       scdata <- Seurat::PercentageFeatureSet(scdata, features = mt.features, col.name = "percent.mt")

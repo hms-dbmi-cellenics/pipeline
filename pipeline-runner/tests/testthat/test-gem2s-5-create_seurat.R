@@ -125,6 +125,36 @@ test_that("create_seurat adds mitochondrial percentage", {
   expect_false(all(scdata$percent.mt == 0))
 })
 
+test_that("create_seurat adds mitochondrial percentage with colons", {
+
+    # without mitcondrial genes - gets set to 0
+    prev_out <- mock_prev_out()
+    out <- create_seurat(NULL, NULL, prev_out)$output
+    scdata <- out$scdata_list[[1]]
+
+    expect_true(all(scdata$percent.mt == 0))
+
+    # with mitochondrial genes - some not zero
+    counts <- DropletUtils:::simCounts()
+    row.names(counts)[1:10] <- paste0("mt:", 1:10)
+    colnames(counts) <- paste0("cell", seq_len(ncol(counts)))
+    prev_out <- mock_prev_out(counts = counts)
+
+    out <- create_seurat(NULL, NULL, prev_out)$output
+    scdata <- out$scdata_list[[1]]
+
+    expect_false(all(scdata$percent.mt == 0))
+
+    # case insensitive
+    row.names(counts)[1:10] <- paste0("MT:", 1:10)
+    prev_out <- mock_prev_out(counts = counts)
+
+    out <- create_seurat(NULL, NULL, prev_out)$output
+    scdata <- out$scdata_list[[1]]
+
+    expect_false(all(scdata$percent.mt == 0))
+})
+
 test_that("create_seurat adds emptyDrops_FDR to SeuratObject", {
   prev_out <- mock_prev_out()
   out <- create_seurat(NULL, NULL, prev_out)$output
