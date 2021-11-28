@@ -28,7 +28,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   scdata.integrated <- run_dataIntegration(scdata, config)
   # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
   if (scdata.integrated@misc[["active.reduction"]] == "mnn") {
-    varExplained <- scdata.integrated@tools$`SeuratWrappers::RunFastMNN`@metadata$pca.info$var.explained
+    varExplained <- scdata.integrated@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
   } else {
     eigValues <- (scdata.integrated@reductions$pca@stdev)^2
     varExplained <- eigValues / sum(eigValues)
