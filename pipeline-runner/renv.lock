@@ -1455,10 +1455,10 @@
     },
     "tryCatchLog": {
       "Package": "tryCatchLog",
-      "Version": "1.2.4",
+      "Version": "1.3.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "40927bf0c3ca3b93ac7974ebe97c25aa"
+      "Hash": "ee3a0717cd6a7a190bb32b90ccf0178b"
     },
     "utf8": {
       "Package": "utf8",
