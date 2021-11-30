@@ -19,7 +19,8 @@
 filter_low_cellsize <- function(scdata, config, sample_id, cells_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
 
-  if (length(cells_id.sample) == 0) {
+  is.spatial <- 'Spatial' %in% Seurat::Assays(scdata)
+  if (is.spatial | length(cells_id.sample) == 0) {
     return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
   }
 

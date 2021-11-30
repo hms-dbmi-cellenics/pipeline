@@ -4,14 +4,27 @@
 # done also in this step.
 
 embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name = "configureEmbedding") {
-  message("starting clusters")
-  flat_cells_id <- unname(unlist(cells_id))
-  scdata <- subset_ids(scdata, flat_cells_id)
+
   clustering_method <- config$clusteringSettings$method
-  methodSettings <- config$clusteringSettings$methodSettings[[clustering_method]]
-  message("Running clustering")
-  cellSets <- runClusters(clustering_method, methodSettings$resolution, scdata)
-  message("formatting cellsets")
+
+  is.spatial <- 'Spatial' %in% Seurat::Assays(scdata)
+  if (is.spatial) {
+    cellSets <- data.frame(
+      cluster = scdata$seurat_clusters,
+      cell_ids = scdata$cells_id,
+      row.names = row.names(scdata@meta.data)
+      )
+
+  } else {
+    message("starting clusters")
+    flat_cells_id <- unname(unlist(cells_id))
+    scdata <- subset_ids(scdata, flat_cells_id)
+    methodSettings <- config$clusteringSettings$methodSettings[[clustering_method]]
+    message("Running clustering")
+    cellSets <- runClusters(clustering_method, methodSettings$resolution, scdata)
+    message("formatting cellsets")
+  }
+
   formated_cell_sets <- format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
   message("udating through api")
 
