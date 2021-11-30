@@ -19,8 +19,8 @@ Suggests:
 Imports:
     data.table,
     covr,
-    hdf5r
->>>>>>> Stashed changes
+    hdf5r,
+    batchelor
 Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)

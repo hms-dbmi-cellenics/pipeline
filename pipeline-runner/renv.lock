@@ -76,6 +76,12 @@
       "Source": "Bioconductor",
       "Hash": "b7d1aa70f71252a7f9d3a927d43846cd"
     },
+    "BiocVersion": {
+      "Package": "BiocVersion",
+      "Version": "3.12.0",
+      "Source": "Bioconductor",
+      "Hash": "ee4d027afb8f52fec1f46b9f0a8660e9"
+    },
     "DelayedArray": {
       "Package": "DelayedArray",
       "Version": "0.16.3",
@@ -270,6 +276,12 @@
       "Repository": "CRAN",
       "Hash": "1c0aa18b97e6aaa17f93b8b866c0ace5"
     },
+    "ResidualMatrix": {
+      "Package": "ResidualMatrix",
+      "Version": "1.0.0",
+      "Source": "Bioconductor",
+      "Hash": "a6359ebe8106451188623f982fb9af20"
+    },
     "Rhdf5lib": {
       "Package": "Rhdf5lib",
       "Version": "1.12.1",
@@ -354,6 +366,12 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "543776ae6848fde2f48ff3816d0628bc"
+    },
+    "batchelor": {
+      "Package": "batchelor",
+      "Version": "1.6.3",
+      "Source": "Bioconductor",
+      "Hash": "0c3bf79f82d71c38d2fc14d89a1be249"
     },
     "beachmat": {
       "Package": "beachmat",
@@ -1476,10 +1494,10 @@
     },
     "tryCatchLog": {
       "Package": "tryCatchLog",
-      "Version": "1.2.4",
+      "Version": "1.3.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "40927bf0c3ca3b93ac7974ebe97c25aa"
+      "Hash": "ee3a0717cd6a7a190bb32b90ccf0178b"
     },
     "utf8": {
       "Package": "utf8",
