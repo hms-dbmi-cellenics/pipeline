@@ -113,6 +113,7 @@ load_config <- function(development_aws_server) {
 run_processing_step <- function(scdata, config, tasks,task_name, cells_id,sample_id, debug_config) {
     if (!task_name %in% names(tasks)) stop('Invalid task: ', task_name)
 
+
     handle_debug(scdata, config, task_name, sample_id, debug_config)
 
     # print info
@@ -167,7 +168,10 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
 call_gem2s <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
 
-    if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+    if (!exists("prev_out")) {
+        remove_cell_ids(pipeline_config, experiment_id)
+        assign("prev_out", NULL, pos = ".GlobalEnv")
+    }
 
     check_input(input)
 
@@ -228,18 +232,17 @@ call_data_processing <- function(task_name, input, pipeline_config) {
             assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
         }else if(task_name %in% names(tasks)){
             samples <- unique(scdata$samples)
-            assign("cells_id", load_cells_id_from_s3(pipeline_config,task_name,experiment_id,samples), pos = ".GlobalEnv")
+            assign("cells_id", load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples), pos = ".GlobalEnv")
         }else{
             stop("Invalid task name given: ", task_name)
         }
         message("Cells id loaded.")
     }
 
-
     # call function to run and update global variable
     c(
         data,new_ids,...rest_of_results
-    ) %<-% run_processing_step(scdata, config, tasks,task_name, cells_id,sample_id, debug_config)
+    ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
 
     message("Comparison between cell ids")
     message("Old ids length ",length(cells_id[[sample_id]]))
@@ -247,8 +250,11 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
     assign("cells_id", new_ids, pos = ".GlobalEnv")
 
-    if(task_name != tail(names(tasks),1)){
-        next_task <- names(tasks)[[match(task_name,names(tasks))+1]]
+    task_names <- names(tasks)
+    integration_index <- match("dataIntegration", task_names)
+    task_index <- match(task_name, task_names)
+    if(task_index < integration_index){
+        next_task <- names(tasks)[[task_index+1]]
         object_key <- paste0(experiment_id,"/",next_task,"/",sample_id,".rds")
         upload_cells_id(pipeline_config,object_key,cells_id)
     }

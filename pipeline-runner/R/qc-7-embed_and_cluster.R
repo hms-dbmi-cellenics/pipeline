@@ -5,8 +5,6 @@
 
 embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name = "configureEmbedding") {
   message("starting clusters")
-  flat_cells_id <- unname(unlist(cells_id))
-  scdata <- subset_ids(scdata, flat_cells_id)
   clustering_method <- config$clusteringSettings$method
   methodSettings <- config$clusteringSettings$methodSettings[[clustering_method]]
   message("Running clustering")
