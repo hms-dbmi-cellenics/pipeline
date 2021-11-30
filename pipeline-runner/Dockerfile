@@ -30,6 +30,11 @@ RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.
 COPY renv.lock.init .
 RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(lockfile='renv.lock.init')"
 
+RUN apt-get update && \
+    apt-get -y install \
+    --no-install-recommends \
+    libhdf5-dev
+
 # use renv::snapshot() while R dependency updates are quick to build
 COPY renv.lock .
 RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock', clean = TRUE)"

@@ -9,6 +9,15 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   # destructure what need from prev_out
   scdata <- prev_out$scdata
+
+  # overwrite scdata with spatial and disable filters
+  spatial <- prev_out$spatial
+  if (!is.null(spatial)) {
+    scdata <- spatial
+    disable <- c('cellSizeDistribution', 'mitochondrialContent', 'numGenesVsNumUmis', 'doubletScores')
+    for (name in disable) prev_out$qc_config[[name]]$enabled <- FALSE
+  }
+
   config <- prev_out$config
   config_dataProcessing <- prev_out$qc_config
 
@@ -19,9 +28,9 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
 
   put_object_in_s3(pipeline_config,
-    bucket = pipeline_config$cell_sets_bucket,
-    object = charToRaw(cell_sets_data),
-    key = experiment_id
+                   bucket = pipeline_config$cell_sets_bucket,
+                   object = charToRaw(cell_sets_data),
+                   key = experiment_id
   )
 
   # seurat object to s3
@@ -31,9 +40,9 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   # can only upload up to 50Gb because part numbers can be any number from 1 to 10,000, inclusive.
   put_object_in_s3_multipart(pipeline_config,
-    bucket = pipeline_config$source_bucket,
-    object = fpath,
-    key = file.path(experiment_id, "r.rds")
+                             bucket = pipeline_config$source_bucket,
+                             object = fpath,
+                             key = file.path(experiment_id, "r.rds")
   )
 
   cluster_env <- pipeline_config$cluster_env

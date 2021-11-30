@@ -21,6 +21,12 @@
 #   },
 
 integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "dataIntegration") {
+
+  is.spatial <- 'Spatial' %in% Seurat::Assays(scdata)
+  if (is.spatial) {
+    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
+  }
+
   flat_cells_id <- unname(unlist(cells_id))
   scdata <- subset_ids(scdata, flat_cells_id)
   # main function

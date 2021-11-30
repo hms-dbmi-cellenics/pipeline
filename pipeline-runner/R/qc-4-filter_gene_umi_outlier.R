@@ -27,7 +27,8 @@
 filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
   cells_id.sample <- cells_id[[sample_id]]
 
-  if (length(cells_id.sample) == 0) {
+  is.spatial <- 'Spatial' %in% Seurat::Assays(scdata)
+  if (is.spatial | length(cells_id.sample) == 0) {
     return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
   }
 
@@ -48,9 +49,11 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
   config$filterSettings$regressionTypeSettings[[type]]$p.level <- p.level
 
   # regress log10 molecules vs genes
+  assay <- ifelse('Spatial' %in% Seurat::Assays(scdata), 'Spatial', 'RNA')
+
   fit.data <- data.frame(
-    log_molecules = log10(scdata.sample$nCount_RNA),
-    log_genes = log10(scdata.sample$nFeature_RNA),
+    log_molecules = log10(scdata.sample@meta.data[[paste0('nCount_', assay)]]),
+    log_genes = log10(scdata.sample@meta.data[[paste0('nFeature_', assay)]]),
     row.names = scdata.sample$cells_id
   )
 

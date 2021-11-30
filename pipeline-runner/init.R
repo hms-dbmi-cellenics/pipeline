@@ -239,7 +239,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # call function to run and update global variable
     c(
         data,new_ids,...rest_of_results
-    ) %<-% run_processing_step(scdata, config, tasks,task_name, cells_id,sample_id, debug_config)
+    ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id,sample_id, debug_config)
 
     message("Comparison between cell ids")
     message("Old ids length ",length(cells_id[[sample_id]]))
@@ -247,7 +247,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
     assign("cells_id", new_ids, pos = ".GlobalEnv")
 
-    if(task_name != tail(names(tasks),1)){
+    if(task_name != tail(names(tasks), 1)) {
         next_task <- names(tasks)[[match(task_name,names(tasks))+1]]
         object_key <- paste0(experiment_id,"/",next_task,"/",sample_id,".rds")
         upload_cells_id(pipeline_config,object_key,cells_id)
@@ -363,7 +363,7 @@ init <- function() {
                 message("Sent task failure to state machine task: ", taskToken)
                 message("recovered from error:", e$message)
             },
-        write.error.dump.file = pipeline_config$cluster_env == 'development',
+        write.error.dump.file = FALSE,
         write.error.dump.folder = '/debug')
     }
 }
