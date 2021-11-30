@@ -251,7 +251,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     assign("cells_id", new_ids, pos = ".GlobalEnv")
 
     task_names <- names(tasks)
-    integration_index <- match("dataIntegration",task_names)
+    integration_index <- match("dataIntegration", task_names)
     task_index <- match(task_name, task_names)
     if(task_index < integration_index){
         next_task <- names(tasks)[[task_index+1]]

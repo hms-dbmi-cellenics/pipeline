@@ -34,7 +34,7 @@ upload_cells_id <- function(pipeline_config, object_key, cells_id) {
 reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
   # If the task is after data integration, we need to get scdata from processed_matrix
   task_names <- names(tasks)
-  integration_index <- match("dataIntegration",task_names)
+  integration_index <- match("dataIntegration", task_names)
   if (match(task_name, task_names) > integration_index) {
     bucket <- pipeline_config$processed_bucket
   } else {
@@ -60,7 +60,7 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   cells_id <- list()
   message("Total of ", length(object_list$Contents), " samples.")
   task_names <- names(tasks)
-  integration_index <- match("dataIntegration",task_names)
+  integration_index <- match("dataIntegration", task_names)
   
   if (match(task_name, task_names) <= integration_index) {
     for (object in object_list$Contents) {
