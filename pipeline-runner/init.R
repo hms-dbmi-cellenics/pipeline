@@ -358,6 +358,7 @@ init <- function() {
                                     input_parse$taskName, sample_text, "! : ", e$message)
 
                 message(error_txt)
+                writeLines(readLines("/var/run/secrets/eks.amazonaws.com/serviceaccount/token"))
                 states$send_task_failure(
                     taskToken = taskToken,
                     error = "We had an issue while processing your data.",
