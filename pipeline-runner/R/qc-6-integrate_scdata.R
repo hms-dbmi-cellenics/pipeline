@@ -34,6 +34,12 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
     varExplained <- eigValues / sum(eigValues)
   }
 
+  print("configDebug")
+  print(config)
+
+  # input$config$dataIntegration$dimensionalityReduction$numPCs <- 15
+  config$dimensionalityReduction$numPCs <- 5
+
   # This same numPCs will be used throughout the platform.
   scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
 
@@ -68,7 +74,6 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
   plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
 
-
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
     data = scdata.integrated,
@@ -85,6 +90,10 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
 #   - Compute PCA analysis
 #   - To visualize the results of the batch effect, an UMAP with default setting has been made.
 run_dataIntegration <- function(scdata, config) {
+
+  message("HOLADEBUG1")
+  # config$dataIntegration$dimensionalityReduction$numPCs <- 15
+  # update_dynamo_processing_config('dataIntegration', config$dataIntegration, config$api_url, scdata@misc$experimentId, config$auth_JWT)
 
   # get method and settings
   method <- config$dataIntegration$method
@@ -124,6 +133,9 @@ run_harmony <- function(scdata, config) {
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
   scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
+
+  # config$dataIntegration$dimensionalityReduction$numPCs <- 15
+  
   return(scdata)
 }
 
@@ -267,4 +279,21 @@ colorObject <- function(data) {
     data@meta.data[, "color_samples"] <- color_pool[1]
   }
   return(data)
+}
+
+update_dynamo_processing_config <- function(step_name, step_config, api_url, experiment_id, auth_JWT) {
+  httr::PUT(
+    paste0(api_url, "/v1/experiments/", experiment_id, "/processingConfig"),
+    body = list(
+      list(
+        name=step_name,
+        body=step_config
+      )
+    ),
+    encode = "json",
+    httr::add_headers(
+      "Content-Type" = "application/json",
+      "Authorization" = auth_JWT
+    )
+  )
 }
