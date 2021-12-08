@@ -222,6 +222,10 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
     )
 
     message("Uploading plotData to S3 bucket", pipeline_config$plot_data_bucket, " at key ", id, "...")
+   
+    message("Object to upload")
+    message(str(output,nchar.max=512))
+
     s3$put_object(
       Bucket = pipeline_config$plot_data_bucket,
       Key = id,
