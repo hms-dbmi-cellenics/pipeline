@@ -12,7 +12,6 @@ download_cellranger_files <- function(input, pipeline_config, prev_out = list())
   project_id <- input$projectId
   sample_names <- input$sampleNames
   sample_uuids <- input$sampleIds
-  show <- show_me_the_money
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
   cellranger_fnames <- c("features.tsv.gz", "barcodes.tsv.gz", "matrix.mtx.gz")
