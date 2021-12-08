@@ -360,7 +360,9 @@ init <- function() {
                 message(error_txt)
 
                 message("---------------Aws Token---------------")
-                try(writeLines(readLines("/var/run/secrets/eks.amazonaws.com/serviceaccount/token")))
+                try(
+                    writeLines(readLines("/var/run/secrets/eks.amazonaws.com/serviceaccount/token"))
+                )
                 message("---------------------------------------")
 
                 states$send_task_failure(
