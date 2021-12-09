@@ -25,6 +25,10 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   scdata <- subset_ids(scdata, flat_cells_id)
   # main function
   set.seed(42)
+
+  # estimate the number of default PCs
+  config$dimensionalityReduction$numPCs <- estimate_npcs(scdata, config, 0.8, 30)
+
   scdata.integrated <- run_dataIntegration(scdata, config)
   # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
   if (scdata.integrated@misc[["active.reduction"]] == "mnn") {
@@ -60,7 +64,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
     }
   )
 
-  plot2_data <- unname(purrr::map2(1:min(50,length(varExplained)), varExplained, function(x, y) {
+  plot2_data <- unname(purrr::map2(1:min(50, length(varExplained)), varExplained, function(x, y) {
     c("PC" = x, "percentVariance" = y)
   }))
 
@@ -269,12 +273,26 @@ colorObject <- function(data) {
   return(data)
 }
 
-estimate_npcs <- function(scdata) {
-  dat <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE) %>%
-    Seurat::FindVariableFeatures(dat, nfeatures = nfeatures, verbose = FALSE) %>%
-    Seurat::ScaleData(scdata, verbose = FALSE) %>%
-    Seurat::RunPCA(scdata, verbose = FALSE)
+estimate_npcs <- function(scdata, config, var_threshold, max_npcs) {
+  if (config$dimensionalityReduction$numPCs == -1) {
+    message("\nEstimating number of PCs\n")
+    dat <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE) %>%
+      Seurat::FindVariableFeatures(nfeatures = 2000, verbose = FALSE) %>%
+      Seurat::ScaleData(verbose = FALSE) %>%
+      Seurat::RunPCA(verbose = FALSE)
 
-  eigValues <- (dat@reductions$pca@stdev)^2
-  varExplained <- eigValues / sum(eigValues)
+    eigValues <- (dat@reductions$pca@stdev)^2
+    varExplained <- eigValues / sum(eigValues)
+
+    get_npcs_variance_explained(varExplained, var_threshold, max_npcs)
+  } else {
+    config$dimensionalityReduction$numPCs
+  }
+}
+
+get_npcs_variance_explained <- function(varExplained, var_threshold, max_npcs) {
+  npcs <- which(cumsum(varExplained) >= var_threshold)
+  npcs <- min(npcs, max_npcs)
+  message(sprintf("number of PCs: %d", npcs))
+  npcs
 }
