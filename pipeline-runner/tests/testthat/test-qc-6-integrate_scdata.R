@@ -12,7 +12,7 @@ mock_scdata <- function() {
   return(scdata)
 }
 
-test_that("Integrate scdata works",{
+test_that("Integrate scdata works", {
   scdata <- mock_scdata()
   cells_id <- 0:79
   config <- list(
@@ -22,10 +22,10 @@ test_that("Integrate scdata works",{
 
   scdata <- suppressWarnings(integrate_scdata(scdata, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_s4_class(scdata, "Seurat")
-  expect_equal(ncol(scdata),80)
+  expect_equal(ncol(scdata), 80)
 })
 
-test_that("Integrate scdata filters out cells ids",{
+test_that("Integrate scdata filters out cells ids", {
   scdata <- mock_scdata()
   cells_id <- 0:40
   config <- list(
@@ -34,7 +34,7 @@ test_that("Integrate scdata filters out cells ids",{
   )
 
   scdata <- suppressWarnings(integrate_scdata(scdata, config, "", cells_id, task_name = "dataIntegration"))$data
-  expect_lt(ncol(scdata),80)
+  expect_lt(ncol(scdata), 80)
 })
 
 test_that("harmony integration works", {
@@ -78,4 +78,10 @@ test_that("FastMNN is not working", {
   )
 
   expect_error(suppressWarnings(run_dataIntegration(scdata, config)))
+})
+
+test_that("numPCs estimation works", {
+  scdata <- mock_scdata()
+  config <- list(dimensionalityReduction = list(numPCs = NULL))
+  expect_gte(estimate_npcs(scdata, config, var_threshold = 0.8, max_npcs = 30), 0)
 })
