@@ -27,7 +27,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   set.seed(42)
 
   # estimate the number of default PCs
-  config$dimensionalityReduction$numPCs <- estimate_npcs(scdata, config, 0.8, 30)
+  config$dimensionalityReduction$numPCs <- estimate_npcs(scdata, config, 0.85, 30)
 
   scdata.integrated <- run_dataIntegration(scdata, config)
   # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
@@ -274,8 +274,11 @@ colorObject <- function(data) {
 }
 
 estimate_npcs <- function(scdata, config, var_threshold, max_npcs) {
-  if (config$dimensionalityReduction$numPCs == -1) {
+  # estimates the number of PCs to use in data integration and embeddings,
+  # using accumulated explained variance
+  if (is.null(config$dimensionalityReduction$numPCs)) {
     message("\nEstimating number of PCs\n")
+
     dat <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE) %>%
       Seurat::FindVariableFeatures(nfeatures = 2000, verbose = FALSE) %>%
       Seurat::ScaleData(verbose = FALSE) %>%
@@ -291,8 +294,9 @@ estimate_npcs <- function(scdata, config, var_threshold, max_npcs) {
 }
 
 get_npcs_variance_explained <- function(varExplained, var_threshold, max_npcs) {
-  npcs <- which(cumsum(varExplained) >= var_threshold)
-  npcs <- min(npcs, max_npcs)
+  # given vector of explained variances return number of PCs
+  npcs <- min(which(cumsum(varExplained) >= var_threshold))
+  npcs <- min(npcs, max_npcs, na.rm = TRUE)
   message(sprintf("number of PCs: %d", npcs))
   npcs
 }

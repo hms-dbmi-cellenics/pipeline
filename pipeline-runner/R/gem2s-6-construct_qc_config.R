@@ -96,7 +96,7 @@ construct_qc_config <- function(scdata, any_filtered) {
     ),
     dimensionalityReduction = list(
       method = "rpca",
-      numPCs = -1,
+      numPCs = NULL,
       excludeGeneCategories = list()
     )
   )
