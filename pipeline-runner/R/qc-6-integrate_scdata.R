@@ -268,3 +268,13 @@ colorObject <- function(data) {
   }
   return(data)
 }
+
+estimate_npcs <- function(scdata) {
+  dat <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE) %>%
+    Seurat::FindVariableFeatures(dat, nfeatures = nfeatures, verbose = FALSE) %>%
+    Seurat::ScaleData(scdata, verbose = FALSE) %>%
+    Seurat::RunPCA(scdata, verbose = FALSE)
+
+  eigValues <- (dat@reductions$pca@stdev)^2
+  varExplained <- eigValues / sum(eigValues)
+}
