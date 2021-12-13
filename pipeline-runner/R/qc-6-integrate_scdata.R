@@ -25,10 +25,6 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   scdata <- subset_ids(scdata, flat_cells_id)
   # main function
   set.seed(42)
-
-  # estimate the number of default PCs
-  config$dimensionalityReduction$numPCs <- estimate_npcs(scdata, config, 0.85, 30)
-
   scdata.integrated <- run_dataIntegration(scdata, config)
   # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
   if (scdata.integrated@misc[["active.reduction"]] == "mnn") {
@@ -125,6 +121,14 @@ run_harmony <- function(scdata, config) {
   scdata <- harmony::RunHarmony(scdata, group.by.vars = "samples")
   scdata <- add_dispersions(scdata)
   scdata@misc[["active.reduction"]] <- "harmony"
+
+  if (is.null(npcs)) {
+    message("\nEstimating number of PCs\n")
+    npcs <- estimate_npcs(scdata, 0.8, 30)
+    # update config
+    config$dimensionalityReduction$numPCs <- npcs
+    message(sprintf("\nNumber of PCs: %d\n", npcs))
+  }
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
   scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
@@ -239,6 +243,14 @@ run_unisample <- function(scdata, config) {
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
 
+  if (is.null(npcs)) {
+    message("\nEstimating number of PCs\n")
+    npcs <- estimate_npcs(scdata, 0.8, 30)
+    # update config
+    config$dimensionalityReduction$numPCs <- npcs
+    message(sprintf("\nNumber of PCs: %d\n", npcs))
+  }
+
   # Compute embedding with default setting to get an overview of the performance of the batch correction
   scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
   return(scdata)
@@ -273,30 +285,11 @@ colorObject <- function(data) {
   return(data)
 }
 
-estimate_npcs <- function(scdata, config, var_threshold, max_npcs) {
+estimate_npcs <- function(scdata, var_threshold, max_npcs) {
   # estimates the number of PCs to use in data integration and embeddings,
   # using accumulated explained variance
-  if (is.null(config$dimensionalityReduction$numPCs)) {
-    message("\nEstimating number of PCs\n")
-
-    dat <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE) %>%
-      Seurat::FindVariableFeatures(nfeatures = 2000, verbose = FALSE) %>%
-      Seurat::ScaleData(verbose = FALSE) %>%
-      Seurat::RunPCA(verbose = FALSE)
-
-    eigValues <- (dat@reductions$pca@stdev)^2
-    varExplained <- eigValues / sum(eigValues)
-
-    get_npcs_variance_explained(varExplained, var_threshold, max_npcs)
-  } else {
-    config$dimensionalityReduction$numPCs
-  }
-}
-
-get_npcs_variance_explained <- function(varExplained, var_threshold, max_npcs) {
-  # given vector of explained variances return number of PCs
+  eigValues <- (scdata@reductions$pca@stdev)^2
+  varExplained <- eigValues / sum(eigValues)
   npcs <- min(which(cumsum(varExplained) >= var_threshold))
-  npcs <- min(npcs, max_npcs, na.rm = TRUE)
-  message(sprintf("number of PCs: %d", npcs))
-  npcs
+  min(npcs, max_npcs, na.rm = TRUE)
 }
