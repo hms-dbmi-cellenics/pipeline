@@ -9,6 +9,13 @@ mock_scdata <- function() {
   # add samples
   scdata$samples <- rep(c("123abc", "123def"), each = 40)
   scdata$cells_id <- 0:79
+
+  # scale and PCA
+  scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
+  scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
+  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
+
   return(scdata)
 }
 
