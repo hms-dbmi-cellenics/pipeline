@@ -26,6 +26,13 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   # main function
   set.seed(42)
   scdata.integrated <- run_dataIntegration(scdata, config)
+
+  if (is.null(config$dimensionalityReduction$numPCs)) {
+    # get estimated npcs from the UMAP call in integration functions
+    estimated_npcs <- length(scdata.integrated@commands$RunUMAP@params$dims)
+    message(sprintf("\nSetting config numPCs to estimated_npcs: %d \n", estimated_npcs))
+    config$dimensionalityReduction$numPCs <- estimated_npcs
+  }
   # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
   if (scdata.integrated@misc[["active.reduction"]] == "mnn") {
     varExplained <- scdata.integrated@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
@@ -123,11 +130,9 @@ run_harmony <- function(scdata, config) {
   scdata@misc[["active.reduction"]] <- "harmony"
 
   if (is.null(npcs)) {
-    message("\nEstimating number of PCs\n")
-    npcs <- estimate_npcs(scdata, 0.8, 30)
-    # update config
-    config$dimensionalityReduction$numPCs <- npcs
-    message(sprintf("\nNumber of PCs: %d\n", npcs))
+    message("\nEstimating number of PCs for UMAP\n")
+    npcs <- estimate_npcs(scdata, 0.85, 30)
+    message(sprintf("Number of PCs: %d\n", npcs))
   }
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
@@ -244,11 +249,9 @@ run_unisample <- function(scdata, config) {
   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
 
   if (is.null(npcs)) {
-    message("\nEstimating number of PCs\n")
-    npcs <- estimate_npcs(scdata, 0.8, 30)
-    # update config
-    config$dimensionalityReduction$numPCs <- npcs
-    message(sprintf("\nNumber of PCs: %d\n", npcs))
+    message("\nEstimating number of PCs for UMAP\n")
+    npcs <- estimate_npcs(scdata, 0.85, 30)
+    message(sprintf("Number of PCs: %d\n", npcs))
   }
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
