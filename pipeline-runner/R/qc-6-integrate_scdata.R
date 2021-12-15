@@ -29,7 +29,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
 
   # get  npcs from the UMAP call in integration functions
   npcs <- length(scdata.integrated@commands$RunUMAP@params$dims)
-  message("\nSet config numPCs to estimated npcs in default integration function: ", npcs, "\n")
+  message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
   config$dimensionalityReduction$numPCs <- npcs
 
   # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
