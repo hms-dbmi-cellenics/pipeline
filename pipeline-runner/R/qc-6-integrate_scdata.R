@@ -60,7 +60,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
     }
   )
 
-  plot2_data <- unname(purrr::map2(1:min(50, length(var_explained)), var_explained, function(x, y) {
+  plot2_data <- unname(purrr::map2(1:min(50,length(var_explained)), var_explained, function(x, y) {
     c("PC" = x, "percentVariance" = y)
   }))
 
@@ -104,7 +104,7 @@ run_dataIntegration <- function(scdata, config) {
 
   if (is.null(npcs)) {
     npcs <- get_npcs(scdata)
-    message("Estimated number of PCs: ", npcs)
+    message("Number of PCs: ", npcs)
   }
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
