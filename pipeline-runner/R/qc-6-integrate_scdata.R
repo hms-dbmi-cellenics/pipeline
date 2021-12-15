@@ -35,10 +35,10 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   }
   # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
   if (scdata.integrated@misc[["active.reduction"]] == "mnn") {
-    varExplained <- scdata.integrated@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
+    var_explained <- scdata.integrated@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
   } else {
-    eigValues <- (scdata.integrated@reductions$pca@stdev)^2
-    varExplained <- eigValues / sum(eigValues)
+    eig_values <- (scdata.integrated@reductions$pca@stdev)^2
+    var_explained <- eig_values / sum(eig_values)
   }
 
   # This same numPCs will be used throughout the platform.
@@ -67,7 +67,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
     }
   )
 
-  plot2_data <- unname(purrr::map2(1:min(50, length(varExplained)), varExplained, function(x, y) {
+  plot2_data <- unname(purrr::map2(1:min(50, length(var_explained)), var_explained, function(x, y) {
     c("PC" = x, "percentVariance" = y)
   }))
 
@@ -289,8 +289,8 @@ colorObject <- function(data) {
 get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
   # estimates the number of PCs to use in data integration and embeddings,
   # using accumulated explained variance
-  eigValues <- (scdata@reductions$pca@stdev)^2
-  varExplained <- eigValues / sum(eigValues)
-  npcs <- min(which(cumsum(varExplained) >= var_threshold))
+  eig_values <- (scdata@reductions$pca@stdev)^2
+  var_explained <- eig_values / sum(eig_values)
+  npcs <- min(which(cumsum(var_explained) >= var_threshold))
   min(npcs, max_npcs, na.rm = TRUE)
 }
