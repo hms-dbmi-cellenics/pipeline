@@ -130,7 +130,7 @@ run_harmony <- function(scdata, config) {
   scdata@misc[["active.reduction"]] <- "harmony"
 
   if (is.null(npcs)) {
-    npcs <- get_npcs(scdata, 0.85, 30)
+    npcs <- get_npcs(scdata)
     message("Estimated number of PCs: ", npcs)
   }
 
@@ -248,7 +248,7 @@ run_unisample <- function(scdata, config) {
   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
 
   if (is.null(npcs)) {
-    npcs <- get_npcs(scdata, 0.85, 30)
+    npcs <- get_npcs(scdata)
     message("Estimated number of PCs: ", npcs)
   }
 
@@ -286,7 +286,7 @@ colorObject <- function(data) {
   return(data)
 }
 
-get_npcs <- function(scdata, var_threshold, max_npcs) {
+get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
   # estimates the number of PCs to use in data integration and embeddings,
   # using accumulated explained variance
   eigValues <- (scdata@reductions$pca@stdev)^2
