@@ -90,5 +90,5 @@ test_that("FastMNN is not working", {
 test_that("numPCs estimation works", {
   scdata <- mock_scdata()
   config <- list(dimensionalityReduction = list(numPCs = NULL))
-  expect_gte(estimate_npcs(scdata, var_threshold = 0.85, max_npcs = 30), 0)
+  expect_gte(get_npcs(scdata, var_threshold = 0.85, max_npcs = 30), 0)
 })

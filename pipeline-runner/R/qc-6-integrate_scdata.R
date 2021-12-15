@@ -67,7 +67,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
     }
   )
 
-  plot2_data <- unname(purrr::map2(1:min(50,length(varExplained)), varExplained, function(x, y) {
+  plot2_data <- unname(purrr::map2(1:min(50, length(varExplained)), varExplained, function(x, y) {
     c("PC" = x, "percentVariance" = y)
   }))
 
@@ -131,7 +131,7 @@ run_harmony <- function(scdata, config) {
 
   if (is.null(npcs)) {
     message("\nEstimating number of PCs for UMAP\n")
-    npcs <- estimate_npcs(scdata, 0.85, 30)
+    npcs <- get_npcs(scdata, 0.85, 30)
     message(sprintf("Number of PCs: %d\n", npcs))
   }
 
@@ -250,7 +250,7 @@ run_unisample <- function(scdata, config) {
 
   if (is.null(npcs)) {
     message("\nEstimating number of PCs for UMAP\n")
-    npcs <- estimate_npcs(scdata, 0.85, 30)
+    npcs <- get_npcs(scdata, 0.85, 30)
     message(sprintf("Number of PCs: %d\n", npcs))
   }
 
@@ -288,7 +288,7 @@ colorObject <- function(data) {
   return(data)
 }
 
-estimate_npcs <- function(scdata, var_threshold, max_npcs) {
+get_npcs <- function(scdata, var_threshold, max_npcs) {
   # estimates the number of PCs to use in data integration and embeddings,
   # using accumulated explained variance
   eigValues <- (scdata@reductions$pca@stdev)^2
