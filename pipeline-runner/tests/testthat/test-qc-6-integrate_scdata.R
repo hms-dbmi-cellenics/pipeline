@@ -15,6 +15,7 @@ mock_scdata <- function() {
   scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
+  scdata@misc[["active.reduction"]] <- "pca"
 
   return(scdata)
 }
@@ -88,7 +89,7 @@ test_that("FastMNN is not working", {
 })
 
 test_that("numPCs estimation works", {
-  scdata <- mock_scdata()
+  scdata <- suppressWarnings(mock_scdata())
   npcs <- get_npcs(scdata)
   expect_lte(npcs, 30)
 })
