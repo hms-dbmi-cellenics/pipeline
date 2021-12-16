@@ -9,6 +9,14 @@ mock_scdata <- function() {
   # add samples
   scdata$samples <- rep(c("123abc", "123def"), each = 40)
   scdata$cells_id <- 0:79
+
+  # scale and PCA
+  scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
+  scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
+  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
+  scdata@misc[["active.reduction"]] <- "pca"
+
   return(scdata)
 }
 
@@ -78,4 +86,10 @@ test_that("FastMNN is not working", {
   )
 
   expect_error(suppressWarnings(run_dataIntegration(scdata, config)))
+})
+
+test_that("numPCs estimation works", {
+  scdata <- suppressWarnings(mock_scdata())
+  npcs <- get_npcs(scdata)
+  expect_lte(npcs, 30)
 })

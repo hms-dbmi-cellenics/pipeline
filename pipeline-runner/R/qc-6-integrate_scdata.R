@@ -26,13 +26,13 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   # main function
   set.seed(42)
   scdata.integrated <- run_dataIntegration(scdata, config)
-  # Compute explained variance for the plot2. It can be computed from pca or other reductions such as mnn
-  if (scdata.integrated@misc[["active.reduction"]] == "mnn") {
-    varExplained <- scdata.integrated@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
-  } else {
-    eigValues <- (scdata.integrated@reductions$pca@stdev)^2
-    varExplained <- eigValues / sum(eigValues)
-  }
+
+  # get  npcs from the UMAP call in integration functions
+  npcs <- length(scdata.integrated@commands$RunUMAP@params$dims)
+  message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
+  config$dimensionalityReduction$numPCs <- npcs
+
+  var_explained <- get_explained_variance(scdata.integrated)
 
   # This same numPCs will be used throughout the platform.
   scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
@@ -60,7 +60,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
     }
   )
 
-  plot2_data <- unname(purrr::map2(1:min(50,length(varExplained)), varExplained, function(x, y) {
+  plot2_data <- unname(purrr::map2(1:min(50,length(var_explained)), var_explained, function(x, y) {
     c("PC" = x, "percentVariance" = y)
   }))
 
@@ -88,6 +88,7 @@ run_dataIntegration <- function(scdata, config) {
 
   # get method and settings
   method <- config$dataIntegration$method
+  npcs <- config$dimensionalityReduction$numPCs
 
   nsamples <- length(unique(scdata$samples))
   if (nsamples == 1) {
@@ -100,6 +101,14 @@ run_dataIntegration <- function(scdata, config) {
 
   integration_function <- get(paste0("run_", method))
   scdata <- integration_function(scdata, config)
+
+  if (is.null(npcs)) {
+    npcs <- get_npcs(scdata)
+    message("Number of PCs: ", npcs)
+  }
+
+  # Compute embedding with default setting to get an overview of the performance of the batch correction
+  scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
 
   return(scdata)
 }
@@ -122,8 +131,6 @@ run_harmony <- function(scdata, config) {
   scdata <- add_dispersions(scdata)
   scdata@misc[["active.reduction"]] <- "harmony"
 
-  # Compute embedding with default setting to get an overview of the performance of the batch correction
-  scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
   return(scdata)
 }
 
@@ -184,8 +191,6 @@ run_seuratv4 <- function(scdata, config) {
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
 
-  # Compute embedding with default setting to get an overview of the performance of the batch correction
-  scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
   return(scdata)
 }
 
@@ -210,8 +215,6 @@ run_fastmnn <- function(scdata, config) {
   scdata@misc <- misc
   scdata@misc[["active.reduction"]] <- "mnn"
 
-  # Compute embedding with default setting to get an overview of the performance of the batch correction
-  scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
   return(scdata)
 }
 
@@ -235,8 +238,6 @@ run_unisample <- function(scdata, config) {
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
 
-  # Compute embedding with default setting to get an overview of the performance of the batch correction
-  scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
   return(scdata)
 }
 
@@ -267,4 +268,24 @@ colorObject <- function(data) {
     data@meta.data[, "color_samples"] <- color_pool[1]
   }
   return(data)
+}
+
+get_explained_variance <- function(scdata) {
+  # Compute explained variance for plotting and numPCs estimation.
+  # It can be computed from pca or other reductions such as mnn
+  if (scdata@misc[["active.reduction"]] == "mnn") {
+    var_explained <- scdata@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
+  } else {
+    eig_values <- (scdata@reductions$pca@stdev)^2
+    var_explained <- eig_values / sum(eig_values)
+  }
+  var_explained
+}
+
+get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
+  # estimates the number of PCs to use in data integration and embeddings,
+  # using accumulated explained variance
+  var_explained <- get_explained_variance(scdata)
+  npcs <- min(which(cumsum(var_explained) >= var_threshold))
+  min(npcs, max_npcs, na.rm = TRUE)
 }
