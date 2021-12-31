@@ -61,6 +61,9 @@ call_read10x <- function(config, input_dir) {
 
     annot <- read.delim(annot_fpath, header = FALSE)
 
+    #Equalizing number of columns in case theres no Gene Expression column
+    annot <- annot[, c(1, 2)]
+
     message(
       sprintf("Sample %s has %s genes and %s droplets.", sample, nrow(counts), ncol(counts))
     )
@@ -76,7 +79,6 @@ call_read10x <- function(config, input_dir) {
 
 format_annot <- function(annot_list) {
   annot <- unique(do.call("rbind", annot_list))
-  annot <- annot[, c(1, 2)]
   colnames(annot) <- c("input", "name")
 
   message("Deduplicating gene annotations...")
