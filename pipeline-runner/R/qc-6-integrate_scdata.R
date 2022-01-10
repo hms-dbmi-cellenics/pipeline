@@ -232,7 +232,7 @@ run_unisample <- function(scdata, config) {
   scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
   scdata <- tryCatch(
     {
-      return(FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE))
+      return(Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE))
     },
     error = function(e) {
         stop(paste0(
