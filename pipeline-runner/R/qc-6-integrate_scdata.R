@@ -230,6 +230,19 @@ run_unisample <- function(scdata, config) {
 
   # in unisample we only need to normalize
   scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
+  data <- tryCatch(
+    {
+      return(FindVariableFeatures(scdata2, nfeatures = nfeatures, verbose = FALSE))
+    },
+    error = function(e) {
+        stop(paste0(
+        "Number of columns: ",ncol(scdata)," / ",
+        "Number of rows: ", nrow(scdata)," / ",
+        unique(scdata$samples)," / ",
+        "Error: ", e
+        ))
+    }
+  )
   scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
   scdata <- add_dispersions(scdata)
   scdata@misc[["active.reduction"]] <- "pca"
