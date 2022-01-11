@@ -78,14 +78,15 @@ test_that("Unisample integration works", {
   expect_s4_class(scdata, "Seurat")
 })
 
-test_that("FastMNN is not working", {
+test_that("FastMNN is working", {
   scdata <- mock_scdata()
   config <- list(
     dimensionalityReduction = list(numPCs = 2),
     dataIntegration = list(method = "fastmnn", methodSettings = list(fastmnn = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_error(suppressWarnings(run_dataIntegration(scdata, config)))
+  scdata <- suppressWarnings(run_dataIntegration(scdata, config))
+  expect_s4_class(scdata, "Seurat")
 })
 
 test_that("numPCs estimation works", {
