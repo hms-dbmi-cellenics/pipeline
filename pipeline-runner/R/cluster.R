@@ -2,14 +2,16 @@
 
 #' Get Clusters
 #'
-#' @param clustering_method
-#' @param resolution
-#' @param data
+#' @param data SeuratObject
+#' @param req list with items:
+#'  \code{req$body$type} either "louvain" or "leiden"
+#'  \code{req$body$config$resolution} integer, range: 0 - 2
 #'
-#' @return
+#' @return data.frame with columns "cluster" and "cell_ids"
 #' @export
 #'
 #' @examples
+#'
 runClusters <- function(req, data) {
     resol <- req$body$config$resolution
     type <- req$body$type
