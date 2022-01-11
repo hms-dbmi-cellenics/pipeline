@@ -156,67 +156,6 @@ calc_filter_stats <- function(scdata) {
   )
 }
 
-#' Title
-#'
-#' @param clustering_method
-#' @param resolution
-#' @param data
-#'
-#' @return
-#' @export
-#'
-#' @examples
-runClusters <- function(clustering_method, resolution, data) {
-  data <- getClusters(clustering_method, resolution, data)
-  res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
-  # In the meta data slot the clustering is stored with the resolution used to calculate it
-  # RNA_snn_res.#resolution
-  df <- data.frame(cluster = data@meta.data[, res_col], cell_ids = data@meta.data$cells_id)
-  # get the cell barcodes as rownames
-  rownames(df) <- rownames(data@meta.data)
-  return(df)
-}
-
-
-#' Get Clusters
-#'
-#' @param clustering_method
-#' @param resolution
-#' @param data
-#'
-#' @return
-#' @export
-#'
-#' @examples
-getClusters <- function(clustering_method, resolution, data) {
-  res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
-  algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]
-  # To run clustering, we need to identify the active.reduction that is used in FindNeighbors.
-  if ("active.reduction" %in% names(data@misc)) {
-    active.reduction <- data@misc[["active.reduction"]]
-  } else {
-    active.reduction <- "pca"
-  }
-
-  if (clustering_method == "leiden") {
-    # emulate FindClusters, which overwrites seurat_clusters slot and meta.data column
-    g <- getSNNiGraph(data)
-    clus_res <- igraph::cluster_leiden(g, "modularity", resolution_parameter = resolution)
-    clusters <- clus_res$membership
-    names(clusters) <- clus_res$names
-    clusters <- clusters[colnames(data)]
-    data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters - 1)
-  } else {
-    graph.name <- paste0(Seurat::DefaultAssay(data), "_snn")
-    if (!graph.name %in% names(data)) {
-      data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
-    }
-    data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm)
-  }
-  return(data)
-}
-
-
 safeTRUE <- function(x) {
   isTRUE(as.logical(x))
 }

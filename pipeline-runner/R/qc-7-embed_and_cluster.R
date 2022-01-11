@@ -4,11 +4,18 @@
 # done also in this step.
 
 embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name = "configureEmbedding") {
-  message("starting clusters")
-  clustering_method <- config$clusteringSettings$method
-  methodSettings <- config$clusteringSettings$methodSettings[[clustering_method]]
   message("Running clustering")
-  cellSets <- runClusters(clustering_method, methodSettings$resolution, scdata)
+  clustering_method <- config$clusteringSettings$method
+  req <- list(
+    body = list(
+      type = config$clusteringSettings$method,
+      config = list(
+        resolution = config$clusteringSettings$methodSettings[[clustering_method]]$resolution
+      )
+    )
+  )
+  cellSets <- runClusters(req, scdata)
+
   message("formatting cellsets")
   formated_cell_sets <- format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
   message("udating through api")
