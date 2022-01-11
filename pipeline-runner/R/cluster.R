@@ -1,4 +1,4 @@
-# IMPORTANT: this function/utilities mirrored in worker. If update, change both.
+# IMPORTANT: functions in this file are duplicated in the worker. If you update, change both.
 
 #' Get Clusters
 #'

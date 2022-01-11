@@ -1,4 +1,4 @@
-# IMPORTANT: these tests are also present in the worker. If update, change both.
+# IMPORTANT: these tests are duplicated in the worker. If you update, change both.
 
 mock_req <- function(type = "louvain") {
     req <- list(
