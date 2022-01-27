@@ -11,7 +11,7 @@ jobs:
   lint-pr-body:
     name: Lint pull request body
     runs-on: ubuntu-20.04
-    concurrency: 
+    concurrency:
       group: ${{ github.head_ref }}
       cancel-in-progress: true
     outputs:
@@ -185,7 +185,7 @@ jobs:
         uses: jwalton/gh-find-current-pr@v1
         with:
           state: open
-          
+
       - id: create-unchecked-pr-body
         if: failure()
         name: Create unchecked PR body
@@ -211,5 +211,6 @@ jobs:
         with:
           repo-token: "${{ secrets.API_TOKEN_GITHUB }}"
           head-branch-regex: '${{ github.head_ref }}'
+          lowercase-branch: false
           body-template: "${{  steps.create-unchecked-pr-body.outputs.body }}"
           body-update-action: 'replace'
