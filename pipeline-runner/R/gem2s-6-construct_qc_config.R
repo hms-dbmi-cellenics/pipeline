@@ -48,7 +48,7 @@ construct_qc_config <- function(scdata, any_filtered) {
     auto = TRUE,
     filterSettings = list(
       method = "absolute_threshold",
-      methodSettings = list(absolute_threshold = list(maxFraction = 0.1, binStep = 0.05))
+      methodSettings = list(absolute_threshold = list(maxFraction = 0.1, binStep = 0.3))
     )
   )
 
@@ -77,7 +77,7 @@ construct_qc_config <- function(scdata, any_filtered) {
     auto = TRUE,
     filterSettings = list(
       probabilityThreshold = 0.5,
-      binStep = 0.05
+      binStep = 0.02
     )
   )
 
