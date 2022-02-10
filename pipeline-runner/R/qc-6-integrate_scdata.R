@@ -28,7 +28,14 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   scdata.integrated <- run_dataIntegration(scdata, config)
 
   # get  npcs from the UMAP call in integration functions
-  npcs <- length(scdata.integrated@commands$RunUMAP@params$dims)
+  # npcs <- length(scdata.integrated@commands$RunUMAP@params$dims)
+
+  npcs <- config$dimensionalityReduction$numPCs
+  if (is.null(npcs)) {
+    npcs <- get_npcs(scdata.integrated)
+    message("Number of PCs: ", npcs)
+  }
+
   message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
   config$dimensionalityReduction$numPCs <- npcs
 
@@ -39,33 +46,33 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
 
   scdata.integrated <- colorObject(scdata.integrated)
   cells_order <- rownames(scdata.integrated@meta.data)
-  plot1_data <- unname(purrr::map2(scdata.integrated@reductions$umap@cell.embeddings[, 1], scdata.integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
-    c("x" = x, "y" = y)
-  }))
+  # plot1_data <- unname(purrr::map2(scdata.integrated@reductions$umap@cell.embeddings[, 1], scdata.integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
+  #   c("x" = x, "y" = y)
+  # }))
 
-  # Adding color and sample id
-  plot1_data <- purrr::map2(
-    plot1_data,
-    unname(scdata.integrated@meta.data[cells_order, "samples"]),
-    function(x, y) {
-      append(x, list("sample" = y))
-    }
-  )
+  # # Adding color and sample id
+  # plot1_data <- purrr::map2(
+  #   plot1_data,
+  #   unname(scdata.integrated@meta.data[cells_order, "samples"]),
+  #   function(x, y) {
+  #     append(x, list("sample" = y))
+  #   }
+  # )
 
-  plot1_data <- purrr::map2(
-    plot1_data,
-    unname(scdata.integrated@meta.data[cells_order, "color_samples"]),
-    function(x, y) {
-      append(x, list("col" = y))
-    }
-  )
+  # plot1_data <- purrr::map2(
+  #   plot1_data,
+  #   unname(scdata.integrated@meta.data[cells_order, "color_samples"]),
+  #   function(x, y) {
+  #     append(x, list("col" = y))
+  #   }
+  # )
 
-  plot2_data <- unname(purrr::map2(1:min(50,length(var_explained)), var_explained, function(x, y) {
+  plot2_data <- unname(purrr::map2(1:min(50, length(var_explained)), var_explained, function(x, y) {
     c("PC" = x, "percentVariance" = y)
   }))
 
   plots <- list()
-  plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
+  # plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
   plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
 
 
@@ -88,7 +95,7 @@ run_dataIntegration <- function(scdata, config) {
 
   # get method and settings
   method <- config$dataIntegration$method
-  npcs <- config$dimensionalityReduction$numPCs
+
 
   nsamples <- length(unique(scdata$samples))
   if (nsamples == 1) {
@@ -102,13 +109,8 @@ run_dataIntegration <- function(scdata, config) {
   integration_function <- get(paste0("run_", method))
   scdata <- integration_function(scdata, config)
 
-  if (is.null(npcs)) {
-    npcs <- get_npcs(scdata)
-    message("Number of PCs: ", npcs)
-  }
-
   # Compute embedding with default setting to get an overview of the performance of the batch correction
-  scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
+  # scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
 
   return(scdata)
 }
