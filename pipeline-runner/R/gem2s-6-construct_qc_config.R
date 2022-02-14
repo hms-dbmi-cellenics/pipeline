@@ -139,11 +139,12 @@ get_sample_mitochondrial_config <- function(scdata.sample, config) {
   config.sample <- list(
     auto = TRUE,
     filterSettings = list(
-      method = "absolute_threshold"
+      method = "absolute_threshold",
+      methodSettings = list()
     )
   )
 
-  config.sample$filterSettings$absolute_threshold <- list(
+  config.sample$filterSettings$methodSettings$absolute_threshold <- list(
     maxFraction = generate_default_values_mitochondrialContent(scdata.sample, config.sample),
     binStep = 0.3
   )
