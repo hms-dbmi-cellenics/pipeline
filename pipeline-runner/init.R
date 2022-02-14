@@ -266,7 +266,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # Upload count matrix data
     if(upload_count_matrix) {
         assign("scdata", data, pos = ".GlobalEnv")
-        object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
+        object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata, "processed_bucket")
         message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
     }
 

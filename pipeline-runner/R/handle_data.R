@@ -1,12 +1,12 @@
 remove_cell_ids <- function(pipeline_config, experiment_id) {
   tasks <- list(
-      'cellSizeDistribution',
-      'mitochondrialContent',
-      'numGenesVsNumUmis',
-      'doubletScores',
-      'dataIntegration',
-      'configureEmbedding'
-    )
+    "cellSizeDistribution",
+    "mitochondrialContent",
+    "numGenesVsNumUmis",
+    "doubletScores",
+    "dataIntegration",
+    "configureEmbedding"
+  )
   keys_to_remove <- list()
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
@@ -30,7 +30,6 @@ upload_cells_id <- function(pipeline_config, object_key, cells_id) {
   return(object_key)
 }
 
-
 reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
   # If the task is after data integration, we need to get scdata from processed_matrix
   task_names <- names(tasks)
@@ -48,7 +47,7 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
     Bucket = bucket,
     Key = paste(experiment_id, "r.rds", sep = "/")
   )
-  obj <- readRDS(rawConnection(body))
+  obj <- readRDS(gzcon(rawConnection(body), allowNonCompressed = TRUE))
   return(obj)
 }
 
@@ -61,7 +60,7 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   message("Total of ", length(object_list$Contents), " samples.")
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
-  
+
   if (match(task_name, task_names) <= integration_index) {
     for (object in object_list$Contents) {
       key <- object$Key
@@ -87,7 +86,7 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
       sample <- readRDS(id_file)
       cells_id[[sample_id]] <- sample[[sample_id]]
       message("Sample ", sample_id, " with ", length(cells_id[[sample_id]]), " cells")
-    }    
+    }
   }
   return(cells_id)
 }
@@ -232,16 +231,16 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
   return(plot_data_keys)
 }
 
-upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
+upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data, bucket) {
   object_key <- paste0(experiment_id, "/r.rds")
 
   count_matrix <- tempfile()
-  saveRDS(data, file = count_matrix)
+  saveRDS(data, file = count_matrix, compress = TRUE)
 
   message("Count matrix file size : ", format(object.size(count_matrix)))
-  message("Uploading updated count matrix to S3 bucket ", pipeline_config$processed_bucket, " at key ", object_key, "...")
+  message("Uploading count matrix to S3 bucket ", pipeline_config[[bucket]], " at key ", object_key, "...")
 
-  put_object_in_s3_multipart(pipeline_config, pipeline_config$processed_bucket, count_matrix, object_key)
+  put_object_in_s3_multipart(pipeline_config, pipeline_config[[bucket]], count_matrix, object_key)
 
   return(object_key)
 }
@@ -264,6 +263,7 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
 #' @param bucket The name of the S3 bucket to be uploaded to, e.g. `my-bucket`.
 #' @param key The name to assign to the file in the S3 bucket, e.g. `path/to/file`.
 put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
+  # Can only upload up to 50Gb because part numbers can be any number from 1 to 10,000, inclusive.
   message(sprintf("Putting %s in %s from object %s", key, bucket, object))
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
