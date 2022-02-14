@@ -150,7 +150,6 @@ get_sample_mitochondrial_config <- function(scdata.sample, config) {
   )
 
   return(config.sample)
-
 }
 
 # threshold for doublet score is the max score given to a singlet (above score => doublets)
