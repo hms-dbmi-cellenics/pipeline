@@ -198,7 +198,7 @@ add_custom_config_per_sample <- function(generate_sample_config, config, scdata)
     config[[sample]] <- config.sample
 
     # add auto settings
-    config[[sample]]$defaultFilterSettings <- result_config$filterSettings
+    config[[sample]]$defaultFilterSettings <- config.sample$filterSettings
   }
 
   return(config)
