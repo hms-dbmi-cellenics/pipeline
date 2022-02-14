@@ -89,13 +89,9 @@ filter_high_mito <- function(scdata, config, sample_id, cells_id, task_name = "m
 }
 
 
-# The most uses values in MT-content are between [0.1, 0.2]. There are not too much literature about how to compute
-# a threshold.
-# --> Absolute threshold: In order to be not too extrictive the threshold is set to 0.1
 generate_default_values_mitochondrialContent <- function(scdata, config) {
   if (config$filterSettings$method == "absolute_threshold") {
-    # HARDCODE
-    threshold <- 0.1
+    threshold <- scuttle::isOutlier(scdata$percent.mt, type = "higher")
   }
 
   return(threshold)
