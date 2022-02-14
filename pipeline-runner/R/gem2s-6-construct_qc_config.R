@@ -28,7 +28,6 @@ construct_qc_config <- function(scdata, any_filtered) {
 
   config.cellSizeDistribution <- add_custom_config_per_sample(get_cellsize_config, config.cellSizeDistribution, scdata)
 
-
   # mito
   config.mitochondrialContent <- list(
     enabled = TRUE,
@@ -38,22 +37,13 @@ construct_qc_config <- function(scdata, any_filtered) {
       methodSettings = list(
         absolute_threshold = list(
           maxFraction = 0.1,
-          binStep = 0.05
+          binStep = 0.3
         )
       )
     )
   )
 
-  mitochondrial_config_to_duplicate <- list(
-    auto = TRUE,
-    filterSettings = list(
-      method = "absolute_threshold",
-      methodSettings = list(absolute_threshold = list(maxFraction = 0.1, binStep = 0.3))
-    )
-  )
-
-  config.mitochondrialContent <- duplicate_config_per_sample(mitochondrial_config_to_duplicate, config.mitochondrialContent, samples)
-
+  config.mitochondrialContent <- add_custom_config_per_sample(get_sample_mitochondrial_config, config.mitochondrialContent, scdata)
 
   # ngenes vs umis
   config.numGenesVsNumUmis <- list(
@@ -144,6 +134,24 @@ get_cellsize_config <- function(scdata, config) {
   return(config)
 }
 
+get_sample_mitochondrial_config <- function(scdata.sample, config) {
+
+  config.sample <- list(
+    auto = TRUE,
+    filterSettings = list(
+      method = "absolute_threshold"
+    )
+  )
+
+  config.sample$filterSettings$absolute_threshold <- list(
+    maxFraction = generate_default_values_mitochondrialContent(scdata.sample, config.sample),
+    binStep = 0.3
+  )
+
+  return(config.sample)
+
+}
+
 # threshold for doublet score is the max score given to a singlet (above score => doublets)
 get_dblscore_config <- function(scdata, config) {
   probabilityThreshold <- max(scdata$doublet_scores[scdata$doublet_class == "singlet"], na.rm = TRUE)
@@ -172,7 +180,7 @@ duplicate_config_per_sample <- function(step_config, config, samples) {
   return(config)
 }
 
-add_custom_config_per_sample <- function(step_fn, config, scdata) {
+add_custom_config_per_sample <- function(generate_sample_config, config, scdata) {
 
   # We update the config file, so to be able to access the raw config we create a copy
   config.raw <- config
@@ -180,14 +188,16 @@ add_custom_config_per_sample <- function(step_fn, config, scdata) {
   samples <- scdata$samples
 
   for (sample in unique(samples)) {
-    # Downsample the seurat object to a unisample experiment
-    scdata_sample <- scdata[, samples %in% sample]
-    # Run the step fun with the unisample experiment and keep the config result
-    result_config <- step_fn(scdata_sample, config.raw)
-    # Update config with the unisample thresholds
-    config[[sample]] <- result_config
+    # subset the Seurat object to a single sample
+    scdata.sample <- scdata[, samples %in% sample]
 
-    # Add auto settings
+    # run the function to generate config for a sample
+    config.sample <- generate_sample_config(scdata.sample, config.raw)
+
+    # update sample config thresholds
+    config[[sample]] <- config.sample
+
+    # add auto settings
     config[[sample]]$defaultFilterSettings <- result_config$filterSettings
   }
 
