@@ -92,7 +92,10 @@ filter_high_mito <- function(scdata, config, sample_id, cells_id, task_name = "m
 generate_default_values_mitochondrialContent <- function(scdata, config) {
   if (config$filterSettings$method == "absolute_threshold") {
     is.out <- scuttle::isOutlier(scdata$percent.mt, type = "higher")
-    threshold <- min(scdata$percent.mt[is.out]) / 100
+
+    threshold <- ifelse(!sum(is.out),
+                        max(scdata$percent.mt),
+                        min(scdata$percent.mt[is.out])) / 100
   }
 
   return(threshold)
