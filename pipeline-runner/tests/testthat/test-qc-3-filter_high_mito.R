@@ -97,7 +97,17 @@ test_that("filter_high_mito can be set to auto", {
   # would filter all 40 cells in first sample unless auto
   config <- mock_config(0.01)
   out <- filter_high_mito(scdata, config, "123abc", cells_id)
+
+  get_threshold <- function(config) config$filterSettings$methodSettings$absolute_threshold$maxFraction
+
+  # check that threshold was updated
+  expect_true(get_threshold(out$config) > get_threshold(config))
+
+  # check that updated threshold was used
+  nkeep <- length(unlist(out$new_ids))
+  expected <- sum(scdata$percent.mt <= get_threshold(out$config) * 100)
+  expect_equal(nkeep, expected)
+
+  # didn't subset original data
   expect_equal(ncol(out$data), 80)
-  expect_equal(length(out$new_ids$`123abc`), 30)
-  expect_equal(length(out$new_ids$`123def`), 40)
 })
