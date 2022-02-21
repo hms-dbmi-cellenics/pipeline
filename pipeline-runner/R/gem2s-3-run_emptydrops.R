@@ -1,6 +1,6 @@
 #' Run emptyDrops from DropletUtils
 #'
-#' @inheritParams download_cellranger_files
+#' @inheritParams download_user_files
 #' @param prev_out 'output' slot from call to \code{load_cellranger}
 #'
 #' @return \code{prev_out} with added slot 'edrops' containing result of call to
