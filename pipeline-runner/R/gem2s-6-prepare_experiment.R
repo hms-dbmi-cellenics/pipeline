@@ -4,7 +4,7 @@
 #'  2) Adds metadata: cellsId, color_pool, and gene annotation
 #'  3) Preparing QC configuration
 #'
-#' @inheritParams download_cellranger_files
+#' @inheritParams download_user_files
 #' @param prev_out  'output' slot from call to \code{create_seurat}
 #'
 #' @return prev_out \code{prev_out} with added slots 'scdata' containing merged

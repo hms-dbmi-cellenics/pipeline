@@ -1,6 +1,6 @@
 #' Create a SeuratObject per sample
 #'
-#' @inheritParams download_cellranger_files
+#' @inheritParams download_user_files
 #' @param prev_out  'output' slot from call to \code{score_doublets}
 #'
 #' @return \code{prev_out} with added slot 'scdata_list' containing \code{SeuratObject}'s for each sample.

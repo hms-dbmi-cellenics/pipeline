@@ -1,4 +1,4 @@
-#' Download cellranger files from S3
+#' Download user files from S3
 #'
 #' @param input The input object from the request
 #' @param pipeline_config result of \code{load_config}
@@ -7,7 +7,7 @@
 #' @return list where 'output' slot has config used by \code{load_cellranger}
 #' @export
 #'
-download_cellranger_files <- function(input, pipeline_config, prev_out = list()) {
+download_user_files <- function(input, pipeline_config, prev_out = list()) {
   project_id <- input$projectId
   sample_names <- input$sampleNames
   sample_uuids <- input$sampleIds
@@ -20,17 +20,23 @@ download_cellranger_files <- function(input, pipeline_config, prev_out = list())
   for (sample in sample_uuids) {
     message("\nSample --> ", sample)
 
-    for (cellranger_fname in cellranger_fnames) {
-      gem_key <- file.path(project_id, sample, cellranger_fname)
+    res <- s3$list_objects(
+      Bucket = pipeline_config$originals_bucket,
+      Prefix = file.path(project_id, sample)
+    )
 
+    keys <- unlist(lapply(res$Contents, `[[`, "Key"))
+
+    for (gem_key in keys) {
       message("GEM key: ", gem_key)
+      fname <- basename(gem_key)
 
       sample_name <- sample_names[[match(sample, sample_uuids)]]
       # Preparing directories
       local_dir <- file.path("/input", sample)
       dir.create("/input")
       dir.create(local_dir)
-      local_fpath <- file.path(local_dir, cellranger_fname)
+      local_fpath <- file.path(local_dir, fname)
 
       # Download the file and store the output in a variable
       c(body, ...rest) %<-% s3$get_object(
