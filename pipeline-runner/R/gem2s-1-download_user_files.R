@@ -66,6 +66,6 @@ download_user_files <- function(input, pipeline_config, prev_out = list()) {
     ouput = prev_out
   )
 
-  message("\nDownloading of cellranger files step complete.")
+  message("\nDownloading of user files step complete.")
   return(res)
 }
