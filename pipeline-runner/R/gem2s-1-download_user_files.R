@@ -14,7 +14,6 @@ download_user_files <- function(input, pipeline_config, prev_out = list()) {
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
-  cellranger_fnames <- c("features.tsv.gz", "barcodes.tsv.gz", "matrix.mtx.gz")
   unlink("/input", recursive = TRUE)
 
   for (sample in sample_uuids) {
