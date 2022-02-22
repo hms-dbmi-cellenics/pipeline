@@ -62,7 +62,7 @@ download_user_files <- function(input, pipeline_config, prev_out = list()) {
   prev_out$config <- config
   res <- list(
     data = list(),
-    ouput = prev_out
+    output = prev_out
   )
 
   message("\nDownloading of user files step complete.")
