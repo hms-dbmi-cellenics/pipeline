@@ -33,9 +33,8 @@ download_user_files <- function(input, pipeline_config, prev_out = list()) {
       fname <- basename(gem_key)
 
       # Preparing directories
-      local_dir <- file.path(input_dir, sample)
-      local_fpath <- file.path(local_dir, fname)
-      fs::dir_create(local_dir)
+      local_fpath <- file.path(input_dir, sample, fname)
+      fs::dir_create(dirname(local_fpath))
 
       # Download the file and store the output in a variable
       c(body, ...rest) %<-% s3$get_object(
