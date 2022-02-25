@@ -12,11 +12,12 @@ mock_cellranger_files <- function(sample_dir, compressed = FALSE) {
   # save features
   features_path <- file.path(sample_dir, "features.tsv")
   write.table(features,
-              features_path,
-              col.names = FALSE,
-              quote = FALSE,
-              sep = "\t",
-              row.names = FALSE)
+    features_path,
+    col.names = FALSE,
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE
+  )
 
   # save barcodes
   barcodes <- colnames(counts)
@@ -45,7 +46,7 @@ mock_cellranger_files <- function(sample_dir, compressed = FALSE) {
 
 
 create_samples <- function(bucket, project, samples) {
-# helper to create samples in project in bucket, like S3
+  # helper to create samples in project in bucket, like S3
   files <- c()
 
   for (id in samples) {
@@ -107,10 +108,12 @@ stubbed_up_download_user_files <- function(input, pipeline_config, prev_out = li
   mockery::stub(where = download_user_files, "s3$get_object", how = stub_s3_get_objects)
   mockery::stub(where = download_user_files, "file.path", how = stub_file.path)
 
-  download_user_files(input, pipeline_config, prev_out)
+  res <- download_user_files(input, pipeline_config, prev_out)
   # download_user_files creates a "/input" folder in the pod. defer deleting
   # it during tests.
   withr::defer(fs::dir_delete("./input"), envir = parent.frame())
+
+  res
 }
 
 mock_samples <- function(n_samples = 1) {
@@ -128,7 +131,6 @@ mock_input <- function(samples) {
 }
 
 test_that("download_user_files downloads user's files. one sample", {
-
   samples <- mock_samples()
   input <- mock_input(samples)
   s3_stuff <- local_create_samples(input$projectId, samples)
@@ -143,12 +145,11 @@ test_that("download_user_files downloads user's files. one sample", {
   expected_files <- lapply(s3_stuff$files, readBin, what = "raw")
   downloaded_files <- lapply(downloaded_file_paths, readBin, what = "raw")
 
-  expect_equal(expected_files, downloaded_files)
+  expect_identical(expected_files, downloaded_files)
 })
 
 
 test_that("download_user_files downloads user's files. 3 samples", {
-
   samples <- mock_samples(n_samples = 3)
   input <- mock_input(samples)
   s3_stuff <- local_create_samples(input$projectId, samples)
