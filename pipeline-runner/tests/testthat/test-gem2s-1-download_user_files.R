@@ -135,16 +135,14 @@ test_that("download_user_files downloads user's files.", {
   s3_stuff <- local_create_samples(input$projectId, samples)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
-  expected_files <- lapply(s3_stuff$files, readBin, what = "raw")
-
   res <- stubbed_up_download_user_files(input, pipeline_config)
 
 
   # download_user_files does not return the paths. So have to build them
   downloaded_file_paths <- gsub(fs::path(s3_stuff$bucket, input$projectId), "./input", s3_stuff$files)
   # read the downloaded files as raw files
-  downloaded_files <<- lapply(downloaded_file_paths, readBin, what = "raw")
+  expected_files <- lapply(s3_stuff$files, readBin, what = "raw")
+  downloaded_files <- lapply(downloaded_file_paths, readBin, what = "raw")
 
   expect_equal(expected_files, downloaded_files)
-
 })
