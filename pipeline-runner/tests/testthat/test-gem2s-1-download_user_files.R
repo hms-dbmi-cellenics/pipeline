@@ -163,5 +163,22 @@ test_that("download_user_files downloads user's files. 3 samples", {
   expected_files <- lapply(s3_stuff$files, readBin, what = "raw")
   downloaded_files <- lapply(downloaded_file_paths, readBin, what = "raw")
 
-  expect_equal(expected_files, downloaded_files)
+  expect_identical(expected_files, downloaded_files)
+})
+
+test_that("metadata is passed over correctly", {
+  samples <- mock_samples(n_samples = 3)
+  input <- mock_input(samples)
+  s3_stuff <- local_create_samples(input$projectId, samples)
+  pipeline_config <- list(originals_bucket = s3_stuff$bucket)
+
+  expected_metadata <- data.frame(a = seq_len(30), b = paste0("meta_", seq_len(30)))
+
+  input$metadata <- expected_metadata
+
+  res <- stubbed_up_download_user_files(input, pipeline_config)
+
+  downloaded__metadata <- res$output$config$metadata
+
+  expect_identical(expected_metadata, downloaded__metadata)
 })
