@@ -64,19 +64,6 @@ local_create_samples <- function(project, samples, env = parent.frame()) {
 }
 
 
-# test_that("mocking bucket works", {
-#     projectId <- "projectID"
-#   files_10x <- c("features.tsv", "barcodes.tsv", "matrix.mtx")
-#   samples <- list(sample1 = files_10x, sample2 = files_10x)
-#
-#   bucket <- local_create_samples(projectId, samples)
-#
-#   print(dir_ls(fs::path(bucket, projectId), full.names = T))
-#   #print(list.files(bucket, recursive = T, full.names = T))
-#
-#   expect_true(is.character(bucket))
-# })
-
 
 stub_s3_list_objects <- function(Bucket, Prefix) {
 
@@ -100,9 +87,6 @@ stub_s3_get_objects <- function(Bucket, Key) {
   list(body = readBin(Key, what = "raw"), rest = list())
 }
 
-# stub_dir_create <- function(path) {
-#   fs::dir_create(fs::path("./", path))
-# }
 
 stub_file.path <- function(...) {
   file.path(".", ...)
@@ -114,7 +98,6 @@ stubbed_up_download_user_files <- function(input, pipeline_config, prev_out = li
   mockery::stub(where = download_user_files, "paws::s3", how = NA)
   mockery::stub(where = download_user_files, "s3$list_objects", how = stub_s3_list_objects)
   mockery::stub(where = download_user_files, "s3$get_object", how = stub_s3_get_objects)
-  # mockery::stub(where = download_user_files, "fs::dir_create", how = stub_dir_create)
   mockery::stub(where = download_user_files, "file.path", how = stub_file.path)
 
   download_user_files(input, pipeline_config, prev_out)
