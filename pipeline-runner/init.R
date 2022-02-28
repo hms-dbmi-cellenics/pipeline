@@ -144,13 +144,13 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
 
     # list of task functions named by task name
     tasks <- list(
-        'downloadGem' = download_cellranger_files,
-        'preproc' = load_cellranger_files,
-        'emptyDrops' = run_emptydrops,
-        'doubletScores' = score_doublets,
-        'createSeurat' = create_seurat,
-        'prepareExperiment' = prepare_experiment,
-        'uploadToAWS' = upload_to_aws
+        "downloadGem" = download_user_files,
+        "preproc" = load_cellranger_files,
+        "emptyDrops" = run_emptydrops,
+        "doubletScores" = score_doublets,
+        "createSeurat" = create_seurat,
+        "prepareExperiment" = prepare_experiment,
+        "uploadToAWS" = upload_to_aws
     )
 
     if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
