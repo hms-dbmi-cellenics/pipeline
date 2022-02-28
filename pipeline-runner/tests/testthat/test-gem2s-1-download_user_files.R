@@ -69,8 +69,6 @@ local_create_samples <- function(project, samples, compressed = FALSE, env = par
   list(bucket = bucket, files = files)
 }
 
-
-
 stub_s3_list_objects <- function(Bucket, Prefix) {
 
   # this workaround is the lesser evil ("bucket/./project/sample")
