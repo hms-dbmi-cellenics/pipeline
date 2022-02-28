@@ -132,7 +132,7 @@ test_that("download_user_files downloads user's files. one sample", {
   s3_stuff <- local_create_samples(input$projectId, samples)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
-  res <- stubbed_up_download_user_files(input, pipeline_config)
+  res <- stubbed_download_user_files(input, pipeline_config)
 
   # download_user_files does not return the paths. So have to build them
   downloaded_file_paths <- gsub(
@@ -154,7 +154,7 @@ test_that("download_user_files downloads user's files. 3 samples", {
   s3_stuff <- local_create_samples(input$projectId, samples)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
-  res <- stubbed_up_download_user_files(input, pipeline_config)
+  res <- stubbed_download_user_files(input, pipeline_config)
 
   # download_user_files does not return the paths. So have to build them
   downloaded_file_paths <- gsub(
@@ -183,7 +183,7 @@ test_that("metadata is passed over correctly", {
 
   input$metadata <- expected_metadata
 
-  res <- stubbed_up_download_user_files(input, pipeline_config)
+  res <- stubbed_download_user_files(input, pipeline_config)
 
   downloaded__metadata <- res$output$config$metadata
 
@@ -197,7 +197,7 @@ test_that("download_user_files correctly downloads compressed files", {
   s3_stuff <- local_create_samples(input$projectId, samples, compressed = TRUE)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
-  res <- stubbed_up_download_user_files(input, pipeline_config)
+  res <- stubbed_download_user_files(input, pipeline_config)
 
   # download_user_files does not return the paths. So have to build them
   downloaded_file_paths <- gsub(
