@@ -95,7 +95,7 @@ stub_file.path <- function(...) {
   file.path(".", ...)
 }
 
-stubbed_up_download_user_files <- function(input, pipeline_config, prev_out = list()) {
+stubbed_download_user_files <- function(input, pipeline_config, prev_out = list()) {
   # helper to simplify calls to the stubbed function
 
   # where makes sure where we are stubbing the what calls.
