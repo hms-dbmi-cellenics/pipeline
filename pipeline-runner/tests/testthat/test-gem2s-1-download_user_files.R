@@ -1,4 +1,4 @@
-mock_cellranger_files <- function(sample_dir, compressed = FALSE) {
+mock_cellranger_files <- function(sample_dir, compressed) {
   counts <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
@@ -43,29 +43,27 @@ mock_cellranger_files <- function(sample_dir, compressed = FALSE) {
   return(files)
 }
 
-
-
-create_samples <- function(bucket, project, samples) {
+create_samples <- function(bucket, project, samples, compressed) {
   # helper to create samples in project in bucket, like S3
   files <- c()
 
   for (id in samples) {
     f <- fs::path(bucket, project, id)
     fs::dir_create(f)
-    these_files <- mock_cellranger_files(f)
+    these_files <- mock_cellranger_files(f, compressed)
     files <- c(files, these_files)
   }
 
   return(files)
 }
 
-local_create_samples <- function(project, samples, env = parent.frame()) {
+local_create_samples <- function(project, samples, compressed = FALSE, env = parent.frame()) {
   # calls creates_samples but makes them "local" (in withr speech), deleting
   # created stuff after the test finishes.
   bucket <- fs::path("./a_fake_bucket")
   fs::dir_create(bucket)
 
-  files <- create_samples(bucket, project, samples)
+  files <- create_samples(bucket, project, samples, compressed)
   withr::defer(fs::dir_delete(bucket), envir = env)
 
   list(bucket = bucket, files = files)
@@ -78,7 +76,7 @@ stub_s3_list_objects <- function(Bucket, Prefix) {
   # this workaround is the lesser evil ("bucket/./project/sample")
   Prefix <- gsub("^./", "", Prefix)
 
-  # returns list with the same structure as s3$list_objects, but with mocked paths
+  # returns list with structure like s3$list_objects, but with mocked paths
   files <- fs::dir_ls(fs::path(Bucket, Prefix), type = "file", recurse = TRUE)
   l <- as.list(files)
   names(l) <- NULL
@@ -102,11 +100,11 @@ stub_file.path <- function(...) {
 stubbed_up_download_user_files <- function(input, pipeline_config, prev_out = list()) {
   # helper to simplify calls to the stubbed function
 
-  # where makes sure that we're only stubbing these functions in the correct function
-  mockery::stub(where = download_user_files, "paws::s3", how = NA)
-  mockery::stub(where = download_user_files, "s3$list_objects", how = stub_s3_list_objects)
-  mockery::stub(where = download_user_files, "s3$get_object", how = stub_s3_get_objects)
-  mockery::stub(where = download_user_files, "file.path", how = stub_file.path)
+  # where makes sure where we are stubbing the what calls.
+  mockery::stub(where = download_user_files, what = "paws::s3", how = NA)
+  mockery::stub(download_user_files, "s3$list_objects", stub_s3_list_objects)
+  mockery::stub(download_user_files, "file.path", stub_file.path)
+  mockery::stub(download_user_files, "s3$get_object", stub_s3_get_objects)
 
   res <- download_user_files(input, pipeline_config, prev_out)
   # download_user_files creates a "/input" folder in the pod. defer deleting
@@ -116,7 +114,7 @@ stubbed_up_download_user_files <- function(input, pipeline_config, prev_out = li
   res
 }
 
-mock_samples <- function(n_samples = 1) {
+mock_sample_ids <- function(n_samples = 1) {
   paste0("sample_", seq_len(n_samples))
 }
 
@@ -131,16 +129,19 @@ mock_input <- function(samples) {
 }
 
 test_that("download_user_files downloads user's files. one sample", {
-  samples <- mock_samples()
+  samples <- mock_sample_ids()
   input <- mock_input(samples)
   s3_stuff <- local_create_samples(input$projectId, samples)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
   res <- stubbed_up_download_user_files(input, pipeline_config)
 
-
   # download_user_files does not return the paths. So have to build them
-  downloaded_file_paths <- gsub(fs::path(s3_stuff$bucket, input$projectId), "./input", s3_stuff$files)
+  downloaded_file_paths <- gsub(
+    fs::path(s3_stuff$bucket, input$projectId),
+    "./input", s3_stuff$files
+  )
+
   # read the downloaded files as raw files
   expected_files <- lapply(s3_stuff$files, readBin, what = "raw")
   downloaded_files <- lapply(downloaded_file_paths, readBin, what = "raw")
@@ -150,16 +151,19 @@ test_that("download_user_files downloads user's files. one sample", {
 
 
 test_that("download_user_files downloads user's files. 3 samples", {
-  samples <- mock_samples(n_samples = 3)
+  samples <- mock_sample_ids(n_samples = 3)
   input <- mock_input(samples)
   s3_stuff <- local_create_samples(input$projectId, samples)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
   res <- stubbed_up_download_user_files(input, pipeline_config)
 
-
   # download_user_files does not return the paths. So have to build them
-  downloaded_file_paths <- gsub(fs::path(s3_stuff$bucket, input$projectId), "./input", s3_stuff$files)
+  downloaded_file_paths <- gsub(
+    fs::path(s3_stuff$bucket, input$projectId),
+    "./input", s3_stuff$files
+  )
+
   # read the downloaded files as raw files
   expected_files <- lapply(s3_stuff$files, readBin, what = "raw")
   downloaded_files <- lapply(downloaded_file_paths, readBin, what = "raw")
@@ -168,12 +172,16 @@ test_that("download_user_files downloads user's files. 3 samples", {
 })
 
 test_that("metadata is passed over correctly", {
-  samples <- mock_samples(n_samples = 3)
+  samples <- mock_sample_ids(n_samples = 3)
   input <- mock_input(samples)
   s3_stuff <- local_create_samples(input$projectId, samples)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
-  expected_metadata <- data.frame(a = seq_len(30), b = paste0("meta_", seq_len(30)))
+  # metadata shape does not matter here
+  expected_metadata <- data.frame(
+    a = seq_len(30),
+    b = paste0("meta_", seq_len(30))
+  )
 
   input$metadata <- expected_metadata
 
@@ -182,4 +190,25 @@ test_that("metadata is passed over correctly", {
   downloaded__metadata <- res$output$config$metadata
 
   expect_identical(expected_metadata, downloaded__metadata)
+})
+
+
+test_that("download_user_files correctly downloads compressed files", {
+  samples <- mock_sample_ids(n_samples = 2)
+  input <- mock_input(samples)
+  s3_stuff <- local_create_samples(input$projectId, samples, compressed = TRUE)
+  pipeline_config <- list(originals_bucket = s3_stuff$bucket)
+
+  res <- stubbed_up_download_user_files(input, pipeline_config)
+
+  # download_user_files does not return the paths. So have to build them
+  downloaded_file_paths <- gsub(
+    fs::path(s3_stuff$bucket, input$projectId),
+    "./input", s3_stuff$files
+  )
+  # read the downloaded files as raw files
+  expected_files <- lapply(s3_stuff$files, readBin, what = "raw")
+  downloaded_files <- lapply(downloaded_file_paths, readBin, what = "raw")
+
+  expect_identical(expected_files, downloaded_files)
 })
