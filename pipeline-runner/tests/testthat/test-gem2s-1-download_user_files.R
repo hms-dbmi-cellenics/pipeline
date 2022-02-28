@@ -185,9 +185,9 @@ test_that("metadata is passed over correctly", {
 
   res <- stubbed_download_user_files(input, pipeline_config)
 
-  downloaded__metadata <- res$output$config$metadata
+  downloaded_metadata <- res$output$config$metadata
 
-  expect_identical(expected_metadata, downloaded__metadata)
+  expect_identical(expected_metadata, downloaded_metadata)
 })
 
 
