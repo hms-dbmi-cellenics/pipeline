@@ -48,8 +48,8 @@ create_samples <- function(bucket, project, samples, compressed) {
   files <- c()
 
   for (id in samples) {
-    f <- fs::path(bucket, project, id)
-    fs::dir_create(f)
+    f <- file.path(bucket, project, id)
+    dir.create(f, recursive = TRUE)
     these_files <- mock_cellranger_files(f, compressed)
     files <- c(files, these_files)
   }
@@ -60,11 +60,11 @@ create_samples <- function(bucket, project, samples, compressed) {
 local_create_samples <- function(project, samples, compressed = FALSE, env = parent.frame()) {
   # calls creates_samples but makes them "local" (in withr speech), deleting
   # created stuff after the test finishes.
-  bucket <- fs::path("./a_fake_bucket")
-  fs::dir_create(bucket)
+  bucket <- "./a_fake_bucket"
+  dir.create(bucket)
 
   files <- create_samples(bucket, project, samples, compressed)
-  withr::defer(fs::dir_delete(bucket), envir = env)
+  withr::defer(unlink(bucket, recursive = TRUE), envir = env)
 
   list(bucket = bucket, files = files)
 }
@@ -75,7 +75,7 @@ stub_s3_list_objects <- function(Bucket, Prefix) {
   Prefix <- gsub("^./", "", Prefix)
 
   # returns list with structure like s3$list_objects, but with mocked paths
-  files <- fs::dir_ls(fs::path(Bucket, Prefix), type = "file", recurse = TRUE)
+  files <- list.files(file.path(Bucket, Prefix), full.names = TRUE, recursive = TRUE)
   l <- as.list(files)
   names(l) <- NULL
   l2 <- lapply(l, list)
@@ -107,7 +107,7 @@ stubbed_up_download_user_files <- function(input, pipeline_config, prev_out = li
   res <- download_user_files(input, pipeline_config, prev_out)
   # download_user_files creates a "/input" folder in the pod. defer deleting
   # it during tests.
-  withr::defer(fs::dir_delete("./input"), envir = parent.frame())
+  withr::defer(unlink("./input", recursive = TRUE), envir = parent.frame())
 
   res
 }
@@ -136,7 +136,7 @@ test_that("download_user_files downloads user's files. one sample", {
 
   # download_user_files does not return the paths. So have to build them
   downloaded_file_paths <- gsub(
-    fs::path(s3_stuff$bucket, input$projectId),
+    file.path(s3_stuff$bucket, input$projectId),
     "./input", s3_stuff$files
   )
 
@@ -158,7 +158,7 @@ test_that("download_user_files downloads user's files. 3 samples", {
 
   # download_user_files does not return the paths. So have to build them
   downloaded_file_paths <- gsub(
-    fs::path(s3_stuff$bucket, input$projectId),
+    file.path(s3_stuff$bucket, input$projectId),
     "./input", s3_stuff$files
   )
 
@@ -201,7 +201,7 @@ test_that("download_user_files correctly downloads compressed files", {
 
   # download_user_files does not return the paths. So have to build them
   downloaded_file_paths <- gsub(
-    fs::path(s3_stuff$bucket, input$projectId),
+    file.path(s3_stuff$bucket, input$projectId),
     "./input", s3_stuff$files
   )
   # read the downloaded files as raw files
