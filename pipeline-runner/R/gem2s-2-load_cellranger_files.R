@@ -61,7 +61,7 @@ call_read10x <- function(config, input_dir) {
 
     annot <- read.delim(annot_fpath, header = FALSE)
 
-    #Equalizing number of columns in case theres no Gene Expression column
+    # Equalizing number of columns in case theres no Gene Expression column
     annot <- annot[, c(1, 2)]
 
     message(
@@ -102,60 +102,60 @@ format_annot <- function(annot_list) {
 
 
 read_rhapsody_matrix <- function(config, input_dir) {
-    counts_list <- list()
-    #annot_list <- list()
+  counts_list <- list()
+  # annot_list <- list()
 
-    samples <- config$samples
-    message("Samples to include in the analysis:\n- ", paste(samples, collapse = "\n- "))
-    message("Loading rhapsody data set from input folder.")
+  samples <- config$samples
+  message("Samples to include in the analysis:\n- ", paste(samples, collapse = "\n- "))
+  message("Loading rhapsody data set from input folder.")
 
 
-    for (sample in samples) {
-        sample_dir <- file.path(input_dir, sample)
-        sample_fpaths <- list.files(sample_dir)
+  for (sample in samples) {
+    sample_dir <- file.path(input_dir, sample)
+    sample_fpaths <- list.files(sample_dir)
 
-        message("\nSample --> ", sample)
-        message("Reading files from ", sample_dir, " --> ", paste(sample_fpaths, collapse = " - "))
+    message("\nSample --> ", sample)
+    message("Reading files from ", sample_dir, " --> ", paste(sample_fpaths, collapse = " - "))
 
-        counts <- data.table::fread(sample_fpaths)
+    counts <- data.table::fread(sample_fpaths)
 
-        # catch absent DBEC column
-        if ("DBEC_Adjusted_Molecules" %in% names(counts)) {
-            counts <- counts[, c("Cell_Index", "Gene", "DBEC_Adjusted_Molecules")]
-        } else {
-            counts <- counts[, c("Cell_Index", "Gene", "RSEC_Adjusted_Molecules")]
-        }
-
-        # order by cell indices and gene, to ensure correct cell_index_j to
-        # column name association when using frank
-        setorder(counts, Cell_Index, Gene)
-
-        counts[, Gene := factor(Gene)]
-        counts[, gene_i := as.integer(Gene)]
-
-        # to create small sparse matrix, and retain original cell indices ("barcodes")
-        counts[, cell_index_j := frank(counts[, Cell_Index], ties.method = "dense")]
-
-        # create dimnames
-        dimnames_i <- levels(counts[, Gene])
-        dimnames_j <- unique(counts[, Cell_Index])
-
-        counts <- Matrix::sparseMatrix(
-            i = counts[, gene_i],
-            j = counts[, cell_index_j],
-            x = counts[, DBEC_Adjusted_Molecules],
-            dimnames = list(dimnames_i, dimnames_j)
-        )
-
-        message(
-            sprintf("Sample %s has %s genes and %s wells", sample, nrow(counts), ncol(counts))
-        )
-
-        counts_list[[sample]] <- counts
-        #annot_list[[sample]] <- annot
+    # catch absent DBEC column
+    if ("DBEC_Adjusted_Molecules" %in% names(counts)) {
+      counts <- counts[, c("Cell_Index", "Gene", "DBEC_Adjusted_Molecules")]
+    } else {
+      counts <- counts[, c("Cell_Index", "Gene", "RSEC_Adjusted_Molecules")]
     }
 
-    #annot <- format_annot(annot_list)
+    # order by cell indices and gene, to ensure correct cell_index_j to
+    # column name association when using frank
+    setorder(counts, Cell_Index, Gene)
 
-    return(list(counts_list = counts_list))#, annot = annot))
+    counts[, Gene := factor(Gene)]
+    counts[, gene_i := as.integer(Gene)]
+
+    # to create small sparse matrix, and retain original cell indices ("barcodes")
+    counts[, cell_index_j := frank(counts[, Cell_Index], ties.method = "dense")]
+
+    # create dimnames
+    dimnames_i <- levels(counts[, Gene])
+    dimnames_j <- unique(counts[, Cell_Index])
+
+    counts <- Matrix::sparseMatrix(
+      i = counts[, gene_i],
+      j = counts[, cell_index_j],
+      x = counts[, DBEC_Adjusted_Molecules],
+      dimnames = list(dimnames_i, dimnames_j)
+    )
+
+    message(
+      sprintf("Sample %s has %s genes and %s wells", sample, nrow(counts), ncol(counts))
+    )
+
+    counts_list[[sample]] <- counts
+    # annot_list[[sample]] <- annot
+  }
+
+  # annot <- format_annot(annot_list)
+
+  return(list(counts_list = counts_list)) # , annot = annot))
 }
