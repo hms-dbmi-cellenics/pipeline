@@ -29,6 +29,36 @@ mock_counts <- function() {
 }
 
 
+mock_rhapsody_matrix <- function(counts, sample_dir) {
+  counts$Gene <- rownames(counts)
+  counts <- tidyr::pivot_longer(counts, -Gene,
+    names_to = "barcode",
+    values_to = "DBEC_Adjusted_Molecules"
+  )
+
+  counts$Cell_Index <- as.integer(factor(counts$barcode))
+  counts$RSEC_Adjusted_Molecules <- counts$DBEC_Adjusted_Molecules + 5
+
+  matrix_path <- file.path(sample_dir, "expression_matrix.st")
+
+  header <- c(
+    "####################",
+    "## BD Targeted Multiplex Rhapsody Analysis Pipeline Version 1.9.1",
+    "## Analysis Date: 2020-09-29 23:41:40",
+    "## Sample: SampleMultiplexDemo",
+    "## Reference: BD_Rhapsody_Immune_Response_Panel_Hs.fasta",
+    "## Sample Tags Version: Single-Cell Multiplex Kit - Human",
+    "####################"
+  )
+  writeLines(header, matrix_path)
+  write.table(counts,
+              file = matrix_path,
+              append = T,
+              quote = F,
+              sep = "\t",
+              row.names = F)
+}
+
 test_that("format_annot keeps unique rows", {
   annot_list <- list(
     sample1 = data.frame(ENSID = 1:5, SYMBOL = paste0("gene", 1:5)),
