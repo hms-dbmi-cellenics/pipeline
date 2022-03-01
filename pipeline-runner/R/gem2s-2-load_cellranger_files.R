@@ -103,7 +103,7 @@ format_annot <- function(annot_list) {
 
 read_rhapsody_matrix <- function(config, input_dir) {
   counts_list <- list()
-  # annot_list <- list()
+  annot_list <- list()
 
   samples <- config$samples
   message("Samples to include in the analysis:\n- ", paste(samples, collapse = "\n- "))
@@ -128,15 +128,15 @@ read_rhapsody_matrix <- function(config, input_dir) {
 
     # order by cell indices and gene, to ensure correct cell_index_j to
     # column name association when using frank
-    setorder(counts, Cell_Index, Gene)
+    data.table::setorder(counts, Cell_Index, Gene)
 
     counts[, Gene := factor(Gene)]
     counts[, gene_i := as.integer(Gene)]
 
     # to create small sparse matrix, and retain original cell indices ("barcodes")
-    counts[, cell_index_j := frank(counts[, Cell_Index], ties.method = "dense")]
+    counts[, cell_index_j := data.table::frank(counts[, Cell_Index], ties.method = "dense")]
 
-    # create dimnames
+    # create row and column names
     dimnames_i <- levels(counts[, Gene])
     dimnames_j <- unique(counts[, Cell_Index])
 
@@ -151,11 +151,15 @@ read_rhapsody_matrix <- function(config, input_dir) {
       sprintf("Sample %s has %s genes and %s wells", sample, nrow(counts), ncol(counts))
     )
 
+    # PoC. Rhapsody data does not contain ensemblIDs, but format_annot needs 2
+    # columns
+    annot <- data.frame(dimnames_i, dimnames_i)
+
     counts_list[[sample]] <- counts
-    # annot_list[[sample]] <- annot
+    annot_list[[sample]] <- annot
   }
 
-  # annot <- format_annot(annot_list)
+  annot <- format_annot(annot_list)
 
-  return(list(counts_list = counts_list)) # , annot = annot))
+  return(list(counts_list = counts_list, annot = annot))
 }
