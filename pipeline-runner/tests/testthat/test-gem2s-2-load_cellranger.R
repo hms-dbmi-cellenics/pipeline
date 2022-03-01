@@ -41,6 +41,7 @@ mock_rhapsody_matrix <- function(counts, sample_dir) {
 
   matrix_path <- file.path(sample_dir, "expression_matrix.st")
 
+  # prepend some of that nice header
   header <- c(
     "####################",
     "## BD Targeted Multiplex Rhapsody Analysis Pipeline Version 1.9.1",
@@ -53,10 +54,31 @@ mock_rhapsody_matrix <- function(counts, sample_dir) {
   writeLines(header, matrix_path)
   write.table(counts,
               file = matrix_path,
-              append = T,
-              quote = F,
+              append = TRUE,
+              quote = FALSE,
               sep = "\t",
-              row.names = F)
+              row.names = FALSE)
+
+  matrix_path
+}
+
+
+
+local_rhapsody_experiment <- function(samples, env = parent.frame()) {
+  # calls creates_samples but makes them "local" (in withr speech), deleting
+  # created stuff after the test finishes.
+  bucket <- "./input"
+  dir.create(bucket)
+  files <- c()
+
+  for (sample in samples) {
+    sample_path <- file.path(bucket, sample$name)
+    dir.create(sample_path)
+    files <- c(files, mock_rhapsody_matrix(sample$counts, sample_path))
+  }
+
+  withr::defer(unlink(bucket, recursive = TRUE), envir = env)
+  files
 }
 
 test_that("format_annot keeps unique rows", {
@@ -254,4 +276,20 @@ test_that("load_cellranger loads multisample experiments", {
   )
 
   unlink(sample_dirs, recursive = TRUE)
+})
+
+
+test_that("read_rhapsody_matrix reads a rhapsody matrix", {
+  samples <- list(sample_1 = list(name = "sample_1",counts =  mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  res <- read_rhapsody_matrix(config, input_dir)
+
+  expect_true("counts_list" %in% names(res))
+  expect_true(names(samples) %in% names(res$counts_list))
+  expect_s4_class(res$counts_list[[1]], "dgCMatrix")
 })
