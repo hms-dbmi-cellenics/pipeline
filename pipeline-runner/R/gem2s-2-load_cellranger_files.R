@@ -112,10 +112,11 @@ read_rhapsody_matrix <- function(config, input_dir) {
 
   for (sample in samples) {
     sample_dir <- file.path(input_dir, sample)
-    sample_fpaths <- list.files(sample_dir)
+    sample_fpaths <- file.path(sample_dir, "expression_matrix.st")
 
     message("\nSample --> ", sample)
     message("Reading files from ", sample_dir, " --> ", paste(sample_fpaths, collapse = " - "))
+
 
     counts <- data.table::fread(sample_fpaths)
 
