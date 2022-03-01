@@ -53,11 +53,12 @@ mock_rhapsody_matrix <- function(counts, sample_dir) {
   )
   writeLines(header, matrix_path)
   write.table(counts,
-              file = matrix_path,
-              append = TRUE,
-              quote = FALSE,
-              sep = "\t",
-              row.names = FALSE)
+    file = matrix_path,
+    append = TRUE,
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE
+  )
 
   matrix_path
 }
@@ -280,7 +281,7 @@ test_that("load_cellranger loads multisample experiments", {
 
 
 test_that("read_rhapsody_matrix reads a rhapsody matrix", {
-  samples <- list(sample_1 = list(name = "sample_1",counts =  mock_counts()))
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
 
   files <- local_rhapsody_experiment(samples)
 
