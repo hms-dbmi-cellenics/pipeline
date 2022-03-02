@@ -294,3 +294,27 @@ test_that("read_rhapsody_matrix reads a rhapsody matrix", {
   expect_true(names(samples) %in% names(res$counts_list))
   expect_s4_class(res$counts_list[[1]], "dgCMatrix")
 })
+
+
+test_that("read_rhapsody_matrix keeps the counts where it counts (correct gene-cell-value)", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+  files <- local_rhapsody_experiment(samples)
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  # read original table and get vector of expected values (originals)
+  original <- data.table::fread(file.path(input_dir, names(samples), "expression_matrix.st"))
+  expected_values <- original$DBEC_Adjusted_Molecules
+
+  res <- read_rhapsody_matrix(config, input_dir)
+
+  # create row and column indices, to cbind and use matrix indexing to get values
+  # as a vector. Given that Simple Triplet sparse matrices basically contain vectors
+  # of row and column indices, we just transform them to ints, keeping order.
+  row_idx <- as.integer(factor(original$Gene))
+  col_idx <- data.table::frank(original$Cell_Index, ties.method = "dense")
+
+  values <- res$counts_list$sample_1[cbind(row_idx, col_idx)]
+
+  expect_equal(values, expected_values)
+})
