@@ -123,9 +123,11 @@ read_rhapsody_matrix <- function(config, input_dir) {
     adjusted_col <- ifelse(
       "DBEC_Adjusted_Molecules" %in% colnames(counts),
       "DBEC_Adjusted_Molecules",
-      "RSEC_Adjusted_Molecules")
+      "RSEC_Adjusted_Molecules"
+    )
 
-    counts <- counts[, c("Cell_Index", "Gene", adjusted_col)]
+    keep <- c("Cell_Index", "Gene", adjusted_col)
+    counts <- counts[, ..keep]
 
     # order by cell indices and gene, to ensure correct cell_index_j to
     # column name association when using frank
