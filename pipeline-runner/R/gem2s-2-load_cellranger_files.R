@@ -117,15 +117,15 @@ read_rhapsody_matrix <- function(config, input_dir) {
     message("\nSample --> ", sample)
     message("Reading files from ", sample_dir, " --> ", paste(sample_fpaths, collapse = " - "))
 
-
     counts <- data.table::fread(sample_fpaths)
 
     # catch absent DBEC column
-    if ("DBEC_Adjusted_Molecules" %in% names(counts)) {
-      counts <- counts[, c("Cell_Index", "Gene", "DBEC_Adjusted_Molecules")]
-    } else {
-      counts <- counts[, c("Cell_Index", "Gene", "RSEC_Adjusted_Molecules")]
-    }
+    adjusted_col <- ifelse(
+      "DBEC_Adjusted_Molecules" %in% colnames(counts),
+      "DBEC_Adjusted_Molecules",
+      "RSEC_Adjusted_Molecules")
+
+    counts <- counts[, c("Cell_Index", "Gene", adjusted_col)]
 
     # order by cell indices and gene, to ensure correct cell_index_j to
     # column name association when using frank
@@ -135,17 +135,13 @@ read_rhapsody_matrix <- function(config, input_dir) {
     counts[, gene_i := as.integer(Gene)]
 
     # to create small sparse matrix, and retain original cell indices ("barcodes")
-    counts[, cell_index_j := data.table::frank(counts[, Cell_Index], ties.method = "dense")]
-
-    # create row and column names
-    dimnames_i <- levels(counts[, Gene])
-    dimnames_j <- unique(counts[, Cell_Index])
+    counts[, cell_index_j := data.table::frank(counts$Cell_Index, ties.method = "dense")]
 
     counts <- Matrix::sparseMatrix(
-      i = counts[, gene_i],
-      j = counts[, cell_index_j],
-      x = counts[, DBEC_Adjusted_Molecules],
-      dimnames = list(dimnames_i, dimnames_j)
+      i = counts$gene_i,
+      j = counts$cell_index_j,
+      x = counts$DBEC_Adjusted_Molecules,
+      dimnames = list(levels(counts$Gene), unique(counts$Cell_Index))
     )
 
     message(
@@ -154,7 +150,7 @@ read_rhapsody_matrix <- function(config, input_dir) {
 
     # PoC. Rhapsody data does not contain ensemblIDs, but format_annot needs 2
     # columns
-    annot <- data.frame(dimnames_i, dimnames_i)
+    annot <- data.frame(rownames(counts), rownames(counts))
 
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annot
