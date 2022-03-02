@@ -129,7 +129,7 @@ read_rhapsody_matrix <- function(config, input_dir) {
 
     # order by cell indices and gene, to ensure correct cell_index_j to
     # column name association when using frank
-    data.table::setorder(counts, Cell_Index, Gene)
+    data.table::setorder(counts, Cell_Index)
 
     counts[, Gene := factor(Gene)]
     counts[, gene_i := as.integer(Gene)]
