@@ -312,7 +312,7 @@ test_that("read_rhapsody_matrix keeps the counts where it counts (correct gene-c
   # as a vector. Given that Simple Triplet sparse matrices basically contain vectors
   # of row and column indices, we just transform them to ints, keeping order.
   row_idx <- as.integer(factor(original$Gene))
-  col_idx <- data.table::frank(original$Cell_Index, ties.method = "dense")
+  col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
 
   values <- res$counts_list$sample_1[cbind(row_idx, col_idx)]
 
