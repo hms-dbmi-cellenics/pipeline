@@ -126,8 +126,8 @@ read_rhapsody_matrix <- function(config, input_dir) {
       "RSEC_Adjusted_Molecules"
     )
 
-    keep <- c("Cell_Index", "Gene", adjusted_col)
     # The ..keep is data.table syntax to grab the keep columns
+    keep <- c("Cell_Index", "Gene", adjusted_col)
     counts <- counts[, ..keep]
 
     counts[, Gene := factor(Gene)]
