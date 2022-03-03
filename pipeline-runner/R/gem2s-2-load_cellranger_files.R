@@ -129,21 +129,20 @@ read_rhapsody_matrix <- function(config, input_dir) {
     keep <- c("Cell_Index", "Gene", adjusted_col)
     counts <- counts[, ..keep]
 
-    # order by cell indices and gene, to ensure correct cell_index_j to
-    # column name association when using frank
-    data.table::setorder(counts, Cell_Index)
-
     counts[, Gene := factor(Gene)]
     counts[, gene_i := as.integer(Gene)]
 
+    features <- levels(counts$Gene)
+    barcodes <- unique(counts$Cell_Index)
+
     # to create small sparse matrix, and retain original cell indices ("barcodes")
-    counts[, cell_index_j := data.table::frank(counts$Cell_Index, ties.method = "dense")]
+    counts[, cell_index_j := match(Cell_Index, barcodes)]
 
     counts <- Matrix::sparseMatrix(
       i = counts$gene_i,
       j = counts$cell_index_j,
       x = counts$DBEC_Adjusted_Molecules,
-      dimnames = list(levels(counts$Gene), unique(counts$Cell_Index))
+      dimnames = list(features, barcodes)
     )
 
     message(
@@ -152,7 +151,7 @@ read_rhapsody_matrix <- function(config, input_dir) {
 
     # PoC. Rhapsody data does not contain ensemblIDs, but format_annot needs 2
     # columns
-    annot <- data.frame(rownames(counts), rownames(counts))
+    annot <- data.frame(features, features)
 
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annot
