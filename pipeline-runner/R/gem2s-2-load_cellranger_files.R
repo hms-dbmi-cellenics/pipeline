@@ -61,7 +61,7 @@ call_read10x <- function(config, input_dir) {
 
     annot <- read.delim(annot_fpath, header = FALSE)
 
-    #Equalizing number of columns in case theres no Gene Expression column
+    # Equalizing number of columns in case theres no Gene Expression column
     annot <- annot[, c(1, 2)]
 
     message(
@@ -89,7 +89,8 @@ format_annot <- function(annot_list) {
   annot$original_name <- gname
   is.dup <- duplicated(gname) | duplicated(gname, fromLast = TRUE)
 
-  # We need to convert the gene inputs from _ to - bc when we create the Seurat object we do this, and the match would return NA values if any of the inputs still has _.
+  # We need to convert the gene inputs from _ to - bc when we create the Seurat
+  # object we do this, and the match would return NA values if any of the inputs still has _.
   annot$input <- gsub("_", "-", annot$input)
   annot$name[is.dup] <- paste(gname[is.dup], annot$input[is.dup], sep = " - ")
 
@@ -97,4 +98,67 @@ format_annot <- function(annot_list) {
 
   rownames(annot) <- annot$input
   return(annot)
+}
+
+
+read_rhapsody_matrix <- function(config, input_dir) {
+  counts_list <- list()
+  annot_list <- list()
+
+  samples <- config$samples
+  message("Samples to include in the analysis:\n- ", paste(samples, collapse = "\n- "))
+  message("Loading rhapsody data set from input folder.")
+
+
+  for (sample in samples) {
+    sample_dir <- file.path(input_dir, sample)
+    sample_fpaths <- file.path(sample_dir, "expression_matrix.st")
+
+    message("\nSample --> ", sample)
+    message("Reading files from ", sample_dir, " --> ", paste(sample_fpaths, collapse = " - "))
+
+    counts <- data.table::fread(sample_fpaths)
+
+    # catch absent DBEC column
+    adjusted_col <- ifelse(
+      "DBEC_Adjusted_Molecules" %in% colnames(counts),
+      "DBEC_Adjusted_Molecules",
+      "RSEC_Adjusted_Molecules"
+    )
+
+    # The ..keep is data.table syntax to grab the keep columns
+    keep <- c("Cell_Index", "Gene", adjusted_col)
+    counts <- counts[, ..keep]
+
+    counts[, Gene := factor(Gene)]
+    counts[, gene_i := as.integer(Gene)]
+
+    features <- levels(counts$Gene)
+    barcodes <- unique(counts$Cell_Index)
+
+    # to create small sparse matrix, and retain original cell indices ("barcodes")
+    counts[, cell_index_j := match(Cell_Index, barcodes)]
+
+    counts <- Matrix::sparseMatrix(
+      i = counts$gene_i,
+      j = counts$cell_index_j,
+      x = counts$DBEC_Adjusted_Molecules,
+      dimnames = list(features, barcodes)
+    )
+
+    message(
+      sprintf("Sample %s has %s genes and %s wells", sample, nrow(counts), ncol(counts))
+    )
+
+    # PoC. Rhapsody data does not contain ensemblIDs, but format_annot needs 2
+    # columns
+    annot <- data.frame(features, features)
+
+    counts_list[[sample]] <- counts
+    annot_list[[sample]] <- annot
+  }
+
+  annot <- format_annot(annot_list)
+
+  return(list(counts_list = counts_list, annot = annot))
 }
