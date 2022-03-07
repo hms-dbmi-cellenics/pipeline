@@ -134,8 +134,8 @@ test_that("load_cellranger loads a count matrix", {
 
   mock_cellranger_files(counts, features, sample_dir)
 
-  prev_out <- list(config = list(samples = sample))
-  out <- load_cellranger_files(NULL, NULL, prev_out, outdir)$output
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
 
   expect_true("counts_list" %in% names(out))
   expect_true(sample %in% names(out$counts_list))
@@ -159,8 +159,8 @@ test_that("load_cellranger generates feature annotation", {
 
   mock_cellranger_files(counts, features, sample_dir)
 
-  prev_out <- list(config = list(samples = sample))
-  out <- load_cellranger_files(NULL, NULL, prev_out, outdir)$output
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
 
   expect_true("annot" %in% names(out))
   expect_true(
@@ -189,8 +189,8 @@ test_that("load_cellranger deduplicates gene symbols", {
 
   mock_cellranger_files(counts, features, sample_dir)
 
-  prev_out <- list(config = list(samples = sample))
-  annot <- load_cellranger_files(NULL, NULL, prev_out, outdir)$output$annot
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  annot <- load_user_files(NULL, NULL, prev_out, outdir)$output$annot
 
   # unique gene names is same as number of gene names
   expect_length(unique(annot$name), length(symbols))
@@ -216,8 +216,8 @@ test_that("load_cellranger uses appropriate feature columns", {
 
   mock_cellranger_files(counts, features, sample_dir)
 
-  prev_out <- list(config = list(samples = sample))
-  out <- load_cellranger_files(NULL, NULL, prev_out, outdir)$output
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
 
   # ensembl ids are counts row names
   expect_equal(
@@ -260,8 +260,8 @@ test_that("load_cellranger loads multisample experiments", {
   mock_cellranger_files(counts, features, sample_dirs[1])
   mock_cellranger_files(counts, features2, sample_dirs[2])
 
-  prev_out <- list(config = list(samples = samples))
-  out <- load_cellranger_files(NULL, NULL, prev_out, outdir)$output
+  prev_out <- list(config = list(samples = samples, input = list(type = "10x")))
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
 
   # loaded both
   expect_equal(names(out$counts_list), samples)
@@ -277,6 +277,21 @@ test_that("load_cellranger loads multisample experiments", {
   )
 
   unlink(sample_dirs, recursive = TRUE)
+})
+
+test_that("call_read_rhapsody reads a rhapsody matrix", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  res <- call_read_rhapsody(config, input_dir)
+
+  expect_true("counts_list" %in% names(res))
+  expect_true(names(samples) %in% names(res$counts_list))
+  expect_s4_class(res$counts_list[[1]], "dgCMatrix")
 })
 
 
