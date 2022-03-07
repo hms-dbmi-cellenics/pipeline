@@ -338,7 +338,7 @@ init <- function() {
             quit('no')
         }
 
-        # Get data from state machine input.
+        # parse data from state machine input
         input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
 
         # save logs to file
