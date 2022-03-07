@@ -120,7 +120,7 @@ test_that("format_annot removes duplicated input (Ensembl IDs) column", {
 })
 
 
-test_that("load_cellranger loads a count matrix", {
+test_that("load_user_files loads a 10x count matrix", {
   counts <- mock_counts()
   features <- data.frame(
     ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
@@ -145,7 +145,7 @@ test_that("load_cellranger loads a count matrix", {
 })
 
 
-test_that("load_cellranger generates feature annotation", {
+test_that("load_user_files generates feature annotation for 10x data", {
   counts <- mock_counts()
   features <- data.frame(
     ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
@@ -171,7 +171,7 @@ test_that("load_cellranger generates feature annotation", {
 })
 
 
-test_that("load_cellranger deduplicates gene symbols", {
+test_that("load_user_files deduplicates gene symbols for 10x data", {
   counts <- mock_counts()
 
   symbols <- row.names(counts)
@@ -200,7 +200,7 @@ test_that("load_cellranger deduplicates gene symbols", {
   unlink(sample_dir, recursive = TRUE)
 })
 
-test_that("load_cellranger uses appropriate feature columns", {
+test_that("load_user_files uses appropriate feature columns for 10x data", {
   counts <- mock_counts()
 
   symbols <- row.names(counts)
@@ -235,7 +235,7 @@ test_that("load_cellranger uses appropriate feature columns", {
 })
 
 
-test_that("load_cellranger loads multisample experiments", {
+test_that("load_user_files loads 10x multisample experiments", {
   counts <- mock_counts()
 
   symbols <- row.names(counts)
@@ -277,6 +277,21 @@ test_that("load_cellranger loads multisample experiments", {
   )
 
   unlink(sample_dirs, recursive = TRUE)
+})
+
+test_that("load_user_files reads rhapsody files", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  prev_out <- list(config = list(samples = samples, input = list(type = "rhapsody")))
+  input_dir <- "./input"
+
+  res <- load_user_files(NULL, NULL, prev_out, input_dir)
+
+  expect_true("counts_list" %in% names(res))
+  expect_true(names(samples) %in% names(res$counts_list))
+  expect_s4_class(res$counts_list[[1]], "dgCMatrix")
 })
 
 test_that("call_read_rhapsody reads a rhapsody matrix", {
