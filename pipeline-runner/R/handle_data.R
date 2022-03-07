@@ -61,7 +61,7 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   message("Total of ", length(object_list$Contents), " samples.")
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
-  
+
   if (match(task_name, task_names) <= integration_index) {
     for (object in object_list$Contents) {
       key <- object$Key
@@ -87,7 +87,7 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
       sample <- readRDS(id_file)
       cells_id[[sample_id]] <- sample[[sample_id]]
       message("Sample ", sample_id, " with ", length(cells_id[[sample_id]]), " cells")
-    }    
+    }
   }
   return(cells_id)
 }
@@ -246,6 +246,19 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   message("Uploading updated count matrix to S3 bucket ", pipeline_config$processed_bucket, " at key ", object_key, "...")
 
   put_object_in_s3_multipart(pipeline_config, pipeline_config$processed_bucket, count_matrix, object_key)
+
+  return(object_key)
+}
+
+upload_debug_folder_to_s3 <- function(debug_subdir, pipeline_config) {
+  fnames <- list.files(file.path("/debug", debug_subdir))
+
+  message("Uploading logs and dump file to S3 bucket ", pipeline_config$debug_bucket, " with prefix ", debug_subdir, "...")
+  for (fname in fnames) {
+    fpath <- file.path("/debug", debug_subdir, fname)
+    key <- file.path(debug_subdir, fname)
+    put_object_in_s3_multipart(pipeline_config, pipeline_config$debug_bucket, fpath, key)
+  }
 
   return(object_key)
 }
