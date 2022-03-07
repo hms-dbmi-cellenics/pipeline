@@ -106,9 +106,10 @@ load_config <- function(development_aws_server) {
     config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, sep = "-")
     config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
     config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, sep = "-")
-    config[["debug_bucket"]] <- paste("pipeline-debug", config$cluster_env, sep = "-")
-    config[["sns_topic"]] <- paste("arn:aws:sns", config$aws_region, config$aws_account_id, config$sns_topic, sep = ":")
-
+    config[["debug_bucket"]] <- paste("pipeline-debug", "staging", sep = "-")
+    config[["sns_topic"]] <- paste(
+      paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
+      config$cluster_env, config$sandbox_id, sep = "-")
 
     return(config)
 }
@@ -374,7 +375,7 @@ init <- function() {
                 send_pipeline_fail_update(pipeline_config, input, error_txt)
                 message("Sent task failure to state machine task: ", taskToken)
 
-                if (pipeline_config$cluster_env != 'development') {
+                if (pipeline_config$cluster_env == 'development') {
                     upload_debug_folder_to_s3(debug_subdir, pipeline_config)
                 }
 
