@@ -29,6 +29,59 @@ mock_counts <- function() {
 }
 
 
+mock_rhapsody_matrix <- function(counts, sample_dir) {
+  counts$Gene <- rownames(counts)
+  counts <- tidyr::pivot_longer(counts, -Gene,
+    names_to = "barcode",
+    values_to = "DBEC_Adjusted_Molecules"
+  )
+
+  counts$Cell_Index <- as.integer(factor(counts$barcode))
+  counts$RSEC_Adjusted_Molecules <- counts$DBEC_Adjusted_Molecules + 5
+
+  matrix_path <- file.path(sample_dir, "expression_matrix.st")
+
+  # prepend some of that nice header
+  header <- c(
+    "####################",
+    "## BD Targeted Multiplex Rhapsody Analysis Pipeline Version 1.9.1",
+    "## Analysis Date: 2020-09-29 23:41:40",
+    "## Sample: SampleMultiplexDemo",
+    "## Reference: BD_Rhapsody_Immune_Response_Panel_Hs.fasta",
+    "## Sample Tags Version: Single-Cell Multiplex Kit - Human",
+    "####################"
+  )
+  writeLines(header, matrix_path)
+  write.table(counts,
+    file = matrix_path,
+    append = TRUE,
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE
+  )
+
+  matrix_path
+}
+
+
+
+local_rhapsody_experiment <- function(samples, env = parent.frame()) {
+  # calls creates_samples but makes them "local" (in withr speech), deleting
+  # created stuff after the test finishes.
+  bucket <- "./input"
+  dir.create(bucket)
+  files <- c()
+
+  for (sample in samples) {
+    sample_path <- file.path(bucket, sample$name)
+    dir.create(sample_path)
+    files <- c(files, mock_rhapsody_matrix(sample$counts, sample_path))
+  }
+
+  withr::defer(unlink(bucket, recursive = TRUE), envir = env)
+  files
+}
+
 test_that("format_annot keeps unique rows", {
   annot_list <- list(
     sample1 = data.frame(ENSID = 1:5, SYMBOL = paste0("gene", 1:5)),
@@ -224,4 +277,44 @@ test_that("load_cellranger loads multisample experiments", {
   )
 
   unlink(sample_dirs, recursive = TRUE)
+})
+
+
+test_that("read_rhapsody_matrix reads a rhapsody matrix", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  res <- read_rhapsody_matrix(config, input_dir)
+
+  expect_true("counts_list" %in% names(res))
+  expect_true(names(samples) %in% names(res$counts_list))
+  expect_s4_class(res$counts_list[[1]], "dgCMatrix")
+})
+
+
+test_that("read_rhapsody_matrix keeps the counts where it counts (correct gene-cell-value)", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+  files <- local_rhapsody_experiment(samples)
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  # read original table and get vector of expected values (originals)
+  original <- data.table::fread(file.path(input_dir, names(samples), "expression_matrix.st"))
+  expected_values <- original$DBEC_Adjusted_Molecules
+
+  res <- read_rhapsody_matrix(config, input_dir)
+
+  # create row and column indices, to cbind and use matrix indexing to get values
+  # as a vector. Given that Simple Triplet sparse matrices basically contain vectors
+  # of row and column indices, we just transform them to ints, keeping order.
+  row_idx <- as.integer(factor(original$Gene))
+  col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
+
+  values <- res$counts_list$sample_1[cbind(row_idx, col_idx)]
+
+  expect_equal(values, expected_values)
 })
