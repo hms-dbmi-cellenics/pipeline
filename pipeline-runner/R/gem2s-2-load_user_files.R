@@ -156,7 +156,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
     counts <- Matrix::sparseMatrix(
       i = counts$gene_i,
       j = counts$cell_index_j,
-      x = counts$DBEC_Adjusted_Molecules,
+      x = counts[[adjusted_col]],
       dimnames = list(features, barcodes)
     )
 
