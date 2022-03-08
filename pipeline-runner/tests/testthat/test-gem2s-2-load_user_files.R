@@ -394,3 +394,48 @@ test_that("parse_rhapsody_matrix returns error if files are missing", {
     "File .* does not exist or is non-readable."
   )
 })
+
+
+test_that("parse_rhapsody_matrix returns error if a column is invalid", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  # remove file
+  tab <- data.table::fread(files[1])
+  tab[, DBEC_Adjusted_Molecules := paste0("corrupt_", DBEC_Adjusted_Molecules)]
+  data.table::fwrite(tab, file = files[1])
+
+  expect_error(
+    parse_rhapsody_matrix(config, input_dir)
+  )
+})
+
+test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  # remove DBEC column
+  original <- data.table::fread(files[1])
+  original[, DBEC_Adjusted_Molecules := NULL]
+  data.table::fwrite(original, file = files[1])
+
+  # keep RSEC values
+  expected_values <- original$RSEC_Adjusted_Molecules
+
+  res <- pipeline:::parse_rhapsody_matrix(config, input_dir)
+
+  row_idx <- as.integer(factor(original$Gene))
+  col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
+
+  values <- res$counts_list$sample_1[cbind(row_idx, col_idx)]
+
+  expect_equal(values, expected_values)
+})
