@@ -25,11 +25,11 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/inpu
     "rhapsody" = read_rhapsody_files
   )
 
-  output <- c(prev_out, read_fun(config, input_dir))
+  user_matrices <- c(prev_out, read_fun(config, input_dir))
 
   res <- list(
     data = list(),
-    output = output
+    output = user_matrices
   )
 
   message("\nLoading of ", technology, " files step complete.")
