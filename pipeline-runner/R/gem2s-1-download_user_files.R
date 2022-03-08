@@ -11,8 +11,6 @@ download_user_files <- function(input, pipeline_config, prev_out = list()) {
   project_id <- input$projectId
   sample_uuids <- input$sampleIds
 
-  stop("THIIS IS A TEST ERROPR")
-
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
   input_dir <- "/input"
