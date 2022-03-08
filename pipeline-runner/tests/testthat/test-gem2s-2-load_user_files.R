@@ -348,3 +348,36 @@ test_that("parse_rhapsody_matrix keeps the counts where it counts (correct gene-
 
   expect_equal(values, expected_values)
 })
+
+
+test_that("read_10x_files returns error if files missing", {
+
+  counts <- mock_counts()
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = row.names(counts)
+  )
+
+  outdir <- tempdir()
+  sample <- "sample_a"
+  sample_dir <- file.path(outdir, sample)
+  dir.create(sample_dir)
+
+  mock_cellranger_files(counts, features, sample_dir)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+
+  files <- c("features.tsv.gz", "barcodes.tsv.gz", "matrix.mtx.gz")
+
+  # remove files one by one renaming
+  for (file in files) {
+    file.rename(file.path(sample_dir, file), file.path(sample_dir, "blah"))
+    expect_error(load_user_files(NULL, NULL, prev_out, outdir), "file missing")
+    file.rename(file.path(sample_dir, "blah"), file.path(sample_dir, file))
+  }
+
+  unlink(sample_dir, recursive = TRUE)
+
+})
+
+test_that("parse_rhapsody_matrix returns error if files are not rhapsody-matrix-like", {})
