@@ -106,7 +106,7 @@ load_config <- function(development_aws_server) {
     config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, sep = "-")
     config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
     config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, sep = "-")
-    config[["debug_bucket"]] <- paste("pipeline-debug", "staging", sep = "-")
+    config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, sep = "-")
     config[["sns_topic"]] <- paste(
       paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
       config$cluster_env, config$sandbox_id, sep = "-")

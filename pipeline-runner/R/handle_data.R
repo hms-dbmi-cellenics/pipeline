@@ -260,7 +260,7 @@ upload_debug_folder_to_s3 <- function(debug_subdir, pipeline_config) {
     put_object_in_s3_multipart(pipeline_config, pipeline_config$debug_bucket, fpath, key)
   }
 
-  return(object_key)
+  return(NULL)
 }
 
 put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
