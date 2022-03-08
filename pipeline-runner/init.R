@@ -375,7 +375,7 @@ init <- function() {
                 send_pipeline_fail_update(pipeline_config, input, error_txt)
                 message("Sent task failure to state machine task: ", taskToken)
 
-                if (pipeline_config$cluster_env == 'development') {
+                if (pipeline_config$cluster_env != 'development') {
                     upload_debug_folder_to_s3(debug_subdir, pipeline_config)
                 }
 
