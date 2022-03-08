@@ -351,7 +351,6 @@ test_that("parse_rhapsody_matrix keeps the counts where it counts (correct gene-
 
 
 test_that("read_10x_files returns error if files missing", {
-
   counts <- mock_counts()
   features <- data.frame(
     ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
@@ -377,7 +376,21 @@ test_that("read_10x_files returns error if files missing", {
   }
 
   unlink(sample_dir, recursive = TRUE)
-
 })
 
-test_that("parse_rhapsody_matrix returns error if files are not rhapsody-matrix-like", {})
+test_that("parse_rhapsody_matrix returns error if files are missing", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  # remove file
+  unlink(files[1])
+
+  expect_error(
+    parse_rhapsody_matrix(config, input_dir),
+    "File .* does not exist or is non-readable."
+  )
+})
