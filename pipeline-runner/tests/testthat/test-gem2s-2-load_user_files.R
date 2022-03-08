@@ -284,17 +284,17 @@ test_that("load_user_files reads rhapsody files", {
 
   files <- local_rhapsody_experiment(samples)
 
-  prev_out <- list(config = list(samples = samples, input = list(type = "rhapsody")))
+  prev_out <- list(config = list(samples = names(samples), input = list(type = "rhapsody")))
   input_dir <- "./input"
 
   res <- load_user_files(NULL, NULL, prev_out, input_dir)
 
-  expect_true("counts_list" %in% names(res))
-  expect_true(names(samples) %in% names(res$counts_list))
-  expect_s4_class(res$counts_list[[1]], "dgCMatrix")
+  expect_true("counts_list" %in% names(res$output))
+  expect_true(names(samples) %in% names(res$output$counts_list))
+  expect_s4_class(res$output$counts_list[[1]], "dgCMatrix")
 })
 
-test_that("call_read_rhapsody reads a rhapsody matrix", {
+test_that("read_rhapsody_files reads a rhapsody matrix", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
 
   files <- local_rhapsody_experiment(samples)
@@ -302,7 +302,7 @@ test_that("call_read_rhapsody reads a rhapsody matrix", {
   config <- list(samples = names(samples))
   input_dir <- "./input"
 
-  res <- call_read_rhapsody(config, input_dir)
+  res <- read_rhapsody_files(config, input_dir)
 
   expect_true("counts_list" %in% names(res))
   expect_true(names(samples) %in% names(res$counts_list))
@@ -310,7 +310,7 @@ test_that("call_read_rhapsody reads a rhapsody matrix", {
 })
 
 
-test_that("read_rhapsody_matrix reads a rhapsody matrix", {
+test_that("parse_rhapsody_matrix reads a rhapsody matrix", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
 
   files <- local_rhapsody_experiment(samples)
@@ -318,7 +318,7 @@ test_that("read_rhapsody_matrix reads a rhapsody matrix", {
   config <- list(samples = names(samples))
   input_dir <- "./input"
 
-  res <- read_rhapsody_matrix(config, input_dir)
+  res <- parse_rhapsody_matrix(config, input_dir)
 
   expect_true("counts_list" %in% names(res))
   expect_true(names(samples) %in% names(res$counts_list))
@@ -326,7 +326,7 @@ test_that("read_rhapsody_matrix reads a rhapsody matrix", {
 })
 
 
-test_that("read_rhapsody_matrix keeps the counts where it counts (correct gene-cell-value)", {
+test_that("parse_rhapsody_matrix keeps the counts where it counts (correct gene-cell-value)", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
   files <- local_rhapsody_experiment(samples)
   config <- list(samples = names(samples))
@@ -336,7 +336,7 @@ test_that("read_rhapsody_matrix keeps the counts where it counts (correct gene-c
   original <- data.table::fread(file.path(input_dir, names(samples), "expression_matrix.st"))
   expected_values <- original$DBEC_Adjusted_Molecules
 
-  res <- read_rhapsody_matrix(config, input_dir)
+  res <- parse_rhapsody_matrix(config, input_dir)
 
   # create row and column indices, to cbind and use matrix indexing to get values
   # as a vector. Given that Simple Triplet sparse matrices basically contain vectors
