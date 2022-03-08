@@ -1,4 +1,3 @@
-
 mock_cellranger_files <- function(counts, features, sample_dir) {
 
   # save features
@@ -64,7 +63,6 @@ mock_rhapsody_matrix <- function(counts, sample_dir) {
 }
 
 
-
 local_rhapsody_experiment <- function(samples, env = parent.frame()) {
   # calls creates_samples but makes them "local" (in withr speech), deleting
   # created stuff after the test finishes.
@@ -82,6 +80,7 @@ local_rhapsody_experiment <- function(samples, env = parent.frame()) {
   files
 }
 
+
 test_that("format_annot keeps unique rows", {
   annot_list <- list(
     sample1 = data.frame(ENSID = 1:5, SYMBOL = paste0("gene", 1:5)),
@@ -93,6 +92,7 @@ test_that("format_annot keeps unique rows", {
   expect_s3_class(annot, "data.frame")
   expect_true(nrow(annot) == nrow(annot_list$sample1))
 })
+
 
 test_that("format_annot deduplicates name column", {
   annot_list <- list(
@@ -200,6 +200,7 @@ test_that("load_user_files deduplicates gene symbols for 10x data", {
   unlink(sample_dir, recursive = TRUE)
 })
 
+
 test_that("load_user_files uses appropriate feature columns for 10x data", {
   counts <- mock_counts()
 
@@ -278,6 +279,7 @@ test_that("load_user_files loads 10x multisample experiments", {
 
   unlink(sample_dirs, recursive = TRUE)
 })
+
 
 test_that("load_user_files reads rhapsody files", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
@@ -378,6 +380,7 @@ test_that("read_10x_files returns error if files missing", {
   unlink(sample_dir, recursive = TRUE)
 })
 
+
 test_that("parse_rhapsody_matrix returns error if files are missing", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
 
@@ -413,6 +416,7 @@ test_that("parse_rhapsody_matrix returns error if a column is invalid", {
     parse_rhapsody_matrix(config, input_dir)
   )
 })
+
 
 test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
