@@ -21,8 +21,8 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/inpu
   technology <- config$input$type
 
   read_fun <- switch(technology,
-    "10x" = call_read10x,
-    "rhapsody" = call_read_rhapsody
+    "10x" = read_10x_files,
+    "rhapsody" = read_rhapsody_files
   )
 
   output <- c(prev_out, read_fun(config, input_dir))
@@ -43,7 +43,7 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/inpu
 #'
 #' @param config experiment settings.
 #'
-call_read10x <- function(config, input_dir) {
+read_10x_files <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
 
@@ -121,12 +121,12 @@ format_annot <- function(annot_list) {
 #'   \item{"counts_list"}{named list of dgCMatrix per sample}
 #'   \item{"annot"}{data.frame with gene symbols}
 #'
-call_read_rhapsody <- function(config, input_dir) {
+read_rhapsody_files <- function(config, input_dir) {
 
   # if we add support for other rhapsody file types (csv matrices) we should
   # check filetypes here and dispatch accordingly.
 
-  out <- read_rhapsody_matrix(config, input_dir)
+  out <- parse_rhapsody_matrix(config, input_dir)
   return(out)
 }
 
@@ -139,7 +139,7 @@ call_read_rhapsody <- function(config, input_dir) {
 #'   \item{"counts_list"}{named list of dgCMatrix per sample}
 #'   \item{"annot"}{data.frame with gene symbols}
 #'
-read_rhapsody_matrix <- function(config, input_dir) {
+parse_rhapsody_matrix <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
 
