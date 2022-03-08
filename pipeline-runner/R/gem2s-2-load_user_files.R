@@ -25,6 +25,9 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/inpu
     "rhapsody" = read_rhapsody_files
   )
 
+  message("Samples to include in the analysis:\n- ", paste(config$samples, collapse = "\n- "))
+  message("Loading ", technology," data set from input folder.")
+
   user_matrices <- c(prev_out, read_fun(config, input_dir))
 
   res <- list(
@@ -48,8 +51,6 @@ read_10x_files <- function(config, input_dir) {
   annot_list <- list()
 
   samples <- config$samples
-  message("Samples to include in the analysis:\n- ", paste(samples, collapse = "\n- "))
-  message("Loading 10x data set from input folder.")
 
 
   for (sample in samples) {
@@ -121,8 +122,6 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   annot_list <- list()
 
   samples <- config$samples
-  message("Samples to include in the analysis:\n- ", paste(samples, collapse = "\n- "))
-  message("Loading rhapsody data set from input folder.")
 
 
   for (sample in samples) {
