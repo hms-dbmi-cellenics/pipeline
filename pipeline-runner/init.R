@@ -343,8 +343,7 @@ init <- function() {
         input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
 
         # save logs to file
-        debug_subdir <- file.path(input$experimentId, debug_timestamp)
-        debug_path <- file.path(DEBUG_PATH, input$experimentId, debug_timestamp)
+        debug_subdir <- file.path(DEBUG_PATH, input$experimentId, debug_timestamp)
         flog.appender(appender.tee(file.path(debug_path, "logs.txt")))
 
         tryCatchLog({
@@ -382,7 +381,7 @@ init <- function() {
                 message("recovered from error:", e$message)
             },
         write.error.dump.file = TRUE,
-        write.error.dump.folder = debug_path)
+        write.error.dump.folder = debug_subdir)
     }
 }
 
