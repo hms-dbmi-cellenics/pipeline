@@ -253,12 +253,13 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
 upload_debug_folder_to_s3 <- function(experiment_id, timestamp, pipeline_config) {
   debug_subdir <- file.path(experiment_id, timestamp)
   fnames <- list.files(file.path(DEBUG_PATH, debug_subdir))
+  bucket <- pipeline_config$debug_bucket
 
-  message("Uploading logs and dump file to S3 bucket ", pipeline_config$debug_bucket, " with prefix ", debug_subdir, "...")
+  message("Uploading logs and dump file to S3 bucket ", bucket, " with prefix ", debug_subdir, "...")
   for (fname in fnames) {
     fpath <- file.path(DEBUG_PATH, debug_subdir, fname)
     key <- file.path(debug_subdir, fname)
-    put_object_in_s3_multipart(pipeline_config, pipeline_config$debug_bucket, fpath, key)
+    put_object_in_s3_multipart(pipeline_config, bucket, fpath, key)
   }
 
   return(NULL)

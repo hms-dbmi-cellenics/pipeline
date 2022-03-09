@@ -24,3 +24,35 @@ test_that("send_gem2s_update_to_api completes successfully", {
 
     expect_true(response == 'ok')
 })
+
+
+test_that("upload_debug_folder_to_s3 completes successfully", {
+
+    # create fake logs and dump file
+    debug_path <- tempdir()
+    debug_timestamp <- 'now'
+    experiment_id <- '1234'
+    pipeline_config <- list(debug_bucket = 'pipeline-debug-development')
+
+    debug_dir <- file.path(debug_path, experiment_id, debug_timestamp)
+    dir.create(debug_dir, recursive = TRUE)
+    file.create(file.path(debug_dir, c('logs.txt', 'dump.rda')))
+
+    mockery::stub(upload_debug_folder_to_s3, 'put_object_in_s3_multipart', function()NULL)
+
+    # generates correct prefix
+    expect_message(
+        upload_debug_folder_to_s3(experiment_id, debug_timestamp, pipeline_config),
+        regexp = "with prefix 1234/now"
+    )
+
+    # puts in right bucket
+    expect_message(
+        upload_debug_folder_to_s3(experiment_id, debug_timestamp, pipeline_config),
+        regexp = pipeline_config$debug_bucket
+    )
+
+    # cleanup
+    unlink(debug_path, recursive = TRUE)
+})
+
