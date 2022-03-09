@@ -56,7 +56,7 @@ test_that("upload_debug_folder_to_s3 completes successfully", {
     )
 
     # cleanup
-    unlink(debug_path, recursive = TRUE)
+    unlink(list.files(debug_path), recursive = TRUE)
 })
 
 
@@ -74,12 +74,4 @@ test_that("upload_matrix_to_s3 completes successfully", {
     key <- upload_matrix_to_s3(pipeline_config, experiment_id, data)
     expect_equal(key, '1234/r.rds')
 
-    # puts in right bucket
-    expect_message(
-        upload_debug_folder_to_s3(experiment_id, debug_timestamp, pipeline_config),
-        regexp = pipeline_config$debug_bucket
-    )
-
-    # cleanup
-    unlink(debug_path, recursive = TRUE)
 })
