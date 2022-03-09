@@ -5,7 +5,7 @@ library(tryCatchLog)
 library(futile.logger)
 library(magrittr)
 
-# timestamp for log file
+# time stamp used for directory to store log/dump files in event of error
 debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
 
 # increase maxSize from the default of 500MB to 32GB
