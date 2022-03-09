@@ -25,6 +25,9 @@ test_that("send_gem2s_update_to_api completes successfully", {
     expect_true(response == 'ok')
 })
 
+stub_put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
+    return(NULL)
+}
 
 test_that("upload_debug_folder_to_s3 completes successfully", {
 
@@ -38,7 +41,7 @@ test_that("upload_debug_folder_to_s3 completes successfully", {
     dir.create(debug_dir, recursive = TRUE)
     file.create(file.path(debug_dir, c('logs.txt', 'dump.rda')))
 
-    mockery::stub(upload_debug_folder_to_s3, 'put_object_in_s3_multipart', function()NULL)
+    mockery::stub(upload_debug_folder_to_s3, 'put_object_in_s3_multipart', stub_put_object_in_s3_multipart)
 
     # generates correct prefix
     expect_message(
@@ -56,3 +59,27 @@ test_that("upload_debug_folder_to_s3 completes successfully", {
     unlink(debug_path, recursive = TRUE)
 })
 
+
+test_that("upload_matrix_to_s3 completes successfully", {
+
+
+    # mock things
+    data <- matrix()
+    pipeline_config <- list(processed_bucket = 'processed-bucket')
+    experiment_id <- '1234'
+
+    mockery::stub(upload_matrix_to_s3, 'put_object_in_s3_multipart', stub_put_object_in_s3_multipart)
+
+    # generates correct S3 key
+    key <- upload_matrix_to_s3(pipeline_config, experiment_id, data)
+    expect_equal(key, '1234/r.rds')
+
+    # puts in right bucket
+    expect_message(
+        upload_debug_folder_to_s3(experiment_id, debug_timestamp, pipeline_config),
+        regexp = pipeline_config$debug_bucket
+    )
+
+    # cleanup
+    unlink(debug_path, recursive = TRUE)
+})
