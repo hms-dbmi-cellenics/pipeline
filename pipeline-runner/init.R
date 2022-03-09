@@ -344,7 +344,7 @@ init <- function() {
 
         # save logs to file
         debug_subdir <- file.path(input$experimentId, debug_timestamp)
-        debug_path <- file.path("/debug", debug_subdir)
+        debug_path <- file.path(DEBUG_PATH, input$experimentId, debug_timestamp)
         flog.appender(appender.tee(file.path(debug_path, "logs.txt")))
 
         tryCatchLog({
@@ -376,7 +376,7 @@ init <- function() {
                 message("Sent task failure to state machine task: ", taskToken)
 
                 if (pipeline_config$cluster_env != 'development') {
-                    upload_debug_folder_to_s3(debug_subdir, pipeline_config)
+                    upload_debug_folder_to_s3(input$experimentId, debug_timestamp, pipeline_config)
                 }
 
                 message("recovered from error:", e$message)
