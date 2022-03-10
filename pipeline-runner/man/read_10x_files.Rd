@@ -10,5 +10,6 @@ read_10x_files(config, input_dir)
 \item{config}{experiment settings.}
 }
 \description{
-Cellranger outputs from V2 and V3 kits were renamed to look like V3 (features.tsv.gz).
+Cellranger outputs from V2 and V3 kits were renamed to look like V3
+(features.tsv.gz).
 }

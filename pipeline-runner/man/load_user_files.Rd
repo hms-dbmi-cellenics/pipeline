@@ -20,6 +20,7 @@ list with 'output' slot containing \itemize{
 }
 \description{
 Checks technology used and dispatches call to correct reading function.
-In case of 10x, \code{annot} contains a data.frame from reading the features.tsv.gz file,
-while in rhapsody it contains the gene symbols as read from the count matrix.
+In case of 10x, \code{annot} contains a data.frame from reading the
+features.tsv.gz file, while in rhapsody it contains the gene symbols as read
+from the count matrix.
 }
