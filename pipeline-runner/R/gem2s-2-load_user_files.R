@@ -19,7 +19,7 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/inpu
   # destructure previous output
   config <- prev_out$config
 
-  technology <- config$input$type
+  technology <- ifelse(config$input$type == "rhapsody", "rhapsody", "10x")
 
   read_fun <- switch(technology,
     "10x" = read_10x_files,
