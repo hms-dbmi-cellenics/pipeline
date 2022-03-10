@@ -140,17 +140,30 @@ parse_rhapsody_matrix <- function(config, input_dir) {
       "RSEC_Adjusted_Molecules"
     )
 
+    # AbSeq has a "Bioproduct" col instead of "Gene" to account for proteins
+    if ("Bioproduct" %in% colnames(counts)) {
+      data.table::setnames(counts, "Bioproduct", "Gene")
+    }
+
     # The ..keep is data.table syntax to grab the keep columns
     keep <- c("Cell_Index", "Gene", adjusted_col)
     counts <- counts[, ..keep]
 
+    # convert Cell_Index to string! we parse strings from jsons a lot, and
+    # having ints alone breaks things, as they are coerced to numbers
+    counts[, Cell_Index := paste0("cell_", Cell_Index)]
+
+    # clean AbSeq names, removing symbols
+    counts[, Gene := gsub("[\\|:]", "_", Gene)]
+
+    # we need the genes as ints to create the sparse matrix
     counts[, Gene := factor(Gene)]
     counts[, gene_i := as.integer(Gene)]
 
     features <- levels(counts$Gene)
     barcodes <- unique(counts$Cell_Index)
 
-    # to create small sparse matrix, and retain original cell indices ("barcodes")
+    # to create small sparse matrix, and keep original cell indices ("barcodes")
     counts[, cell_index_j := match(Cell_Index, barcodes)]
 
     counts <- Matrix::sparseMatrix(
