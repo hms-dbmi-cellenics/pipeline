@@ -19,8 +19,6 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/inpu
   # destructure previous output
   config <- prev_out$config
 
-  # defensive programming. input$type might be NULL, given that it was not
-  # previously used. Default to 10x, and correct when adding new technology.
   technology <- ifelse(config$input$type == "rhapsody", "rhapsody", "10x")
 
   read_fun <- switch(technology,
