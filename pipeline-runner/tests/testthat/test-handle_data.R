@@ -37,7 +37,9 @@ test_that("upload_debug_folder_to_s3 completes successfully", {
     experiment_id <- '1234'
     pipeline_config <- list(debug_bucket = 'pipeline-debug-development')
 
-    debug_dir <- file.path(debug_path, experiment_id, debug_timestamp)
+    debug_prefix <- file.path(experiment_id, debug_timestamp)
+
+    debug_dir <- file.path(debug_path, debug_prefix)
     dir.create(debug_dir, recursive = TRUE)
     file.create(file.path(debug_dir, c('logs.txt', 'dump.rda')))
 
@@ -45,13 +47,13 @@ test_that("upload_debug_folder_to_s3 completes successfully", {
 
     # generates correct prefix
     expect_message(
-        upload_debug_folder_to_s3(experiment_id, debug_timestamp, pipeline_config),
+        upload_debug_folder_to_s3(debug_prefix, pipeline_config),
         regexp = "with prefix 1234/now"
     )
 
     # puts in right bucket
     expect_message(
-        upload_debug_folder_to_s3(experiment_id, debug_timestamp, pipeline_config),
+        upload_debug_folder_to_s3(debug_prefix, pipeline_config),
         regexp = pipeline_config$debug_bucket
     )
 
