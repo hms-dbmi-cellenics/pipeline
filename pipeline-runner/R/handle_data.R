@@ -250,8 +250,7 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   return(object_key)
 }
 
-upload_debug_folder_to_s3 <- function(experiment_id, timestamp, pipeline_config) {
-  debug_prefix <- file.path(experiment_id, timestamp)
+upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
   fnames <- list.files(file.path(DEBUG_PATH, debug_prefix))
   bucket <- pipeline_config$debug_bucket
 
