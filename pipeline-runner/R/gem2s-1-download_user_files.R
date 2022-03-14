@@ -4,7 +4,7 @@
 #' @param pipeline_config result of \code{load_config}
 #' @param prev_out \code{list()} that is added to in each with gem2s task.
 #'
-#' @return list where 'output' slot has config used by \code{load_cellranger}
+#' @return list where 'output' slot has config used by \code{load_user_files}
 #' @export
 #'
 download_user_files <- function(input, pipeline_config, prev_out = list()) {
