@@ -1,4 +1,3 @@
-
 mock_cellranger_files <- function(counts, features, sample_dir) {
 
   # save features
@@ -64,7 +63,6 @@ mock_rhapsody_matrix <- function(counts, sample_dir) {
 }
 
 
-
 local_rhapsody_experiment <- function(samples, env = parent.frame()) {
   # calls creates_samples but makes them "local" (in withr speech), deleting
   # created stuff after the test finishes.
@@ -82,6 +80,7 @@ local_rhapsody_experiment <- function(samples, env = parent.frame()) {
   files
 }
 
+
 test_that("format_annot keeps unique rows", {
   annot_list <- list(
     sample1 = data.frame(ENSID = 1:5, SYMBOL = paste0("gene", 1:5)),
@@ -93,6 +92,7 @@ test_that("format_annot keeps unique rows", {
   expect_s3_class(annot, "data.frame")
   expect_true(nrow(annot) == nrow(annot_list$sample1))
 })
+
 
 test_that("format_annot deduplicates name column", {
   annot_list <- list(
@@ -120,7 +120,7 @@ test_that("format_annot removes duplicated input (Ensembl IDs) column", {
 })
 
 
-test_that("load_cellranger loads a count matrix", {
+test_that("load_user_files loads a 10x count matrix", {
   counts <- mock_counts()
   features <- data.frame(
     ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
@@ -134,8 +134,8 @@ test_that("load_cellranger loads a count matrix", {
 
   mock_cellranger_files(counts, features, sample_dir)
 
-  prev_out <- list(config = list(samples = sample))
-  out <- load_cellranger_files(NULL, NULL, prev_out, outdir)$output
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
 
   expect_true("counts_list" %in% names(out))
   expect_true(sample %in% names(out$counts_list))
@@ -145,7 +145,7 @@ test_that("load_cellranger loads a count matrix", {
 })
 
 
-test_that("load_cellranger generates feature annotation", {
+test_that("load_user_files generates feature annotation for 10x data", {
   counts <- mock_counts()
   features <- data.frame(
     ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
@@ -159,8 +159,8 @@ test_that("load_cellranger generates feature annotation", {
 
   mock_cellranger_files(counts, features, sample_dir)
 
-  prev_out <- list(config = list(samples = sample))
-  out <- load_cellranger_files(NULL, NULL, prev_out, outdir)$output
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
 
   expect_true("annot" %in% names(out))
   expect_true(
@@ -171,7 +171,7 @@ test_that("load_cellranger generates feature annotation", {
 })
 
 
-test_that("load_cellranger deduplicates gene symbols", {
+test_that("load_user_files deduplicates gene symbols for 10x data", {
   counts <- mock_counts()
 
   symbols <- row.names(counts)
@@ -189,8 +189,8 @@ test_that("load_cellranger deduplicates gene symbols", {
 
   mock_cellranger_files(counts, features, sample_dir)
 
-  prev_out <- list(config = list(samples = sample))
-  annot <- load_cellranger_files(NULL, NULL, prev_out, outdir)$output$annot
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  annot <- load_user_files(NULL, NULL, prev_out, outdir)$output$annot
 
   # unique gene names is same as number of gene names
   expect_length(unique(annot$name), length(symbols))
@@ -200,7 +200,8 @@ test_that("load_cellranger deduplicates gene symbols", {
   unlink(sample_dir, recursive = TRUE)
 })
 
-test_that("load_cellranger uses appropriate feature columns", {
+
+test_that("load_user_files uses appropriate feature columns for 10x data", {
   counts <- mock_counts()
 
   symbols <- row.names(counts)
@@ -216,8 +217,8 @@ test_that("load_cellranger uses appropriate feature columns", {
 
   mock_cellranger_files(counts, features, sample_dir)
 
-  prev_out <- list(config = list(samples = sample))
-  out <- load_cellranger_files(NULL, NULL, prev_out, outdir)$output
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
 
   # ensembl ids are counts row names
   expect_equal(
@@ -235,7 +236,7 @@ test_that("load_cellranger uses appropriate feature columns", {
 })
 
 
-test_that("load_cellranger loads multisample experiments", {
+test_that("load_user_files loads 10x multisample experiments", {
   counts <- mock_counts()
 
   symbols <- row.names(counts)
@@ -260,8 +261,8 @@ test_that("load_cellranger loads multisample experiments", {
   mock_cellranger_files(counts, features, sample_dirs[1])
   mock_cellranger_files(counts, features2, sample_dirs[2])
 
-  prev_out <- list(config = list(samples = samples))
-  out <- load_cellranger_files(NULL, NULL, prev_out, outdir)$output
+  prev_out <- list(config = list(samples = samples, input = list(type = "10x")))
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
 
   # loaded both
   expect_equal(names(out$counts_list), samples)
@@ -280,7 +281,22 @@ test_that("load_cellranger loads multisample experiments", {
 })
 
 
-test_that("read_rhapsody_matrix reads a rhapsody matrix", {
+test_that("load_user_files reads rhapsody files", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  prev_out <- list(config = list(samples = names(samples), input = list(type = "rhapsody")))
+  input_dir <- "./input"
+
+  res <- load_user_files(NULL, NULL, prev_out, input_dir)
+
+  expect_true("counts_list" %in% names(res$output))
+  expect_true(names(samples) %in% names(res$output$counts_list))
+  expect_s4_class(res$output$counts_list[[1]], "dgCMatrix")
+})
+
+test_that("read_rhapsody_files reads a rhapsody matrix", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
 
   files <- local_rhapsody_experiment(samples)
@@ -288,7 +304,7 @@ test_that("read_rhapsody_matrix reads a rhapsody matrix", {
   config <- list(samples = names(samples))
   input_dir <- "./input"
 
-  res <- read_rhapsody_matrix(config, input_dir)
+  res <- read_rhapsody_files(config, input_dir)
 
   expect_true("counts_list" %in% names(res))
   expect_true(names(samples) %in% names(res$counts_list))
@@ -296,7 +312,23 @@ test_that("read_rhapsody_matrix reads a rhapsody matrix", {
 })
 
 
-test_that("read_rhapsody_matrix keeps the counts where it counts (correct gene-cell-value)", {
+test_that("parse_rhapsody_matrix reads a rhapsody matrix", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  res <- parse_rhapsody_matrix(config, input_dir)
+
+  expect_true("counts_list" %in% names(res))
+  expect_true(names(samples) %in% names(res$counts_list))
+  expect_s4_class(res$counts_list[[1]], "dgCMatrix")
+})
+
+
+test_that("parse_rhapsody_matrix keeps the counts where it counts (correct gene-cell-value)", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
   files <- local_rhapsody_experiment(samples)
   config <- list(samples = names(samples))
@@ -306,11 +338,104 @@ test_that("read_rhapsody_matrix keeps the counts where it counts (correct gene-c
   original <- data.table::fread(file.path(input_dir, names(samples), "expression_matrix.st"))
   expected_values <- original$DBEC_Adjusted_Molecules
 
-  res <- read_rhapsody_matrix(config, input_dir)
+  res <- parse_rhapsody_matrix(config, input_dir)
 
   # create row and column indices, to cbind and use matrix indexing to get values
   # as a vector. Given that Simple Triplet sparse matrices basically contain vectors
   # of row and column indices, we just transform them to ints, keeping order.
+  row_idx <- as.integer(factor(original$Gene))
+  col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
+
+  values <- res$counts_list$sample_1[cbind(row_idx, col_idx)]
+
+  expect_equal(values, expected_values)
+})
+
+
+test_that("read_10x_files returns error if files missing", {
+  counts <- mock_counts()
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = row.names(counts)
+  )
+
+  outdir <- tempdir()
+  sample <- "sample_a"
+  sample_dir <- file.path(outdir, sample)
+  dir.create(sample_dir)
+
+  mock_cellranger_files(counts, features, sample_dir)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+
+  files <- c("features.tsv.gz", "barcodes.tsv.gz", "matrix.mtx.gz")
+
+  # remove files one by one renaming
+  for (file in files) {
+    file.rename(file.path(sample_dir, file), file.path(sample_dir, "blah"))
+    expect_error(load_user_files(NULL, NULL, prev_out, outdir), "file missing")
+    file.rename(file.path(sample_dir, "blah"), file.path(sample_dir, file))
+  }
+
+  unlink(sample_dir, recursive = TRUE)
+})
+
+
+test_that("parse_rhapsody_matrix returns error if files are missing", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  # remove file
+  unlink(files[1])
+
+  expect_error(
+    parse_rhapsody_matrix(config, input_dir),
+    "File .* does not exist or is non-readable."
+  )
+})
+
+
+test_that("parse_rhapsody_matrix returns error if a column is invalid", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  # remove file
+  tab <- data.table::fread(files[1])
+  tab[, DBEC_Adjusted_Molecules := paste0("corrupt_", DBEC_Adjusted_Molecules)]
+  data.table::fwrite(tab, file = files[1])
+
+  expect_error(
+    parse_rhapsody_matrix(config, input_dir)
+  )
+})
+
+
+test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples)
+
+  config <- list(samples = names(samples))
+  input_dir <- "./input"
+
+  # remove DBEC column
+  original <- data.table::fread(files[1])
+  original[, DBEC_Adjusted_Molecules := NULL]
+  data.table::fwrite(original, file = files[1])
+
+  # keep RSEC values
+  expected_values <- original$RSEC_Adjusted_Molecules
+
+  res <- pipeline:::parse_rhapsody_matrix(config, input_dir)
+
   row_idx <- as.integer(factor(original$Gene))
   col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
 

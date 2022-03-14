@@ -14,7 +14,7 @@ download_user_files(input, pipeline_config, prev_out = list())
 \item{prev_out}{\code{list()} that is added to in each with gem2s task.}
 }
 \value{
-list where 'output' slot has config used by \code{load_cellranger}
+list where 'output' slot has config used by \code{load_user_files}
 }
 \description{
 Download user files from S3
