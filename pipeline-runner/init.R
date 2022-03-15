@@ -343,7 +343,8 @@ init <- function() {
         input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
 
         # save logs to file
-        dump_folder <- file.path(DEBUG_PATH, input$experimentId, debug_timestamp)
+        debug_prefix <- file.path(input$experimentId, debug_timestamp)
+        dump_folder <- file.path(DEBUG_PATH, debug_prefix)
         flog.appender(appender.tee(file.path(dump_folder, "logs.txt")))
 
         tryCatchLog({
@@ -375,7 +376,7 @@ init <- function() {
                 message("Sent task failure to state machine task: ", taskToken)
 
                 if (pipeline_config$cluster_env != 'development') {
-                    upload_debug_folder_to_s3(input$experimentId, debug_timestamp, pipeline_config)
+                    upload_debug_folder_to_s3(debug_prefix, pipeline_config)
                 }
 
                 message("recovered from error:", e$message)
