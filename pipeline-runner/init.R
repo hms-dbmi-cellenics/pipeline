@@ -5,6 +5,9 @@ library(tryCatchLog)
 library(futile.logger)
 library(magrittr)
 
+# time stamp used for directory to store log/dump files in event of error
+debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
+
 # increase maxSize from the default of 500MB to 32GB
 options(future.globals.maxSize = 32 * 1024 * 1024^2)
 
@@ -103,9 +106,10 @@ load_config <- function(development_aws_server) {
     config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, sep = "-")
     config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
     config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, sep = "-")
-    config[["sns_topic"]] <- paste("work-results", config$cluster_env, config$sandbox_id, sep = "-")
-    config[["sns_topic"]] <- paste("arn:aws:sns", config$aws_region, config$aws_account_id, config$sns_topic, sep = ":")
-
+    config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, sep = "-")
+    config[["sns_topic"]] <- paste(
+      paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
+      config$cluster_env, config$sandbox_id, sep = "-")
 
     return(config)
 }
@@ -285,9 +289,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 #
 # Calls the appropiate process: data processing pipeline or gem2s.
 #
-wrapper <- function(input_json) {
-    # Get data from state machine input.
-    input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
+wrapper <- function(input) {
     task_name <- input$taskName
     message("------\nStarting task: ", task_name, '\n')
     message("Input:")
@@ -327,7 +329,7 @@ init <- function() {
     message("Waiting for tasks")
 
     repeat {
-        c(taskToken, input) %<-% states$get_activity_task(
+        c(taskToken, input_json) %<-% states$get_activity_task(
             activityArn = pipeline_config$activity_arn,
             workerName = pipeline_config$pod_name
         )
@@ -336,6 +338,14 @@ init <- function() {
             message('No input received during last poll, shutting down...')
             quit('no')
         }
+
+        # parse data from state machine input
+        input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
+
+        # save logs to file
+        debug_prefix <- file.path(input$experimentId, debug_timestamp)
+        dump_folder <- file.path(DEBUG_PATH, debug_prefix)
+        flog.appender(appender.tee(file.path(dump_folder, "logs.txt")))
 
         tryCatchLog({
                 wrapper(input)
@@ -348,14 +358,12 @@ init <- function() {
         },
             error = function(e) {
                 flog.error("🚩 ---------")
-
-                input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
-                sample_text <- ifelse(is.null(input_parse$sampleUuid),
+                sample_text <- ifelse(is.null(input$sampleUuid),
                                       "",
-                                      paste0(" for sample ", input_parse$sampleUuid))
+                                      paste0(" for sample ", input$sampleUuid))
 
                 error_txt <- paste0("R error at filter step ",
-                                    input_parse$taskName, sample_text, "! : ", e$message)
+                                    input$taskName, sample_text, "! : ", e$message)
 
                 message(error_txt)
                 states$send_task_failure(
@@ -364,13 +372,17 @@ init <- function() {
                     cause = error_txt
                 )
 
-                send_pipeline_fail_update(pipeline_config, input_parse, error_txt)
-
+                send_pipeline_fail_update(pipeline_config, input, error_txt)
                 message("Sent task failure to state machine task: ", taskToken)
+
+                if (pipeline_config$cluster_env != 'development') {
+                    upload_debug_folder_to_s3(debug_prefix, pipeline_config)
+                }
+
                 message("recovered from error:", e$message)
             },
-        write.error.dump.file = pipeline_config$cluster_env == 'development',
-        write.error.dump.folder = '/debug')
+        write.error.dump.file = TRUE,
+        write.error.dump.folder = dump_folder)
     }
 }
 

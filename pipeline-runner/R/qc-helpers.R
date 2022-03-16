@@ -114,7 +114,7 @@ handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
     num_cells_to_downsample <- 6000
     sample_str <- ifelse(sample_id == "", "", paste0("_", sample_id))
     fname <- paste0(task_name, sample_str, ".RData")
-    fpath_cont <- file.path("/debug", fname)
+    fpath_cont <- file.path(DEBUG_PATH, fname)
     fpath_host <- file.path(debug_config$path, fname)
     message(sprintf("⚠️ DEBUG_STEP = %s. Saving arguments.", task_name))
     save(scdata, config, task_name, sample_id, num_cells_to_downsample, file = fpath_cont)
