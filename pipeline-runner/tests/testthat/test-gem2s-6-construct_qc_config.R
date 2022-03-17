@@ -13,9 +13,6 @@ mock_scdata <- function() {
   # add doublet scores
   scdata$doublet_scores <- rep(c(0.01, 0.9), each = 40)
   scdata$doublet_class <- rep(c("singlet", "doublet"), each = 40)
-
-  # add mitochondrial percent
-  scdata$percent.mt <- rnorm(ncol(scdata), mean = 6)
   return(scdata)
 }
 

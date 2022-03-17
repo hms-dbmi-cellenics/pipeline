@@ -11,7 +11,7 @@ run_emptydrops(input, pipeline_config, prev_out)
 
 \item{pipeline_config}{result of \code{load_config}}
 
-\item{prev_out}{'output' slot from call to \code{load_user_files}}
+\item{prev_out}{'output' slot from call to \code{load_cellranger}}
 }
 \value{
 \code{prev_out} with added slot 'edrops' containing result of call to

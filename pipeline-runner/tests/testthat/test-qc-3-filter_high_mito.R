@@ -33,7 +33,6 @@ mock_scdata <- function() {
   return(scdata)
 }
 
-get_threshold <- function(config) config$filterSettings$methodSettings$absolute_threshold$maxFraction
 
 
 test_that("filter_high_mito filters based on threshold", {
@@ -98,33 +97,7 @@ test_that("filter_high_mito can be set to auto", {
   # would filter all 40 cells in first sample unless auto
   config <- mock_config(0.01)
   out <- filter_high_mito(scdata, config, "123abc", cells_id)
-
-  # check that threshold was updated
-  expect_true(get_threshold(out$config) > get_threshold(config))
-
-  # check that updated threshold was used
-  nkeep <- length(unlist(out$new_ids))
-  expected <- sum(scdata$percent.mt <= get_threshold(out$config) * 100)
-  expect_equal(nkeep, expected)
-
-  # didn't subset original data
   expect_equal(ncol(out$data), 80)
+  expect_equal(length(out$new_ids$`123abc`), 30)
+  expect_equal(length(out$new_ids$`123def`), 40)
 })
-
-
-test_that("data without percent.mt outliers uses the max percentage as the threshold", {
-  scdata <- mock_scdata()
-  set.seed(0)
-  scdata$percent.mt <- rnorm(ncol(scdata), 6)
-  cells_id <- mock_ids()
-
-  config <- mock_config()
-  out <- filter_high_mito(scdata, config, "123abc", cells_id)
-
-  # nothing filtered
-  expect_length(unlist(out$new_ids), ncol(scdata))
-
-  # threshold equals max for sample
-  expect_equal(get_threshold(out$config), max(scdata$percent.mt[scdata$samples == "123abc"]) / 100)
-})
-

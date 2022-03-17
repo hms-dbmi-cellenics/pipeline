@@ -19,12 +19,12 @@
         .. .. ..$ :List of 4
         .. .. .. ..$ key    : chr "123abc"
         .. .. .. ..$ name   : chr "WT1"
-        .. .. .. ..$ color  : chr "#77aadd"
+        .. .. .. ..$ color  : chr "#e377c2"
         .. .. .. ..$ cellIds: int [1:40] 0 1 2 3 4 5 6 7 8 9 ...
         .. .. ..$ :List of 4
         .. .. .. ..$ key    : chr "123def"
         .. .. .. ..$ name   : chr "WT2"
-        .. .. .. ..$ color  : chr "#ee8866"
+        .. .. .. ..$ color  : chr "#8c564b"
         .. .. .. ..$ cellIds: int [1:40] 40 41 42 43 44 45 46 47 48 49 ...
         .. ..$ type    : chr "metadataCategorical"
 
@@ -49,12 +49,12 @@
         .. .. ..$ :List of 4
         .. .. .. ..$ key    : chr "123abc"
         .. .. .. ..$ name   : chr "WT1"
-        .. .. .. ..$ color  : chr "#77aadd"
+        .. .. .. ..$ color  : chr "#e377c2"
         .. .. .. ..$ cellIds: int [1:40] 0 1 2 3 4 5 6 7 8 9 ...
         .. .. ..$ :List of 4
         .. .. .. ..$ key    : chr "123def"
         .. .. .. ..$ name   : chr "WT2"
-        .. .. .. ..$ color  : chr "#ee8866"
+        .. .. .. ..$ color  : chr "#8c564b"
         .. .. .. ..$ cellIds: int [1:40] 40 41 42 43 44 45 46 47 48 49 ...
         .. ..$ type    : chr "metadataCategorical"
         ..$ :List of 5
@@ -65,12 +65,12 @@
         .. .. ..$ :List of 4
         .. .. .. ..$ key    : chr "Group1-Hello"
         .. .. .. ..$ name   : chr "Hello"
-        .. .. .. ..$ color  : chr "#eedd88"
+        .. .. .. ..$ color  : chr "#d62728"
         .. .. .. ..$ cellIds: int [1:40] 0 1 2 3 4 5 6 7 8 9 ...
         .. .. ..$ :List of 4
         .. .. .. ..$ key    : chr "Group1-WT2"
         .. .. .. ..$ name   : chr "WT2"
-        .. .. .. ..$ color  : chr "#ffaabb"
+        .. .. .. ..$ color  : chr "#2ca02c"
         .. .. .. ..$ cellIds: int [1:40] 40 41 42 43 44 45 46 47 48 49 ...
         .. ..$ type    : chr "metadataCategorical"
         ..$ :List of 5
@@ -81,7 +81,7 @@
         .. .. ..$ :List of 4
         .. .. .. ..$ key    : chr "Group2-WT"
         .. .. .. ..$ name   : chr "WT"
-        .. .. .. ..$ color  : chr "#99ddff"
+        .. .. .. ..$ color  : chr "#ff7f0e"
         .. .. .. ..$ cellIds: int [1:80] 0 1 2 3 4 5 6 7 8 9 ...
         .. ..$ type    : chr "metadataCategorical"
 

@@ -27,21 +27,21 @@
         .. ..$ methodSettings:List of 1
         .. .. ..$ absolute_threshold:List of 2
         .. .. .. ..$ maxFraction: num 0.1
-        .. .. .. ..$ binStep    : num 0.3
+        .. .. .. ..$ binStep    : num 0.05
         ..$ sample_a      :List of 3
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 2
         .. .. ..$ method        : chr "absolute_threshold"
         .. .. ..$ methodSettings:List of 1
         .. .. .. ..$ absolute_threshold:List of 2
-        .. .. .. .. ..$ maxFraction: num 0
-        .. .. .. .. ..$ binStep    : num 0.3
+        .. .. .. .. ..$ maxFraction: num 0.1
+        .. .. .. .. ..$ binStep    : num 0.05
         .. ..$ defaultFilterSettings:List of 2
         .. .. ..$ method        : chr "absolute_threshold"
         .. .. ..$ methodSettings:List of 1
         .. .. .. ..$ absolute_threshold:List of 2
-        .. .. .. .. ..$ maxFraction: num 0
-        .. .. .. .. ..$ binStep    : num 0.3
+        .. .. .. .. ..$ maxFraction: num 0.1
+        .. .. .. .. ..$ binStep    : num 0.05
        $ classifier          :List of 5
         ..$ enabled       : logi TRUE
         ..$ prefiltered   : logi FALSE
@@ -87,16 +87,16 @@
         ..$ auto          : logi TRUE
         ..$ filterSettings:List of 2
         .. ..$ probabilityThreshold: num 0.5
-        .. ..$ binStep             : num 0.02
+        .. ..$ binStep             : num 0.05
         ..$ sample_a      :List of 4
         .. ..$ enabled              : logi TRUE
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 2
         .. .. ..$ probabilityThreshold: num 0.8
-        .. .. ..$ binStep             : num 0.02
+        .. .. ..$ binStep             : num 0.05
         .. ..$ defaultFilterSettings:List of 2
         .. .. ..$ probabilityThreshold: num 0.8
-        .. .. ..$ binStep             : num 0.02
+        .. .. ..$ binStep             : num 0.05
        $ dataIntegration     :List of 2
         ..$ dataIntegration        :List of 2
         .. ..$ method        : chr "harmony"
@@ -115,7 +115,7 @@
         .. .. .. ..$ normalisation: chr "logNormalize"
         ..$ dimensionalityReduction:List of 3
         .. ..$ method               : chr "rpca"
-        .. ..$ numPCs               : NULL
+        .. ..$ numPCs               : num 30
         .. ..$ excludeGeneCategories: list()
        $ configureEmbedding  :List of 2
         ..$ embeddingSettings :List of 2

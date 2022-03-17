@@ -61,7 +61,7 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   message("Total of ", length(object_list$Contents), " samples.")
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
-
+  
   if (match(task_name, task_names) <= integration_index) {
     for (object in object_list$Contents) {
       key <- object$Key
@@ -87,7 +87,7 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
       sample <- readRDS(id_file)
       cells_id[[sample_id]] <- sample[[sample_id]]
       message("Sample ", sample_id, " with ", length(cells_id[[sample_id]]), " cells")
-    }
+    }    
   }
   return(cells_id)
 }
@@ -222,14 +222,10 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
     )
 
     message("Uploading plotData to S3 bucket", pipeline_config$plot_data_bucket, " at key ", id, "...")
-
-    tags <- paste0("experimentId=", experiment_id , "&plotUuid=" , plot_data_name)
-
     s3$put_object(
       Bucket = pipeline_config$plot_data_bucket,
       Key = id,
-      Body = charToRaw(output),
-      Tagging = tags
+      Body = charToRaw(output)
     )
   }
 
@@ -248,20 +244,6 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   put_object_in_s3_multipart(pipeline_config, pipeline_config$processed_bucket, count_matrix, object_key)
 
   return(object_key)
-}
-
-upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
-  fnames <- list.files(file.path(DEBUG_PATH, debug_prefix))
-  bucket <- pipeline_config$debug_bucket
-
-  message("Uploading logs and dump file to S3 bucket ", bucket, " with prefix ", debug_prefix, "...")
-  for (fname in fnames) {
-    fpath <- file.path(DEBUG_PATH, debug_prefix, fname)
-    key <- file.path(debug_prefix, fname)
-    put_object_in_s3_multipart(pipeline_config, bucket, fpath, key)
-  }
-
-  return(NULL)
 }
 
 put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
