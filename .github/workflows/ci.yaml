@@ -152,13 +152,12 @@ jobs:
         name: Build Docker images
         run: |-
           docker build --target builder \
-            --cache-from=$PREVIOUS_IMAGE_NAME-builder \
+            --no-cache\
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-builder .
 
           docker build --target prod \
-            --cache-from=$IMAGE_NAME-builder \
-            --cache-from=$PREVIOUS_IMAGE_NAME \
+            --no-cache\
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME .
         env:
