@@ -774,7 +774,7 @@
       "Package": "httptest",
       "Version": "4.1.0",
       "Source": "Repository",
-      "Requirements": []
+      "Repository": "CRAN",
     },
     "httpuv": {
       "Package": "httpuv",
