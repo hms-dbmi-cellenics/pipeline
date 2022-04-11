@@ -441,10 +441,17 @@
     },
     "cli": {
       "Package": "cli",
-      "Version": "3.0.0",
+      "Version": "3.2.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "096829b701eec2d2b4538be63de97e75"
+      "Hash": "1bdb126893e9ce6aae50ad1d6fc32faf"
+    },
+    "clipr": {
+      "Package": "clipr",
+      "Version": "0.8.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "3f038e5ac7f41d4ac41ce658c85e3042"
     },
     "cluster": {
       "Package": "cluster",
@@ -507,6 +514,13 @@
       "RemoteHost": "api.github.com",
       "Hash": "5228bbb35d0a0789a323aaf496e85956"
     },
+    "credentials": {
+      "Package": "credentials",
+      "Version": "1.3.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "93762d0a34d78e6a025efdbfb5c6bb41"
+    },
     "crosstalk": {
       "Package": "crosstalk",
       "Version": "1.1.1",
@@ -537,10 +551,10 @@
     },
     "desc": {
       "Package": "desc",
-      "Version": "1.3.0",
+      "Version": "1.4.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "b6963166f7f10b970af1006c462ce6cd"
+      "Hash": "eebd27ee58fcc58714eedb7aa07d8ad1"
     },
     "diffobj": {
       "Package": "diffobj",
@@ -667,6 +681,13 @@
       "Repository": "CRAN",
       "Hash": "4d243a9c10b00589889fe32314ffd902"
     },
+    "gert": {
+      "Package": "gert",
+      "Version": "1.6.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "98c014c4c933f23ea5a0321a4d0b588b"
+    },
     "ggbeeswarm": {
       "Package": "ggbeeswarm",
       "Version": "0.6.0",
@@ -695,6 +716,20 @@
       "Repository": "CRAN",
       "Hash": "9d028e8f37c84dba356ce3c367a1978e"
     },
+    "gh": {
+      "Package": "gh",
+      "Version": "1.3.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "38c2580abbda249bd6afeec00d14f531"
+    },
+    "gitcreds": {
+      "Package": "gitcreds",
+      "Version": "0.1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "f3aefccc1cc50de6338146b62f115de8"
+    },
     "globals": {
       "Package": "globals",
       "Version": "0.14.0",
@@ -704,10 +739,10 @@
     },
     "glue": {
       "Package": "glue",
-      "Version": "1.4.2",
+      "Version": "1.6.2",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "6efd734b14c6471cfe443345f3e35e29"
+      "Hash": "4f2596dfb05dac67b9dc558e5c6fba2e"
     },
     "goftest": {
       "Package": "goftest",
@@ -775,6 +810,7 @@
       "Version": "4.1.0",
       "Source": "Repository",
       "Repository": "CRAN",
+      "Hash": "cd910dc78e8edbc40b9723824baa7097"
     },
     "httpuv": {
       "Package": "httpuv",
@@ -815,6 +851,13 @@
       "RemoteSha": "46bfafd9623b4c9d6cbad9b6768ba3fb297fc06b",
       "RemoteHost": "api.github.com",
       "Hash": "d0bc05b3feb0bb04b8f6aae3d4d14271"
+    },
+    "ini": {
+      "Package": "ini",
+      "Version": "0.3.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "6154ec2223172bce8162d4153cda21f7"
     },
     "irlba": {
       "Package": "irlba",
@@ -1484,6 +1527,13 @@
       "Repository": "CRAN",
       "Hash": "ee3a0717cd6a7a190bb32b90ccf0178b"
     },
+    "usethis": {
+      "Package": "usethis",
+      "Version": "2.1.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c499f488e6dd7718accffaee5bc5a79b"
+    },
     "utf8": {
       "Package": "utf8",
       "Version": "1.2.1",
@@ -1540,6 +1590,13 @@
       "Repository": "CRAN",
       "Hash": "20c45f1d511a3f730b7b469f4d11e104"
     },
+    "whisker": {
+      "Package": "whisker",
+      "Version": "0.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "ca970b96d894e90397ed20637a0c1bbe"
+    },
     "withr": {
       "Package": "withr",
       "Version": "2.4.2",
@@ -1581,6 +1638,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "ee9b643aa8331c45d8d82eb3a137c9bc"
+    },
+    "zip": {
+      "Package": "zip",
+      "Version": "2.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c7eef2996ac270a18c2715c997a727c5"
     },
     "zlibbioc": {
       "Package": "zlibbioc",
