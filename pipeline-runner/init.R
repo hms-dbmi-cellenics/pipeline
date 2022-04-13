@@ -323,6 +323,8 @@ init <- function() {
     states <- paws::sfn(config=pipeline_config$aws_config)
     message("Loaded step function")
 
+    print(sessionInfo())
+
     flog.layout(layout.simple)
     flog.threshold(ERROR)
 
