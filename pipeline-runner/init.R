@@ -4,6 +4,7 @@ library(zeallot)
 library(tryCatchLog)
 library(futile.logger)
 library(magrittr)
+library(future)
 
 # time stamp used for directory to store log/dump files in event of error
 debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
@@ -282,6 +283,16 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     return(message_id)
 }
 
+start_heartbeat <- function(taskToken) {
+    message("Starting hearbeat")
+
+    while (TRUE) {
+        states$send_task_success(taskToken = taskToken)
+        # sleep for 30 seconds until next heartbeat
+        Sys.sleep(30)
+    }
+}
+
 #
 # Wrapper(input_json)
 # IN input_json: json input from message. Input should have:
@@ -295,6 +306,7 @@ wrapper <- function(input) {
     message("Input:")
     str(input)
     message("")
+
 
     # common to gem2s and data processing
     server <- input$server
@@ -350,6 +362,10 @@ init <- function() {
         flog.appender(appender.tee(file.path(dump_folder, "logs.txt")))
 
         tryCatchLog({
+
+                plan(multiprocess)
+                # start heartbeat as future so it runs in the background
+                future(start_heartbeat(taskToken))
                 wrapper(input)
 
                 message('Send task success\n------\n')
