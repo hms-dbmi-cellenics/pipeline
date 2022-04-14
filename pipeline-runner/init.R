@@ -283,20 +283,31 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     return(message_id)
 }
 
-start_heartbeat <- function(taskToken) {
+start_heartbeat <- function(taskToken, aws_config) {
+    library(tryCatchLog)
     message("Starting hearbeat")
+    states <- paws::sfn(config=aws_config)
 
-    while (TRUE) {
+    keep_running <- TRUE
+    i <- 0
+    while (keep_running) {
+        cat(toString(i), file="/tmp/output.txt", append=TRUE)
+
         tryCatchLog({
-            states$send_task_success(taskToken = taskToken)
+            states$send_task_heartbeat(
+                taskToken = taskToken
+            )
+            message("Heartbeat sent: ", i)
             # sleep for 30 seconds until next heartbeat
         },
         error = function(e) {
             message("Send task heartbeat failed: ", e$message)
             message("Stopping heartbeat")
-            break
+            keep_running <- FALSE
         })
-        Sys.sleep(30)
+        i <- i + 1
+        Sys.sleep(10)
+
     }
 }
 
@@ -371,7 +382,9 @@ init <- function() {
         tryCatchLog({
 
                 # start heartbeat as future so it runs in the background
-                r_bg(func=start_heartbeat, args=list(taskToken), supervise=FALSE)
+                message("calling r heartbeat")
+                rx <- r_bg(func=start_heartbeat, args=list(taskToken, pipeline_config$aws_config), stdout = "/tmp/out", stderr = "/tmp/err")
+                message(rx$is_alive())
                 wrapper(input)
 
                 message('Send task success\n------\n')
