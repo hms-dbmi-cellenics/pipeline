@@ -4,7 +4,7 @@ library(zeallot)
 library(tryCatchLog)
 library(futile.logger)
 library(magrittr)
-library(future)
+library(callr)
 
 # time stamp used for directory to store log/dump files in event of error
 debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
@@ -287,8 +287,15 @@ start_heartbeat <- function(taskToken) {
     message("Starting hearbeat")
 
     while (TRUE) {
-        states$send_task_success(taskToken = taskToken)
-        # sleep for 30 seconds until next heartbeat
+        tryCatchLog({
+            states$send_task_success(taskToken = taskToken)
+            # sleep for 30 seconds until next heartbeat
+        },
+        error = function(e) {
+            message("Send task heartbeat failed: ", e$message)
+            message("Stopping heartbeat")
+            break
+        })
         Sys.sleep(30)
     }
 }
@@ -363,9 +370,8 @@ init <- function() {
 
         tryCatchLog({
 
-                plan(multiprocess)
                 # start heartbeat as future so it runs in the background
-                future(start_heartbeat(taskToken))
+                r_bg(func=start_heartbeat, args=list(taskToken), supervise=FALSE)
                 wrapper(input)
 
                 message('Send task success\n------\n')
