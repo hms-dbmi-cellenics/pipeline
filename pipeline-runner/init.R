@@ -314,8 +314,8 @@ start_heartbeat <- function(task_token, aws_config) {
             keep_running <- FALSE
         })
         i <- i + 1
-        # sleep for 10 seconds until next heartbeat
-        Sys.sleep(10)
+        # sleep for 30 seconds until next heartbeat
+        Sys.sleep(30)
 
     }
 }
@@ -392,6 +392,10 @@ init <- function() {
 
                 # start heartbeat as a different process in the background
                 message("Starting heartbeat")
+                # message inside r_bg will ONLY be printed into /tmp/[out|err]
+                # to see them
+                # 1. log into the R container
+                # 2. cat /tmp/out  o tail -f /tmp/out
                 r_bg(func=start_heartbeat, args=list(
                     task_token, pipeline_config$aws_config),
                     stdout = "/tmp/out",
