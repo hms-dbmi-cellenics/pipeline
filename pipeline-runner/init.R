@@ -283,7 +283,18 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     return(message_id)
 }
 
-start_heartbeat <- function(taskToken, aws_config) {
+#
+# start_heartbeat(task_token, aws_config)
+# IN task_token, aws_config
+#
+# Sends a heartbeat to the state machine every 10 seconds
+# Once the task is completed the heartbeat will fail accordingly with a
+# task timeout and exit the loop and a new heartbeat will be set up by next task.
+# This method is invoked with `r_bg` which creates a new process which does not inherit
+# the current workspace or memory, only the provided parameters; that's why we need to
+# reimport tryCatchLog & initialize states again.
+#
+start_heartbeat <- function(task_token, aws_config) {
     library(tryCatchLog)
     message("Starting hearbeat")
     states <- paws::sfn(config=aws_config)
@@ -291,21 +302,19 @@ start_heartbeat <- function(taskToken, aws_config) {
     keep_running <- TRUE
     i <- 0
     while (keep_running) {
-        cat(toString(i), file="/tmp/output.txt", append=TRUE)
-
         tryCatchLog({
             states$send_task_heartbeat(
-                taskToken = taskToken
+                taskToken = task_token
             )
             message("Heartbeat sent: ", i)
-            # sleep for 30 seconds until next heartbeat
         },
         error = function(e) {
             message("Send task heartbeat failed: ", e$message)
-            message("Stopping heartbeat")
+            message("Stopping heartbeat after ", i+1)
             keep_running <- FALSE
         })
         i <- i + 1
+        # sleep for 10 seconds until next heartbeat
         Sys.sleep(10)
 
     }
@@ -361,12 +370,12 @@ init <- function() {
     message("Waiting for tasks")
 
     repeat {
-        c(taskToken, input_json) %<-% states$get_activity_task(
+        c(task_token, input_json) %<-% states$get_activity_task(
             activityArn = pipeline_config$activity_arn,
             workerName = pipeline_config$pod_name
         )
 
-        if(is.null(taskToken) || !length(taskToken) || taskToken == "") {
+        if(is.null(task_token) || !length(task_token) || task_token == "") {
             message('No input received during last poll, shutting down...')
             quit('no')
         }
@@ -381,15 +390,18 @@ init <- function() {
 
         tryCatchLog({
 
-                # start heartbeat as future so it runs in the background
-                message("calling r heartbeat")
-                rx <- r_bg(func=start_heartbeat, args=list(taskToken, pipeline_config$aws_config), stdout = "/tmp/out", stderr = "/tmp/err")
-                message(rx$is_alive())
+                # start heartbeat as a different process in the background
+                message("Starting heartbeat")
+                r_bg(func=start_heartbeat, args=list(
+                    task_token, pipeline_config$aws_config),
+                    stdout = "/tmp/out",
+                    stderr = "/tmp/err"
+                )
                 wrapper(input)
 
                 message('Send task success\n------\n')
                 states$send_task_success(
-                    taskToken = taskToken,
+                    taskToken = task_token,
                     output = "{}"
                 )
         },
@@ -404,13 +416,13 @@ init <- function() {
 
                 message(error_txt)
                 states$send_task_failure(
-                    taskToken = taskToken,
+                    taskToken = task_token,
                     error = "We had an issue while processing your data.",
                     cause = error_txt
                 )
 
                 send_pipeline_fail_update(pipeline_config, input, error_txt)
-                message("Sent task failure to state machine task: ", taskToken)
+                message("Sent task failure to state machine task: ", task_token)
 
                 if (pipeline_config$cluster_env != 'development') {
                     upload_debug_folder_to_s3(debug_prefix, pipeline_config)
