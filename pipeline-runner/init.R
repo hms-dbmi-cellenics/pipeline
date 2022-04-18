@@ -287,7 +287,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 # start_heartbeat(task_token, aws_config)
 # IN task_token, aws_config
 #
-# Sends a heartbeat to the state machine every 10 seconds
+# Sends a heartbeat to the state machine every 'wait_time' seconds
 # Once the task is completed the heartbeat will fail accordingly with a
 # task timeout and exit the loop and a new heartbeat will be set up by next task.
 # This method is invoked with `r_bg` which creates a new process which does not inherit
@@ -300,6 +300,8 @@ start_heartbeat <- function(task_token, aws_config) {
     states <- paws::sfn(config=aws_config)
 
     keep_running <- TRUE
+    # amount of time to wait between heartbeats
+    wait_time <- 30
     i <- 0
     while (keep_running) {
         tryCatchLog({
@@ -314,8 +316,8 @@ start_heartbeat <- function(task_token, aws_config) {
             keep_running <- FALSE
         })
         i <- i + 1
-        # sleep for 30 seconds until next heartbeat
-        Sys.sleep(30)
+        # sleep until next hearbeat
+        Sys.sleep(wait_time)
 
     }
 }
@@ -388,19 +390,21 @@ init <- function() {
         dump_folder <- file.path(DEBUG_PATH, debug_prefix)
         flog.appender(appender.tee(file.path(dump_folder, "logs.txt")))
 
+        # start heartbeat as a different process in the background
+        message("Starting heartbeat")
+        # message inside r_bg will ONLY be printed into /tmp/[out|err]
+        # to see them
+        # 1. log into the R container
+        # 2. cat /tmp/out  o tail -f /tmp/out
+        heartbeat_proc <- r_bg(func=start_heartbeat, args=list(
+            task_token, pipeline_config$aws_config),
+            stdout = "/tmp/out",
+            stderr = "/tmp/err"
+        )
+
         tryCatchLog({
 
-                # start heartbeat as a different process in the background
-                message("Starting heartbeat")
-                # message inside r_bg will ONLY be printed into /tmp/[out|err]
-                # to see them
-                # 1. log into the R container
-                # 2. cat /tmp/out  o tail -f /tmp/out
-                r_bg(func=start_heartbeat, args=list(
-                    task_token, pipeline_config$aws_config),
-                    stdout = "/tmp/out",
-                    stderr = "/tmp/err"
-                )
+
                 wrapper(input)
 
                 message('Send task success\n------\n')
@@ -436,6 +440,9 @@ init <- function() {
             },
         write.error.dump.file = TRUE,
         write.error.dump.folder = dump_folder)
+
+        # kill heartbeat process
+        heartbeat_proc$kill()
     }
 }
 
