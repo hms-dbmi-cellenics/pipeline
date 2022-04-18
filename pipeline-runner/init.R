@@ -290,7 +290,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 # Sends a heartbeat to the state machine every 'wait_time' seconds
 # Once the task is completed the heartbeat will fail accordingly with a
 # task timeout and exit the loop and a new heartbeat will be set up by next task.
-# This method is invoked with `r_bg` which creates a new process which does not inherit
+# This method is invoked with `callr::r_bg` which creates a new process which does not inherit
 # the current workspace or memory, only the provided parameters; that's why we need to
 # reimport tryCatchLog & initialize states again.
 #
