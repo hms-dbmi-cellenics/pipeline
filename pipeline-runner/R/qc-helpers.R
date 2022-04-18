@@ -189,6 +189,7 @@ runClusters <- function(clustering_method, resolution, data) {
 #'
 #' @examples
 getClusters <- function(clustering_method, resolution, data) {
+  set.seed(0)
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]
   # To run clustering, we need to identify the active.reduction that is used in FindNeighbors.
