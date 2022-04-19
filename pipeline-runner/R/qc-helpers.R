@@ -200,15 +200,15 @@ getClusters <- function(clustering_method, resolution, data) {
 
   if (clustering_method == "leiden") {
     # emulate FindClusters, which overwrites seurat_clusters slot and meta.data column
-    g <- getSNNiGraph(data, active.reduction)
-    clus_res <- igraph::cluster_leiden(g, "modularity", resolution_parameter = resolution)
+    snn_graph <- getSNNiGraph(data, active.reduction)
+    clus_res <- igraph::cluster_leiden(snn_graph, "modularity", resolution_parameter = resolution)
     clusters <- clus_res$membership
     names(clusters) <- clus_res$names
     clusters <- clusters[colnames(data)]
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters - 1)
   } else {
-    graph.name <- paste0(Seurat::DefaultAssay(data), "_snn")
-    if (!graph.name %in% names(data)) {
+    graph_name <- paste0(Seurat::DefaultAssay(data), "_snn")
+    if (!graph_name %in% names(data)) {
       data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
     }
     data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm)
@@ -237,11 +237,11 @@ getSNNiGraph <- function(data, active.reduction) {
   # similar to https://github.com/joshpeters/westerlund/blob/46609a68855d64ed06f436a6e2628578248d3237/R/functions.R#L85
   adj_matrix <-
     Matrix::Matrix(as.matrix(data@graphs[[snn_name]]), sparse = TRUE)
-  g <- igraph::graph_from_adjacency_matrix(adj_matrix,
+  graph <- igraph::graph_from_adjacency_matrix(adj_matrix,
                                            mode = "undirected",
                                            weighted = TRUE
   )
-  return(g)
+  return(graph)
 }
 
 safeTRUE <- function(x) {
