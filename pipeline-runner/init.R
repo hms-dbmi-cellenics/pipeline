@@ -395,7 +395,7 @@ init <- function() {
         # message inside r_bg will ONLY be printed into /tmp/[out|err]
         # to see them
         # 1. log into the R container
-        # 2. cat /tmp/out  o tail -f /tmp/out
+        # 2. cat /tmp/out or tail -f /tmp/out
         heartbeat_proc <- r_bg(func=start_heartbeat, args=list(
             task_token, pipeline_config$aws_config),
             stdout = "/tmp/out",
