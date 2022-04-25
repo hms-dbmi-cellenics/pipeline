@@ -81,7 +81,7 @@ test_that("runClusters returns one value per cell", {
   }
 })
 
-test_that("runClusters orders barcodes correctly", {
+test_that("runClusters returns same order of barcodes as seurat object", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
   expected_barcodes <- colnames(data)
