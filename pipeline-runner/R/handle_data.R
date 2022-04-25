@@ -95,6 +95,8 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
 send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   c(config, plot_data = plotData) %<-% output
 
+  config <- config[!names(config) %in% c("auth_JWT", "api_url")]
+
   # upload output
   s3 <- paws::s3(config = pipeline_config$aws_config)
   id <- ids::uuid()
