@@ -13,6 +13,18 @@ embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name = "
   formated_cell_sets <- format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
   message("udating through api")
 
+  print("CellSets")
+  print(formated_cell_sets)
+
+  print("Auth_JWT")
+  print(config$auth_JWT)
+
+  print("ExpID")
+  print(scdata@misc$experimentId)
+
+  print("ApiURL")
+  print(config$api_url)
+  
   update_sets_through_api(formated_cell_sets, config$api_url, scdata@misc$experimentId, clustering_method, config$auth_JWT)
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
