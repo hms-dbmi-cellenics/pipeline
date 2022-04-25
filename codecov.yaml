@@ -15,3 +15,4 @@ coverage:
 
 
     patch: false                 # measuring the coverage of new changes
+    
