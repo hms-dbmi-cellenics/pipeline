@@ -22,7 +22,9 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   message("Merging Seurat Objects...")
   scdata <- merge_scdatas(scdata_list)
+  message("Adding metadata...")
   scdata <- add_metadata(scdata, prev_out$annot, input$experimentId)
+  message("Added metadata...")
   prev_out$scdata <- scdata
 
   # construct default QC config and update prev out
@@ -40,12 +42,14 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 }
 
 merge_scdatas <- function(scdata_list) {
+  message("Merging ", length(scdata_list))
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
     scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
   }
 
+  message("Merging done")
   return(scdata)
 }
 
