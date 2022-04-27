@@ -770,6 +770,13 @@
       "Repository": "CRAN",
       "Hash": "6fdaa86d0700f8b3e92ee3c445a5a10d"
     },
+    "httptest": {
+      "Package": "httptest",
+      "Version": "4.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "cd910dc78e8edbc40b9723824baa7097"
+    },
     "httpuv": {
       "Package": "httpuv",
       "Version": "1.6.1",
