@@ -1,3 +1,69 @@
+download_and_store <- function(bucket, key, file_path, aws_config) {
+  s3 <- paws::s3(config = aws_config)
+  fs::dir_create(dirname(file_path))
+
+  # Download the file and store the output in a variable
+  c(body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = key
+  )
+
+  # Write output to file
+  writeBin(body, con = file_path)
+}
+
+get_gem2s_file_v1 <- function(project_id, sample_ids, originals_bucket, aws_config) {
+  input_dir <- "/input"
+  unlink(input_dir, recursive = TRUE)
+
+  for (sample_id in sample_ids) {
+    message("\nSample --> ", sample_id)
+
+    res <- s3$list_objects(
+      Bucket = originals_bucket,
+      Prefix = file.path(project_id, sample_id)
+    )
+
+    keys <- unlist(lapply(res$Contents, `[[`, "Key"))
+
+    for (gem_key in keys) {
+      message("GEM key: ", gem_key)
+      fname <- basename(gem_key)
+
+      # Preparing directories
+      local_fpath <- file.path(input_dir, sample_id, fname)
+
+      download_and_store(originals_bucket, gem_key, local_fpath, aws_config)
+    }
+  }
+}
+
+file_names_v1 <- list(
+  barcodes10x = "barcodes.tsv.gz",
+  features10x = "features.tsv.gz",
+  matrix10x = "matrix.mtx.gz"
+)
+
+file_types_by_technology <- list(
+  "10x" = list("barcodes10x", "features10x", "matrix10x")
+)
+
+get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, technology, originals_bucket, aws_config) {
+  input_dir <- "/input"
+  unlink(input_dir, recursive = TRUE)
+  
+  for (i in seq_along(sample_ids)) {
+    sample_id <- sample_ids[i]
+    sample_s3_paths <- s3_paths_by_sample[i][[1]]    
+
+    for (file_type in file_types_by_technology[[technology]]) {
+      s3_path <- sample_s3_paths[[file_type]]
+      local_fpath <- file.path(input_dir, sample_id, file_names_v1[[file_type]])
+      download_and_store(originals_bucket, s3_path, local_fpath, aws_config)
+    }
+  }
+}
+
 #' Download user files from S3
 #'
 #' @param input The input object from the request
@@ -9,48 +75,21 @@
 #'
 download_user_files <- function(input, pipeline_config, prev_out = list()) {
   project_id <- input$projectId
-  sample_uuids <- input$sampleIds
+  sample_ids = input$sampleIds
+  s3_paths_by_sample = input$sampleS3Paths
+  technology = input$input$type
 
-  s3 <- paws::s3(config = pipeline_config$aws_config)
-
-  input_dir <- "/input"
-
-  unlink(input_dir, recursive = TRUE)
-
-  for (sample in sample_uuids) {
-    message("\nSample --> ", sample)
-
-    res <- s3$list_objects(
-      Bucket = pipeline_config$originals_bucket,
-      Prefix = file.path(project_id, sample)
-    )
-
-    keys <- unlist(lapply(res$Contents, `[[`, "Key"))
-
-    for (gem_key in keys) {
-      message("GEM key: ", gem_key)
-      fname <- basename(gem_key)
-
-      # Preparing directories
-      local_fpath <- file.path(input_dir, sample, fname)
-      fs::dir_create(dirname(local_fpath))
-
-      # Download the file and store the output in a variable
-      c(body, ...rest) %<-% s3$get_object(
-        Bucket = pipeline_config$originals_bucket,
-        Key = gem_key
-      )
-
-      # Write output to file
-      writeBin(body, con = local_fpath)
-    }
+  if (input$apiVersion == "v1") {
+    get_gem2s_file_v1(project_id, sample_ids, pipeline_config$originals_bucket, pipeline_config$aws_config)
+  } else if (input$apiVersion == "v2") {
+    get_gem2s_file_v2(project_id, sample_ids, s3_paths_by_sample, technology, pipeline_config$originals_bucket, pipeline_config$aws_config)
   }
 
   config <- list(
     name = input$experimentName,
     samples = input$sampleIds,
     organism = input$organism,
-    input = list(type = input$input$type)
+    input = list(type = technology)
   )
 
   if ("metadata" %in% names(input)) {

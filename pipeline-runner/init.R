@@ -146,7 +146,6 @@ run_processing_step <- function(scdata, config, tasks,task_name, cells_id,sample
 #
 
 run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
-
     # list of task functions named by task name
     tasks <- list(
         "downloadGem" = download_user_files,
