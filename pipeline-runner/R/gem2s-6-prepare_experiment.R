@@ -21,21 +21,25 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   samples <- names(scdata_list)
 
   message("Merging Seurat Objects...")
-  scdata <- merge_scdatas(scdata_list)
-  scdata <- add_metadata(scdata, prev_out$annot, input$experimentId)
-  prev_out$scdata <- scdata
+  # saveRDS(scdata_list, "/debug/scdata_list.rds")
+  # saveRDS(prev_out, "/debug/prev_out.rds")
+  # saveRDS(pipeline_config, "/debug/pipeline_config.rds")
+  # sum(sapply(scdata_list, ncol))r
+  # scdata <- merge_scdatas(scdata_list)
+  # scdata_list <- add_metadata(scdata_list, prev_out$annot, input$experimentId)
+  prev_out$scdata <- scdata_list
 
   # construct default QC config and update prev out
   message("Constructing default QC configuration...")
   any_filtered <- !(length(prev_out$edrops) == length(samples))
-  prev_out$qc_config <- construct_qc_config(scdata, any_filtered)
+  # prev_out$qc_config <- construct_qc_config(scdata_list, any_filtered)
 
   res <- list(
     data = list(),
     output = prev_out
   )
 
-  message("\nPreperation for AWS upload step complete.")
+  message("\nPreparation for AWS upload step complete.")
   return(res)
 }
 

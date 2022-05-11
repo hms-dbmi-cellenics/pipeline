@@ -8,33 +8,38 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   project_id <- input$projectId
 
   # destructure what need from prev_out
-  scdata <- prev_out$scdata
+  scdata_list <- prev_out$scdata_list
   config <- prev_out$config
   config_dataProcessing <- prev_out$qc_config
 
-  message("Constructing cell sets ...")
-  cell_sets <- get_cell_sets(scdata, input)
+  i <- 0
+  for (scdata in scdata_list) {
+    message('Uploading: ', i)
+    i <- i + 1
+    message("Constructing cell sets ...")
+    cell_sets <- get_cell_sets(scdata, input)
 
-  # cell sets file to s3
-  cell_sets_data <- RJSONIO::toJSON(cell_sets)
+    # cell sets file to s3
+    cell_sets_data <- RJSONIO::toJSON(cell_sets)
 
-  put_object_in_s3(pipeline_config,
-    bucket = pipeline_config$cell_sets_bucket,
-    object = charToRaw(cell_sets_data),
-    key = experiment_id
-  )
+    put_object_in_s3(pipeline_config,
+      bucket = pipeline_config$cell_sets_bucket,
+      object = charToRaw(cell_sets_data),
+      key = experiment_id
+    )
 
-  # seurat object to s3
-  message("Uploading Seurat Object to S3 ...")
-  fpath <- file.path(tempdir(), "experiment.rds")
-  saveRDS(scdata, fpath, compress = FALSE)
+    # seurat object to s3
+    message("Uploading Seurat Object to S3 ...")
+    fpath <- file.path(tempdir(), "experiment.rds")
+    saveRDS(scdata, fpath, compress = FALSE)
 
-  # can only upload up to 50Gb because part numbers can be any number from 1 to 10,000, inclusive.
-  put_object_in_s3_multipart(pipeline_config,
-    bucket = pipeline_config$source_bucket,
-    object = fpath,
-    key = file.path(experiment_id, "r.rds")
-  )
+    # can only upload up to 50Gb because part numbers can be any number from 1 to 10,000, inclusive.
+    put_object_in_s3_multipart(pipeline_config,
+      bucket = pipeline_config$source_bucket,
+      object = fpath,
+      key = file.path(experiment_id, "r.rds")
+    )
+  }
 
   cluster_env <- pipeline_config$cluster_env
 
@@ -58,6 +63,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   )
 
   message("\nUpload to AWS step complete.")
+
   return(res)
 }
 
