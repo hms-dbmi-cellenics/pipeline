@@ -98,13 +98,18 @@ stub_file.path <- function(...) {
 stubbed_download_user_files <- function(input, pipeline_config, prev_out = list()) {
   # helper to simplify calls to the stubbed function
 
-  # where makes sure where we are stubbing the what calls.
-  mockery::stub(where = download_user_files, what = "paws::s3", how = NA)
-  mockery::stub(download_user_files, "s3$list_objects", stub_s3_list_objects)
-  mockery::stub(download_user_files, "file.path", stub_file.path)
-  mockery::stub(download_user_files, "s3$get_object", stub_s3_get_objects)
+  mockedS3 <- list(
+    list_objects=stub_s3_list_objects,
+    get_object=stub_s3_get_objects
+  )
 
-  res <- download_user_files(input, pipeline_config, prev_out)
+  # where makes sure where we are stubbing the what calls.
+  mockery::stub(where = download_user_files, what = "paws::s3", how=mockedS3, depth=3)
+  mockery::stub(download_user_files, "s3$list_objects", stub_s3_list_objects, depth=3)
+  mockery::stub(download_user_files, "file.path", stub_file.path, depth=3)
+  mockery::stub(download_user_files, "s3$get_object", stub_s3_get_objects, depth=3)
+
+  res <- download_user_files(input, pipeline_config, input_dir = "./input", prev_out = prev_out)
   # download_user_files creates a "/input" folder in the pod. defer deleting
   # it during tests.
   withr::defer(unlink("./input", recursive = TRUE), envir = parent.frame())
@@ -122,7 +127,8 @@ mock_input <- function(samples) {
     sampleIds = as.list(samples),
     sampleNames = as.list(paste0(samples, "_name")),
     experimentName = "test_exp",
-    input = list(type = "techno")
+    input = list(type = "techno"),
+    apiVersion = "v1"
   )
 }
 

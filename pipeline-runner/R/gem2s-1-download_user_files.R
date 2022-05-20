@@ -14,17 +14,15 @@ download_and_store <- function(bucket, key, file_path, s3) {
 
 #' Download user files from S3
 #'
-#' @param project_id 
-#' @param sample_ids 
-#' @param s3_paths_by_sample The key for each sample file stored in s3
-#' @param technology The technology used in the samples
+#' @param project_id
+#' @param sample_ids
 #' @param originals_bucket The bucket where the sample files are
-#' @param aws_config The input object from the request
+#' @param input_dir A string, where the s3 object is going to be stored
+#' @param s3 S3 aws client
 #'
 #' @export
 #'
-get_gem2s_file_v1 <- function(project_id, sample_ids, originals_bucket, s3) {
-  input_dir <- "/input"
+get_gem2s_file_v1 <- function(project_id, sample_ids, originals_bucket, input_dir, s3) {
   unlink(input_dir, recursive = TRUE)
 
   for (sample_id in sample_ids) {
@@ -51,22 +49,23 @@ get_gem2s_file_v1 <- function(project_id, sample_ids, originals_bucket, s3) {
 
 #' Download user files from S3
 #'
-#' @param project_id 
-#' @param sample_ids 
+#' @param project_id
+#' @param sample_ids
 #' @param s3_paths_by_sample The key for each sample file stored in s3
 #' @param technology The technology used in the samples
 #' @param originals_bucket The bucket where the sample files are
 #' @param aws_config The input object from the request
+#' @param input_dir A string, where the s3 object is going to be stored
+#' @param s3 S3 aws client
 #'
 #' @export
 #'
-get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, technology, originals_bucket, aws_config) {
-  input_dir <- "/input"
+get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, technology, originals_bucket, aws_config, input_dir, s3) {
   unlink(input_dir, recursive = TRUE)
-  
+
   for (i in seq_along(sample_ids)) {
     sample_id <- sample_ids[i]
-    sample_s3_paths <- s3_paths_by_sample[i][[1]]    
+    sample_s3_paths <- s3_paths_by_sample[i][[1]]
 
     for (file_type in file_types_by_technology[[technology]]) {
       s3_path <- sample_s3_paths[[file_type]]
@@ -80,12 +79,13 @@ get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, techno
 #'
 #' @param input The input object from the request
 #' @param pipeline_config result of \code{load_config}
+#' @param input_dir A string, where the s3 object is going to be stored
 #' @param prev_out \code{list()} that is added to in each with gem2s task.
 #'
 #' @return list where 'output' slot has config used by \code{load_user_files}
 #' @export
 #'
-download_user_files <- function(input, pipeline_config, prev_out = list()) {
+download_user_files <- function(input, pipeline_config, prev_out = list(), input_dir= "/input") {
   project_id <- input$projectId
   sample_ids = input$sampleIds
   s3_paths_by_sample = input$sampleS3Paths
@@ -94,9 +94,9 @@ download_user_files <- function(input, pipeline_config, prev_out = list()) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
   if (input$apiVersion == "v1") {
-    get_gem2s_file_v1(project_id, sample_ids, pipeline_config$originals_bucket, s3)
+    get_gem2s_file_v1(project_id, sample_ids, pipeline_config$originals_bucket, input_dir, s3)
   } else if (input$apiVersion == "v2") {
-    get_gem2s_file_v2(project_id, sample_ids, s3_paths_by_sample, technology, pipeline_config$originals_bucket, s3)
+    get_gem2s_file_v2(project_id, sample_ids, s3_paths_by_sample, technology, pipeline_config$originals_bucket, input_dir, s3)
   }
 
   config <- list(
