@@ -1,5 +1,5 @@
-download_and_store <- function(bucket, key, file_path, aws_config) {
-  s3 <- paws::s3(config = aws_config)
+# Download the file and stores the output in a file
+download_and_store <- function(bucket, key, file_path, s3) {
   fs::dir_create(dirname(file_path))
 
   # Download the file and store the output in a variable
@@ -12,7 +12,18 @@ download_and_store <- function(bucket, key, file_path, aws_config) {
   writeBin(body, con = file_path)
 }
 
-get_gem2s_file_v1 <- function(project_id, sample_ids, originals_bucket, aws_config) {
+#' Download user files from S3
+#'
+#' @param project_id 
+#' @param sample_ids 
+#' @param s3_paths_by_sample The key for each sample file stored in s3
+#' @param technology The technology used in the samples
+#' @param originals_bucket The bucket where the sample files are
+#' @param aws_config The input object from the request
+#'
+#' @export
+#'
+get_gem2s_file_v1 <- function(project_id, sample_ids, originals_bucket, s3) {
   input_dir <- "/input"
   unlink(input_dir, recursive = TRUE)
 
@@ -33,21 +44,22 @@ get_gem2s_file_v1 <- function(project_id, sample_ids, originals_bucket, aws_conf
       # Preparing directories
       local_fpath <- file.path(input_dir, sample_id, fname)
 
-      download_and_store(originals_bucket, gem_key, local_fpath, aws_config)
+      download_and_store(originals_bucket, gem_key, local_fpath, s3)
     }
   }
 }
 
-file_names_v1 <- list(
-  barcodes10x = "barcodes.tsv.gz",
-  features10x = "features.tsv.gz",
-  matrix10x = "matrix.mtx.gz"
-)
-
-file_types_by_technology <- list(
-  "10x" = list("barcodes10x", "features10x", "matrix10x")
-)
-
+#' Download user files from S3
+#'
+#' @param project_id 
+#' @param sample_ids 
+#' @param s3_paths_by_sample The key for each sample file stored in s3
+#' @param technology The technology used in the samples
+#' @param originals_bucket The bucket where the sample files are
+#' @param aws_config The input object from the request
+#'
+#' @export
+#'
 get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, technology, originals_bucket, aws_config) {
   input_dir <- "/input"
   unlink(input_dir, recursive = TRUE)
@@ -79,10 +91,12 @@ download_user_files <- function(input, pipeline_config, prev_out = list()) {
   s3_paths_by_sample = input$sampleS3Paths
   technology = input$input$type
 
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+
   if (input$apiVersion == "v1") {
-    get_gem2s_file_v1(project_id, sample_ids, pipeline_config$originals_bucket, pipeline_config$aws_config)
+    get_gem2s_file_v1(project_id, sample_ids, pipeline_config$originals_bucket, s3)
   } else if (input$apiVersion == "v2") {
-    get_gem2s_file_v2(project_id, sample_ids, s3_paths_by_sample, technology, pipeline_config$originals_bucket, pipeline_config$aws_config)
+    get_gem2s_file_v2(project_id, sample_ids, s3_paths_by_sample, technology, pipeline_config$originals_bucket, s3)
   }
 
   config <- list(
