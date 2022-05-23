@@ -60,7 +60,7 @@ get_gem2s_file_v1 <- function(project_id, sample_ids, originals_bucket, input_di
 #'
 #' @export
 #'
-get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, technology, originals_bucket, aws_config, input_dir, s3) {
+get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, technology, originals_bucket, input_dir, s3) {
   unlink(input_dir, recursive = TRUE)
 
   for (i in seq_along(sample_ids)) {
@@ -69,8 +69,9 @@ get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, techno
 
     for (file_type in file_types_by_technology[[technology]]) {
       s3_path <- sample_s3_paths[[file_type]]
+
       local_fpath <- file.path(input_dir, sample_id, file_names_v1[[file_type]])
-      download_and_store(originals_bucket, s3_path, local_fpath, aws_config)
+      download_and_store(originals_bucket, s3_path, local_fpath, s3)
     }
   }
 }
