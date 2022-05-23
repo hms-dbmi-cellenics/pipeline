@@ -80,6 +80,11 @@ read_10x_files <- function(config, input_dir) {
       counts <- counts[[slot]]
     }
 
+    # Check if there are any rows with empty gene symbol in the count matrix and remove them if < 1% of the total number of features
+    if (length(which(rownames(counts) == ""))/nrow(counts) < 0.01) {
+      counts <- counts[-which(rownames(counts) == ""),]
+    }
+
     annot <- read.delim(annot_fpath, header = FALSE)
 
     # Equalizing number of columns in case theres no Gene Expression column
