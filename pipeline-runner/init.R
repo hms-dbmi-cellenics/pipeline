@@ -335,18 +335,17 @@ start_heartbeat <- function(task_token, aws_config) {
 #
 # Calls the appropiate process: data processing pipeline or gem2s.
 #
-wrapper <- function(input) {
+wrapper <- function(input, pipeline_config) {
     task_name <- input$taskName
     message("------\nStarting task: ", task_name, '\n')
     message("Input:")
     str(input)
     message("")
 
-
     # common to gem2s and data processing
     server <- input$server
     input <- input[names(input) != "server"]
-    pipeline_config <- load_config(server, input$apiVersion)
+
     process_name <- input$processName
 
     if (process_name == 'qc') {
@@ -409,9 +408,10 @@ init <- function() {
         )
 
         tryCatchLog({
+                # Refresh pipeline_config with the new task input
+                pipeline_config <- load_config(input$server, input$apiVersion)
 
-
-                wrapper(input)
+                wrapper(input, pipeline_config)
 
                 message('Send task success\n------\n')
                 states$send_task_success(
