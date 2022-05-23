@@ -1,4 +1,14 @@
-mock_cellranger_files <- function(sample_dir, compressed) {
+mock_cellranger_files <- function(sample_dir, compressed, api_version, sample_id) {
+  if (api_version == "v1") {
+    features_path <- file.path(sample_dir, "features.tsv")
+    barcodes_path <- file.path(sample_dir, "barcodes.tsv")
+    matrix_path <- file.path(sample_dir, "matrix.mtx")
+  } else if (api_version == "v2") {
+    features_path <- file.path(sample_dir, paste("features10x", "path", sample_id))
+    barcodes_path <- file.path(sample_dir, paste("barcodes10x", "path", sample_id))
+    matrix_path <- file.path(sample_dir, paste("matrix10x", "path", sample_id))
+  }
+
   counts <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
@@ -10,7 +20,6 @@ mock_cellranger_files <- function(sample_dir, compressed) {
   )
 
   # save features
-  features_path <- file.path(sample_dir, "features.tsv")
   write.table(features,
     features_path,
     col.names = FALSE,
@@ -21,18 +30,16 @@ mock_cellranger_files <- function(sample_dir, compressed) {
 
   # save barcodes
   barcodes <- colnames(counts)
-  barcodes_path <- file.path(sample_dir, "barcodes.tsv")
   writeLines(barcodes, barcodes_path)
 
   # save Matrix
   if (is(counts, "data.frame")) counts <- as.matrix(counts)
   sparse.mat <- Matrix::Matrix(counts, sparse = TRUE)
-  matrix_path <- file.path(sample_dir, "matrix.mtx")
   Matrix::writeMM(sparse.mat, matrix_path)
 
   files <- c(features_path, barcodes_path, matrix_path)
 
-  if (compressed) {
+  if (compressed && api_version == "v1") {
     R.utils::gzip(features_path)
     R.utils::gzip(barcodes_path)
     R.utils::gzip(matrix_path)
@@ -43,28 +50,37 @@ mock_cellranger_files <- function(sample_dir, compressed) {
   return(files)
 }
 
-create_samples <- function(bucket, project, samples, compressed) {
+create_samples <- function(bucket, project, samples, compressed, env, api_version) {
   # helper to create samples in project in bucket, like S3
   files <- c()
 
   for (id in samples) {
-    f <- file.path(bucket, project, id)
-    dir.create(f, recursive = TRUE)
-    these_files <- mock_cellranger_files(f, compressed)
+    if(api_version == "v1") {
+      f <- file.path(bucket, project, id)
+      
+      dir.create(f, recursive = TRUE)
+      withr::defer(unlink(bucket, recursive = TRUE), envir = env)
+    } else if (api_version == "v2") {
+      f <- paste(bucket, id, collapse = "-")
+      
+      dir.create(f)
+      withr::defer(unlink(f, recursive = TRUE, force = TRUE), envir = env)
+    }
+
+    these_files <- mock_cellranger_files(f, compressed, api_version, id)
     files <- c(files, these_files)
   }
 
   return(files)
 }
 
-local_create_samples <- function(project, samples, compressed = FALSE, env = parent.frame()) {
+local_create_samples <- function(project, samples, compressed = FALSE, env = parent.frame(), api_version = "v1") {
   # calls creates_samples but makes them "local" (in withr speech), deleting
   # created stuff after the test finishes.
   bucket <- "./a_fake_bucket"
   dir.create(bucket)
 
-  files <- create_samples(bucket, project, samples, compressed)
-  withr::defer(unlink(bucket, recursive = TRUE), envir = env)
+  files <- create_samples(bucket, project, samples, compressed, env, api_version)
 
   list(bucket = bucket, files = files)
 }
@@ -154,7 +170,7 @@ mock_input_v2 <- function(samples) {
     sampleS3Paths = sample_s3_paths,
     experimentName = "test_exp",
     input = list(type = "techno"),
-    apiVersion = "v1"
+    apiVersion = "v2"
   )
 }
 
@@ -243,13 +259,10 @@ test_that("download_user_files correctly downloads compressed files", {
   expect_identical(expected_files, downloaded_files)
 })
 
-
-
-
 test_that("download_user_files downloads user's files. one sample in v2", {
   samples <- mock_sample_ids()
   input <- mock_input_v2(samples)
-  s3_stuff <- local_create_samples(input$projectId, samples)
+  s3_stuff <- local_create_samples(input$projectId, samples, api_version = "v2")
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
   res <- stubbed_download_user_files(input, pipeline_config)
@@ -271,7 +284,7 @@ test_that("download_user_files downloads user's files. one sample in v2", {
 test_that("download_user_files downloads user's files. 3 samples in v2", {
   samples <- mock_sample_ids(n_samples = 3)
   input <- mock_input_v2(samples)
-  s3_stuff <- local_create_samples(input$projectId, samples)
+  s3_stuff <- local_create_samples(input$projectId, samples, api_version = "v2")
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
   res <- stubbed_download_user_files(input, pipeline_config)
@@ -292,7 +305,7 @@ test_that("download_user_files downloads user's files. 3 samples in v2", {
 test_that("metadata is passed over correctly in v2", {
   samples <- mock_sample_ids(n_samples = 3)
   input <- mock_input_v2(samples)
-  s3_stuff <- local_create_samples(input$projectId, samples)
+  s3_stuff <- local_create_samples(input$projectId, samples, api_version = "v2")
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
   # metadata shape does not matter here
@@ -314,7 +327,7 @@ test_that("metadata is passed over correctly in v2", {
 test_that("download_user_files correctly downloads compressed files in v2", {
   samples <- mock_sample_ids(n_samples = 2)
   input <- mock_input_v2(samples)
-  s3_stuff <- local_create_samples(input$projectId, samples, compressed = TRUE)
+  s3_stuff <- local_create_samples(input$projectId, samples, compressed = TRUE, api_version = "v2")
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
   res <- stubbed_download_user_files(input, pipeline_config)

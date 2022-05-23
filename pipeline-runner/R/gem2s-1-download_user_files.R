@@ -93,8 +93,6 @@ download_user_files <- function(input, pipeline_config, prev_out = list(), input
   if (input$apiVersion == "v1") {
     get_gem2s_file_v1(input, pipeline_config$originals_bucket, input_dir, s3)
   } else if (input$apiVersion == "v2") {
-    print("inputDebug")
-    print(input)
     get_gem2s_file_v2(input, pipeline_config$originals_bucket, input_dir, s3)
   }
 
