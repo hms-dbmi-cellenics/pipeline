@@ -65,7 +65,7 @@ get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, techno
 
   for (i in seq_along(sample_ids)) {
     sample_id <- sample_ids[i]
-    sample_s3_paths <- s3_paths_by_sample[i][[1]]
+    sample_s3_paths <- s3_paths_by_sample[[i]]
 
     for (file_type in file_types_by_technology[[technology]]) {
       s3_path <- sample_s3_paths[[file_type]]
