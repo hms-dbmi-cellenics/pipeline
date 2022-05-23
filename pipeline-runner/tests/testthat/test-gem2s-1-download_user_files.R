@@ -125,7 +125,7 @@ mock_sample_ids <- function(n_samples = 1) {
   paste0("sample_", seq_len(n_samples))
 }
 
-mock_input <- function(samples) {
+mock_input_v1 <- function(samples) {
   input <- list(
     projectId = "projectID",
     sampleIds = as.list(samples),
@@ -136,9 +136,31 @@ mock_input <- function(samples) {
   )
 }
 
+mock_input_v2 <- function(samples) {
+  sample_s3_paths <- list()
+
+  for (sample_id in samples) {
+    sample_s3_paths[sample_id] <- list(
+      "barcodes10x" = paste("barcodes10x", "path", sample_id), 
+      "features10x" = paste("features10x", "path", sample_id), 
+      "matrix10x" = paste("matrix10x", "path", sample_id)
+    )
+  }
+
+  input <- list(
+    projectId = "projectID",
+    sampleIds = as.list(samples),
+    sampleNames = as.list(paste0(samples, "_name")),
+    sampleS3Paths = sample_s3_paths,
+    experimentName = "test_exp",
+    input = list(type = "techno"),
+    apiVersion = "v1"
+  )
+}
+
 test_that("download_user_files downloads user's files. one sample", {
   samples <- mock_sample_ids()
-  input <- mock_input(samples)
+  input <- mock_input_v1(samples)
   s3_stuff <- local_create_samples(input$projectId, samples)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
@@ -160,7 +182,7 @@ test_that("download_user_files downloads user's files. one sample", {
 
 test_that("download_user_files downloads user's files. 3 samples", {
   samples <- mock_sample_ids(n_samples = 3)
-  input <- mock_input(samples)
+  input <- mock_input_v1(samples)
   s3_stuff <- local_create_samples(input$projectId, samples)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
@@ -181,7 +203,7 @@ test_that("download_user_files downloads user's files. 3 samples", {
 
 test_that("metadata is passed over correctly", {
   samples <- mock_sample_ids(n_samples = 3)
-  input <- mock_input(samples)
+  input <- mock_input_v1(samples)
   s3_stuff <- local_create_samples(input$projectId, samples)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
@@ -203,7 +225,95 @@ test_that("metadata is passed over correctly", {
 
 test_that("download_user_files correctly downloads compressed files", {
   samples <- mock_sample_ids(n_samples = 2)
-  input <- mock_input(samples)
+  input <- mock_input_v1(samples)
+  s3_stuff <- local_create_samples(input$projectId, samples, compressed = TRUE)
+  pipeline_config <- list(originals_bucket = s3_stuff$bucket)
+
+  res <- stubbed_download_user_files(input, pipeline_config)
+
+  # download_user_files does not return the paths. So have to build them
+  downloaded_file_paths <- gsub(
+    file.path(s3_stuff$bucket, input$projectId),
+    "./input", s3_stuff$files
+  )
+  # read the downloaded files as raw files
+  expected_files <- lapply(s3_stuff$files, readBin, what = "raw")
+  downloaded_files <- lapply(downloaded_file_paths, readBin, what = "raw")
+
+  expect_identical(expected_files, downloaded_files)
+})
+
+
+
+
+test_that("download_user_files downloads user's files. one sample in v2", {
+  samples <- mock_sample_ids()
+  input <- mock_input_v2(samples)
+  s3_stuff <- local_create_samples(input$projectId, samples)
+  pipeline_config <- list(originals_bucket = s3_stuff$bucket)
+
+  res <- stubbed_download_user_files(input, pipeline_config)
+
+  # download_user_files does not return the paths. So have to build them
+  downloaded_file_paths <- gsub(
+    file.path(s3_stuff$bucket, input$projectId),
+    "./input", s3_stuff$files
+  )
+
+  # read the downloaded files as raw files
+  expected_files <- lapply(s3_stuff$files, readBin, what = "raw")
+  downloaded_files <- lapply(downloaded_file_paths, readBin, what = "raw")
+
+  expect_identical(expected_files, downloaded_files)
+})
+
+
+test_that("download_user_files downloads user's files. 3 samples in v2", {
+  samples <- mock_sample_ids(n_samples = 3)
+  input <- mock_input_v2(samples)
+  s3_stuff <- local_create_samples(input$projectId, samples)
+  pipeline_config <- list(originals_bucket = s3_stuff$bucket)
+
+  res <- stubbed_download_user_files(input, pipeline_config)
+
+  # download_user_files does not return the paths. So have to build them
+  downloaded_file_paths <- gsub(
+    file.path(s3_stuff$bucket, input$projectId),
+    "./input", s3_stuff$files
+  )
+
+  # read the downloaded files as raw files
+  expected_files <- lapply(s3_stuff$files, readBin, what = "raw")
+  downloaded_files <- lapply(downloaded_file_paths, readBin, what = "raw")
+
+  expect_identical(expected_files, downloaded_files)
+})
+
+test_that("metadata is passed over correctly in v2", {
+  samples <- mock_sample_ids(n_samples = 3)
+  input <- mock_input_v2(samples)
+  s3_stuff <- local_create_samples(input$projectId, samples)
+  pipeline_config <- list(originals_bucket = s3_stuff$bucket)
+
+  # metadata shape does not matter here
+  expected_metadata <- data.frame(
+    a = seq_len(30),
+    b = paste0("meta_", seq_len(30))
+  )
+
+  input$metadata <- expected_metadata
+
+  res <- stubbed_download_user_files(input, pipeline_config)
+
+  downloaded_metadata <- res$output$config$metadata
+
+  expect_identical(expected_metadata, downloaded_metadata)
+})
+
+
+test_that("download_user_files correctly downloads compressed files in v2", {
+  samples <- mock_sample_ids(n_samples = 2)
+  input <- mock_input_v2(samples)
   s3_stuff <- local_create_samples(input$projectId, samples, compressed = TRUE)
   pipeline_config <- list(originals_bucket = s3_stuff$bucket)
 
