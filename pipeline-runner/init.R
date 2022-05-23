@@ -55,6 +55,7 @@ load_config <- function(development_aws_server, api_version = "v1") {
             break
         }
     }
+
     sandbox <- Sys.getenv("SANDBOX_ID", "default")
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
@@ -110,13 +111,15 @@ load_config <- function(development_aws_server, api_version = "v1") {
     config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, sep = "-")
 
     if (api_version == "v1") {
-    config[["sns_topic"]] <- paste(
-      paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
-      config$cluster_env, config$sandbox_id, sep = "-")
+        config[["sns_topic"]] <- paste(
+            paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
+            config$cluster_env, config$sandbox_id, sep = "-"
+        )
     } else if (api_version == "v2") {
-    config[["sns_topic"]] <- paste(
-      paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
-      config$cluster_env, config$sandbox_id, "v2", sep = "-")
+        config[["sns_topic"]] <- paste(
+            paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
+            config$cluster_env, config$sandbox_id, "v2", sep = "-"
+        )
     }
 
     return(config)
@@ -409,7 +412,7 @@ init <- function() {
 
         tryCatchLog({
                 # Refresh pipeline_config with the new task input
-                pipeline_config <- load_config(input$server, input$apiVersion)
+                pipeline_config <- load_config(input$server, api_version = input$apiVersion %||% "v1")
 
                 wrapper(input, pipeline_config)
 
