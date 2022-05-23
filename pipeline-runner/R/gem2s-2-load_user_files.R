@@ -80,8 +80,8 @@ read_10x_files <- function(config, input_dir) {
       counts <- counts[[slot]]
     }
 
-    # Check if there are any rows with empty gene symbol in the count matrix and remove them if < 1% of the total number of features
-    if (length(which(rownames(counts) == ""))/nrow(counts) < 0.01) {
+    # Check if there are any rows with empty gene symbol in the count matrix and remove them if < 0.1% of the total number of features
+    if (length(which(rownames(counts) == ""))/nrow(counts) < 0.001) {
       counts <- counts[-which(rownames(counts) == ""),]
     }
 
@@ -97,8 +97,8 @@ read_10x_files <- function(config, input_dir) {
       )
     )
 
-    # Check if there are any rows with empty gene symbol in the feature file and remove them if < 1% of the total number of features
-    if (length(which(annot[,1] == ""))/nrow(annot) < 0.01) {
+    # Check if there are any rows with empty gene symbol in the feature file and remove them if < 0.1% of the total number of features
+    if (length(which(annot[,1] == ""))/nrow(annot) < 0.001) {
       annot <- annot[-which(annot[,1] == ""),]
     }
 
