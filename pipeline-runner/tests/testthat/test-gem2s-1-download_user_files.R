@@ -104,10 +104,14 @@ stubbed_download_user_files <- function(input, pipeline_config, prev_out = list(
   )
 
   # where makes sure where we are stubbing the what calls.
-  mockery::stub(where = download_user_files, what = "paws::s3", how=mockedS3, depth=3)
-  mockery::stub(download_user_files, "s3$list_objects", stub_s3_list_objects, depth=3)
-  mockery::stub(download_user_files, "file.path", stub_file.path, depth=3)
-  mockery::stub(download_user_files, "s3$get_object", stub_s3_get_objects, depth=3)
+  mockery::stub(where = download_user_files, what = "paws::s3", how=mockedS3)
+  mockery::stub(get_gem2s_file_v1, "s3$list_objects", stub_s3_list_objects)
+
+  mockery::stub(download_user_files, "file.path", stub_file.path)
+  mockery::stub(get_gem2s_file_v1, "file.path", stub_file.path)
+  mockery::stub(get_gem2s_file_v2, "file.path", stub_file.path)
+  
+  mockery::stub(download_and_store, "s3$get_object", stub_s3_get_objects)
 
   res <- download_user_files(input, pipeline_config, input_dir = "./input", prev_out = prev_out)
   # download_user_files creates a "/input" folder in the pod. defer deleting
