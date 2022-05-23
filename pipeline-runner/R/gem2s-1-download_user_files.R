@@ -22,7 +22,10 @@ download_and_store <- function(bucket, key, file_path, s3) {
 #'
 #' @export
 #'
-get_gem2s_file_v1 <- function(project_id, sample_ids, originals_bucket, input_dir, s3) {
+get_gem2s_file_v1 <- function(input, originals_bucket, input_dir, s3) {
+  project_id <- input$projectId
+  sample_ids <- input$sampleIds
+
   unlink(input_dir, recursive = TRUE)
 
   for (sample_id in sample_ids) {
@@ -60,7 +63,12 @@ get_gem2s_file_v1 <- function(project_id, sample_ids, originals_bucket, input_di
 #'
 #' @export
 #'
-get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, technology, originals_bucket, input_dir, s3) {
+get_gem2s_file_v2 <- function(input, originals_bucket, input_dir, s3) {
+  project_id <- input$projectId
+  sample_ids <- input$sampleIds
+  s3_paths_by_sample <- input$sampleS3Paths
+  technology <- input$input$type
+
   unlink(input_dir, recursive = TRUE)
 
   for (i in seq_along(sample_ids)) {
@@ -87,24 +95,19 @@ get_gem2s_file_v2 <- function(project_id, sample_ids, s3_paths_by_sample, techno
 #' @export
 #'
 download_user_files <- function(input, pipeline_config, prev_out = list(), input_dir= "/input") {
-  project_id <- input$projectId
-  sample_ids = input$sampleIds
-  s3_paths_by_sample = input$sampleS3Paths
-  technology = input$input$type
-
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
   if (input$apiVersion == "v1") {
-    get_gem2s_file_v1(project_id, sample_ids, pipeline_config$originals_bucket, input_dir, s3)
+    get_gem2s_file_v1(input, pipeline_config$originals_bucket, input_dir, s3)
   } else if (input$apiVersion == "v2") {
-    get_gem2s_file_v2(project_id, sample_ids, s3_paths_by_sample, technology, pipeline_config$originals_bucket, input_dir, s3)
+    get_gem2s_file_v2(input, pipeline_config$originals_bucket, input_dir, s3)
   }
 
   config <- list(
     name = input$experimentName,
     samples = input$sampleIds,
     organism = input$organism,
-    input = list(type = technology)
+    input = list(type = input$input$type)
   )
 
   if ("metadata" %in% names(input)) {
