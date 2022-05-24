@@ -59,7 +59,6 @@ create_samples <- function(bucket, project, samples, compressed, env, api_versio
       f <- file.path(bucket, project, id)
       dir.create(f, recursive = TRUE)
 
-
     } else if (api_version == "v2") {
       f <- paste(bucket, id, sep = "-")
       dir.create(f)
