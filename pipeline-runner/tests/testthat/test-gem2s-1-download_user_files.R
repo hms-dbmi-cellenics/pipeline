@@ -57,13 +57,12 @@ create_samples <- function(bucket, project, samples, compressed, env, api_versio
   for (id in samples) {
     if(api_version == "v1") {
       f <- file.path(bucket, project, id)
-      
       dir.create(f, recursive = TRUE)
-      withr::defer(unlink(bucket, recursive = TRUE), envir = env)
+
+
     } else if (api_version == "v2") {
       f <- paste(bucket, id, sep = "-")
       dir.create(f)
-      withr::defer(unlink(f, recursive = TRUE, force = TRUE), envir = env)
     }
 
     these_files <- mock_cellranger_files(f, compressed, api_version, id)
@@ -79,7 +78,16 @@ local_create_samples <- function(project, samples, compressed = FALSE, env = par
   bucket <- "./a_fake_bucket"
   dir.create(bucket)
 
+
   files <- create_samples(bucket, project, samples, compressed, env, api_version)
+
+  if (api_version == "v2") {
+    # api v2 creates several directories (one per sample), so we have to remove
+    # then all, passing  a character vector with all dirnames
+    withr::defer(unlink(unique(dirname(files)), recursive = TRUE), envir = env)
+  }
+
+  withr::defer(unlink(bucket, recursive = TRUE), envir = env)
 
   list(bucket = bucket, files = files)
 }
@@ -125,7 +133,7 @@ stubbed_download_user_files <- function(input, pipeline_config, prev_out = list(
   mockery::stub(download_user_files, "file.path", stub_file.path)
   mockery::stub(get_gem2s_file_v1, "file.path", stub_file.path)
   mockery::stub(get_gem2s_file_v2, "file.path", stub_file.path)
-  
+
   mockery::stub(download_and_store, "s3$get_object", stub_s3_get_objects)
 
   res <- download_user_files(input, pipeline_config, input_dir = "./input", prev_out = prev_out)
