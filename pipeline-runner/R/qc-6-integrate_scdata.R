@@ -320,9 +320,10 @@ filter_cell_cycle <- function(scdata) {
                              unlist(Seurat::cc.genes)))
 
   cc_gene_indices <- na.omit(match(human_cc_genes, scdata@misc$gene_annotations$name))
+  cc_gene_ids <- scdata@misc$gene_annotations$input[-cc_gene_indices]
 
   message(sprintf("\n NUMBER OF EXCLUDED CELL CYCLE GENES: %s", length(cc_gene_indices)))
-  scdata <- subset(scdata, features = -cc_gene_indices)
+  scdata <- subset(scdata, features = cc_gene_ids)
 
-  scdata
+  return(scdata)
 }
