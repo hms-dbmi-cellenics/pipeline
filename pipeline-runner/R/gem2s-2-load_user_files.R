@@ -83,7 +83,7 @@ read_10x_files <- function(config, input_dir) {
     annot <- read.delim(annot_fpath, header = FALSE)
 
     # Equalizing number of columns in case theres no Gene Expression column
-    annot <- annot[, c(1, 2)]
+    #annot <- annot[, c(1, 2)]
 
     message(
       sprintf(
@@ -212,7 +212,18 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 
 
 format_annot <- function(annot_list) {
+  for(annot in annot_list){
+    features_types <- extract_features_types(annot)
+  }
+
   annot <- unique(do.call("rbind", annot_list))
+
+  #Check annotation types
+  if(ncol(annot)==0){
+    stop("No rows in annotations file")
+  }
+  
+
   colnames(annot) <- c("input", "name")
 
   message("Deduplicating gene annotations...")
@@ -233,4 +244,27 @@ format_annot <- function(annot_list) {
 
   rownames(annot) <- annot$input
   return(annot)
+}
+
+extract_features_types(annot){
+    if(ncol(annot)==1){
+    features_types <- list(TRUE)
+    random_features_list <- sample(annot[,1],10)
+    for(i in random_features_list){
+      if(substr(i,1,3)!="ENS"){
+        features_types[1] <- FALSE
+      }
+    }
+  }else{
+    # Equalizing number of columns in case theres no Gene Expression column
+    annot <- annot[, c(1, 2)]
+    features_types <- list(TRUE,TRUE)
+    random_features_list <- sample(annot[,1],10)
+    for(i in random_features_list){
+      if(substr(i,1,3)!="ENS"){
+        features_types[1] <- FALSE
+      }
+    }
+  }
+  return(features_types)
 }
