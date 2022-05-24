@@ -89,6 +89,8 @@ run_dataIntegration <- function(scdata, config) {
   # get method and settings
   method <- config$dataIntegration$method
   npcs <- config$dimensionalityReduction$numPCs
+  exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
+
 
   nsamples <- length(unique(scdata$samples))
   if (nsamples == 1) {
@@ -98,6 +100,13 @@ run_dataIntegration <- function(scdata, config) {
 
   # we need RNA assay to compute the integrated matrix
   Seurat::DefaultAssay(scdata) <- "RNA"
+
+  # remove cell cycle genes if needed
+  if(length(exclude_groups) > 0) {
+    scdata <- remove_genes(scdata, exclude_groups)
+  }
+
+  message(sprintf("\n NUMBER OF GENES AFTER FILTER %s", nrow(scdata)))
 
   integration_function <- get(paste0("run_", method))
   scdata <- integration_function(scdata, config)
