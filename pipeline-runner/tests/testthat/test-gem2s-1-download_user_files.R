@@ -4,9 +4,9 @@ mock_cellranger_files <- function(sample_dir, compressed, api_version, sample_id
     barcodes_path <- file.path(sample_dir, "barcodes.tsv")
     matrix_path <- file.path(sample_dir, "matrix.mtx")
   } else if (api_version == "v2") {
-    features_path <- file.path(sample_dir, paste("features10x", "path", sample_id))
-    barcodes_path <- file.path(sample_dir, paste("barcodes10x", "path", sample_id))
-    matrix_path <- file.path(sample_dir, paste("matrix10x", "path", sample_id))
+    features_path <- file.path(sample_dir, paste("features10x", "path", sample_id, sep = "-"))
+    barcodes_path <- file.path(sample_dir, paste("barcodes10x", "path", sample_id, sep = "-"))
+    matrix_path <- file.path(sample_dir, paste("matrix10x", "path", sample_id, sep = "-"))
   }
 
   counts <- read.table(
@@ -61,8 +61,7 @@ create_samples <- function(bucket, project, samples, compressed, env, api_versio
       dir.create(f, recursive = TRUE)
       withr::defer(unlink(bucket, recursive = TRUE), envir = env)
     } else if (api_version == "v2") {
-      f <- paste(bucket, id, collapse = "-")
-      
+      f <- paste(bucket, id, sep = "-")
       dir.create(f)
       withr::defer(unlink(f, recursive = TRUE, force = TRUE), envir = env)
     }
@@ -157,9 +156,9 @@ mock_input_v2 <- function(samples) {
 
   for (sample_id in samples) {
     sample_s3_paths[sample_id] <- list(
-      "barcodes10x" = paste("barcodes10x", "path", sample_id), 
-      "features10x" = paste("features10x", "path", sample_id), 
-      "matrix10x" = paste("matrix10x", "path", sample_id)
+      "barcodes10x" = paste("barcodes10x", "path", sample_id, sep = "-"),
+      "features10x" = paste("features10x", "path", sample_id, sep = "-"),
+      "matrix10x" = paste("matrix10x", "path", sample_id, sep = "-")
     )
   }
 
