@@ -94,6 +94,8 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
 send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   c(config, plot_data = plotData) %<-% output
 
+  config <- config[!names(config) %in% c("auth_JWT", "api_url")]
+
   # upload output
   s3 <- paws::s3(config = pipeline_config$aws_config)
   id <- ids::uuid()
@@ -221,10 +223,14 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
     )
 
     message("Uploading plotData to S3 bucket", pipeline_config$plot_data_bucket, " at key ", id, "...")
+
+    tags <- paste0("experimentId=", experiment_id , "&plotUuid=" , plot_data_name)
+
     s3$put_object(
       Bucket = pipeline_config$plot_data_bucket,
       Key = id,
-      Body = charToRaw(output)
+      Body = charToRaw(output),
+      Tagging = tags
     )
   }
 
@@ -243,6 +249,20 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data, bucket) {
   put_object_in_s3_multipart(pipeline_config, pipeline_config[[bucket]], count_matrix, object_key)
 
   return(object_key)
+}
+
+upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
+  fnames <- list.files(file.path(DEBUG_PATH, debug_prefix))
+  bucket <- pipeline_config$debug_bucket
+
+  message("Uploading logs and dump file to S3 bucket ", bucket, " with prefix ", debug_prefix, "...")
+  for (fname in fnames) {
+    fpath <- file.path(DEBUG_PATH, debug_prefix, fname)
+    key <- file.path(debug_prefix, fname)
+    put_object_in_s3_multipart(pipeline_config, bucket, fpath, key)
+  }
+
+  return(NULL)
 }
 
 put_object_in_s3 <- function(pipeline_config, bucket, object, key) {

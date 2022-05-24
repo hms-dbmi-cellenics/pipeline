@@ -48,8 +48,8 @@ FROM builder AS prod
 # see at https://github.com/paws-r/paws/blob/main/docs/credentials.md for how PAWS
 # handles this
 #
-RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && chmod +x ./jq && cp jq /usr/bin
-RUN pip install awscli
+RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && chmod +x ./jq && cp jq /usr/bin && \
+    pip install awscli
 COPY aws_config /root/.aws/config
 
 # start app

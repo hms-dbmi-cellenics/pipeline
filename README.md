@@ -1,7 +1,7 @@
 [![codecov](https://codecov.io/gh/hms-dbmi-cellenics/pipeline/branch/master/graph/badge.svg?token=kQ19q1EenW)](https://codecov.io/gh/hms-dbmi-cellenics/pipeline)
-# Biomage Pipeline
+# Cellenics Pipeline
 
-The Cellscope pipeline project for dependency-managed work processing.
+The Cellenics pipeline project for dependency-managed work processing.
 
 ## Getting started
 

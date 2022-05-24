@@ -4,6 +4,10 @@ library(zeallot)
 library(tryCatchLog)
 library(futile.logger)
 library(magrittr)
+library(callr)
+
+# time stamp used for directory to store log/dump files in event of error
+debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
 
 # increase maxSize from the default of 500MB to 32GB
 options(future.globals.maxSize = 32 * 1024 * 1024^2)
@@ -103,9 +107,10 @@ load_config <- function(development_aws_server) {
     config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, sep = "-")
     config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
     config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, sep = "-")
-    config[["sns_topic"]] <- paste("work-results", config$cluster_env, config$sandbox_id, sep = "-")
-    config[["sns_topic"]] <- paste("arn:aws:sns", config$aws_region, config$aws_account_id, config$sns_topic, sep = ":")
-
+    config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, sep = "-")
+    config[["sns_topic"]] <- paste(
+      paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
+      config$cluster_env, config$sandbox_id, sep = "-")
 
     return(config)
 }
@@ -144,13 +149,13 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
 
     # list of task functions named by task name
     tasks <- list(
-        'downloadGem' = download_cellranger_files,
-        'preproc' = load_cellranger_files,
-        'emptyDrops' = run_emptydrops,
-        'doubletScores' = score_doublets,
-        'createSeurat' = create_seurat,
-        'prepareExperiment' = prepare_experiment,
-        'uploadToAWS' = upload_to_aws
+        "downloadGem" = download_user_files,
+        "preproc" = load_user_files,
+        "emptyDrops" = run_emptydrops,
+        "doubletScores" = score_doublets,
+        "createSeurat" = create_seurat,
+        "prepareExperiment" = prepare_experiment,
+        "uploadToAWS" = upload_to_aws
     )
 
     if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
@@ -279,20 +284,58 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 }
 
 #
+# start_heartbeat(task_token, aws_config)
+# IN task_token, aws_config
+#
+# Sends a heartbeat to the state machine every 'wait_time' seconds
+# Once the task is completed the heartbeat will fail accordingly with a
+# task timeout and exit the loop and a new heartbeat will be set up by next task.
+# This method is invoked with `callr::r_bg` which creates a new process which does not inherit
+# the current workspace or memory, only the provided parameters; that's why we need to
+# reimport tryCatchLog & initialize states again.
+#
+start_heartbeat <- function(task_token, aws_config) {
+    library(tryCatchLog)
+    message("Starting hearbeat")
+    states <- paws::sfn(config=aws_config)
+
+    keep_running <- TRUE
+    # amount of time to wait between heartbeats
+    wait_time <- 30
+    i <- 0
+    while (keep_running) {
+        tryCatchLog({
+            states$send_task_heartbeat(
+                taskToken = task_token
+            )
+            message("Heartbeat sent: ", i)
+        },
+        error = function(e) {
+            message("Send task heartbeat failed: ", e$message)
+            message("Stopping heartbeat after ", i+1)
+            keep_running <- FALSE
+        })
+        i <- i + 1
+        # sleep until next hearbeat
+        Sys.sleep(wait_time)
+
+    }
+}
+
+#
 # Wrapper(input_json)
 # IN input_json: json input from message. Input should have:
 # taskname, server, extra config parameters.
 #
 # Calls the appropiate process: data processing pipeline or gem2s.
 #
-wrapper <- function(input_json) {
-    # Get data from state machine input.
-    input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
+wrapper <- function(input) {
     task_name <- input$taskName
     message("------\nStarting task: ", task_name, '\n')
     message("Input:")
     str(input)
     message("")
+
 
     # common to gem2s and data processing
     server <- input$server
@@ -321,56 +364,85 @@ init <- function() {
     states <- paws::sfn(config=pipeline_config$aws_config)
     message("Loaded step function")
 
+    print(sessionInfo())
+
     flog.layout(layout.simple)
     flog.threshold(ERROR)
 
     message("Waiting for tasks")
 
     repeat {
-        c(taskToken, input) %<-% states$get_activity_task(
+        c(task_token, input_json) %<-% states$get_activity_task(
             activityArn = pipeline_config$activity_arn,
             workerName = pipeline_config$pod_name
         )
 
-        if(is.null(taskToken) || !length(taskToken) || taskToken == "") {
+        if(is.null(task_token) || !length(task_token) || task_token == "") {
             message('No input received during last poll, shutting down...')
             quit('no')
         }
 
+        # parse data from state machine input
+        input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
+
+        # save logs to file
+        debug_prefix <- file.path(input$experimentId, debug_timestamp)
+        dump_folder <- file.path(DEBUG_PATH, debug_prefix)
+        flog.appender(appender.tee(file.path(dump_folder, "logs.txt")))
+
+        # start heartbeat as a different process in the background
+        message("Starting heartbeat")
+        # message inside r_bg will ONLY be printed into /tmp/[out|err]
+        # to see them
+        # 1. log into the R container
+        # 2. cat /tmp/out or tail -f /tmp/out
+        heartbeat_proc <- r_bg(func=start_heartbeat, args=list(
+            task_token, pipeline_config$aws_config),
+            stdout = "/tmp/out",
+            stderr = "/tmp/err"
+        )
+
         tryCatchLog({
+
+
                 wrapper(input)
 
                 message('Send task success\n------\n')
                 states$send_task_success(
-                    taskToken = taskToken,
+                    taskToken = task_token,
                     output = "{}"
                 )
         },
             error = function(e) {
                 flog.error("🚩 ---------")
-
-                input_parse <- RJSONIO::fromJSON(input, simplify = FALSE)
-                sample_text <- ifelse(is.null(input_parse$sampleUuid),
+                sample_text <- ifelse(is.null(input$sampleUuid),
                                       "",
-                                      paste0(" for sample ", input_parse$sampleUuid))
+                                      paste0(" for sample ", input$sampleUuid))
 
                 error_txt <- paste0("R error at filter step ",
-                                    input_parse$taskName, sample_text, "! : ", e$message)
+                                    input$taskName, sample_text, "! : ", e$message)
 
                 message(error_txt)
                 states$send_task_failure(
-                    taskToken = taskToken,
+                    taskToken = task_token,
                     error = "We had an issue while processing your data.",
                     cause = error_txt
                 )
 
-                send_pipeline_fail_update(pipeline_config, input_parse, error_txt)
+                send_pipeline_fail_update(pipeline_config, input, error_txt)
+                message("Sent task failure to state machine task: ", task_token)
 
-                message("Sent task failure to state machine task: ", taskToken)
+                if (pipeline_config$cluster_env != 'development') {
+                    upload_debug_folder_to_s3(debug_prefix, pipeline_config)
+                }
+
                 message("recovered from error:", e$message)
             },
-        write.error.dump.file = pipeline_config$cluster_env == 'development',
-        write.error.dump.folder = '/debug')
+        write.error.dump.file = TRUE,
+        write.error.dump.folder = dump_folder)
+
+        # kill heartbeat process
+        heartbeat_proc$kill()
     }
 }
 
