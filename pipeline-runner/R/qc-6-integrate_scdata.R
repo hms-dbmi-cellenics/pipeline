@@ -289,3 +289,31 @@ get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
   npcs <- min(which(cumsum(var_explained) >= var_threshold))
   min(npcs, max_npcs, na.rm = TRUE)
 }
+
+remove_genes <- function(scdata, exclude_groups) {
+  message("\n FILTERING GENES \n")
+
+  gene_filters <- list("cellCycle" = filter_cell_cycle, "ribosomal" = NULL, "mito" = NULL)
+
+  for (group in exclude_groups) {
+    filter_fun <- switch(group, gene_filters)[[1]]
+    scdata <- filter_fun(scdata)
+  }
+  scdata
+}
+
+filter_cell_cycle <- function(scdata) {
+  message("\n FILTER CC GENES\n")
+
+  # some symbols were updated in 2019, but surely there are badly annotated datasets
+  # so I take the unique join, to cover all cases
+  human_cc_genes <- unique(c(unlist(Seurat::cc.genes.updated.2019),
+                             unlist(Seurat::cc.genes)))
+
+  cc_gene_indices <- na.omit(match(human_cc_genes, scdata@misc$gene_annotations$name))
+
+  message(sprintf("\n NUMBER OF EXCLUDED CELL CYCLE GENES: %s", length(cc_gene_indices)))
+  scdata <- subset(scdata, features = -cc_gene_indices)
+
+  scdata
+}
