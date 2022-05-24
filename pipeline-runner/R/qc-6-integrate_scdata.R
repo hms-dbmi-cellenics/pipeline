@@ -288,7 +288,7 @@ get_explained_variance <- function(scdata) {
     eig_values <- (scdata@reductions$pca@stdev)^2
     var_explained <- eig_values / sum(eig_values)
   }
-  var_explained
+  return(var_explained)
 }
 
 get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
@@ -296,7 +296,7 @@ get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
   # using accumulated explained variance
   var_explained <- get_explained_variance(scdata)
   npcs <- min(which(cumsum(var_explained) >= var_threshold))
-  min(npcs, max_npcs, na.rm = TRUE)
+  return(min(npcs, max_npcs, na.rm = TRUE))
 }
 
 remove_genes <- function(scdata, exclude_groups) {
@@ -308,7 +308,7 @@ remove_genes <- function(scdata, exclude_groups) {
     filter_fun <- switch(group, gene_filters)[[1]]
     scdata <- filter_fun(scdata)
   }
-  scdata
+  return(scdata)
 }
 
 filter_cell_cycle <- function(scdata) {
