@@ -114,7 +114,7 @@ test_that("filter_high_mito can be set to auto", {
 
 test_that("data without percent.mt outliers uses the max percentage as the threshold", {
   scdata <- mock_scdata()
-  set.seed(0)
+  set.seed(42)
   scdata$percent.mt <- rnorm(ncol(scdata), 6)
   cells_id <- mock_ids()
 

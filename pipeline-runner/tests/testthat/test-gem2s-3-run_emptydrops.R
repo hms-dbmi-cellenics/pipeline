@@ -1,5 +1,5 @@
 mock_counts <- function() {
-  set.seed(0)
+  set.seed(42)
   DropletUtils:::simCounts()
 }
 
