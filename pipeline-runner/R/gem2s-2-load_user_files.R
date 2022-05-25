@@ -54,14 +54,15 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/inpu
 read_10x_files <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
-
+  features_types_list <- list()
+  
   samples <- config$samples
-
 
   for (sample in samples) {
     sample_dir <- file.path(input_dir, sample)
     sample_fpaths <- list.files(sample_dir)
     annot_fpath <- file.path(sample_dir, "features.tsv.gz")
+    gene_column <- 1
 
     message("\nSample --> ", sample)
     message(
@@ -71,7 +72,22 @@ read_10x_files <- function(config, input_dir) {
       paste(sample_fpaths, collapse = " - ")
     )
 
-    counts <- Seurat::Read10X(sample_dir, gene.column = 1)
+    annot <- read.delim(annot_fpath, header = FALSE)
+    features_types <- extract_features_types(annot)
+      
+    if(length(features_types)==1){
+      annot[,2] <- annot[,1]
+      features_types[[2]] <- features_types[[1]] 
+    }
+    else{
+      if(features_types == list(FALSE,TRUE)){
+        annot[,c(1,2)] <- annot[,c(2,1)]
+        gene_column <- 2
+      }
+    }
+
+    annot[,gene_column] <- make.unique(annot[,gene_column])
+    counts <- Seurat::Read10X(sample_dir, gene.column = gene_column, unique.features = TRUE,)
 
     if (is(counts, "list")) {
       slot <- "Gene Expression"
@@ -80,10 +96,8 @@ read_10x_files <- function(config, input_dir) {
       counts <- counts[[slot]]
     }
 
-    annot <- read.delim(annot_fpath, header = FALSE)
-
     # Equalizing number of columns in case theres no Gene Expression column
-    #annot <- annot[, c(1, 2)]
+    annot <- annot[, c(1, 2)]
 
     message(
       sprintf(
@@ -94,8 +108,10 @@ read_10x_files <- function(config, input_dir) {
 
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annot
+    features_types_list[[sample]] <- features_types
   }
 
+  annot_list <- fix_annotations(annot_list, counts_list, features_types_list, samples)
   annot <- format_annot(annot_list)
 
   return(list(counts_list = counts_list, annot = annot))
@@ -210,19 +226,22 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   return(list(counts_list = counts_list, annot = annot))
 }
 
+fix_annotations <- function(annot_list, counts_list, features_types_list, samples){
+  if(any(features_types_list==list(TRUE,TRUE)) and any(features_types_list==list(FALSE,FALSE)) stop("Incompatible features detected.")
+
+  for(sample in samples){
+    if(any(features_types_list==list(TRUE,TRUE)){
+      annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(1,1)]
+    }
+
+    if(any(features_types_list==list(FALSE,FALSE)){
+      annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(2,2)]
+    }
+  }
+}
 
 format_annot <- function(annot_list) {
-  for(annot in annot_list){
-    features_types <- extract_features_types(annot)
-  }
-
   annot <- unique(do.call("rbind", annot_list))
-
-  #Check annotation types
-  if(ncol(annot)==0){
-    stop("No rows in annotations file")
-  }
-  
 
   colnames(annot) <- c("input", "name")
 
@@ -246,25 +265,15 @@ format_annot <- function(annot_list) {
   return(annot)
 }
 
-extract_features_types(annot){
-    if(ncol(annot)==1){
-    features_types <- list(TRUE)
-    random_features_list <- sample(annot[,1],10)
-    for(i in random_features_list){
-      if(substr(i,1,3)!="ENS"){
-        features_types[1] <- FALSE
-      }
-    }
-  }else{
-    # Equalizing number of columns in case theres no Gene Expression column
-    annot <- annot[, c(1, 2)]
-    features_types <- list(TRUE,TRUE)
-    random_features_list <- sample(annot[,1],10)
-    for(i in random_features_list){
-      if(substr(i,1,3)!="ENS"){
-        features_types[1] <- FALSE
-      }
-    }
+extract_features_types <- function(annot){
+  random_features_list <- sample(annot[,1],100)
+  ens_count <- table(substr(random_features_list,1,3)=="ENS")
+  features_types <- list(ens_count[["TRUE"]]>=ens_count[["FALSE"]])
+
+  if(ncol(annot)>1){ 
+    random_features_list <- sample(annot[,2],100)
+    ens_count <- table(substr(random_features_list,1,3)=="ENS")
+    features_types[2] <- ens_count[["TRUE"]]>=ens_count[["FALSE"]]
   }
   return(features_types)
 }
