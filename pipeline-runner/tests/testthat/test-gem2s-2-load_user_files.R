@@ -368,7 +368,7 @@ test_that("read_10x_files returns error if files missing", {
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
 
-  files <- c("features.tsv.gz", "barcodes.tsv.gz", "matrix.mtx.gz")
+  files <- c("barcodes.tsv.gz", "matrix.mtx.gz")
 
   # remove files one by one renaming
   for (file in files) {
@@ -376,6 +376,12 @@ test_that("read_10x_files returns error if files missing", {
     expect_error(load_user_files(NULL, NULL, prev_out, outdir), "file missing")
     file.rename(file.path(sample_dir, "blah"), file.path(sample_dir, file))
   }
+
+  file <- "features.tsv.gz"
+
+  file.rename(file.path(sample_dir, file), file.path(sample_dir, "blah"))
+  expect_error(supressWarnings(load_user_files(NULL, NULL, prev_out, outdir), "cannot open the connection"))
+  file.rename(file.path(sample_dir, "blah"), file.path(sample_dir, file))
 
   unlink(sample_dir, recursive = TRUE)
 })
