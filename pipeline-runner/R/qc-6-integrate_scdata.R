@@ -322,25 +322,29 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 }
 
 remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
-  message("\n FILTERING GENES \n")
+  message("Filtering genes...")
+  message(sprintf("Number of genes before filtering: %s", nrow(scdata)))
 
   # TODO: implement matching by ID as well. depends on single columns PR
   all_genes <- scdata@misc$gene_annotations$name
 
   # build list of genes to exclude
   exclude_genes <- list_exclude_genes(all_genes, exclude_groups, exclude_custom)
+  message(sprintf("Total number of genes to exlude: %s", length(exclude_genes)))
 
   # we do the actual subsetting using ensemblIDs!
   # subset.Seurat requires genes to keep.
   keep_genes <- scdata@misc$gene_annotations$input[-exclude_genes]
 
+
   scdata <- subset(scdata, features = keep_genes)
+  message(sprintf("Number of genes after filtering: %s", nrow(scdata)))
 
   return(scdata)
 }
 
 list_cell_cycle <- function(all_genes) {
-  message("\n FILTER CC GENES\n")
+  message("Filtering Cell Cycle genes...")
 
   # some symbols were updated in 2019, but to defend against badly annotated data
   # we take the unique join. There are 6 renamed genes only.
@@ -349,7 +353,7 @@ list_cell_cycle <- function(all_genes) {
 
   cc_gene_indices <- na.omit(match(human_cc_genes, all_genes))
 
-  message(sprintf("\n NUMBER OF EXCLUDED CELL CYCLE GENES: %s", length(cc_gene_indices)))
+  message(sprintf("Number of  Cell Cycle genes to exclude: %s", length(cc_gene_indices)))
 
   return(cc_gene_ids)
 }
