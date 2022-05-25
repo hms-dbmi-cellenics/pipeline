@@ -55,7 +55,7 @@ read_10x_files <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
   features_types_list <- list()
-  
+
   samples <- config$samples
 
   for (sample in samples) {
@@ -73,19 +73,23 @@ read_10x_files <- function(config, input_dir) {
     )
 
     annot <- read.delim(annot_fpath, header = FALSE)
-      
-    if(ncol(annot)==1 or annot[1,2]=="Gene Expression"){
+
+    if(ncol(annot)==1 || annot[1,2]=="Gene Expression"){
       annot[,2] <- annot[,1]
     }
 
     features_types <- extract_features_types(annot)
 
-    if(features_types == list(FALSE,TRUE)){
+    message("Features types is ",features_types, "for sample ",sample)
+
+    if(features_types == -1){
       annot[,c(1,2)] <- annot[,c(2,1)]
       gene_column <- 2
-      features_types <- list(TRUE,FALSE)
+      features_types <- 1
     }
- 
+
+    #Make unique the annot column 1 so it's equal to the gene names that read10X makes unique
+    #Only c1 needs make.unique because we copy c2 into c1 in annot if gene_column is 2
     annot[,1] <- make.unique(annot[,1])
     counts <- Seurat::Read10X(sample_dir, gene.column = gene_column, unique.features = TRUE)
 
@@ -111,7 +115,7 @@ read_10x_files <- function(config, input_dir) {
     features_types_list[[sample]] <- features_types
   }
 
-  c(counts_list, annot_list) %<-% fix_annotations(annot_list, counts_list, features_types_list, samples)
+  c(counts_list,annot_list) %<-% fix_annotations(annot_list, counts_list, features_types_list, samples)
   annot <- format_annot(annot_list)
 
   return(list(counts_list = counts_list, annot = annot))
@@ -251,17 +255,20 @@ format_annot <- function(annot_list) {
   return(annot)
 }
 
+#Fix annotations makes annotations compatible between samples with different types.
+
+#The possible options at this stage are TT, FF, TF. It will convert all TF annotations into either FF or TT.
 fix_annotations <- function(annot_list, counts_list, features_types_list, samples){
-  if(any(features_types_list==list(TRUE,TRUE)) and any(features_types_list==list(FALSE,FALSE)) stop("Incompatible features detected.")
+  if(any(features_types_list==2) && any(features_types_list==0)) stop("Incompatible features detected.")
 
   for(sample in samples){
-    if(any(features_types_list==list(TRUE,TRUE)){
-      if(features_types_list[[sample]]==list(TRUE,FALSE)){
+    if(any(features_types_list==2)){
+      if(features_types_list[[sample]]==1){
         annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(1,1)]
       }
     }
-    if(any(features_types_list==list(FALSE,FALSE)){
-      if(features_types_list[[sample]]==list(TRUE,FALSE)){
+    if(any(features_types_list==0)){
+      if(features_types_list[[sample]]==1){
         annot <- annot_list[[sample]]
         counts <- counts_list[[sample]]
         annot[,2] <- make.unique(annot[,2])
@@ -271,17 +278,21 @@ fix_annotations <- function(annot_list, counts_list, features_types_list, sample
       }
     }
   }
-  return(c(counts_list,annot_list))
+  return(list(counts_list,annot_list))
 }
 
 extract_features_types <- function(annot){
+  features_types <- list()
+
   random_features <- sample(annot[,1],100)
-  ens_count <- table(substr(random_features,1,3)=="ENS")
-  features_types <- list(ens_count[["TRUE"]]>=ens_count[["FALSE"]])
+  is_ens <- random_features[substr(random_features,1,3)=="ENS"]
+  features_types[[1]] <- length(is_ens)>=50
 
   random_features <- sample(annot[,2],100)
-  ens_count <- table(substr(random_features,1,3)=="ENS")
-  features_types[[2]] <- ens_count[["TRUE"]]>=ens_count[["FALSE"]]
+  is_ens <- random_features[substr(random_features,1,3)=="ENS"]
+  features_types[[2]] <- length(is_ens)>=50
 
-  return(features_types)
+  if(features_types[[1]]==FALSE && features_types[[2]]==TRUE) return(-1)
+
+  return(features_types[[1]]+features_types[[2]])
 }
