@@ -299,31 +299,58 @@ get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
   return(min(npcs, max_npcs, na.rm = TRUE))
 }
 
-remove_genes <- function(scdata, exclude_groups) {
-  message("\n FILTERING GENES \n")
 
-  gene_filters <- list("cellCycle" = filter_cell_cycle, "ribosomal" = NULL, "mito" = NULL)
+list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
+
+  gene_lists <- list("cellCycle" = list_cell_cycle,
+                     "ribosomal" = NULL,
+                     "mitochondrial" = NULL)
+
+  exclude_genes <- list()
 
   for (group in exclude_groups) {
-    filter_fun <- switch(group, gene_filters)[[1]]
-    scdata <- filter_fun(scdata)
+    list_fun <- gene_lists[[group]]
+    exclude_genes <- append(exclude_genes, list_fun(all_genes))
   }
+
+  # in case there's a custom list of genes to exclude
+  if (length(exclude_custom > 0)) {
+    exclude_genes <- append(exclude_genes, exclude_custom)
+  }
+
+  # remove duplicates
+  return(unique(exclude_genes))
+}
+
+remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
+  message("\n FILTERING GENES \n")
+
+  # TODO: implement matching by ID as well. depends on single columns PR
+  all_genes <- scdata@misc$gene_annotations$name
+
+  # build list of genes to exclude
+  exclude_genes <- list_exclude_genes(all_genes, exclude_groups, exclude_custom)
+
+  # we do the actual subsetting using ensemblIDs!
+  # subset.Seurat requires genes to keep.
+  keep_genes <- scdata@misc$gene_annotations$input[-exclude_genes]
+
+  scdata <- subset(scdata, features = keep_genes)
+
   return(scdata)
 }
 
-filter_cell_cycle <- function(scdata) {
+list_cell_cycle <- function(all_genes) {
   message("\n FILTER CC GENES\n")
 
-  # some symbols were updated in 2019, but surely there are badly annotated datasets
-  # so I take the unique join, to cover all cases
+  # some symbols were updated in 2019, but to defend against badly annotated data
+  # we take the unique join. There are 6 renamed genes only.
   human_cc_genes <- unique(c(unlist(Seurat::cc.genes.updated.2019),
                              unlist(Seurat::cc.genes)))
 
-  cc_gene_indices <- na.omit(match(human_cc_genes, scdata@misc$gene_annotations$name))
-  cc_gene_ids <- scdata@misc$gene_annotations$input[-cc_gene_indices]
+  cc_gene_indices <- na.omit(match(human_cc_genes, all_genes))
 
   message(sprintf("\n NUMBER OF EXCLUDED CELL CYCLE GENES: %s", length(cc_gene_indices)))
-  scdata <- subset(scdata, features = cc_gene_ids)
 
-  return(scdata)
+  return(cc_gene_ids)
 }
