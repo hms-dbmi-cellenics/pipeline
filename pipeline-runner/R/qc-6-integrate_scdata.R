@@ -100,12 +100,11 @@ run_dataIntegration <- function(scdata, config) {
 
   # we need RNA assay to compute the integrated matrix
   Seurat::DefaultAssay(scdata) <- "RNA"
+
   # remove cell cycle genes if needed
   if(length(exclude_groups) > 0) {
     scdata <- remove_genes(scdata, exclude_groups)
-    message(sprintf("\n NUMBER OF GENES AFTER FILTER %s", nrow(scdata)))
   }
-
 
   integration_function <- get(paste0("run_", method))
   scdata <- integration_function(scdata, config)
@@ -341,7 +340,7 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
   }
 
   # remove duplicates
-  return(unique(exclude_genes))
+  return(unlist(unique(exclude_genes)))
 }
 
 
@@ -355,7 +354,7 @@ list_cell_cycle <- function(all_genes) {
 
   cc_gene_indices <- na.omit(match(human_cc_genes, all_genes))
 
-  message(sprintf("Number of  Cell Cycle genes to exclude: %s", length(cc_gene_indices)))
+  message(sprintf("Number of Cell Cycle genes to exclude: %s", length(cc_gene_indices)))
 
-  return(cc_gene_ids)
+  return(cc_gene_indices)
 }
