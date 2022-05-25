@@ -73,21 +73,21 @@ read_10x_files <- function(config, input_dir) {
     )
 
     annot <- read.delim(annot_fpath, header = FALSE)
-    features_types <- extract_features_types(annot)
       
-    if(length(features_types)==1){
+    if(ncol(annot)==1 or annot[1,2]=="Gene Expression"){
       annot[,2] <- annot[,1]
-      features_types[[2]] <- features_types[[1]] 
-    }
-    else{
-      if(features_types == list(FALSE,TRUE)){
-        annot[,c(1,2)] <- annot[,c(2,1)]
-        gene_column <- 2
-      }
     }
 
-    annot[,gene_column] <- make.unique(annot[,gene_column])
-    counts <- Seurat::Read10X(sample_dir, gene.column = gene_column, unique.features = TRUE,)
+    features_types <- extract_features_types(annot)
+
+    if(features_types == list(FALSE,TRUE)){
+      annot[,c(1,2)] <- annot[,c(2,1)]
+      gene_column <- 2
+      features_types <- list(TRUE,FALSE)
+    }
+ 
+    annot[,1] <- make.unique(annot[,1])
+    counts <- Seurat::Read10X(sample_dir, gene.column = gene_column, unique.features = TRUE)
 
     if (is(counts, "list")) {
       slot <- "Gene Expression"
@@ -111,7 +111,7 @@ read_10x_files <- function(config, input_dir) {
     features_types_list[[sample]] <- features_types
   }
 
-  annot_list <- fix_annotations(annot_list, counts_list, features_types_list, samples)
+  c(counts_list, annot_list) %<-% fix_annotations(annot_list, counts_list, features_types_list, samples)
   annot <- format_annot(annot_list)
 
   return(list(counts_list = counts_list, annot = annot))
@@ -256,24 +256,32 @@ fix_annotations <- function(annot_list, counts_list, features_types_list, sample
 
   for(sample in samples){
     if(any(features_types_list==list(TRUE,TRUE)){
-      annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(1,1)]
+      if(features_types_list[[sample]]==list(TRUE,FALSE)){
+        annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(1,1)]
+      }
     }
-
     if(any(features_types_list==list(FALSE,FALSE)){
-      annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(2,2)]
+      if(features_types_list[[sample]]==list(TRUE,FALSE)){
+        annot <- annot_list[[sample]]
+        counts <- counts_list[[sample]]
+        annot[,2] <- make.unique(annot[,2])
+        rownames(counts) <- annot[match(rownames(counts),annot[,1]),2]
+        annot_list[[sample]][,c(1,2)] <- annot[,c(2,2)]
+        counts_list[[sample]] <- counts
+      }
     }
   }
+  return(c(counts_list,annot_list))
 }
 
 extract_features_types <- function(annot){
-  random_features_list <- sample(annot[,1],100)
-  ens_count <- table(substr(random_features_list,1,3)=="ENS")
+  random_features <- sample(annot[,1],100)
+  ens_count <- table(substr(random_features,1,3)=="ENS")
   features_types <- list(ens_count[["TRUE"]]>=ens_count[["FALSE"]])
 
-  if(ncol(annot)>1){ 
-    random_features_list <- sample(annot[,2],100)
-    ens_count <- table(substr(random_features_list,1,3)=="ENS")
-    features_types[2] <- ens_count[["TRUE"]]>=ens_count[["FALSE"]]
-  }
+  random_features <- sample(annot[,2],100)
+  ens_count <- table(substr(random_features,1,3)=="ENS")
+  features_types[[2]] <- ens_count[["TRUE"]]>=ens_count[["FALSE"]]
+
   return(features_types)
 }
