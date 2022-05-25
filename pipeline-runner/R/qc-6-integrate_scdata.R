@@ -299,6 +299,29 @@ get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
 }
 
 
+remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
+  message("Filtering genes...")
+  message(sprintf("Number of genes before filtering: %s", nrow(scdata)))
+
+  # TODO: implement matching by ID as well. depends on single columns PR
+  all_genes <- scdata@misc$gene_annotations$name
+
+  # build list of genes to exclude
+  exclude_genes <- list_exclude_genes(all_genes, exclude_groups, exclude_custom)
+  message(sprintf("Total number of genes to exlude: %s", length(exclude_genes)))
+
+  # we do the actual subsetting using ensemblIDs!
+  # subset.Seurat requires genes to keep.
+  keep_genes <- scdata@misc$gene_annotations$input[-exclude_genes]
+
+
+  scdata <- subset(scdata, features = keep_genes)
+  message(sprintf("Number of genes after filtering: %s", nrow(scdata)))
+
+  return(scdata)
+}
+
+
 list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 
   gene_lists <- list("cellCycle" = list_cell_cycle,
@@ -321,27 +344,6 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
   return(unique(exclude_genes))
 }
 
-remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
-  message("Filtering genes...")
-  message(sprintf("Number of genes before filtering: %s", nrow(scdata)))
-
-  # TODO: implement matching by ID as well. depends on single columns PR
-  all_genes <- scdata@misc$gene_annotations$name
-
-  # build list of genes to exclude
-  exclude_genes <- list_exclude_genes(all_genes, exclude_groups, exclude_custom)
-  message(sprintf("Total number of genes to exlude: %s", length(exclude_genes)))
-
-  # we do the actual subsetting using ensemblIDs!
-  # subset.Seurat requires genes to keep.
-  keep_genes <- scdata@misc$gene_annotations$input[-exclude_genes]
-
-
-  scdata <- subset(scdata, features = keep_genes)
-  message(sprintf("Number of genes after filtering: %s", nrow(scdata)))
-
-  return(scdata)
-}
 
 list_cell_cycle <- function(all_genes) {
   message("Filtering Cell Cycle genes...")
