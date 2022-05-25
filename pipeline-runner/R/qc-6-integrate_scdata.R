@@ -103,7 +103,9 @@ run_dataIntegration <- function(scdata, config) {
 
   # remove cell cycle genes if needed
   if(length(exclude_groups) > 0) {
+    message("\n------\n")
     scdata <- remove_genes(scdata, exclude_groups)
+    message("\n------\n")
   }
 
   integration_function <- get(paste0("run_", method))
@@ -298,9 +300,23 @@ get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
 }
 
 
+#' Remove genes from downstream analysis
+#'
+#' This function subsets the seurat object, removing genes to be excluded for
+#' integration and downstream analysis.
+#'
+#' It calls list_exclude_genes to build the list of genes to remove.
+#'
+#' @param scdata Seurat object
+#' @param exclude_groups list of groups to exclude
+#' @param exclude_custom list of custom (user provided) genes to exclude
+#'
+#' @return Seurat object without excluded genes
+#' @export
+#'
 remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
-  message("Filtering genes...")
-  message(sprintf("Number of genes before filtering: %s", nrow(scdata)))
+  message("Excluding genes...")
+  message(sprintf("Number of genes before excluding: %s", nrow(scdata)))
 
   # TODO: implement matching by ID as well. depends on single columns PR
   all_genes <- scdata@misc$gene_annotations$name
@@ -315,37 +331,56 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
 
 
   scdata <- subset(scdata, features = keep_genes)
-  message(sprintf("Number of genes after filtering: %s", nrow(scdata)))
+  message(sprintf("Number of genes after excluding: %s", nrow(scdata)))
 
   return(scdata)
 }
 
 
+#' Build list of genes to exclude
+#'
+#' This function builds the union of gene indices to exclude, joining all groups.
+#'
+#' @param all_genes vector of gene symbols
+#' @param exclude_groups list of groups to exclude
+#' @param exclude_custom list of custom (user provided) genes to exclude
+#'
+#' @return integer vector of gene indices
+#' @export
+#'
 list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 
   gene_lists <- list("cellCycle" = list_cell_cycle,
                      "ribosomal" = NULL,
                      "mitochondrial" = NULL)
 
-  exclude_genes <- list()
+  exclude_genes <- c()
 
   for (group in exclude_groups) {
     list_fun <- gene_lists[[group]]
-    exclude_genes <- append(exclude_genes, list_fun(all_genes))
+    exclude_genes <- c(exclude_genes, list_fun(all_genes))
   }
 
   # in case there's a custom list of genes to exclude
   if (length(exclude_custom > 0)) {
-    exclude_genes <- append(exclude_genes, exclude_custom)
+    exclude_genes <- c(exclude_genes, unlist(exclude_custom))
   }
 
   # remove duplicates
-  return(unlist(unique(exclude_genes)))
+  return(unique(exclude_genes))
 }
 
 
+#' Title
+#'
+#' @param all_genes
+#'
+#' @return
+#' @export
+#'
+#' @examples
 list_cell_cycle <- function(all_genes) {
-  message("Filtering Cell Cycle genes...")
+  message("Excluding Cell Cycle genes...")
 
   # some symbols were updated in 2019, but to defend against badly annotated data
   # we take the unique join. There are 6 renamed genes only.
@@ -354,7 +389,8 @@ list_cell_cycle <- function(all_genes) {
 
   cc_gene_indices <- na.omit(match(human_cc_genes, all_genes))
 
-  message(sprintf("Number of Cell Cycle genes to exclude: %s", length(cc_gene_indices)))
+  message(sprintf("Number of Cell Cycle genes to exclude: %s",
+                  length(cc_gene_indices)))
 
   return(cc_gene_indices)
 }
