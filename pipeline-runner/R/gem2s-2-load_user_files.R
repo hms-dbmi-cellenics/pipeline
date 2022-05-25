@@ -226,20 +226,6 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   return(list(counts_list = counts_list, annot = annot))
 }
 
-fix_annotations <- function(annot_list, counts_list, features_types_list, samples){
-  if(any(features_types_list==list(TRUE,TRUE)) and any(features_types_list==list(FALSE,FALSE)) stop("Incompatible features detected.")
-
-  for(sample in samples){
-    if(any(features_types_list==list(TRUE,TRUE)){
-      annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(1,1)]
-    }
-
-    if(any(features_types_list==list(FALSE,FALSE)){
-      annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(2,2)]
-    }
-  }
-}
-
 format_annot <- function(annot_list) {
   annot <- unique(do.call("rbind", annot_list))
 
@@ -263,6 +249,20 @@ format_annot <- function(annot_list) {
 
   rownames(annot) <- annot$input
   return(annot)
+}
+
+fix_annotations <- function(annot_list, counts_list, features_types_list, samples){
+  if(any(features_types_list==list(TRUE,TRUE)) and any(features_types_list==list(FALSE,FALSE)) stop("Incompatible features detected.")
+
+  for(sample in samples){
+    if(any(features_types_list==list(TRUE,TRUE)){
+      annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(1,1)]
+    }
+
+    if(any(features_types_list==list(FALSE,FALSE)){
+      annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(2,2)]
+    }
+  }
 }
 
 extract_features_types <- function(annot){
