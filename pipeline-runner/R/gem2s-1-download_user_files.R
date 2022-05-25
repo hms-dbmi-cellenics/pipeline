@@ -9,7 +9,8 @@
 #'
 download_user_files <- function(input, pipeline_config, prev_out = list()) {
   project_id <- input$projectId
-  sample_uuids <- input$sampleIds[order(input$sampleIds)]
+  sample_uuids <- unlist(input$sampleIds)
+  sample_uuids <- sample_uuids[order(sample_uuids)]
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
