@@ -44,7 +44,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 }
 
 # construct SeuratObject
-construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, config, min.cells = 3, min.features = 10) {
+construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, config, min.cells = 0, min.features = 10) {
   metadata <- construct_metadata(counts, sample, config)
 
   scdata <- Seurat::CreateSeuratObject(
