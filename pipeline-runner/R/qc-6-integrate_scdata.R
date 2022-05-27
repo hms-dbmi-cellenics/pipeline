@@ -340,12 +340,14 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
 #' Build list of genes to exclude
 #'
 #' This function builds the union of gene indices to exclude, joining all groups.
+#' To do so, it calls all the required list_* functions, getting the exclude gene
+#' ids and joins them.
 #'
-#' @param all_genes vector of gene symbols
+#' @param all_genes character vector of gene symbols
 #' @param exclude_groups list of groups to exclude
 #' @param exclude_custom list of custom (user provided) genes to exclude
 #'
-#' @return integer vector of gene indices
+#' @return integer vector of gene indices to exclude
 #' @export
 #'
 list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
@@ -371,14 +373,19 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 }
 
 
-#' Title
+#' Build list of cell cycle genes
 #'
-#' @param all_genes
+#' Uses cell cycle gene list from Tirosh et. al. 2016, bundled with Seurat.
 #'
-#' @return
+#' For now it's only useful for Homo sapiens. But could be easily extended to mice
+#' converting the human gene names to their orthologs in mice, as suggested by
+#' satijalab in [this github issue](https://github.com/satijalab/seurat/issues/2493#issuecomment-575702274)
+#'
+#' @param all_genes character vector of gene symbols
+#'
+#' @return integer vector of cell cycle gene indices
 #' @export
 #'
-#' @examples
 list_cell_cycle <- function(all_genes) {
   message("Excluding Cell Cycle genes...")
 
