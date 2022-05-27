@@ -93,7 +93,6 @@ test_that("prepare_experiment ensures gene_annotations are indexed the same as s
   expect_equal(row.names(scdata), scdata@misc$gene_annotations$input)
 })
 
-
 test_that("prepare_experiment adds 0 indexed cell_ids and other metadata to scdata", {
   prev_out <- mock_prev_out()
   input <- list(experimentId = "1234")
@@ -107,7 +106,6 @@ test_that("prepare_experiment adds 0 indexed cell_ids and other metadata to scda
   expect_equal(added_ids, expected_ids)
 })
 
-
 test_that("prepare_experiment generates qc_config that matches snapshot", {
   prev_out <- mock_prev_out()
   input <- list(experimentId = "1234")
@@ -115,8 +113,6 @@ test_that("prepare_experiment generates qc_config that matches snapshot", {
 
   expect_snapshot(str(task_out$qc_config))
 })
-
-
 
 test_object <- function() {
   prev_out <- mock_prev_out(samples = c("a", "b", "c"))
@@ -126,13 +122,22 @@ test_object <- function() {
 
   scdata <- task_out$scdata
 
-
   test_that("Seurat object validation", {
     expect_type(scdata, "S4")
     expect_true(nrow(scdata) == 100, "Seurat")
     expect_true(scdata@active.assay == "RNA")
   })
 
+  test_that("Validating misc", {
+    expect_type(scdata@misc, "list")
+    misc <- scdata@misc
+    expect_true("gene_annotations" %in% names(misc))
+    expect_true("color_pool" %in% names(misc))
+    expect_type(misc$color_pool, "character")
+    expect_true(all(misc$gene_annotations$input == rownames(scdata)))
+    expect_equal(sum(duplicated(misc$gene_annotations$name)), 0)
+    # check that in duplicated positions (including the first) we have the gene id instead of the name.
+  })
 
   test_that("Validating metadata", {
     md <- scdata@meta.data
@@ -160,22 +165,12 @@ test_object <- function() {
     test_that("Percent mitocondrial", {
       expect_true(max(md$percent.mt) <= 100)
       expect_true(min(md$percent.mt) >= 0)
-      # Polemic check to see that we are in percent and not fraction
+      #Verify that we have percent mt and not fraction
       expect_true(max(md$percent.mt) > 1 || all(md$percent.mt == 0))
     })
   })
-
-
-  test_that("Validating misc", {
-    expect_type(scdata@misc, "list")
-    misc <- scdata@misc
-    expect_true("gene_annotations" %in% names(misc))
-    expect_true("color_pool" %in% names(misc))
-    expect_type(misc$color_pool, "character")
-    expect_true(all(misc$gene_annotations$input == rownames(scdata)))
-    expect_true(sum(duplicated(misc$gene_annotations$name)) == 0)
-    # check that in duplicated positions (including the first) we have the gene id instead of the name.
-  })
 }
 
-test_object()
+test_that("Test Seurat Object", {
+  test_object()
+})
