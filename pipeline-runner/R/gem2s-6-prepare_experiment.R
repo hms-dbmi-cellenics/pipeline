@@ -25,7 +25,7 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   #If subsetting all cells, Seurat will not reorder the cells in the object. We need to subset to [-1] and [1] and merge to shuffle.
   set.seed(42)
-  shuffle_mask <- sample(colnames(scdata),ncol(scdata))
+  shuffle_mask <- sample(colnames(scdata))
   scdata <- merge(scdata[,shuffle_mask[1]],scdata[,shuffle_mask[-1]])
 
   scdata <- add_metadata(scdata, prev_out$annot, input$experimentId)
