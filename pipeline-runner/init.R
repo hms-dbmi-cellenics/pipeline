@@ -412,7 +412,7 @@ init <- function() {
 
         tryCatchLog({
                 # Refresh pipeline_config with the new task input
-                pipeline_config <- load_config(input$server, api_version = input$apiVersion %||% "v1")
+                pipeline_config <- load_config(input$server, api_version = input$apiVersion)
 
                 wrapper(input, pipeline_config)
 
