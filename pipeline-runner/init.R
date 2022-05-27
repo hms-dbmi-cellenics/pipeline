@@ -229,6 +229,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     #need this for embed_and_cluster
     config$api_url <- pipeline_config$api_url
     config$auth_JWT <- input$authJWT
+    config$api_version <- input$apiVersion
 
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
