@@ -26,9 +26,6 @@ get_gem2s_file_v1 <- function(input, originals_bucket, input_dir, s3) {
   sample_ids <- unlist(input$sampleIds)
   sample_ids <- sample_uuids[order(sample_uuids)]
 
-  s3 <- paws::s3(config = pipeline_config$aws_config)
-
-  input_dir <- "/input"
 
   unlink(input_dir, recursive = TRUE)
 
