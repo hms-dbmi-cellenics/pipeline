@@ -45,6 +45,14 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
+#' Merge scdatas: merge rds files in input list
+#'
+#' @param scdata_list
+#'
+#' @return
+#' @export
+#'
+#' @examples
 merge_scdatas <- function(scdata_list) {
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]

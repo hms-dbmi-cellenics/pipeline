@@ -61,6 +61,25 @@ test_that("prepare_experiment merges multiple SeuratObjects", {
   expect_equal(ncol(scdata), sum(sapply(scdata_list, ncol)))
 })
 
+test_that("prepare_experiment shuffles cells after merge", {
+  prev_out <- mock_prev_out(samples = c("a", "b", "c"))
+  scdata_list <- prev_out$scdata_list
+
+  task_out <- expect_warning(prepare_experiment(NULL, NULL, prev_out)$output)
+
+  scdata <- task_out$scdata
+  merged_scdatas <- expect_warning(merge_scdatas(scdata_list))
+
+  set.seed(42)
+  shuffle_mask <- sample(colnames(merged_scdatas))
+
+  expect_equal(ncol(scdata), ncol(merged_scdatas))
+  expect_equal(merged_scdatas$samples[shuffle_mask],scdata$samples)
+  expect_true(all(shuffle_mask == colnames(scdata)))
+  expect_false(all(shuffle_mask == colnames(merged_scdatas)))
+  expect_true(all(merged_scdatas$samples[1:ncol(scdata_list[[1]])]=="a"))
+  expect_false(all(scdata$samples[1:ncol(scdata_list[[1]])]=="a"))
+})
 
 test_that("prepare_experiment ensures gene_annotations are indexed the same as scdata", {
   prev_out <- mock_prev_out()
@@ -96,3 +115,67 @@ test_that("prepare_experiment generates qc_config that matches snapshot", {
 
   expect_snapshot(str(task_out$qc_config))
 })
+
+
+
+test_object <- function() {
+  prev_out <- mock_prev_out(samples = c("a", "b", "c"))
+  scdata_list <- prev_out$scdata_list
+
+  task_out <- expect_warning(prepare_experiment(NULL, NULL, prev_out)$output)
+
+  scdata <- task_out$scdata
+
+
+  test_that("Seurat object validation", {
+    expect_type(scdata, "S4")
+    expect_true(nrow(scdata) == 100, "Seurat")
+    expect_true(scdata@active.assay == "RNA")
+  })
+
+
+  test_that("Validating metadata", {
+    md <- scdata@meta.data
+    annotations <- scdata@misc$gene_annotations
+
+    expect_type(md, "list")
+    expect_true(nrow(md) == ncol(scdata))
+    expect_true("barcode" %in% colnames(md))
+    expect_true(all(colnames(scdata) %in% rownames(md)))
+    expect_true("samples" %in% colnames(md))
+
+    if (any(grepl("^mt-", annotations$name, ignore.case = T))) {
+      expect_true("percent.mt" %in% colnames(md))
+    }
+
+    expect_true("doublet_scores" %in% colnames(md))
+    expect_true("cells_id" %in% colnames(md))
+    expect_true("samples" %in% colnames(md))
+
+    test_that("Cell ids", {
+      cellNumber <- ncol(scdata@assays$RNA@data)
+      expect_equal(md$cells_id, 0:(cellNumber - 1))
+    })
+
+    test_that("Percent mitocondrial", {
+      expect_true(max(md$percent.mt) <= 100)
+      expect_true(min(md$percent.mt) >= 0)
+      # Polemic check to see that we are in percent and not fraction
+      expect_true(max(md$percent.mt) > 1 || all(md$percent.mt == 0))
+    })
+  })
+
+
+  test_that("Validating misc", {
+    expect_type(scdata@misc, "list")
+    misc <- scdata@misc
+    expect_true("gene_annotations" %in% names(misc))
+    expect_true("color_pool" %in% names(misc))
+    expect_type(misc$color_pool, "character")
+    expect_true(all(misc$gene_annotations$input == rownames(scdata)))
+    expect_true(sum(duplicated(misc$gene_annotations$name)) == 0)
+    # check that in duplicated positions (including the first) we have the gene id instead of the name.
+  })
+}
+
+test_object()
