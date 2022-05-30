@@ -268,7 +268,7 @@ jobs:
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="0"
             IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
-            MEMORY_REQUEST="29Gi"
+            MEMORY_REQUEST="4Gi"
           fi
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
