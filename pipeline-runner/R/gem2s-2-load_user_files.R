@@ -81,8 +81,10 @@ read_10x_files <- function(config, input_dir) {
     }
 
     # Check if there are any rows with empty gene symbol in the count matrix and remove them if < 0.1% of the total number of features
-    if (length(which(rownames(counts) == "")) != 0 & length(which(rownames(counts) == ""))/nrow(counts) < 0.001) {
-      counts <- counts[!(rownames(counts) == ""),]
+  unnamed_genes <- which(rownames(counts) == "")
+  
+  if (length(unnamed_genes) != 0 & length(unnamed_genes) / nrow(counts) < 0.001) {
+    counts <- counts[!unnamed_genes,]
     }
 
     annot <- read.delim(annot_fpath, header = FALSE)
