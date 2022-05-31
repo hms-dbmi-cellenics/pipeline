@@ -67,8 +67,11 @@ FROM builder AS dev
 # also install watchdog to automatically restart
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+RUN apt update && apt -y install git
+RUN git clone https://github.com/pythonprofilers/memory_profiler.git && cd memory_profiler && pip3 install .
 
 # start app
 ADD R ./R
 COPY init.R .
-ENTRYPOINT ["Rscript", "init.R"]
+COPY start.sh start.sh
+ENTRYPOINT ["./start.sh"]
