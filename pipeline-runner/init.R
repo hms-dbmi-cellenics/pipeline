@@ -27,7 +27,7 @@ buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
     return(activity_arn)
 }
 
-load_config <- function(development_aws_server) {
+load_config <- function(development_aws_server, api_version = "v1") {
     label_path <- "/etc/podinfo/labels"
     aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset="242905224710")
     aws_region <- Sys.getenv("AWS_DEFAULT_REGION", unset="eu-west-1")
@@ -55,6 +55,7 @@ load_config <- function(development_aws_server) {
             break
         }
     }
+
     sandbox <- Sys.getenv("SANDBOX_ID", "default")
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
@@ -108,9 +109,18 @@ load_config <- function(development_aws_server) {
     config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
     config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, sep = "-")
     config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, sep = "-")
-    config[["sns_topic"]] <- paste(
-      paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
-      config$cluster_env, config$sandbox_id, sep = "-")
+
+    if (api_version == "v1") {
+        config[["sns_topic"]] <- paste(
+            paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
+            config$cluster_env, config$sandbox_id, sep = "-"
+        )
+    } else if (api_version == "v2") {
+        config[["sns_topic"]] <- paste(
+            paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
+            config$cluster_env, config$sandbox_id, "v2", sep = "-"
+        )
+    }
 
     return(config)
 }
@@ -146,7 +156,6 @@ run_processing_step <- function(scdata, config, tasks,task_name, cells_id,sample
 #
 
 run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
-
     # list of task functions named by task name
     tasks <- list(
         "downloadGem" = download_user_files,
@@ -329,18 +338,17 @@ start_heartbeat <- function(task_token, aws_config) {
 #
 # Calls the appropiate process: data processing pipeline or gem2s.
 #
-wrapper <- function(input) {
+wrapper <- function(input, pipeline_config) {
     task_name <- input$taskName
     message("------\nStarting task: ", task_name, '\n')
     message("Input:")
     str(input)
     message("")
 
-
     # common to gem2s and data processing
     server <- input$server
     input <- input[names(input) != "server"]
-    pipeline_config <- load_config(server)
+
     process_name <- input$processName
 
     if (process_name == 'qc') {
@@ -403,9 +411,10 @@ init <- function() {
         )
 
         tryCatchLog({
+                # Refresh pipeline_config with the new task input
+                pipeline_config <- load_config(input$server, api_version = input$apiVersion %||% "v1")
 
-
-                wrapper(input)
+                wrapper(input, pipeline_config)
 
                 message('Send task success\n------\n')
                 states$send_task_success(
