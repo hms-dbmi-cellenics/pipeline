@@ -95,7 +95,7 @@ read_10x_files <- function(config, input_dir) {
 
     if (is(counts, "list")) {
       slot <- "Gene Expression"
-      # questionable: grab first slot if no gene expression
+      # questionable: grab first slot if no slot named gene expression
       if (!slot %in% names(counts)) slot <- names(counts)[1]
       counts <- counts[[slot]]
     }
@@ -259,38 +259,61 @@ format_annot <- function(annot_list) {
 
 #The possible options at this stage are TT, FF, TF. It will convert all TF annotations into either FF or TT.
 fix_annotations <- function(annot_list, counts_list, features_types_list, samples){
-  if(any(features_types_list==2) && any(features_types_list==0)) stop("Incompatible features detected.")
+  if(any(features_types_list == 2) && any(features_types_list == 0)) stop("Incompatible features detected.")
 
-  for(sample in samples){
-    if(any(features_types_list==2)){
-      if(features_types_list[[sample]]==1){
-        annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(1,1)]
+  if(any(features_types_list == 1) && (any(features_types_list == 2) || any(features_types_list == 0))){
+    annots_with_ids <- unique(do.call("rbind", annot_list[features_types_list == 1]))  
+    annots_with_ids <- annots_with_ids[!duplicated(annots_with_ids[,1]), ]
+
+    for(sample in samples){
+      if(features_types_list[[sample]]==0){
+        matching_symbols_index <- match(annot_list[[sample]][,1],annots_with_ids[,2])
+        annot_list[[sample]][matching_symbols_index,1] <- annots_with_ids[matching_symbols_index,1] 
       }
-    }
-    if(any(features_types_list==0)){
-      if(features_types_list[[sample]]==1){
+      if(features_types_list[[sample]]==2){
+        matching_symbols_index <- match(annot_list[[sample]][,1],annots_with_ids[,1])
+        annot_list[[sample]][matching_symbols_index,2] <- annots_with_ids[matching_symbols_index,2] 
         annot <- annot_list[[sample]]
         counts <- counts_list[[sample]]
         annot[,2] <- make.unique(annot[,2])
         rownames(counts) <- annot[match(rownames(counts),annot[,1]),2]
         annot_list[[sample]][,c(1,2)] <- annot[,c(2,2)]
         counts_list[[sample]] <- counts
-      }
+        }     
     }
   }
+
+
+  # for(sample in samples){
+  #   if(any(features_types_list==2)){
+  #     if(features_types_list[[sample]]==1){
+  #       annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(1,1)]
+  #     }
+  #   }
+  #   if(any(features_types_list==0)){
+  #     if(features_types_list[[sample]]==1){
+  #       annot <- annot_list[[sample]]
+  #       counts <- counts_list[[sample]]
+  #       annot[,2] <- make.unique(annot[,2])
+  #       rownames(counts) <- annot[match(rownames(counts),annot[,1]),2]
+  #       annot_list[[sample]][,c(1,2)] <- annot[,c(2,2)]
+  #       counts_list[[sample]] <- counts
+  #     }
+  #   }
+  # }
   return(list(counts_list,annot_list))
 }
 
 extract_features_types <- function(annot){
   features_types <- list()
 
-  random_features <- sample(annot[,1],100)
-  is_ens <- random_features[substr(random_features,1,3)=="ENS"]
-  features_types[[1]] <- length(is_ens)>=50
+  annot_c1 <- annot[,1]
+  is_ens <- annot_c1[substr(annot_c1,1,3)=="ENS"]
+  features_types[[1]] <- length(is_ens)>=length(annot_c1)-length(is_ens)
 
-  random_features <- sample(annot[,2],100)
-  is_ens <- random_features[substr(random_features,1,3)=="ENS"]
-  features_types[[2]] <- length(is_ens)>=50
+  annot_c2 <- annot[,2]
+  is_ens <- annot_c2[substr(annot_c2,1,3)=="ENS"]
+  features_types[[2]] <- length(is_ens)>=length(annot_c2)-length(is_ens)
 
   if(features_types[[1]]==FALSE && features_types[[2]]==TRUE) return(-1)
 
