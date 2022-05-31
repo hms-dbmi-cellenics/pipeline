@@ -23,23 +23,23 @@
         ..$ enabled       : logi TRUE
         ..$ auto          : logi TRUE
         ..$ filterSettings:List of 2
-        .. ..$ method        : chr "absolute_threshold"
+        .. ..$ method        : chr "absoluteThreshold"
         .. ..$ methodSettings:List of 1
-        .. .. ..$ absolute_threshold:List of 2
+        .. .. ..$ absoluteThreshold:List of 2
         .. .. .. ..$ maxFraction: num 0.1
         .. .. .. ..$ binStep    : num 0.3
         ..$ sample_a      :List of 3
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 2
-        .. .. ..$ method        : chr "absolute_threshold"
+        .. .. ..$ method        : chr "absoluteThreshold"
         .. .. ..$ methodSettings:List of 1
-        .. .. .. ..$ absolute_threshold:List of 2
+        .. .. .. ..$ absoluteThreshold:List of 2
         .. .. .. .. ..$ maxFraction: num 0
         .. .. .. .. ..$ binStep    : num 0.3
         .. ..$ defaultFilterSettings:List of 2
-        .. .. ..$ method        : chr "absolute_threshold"
+        .. .. ..$ method        : chr "absoluteThreshold"
         .. .. ..$ methodSettings:List of 1
-        .. .. .. ..$ absolute_threshold:List of 2
+        .. .. .. ..$ absoluteThreshold:List of 2
         .. .. .. .. ..$ maxFraction: num 0
         .. .. .. .. ..$ binStep    : num 0.3
        $ classifier          :List of 5

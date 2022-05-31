@@ -3,9 +3,9 @@ mock_config <- function(max_fraction = 0.1) {
     auto = TRUE,
     enabled = TRUE,
     filterSettings = list(
-      method = "absolute_threshold",
+      method = "absoluteThreshold",
       methodSettings = list(
-        absolute_threshold = list(maxFraction = max_fraction)
+        absoluteThreshold = list(maxFraction = max_fraction)
       )
     )
   )
@@ -33,7 +33,7 @@ mock_scdata <- function() {
   return(scdata)
 }
 
-get_threshold <- function(config) config$filterSettings$methodSettings$absolute_threshold$maxFraction
+get_threshold <- function(config) config$filterSettings$methodSettings$absoluteThreshold$maxFraction
 
 
 test_that("filter_high_mito filters based on threshold", {
