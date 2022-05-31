@@ -20,7 +20,14 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "dataIntegration") {
+integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+  # merge the data before integration
+  scdata <- merge_scdatas(scdata_list)
+  # the sample already contain the metadata, check if the merged object already has the annotations
+  # otherwise try to add it from one of the samples
+  #ascdata <- add_metadata(scdata, scdata_list$annot, input$experimentId)
+
+
   flat_cells_id <- unname(unlist(cells_id))
   scdata <- subset_ids(scdata, flat_cells_id)
   # main function
@@ -78,6 +85,21 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   )
 
   return(result)
+}
+
+merge_scdatas <- function(scdata_list) {
+  saveRDS(scdata_list, '/debug/scdata_list.b4-merge.rds')
+  # remove the samples slot before merging or it triggers error because it ain't expected
+  scdata_list$samples <- NULL
+  if (length(scdata_list) == 1) {
+    scdata <- scdata_list[[1]]
+  } else {
+    scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
+  }
+
+  scdata@misc <- scdata_list[[1]]@misc
+
+  return(scdata)
 }
 
 # This function covers
@@ -289,3 +311,24 @@ get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
   npcs <- min(which(cumsum(var_explained) >= var_threshold))
   min(npcs, max_npcs, na.rm = TRUE)
 }
+
+
+add_metadata <- function(scdata, annot, experiment_id) {
+
+  # Ensure index by rownames in scdata
+  annot <- annot[match(rownames(scdata), annot$input), ]
+  scdata@misc[["gene_annotations"]] <- annot
+
+  message("Storing cells id...")
+  # Keeping old version of ids starting from 0
+  scdata$cells_id <- 0:(ncol(scdata) - 1)
+
+  message("Storing color pool...")
+  # We store the color pool in a slot in order to be able to access it during configureEmbedding
+  scdata@misc[["color_pool"]] <- get_color_pool()
+  scdata@misc[["experimentId"]] <- experiment_id
+  scdata@misc[["ingestionDate"]] <- Sys.time()
+
+  return(scdata)
+}
+

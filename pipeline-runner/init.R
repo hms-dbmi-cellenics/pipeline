@@ -221,6 +221,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     config$api_url <- pipeline_config$api_url
     config$auth_JWT <- input$authJWT
 
+    # TODO, we need to change this to reload separate samples instead of single scdata
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
 
@@ -233,10 +234,14 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
     if (!exists("cells_id")) {
         message("No filtered cell ids have been loaded, loading from S3...")
+        message('task_name: ', task_name)
         if(task_name == names(tasks)[1]){
+            message('generate_first_step_ids')
             assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
         }else if(task_name %in% names(tasks)){
+            message('load_cells_id_from_s3')
             samples <- unique(scdata$samples)
+            message('samples: ', samples)
             assign("cells_id", load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples), pos = ".GlobalEnv")
         }else{
             stop("Invalid task name given: ", task_name)
@@ -271,7 +276,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # Upload count matrix data
     if(upload_count_matrix) {
         assign("scdata", data, pos = ".GlobalEnv")
-        object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
+        object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, data)
         message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
     }
 

@@ -7,9 +7,13 @@
 #'
 #' @examples
 generate_first_step_ids <- function(scdata) {
+  message('gen: ', scdata$samples)
+  saveRDS(scdata, '/debug/scdata.gen.1.rds')
   cells_id <- list()
-  for (sample_id in unique(scdata$samples)) {
-    cells_id[[sample_id]] <- scdata$cells_id[scdata$samples == sample_id]
+  for (sample in unique(scdata$samples)) {
+    sample_id <- sample$Key
+    message('sample_id: ', sample_id)
+    cells_id[[sample_id]] <- scdata[[sample_id]]$cells_id
   }
   return(cells_id)
 }

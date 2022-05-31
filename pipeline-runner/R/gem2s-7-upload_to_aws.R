@@ -13,10 +13,12 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   config_dataProcessing <- prev_out$qc_config
 
   i <- 0
-  for (scdata in scdata_list) {
-    message('Uploading: ', i)
+  # for (scdata in scdata_list) {
+  for (sample in names(scdata_list)) {
+    message('Uploading: ', sample)
     i <- i + 1
     message("Constructing cell sets ...")
+    scdata <- scdata_list[[sample]]
     cell_sets <- get_cell_sets(scdata, input)
 
     # cell sets file to s3
@@ -37,7 +39,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     put_object_in_s3_multipart(pipeline_config,
       bucket = pipeline_config$source_bucket,
       object = fpath,
-      key = file.path(experiment_id, "r.rds")
+      key = file.path(experiment_id, sample, "r.rds")
     )
   }
 

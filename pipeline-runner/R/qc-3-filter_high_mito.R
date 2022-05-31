@@ -23,16 +23,16 @@ filter_high_mito <- function(scdata, config, sample_id, cells_id, task_name = "m
   cells_id.sample <- cells_id[[sample_id]]
 
   if (length(cells_id.sample) == 0) {
-    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
+    return(list(data = scdata[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata, cells_id.sample)
+  scdata.sample <- subset_ids(scdata[[sample_id]], cells_id.sample)
 
   # Check if the experiment has MT-content
-  if (!"percent.mt" %in% colnames(scdata@meta.data)) {
+  if (!"percent.mt" %in% colnames(scdata[[sample_id]]@meta.data)) {
     message("Warning! No MT-content has been computed for this experiment!")
     guidata <- list()
-    return(list(data = scdata, config = config, plotData = guidata))
+    return(list(data = scdata[[sample_id]], config = config, plotData = guidata))
   }
 
   maxFraction <- config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction

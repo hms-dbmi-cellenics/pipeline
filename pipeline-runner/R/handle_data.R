@@ -44,12 +44,27 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   message(bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
 
-  c(body, ...rest) %<-% s3$get_object(
+  objects <- s3$list_objects(
     Bucket = bucket,
-    Key = paste(experiment_id, "r.rds", sep = "/")
+    Prefix = experiment_id
   )
-  obj <- readRDS(rawConnection(body))
-  return(obj)
+  samples <- objects$Contents
+  message("samples: ", samples)
+  scdata <- list()
+  for (sample in samples) {
+    key <- sample$Key
+    message("sample: ", key)
+    c(body, ...rest) %<-% s3$get_object(
+      Bucket = bucket,
+      Key = paste(key, sep = "/")
+    )
+    obj <- readRDS(rawConnection(body))
+    scdata[[key]] <- obj
+  }
+
+  scdata$samples <- samples
+
+  return(scdata)
 }
 
 load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, samples) {

@@ -28,10 +28,10 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
   cells_id.sample <- cells_id[[sample_id]]
 
   if (length(cells_id.sample) == 0) {
-    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
+    return(list(data = scdata[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata, cells_id.sample)
+  scdata.sample <- subset_ids(scdata[[sample_id]], cells_id.sample)
 
   type <- config$filterSettings$regressionType
 
