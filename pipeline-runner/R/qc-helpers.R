@@ -51,16 +51,25 @@ remove_cell_ids <- function(pipeline_config, experiment_id) {
 get_positions_to_keep <- function(scdata, num_cells_to_downsample) {
   # Downsample plotData
   num_cells_to_downsample <- downsample_plotdata(ncol(scdata), num_cells_to_downsample)
-  set.seed(123)
+  set.seed(gem2s$random.seed)
   cells_position_to_keep <- sample(1:ncol(scdata), num_cells_to_downsample, replace = FALSE)
   cells_position_to_keep <- sort(cells_position_to_keep)
 
   return(cells_position_to_keep)
 }
 
-#
-# subset_ids subsets a seurat object with the cell ids
-#
+#' Subset Seurat object given cell_ids
+#'
+#' Cell Ids are an internal representation used by Cellenics. They are stored in
+#' the `meta.data` slot of the Seurat object. This function subsets a Seurat
+#' object given a vector of cell ids.
+#'
+#' @param scdata Seurat rds object downloaded from S3
+#' @param cells_id numeric vector of cell ids to extract
+#'
+#' @return subsetted Seurat object
+#' @export
+#'
 subset_ids <- function(scdata, cells_id) {
   meta_data_subset <- scdata@meta.data[match(cells_id, scdata@meta.data$cells_id), ]
   current_cells <- rownames(meta_data_subset)
@@ -79,15 +88,22 @@ generate_gui_uuid <- function(sample_uuid, task_name, item_idx) {
   return(paste(task_name, item_idx, sep = "-"))
 }
 
-#
-# Subset safe allows us to attempt to subset a seurat object even with an empty list
-# this function exists for the case when the user over-filters the object, and we need to return something
-# that'd allow the user to realize that they are filtering all the cells, while maintaining certain seurat functionality.
-# it's a questionable function and it should be questioned.
-#
-# IN scdata: object to filter
-# IN cells: cell barcodes to subset the object with
-#
+
+#' Safely subset Seurat object
+#'
+#' Subset safe allows us to attempt to subset a seurat object even with an empty
+#' list. This function exists for the case when the user over-filters the object,
+#' and we need to return something that'd allow the user to realize that they are
+#' filtering all the cells, while maintaining certain seurat functionality.
+#'
+#' It's a questionable function and it should be questioned.
+#'
+#' @param scdata Seurat object to filter
+#' @param cells cell barcodes to subset the object with
+#'
+#' @return subsetted Seurat Object
+#' @export
+#'
 subset_safe <- function(scdata, cells) {
   if (length(cells) > 0) {
     return(subset(scdata, cells = cells))

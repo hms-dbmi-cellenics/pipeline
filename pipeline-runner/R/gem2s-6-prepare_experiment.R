@@ -20,13 +20,18 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   scdata_list <- prev_out$scdata_list
   samples <- names(scdata_list)
 
-  # message("Merging Seurat Objects...")
-  # saveRDS(scdata_list, "/debug/scdata_list.rds")
-  # saveRDS(prev_out, "/debug/prev_out.rds")
-  # saveRDS(pipeline_config, "/debug/pipeline_config.rds")
+  message("Merging Seurat Objects...")
   message(sum(sapply(scdata_list, ncol)))
-  # scdata <- merge_scdatas(scdata_list)
-  # adding metadata to each element in scdata_list works OK
+
+  scdata <- merge_scdatas(scdata_list)
+
+  #If subsetting all cells, Seurat will not reorder the cells in the object. We need to subset to [-1] and [1] and merge to shuffle.
+  set.seed(gem2s$random.seed)
+  shuffle_mask <- sample(colnames(scdata))
+  # scdata <- merge(scdata[,shuffle_mask[1]],scdata[,shuffle_mask[-1]])
+
+  # scdata <- add_metadata(scdata, prev_out$annot, input$experimentId)
+  # prev_out$scdata <- scdata
   scdata_list <- add_metadata_to_each(scdata_list, prev_out$annot, input$experimentId)
   # saveRDS(scdata_list, '/debug/scdata_list.metadata.rds')
   prev_out$scdata_list <- scdata_list
@@ -47,15 +52,23 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
-# merge_scdatas <- function(scdata_list) {
-#   if (length(scdata_list) == 1) {
-#     scdata <- scdata_list[[1]]
-#   } else {
-#     scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
-#   }
+#' Merge scdatas: merge rds files in input list
+#'
+#' @param scdata_list
+#'
+#' @return
+#' @export
+#'
+#' @examples
+merge_scdatas <- function(scdata_list) {
+  if (length(scdata_list) == 1) {
+    scdata <- scdata_list[[1]]
+  } else {
+    scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
+  }
 
-#   return(scdata)
-# }
+  return(scdata)
+}
 
 add_metadata_to_each <- function(scdata_list, annot, experiment_id) {
 

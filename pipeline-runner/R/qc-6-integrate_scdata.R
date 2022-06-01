@@ -31,7 +31,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   flat_cells_id <- unname(unlist(cells_id))
   scdata <- subset_ids(scdata, flat_cells_id)
   # main function
-  set.seed(42)
+  set.seed(gem2s$random.seed)
   saveRDS(config, '/debug/config.rds')
   scdata.integrated <- run_dataIntegration(scdata, config)
 

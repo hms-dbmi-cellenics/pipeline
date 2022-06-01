@@ -85,7 +85,7 @@ update_sets_through_api <-
     httr::PATCH(
       paste0(api_url, "/v1/experiments/", experiment_id, "/cellSets"),
       body = list(list(
-        "$match" = list(query = httr_query, "$remove" = TRUE)
+        "$match" = list(query = httr_query, value = list("$remove" = TRUE))
       ),
       list("$prepend" = cell_sets_object)),
       encode = "json",
