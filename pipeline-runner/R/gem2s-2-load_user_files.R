@@ -74,23 +74,23 @@ read_10x_files <- function(config, input_dir) {
 
     annot <- read.delim(annot_fpath, header = FALSE)
 
-    if(ncol(annot)==1 || annot[1,2]=="Gene Expression"){
-      annot[,2] <- annot[,1]
+    if (ncol(annot) == 1 || annot[1, 2] == "Gene Expression") {
+      annot[, 2] <- annot[, 1]
     }
 
     features_types <- extract_features_types(annot)
 
-    message("Features types is ",features_types, "for sample ",sample)
+    message("Features types is ", features_types, "for sample ", sample)
 
-    if(features_types == -1){
-      annot[,c(1,2)] <- annot[,c(2,1)]
+    if (features_types == -1) {
+      annot[, c(1, 2)] <- annot[, c(2, 1)]
       gene_column <- 2
       features_types <- 1
     }
 
-    #Make unique the annot column 1 so it's equal to the gene names that read10X makes unique
-    #Only c1 needs make.unique because we copy c2 into c1 in annot if gene_column is 2
-    annot[,1] <- make.unique(annot[,1])
+    # Make unique the annot column 1 so it's equal to the gene names that read10X makes unique
+    # Only c1 needs make.unique because we copy c2 into c1 in annot if gene_column is 2
+    annot[, 1] <- make.unique(annot[, 1])
     counts <- Seurat::Read10X(sample_dir, gene.column = gene_column, unique.features = TRUE)
 
     if (is(counts, "list")) {
@@ -115,7 +115,7 @@ read_10x_files <- function(config, input_dir) {
     features_types_list[[sample]] <- features_types
   }
 
-  c(counts_list,annot_list) %<-% fix_annotations(annot_list, counts_list, features_types_list, samples)
+  c(counts_list, annot_list) %<-% fix_annotations(annot_list, counts_list, features_types_list, samples)
   annot <- format_annot(annot_list)
 
   return(list(counts_list = counts_list, annot = annot))
@@ -255,58 +255,76 @@ format_annot <- function(annot_list) {
   return(annot)
 }
 
-#Fix annotations makes annotations compatible between samples with different types.
+# Fix annotations makes annotations compatible between samples with different types.
 
-#The possible options at this stage are TT, FF, TF. It will convert all TF annotations into either FF or TT.
-fix_annotations <- function(annot_list, counts_list, features_types_list, samples){
-  if(any(features_types_list == 2) && any(features_types_list == 0)) stop("Incompatible features detected.")
+# The possible options at this stage are TT, FF, TF. It will convert all TF annotations into either FF or TT.
+fix_annotations <- function(annot_list, counts_list, features_types_list, samples) {
+  if (any(features_types_list == 2) && any(features_types_list == 0)) stop("Incompatible features detected.")
 
-  if(any(features_types_list == 1) && (any(features_types_list == 2) || any(features_types_list == 0))){
+  if (any(features_types_list == 1) && (any(features_types_list == 2) || any(features_types_list == 0))) {
+    annots_with_ids <- unique(do.call("rbind", annot_list[features_types_list == 1]))
 
-    annots_with_ids <- unique(do.call("rbind", annot_list[features_types_list == 1])) 
+    annots_with_ids <- annots_with_ids[!duplicated(annots_with_ids[, 1]), ]
 
-    annots_with_ids <- annots_with_ids[!duplicated(annots_with_ids[,1]), ]
-
-    for(sample in samples){
-      if(features_types_list[[sample]]==0 || features_types_list[[sample]]==2){
+    for (sample in samples) {
+      if (features_types_list[[sample]] == 0 || features_types_list[[sample]] == 2) {
         sample_annot <- annot_list[[sample]]
 
-        if(features_types_list[[sample]]==0){
-          matching_symbols_index <- match(sample_annot[,1],annots_with_ids[,2])
-          sample_annot[matching_symbols_index,1] <- annots_with_ids[matching_symbols_index,1] 
+        if (features_types_list[[sample]] == 0) {
+          matching_symbols_index <- match(sample_annot[, 1], annots_with_ids[, 2])
+          sample_annot[matching_symbols_index, 1] <- annots_with_ids[matching_symbols_index, 1]
         }
 
-        if(features_types_list[[sample]]==2){
-          matching_symbols_index <- match(sample_annot[,1],annots_with_ids[,1])
-          sample_annot[matching_symbols_index,2] <- annots_with_ids[matching_symbols_index,2] 
+        if (features_types_list[[sample]] == 2) {
+          matching_symbols_index <- match(sample_annot[, 1], annots_with_ids[, 1])
+          sample_annot[matching_symbols_index, 2] <- annots_with_ids[matching_symbols_index, 2]
         }
 
         counts <- counts_list[[sample]]
-        rownames(counts)[match(rownames(counts),sample_annot[,1])] <- sample_annot[match(sample_annot[,1],rownames(counts)),1]
-        annot_list[[sample]][,c(1,2)] <- sample_annot[,c(2,2)]
-        counts_list[[sample]] <- counts 
+        rownames(counts)[match(rownames(counts), sample_annot[, 1])] <- sample_annot[match(sample_annot[, 1], rownames(counts)), 1]
+        annot_list[[sample]][, c(1, 2)] <- sample_annot[, c(2, 2)]
+        counts_list[[sample]] <- counts
       }
     }
   }
-  return(list(counts_list,annot_list))
+  return(list(counts_list, annot_list))
 }
 
 # -1 is SYMBOl/IDS
 #  0 is SYMBOL/ SYMBOL
 #  1 is IDS/SYMBOL
 #  2 is IDS/IDS
-extract_features_types <- function(annot){
+
+#' extract_features_types
+#'
+#' Determines the type of an annot data frame.
+#' Classifies the columns into either ensemblIds or symbols, and extracts a number that represents the combination.
+#'
+#' @param annot
+#'
+#' @return
+#' -1 is SYMBOl/IDS
+#' 0 is SYMBOL/ SYMBOL
+#' 1 is IDS/SYMBOL
+#' 2 is IDS/IDS
+#'
+#' @export
+#'
+#' @examples
+extract_features_types <- function(annot) {
   features_types <- list()
 
-  annot_c1 <- annot[,1]
-  is_ens <- annot_c1[substr(annot_c1,1,3)=="ENS"]
-  features_types[[1]] <- length(is_ens)>=length(annot_c1)-length(is_ens)
+  annot_c1 <- annot[, 1]
+  is_ens <- annot_c1[substr(annot_c1, 1, 3) == "ENS"]
+  features_types[[1]] <- length(is_ens) >= length(annot_c1) - length(is_ens)
 
-  annot_c2 <- annot[,2]
-  is_ens <- annot_c2[substr(annot_c2,1,3)=="ENS"]
-  features_types[[2]] <- length(is_ens)>=length(annot_c2)-length(is_ens)
+  annot_c2 <- annot[, 2]
+  is_ens <- annot_c2[substr(annot_c2, 1, 3) == "ENS"]
+  features_types[[2]] <- length(is_ens) >= length(annot_c2) - length(is_ens)
 
-  if(features_types[[1]]==FALSE && features_types[[2]]==TRUE) return(-1)
+  if (features_types[[1]] == FALSE && features_types[[2]] == TRUE) {
+    return(-1)
+  }
 
-  return(features_types[[1]]+features_types[[2]])
+  return(features_types[[1]] + features_types[[2]])
 }

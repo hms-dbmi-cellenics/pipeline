@@ -449,3 +449,7 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
 
   expect_equal(values, expected_values)
 })
+
+test_that("extract_features_types properly determines types", {
+
+})
