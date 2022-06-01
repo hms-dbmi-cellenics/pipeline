@@ -21,14 +21,14 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   samples <- names(scdata_list)
 
   # message("Merging Seurat Objects...")
-  saveRDS(scdata_list, "/debug/scdata_list.rds")
+  # saveRDS(scdata_list, "/debug/scdata_list.rds")
   # saveRDS(prev_out, "/debug/prev_out.rds")
   # saveRDS(pipeline_config, "/debug/pipeline_config.rds")
   message(sum(sapply(scdata_list, ncol)))
   # scdata <- merge_scdatas(scdata_list)
   # adding metadata to each element in scdata_list works OK
   scdata_list <- add_metadata_to_each(scdata_list, prev_out$annot, input$experimentId)
-  saveRDS(scdata_list, 'scdata_list.metadata.rds')
+  # saveRDS(scdata_list, '/debug/scdata_list.metadata.rds')
   prev_out$scdata_list <- scdata_list
 
   # construct default QC config and update prev out
@@ -59,6 +59,8 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
 add_metadata_to_each <- function(scdata_list, annot, experiment_id) {
 
+  message("add_metadata_to_each")
+  message("names(scdata_list): ", names(scdata_list))
   for (sample in names(scdata_list)) {
   # for (scdata in scdata_list) {
     # Ensure index by rownames in scdata

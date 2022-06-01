@@ -88,7 +88,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 }
 
 merge_scdatas <- function(scdata_list) {
-  saveRDS(scdata_list, '/debug/scdata_list.b4-merge.rds')
+  # saveRDS(scdata_list, '/debug/scdata_list.b4-merge.rds')
   # remove the samples slot before merging or it triggers error because it ain't expected
   scdata_list$samples <- NULL
   if (length(scdata_list) == 1) {

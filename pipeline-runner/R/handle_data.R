@@ -49,11 +49,12 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
     Prefix = experiment_id
   )
   samples <- objects$Contents
-  message("samples: ", samples)
+  sample_ids <- sapply(samples, function(x) strsplit(x$Key, "/")[[1]][[2]])
+  message("reaload_scdata sample_ids 01: ", sample_ids)
   scdata <- list()
-  for (sample in samples) {
+  for (sample in sample_ids) {
     key <- sample$Key
-    message("sample: ", key)
+    message("sample: ", sample)
     c(body, ...rest) %<-% s3$get_object(
       Bucket = bucket,
       Key = paste(key, sep = "/")
@@ -69,7 +70,10 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
 
 load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, samples) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
+  object_list <- s3$list_objects(
+                    Bucket = pipeline_config$cells_id_bucket,
+                    Prefix = paste0(experiment_id, "/", task_name, "/")
+                  )
   message(pipeline_config$cells_id_bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
   cells_id <- list()

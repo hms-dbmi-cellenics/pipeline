@@ -185,9 +185,16 @@ add_custom_config_per_sample <- function(generate_sample_config, config, scdata)
   # We update the config file, so to be able to access the raw config we create a copy
   config.raw <- config
 
+  message("add_custom_config_per_sample")
+  message("11 samples: ", scdata$samples)
   samples <- scdata$samples
 
-  for (sample in unique(samples)) {
+  sample_ids <- sapply(scdata$samples, function(x) strsplit(x$Key, "/")[[1]][[2]])
+  message("11 sample_ids: ", sample_ids)
+
+  message("names(scdata$samples): ", names(scdata$samples))
+
+  for (sample in samples) {
     # subset the Seurat object to a single sample
     scdata.sample <- scdata[, samples %in% sample]
 
