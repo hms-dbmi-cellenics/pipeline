@@ -262,48 +262,39 @@ fix_annotations <- function(annot_list, counts_list, features_types_list, sample
   if(any(features_types_list == 2) && any(features_types_list == 0)) stop("Incompatible features detected.")
 
   if(any(features_types_list == 1) && (any(features_types_list == 2) || any(features_types_list == 0))){
-    annots_with_ids <- unique(do.call("rbind", annot_list[features_types_list == 1]))  
+
+    annots_with_ids <- unique(do.call("rbind", annot_list[features_types_list == 1])) 
+
     annots_with_ids <- annots_with_ids[!duplicated(annots_with_ids[,1]), ]
 
     for(sample in samples){
-      if(features_types_list[[sample]]==0){
-        matching_symbols_index <- match(annot_list[[sample]][,1],annots_with_ids[,2])
-        annot_list[[sample]][matching_symbols_index,1] <- annots_with_ids[matching_symbols_index,1] 
-      }
-      if(features_types_list[[sample]]==2){
-        matching_symbols_index <- match(annot_list[[sample]][,1],annots_with_ids[,1])
-        annot_list[[sample]][matching_symbols_index,2] <- annots_with_ids[matching_symbols_index,2] 
-        annot <- annot_list[[sample]]
+      if(features_types_list[[sample]]==0 || features_types_list[[sample]]==2){
+        sample_annot <- annot_list[[sample]]
+
+        if(features_types_list[[sample]]==0){
+          matching_symbols_index <- match(sample_annot[,1],annots_with_ids[,2])
+          sample_annot[matching_symbols_index,1] <- annots_with_ids[matching_symbols_index,1] 
+        }
+
+        if(features_types_list[[sample]]==2){
+          matching_symbols_index <- match(sample_annot[,1],annots_with_ids[,1])
+          sample_annot[matching_symbols_index,2] <- annots_with_ids[matching_symbols_index,2] 
+        }
+
         counts <- counts_list[[sample]]
-        annot[,2] <- make.unique(annot[,2])
-        rownames(counts) <- annot[match(rownames(counts),annot[,1]),2]
-        annot_list[[sample]][,c(1,2)] <- annot[,c(2,2)]
-        counts_list[[sample]] <- counts
-        }     
+        rownames(counts)[match(rownames(counts),sample_annot[,1])] <- sample_annot[match(sample_annot[,1],rownames(counts)),1]
+        annot_list[[sample]][,c(1,2)] <- sample_annot[,c(2,2)]
+        counts_list[[sample]] <- counts 
+      }
     }
   }
-
-
-  # for(sample in samples){
-  #   if(any(features_types_list==2)){
-  #     if(features_types_list[[sample]]==1){
-  #       annot_list[[sample]][,c(1,2)] <- annot_list[[sample]][,c(1,1)]
-  #     }
-  #   }
-  #   if(any(features_types_list==0)){
-  #     if(features_types_list[[sample]]==1){
-  #       annot <- annot_list[[sample]]
-  #       counts <- counts_list[[sample]]
-  #       annot[,2] <- make.unique(annot[,2])
-  #       rownames(counts) <- annot[match(rownames(counts),annot[,1]),2]
-  #       annot_list[[sample]][,c(1,2)] <- annot[,c(2,2)]
-  #       counts_list[[sample]] <- counts
-  #     }
-  #   }
-  # }
   return(list(counts_list,annot_list))
 }
 
+# -1 is SYMBOl/IDS
+#  0 is SYMBOL/ SYMBOL
+#  1 is IDS/SYMBOL
+#  2 is IDS/IDS
 extract_features_types <- function(annot){
   features_types <- list()
 
