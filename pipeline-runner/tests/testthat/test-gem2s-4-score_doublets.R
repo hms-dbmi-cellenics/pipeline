@@ -1,5 +1,5 @@
 mock_counts <- function(...) {
-  set.seed(0)
+  set.seed(gem2s$random.seed)
   sce <- scDblFinder::mockDoubletSCE(...)
   sce@assays@data$counts
 }
