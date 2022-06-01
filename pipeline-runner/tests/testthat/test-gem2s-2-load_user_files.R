@@ -27,6 +27,19 @@ mock_counts <- function() {
   )
 }
 
+mock_lists <- function(){
+  counts <- mock_counts()
+
+  symbols <- row.names(counts)
+  ensids <- paste0("ENSFAKE", seq_len(nrow(counts)))
+  features <- data.frame(ensid = ensids, symbol = symbols)
+  rownames(counts) <- ensids
+
+  counts_list <- list(sample1=counts,sample2=counts)
+  annot_list <- list(sample1=features,sample2=features)
+  return(list(counts_list=counts_list,annot_list=annot_list))
+}
+
 test_that("format_annot keeps unique rows", {
   annot_list <- list(
     sample1 = data.frame(ENSID = 1:5, SYMBOL = paste0("gene", 1:5)),
@@ -284,16 +297,71 @@ test_that("extract_features_types identifies mixed columns", {
   expect_true(pipeline:::extract_features_types(annot_list[["sample2"]])==0)
 })
 
-test_that("extract_features_types identifies mixed columns", {
-  annot_list <- list(
-    sample1 = data.frame(ENSID = c(paste0("ENS", 1:5),paste0("gene",1:5)), SYMBOL = c(paste0("ENS", 1:4),paste0("gene",1:6))),
-    sample2 = data.frame(ENSID = c(paste0("ENS", 1:4),paste0("gene",1:6)), SYMBOL = paste0("gene", 1:10))
-  )
 
-  expect_equal(pipeline:::extract_features_types(annot_list[["sample1"]]),1)
-  expect_true(pipeline:::extract_features_types(annot_list[["sample2"]])==0)
+test_that("equalize_annotation_types does nothing if all annotation types are the same",{
+  features_types_list <- list(sample1=extract_features_types(features),sample2=extract_features_types(features2))
+
+  input <- mock_lists()
+
+  counts_list <- input$counts_list
+  annot_list <- input$annot_list
+
+  res <- equalize_annotation_types(annot_list,counts_list,features_types_list)
+
+  expect_equal(res[[1]],counts_list)
+  expect_equal(res[[2]],annot_list)
 })
 
+test_that("equalize_annotation_types infers gene ids from symbols and corrects counts rownames",{
+  input <- mock_lists()
+
+  sample2_annot <- input$annot_list$sample2
+  sample2_annot$ensid <- sample2_annot$symbol
+  input$annot_list$sample2 <- sample2_annot
+  rownames(input$counts_list$sample2) <- sample2_annot$ensid
+
+  features_types_list <- list(sample1=extract_features_types(input$annot_list$sample1),sample2=extract_features_types(input$annot_list$sample2))
+
+  res <- equalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+
+  expect_equal(res$annot_list$sample2,input$annot_list$sample1)
+  expect_equal(rownames(res$counts_list$sample2),res$annot_list$sample2$ensid)
+})
+
+test_that("equalize_annotation_types infers gene symbols from ids and corrects counts rownames",{
+  input <- mock_lists()
+
+  sample2_annot <- input$annot_list$sample2
+  sample2_annot$symbol <- sample2_annot$ensid
+  input$annot_list$sample2 <- sample2_annot
+
+  features_types_list <- list(sample1=extract_features_types(input$annot_list$sample1),sample2=extract_features_types(input$annot_list$sample2))
+
+  res <- equalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+
+  expect_equal(res$annot_list$sample2,input$annot_list$sample1)
+  expect_equal(rownames(res$counts_list$sample2),res$annot_list$sample2$ensid)
+})
+
+test_that("equalize_annotation_types works with incomplete match",{
+  input <- mock_lists()
+
+  sample2_annot <- input$annot_list$sample2
+  sample2_annot$ensid <- sample2_annot$symbol
+  sample2_annot$ensid[1:nrow(sample2_annot)%%2==1] <- paste0("gene",(1:(nrow(sample2_annot)/2)))
+  rownames(input$counts_list$sample2) <- sample2_annot$ensid
+  input$annot_list$sample2 <- sample2_annot
+
+  features_types_list <- list(sample1=extract_features_types(input$annot_list$sample1),sample2=extract_features_types(input$annot_list$sample2))
+
+  res <- equalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+
+  sample1_annot <- input$annot_list$sample1
+  sample1_annot$ensid[1:nrow(sample1_annot)%%2==1] <- paste0("gene",(1:(nrow(sample1_annot)/2)))
+
+  expect_equal(res$annot_list$sample2,sample1_annot)
+  expect_equal(rownames(res$counts_list$sample2),res$annot_list$sample2$ensid)
+})
 
 #Test that
 # Duplicates columns correctly

@@ -73,7 +73,6 @@ read_10x_files <- function(config, input_dir) {
     )
 
     annot <- read.delim(annot_fpath, header = FALSE)
-
     if (ncol(annot) == 1 || annot[1, 2] == "Gene Expression") {
       annot[, 2] <- annot[, 1]
     }
@@ -116,12 +115,11 @@ read_10x_files <- function(config, input_dir) {
     features_types_list[[sample]] <- features_types
   }
 
-  c(counts_list, annot_list) %<-% fix_annotations(annot_list, counts_list, features_types_list, samples)
-  annot <- format_annot(annot_list)
+  c(counts_list, annot_list) %<-% equalize_annotation_types(annot_list, counts_list, features_types_list, samples)
+  annot <- unify_annot(annot_list)
 
   return(list(counts_list = counts_list, annot = annot))
 }
-
 
 #' Calls BD rhapsody data parsing functions
 #'
@@ -231,7 +229,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   return(list(counts_list = counts_list, annot = annot))
 }
 
-format_annot <- function(annot_list) {
+unify_annot <- function(annot_list) {
   annot <- unique(do.call("rbind", annot_list))
 
   colnames(annot) <- c("input", "name")
@@ -257,9 +255,10 @@ format_annot <- function(annot_list) {
 }
 
 # Fix annotations makes annotations compatible between samples with different types.
-
+annot_list <- input$annot_list
+counts_list <- input$counts_list
 # The possible options at this stage are TT, FF, TF. It will convert all TF annotations into either FF or TT.
-fix_annotations <- function(annot_list, counts_list, features_types_list, samples) {
+equalize_annotation_types <- function(annot_list, counts_list, features_types_list, samples) {
   if (any(features_types_list == 2) && any(features_types_list == 0)) stop("Incompatible features detected.")
 
   if (any(features_types_list == 1) && (any(features_types_list == 2) || any(features_types_list == 0))) {
@@ -272,23 +271,23 @@ fix_annotations <- function(annot_list, counts_list, features_types_list, sample
         sample_annot <- annot_list[[sample]]
 
         if (features_types_list[[sample]] == 0) {
-          matching_symbols_index <- match(sample_annot[, 1], annots_with_ids[, 2])
-          sample_annot[matching_symbols_index, 1] <- annots_with_ids[matching_symbols_index, 1]
+          matching_symbols_index <- match(sample_annot[, 1],annots_with_ids[, 2])
+          sample_annot[!is.na(matching_symbols_index), 1] <- annots_with_ids[na.omit(matching_symbols_index), 1]
+          counts <- counts_list[[sample]]
+          rownames(counts)[which(rownames(counts) %in% sample_annot[, 2])] <- sample_annot[na.omit(match(rownames(counts),sample_annot[, 2])), 1]
         }
 
         if (features_types_list[[sample]] == 2) {
-          matching_symbols_index <- match(sample_annot[, 1], annots_with_ids[, 1])
-          sample_annot[matching_symbols_index, 2] <- annots_with_ids[matching_symbols_index, 2]
+          matching_symbols_index <- match(sample_annot[, 1],annots_with_ids[, 1])
+          sample_annot[!is.na(matching_symbols_index), 2] <- annots_with_ids[na.omit(matching_symbols_index), 2]
         }
 
-        counts <- counts_list[[sample]]
-        rownames(counts)[match(rownames(counts), sample_annot[, 1])] <- sample_annot[match(sample_annot[, 1], rownames(counts)), 1]
-        annot_list[[sample]][, c(1, 2)] <- sample_annot[, c(2, 2)]
+        annot_list[[sample]] <- sample_annot
         counts_list[[sample]] <- counts
       }
     }
   }
-  return(list(counts_list, annot_list))
+  return(list(counts_list=counts_list, annot_list=annot_list))
 }
 
 # -1 is SYMBOl/IDS
