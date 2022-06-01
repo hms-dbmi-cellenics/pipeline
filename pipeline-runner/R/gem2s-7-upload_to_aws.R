@@ -43,6 +43,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     )
   }
 
+
   cluster_env <- pipeline_config$cluster_env
 
   experiment_data <- list(
@@ -106,13 +107,19 @@ samples_sets <- function(input, scdata, color_pool) {
     type = "metadataCategorical"
   )
 
-  cells_sample <- scdata$samples
+  # cells_sample <- scdata$samples
+  cells_sample <- names(scdata)
   sample_ids <- unlist(input$sampleIds)
   sample_names <- unlist(input$sampleNames)
 
+  # now the scdata contains only one sample so we don't really have to loop anymore
+  # I've added this to keep the same cellsets structure but the nestig of $children
+  # can probably be removed in the future
+  sample_ids <- scdata@meta.data$samples[[1]]
   for (i in seq_along(sample_ids)) {
     sample_id <- sample_ids[i]
     sample_name <- sample_names[i]
+    saveRDS(scdata, '/debug/scdata_cells_id.rds')
     cell_ids <- scdata$cells_id[cells_sample == sample_id]
 
     cell_set$children[[i]] <- list(

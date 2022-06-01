@@ -1,19 +1,21 @@
 #' Title
 #'
-#' @param scdata
+#' @param scdata_list
 #'
 #' @return
 #' @export
 #'
 #' @examples
-generate_first_step_ids <- function(scdata) {
-  message('gen: ', scdata$samples)
-  # saveRDS(scdata, '/debug/scdata.gen.1.rds')
+generate_first_step_ids <- function(scdata_list) {
+  message('gen: ', scdata_list$samples)
+  saveRDS(scdata_list, '/debug/scdata.gen.1.rds')
   cells_id <- list()
-  sample_ids <- unique(sapply(scdata$samples, function(x) strsplit(x$Key, "/")[[1]][[2]]))
-  for (sample_id in sample_ids) {
+  sample_ids <- unique(sapply(scdata_list$samples, function(x) strsplit(x$Key, "/")[[1]][[2]]))
+  for (sample in names(scdata_list)) {
+    # sample_id <- sample$Key
+    sample_id <- sample
     message('sample_id: ', sample_id)
-    cells_id[[sample_id]] <- scdata[[sample_id]]$cells_id
+    cells_id[[sample_id]] <- scdata_list[[sample_id]]$cells_id
   }
   return(cells_id)
 }

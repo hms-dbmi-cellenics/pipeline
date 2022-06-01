@@ -222,12 +222,12 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     config$auth_JWT <- input$authJWT
 
     # TODO, we need to change this to reload separate samples instead of single scdata
-    if (!exists("scdata")) {
+    if (!exists("scdata_list")) {
         message("No single-cell data has been loaded, reloading from S3...")
 
         # assign it to the global environment so we can
         # persist it across runs of the wrapper
-        assign("scdata", reload_scdata_from_s3(pipeline_config, experiment_id, task_name, tasks), pos = ".GlobalEnv")
+        assign("scdata_list", reload_scdata_from_s3(pipeline_config, experiment_id, task_name, tasks), pos = ".GlobalEnv")
 
         message("Single-cell data loaded.")
     }
@@ -237,11 +237,11 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message('task_name: ', task_name)
         if(task_name == names(tasks)[1]){
             message('generate_first_step_ids')
-            assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
+            assign("cells_id", generate_first_step_ids(scdata_list), pos = ".GlobalEnv")
         }else if(task_name %in% names(tasks)){
             message('load_cells_id_from_s3')
-            samples <- unique(scdata$samples)
-            message('samples: ', samples)
+            samples <- names(scdata_list)
+            message('samples lcs: ', samples)
             assign("cells_id", load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples), pos = ".GlobalEnv")
         }else{
             stop("Invalid task name given: ", task_name)
@@ -252,9 +252,10 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # call function to run and update global variable
     c(
         data,new_ids,...rest_of_results
-    ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
+    ) %<-% run_processing_step(scdata_list, config, tasks, task_name, cells_id, sample_id, debug_config)
 
     message("Comparison between cell ids")
+    saveRDS(cells_id, '/debug/cells_id.rds')
     message("Old ids length ",length(cells_id[[sample_id]]))
     message("New ids length ",length(new_ids[[sample_id]]))
 
@@ -275,7 +276,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
     # Upload count matrix data
     if(upload_count_matrix) {
-        assign("scdata", data, pos = ".GlobalEnv")
+        assign("scdata_list", data, pos = ".GlobalEnv")
         object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, data)
         message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
     }
