@@ -500,6 +500,7 @@ test_that("read_10x_files doesn't remove any rows if no rows with empty rownames
   expect_true(length(which(rownames(counts) == "")) == 0 & length(which(rownames(counts_list[[1]]) == "")) == 0)
   expect_true(length(which(features[,1] == "")) == 0 & length(which(annot[,1] == "")) == 0)
   expect_true(nrow(counts) == nrow(counts_list[[1]]))
+  expect_true(nrow(features) == nrow(annot))
 
   unlink(sample_dir, recursive = TRUE)
 })
