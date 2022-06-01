@@ -443,3 +443,64 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
 
   expect_equal(values, expected_values)
 })
+
+
+test_that("read_10x_files removes rows with empty feature names both in count matrix and annotation if present", {
+  counts <- mock_counts()
+  rownames(counts)[1] <- ""
+
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = row.names(counts)
+  )
+  features[1,1] = ""
+
+  outdir <- tempdir()
+  sample <- "sample_a"
+  sample_dir <- file.path(outdir, sample)
+  dir.create(sample_dir)
+
+  mock_cellranger_files(counts, features, sample_dir)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+
+  out <- pipeline::load_user_files(NULL, NULL, prev_out, outdir)$output
+
+  counts_list <- out$counts_list
+  annot <- out$annot
+
+  expect_true(length(which(rownames(counts) == "")) > 0 & length(which(rownames(counts_list[[1]]) == "")) == 0)
+  expect_true(length(which(features[,1] == "")) > 0 & length(which(annot[,1] == "")) == 0)
+
+  unlink(sample_dir, recursive = TRUE)
+})
+
+test_that("read_10x_files doesn't remove any rows if no rows with empty rownames are present", {
+  counts <- mock_counts()
+
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = row.names(counts)
+  )
+
+  outdir <- tempdir()
+  sample <- "sample_a"
+  sample_dir <- file.path(outdir, sample)
+  dir.create(sample_dir)
+
+  mock_cellranger_files(counts, features, sample_dir)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
+
+  counts_list <- out$counts_list
+  annot <- out$annot
+
+  expect_true(length(which(rownames(counts) == "")) == 0 & length(which(rownames(counts_list[[1]]) == "")) == 0)
+  expect_true(length(which(features[,1] == "")) == 0 & length(which(annot[,1] == "")) == 0)
+  expect_true(nrow(counts) == nrow(counts_list[[1]]))
+
+  unlink(sample_dir, recursive = TRUE)
+})
+
