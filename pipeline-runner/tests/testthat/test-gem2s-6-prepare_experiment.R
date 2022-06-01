@@ -70,7 +70,7 @@ test_that("prepare_experiment shuffles cells after merge", {
   scdata <- task_out$scdata
   merged_scdatas <- expect_warning(merge_scdatas(scdata_list))
 
-  set.seed(42)
+  set.seed(gem2s$random.seed)
   shuffle_mask <- sample(colnames(merged_scdatas))
 
   expect_equal(ncol(scdata), ncol(merged_scdatas))
@@ -122,13 +122,13 @@ test_object <- function() {
 
   scdata <- task_out$scdata
 
-  test_that("Seurat object validation", {
+  test_that("prepare_experiment creates a valid Seurat object", {
     expect_type(scdata, "S4")
     expect_true(nrow(scdata) == 100, "Seurat")
     expect_true(scdata@active.assay == "RNA")
   })
 
-  test_that("Validating misc", {
+  test_that("prepare_experiment properly populates the misc slot", {
     expect_type(scdata@misc, "list")
     misc <- scdata@misc
     expect_true("gene_annotations" %in% names(misc))
@@ -139,7 +139,7 @@ test_object <- function() {
     # check that in duplicated positions (including the first) we have the gene id instead of the name.
   })
 
-  test_that("Validating metadata", {
+  test_that("prepare_experiment properly populates the metadata slot", {
     md <- scdata@meta.data
     annotations <- scdata@misc$gene_annotations
 
@@ -157,12 +157,12 @@ test_object <- function() {
     expect_true("cells_id" %in% colnames(md))
     expect_true("samples" %in% colnames(md))
 
-    test_that("Cell ids", {
+    test_that("Cell ids are assigned correctly", {
       cellNumber <- ncol(scdata@assays$RNA@data)
       expect_equal(md$cells_id, 0:(cellNumber - 1))
     })
 
-    test_that("Percent mitocondrial", {
+    test_that("Mitochondrial percentage is correct", {
       expect_true(max(md$percent.mt) <= 100)
       expect_true(min(md$percent.mt) >= 0)
       #Verify that we have percent mt and not fraction
@@ -171,6 +171,6 @@ test_object <- function() {
   })
 }
 
-test_that("Test Seurat Object", {
+test_that("prepare_experiment creates a valid Seurat object", {
   test_object()
 })

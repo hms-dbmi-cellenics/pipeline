@@ -1,5 +1,5 @@
 mock_counts <- function() {
-  set.seed(42)
+  set.seed(gem2s$random.seed)
   DropletUtils:::simCounts()
 }
 

@@ -56,7 +56,7 @@ filter_high_mito <- function(scdata, config, sample_id, cells_id, task_name = "m
   # Downsample plotData
   num_cells_to_downsample <- downsample_plotdata(ncol(scdata.sample), num_cells_to_downsample)
 
-  set.seed(42)
+  set.seed(gem2s$random.seed)
   cells_position_to_keep <- sample(1:ncol(scdata.sample), num_cells_to_downsample, replace = FALSE)
   cells_position_to_keep <- sort(cells_position_to_keep)
   plot1_data <- plot_data$plot1_data[cells_position_to_keep]
