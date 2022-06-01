@@ -70,7 +70,7 @@ test_that("prepare_experiment shuffles cells after merge", {
   scdata <- task_out$scdata
   merged_scdatas <- expect_warning(merge_scdatas(scdata_list))
 
-  set.seed(gem2s$random.seed)
+  set.seed(pipeline::gem2s$random.seed)
   shuffle_mask <- sample(colnames(merged_scdatas))
 
   expect_equal(ncol(scdata), ncol(merged_scdatas))

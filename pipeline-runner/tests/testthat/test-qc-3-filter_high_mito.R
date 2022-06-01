@@ -114,7 +114,7 @@ test_that("filter_high_mito can be set to auto", {
 
 test_that("data without percent.mt outliers uses the max percentage as the threshold", {
   scdata <- mock_scdata()
-  set.seed(gem2s$random.seed)
+  set.seed(pipeline::gem2s$random.seed)
   scdata$percent.mt <- rnorm(ncol(scdata), 6)
   cells_id <- mock_ids()
 
