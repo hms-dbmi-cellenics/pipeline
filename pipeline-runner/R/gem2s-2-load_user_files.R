@@ -100,8 +100,10 @@ read_10x_files <- function(config, input_dir) {
     )
 
     # Check if there are any rows with empty gene symbol in the feature file and remove them if < 0.1% of the total number of features
-    if (length(which(annot[,1] == "")) != 0 & length(which(annot[,1] == ""))/nrow(annot) < 0.001) {
-      annot <- annot[!(annot[,1] == ""),]
+    unnamed_ids <- which(annot[,1] == "")
+
+    if (length(unnamed_ids) != 0 & length(unnamed_ids)/nrow(annot) < 0.001) {
+      annot <- annot[!unnamed_ids,]
     }
 
     counts_list[[sample]] <- counts
