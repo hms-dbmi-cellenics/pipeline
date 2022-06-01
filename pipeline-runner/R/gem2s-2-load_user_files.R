@@ -91,6 +91,10 @@ read_10x_files <- function(config, input_dir) {
     # Make unique the annot column 1 so it's equal to the gene names that read10X makes unique
     # Only c1 needs make.unique because we copy c2 into c1 in annot if gene_column is 2
     annot[, 1] <- make.unique(annot[, 1])
+
+    # Equalizing number of columns in case theres no Gene Expression column
+    annot <- annot[, c(1, 2)]
+
     counts <- Seurat::Read10X(sample_dir, gene.column = gene_column, unique.features = TRUE)
 
     if (is(counts, "list")) {
@@ -99,9 +103,6 @@ read_10x_files <- function(config, input_dir) {
       if (!slot %in% names(counts)) slot <- names(counts)[1]
       counts <- counts[[slot]]
     }
-
-    # Equalizing number of columns in case theres no Gene Expression column
-    annot <- annot[, c(1, 2)]
 
     message(
       sprintf(

@@ -27,60 +27,6 @@ mock_counts <- function() {
   )
 }
 
-
-mock_rhapsody_matrix <- function(counts, sample_dir) {
-  counts$Gene <- rownames(counts)
-  counts <- tidyr::pivot_longer(counts, -Gene,
-    names_to = "barcode",
-    values_to = "DBEC_Adjusted_Molecules"
-  )
-
-  counts$Cell_Index <- as.integer(factor(counts$barcode))
-  counts$RSEC_Adjusted_Molecules <- counts$DBEC_Adjusted_Molecules + 5
-
-  matrix_path <- file.path(sample_dir, "expression_matrix.st")
-
-  # prepend some of that nice header
-  header <- c(
-    "####################",
-    "## BD Targeted Multiplex Rhapsody Analysis Pipeline Version 1.9.1",
-    "## Analysis Date: 2020-09-29 23:41:40",
-    "## Sample: SampleMultiplexDemo",
-    "## Reference: BD_Rhapsody_Immune_Response_Panel_Hs.fasta",
-    "## Sample Tags Version: Single-Cell Multiplex Kit - Human",
-    "####################"
-  )
-  writeLines(header, matrix_path)
-  write.table(counts,
-    file = matrix_path,
-    append = TRUE,
-    quote = FALSE,
-    sep = "\t",
-    row.names = FALSE
-  )
-
-  matrix_path
-}
-
-
-local_rhapsody_experiment <- function(samples, env = parent.frame()) {
-  # calls creates_samples but makes them "local" (in withr speech), deleting
-  # created stuff after the test finishes.
-  bucket <- "./input"
-  dir.create(bucket)
-  files <- c()
-
-  for (sample in samples) {
-    sample_path <- file.path(bucket, sample$name)
-    dir.create(sample_path)
-    files <- c(files, mock_rhapsody_matrix(sample$counts, sample_path))
-  }
-
-  withr::defer(unlink(bucket, recursive = TRUE), envir = env)
-  files
-}
-
-
 test_that("format_annot keeps unique rows", {
   annot_list <- list(
     sample1 = data.frame(ENSID = 1:5, SYMBOL = paste0("gene", 1:5)),
@@ -280,78 +226,6 @@ test_that("load_user_files loads 10x multisample experiments", {
   unlink(sample_dirs, recursive = TRUE)
 })
 
-
-test_that("load_user_files reads rhapsody files", {
-  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
-
-  files <- local_rhapsody_experiment(samples)
-
-  prev_out <- list(config = list(samples = names(samples), input = list(type = "rhapsody")))
-  input_dir <- "./input"
-
-  res <- load_user_files(NULL, NULL, prev_out, input_dir)
-
-  expect_true("counts_list" %in% names(res$output))
-  expect_true(names(samples) %in% names(res$output$counts_list))
-  expect_s4_class(res$output$counts_list[[1]], "dgCMatrix")
-})
-
-test_that("read_rhapsody_files reads a rhapsody matrix", {
-  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
-
-  files <- local_rhapsody_experiment(samples)
-
-  config <- list(samples = names(samples))
-  input_dir <- "./input"
-
-  res <- read_rhapsody_files(config, input_dir)
-
-  expect_true("counts_list" %in% names(res))
-  expect_true(names(samples) %in% names(res$counts_list))
-  expect_s4_class(res$counts_list[[1]], "dgCMatrix")
-})
-
-
-test_that("parse_rhapsody_matrix reads a rhapsody matrix", {
-  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
-
-  files <- local_rhapsody_experiment(samples)
-
-  config <- list(samples = names(samples))
-  input_dir <- "./input"
-
-  res <- parse_rhapsody_matrix(config, input_dir)
-
-  expect_true("counts_list" %in% names(res))
-  expect_true(names(samples) %in% names(res$counts_list))
-  expect_s4_class(res$counts_list[[1]], "dgCMatrix")
-})
-
-
-test_that("parse_rhapsody_matrix keeps the counts where it counts (correct gene-cell-value)", {
-  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
-  files <- local_rhapsody_experiment(samples)
-  config <- list(samples = names(samples))
-  input_dir <- "./input"
-
-  # read original table and get vector of expected values (originals)
-  original <- data.table::fread(file.path(input_dir, names(samples), "expression_matrix.st"))
-  expected_values <- original$DBEC_Adjusted_Molecules
-
-  res <- parse_rhapsody_matrix(config, input_dir)
-
-  # create row and column indices, to cbind and use matrix indexing to get values
-  # as a vector. Given that Simple Triplet sparse matrices basically contain vectors
-  # of row and column indices, we just transform them to ints, keeping order.
-  row_idx <- as.integer(factor(original$Gene))
-  col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
-
-  values <- res$counts_list$sample_1[cbind(row_idx, col_idx)]
-
-  expect_equal(values, expected_values)
-})
-
-
 test_that("read_10x_files returns error if files missing", {
   counts <- mock_counts()
   features <- data.frame(
@@ -386,70 +260,42 @@ test_that("read_10x_files returns error if files missing", {
   unlink(sample_dir, recursive = TRUE)
 })
 
-
-test_that("parse_rhapsody_matrix returns error if files are missing", {
-  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
-
-  files <- local_rhapsody_experiment(samples)
-
-  config <- list(samples = names(samples))
-  input_dir <- "./input"
-
-  # remove file
-  unlink(files[1])
-
-  expect_error(
-    parse_rhapsody_matrix(config, input_dir),
-    "File .* does not exist or is non-readable."
-  )
-})
-
-
-test_that("parse_rhapsody_matrix returns error if a column is invalid", {
-  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
-
-  files <- local_rhapsody_experiment(samples)
-
-  config <- list(samples = names(samples))
-  input_dir <- "./input"
-
-  # remove file
-  tab <- data.table::fread(files[1])
-  tab[, DBEC_Adjusted_Molecules := paste0("corrupt_", DBEC_Adjusted_Molecules)]
-  data.table::fwrite(tab, file = files[1])
-
-  expect_error(
-    parse_rhapsody_matrix(config, input_dir)
-  )
-})
-
-
-test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing", {
-  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
-
-  files <- local_rhapsody_experiment(samples)
-
-  config <- list(samples = names(samples))
-  input_dir <- "./input"
-
-  # remove DBEC column
-  original <- data.table::fread(files[1])
-  original[, DBEC_Adjusted_Molecules := NULL]
-  data.table::fwrite(original, file = files[1])
-
-  # keep RSEC values
-  expected_values <- original$RSEC_Adjusted_Molecules
-
-  res <- pipeline:::parse_rhapsody_matrix(config, input_dir)
-
-  row_idx <- as.integer(factor(original$Gene))
-  col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
-
-  values <- res$counts_list$sample_1[cbind(row_idx, col_idx)]
-
-  expect_equal(values, expected_values)
-})
-
 test_that("extract_features_types properly determines types", {
+  annot_list <- list(
+    sample1 = data.frame(ENSID = paste0("ENS", 1:5), SYMBOL = paste0("gene", 1:5)),
+    sample2 = data.frame(ENSID = paste0("gene", 1:5), SYMBOL = paste0("gene", 1:5)),
+    sample3 = data.frame(ENSID = paste0("ENS", 1:5), SYMBOL = paste0("ENS", 1:5)),
+    sample4 = data.frame(ENSID = paste0("gene", 1:5), SYMBOL = paste0("ENS", 1:5))
+  )
 
+  expect_equal(pipeline:::extract_features_types(annot_list[["sample1"]]),1)
+  expect_equal(pipeline:::extract_features_types(annot_list[["sample2"]]),0)
+  expect_equal(pipeline:::extract_features_types(annot_list[["sample3"]]),2)
+  expect_equal(pipeline:::extract_features_types(annot_list[["sample4"]]),-1)
 })
+
+test_that("extract_features_types identifies mixed columns", {
+  annot_list <- list(
+    sample1 = data.frame(ENSID = c(paste0("ENS", 1:5),paste0("gene",1:5)), SYMBOL = c(paste0("ENS", 1:4),paste0("gene",1:6))),
+    sample2 = data.frame(ENSID = c(paste0("ENS", 1:4),paste0("gene",1:6)), SYMBOL = paste0("gene", 1:10))
+  )
+
+  expect_equal(pipeline:::extract_features_types(annot_list[["sample1"]]),1)
+  expect_true(pipeline:::extract_features_types(annot_list[["sample2"]])==0)
+})
+
+test_that("extract_features_types identifies mixed columns", {
+  annot_list <- list(
+    sample1 = data.frame(ENSID = c(paste0("ENS", 1:5),paste0("gene",1:5)), SYMBOL = c(paste0("ENS", 1:4),paste0("gene",1:6))),
+    sample2 = data.frame(ENSID = c(paste0("ENS", 1:4),paste0("gene",1:6)), SYMBOL = paste0("gene", 1:10))
+  )
+
+  expect_equal(pipeline:::extract_features_types(annot_list[["sample1"]]),1)
+  expect_true(pipeline:::extract_features_types(annot_list[["sample2"]])==0)
+})
+
+
+#Test that
+# Duplicates columns correctly
+# SYMBOL ENS are converted into ENS SYMBOL
+#

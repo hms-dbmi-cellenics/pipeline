@@ -2,6 +2,7 @@
 
 export(create_seurat)
 export(download_user_files)
+export(extract_features_types)
 export(filter_doublets)
 export(filter_emptydrops)
 export(filter_gene_umi_outlier)
