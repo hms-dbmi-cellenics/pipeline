@@ -24,7 +24,7 @@ download_and_store <- function(bucket, key, file_path, s3) {
 get_gem2s_file_v1 <- function(input, originals_bucket, input_dir, s3) {
   project_id <- input$projectId
   sample_ids <- unlist(input$sampleIds)
-  sample_ids <- sample_ids[order(sample_ids)]
+  sample_ids <- sort(sample_ids)
 
 
   unlink(input_dir, recursive = TRUE)
