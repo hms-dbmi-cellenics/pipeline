@@ -45,7 +45,7 @@ remove_cell_ids <- function(pipeline_config, experiment_id) {
 get_positions_to_keep <- function(scdata, num_cells_to_downsample) {
   # Downsample plotData
   num_cells_to_downsample <- downsample_plotdata(ncol(scdata), num_cells_to_downsample)
-  set.seed(123)
+  set.seed(gem2s$random.seed)
   cells_position_to_keep <- sample(1:ncol(scdata), num_cells_to_downsample, replace = FALSE)
   cells_position_to_keep <- sort(cells_position_to_keep)
 
