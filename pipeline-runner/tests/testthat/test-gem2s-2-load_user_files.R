@@ -445,15 +445,16 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
 })
 
 
-test_that("read_10x_files removes rows with empty feature names both in count matrix and annotation if present", {
-  counts <- mock_counts()
-  rownames(counts)[1] <- ""
+test_that("read_10x_files removes rows with empty feature names both in count matrix and annotation if present and < 0.1%", {
+  counts <- mock_counts()[rep(seq_len(nrow(mock_counts())), each = 10), ]
+  rownames(counts)[2]=""
+  rownames(counts)[3]=".1"
 
   features <- data.frame(
     ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
     symbol = row.names(counts)
   )
-  features[1,1] = ""
+  features[2:3,1:2] = ""
 
   outdir <- tempdir()
   sample <- "sample_a"
@@ -464,13 +465,76 @@ test_that("read_10x_files removes rows with empty feature names both in count ma
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
 
-  out <- pipeline::load_user_files(NULL, NULL, prev_out, outdir)$output
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
 
   counts_list <- out$counts_list
   annot <- out$annot
 
-  expect_true(length(which(rownames(counts) == "")) > 0 & length(which(rownames(counts_list[[1]]) == "")) == 0)
-  expect_true(length(which(features[,1] == "")) > 0 & length(which(annot[,1] == "")) == 0)
+  expect_true(length(which(rownames(counts_list[[1]]) == "")) == 0)
+  expect_true(length(which(annot[,1] == "")) == 0)
+
+  unlink(sample_dir, recursive = TRUE)
+})
+
+
+test_that("read_10x_files removes single row with empty feature names both in count matrix and annotation if present and < 0.1%", {
+  counts <- mock_counts()[rep(seq_len(nrow(mock_counts())), each = 10), ]
+  rownames(counts)[2]=""
+
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = row.names(counts)
+  )
+  features[2,1:2] = ""
+
+  outdir <- tempdir()
+  sample <- "sample_a"
+  sample_dir <- file.path(outdir, sample)
+  dir.create(sample_dir)
+
+  mock_cellranger_files(counts, features, sample_dir)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
+
+  counts_list <- out$counts_list
+  annot <- out$annot
+
+  expect_true(length(which(rownames(counts_list[[1]]) == "")) == 0)
+  expect_true(length(which(annot[,1] == "")) == 0)
+
+  unlink(sample_dir, recursive = TRUE)
+})
+
+
+test_that("read_10x_files doesn't remove any rows with empty feature names both in count matrix and annotation if present and >= 0.1%", {
+  counts <- mock_counts()
+  rownames(counts)[2]=""
+  rownames(counts)[3]=".1"
+
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = row.names(counts)
+  )
+  features[2:3,1:2] = ""
+
+  outdir <- tempdir()
+  sample <- "sample_a"
+  sample_dir <- file.path(outdir, sample)
+  dir.create(sample_dir)
+
+  mock_cellranger_files(counts, features, sample_dir)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+
+  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
+
+  counts_list <- out$counts_list
+  annot <- out$annot
+
+  expect_true(nrow(counts) == nrow(counts_list[[1]]))
+  expect_true(nrow(features) == nrow(annot))
 
   unlink(sample_dir, recursive = TRUE)
 })
@@ -497,8 +561,8 @@ test_that("read_10x_files doesn't remove any rows if no rows with empty rownames
   counts_list <- out$counts_list
   annot <- out$annot
 
-  expect_true(length(which(rownames(counts) == "")) == 0 & length(which(rownames(counts_list[[1]]) == "")) == 0)
-  expect_true(length(which(features[,1] == "")) == 0 & length(which(annot[,1] == "")) == 0)
+  expect_true(length(which(rownames(counts_list[[1]]) == "")) == 0)
+  expect_true(length(which(annot[,1] == "")) == 0)
   expect_true(nrow(counts) == nrow(counts_list[[1]]))
   expect_true(nrow(features) == nrow(annot))
 

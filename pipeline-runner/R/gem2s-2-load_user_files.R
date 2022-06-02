@@ -81,10 +81,11 @@ read_10x_files <- function(config, input_dir) {
     }
 
     # Check if there are any rows with empty gene symbol in the count matrix and remove them if < 0.1% of the total number of features
-  unnamed_genes <- which(rownames(counts) == "")
-  
-  if (length(unnamed_genes) != 0) {
-    counts <- counts[!unnamed_genes,]
+    # if more than 1 empty gene is present in the feature file, the count matrix will have the first rowname empty, while the following will be ".1", ".2". etc...
+    unnamed_genes <- c(which(rownames(counts) == ""),grep("^\\.[0-9]+", rownames(counts)))
+
+    if (length(unnamed_genes) != 0 & length(unnamed_genes)/nrow(counts) < 0.001) {
+      counts <- counts[-unnamed_genes,]
     }
 
     annot <- read.delim(annot_fpath, header = FALSE)
@@ -102,8 +103,8 @@ read_10x_files <- function(config, input_dir) {
     # Check if there are any rows with empty gene symbol in the feature file and remove them if < 0.1% of the total number of features
     unnamed_ids <- which(annot[,1] == "")
 
-    if (length(unnamed_ids) != 0) {
-      annot <- annot[!unnamed_ids,]
+    if (length(unnamed_ids) != 0 & length(unnamed_ids)/nrow(annot) < 0.001) {
+      annot <- annot[-unnamed_ids,]
     }
 
     counts_list[[sample]] <- counts
