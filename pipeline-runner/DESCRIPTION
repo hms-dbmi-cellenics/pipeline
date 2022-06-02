@@ -20,7 +20,8 @@ Suggests:
 Imports: 
     data.table,
     covr,
-    batchelor
+    batchelor,
+    scDblFinder (>= 1.11.3)
 Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)

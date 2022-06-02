@@ -1,6 +1,6 @@
 # Create builder step
 # pull official base image and use it as builder
-FROM r-base:4.0.5 AS builder
+FROM r-base:4.2.0 AS builder
 WORKDIR /src
 
 # install required debian packages for R installation
@@ -21,18 +21,19 @@ ARG GITHUB_PAT
 ENV GITHUB_PAT $GITHUB_PAT
 RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
-# install required R packages for the pipeline.
+# install renv to install required R packages
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -e "remotes::install_github('rstudio/renv@0.13.2')"
+    R -e "remotes::install_github('rstudio/renv@0.15.5')" && \
+    R -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
 # an initial lockfile is used to avoid frequent re-installs
 # use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
 COPY renv.lock.init .
-RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(lockfile='renv.lock.init')"
+RUN R -e "renv::restore(lockfile='renv.lock.init')"
 
 # use renv::snapshot() while R dependency updates are quick to build
 COPY renv.lock .
-RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock', clean = TRUE)"
+RUN R -e "renv::restore(lockfile='renv.lock', clean = TRUE)"
 
 
 # ---------------------------------------------------
