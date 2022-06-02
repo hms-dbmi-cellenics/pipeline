@@ -312,6 +312,27 @@ test_that("equalize_annotation_types does nothing if all annotation types are th
   expect_equal(res[[2]],annot_list)
 })
 
+test_that("equalize_annotations does nothing if there are no samples with annotations",{
+  features_types_list <- list(sample1=extract_features_types(features),sample2=extract_features_types(features2))
+
+  input <- mock_lists()
+
+  samples <- c("sample1","sample2")
+  for(sample in samples){
+    input$annot_list[[sample]]$input <- input$annot_list[[sample]]$name
+    rownames(input$counts_list[[sample]])  <- input$annot_list[[sample]]$input
+  }
+
+  counts_list <- input$counts_list
+  annot_list <- input$annot_list
+
+  res <- equalize_annotation_types(annot_list,counts_list,features_types_list)
+
+  expect_equal(res[[1]],counts_list)
+  expect_equal(res[[2]],annot_list)
+})
+
+
 test_that("equalize_annotation_types infers gene ids from symbols and corrects counts rownames",{
   input <- mock_lists()
 
@@ -384,6 +405,40 @@ test_that("equalize_annotation_types infers symbols with incomplete match and do
   expect_equal(res$annot_list$sample2,expected_annot)
   expect_equal(rownames(res$counts_list$sample2),input$annot_list$sample2$input)
   expect_equal(res$annot_list$sample2$input,input$annot_list$sample2$input)
+})
+
+test_that("equalize_annot properly infers ids with more than 2 samples",{
+  input <- mock_lists()
+
+  annot <- input$annot_list$sample1
+  counts <- input$counts_list$sample1
+
+  input$counts_list$sample3 <- counts[1:(nrow(counts)/2),]
+  input$annot_list$sample3 <- annot[1:(nrow(annot)/2),]
+
+  input$counts_list$sample1 <- counts[(nrow(counts)/2):nrow(counts),]
+  input$annot_list$sample1 <- annot[(nrow(annot)/2):nrow(annot),]
+
+  sample2_annot <- input$annot_list$sample2
+  sample2_annot$name[1:nrow(sample2_annot)%%2==1] <- paste0("gene",(1:(nrow(sample2_annot)/2)))
+  sample2_annot$input <- sample2_annot$name
+  rownames(input$counts_list$sample2) <- sample2_annot$input
+  input$annot_list$sample2 <- sample2_annot
+
+  features_types_list <- list(sample1=extract_features_types(input$annot_list$sample1),sample2=extract_features_types(input$annot_list$sample2))
+
+  res <- equalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+
+  expected_annot <- annot
+  expected_annot$input[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
+  expected_annot$name[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
+
+  expect_equal(res$annot_list$sample2,expected_annot)
+  expect_equal(rownames(res$counts_list$sample2),res$annot_list$sample2$input)
+})
+
+test_that("duplicated genes dont lead to any rowname duplication",{
+
 })
 
 test_that("gene name not present in annotations",{
