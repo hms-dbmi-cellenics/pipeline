@@ -39,7 +39,6 @@ mock_color_pool <- function(n) {
   paste0("color_", 1:n)
 }
 
-
 stub_update_sets_through_api <- function(cell_sets_object,
                                           api_url,
                                           api_version,
@@ -127,11 +126,13 @@ test_that("runClusters uses active.reduction in misc slot", {
   }
 })
 
-with_fake_http(test_that("update_sets_through_api sends patch request", {
-  expect_PATCH(
-    update_sets_through_api(list(), "api_url", "v1", "experiment_id", "cell_set_key", "auth")
-  )
-}))
+with_fake_http(
+  test_that("update_sets_through_api sends patch request", {
+    expect_PATCH(
+      update_sets_through_api(list(), "api_url", "v1", "experiment_id", "cell_set_key", "auth")
+    )
+  })
+)
 
 
 test_that("format_cell_sets_object returns correct items", {
@@ -218,4 +219,61 @@ test_that("format_cell_sets_object returns empty children on empty cellset", {
     res <- format_cell_sets_object(cell_sets, algo, color_pool)
     expect_equal(length(res$children), 0)
   }
+})
+
+stub_runClusters <- function(clustering_method, resolution, data) {}
+stub_format_cell_sets_object <- function(cell_sets, clustering_method, color_pool) {}
+stub_update_sets_through_api <- function(
+  cell_sets_object, 
+  api_url, 
+  api_version,
+  experiment_id, 
+  cell_set_key, 
+  auth_JWT
+  ) {}
+
+stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name) {
+  mockery::stub(embed_and_cluster,
+                "runClusters",
+                stub_runClusters)
+  
+  mockery::stub(embed_and_cluster,
+                "format_cell_sets_object",
+                stub_format_cell_sets_object)
+  
+  mockery::stub(embed_and_cluster,
+                "update_sets_through_api",
+                stub_update_sets_through_api)
+
+  embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
+}
+
+test_that("embed_and_cluster works", {
+  scdata <- mock_scdata()
+
+  config <- list(
+    clusteringSettings = list(
+      method = "louvain",
+      methodSettings = list(louvain = list(resolution = 0.8))
+    ),
+    embeddingSettings = list(
+      method = "umap",
+      methodSettings = list(
+        tsne = list(
+          learningRate = 738.75,
+          perplexity = 30
+        ),
+        umap = list(
+          distanceMetric = "cosine",
+          minimumDistance = 0.3
+        )
+      )
+    )
+  )
+
+  sample_id <- "mock_sample_id"
+  cells_id <- "83abbeea-b664-499a-8e6e-d2dbae4c60a9"
+  task_name <- "configureEmbedding"
+
+  stubbed_embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
 })
