@@ -93,6 +93,7 @@ read_10x_files <- function(config, input_dir) {
 
     # Equalizing number of columns in case theres no Gene Expression column
     annot <- annot[, c(1, 2)]
+    colnames(annot) <- c("input", "name")
 
     counts <- Seurat::Read10X(sample_dir, gene.column = gene_column, unique.features = TRUE)
 
@@ -232,8 +233,6 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 unify_annot <- function(annot_list) {
   annot <- unique(do.call("rbind", annot_list))
 
-  colnames(annot) <- c("input", "name")
-
   message("Deduplicating gene annotations...")
 
   # add ENSEMBL ID for genes that are duplicated (geneNameDuplicated-ENSEMBL)
@@ -254,41 +253,52 @@ unify_annot <- function(annot_list) {
   return(annot)
 }
 
-# Fix annotations makes annotations compatible between samples with different types.
+
+
 annot_list <- input$annot_list
 counts_list <- input$counts_list
-# The possible options at this stage are TT, FF, TF. It will convert all TF annotations into either FF or TT.
+# Fix annotations makes annotations compatible between samples with different types.
+# The possible options for features_types at this stage are 0,1,2
+#  0 is SYMBOL/ SYMBOL
+#  1 is IDS/SYMBOL
+#  2 is IDS/IDS
 equalize_annotation_types <- function(annot_list, counts_list, features_types_list, samples) {
-  if (any(features_types_list == 2) && any(features_types_list == 0)) stop("Incompatible features detected.")
+  if (any(features_types_list == 2) && any(features_types_list == 0) && !any(features_types_list == 1)) stop("Incompatible features detected.")
 
   if (any(features_types_list == 1) && (any(features_types_list == 2) || any(features_types_list == 0))) {
     annots_with_ids <- unique(do.call("rbind", annot_list[features_types_list == 1]))
 
-    annots_with_ids <- annots_with_ids[!duplicated(annots_with_ids[, 1]), ]
+    annots_with_ids <- annots_with_ids[!duplicated(annots_with_ids$input), ]
 
     for (sample in samples) {
-      # 0 is SYMBOL/SYMBOL, 1 is ID/SYMBOL, 2 is ID/ID
       if (features_types_list[[sample]] == 0 || features_types_list[[sample]] == 2) {
         sample_annot <- annot_list[[sample]]
 
+        # Try to replace input column (currently symbols) in sample_annot with ids from annots_with_ids
         if (features_types_list[[sample]] == 0) {
 
-          matched_symbols_index <- match(sample_annot[, 1],annots_with_ids[, 2])
+          matched_symbols_index <- match(sample_annot$input,annots_with_ids$name)
+          is_in_annot_list <- which(sample_annot$input %in% annots_with_ids$name)
 
-          sample_annot[!is.na(matched_symbols_index), 1] <- annots_with_ids[na.omit(matched_symbols_index), 1]
+          sample_annot$input[is_in_annot_list] <- annots_with_ids$input[na.omit(matched_symbols_index)]
 
+          #In this case the counts have been loaded with gene names so we need to replace the rownames with the ids
           counts <- counts_list[[sample]]
 
-          present_in_annot <- which(rownames(counts) %in% sample_annot[, 2])
-          index_in_annot <- na.omit(match(rownames(counts),sample_annot[, 2]))
-          rownames(counts)[present_in_annot] <- sample_annot[index_in_annot, 1]
+          #present_in_annot <- which(rownames(counts) %in% sample_annot$name)
+          index_in_annot <- match(rownames(counts),sample_annot$name)
+
+          rownames(counts) <- sample_annot$input[index_in_annot]
 
           counts_list[[sample]] <- counts
         }
 
+        # Try to replace names column (currently ids) in sample_annot with symbols from annots_with_ids
         if (features_types_list[[sample]] == 2) {
-          matched_symbols_index <- match(sample_annot[, 1],annots_with_ids[, 1])
-          sample_annot[!is.na(matched_symbols_index), 2] <- annots_with_ids[na.omit(matched_symbols_index), 2]
+          matched_ids_index <- match(sample_annot$input,annots_with_ids$input)
+          is_in_annot_list <- which(sample_annot$input %in% annots_with_ids$input)
+
+          sample_annot$name[is_in_annot_list] <- annots_with_ids$name[na.omit(matched_ids_index)]
         }
 
         annot_list[[sample]] <- sample_annot
@@ -297,11 +307,6 @@ equalize_annotation_types <- function(annot_list, counts_list, features_types_li
   }
   return(list(counts_list=counts_list, annot_list=annot_list))
 }
-
-# -1 is SYMBOl/IDS
-#  0 is SYMBOL/ SYMBOL
-#  1 is IDS/SYMBOL
-#  2 is IDS/IDS
 
 #' extract_features_types
 #'
