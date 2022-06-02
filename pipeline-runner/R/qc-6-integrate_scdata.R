@@ -334,7 +334,7 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
     scdata <- subset(scdata, features = keep_genes)
   }
 
-  message(sprintf("Number of genes after excluding: %s", nrow(scdata)))
+  message("Number of genes after excluding: ", nrow(scdata)))
 
   return(scdata)
 }
