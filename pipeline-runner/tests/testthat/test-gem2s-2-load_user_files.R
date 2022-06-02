@@ -343,7 +343,7 @@ test_that("equalize_annotation_types infers gene symbols from ids and corrects c
   expect_equal(rownames(res$counts_list$sample2),res$annot_list$sample2$ensid)
 })
 
-test_that("equalize_annotation_types works with incomplete match",{
+test_that("equalize_annotation_types infers ids with incomplete match",{
   input <- mock_lists()
 
   sample2_annot <- input$annot_list$sample2
@@ -356,11 +356,33 @@ test_that("equalize_annotation_types works with incomplete match",{
 
   res <- equalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
 
-  sample1_annot <- input$annot_list$sample1
-  sample1_annot$ensid[1:nrow(sample1_annot)%%2==1] <- paste0("gene",(1:(nrow(sample1_annot)/2)))
+  expected_annot <- input$annot_list$sample1
+  expected_annot$ensid[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
 
-  expect_equal(res$annot_list$sample2,sample1_annot)
+  expect_equal(res$annot_list$sample2,expected_annot)
   expect_equal(rownames(res$counts_list$sample2),res$annot_list$sample2$ensid)
+})
+
+test_that("equalize_annotation_types infers symbols with incomplete match and doesnt modify ids",{
+  input <- mock_lists()
+
+  sample2_annot <- input$annot_list$sample2
+  sample2_annot$symbol <- sample2_annot$ensid
+  sample2_annot$ensid[1:nrow(sample2_annot)%%2==1] <- paste0("gene",(1:(nrow(sample2_annot)/2)))
+  rownames(input$counts_list$sample2) <- sample2_annot$ensid
+  input$annot_list$sample2 <- sample2_annot
+
+  features_types_list <- list(sample1=extract_features_types(input$annot_list$sample1),sample2=extract_features_types(input$annot_list$sample2))
+
+  res <- equalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+
+  expected_annot <- input$annot_list$sample1
+  expected_annot$ensid[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
+  expected_annot$symbol[1:nrow(expected_annot)%%2==1] <- input$annot_list$sample1$ensid[1:nrow(expected_annot)%%2==1]
+
+  expect_equal(res$annot_list$sample2,expected_annot)
+  expect_equal(rownames(res$counts_list$sample2),input$annot_list$sample2$ensid)
+  expect_equal(res$annot_list$sample2$ensid,input$annot_list$sample2$ensid)
 })
 
 #Test that

@@ -267,23 +267,31 @@ equalize_annotation_types <- function(annot_list, counts_list, features_types_li
     annots_with_ids <- annots_with_ids[!duplicated(annots_with_ids[, 1]), ]
 
     for (sample in samples) {
+      # 0 is SYMBOL/SYMBOL, 1 is ID/SYMBOL, 2 is ID/ID
       if (features_types_list[[sample]] == 0 || features_types_list[[sample]] == 2) {
         sample_annot <- annot_list[[sample]]
 
         if (features_types_list[[sample]] == 0) {
-          matching_symbols_index <- match(sample_annot[, 1],annots_with_ids[, 2])
-          sample_annot[!is.na(matching_symbols_index), 1] <- annots_with_ids[na.omit(matching_symbols_index), 1]
+
+          matched_symbols_index <- match(sample_annot[, 1],annots_with_ids[, 2])
+
+          sample_annot[!is.na(matched_symbols_index), 1] <- annots_with_ids[na.omit(matched_symbols_index), 1]
+
           counts <- counts_list[[sample]]
-          rownames(counts)[which(rownames(counts) %in% sample_annot[, 2])] <- sample_annot[na.omit(match(rownames(counts),sample_annot[, 2])), 1]
+
+          present_in_annot <- which(rownames(counts) %in% sample_annot[, 2])
+          index_in_annot <- na.omit(match(rownames(counts),sample_annot[, 2]))
+          rownames(counts)[present_in_annot] <- sample_annot[index_in_annot, 1]
+
+          counts_list[[sample]] <- counts
         }
 
         if (features_types_list[[sample]] == 2) {
-          matching_symbols_index <- match(sample_annot[, 1],annots_with_ids[, 1])
-          sample_annot[!is.na(matching_symbols_index), 2] <- annots_with_ids[na.omit(matching_symbols_index), 2]
+          matched_symbols_index <- match(sample_annot[, 1],annots_with_ids[, 1])
+          sample_annot[!is.na(matched_symbols_index), 2] <- annots_with_ids[na.omit(matched_symbols_index), 2]
         }
 
         annot_list[[sample]] <- sample_annot
-        counts_list[[sample]] <- counts
       }
     }
   }
