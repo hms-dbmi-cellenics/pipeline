@@ -24,7 +24,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
   flat_cells_id <- unname(unlist(cells_id))
   scdata <- subset_ids(scdata, flat_cells_id)
   # main function
-  set.seed(42)
+  set.seed(gem2s$random.seed)
   scdata.integrated <- run_dataIntegration(scdata, config)
 
   # get  npcs from the UMAP call in integration functions
