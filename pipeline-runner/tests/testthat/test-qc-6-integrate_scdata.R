@@ -177,7 +177,6 @@ test_that("remove_genes removes the correct genes when there are genes to remove
 test_that("remove_genes doesn't modify the object when there are no matches", {
 
   scdata <- suppressWarnings(mock_scdata())
-  all_genes <- scdata@misc$gene_annotations$input
 
   # empty integer vector
   res <- remove_genes(scdata, exclude_groups = "cellCycle")
