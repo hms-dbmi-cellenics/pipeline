@@ -318,17 +318,15 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
   message("Excluding genes...")
   message(sprintf("Number of genes before excluding: %s", nrow(scdata)))
 
-  # TODO: implement matching by ID as well. depends on single columns PR
-  all_genes <- scdata@misc$gene_annotations$name
+  all_genes <- scdata@misc$gene_annotations$input
 
   # build list of genes to exclude
   exclude_genes <- list_exclude_genes(all_genes, exclude_groups, exclude_custom)
   message(sprintf("Total number of genes to exlude: %s", length(exclude_genes)))
 
-  # we do the actual subsetting using ensemblIDs!
+  # subset using input (either ensID, ensID + sym or sym, depending on dataset)
   # subset.Seurat requires genes to keep.
   keep_genes <- scdata@misc$gene_annotations$input[-exclude_genes]
-
 
   scdata <- subset(scdata, features = keep_genes)
   message(sprintf("Number of genes after excluding: %s", nrow(scdata)))
@@ -343,7 +341,7 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
 #' To do so, it calls all the required list_* functions, getting the exclude gene
 #' ids and joins them.
 #'
-#' @param all_genes character vector of gene symbols
+#' @param all_genes character vector, gene_annotations$input
 #' @param exclude_groups list of groups to exclude
 #' @param exclude_custom list of custom (user provided) genes to exclude
 #'
@@ -352,28 +350,29 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
 #'
 list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 
-  gene_lists <- list("cellCycle" = list_cell_cycle,
+  gene_lists <- list("cellCycle" = make_list_cc_genes,
                      "ribosomal" = NULL,
                      "mitochondrial" = NULL)
 
-  exclude_genes <- c()
+  exclude_gene_indices <- c()
 
   for (group in exclude_groups) {
     list_fun <- gene_lists[[group]]
-    exclude_genes <- c(exclude_genes, list_fun(all_genes))
+    exclude_gene_indices <- c(exclude_gene_indices, list_fun(all_genes))
   }
 
   # in case there's a custom list of genes to exclude
   if (length(exclude_custom > 0)) {
-    exclude_genes <- c(exclude_genes, unlist(exclude_custom))
+    exclude_custom_indices <- na.omit(match(unlist(exclude_custom), all_genes))
+    exclude_gene_indices <- c(exclude_gene_indices, exclude_custom_indices)
   }
 
   # remove duplicates
-  return(unique(exclude_genes))
+  return(unique(exclude_gene_indices))
 }
 
 
-#' Build list of cell cycle genes
+#' Make list of cell cycle genes
 #'
 #' Uses cell cycle gene list from Tirosh et. al. 2016, bundled with Seurat.
 #'
@@ -381,20 +380,31 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 #' converting the human gene names to their orthologs in mice, as suggested by
 #' satijalab in [this github issue](https://github.com/satijalab/seurat/issues/2493#issuecomment-575702274)
 #'
-#' @param all_genes character vector of gene symbols
+#' @param all_genes character vector, gene_annotations$input
 #'
 #' @return integer vector of cell cycle gene indices
 #' @export
 #'
-list_cell_cycle <- function(all_genes) {
+make_list_cc_genes <- function(all_genes) {
   message("Excluding Cell Cycle genes...")
 
-  # some symbols were updated in 2019, but to defend against badly annotated data
-  # we take the unique join. There are 6 renamed genes only.
-  human_cc_genes <- unique(c(unlist(Seurat::cc.genes.updated.2019),
-                             unlist(Seurat::cc.genes)))
+  human_cc_genes <- cc_genes[["human"]]
+  mouse_cc_genes <- cc_genes[["mouse"]]
 
-  cc_gene_indices <- na.omit(match(human_cc_genes, all_genes))
+  # match human cc genes
+  human_cc_ens_indices <- na.omit(match(human_cc_genes[["ensembl_id"]], all_genes))
+  human_cc_sym_indices <- na.omit(match(human_cc_genes[["symbol"]], all_genes))
+
+  # match mouse cc genes
+  mouse_cc_ens_indices <- na.omit(match(mouse_cc_genes[["ensembl_id"]], all_genes))
+  mouse_cc_sym_indices <- na.omit(match(mouse_cc_genes[["symbol"]], all_genes))
+
+  # questionable bit of code. This should work for human, mice, human + mice
+  # and ignore other species, since matching is case sensitive.
+  cc_gene_indices <- unique(c(human_cc_ens_indices,
+                            human_cc_sym_indices,
+                            mouse_cc_ens_indices,
+                            mouse_cc_sym_indices))
 
   message(sprintf("Number of Cell Cycle genes to exclude: %s",
                   length(cc_gene_indices)))
