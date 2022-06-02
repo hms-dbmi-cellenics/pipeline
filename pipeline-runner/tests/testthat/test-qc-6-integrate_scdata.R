@@ -161,7 +161,7 @@ test_that("remove_genes removes the correct genes when there are genes to remove
 
   # only cc genes
   expect_equal(nrow(res), nrow(scdata) - 10)
-  expect_false(all(some_cc_genes %in% rownames(res)))
+  expect_false(any(some_cc_genes %in% rownames(res)))
 
   exclude_custom <- sample(setdiff(all_genes, some_cc_genes), 7)
 
@@ -169,7 +169,7 @@ test_that("remove_genes removes the correct genes when there are genes to remove
   res <- remove_genes(scdata, exclude_groups = list("cellCycle"), exclude_custom)
 
   expect_equal(nrow(res), nrow(scdata) - 17)
-  expect_false(all(c(some_cc_genes, exclude_custom) %in% rownames(res)))
+  expect_false(any(c(some_cc_genes, exclude_custom) %in% rownames(res)))
 
 })
 
