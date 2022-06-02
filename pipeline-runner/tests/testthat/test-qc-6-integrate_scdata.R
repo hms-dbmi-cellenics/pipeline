@@ -1,14 +1,23 @@
-mock_scdata <- function() {
+human_cc_genes <- pipeline:::cc_genes[["human"]]
+
+mock_scdata <- function(rename_genes = c()) {
   pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
+
+  if (length(rename_genes) > 0) {
+    # rename some genes to match cell cycle genes
+    some_genes <- sample(1:nrow(pbmc_raw), length(rename_genes))
+    rownames(pbmc_raw)[some_genes] <- rename_genes
+  }
 
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
   # add samples
   scdata$samples <- rep(c("123abc", "123def"), each = 40)
   scdata$cells_id <- 0:79
+  scdata@misc$gene_annotations$input <- rownames(scdata)
 
   # scale and PCA
   scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
@@ -92,4 +101,87 @@ test_that("numPCs estimation works", {
   scdata <- suppressWarnings(mock_scdata())
   npcs <- get_npcs(scdata)
   expect_lte(npcs, 30)
+})
+
+
+test_that("build_cc_gene_list correctly makes the list of cc genes when there are matches", {
+
+  n_rename <- 10
+  some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
+  scdata <- suppressWarnings(mock_scdata(rename_genes = some_cc_genes))
+  all_genes <- scdata@misc$gene_annotations$input
+
+  expected_res <- match(some_cc_genes, all_genes)
+  res <- build_cc_gene_list(all_genes)
+
+  expect_setequal(res, expected_res)
+
+})
+
+
+test_that("build_cc_gene_list returns empty int vector when there aren't matches", {
+
+  scdata <- suppressWarnings(mock_scdata())
+  all_genes <- scdata@misc$gene_annotations$input
+
+  # empty integer vector
+  expected_res <- integer()
+  res <- build_cc_gene_list(all_genes)
+
+  expect_equal(res, expected_res)
+})
+
+
+test_that("list_exclude_genes adds custom genes to exclusion", {
+
+  n_rename <- 10
+  some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
+  scdata <- suppressWarnings(mock_scdata(rename_genes = some_cc_genes))
+  all_genes <- scdata@misc$gene_annotations$input
+
+  exclude_custom <- sample(setdiff(all_genes, some_cc_genes), 7)
+  exclude_custom_indices <- match(exclude_custom, all_genes)
+
+  expected_res <- c(build_cc_gene_list(all_genes), exclude_custom_indices)
+
+  res <- list_exclude_genes(all_genes, list("cellCycle"), exclude_custom)
+
+  expect_setequal(res, expected_res)
+
+})
+
+test_that("remove_genes removes the correct genes when there are genes to remove", {
+
+  n_rename <- 10
+  some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
+  scdata <- suppressWarnings(mock_scdata(rename_genes = some_cc_genes))
+  all_genes <- scdata@misc$gene_annotations$input
+
+  res <- remove_genes(scdata, exclude_groups = list("cellCycle"))
+
+  # only cc genes
+  expect_equal(nrow(res), nrow(scdata) - 10)
+  expect_false(all(some_cc_genes %in% rownames(res)))
+
+  exclude_custom <- sample(setdiff(all_genes, some_cc_genes), 7)
+
+  # cc genes and custom
+  res <- remove_genes(scdata, exclude_groups = list("cellCycle"), exclude_custom)
+
+  expect_equal(nrow(res), nrow(scdata) - 17)
+  expect_false(all(c(some_cc_genes, exclude_custom) %in% rownames(res)))
+
+})
+
+
+test_that("remove_genes doesn't modify the object when there are no matches", {
+
+  scdata <- suppressWarnings(mock_scdata())
+  all_genes <- scdata@misc$gene_annotations$input
+
+  # empty integer vector
+  res <- remove_genes(scdata, exclude_groups = "cellCycle")
+
+  expect_equal(res, scdata)
+
 })
