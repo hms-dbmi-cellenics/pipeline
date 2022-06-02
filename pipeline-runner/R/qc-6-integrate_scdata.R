@@ -326,7 +326,7 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
   # only subset if there are genes to remove.
   # Seurat removes reductions when subsetting
   if (length(exclude_genes) > 0) {
-    message(sprintf("Total number of genes to exlude: %s", length(exclude_genes)))
+    message("Total number of genes to exlude: ", length(exclude_genes))
 
     # subset using input (either ensID, ensID + sym or sym, depending on dataset)
     # subset.Seurat requires genes to keep.
