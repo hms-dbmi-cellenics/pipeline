@@ -9,7 +9,7 @@ embed_and_cluster <-
            sample_id,
            cells_id,
            task_name = "configureEmbedding") {
-    saveRDS(config, '/debug/cluster.config.rds')
+    # saveRDS(config, '/debug/cluster.config.rds')
     message("starting clusters")
     clustering_method <- config$clusteringSettings$method
     methodSettings <-
@@ -79,7 +79,7 @@ update_sets_through_api <-
            cell_set_key,
            auth_JWT) {
 
-    saveRDS(cell_sets_object, '/debug/cells_sets_object.alpha.rds')
+    # saveRDS(cell_sets_object, '/debug/cells_sets_object.alpha.rds')
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
     httr::PATCH(

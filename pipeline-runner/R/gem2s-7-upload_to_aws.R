@@ -119,7 +119,7 @@ samples_sets <- function(input, scdata, color_pool) {
   for (i in seq_along(sample_ids)) {
     sample_id <- sample_ids[i]
     sample_name <- sample_names[i]
-    saveRDS(scdata, '/debug/scdata_cells_id.rds')
+    # saveRDS(scdata, '/debug/scdata_cells_id.rds')
     cell_ids <- scdata$cells_id[cells_sample == sample_id]
 
     cell_set$children[[i]] <- list(

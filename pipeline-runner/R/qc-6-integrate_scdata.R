@@ -32,7 +32,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   scdata <- subset_ids(scdata, flat_cells_id)
   # main function
   set.seed(gem2s$random.seed)
-  saveRDS(config, '/debug/config.rds')
+  # saveRDS(config, '/debug/config.rds')
   scdata.integrated <- run_dataIntegration(scdata, config)
 
   # get  npcs from the UMAP call in integration functions
