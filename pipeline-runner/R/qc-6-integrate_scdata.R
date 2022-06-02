@@ -316,7 +316,7 @@ get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
 #'
 remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
   message("Excluding genes...")
-  message(sprintf("Number of genes before excluding: %s", nrow(scdata)))
+  message("Number of genes before excluding: ", nrow(scdata))
 
   all_genes <- scdata@misc$gene_annotations$input
 
@@ -326,7 +326,7 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
   # only subset if there are genes to remove.
   # Seurat removes reductions when subsetting
   if (length(exclude_genes) > 0) {
-    message(sprintf("Total number of genes to exlude: %s", length(exclude_genes)))
+    message("Total number of genes to exlude: ", length(exclude_genes))
 
     # subset using input (either ensID, ensID + sym or sym, depending on dataset)
     # subset.Seurat requires genes to keep.
@@ -334,7 +334,7 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
     scdata <- subset(scdata, features = keep_genes)
   }
 
-  message(sprintf("Number of genes after excluding: %s", nrow(scdata)))
+  message("Number of genes after excluding: ", nrow(scdata))
 
   return(scdata)
 }
@@ -412,8 +412,8 @@ build_cc_gene_list <- function(all_genes) {
                             mouse_cc_ens_indices,
                             mouse_cc_sym_indices))
 
-  message(sprintf("Number of Cell Cycle genes to exclude: %s",
-                  length(cc_gene_indices)))
+  message("Number of Cell Cycle genes to exclude: ",
+                  length(cc_gene_indices))
 
   return(cc_gene_indices)
 }
