@@ -1,7 +1,11 @@
+# extracted cell cycle gene symbols from Seurat::cc.genes and Seurat::cc.genes.updated.2019
+# converted to ensemblIDs using https://biit.cs.ut.ee/gprofiler/convert
+# found mice orthologs using https://www.genenames.org/tools/hcop/
+
 human_cc_genes <-
   structure(
     list(
-      X = 1:100,
+      X = 1:103,
       ensembl_id = c(
         "ENSG00000100297",
         "ENSG00000132646",
@@ -102,7 +106,10 @@ human_cc_genes <-
         "ENSG00000115163",
         "ENSG00000073111",
         "ENSG00000117748",
-        "ENSG00000136492"
+        "ENSG00000136492",
+        "ENSG00000129195",
+        NA,
+        NA
       ),
       symbol = c(
         "MCM5",
@@ -204,11 +211,15 @@ human_cc_genes <-
         "CENPA",
         "MCM2",
         "RPA2",
-        "BRIP1"
+        "BRIP1",
+        "FAM64A",
+        "MLF1IP",
+        "HN1"
+
       )
     ),
     class = "data.frame",
-    row.names = c(NA, -100L)
+    row.names = c(NA, -103L)
   )
 
 mouse_cc_genes <-

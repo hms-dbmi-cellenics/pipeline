@@ -398,7 +398,7 @@ build_cc_gene_list <- function(all_genes) {
   mouse_cc_genes <- cc_genes[["mouse"]]
 
   # match human cc genes
-  human_cc_ens_indices <- na.omit(match(human_cc_genes[["ensembl_id"]], all_genes))
+  human_cc_ens_indices <- na.omit(match(na.omit(human_cc_genes[["ensembl_id"]]), all_genes))
   human_cc_sym_indices <- na.omit(match(human_cc_genes[["symbol"]], all_genes))
 
   # match mouse cc genes
