@@ -322,13 +322,18 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
 
   # build list of genes to exclude
   exclude_genes <- list_exclude_genes(all_genes, exclude_groups, exclude_custom)
-  message(sprintf("Total number of genes to exlude: %s", length(exclude_genes)))
 
-  # subset using input (either ensID, ensID + sym or sym, depending on dataset)
-  # subset.Seurat requires genes to keep.
-  keep_genes <- scdata@misc$gene_annotations$input[-exclude_genes]
+  # only subset if there are genes to remove.
+  # Seurat removes reductions when subsetting
+  if (length(exclude_genes) > 0) {
+    message(sprintf("Total number of genes to exlude: %s", length(exclude_genes)))
 
-  scdata <- subset(scdata, features = keep_genes)
+    # subset using input (either ensID, ensID + sym or sym, depending on dataset)
+    # subset.Seurat requires genes to keep.
+    keep_genes <- scdata@misc$gene_annotations$input[-exclude_genes]
+    scdata <- subset(scdata, features = keep_genes)
+  }
+
   message(sprintf("Number of genes after excluding: %s", nrow(scdata)))
 
   return(scdata)
@@ -350,7 +355,7 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
 #'
 list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 
-  gene_lists <- list("cellCycle" = make_list_cc_genes,
+  gene_lists <- list("cellCycle" = build_cc_gene_list,
                      "ribosomal" = NULL,
                      "mitochondrial" = NULL)
 
@@ -385,9 +390,10 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 #' @return integer vector of cell cycle gene indices
 #' @export
 #'
-make_list_cc_genes <- function(all_genes) {
+build_cc_gene_list <- function(all_genes) {
   message("Excluding Cell Cycle genes...")
 
+  # TODO: change when adding species input
   human_cc_genes <- cc_genes[["human"]]
   mouse_cc_genes <- cc_genes[["mouse"]]
 
