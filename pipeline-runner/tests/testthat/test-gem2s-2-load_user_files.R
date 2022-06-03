@@ -470,12 +470,29 @@ test_that("duplicated genes dont lead to any rowname duplication",{
   expect_equal(rownames(res$counts_list$sample2),expected_annot$input)
 })
 
-test_that("Mislabeling of features types results in no changes",{
+test_that("Mislabeling of features types to symbols results in no changes",{
   input <- mock_lists()
 
   sample2_annot <- input$annot_list$sample2
   sample2_annot$input[1:(nrow(sample2_annot)/2+1)] <- paste0("ab",1:(nrow(sample2_annot)/2+1))
   sample2_annot$name[1:(nrow(sample2_annot)/2+1)] <- paste0("ab",1:(nrow(sample2_annot)/2+1))
+  input$annot_list$sample2 <- sample2_annot
+  rownames(input$counts_list$sample2) <- sample2_annot$input
+
+  features_types_list <- list(sample1=extract_features_types(input$annot_list$sample1),sample2=extract_features_types(input$annot_list$sample2))
+
+  res <- pipeline:::equalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+
+  expect_equal(res$annot_list$sample2,input$annot_list$sample2)
+  expect_equal(rownames(res$counts_list$sample2),input$annot_list$sample2$input)
+})
+
+test_that("Mislabeling of features types to ids results in no changes",{
+  input <- mock_lists()
+
+  sample2_annot <- input$annot_list$sample2
+  sample2_annot$input[1:(nrow(sample2_annot)/2+1)] <- paste0("ENS",1:(nrow(sample2_annot)/2+1))
+  sample2_annot$name[1:(nrow(sample2_annot)/2+1)] <- paste0("ENS",1:(nrow(sample2_annot)/2+1))
   input$annot_list$sample2 <- sample2_annot
   rownames(input$counts_list$sample2) <- sample2_annot$input
 
