@@ -73,6 +73,7 @@ read_10x_files <- function(config, input_dir) {
     )
 
     annot <- read.delim(annot_fpath, header = FALSE)
+
     if (ncol(annot) == 1 || annot[1, 2] == "Gene Expression") {
       annot[, 2] <- annot[, 1]
     }
@@ -282,13 +283,17 @@ equalize_annotation_types <- function(annot_list, counts_list, features_types_li
 
           sample_annot$input[is_in_annot_list] <- annots_with_ids$input[na.omit(matched_symbols_index)]
 
-          #In this case the counts have been loaded with gene names so we need to replace the rownames with the ids
+          #This avoids duplicates after combining with the annotated df.
+          #Leads to a mismatch in genes between samples but it seems like the best solution
+          sample_annot$input <- make.unique(sample_annot$input)
+
+          #The counts have been loaded with gene symbols so we need to replace the rownames with the ids
           counts <- counts_list[[sample]]
 
-          #present_in_annot <- which(rownames(counts) %in% sample_annot$name)
-          index_in_annot <- match(rownames(counts),sample_annot$name)
+          present_in_annot <- which(rownames(counts) %in% sample_annot$name)
+          index_in_annot <- na.omit(match(rownames(counts),sample_annot$name))
 
-          rownames(counts) <- sample_annot$input[index_in_annot]
+          rownames(counts)[present_in_annot] <- sample_annot$input[index_in_annot]
 
           counts_list[[sample]] <- counts
         }
