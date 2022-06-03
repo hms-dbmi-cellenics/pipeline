@@ -9,9 +9,6 @@ merge_scdatas(scdata_list)
 \arguments{
 \item{scdata_list}{}
 }
-\value{
-
-}
 \description{
 Merge scdatas: merge rds files in input list
 }
