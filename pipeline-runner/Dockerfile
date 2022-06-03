@@ -47,6 +47,9 @@ COPY DESCRIPTION .
 COPY NAMESPACE .
 ADD tests ./tests
 
+ADD R ./R
+COPY init.R .
+
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
@@ -69,8 +72,6 @@ RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux6
 COPY aws_config /root/.aws/config
 
 # start app
-ADD R ./R
-COPY init.R .
 ENTRYPOINT ["Rscript", "init.R"]
 
 
@@ -85,6 +86,4 @@ FROM builder AS dev
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
 # start app
-ADD R ./R
-COPY init.R .
 ENTRYPOINT ["Rscript", "init.R"]
