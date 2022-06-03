@@ -486,14 +486,3 @@ test_that("Mislabeling of features types results in no changes",{
   expect_equal(res$annot_list$sample2,input$annot_list$sample2)
   expect_equal(rownames(res$counts_list$sample2),input$annot_list$sample2$input)
 })
-
-test_that("Gene ids can be populated from the union of two annotations",{
-
-})
-
-test_that("gene name not present in annotations",{
-
-})
-
-
-
