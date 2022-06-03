@@ -40,8 +40,7 @@ RUN R -e "renv::restore(lockfile='renv.lock', clean = TRUE)"
 RUN RENV_LIB=$(echo "cat(.libPaths()[1])"|Rscript -) && \
     mv $RENV_LIB /library && \
     echo ".libPaths(c('/library', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site && \
-    rm -rf /src/renv && \
-    rm .Rprofile renv.lock renv.lock.init requirements_debian.txt
+    rm -rf renv .Rprofile renv.lock renv.lock.init requirements_debian.txt
 
 # add R package and test files to get code coverage
 COPY DESCRIPTION .
