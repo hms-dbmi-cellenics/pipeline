@@ -511,8 +511,8 @@ test_that("read_10x_files removes single row with empty feature names both in co
 
 test_that("read_10x_files doesn't remove any rows with empty feature names both in count matrix and annotation if present and >= 0.1%", {
   counts <- mock_counts()
-  rownames(counts)[2]=""
-  rownames(counts)[3]=".1"
+  rownames(counts)[2] <- ""
+  rownames(counts)[3] <- ".1"
 
   features <- data.frame(
     ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
