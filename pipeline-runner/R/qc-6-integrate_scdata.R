@@ -21,6 +21,12 @@
 #   },
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+  for (sample in names(scdata_list)) {
+    flat_cells_id <- unname(unlist(cells_id[[sample]]))
+    scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cells_id)
+    #scdata_subset[[sample]] <- aux
+  }
+
   # merge the data before integration
   scdata <- merge_scdatas(scdata_list)
   # the sample already contain the metadata, check if the merged object already has the annotations
@@ -28,8 +34,8 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   #ascdata <- add_metadata(scdata, scdata_list$annot, input$experimentId)
 
 
-  flat_cells_id <- unname(unlist(cells_id))
-  scdata <- subset_ids(scdata, flat_cells_id)
+  # flat_cells_id <- unname(unlist(cells_id))
+  # scdata <- subset_ids(scdata, flat_cells_id)
   # main function
   set.seed(gem2s$random.seed)
   # saveRDS(config, '/debug/config.rds')
