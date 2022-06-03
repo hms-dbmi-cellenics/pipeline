@@ -47,6 +47,7 @@ COPY DESCRIPTION .
 COPY NAMESPACE .
 ADD tests ./tests
 
+# copy R source files and runner
 ADD R ./R
 COPY init.R .
 
