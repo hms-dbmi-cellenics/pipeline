@@ -87,7 +87,7 @@ test_that("format_annot keeps unique rows", {
     sample2 = data.frame(ENSID = 1:5, SYMBOL = paste0("gene", 1:5))
   )
 
-  annot <- pipeline:::format_annot(annot_list)
+  annot <- format_annot(annot_list)
 
   expect_s3_class(annot, "data.frame")
   expect_true(nrow(annot) == nrow(annot_list$sample1))
@@ -99,7 +99,7 @@ test_that("format_annot deduplicates name column", {
     sample1 = data.frame(ENSID = 1:6, SYMBOL = paste0("gene", c(1, 1:5)))
   )
 
-  annot <- pipeline:::format_annot(annot_list)
+  annot <- format_annot(annot_list)
 
   expect_true(length(annot$name) == length(unique(annot$name)))
 })
@@ -111,7 +111,7 @@ test_that("format_annot removes duplicated input (Ensembl IDs) column", {
     sample1 = data.frame(ENSID = ensids, SYMBOL = paste0("gene", 1:5))
   )
 
-  annot <- pipeline:::format_annot(annot_list)
+  annot <- format_annot(annot_list)
 
   expect_equal(
     length(unique(ensids)),
@@ -434,7 +434,7 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
   # keep RSEC values
   expected_values <- original$RSEC_Adjusted_Molecules
 
-  res <- pipeline:::parse_rhapsody_matrix(config, input_dir)
+  res <- parse_rhapsody_matrix(config, input_dir)
 
   row_idx <- as.integer(factor(original$Gene))
   col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
