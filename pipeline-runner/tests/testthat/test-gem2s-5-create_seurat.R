@@ -182,3 +182,22 @@ test_that("create_seurat works with multiple samples", {
   expect_true(all(scdata_list[["a"]]$samples == "a"))
   expect_true(all(scdata_list[["b"]]$samples == "b"))
 })
+
+
+test_that("create_seurat does not exclude genes without counts", {
+  counts <- mock_counts()
+  counts['NOT-EXPRESSED', ] = 0
+
+  prev_out <- mock_prev_out(counts = counts)
+
+  # check that have genes with 0 counts
+  counts <- prev_out$counts_list[[1]]
+  counts_per_gene <- Matrix::rowSums(counts)
+  expect_equal(sum(counts_per_gene == 0), 1)
+
+  out <- create_seurat(NULL, NULL, prev_out)$output
+  scdata <- out$scdata_list[[1]]
+
+  # gene is still there
+  expect_true('NOT-EXPRESSED' %in% row.names(scdata))
+})

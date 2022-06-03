@@ -82,6 +82,12 @@
       "Source": "Bioconductor",
       "Hash": "ee4d027afb8f52fec1f46b9f0a8660e9"
     },
+    "Biostrings": {
+      "Package": "Biostrings",
+      "Version": "2.58.0",
+      "Source": "Bioconductor",
+      "Hash": "7025417314cfb2f1be19919998874466"
+    },
     "DelayedArray": {
       "Package": "DelayedArray",
       "Version": "0.16.3",
@@ -118,6 +124,12 @@
       "Version": "1.2.4",
       "Source": "Bioconductor",
       "Hash": "8e9c39ceac5f1d98d3267541853fca31"
+    },
+    "GenomicAlignments": {
+      "Package": "GenomicAlignments",
+      "Version": "1.26.0",
+      "Source": "Bioconductor",
+      "Hash": "b39d47616678079df56fb8fcf07c707d"
     },
     "GenomicRanges": {
       "Package": "GenomicRanges",
@@ -288,6 +300,18 @@
       "Source": "Bioconductor",
       "Hash": "7dc9be3558a910226d64a2040520dc7f"
     },
+    "Rhtslib": {
+      "Package": "Rhtslib",
+      "Version": "1.22.0",
+      "Source": "Bioconductor",
+      "Hash": "bc1c8c2d34d2649ff80c22237c3a03ed"
+    },
+    "Rsamtools": {
+      "Package": "Rsamtools",
+      "Version": "2.6.0",
+      "Source": "Bioconductor",
+      "Hash": "7d5b0ec921f85730aafe82f0f94f76c0"
+    },
     "Rtsne": {
       "Package": "Rtsne",
       "Version": "0.15",
@@ -339,6 +363,13 @@
       "Version": "1.20.0",
       "Source": "Bioconductor",
       "Hash": "2da24c5f66521d18cff602d324834b20"
+    },
+    "XML": {
+      "Package": "XML",
+      "Version": "3.99-0.9",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "6e75b3884423e21eda89b424a98e091d"
     },
     "XVector": {
       "Package": "XVector",
@@ -810,11 +841,11 @@
       "Version": "1.2.6.9118",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteUsername": "igraph",
+      "RemoteHost": "api.github.com",
       "RemoteRepo": "rigraph",
+      "RemoteUsername": "igraph",
       "RemoteRef": "master",
       "RemoteSha": "46bfafd9623b4c9d6cbad9b6768ba3fb297fc06b",
-      "RemoteHost": "api.github.com",
       "Hash": "d0bc05b3feb0bb04b8f6aae3d4d14271"
     },
     "irlba": {
@@ -1281,6 +1312,12 @@
       "Repository": "CRAN",
       "Hash": "b462187d887abc519894874486dbd6fd"
     },
+    "rtracklayer": {
+      "Package": "rtracklayer",
+      "Version": "1.50.0",
+      "Source": "Bioconductor",
+      "Hash": "3905c00eda8f95ab761abc0978ffa19d"
+    },
     "sass": {
       "Package": "sass",
       "Version": "0.4.0",
@@ -1290,15 +1327,15 @@
     },
     "scDblFinder": {
       "Package": "scDblFinder",
-      "Version": "1.7.4",
+      "Version": "1.11.3",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "scDblFinder",
       "RemoteUsername": "plger",
       "RemoteRef": "HEAD",
-      "RemoteSha": "71e65fb1d8b9ef9d130b65e7d2fd14a1eb5c3fab",
-      "Hash": "76db21226b8b5a7faab9224a1bd2c670"
+      "RemoteSha": "367b77d27d614c4a81fcb02cf13f9b9e8487e6a5",
+      "Hash": "aa0d0f66a5b31ec0709112c6217dbcfc"
     },
     "scales": {
       "Package": "scales",
