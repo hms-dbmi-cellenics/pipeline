@@ -454,6 +454,7 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
 
 
 test_that("read_10x_files removes rows with empty feature names both in count matrix and annotation if present and < 0.1%", {
+  # mock count matrix replicating it 10 times to mock a matrix with < 0.1% of empty features
   counts <- mock_counts()[rep(seq_len(nrow(mock_counts())), each = 10), ]
   rownames(counts)[2] <- ""
   rownames(counts)[3] <- ".1"
@@ -534,7 +535,7 @@ test_that("read_10x_files doesn't remove any rows with empty feature names both 
   annot <- out$annot
 
   expect_equal(nrow(counts), nrow(counts_list[[1]]))
-  expect_equal(nrow(features), nrow(annot))
+  expect_equal(length(which(annot[,1] == "")), 1)
 
 })
 
