@@ -118,7 +118,7 @@ read_10x_files <- function(config, input_dir) {
   }
 
   c(counts_list, annot_list) %<-% equalize_annotation_types(annot_list, counts_list, features_types_list, samples)
-  annot <- unify_annot(annot_list)
+  annot <- format_annot(annot_list)
 
   return(list(counts_list = counts_list, annot = annot))
 }
@@ -231,7 +231,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   return(list(counts_list = counts_list, annot = annot))
 }
 
-unify_annot <- function(annot_list) {
+format_annot <- function(annot_list) {
   annot <- unique(do.call("rbind", annot_list))
 
   message("Deduplicating gene annotations...")
@@ -254,10 +254,6 @@ unify_annot <- function(annot_list) {
   return(annot)
 }
 
-
-
-annot_list <- input$annot_list
-counts_list <- input$counts_list
 # Fix annotations makes annotations compatible between samples with different types.
 # The possible options for features_types at this stage are 0,1,2
 #  0 is SYMBOL/ SYMBOL
@@ -288,14 +284,7 @@ equalize_annotation_types <- function(annot_list, counts_list, features_types_li
           sample_annot$input <- make.unique(sample_annot$input)
 
           #The counts have been loaded with gene symbols so we need to replace the rownames with the ids
-          counts <- counts_list[[sample]]
-
-          present_in_annot <- which(rownames(counts) %in% sample_annot$name)
-          index_in_annot <- na.omit(match(rownames(counts),sample_annot$name))
-
-          rownames(counts)[present_in_annot] <- sample_annot$input[index_in_annot]
-
-          counts_list[[sample]] <- counts
+          rownames(counts_list[[sample]]) <- sample_annot$input
         }
 
         # Try to replace names column (currently ids) in sample_annot with symbols from annots_with_ids
