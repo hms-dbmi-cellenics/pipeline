@@ -355,6 +355,7 @@ test_that("equalize_annotation_types infers gene symbols from ids and corrects c
   sample2_annot <- input$annot_list$sample2
   sample2_annot$name <- sample2_annot$input
   input$annot_list$sample2 <- sample2_annot
+  rownames(input$counts_list$sample2) <- sample2_annot$input
 
   features_types_list <- list(sample1=extract_features_types(input$annot_list$sample1),sample2=extract_features_types(input$annot_list$sample2))
 
