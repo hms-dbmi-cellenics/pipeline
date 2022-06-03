@@ -349,7 +349,7 @@ test_that("equalize_annotation_types infers gene ids from symbols and corrects c
   expect_equal(rownames(res$counts_list$sample2),res$annot_list$sample2$input)
 })
 
-test_that("equalize_annotation_types infers gene symbols from ids and corrects counts rownames",{
+test_that("equalize_annotation_types infers gene symbols from ids",{
   input <- mock_lists()
 
   sample2_annot <- input$annot_list$sample2
@@ -362,7 +362,7 @@ test_that("equalize_annotation_types infers gene symbols from ids and corrects c
   res <- equalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
 
   expect_equal(res$annot_list$sample2,input$annot_list$sample1)
-  expect_equal(rownames(res$counts_list$sample2),res$annot_list$sample2$input)
+  expect_equal(rownames(res$counts_list$sample2),input$annot_list$sample2$input)
 })
 
 test_that("equalize_annotation_types infers ids with incomplete match",{
@@ -439,6 +439,55 @@ test_that("equalize_annot properly infers ids with more than 2 samples",{
 })
 
 test_that("duplicated genes dont lead to any rowname duplication",{
+  input <- mock_lists()
+
+  annot <- input$annot_list$sample1
+  counts <- input$counts_list$sample1
+
+  sample2_annot <- input$annot_list$sample2
+  sample2_annot$name[1:nrow(sample2_annot)%%2==1] <- paste0("gene",(1:(nrow(sample2_annot)/2)))
+  sample2_annot$input <- sample2_annot$name
+
+  sample2_annot[1,1] <- sample2_annot[2,1]
+  sample2_annot[1,1] <- annot[2,1]
+
+
+  rownames(input$counts_list$sample2) <- sample2_annot$input
+  input$annot_list$sample2 <- sample2_annot
+
+  features_types_list <- list(sample1=extract_features_types(input$annot_list$sample1),sample2=extract_features_types(input$annot_list$sample2))
+
+  res <- equalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+
+  expected_annot <- annot
+  expected_annot$input[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
+  expected_annot$name[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
+
+  expected_annot$input[[1]] <- "ENSFAKE2"
+  expected_annot$input[[2]] <- "ENSFAKE2.1"
+
+  expect_equal(res$annot_list$sample2,expected_annot)
+  expect_equal(rownames(res$counts_list$sample2),expected_annot$input)
+})
+
+test_that("Mislabeling of features types results in no changes",{
+  input <- mock_lists()
+
+  sample2_annot <- input$annot_list$sample2
+  sample2_annot$input[1:(nrow(sample2_annot)/2+1)] <- paste0("ab",1:(nrow(sample2_annot)/2+1))
+  sample2_annot$name[1:(nrow(sample2_annot)/2+1)] <- paste0("ab",1:(nrow(sample2_annot)/2+1))
+  input$annot_list$sample2 <- sample2_annot
+  rownames(input$counts_list$sample2) <- sample2_annot$input
+
+  features_types_list <- list(sample1=extract_features_types(input$annot_list$sample1),sample2=extract_features_types(input$annot_list$sample2))
+
+  res <- equalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+
+  expect_equal(res$annot_list$sample2,input$annot_list$sample2)
+  expect_equal(rownames(res$counts_list$sample2),input$annot_list$sample2$input)
+})
+
+test_that("Gene ids can be populated from the union of two annotations",{
 
 })
 
@@ -446,10 +495,5 @@ test_that("gene name not present in annotations",{
 
 })
 
-test_that("Mislabeling of features types results in no changes",{
 
-})
 
-test_that("Gene ids can be populated from the union of two annotations",{
-
-})
