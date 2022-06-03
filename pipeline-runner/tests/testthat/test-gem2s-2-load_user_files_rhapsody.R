@@ -32,6 +32,12 @@ mock_rhapsody_matrix <- function(counts, sample_dir) {
   matrix_path
 }
 
+mock_counts <- function() {
+  pbmc_raw <- read.table(
+    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
+    as.is = TRUE
+  )
+}
 
 local_rhapsody_experiment <- function(samples, env = parent.frame()) {
   # calls creates_samples but makes them "local" (in withr speech), deleting

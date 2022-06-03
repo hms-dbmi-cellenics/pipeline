@@ -220,7 +220,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
     )
 
     # Rhapsody data does not have ensemblIDs, but format_annot needs 2 cols
-    annot <- data.frame(features, features)
+    annot <- data.frame(input=features, name=features)
 
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annot
@@ -233,6 +233,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 
 format_annot <- function(annot_list) {
   annot <- unique(do.call("rbind", annot_list))
+  colnames(annot) <- c("input", "name")
 
   message("Deduplicating gene annotations...")
 
