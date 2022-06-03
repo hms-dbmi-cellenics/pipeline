@@ -483,6 +483,7 @@ test_that("read_10x_files removes rows with empty feature names both in count ma
 
 
 test_that("read_10x_files removes single row with empty feature names both in count matrix and annotation if present and < 0.1%", {
+  # mock count matrix replicating it 10 times to mock a matrix with < 0.1% of empty features
   counts <- mock_counts()[rep(seq_len(nrow(mock_counts())), each = 10), ]
   rownames(counts)[2]=""
 
