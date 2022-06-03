@@ -6,6 +6,9 @@
 \usage{
 parse_rhapsody_matrix(config, input_dir)
 }
+\arguments{
+\item{input_dir}{A string, where the s3 object is going to be stored}
+}
 \value{
 list containing \itemize{
 \item{"counts_list"}{named list of dgCMatrix per sample}

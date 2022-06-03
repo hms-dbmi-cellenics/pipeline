@@ -12,6 +12,8 @@ load_user_files(input, pipeline_config, prev_out, input_dir = "/input")
 \item{pipeline_config}{result of \code{load_config}}
 
 \item{prev_out}{list with experiment configuration settings}
+
+\item{input_dir}{A string, where the s3 object is going to be stored}
 }
 \value{
 list with 'output' slot containing \itemize{

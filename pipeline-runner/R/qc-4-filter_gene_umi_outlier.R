@@ -74,7 +74,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
   # downsample for plot data
   nkeep <- downsample_plotdata(ncol(scdata.sample), num_cells_to_downsample)
 
-  set.seed(123)
+  set.seed(gem2s$random.seed)
   keep_rows <- sample(nrow(fit.data), nkeep)
   keep_rows <- sort(keep_rows)
   downsampled_data <- fit.data[keep_rows, ]
