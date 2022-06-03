@@ -172,7 +172,7 @@ jobs:
           docker run \
             --entrypoint /bin/bash \
             -v $(pwd):/app $IMAGE_NAME \
-            -c "R -e 'cov <- covr::package_coverage(\"/app\"); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
+            -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
 
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
