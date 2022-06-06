@@ -533,7 +533,7 @@ test_that("read_10x_files doesn't remove any rows with empty feature names both 
   annot <- out$annot
 
   expect_equal(nrow(counts), nrow(counts_list[[1]]))
-  # expect_equal(nrow(features), nrow(annot))  # decomment this line and delete the following line when make unique will be added in format_annot
+  # expect_equal(nrow(features), nrow(annot))  # decomment this line and delete the following line when make unique will be added in format_annot [BIOMAGE-1817]
   expect_equal(length(which(annot[, 1] == "")), 1)
 })
 
