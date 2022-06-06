@@ -87,8 +87,7 @@ read_10x_files <- function(config, input_dir) {
     # remove rows with empty names if < 0.1% of the total features.
     if (length(unnamed_genes) != 0 & length(unnamed_genes) / nrow(counts) < 0.001) {
       counts <- counts[-unnamed_genes,]
-      message("*** Removed ", length(unnamed_genes), " rows with empty gene symbol from count matrix")
-      message(
+       message(
         sprintf(
           "*** Removed %s rows with empty gene symbol from count matrix of sample %s",
           length(unnamed_genes), sample
