@@ -89,7 +89,7 @@ read_10x_files <- function(config, input_dir) {
       counts <- counts[-unnamed_genes,]
        message(
         sprintf(
-          "*** Removed %s rows with empty gene symbol from count matrix of sample %s",
+          "Removed %s rows with empty gene symbol from count matrix of sample %s",
           length(unnamed_genes), sample
         )
       )
@@ -115,7 +115,7 @@ read_10x_files <- function(config, input_dir) {
       annot <- annot[-unnamed_ids,]
       message(
         sprintf(
-          "*** Removed %s rows with empty gene symbol from annot of sample %s",
+          "Removed %s rows with empty gene symbol from annotations table of sample %s",
           length(unnamed_genes), sample
         )
       )
