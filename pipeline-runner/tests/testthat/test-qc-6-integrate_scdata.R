@@ -1,4 +1,4 @@
-human_cc_genes <- pipeline:::cc_genes[["human"]]
+human_cc_genes <- cc_genes[["human"]]
 
 mock_scdata <- function(rename_genes = c()) {
   pbmc_raw <- read.table(
