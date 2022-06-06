@@ -80,13 +80,11 @@ read_10x_files <- function(config, input_dir) {
       counts <- counts[[slot]]
     }
 
-    # Check if there are any rows with empty gene symbol in the count
-    # matrix and remove them if < 0.1% of the total number of features
-    # if more than 1 empty gene is present in the feature file,
-    # the count matrix will have the first rowname empty, while the 
-    # following will be ".1", ".2". etc...
+    # Check existence of empty gene symbols in count matrix' rownames.
+    # If there are more than one the first will be empty, while the 
+    # following will be ".1", ".2"... because Seurat runs make.unique
     unnamed_genes <- c(which(rownames(counts) == ""), grep("^\\.[0-9]+", rownames(counts)))
-
+    # remove rows with empty names if < 0.1% of the total features.
     if (length(unnamed_genes) != 0 & length(unnamed_genes) / nrow(counts) < 0.001) {
       counts <- counts[-unnamed_genes,]
     }
@@ -103,7 +101,8 @@ read_10x_files <- function(config, input_dir) {
       )
     )
 
-    # Check if there are any rows with empty gene symbol in the feature file and remove them if < 0.1% of the total number of features
+    # Check if there are any rows with empty gene symbol in the features file
+    # and remove them if < 0.1% of the total number of features
     unnamed_ids <- which(annot[,1] == "")
 
     if (length(unnamed_ids) != 0 & length(unnamed_ids) / nrow(annot) < 0.001) {
