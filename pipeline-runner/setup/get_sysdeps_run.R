@@ -1,5 +1,3 @@
-install.packages('maketools')
-
 lock <- renv:::renv_lockfile_read('renv.lock')
 pkgs <- names(lock$Packages)
 
@@ -13,6 +11,3 @@ for (pkg in pkgs) {
 
 sysdeps_run <- unique(sysdeps_run)
 writeLines(sysdeps_run, 'sysdeps_run.txt')
-
-remove.packages('maketools')
-
