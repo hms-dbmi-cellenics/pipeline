@@ -644,10 +644,10 @@
     },
     "Seurat": {
       "Package": "Seurat",
-      "Version": "4.0.3",
+      "Version": "4.1.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "7249f329b663f90bf99ffe06097ea3e7",
+      "Hash": "0d7350ea71e070760974a50692596c4d",
       "Requirements": [
         "KernSmooth",
         "MASS",
@@ -696,15 +696,20 @@
     },
     "SeuratObject": {
       "Package": "SeuratObject",
-      "Version": "4.0.2",
+      "Version": "4.1.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "e5959242d66cfe4de9116fdcec327f80",
+      "Hash": "8242cf3391113462a4af2ba2062a6637",
       "Requirements": [
         "Matrix",
         "Rcpp",
         "RcppEigen",
-        "rlang"
+        "future",
+        "future.apply",
+        "progressr",
+        "rgeos",
+        "rlang",
+        "sp"
       ]
     },
     "SeuratWrappers": {
@@ -1222,10 +1227,10 @@
     },
     "fs": {
       "Package": "fs",
-      "Version": "1.5.0",
+      "Version": "1.5.2",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "44594a07a42e5f91fac9f93fda6d0109",
+      "Hash": "7c89603d81793f0d5486d91ab1fc6f1d",
       "Requirements": []
     },
     "futile.logger": {
@@ -2052,6 +2057,16 @@
         "ps"
       ]
     },
+    "progressr": {
+      "Package": "progressr",
+      "Version": "0.10.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "f785c20b96fae12a810c66717c0137a6",
+      "Requirements": [
+        "digest"
+      ]
+    },
     "promises": {
       "Package": "promises",
       "Version": "1.2.0.1",
@@ -2168,6 +2183,16 @@
       "Hash": "093584b944440c5cd07a696b3c8e0e4c",
       "Requirements": [
         "lazyeval"
+      ]
+    },
+    "rgeos": {
+      "Package": "rgeos",
+      "Version": "0.5-9",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "7cfa4f73a070042ecf141d5c1d1bfcae",
+      "Requirements": [
+        "sp"
       ]
     },
     "rhdf5": {
@@ -2417,21 +2442,24 @@
     },
     "sctransform": {
       "Package": "sctransform",
-      "Version": "0.3.2",
+      "Version": "0.3.3",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "f6423b883393222fb5c022799374ccec",
+      "Hash": "85ff27d18c45a92993f6d7fd09c41f79",
       "Requirements": [
         "MASS",
         "Matrix",
         "Rcpp",
         "RcppArmadillo",
+        "dplyr",
         "future",
         "future.apply",
         "ggplot2",
         "gridExtra",
+        "magrittr",
         "matrixStats",
-        "reshape2"
+        "reshape2",
+        "rlang"
       ]
     },
     "scuttle": {
@@ -2511,6 +2539,16 @@
       "Repository": "CRAN",
       "Hash": "947e4e02a79effa5d512473e10f41797",
       "Requirements": []
+    },
+    "sp": {
+      "Package": "sp",
+      "Version": "1.5-0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "2a118bdd2db0a301711e0a9e3e3206d5",
+      "Requirements": [
+        "lattice"
+      ]
     },
     "sparseMatrixStats": {
       "Package": "sparseMatrixStats",
