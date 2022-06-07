@@ -27,6 +27,14 @@ mock_counts <- function() {
   )
 }
 
+local_cellranger_experiment <- function(counts, features, experiment_dir, sample_dir, env = parent.frame()) {
+
+  sample_path <- file.path(experiment_dir, sample_dir)
+  dir.create(sample_path, recursive = T)
+  mock_cellranger_files(counts, features, sample_path)
+  withr::defer(unlink(experiment_dir, recursive = T), envir = env)
+
+}
 
 mock_rhapsody_matrix <- function(counts, sample_dir) {
   counts$Gene <- rownames(counts)
@@ -87,7 +95,7 @@ test_that("format_annot keeps unique rows", {
     sample2 = data.frame(ENSID = 1:5, SYMBOL = paste0("gene", 1:5))
   )
 
-  annot <- pipeline:::format_annot(annot_list)
+  annot <- format_annot(annot_list)
 
   expect_s3_class(annot, "data.frame")
   expect_true(nrow(annot) == nrow(annot_list$sample1))
@@ -99,7 +107,7 @@ test_that("format_annot deduplicates name column", {
     sample1 = data.frame(ENSID = 1:6, SYMBOL = paste0("gene", c(1, 1:5)))
   )
 
-  annot <- pipeline:::format_annot(annot_list)
+  annot <- format_annot(annot_list)
 
   expect_true(length(annot$name) == length(unique(annot$name)))
 })
@@ -111,7 +119,7 @@ test_that("format_annot removes duplicated input (Ensembl IDs) column", {
     sample1 = data.frame(ENSID = ensids, SYMBOL = paste0("gene", 1:5))
   )
 
-  annot <- pipeline:::format_annot(annot_list)
+  annot <- format_annot(annot_list)
 
   expect_equal(
     length(unique(ensids)),
@@ -434,7 +442,7 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
   # keep RSEC values
   expected_values <- original$RSEC_Adjusted_Molecules
 
-  res <- pipeline:::parse_rhapsody_matrix(config, input_dir)
+  res <- parse_rhapsody_matrix(config, input_dir)
 
   row_idx <- as.integer(factor(original$Gene))
   col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
@@ -442,4 +450,116 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
   values <- res$counts_list$sample_1[cbind(row_idx, col_idx)]
 
   expect_equal(values, expected_values)
+})
+
+
+test_that("read_10x_files removes rows with empty feature names both in count matrix and annotation if present and < 0.1%", {
+  # mock count matrix replicating it 10 times to mock a matrix with < 0.1% of empty features
+  counts <- mock_counts()[rep(seq_len(nrow(mock_counts())), each = 10), ]
+  rownames(counts)[2] <- ""
+  rownames(counts)[3] <- ".1"
+
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = row.names(counts)
+  )
+  features[2:3, 1:2] <- ""
+
+  experiment_dir <- "./experiment_1"
+  sample <- "sample_a"
+
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+
+  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
+
+  counts_list <- out$counts_list
+  annot <- out$annot
+
+  expect_equal(length(which(rownames(counts_list[[1]]) == "")), 0)
+  expect_equal(length(which(annot[, 1] == "")), 0)
+})
+
+
+test_that("read_10x_files removes single row with empty feature names both in count matrix and annotation if present and < 0.1%", {
+  # mock count matrix replicating it 10 times to mock a matrix with < 0.1% of empty features
+  counts <- mock_counts()[rep(seq_len(nrow(mock_counts())), each = 10), ]
+  rownames(counts)[2] <- ""
+
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = row.names(counts)
+  )
+  features[2, 1:2] <- ""
+
+  experiment_dir <- "./experiment_1"
+  sample <- "sample_a"
+
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+
+  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
+  counts_list <- out$counts_list
+  annot <- out$annot
+
+  expect_equal(length(which(rownames(counts_list[[1]]) == "")), 0)
+  expect_equal(length(which(annot[, 1] == "")), 0)
+})
+
+
+test_that("read_10x_files doesn't remove any rows with empty feature names both in count matrix and annotation if present and >= 0.1%", {
+  counts <- mock_counts()
+  rownames(counts)[2] <- ""
+  rownames(counts)[3] <- ".1"
+
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = row.names(counts)
+  )
+  features[2:3, 1:2] <- ""
+
+  experiment_dir <- "./experiment_1"
+  sample <- "sample_a"
+
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+
+  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
+
+  counts_list <- out$counts_list
+  annot <- out$annot
+
+  expect_equal(nrow(counts), nrow(counts_list[[1]]))
+  # expect_equal(nrow(features), nrow(annot))  # decomment this line and delete the following line when make unique will be added in format_annot [BIOMAGE-1817]
+  expect_equal(length(which(annot[, 1] == "")), 1)
+})
+
+
+test_that("read_10x_files doesn't remove any rows if no rows with empty rownames are present", {
+  counts <- mock_counts()
+
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = row.names(counts)
+  )
+
+  experiment_dir <- "./experiment_1"
+  sample <- "sample_a"
+
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+
+  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
+
+  counts_list <- out$counts_list
+  annot <- out$annot
+
+  expect_equal(length(which(rownames(counts_list[[1]]) == "")), 0)
+  expect_equal(length(which(annot[, 1] == "")), 0)
+  expect_equal(nrow(counts), nrow(counts_list[[1]]))
+  expect_equal(nrow(features), nrow(annot))
 })

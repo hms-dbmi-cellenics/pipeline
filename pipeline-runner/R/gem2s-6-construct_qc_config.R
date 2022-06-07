@@ -33,9 +33,9 @@ construct_qc_config <- function(scdata, any_filtered) {
     enabled = TRUE,
     auto = TRUE,
     filterSettings = list(
-      method = "absolute_threshold",
+      method = "absoluteThreshold",
       methodSettings = list(
-        absolute_threshold = list(
+        absoluteThreshold = list(
           maxFraction = 0.1,
           binStep = 0.3
         )
@@ -139,12 +139,12 @@ get_sample_mitochondrial_config <- function(scdata.sample, config) {
   config.sample <- list(
     auto = TRUE,
     filterSettings = list(
-      method = "absolute_threshold",
+      method = "absoluteThreshold",
       methodSettings = list()
     )
   )
 
-  config.sample$filterSettings$methodSettings$absolute_threshold <- list(
+  config.sample$filterSettings$methodSettings$absoluteThreshold <- list(
     maxFraction = generate_default_values_mitochondrialContent(scdata.sample, config.sample),
     binStep = 0.3
   )
