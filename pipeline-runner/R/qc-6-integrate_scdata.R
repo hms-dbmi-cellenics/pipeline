@@ -38,13 +38,18 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # all samples contain the experiment ID
   # annot <- scdata_list[[1]]$annot
   experiment_id <- scdata_list[[sample]]@misc[["experimentId"]]
-  annot_list <- list()
-  for (sample in scdata_list){
-      annot_list <- append(annot_list, sample@misc[["gene_annotations"]])
-  }
-  annot <- dplyr::bind_rows(annot_list)
-  annot <- dplyr::distinct(annot)
+  # saveRDS(scdata , '/debug/scdata.xx.rds')
+  # saveRDS(scdata_list, '/debug/scdata_list.xx.rds')
+  # annot_list <- list()
+  # for (sample in scdata_list){
+  #     annot_list <- append(annot_list, sample@misc[["gene_annotations"]])
+  #     print(names(sample@misc[["gene_annotations"]]))
+  # }
+  # annot <- dplyr::bind_rows(annot_list, .name_repair = "universal")
+  # annot <- dplyr::distinct(annot)
+  # print(names(annot))
   # scdata@misc[["gene_annotations"]] <- annot
+  annot <- NULL
   scdata <- add_metadata(scdata, annot, experiment_id)
 
 
@@ -467,7 +472,7 @@ add_metadata <- function(scdata, annot, experiment_id) {
   # Ensure index by rownames in scdata
   # TODO find a way to merge annotations of differen samples
   # annot <- annot[match(rownames(scdata), annot$input), ]
-  scdata@misc[["gene_annotations"]] <- annot
+  # scdata@misc[["gene_annotations"]] <- annot
 
 
   message("Storing color pool...")
