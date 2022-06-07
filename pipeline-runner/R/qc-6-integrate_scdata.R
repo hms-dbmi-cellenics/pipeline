@@ -36,9 +36,16 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # another option is to add the partial annotations to each sample and then figure out how to merge them
   # (should be easy with bio help)
   # all samples contain the experiment ID
-  annot <- scdata_list[[1]]$annot
+  # annot <- scdata_list[[1]]$annot
   experiment_id <- scdata_list[[sample]]@misc[["experimentId"]]
-  ascdata <- add_metadata(scdata, annot, experiment_id)
+  annot_list <- list()
+  for (sample in scdata_list){
+      annot_list <- append(annot_list, sample@misc[["gene_annotations"]])
+  }
+  annot <- dplyr::bind_rows(annot_list)
+  annot <- dplyr::distinct(annot)
+  # scdata@misc[["gene_annotations"]] <- annot
+  scdata <- add_metadata(scdata, annot, experiment_id)
 
 
   # flat_cells_id <- unname(unlist(cells_id))
@@ -125,6 +132,8 @@ run_dataIntegration <- function(scdata, config) {
   # get method and settings
   method <- config$dataIntegration$method
   npcs <- config$dimensionalityReduction$numPCs
+  exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
+
 
   nsamples <- length(unique(scdata$samples))
   if (nsamples == 1) {
@@ -134,6 +143,13 @@ run_dataIntegration <- function(scdata, config) {
 
   # we need RNA assay to compute the integrated matrix
   Seurat::DefaultAssay(scdata) <- "RNA"
+
+  # remove cell cycle genes if needed
+  if(length(exclude_groups) > 0) {
+    message("\n------\n")
+    scdata <- remove_genes(scdata, exclude_groups)
+    message("\n------\n")
+  }
 
   integration_function <- get(paste0("run_", method))
   scdata <- integration_function(scdata, config)
@@ -315,7 +331,7 @@ get_explained_variance <- function(scdata) {
     eig_values <- (scdata@reductions$pca@stdev)^2
     var_explained <- eig_values / sum(eig_values)
   }
-  var_explained
+  return(var_explained)
 }
 
 get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
@@ -323,7 +339,126 @@ get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
   # using accumulated explained variance
   var_explained <- get_explained_variance(scdata)
   npcs <- min(which(cumsum(var_explained) >= var_threshold))
-  min(npcs, max_npcs, na.rm = TRUE)
+  return(min(npcs, max_npcs, na.rm = TRUE))
+}
+
+
+#' Remove genes from downstream analysis
+#'
+#' This function subsets the seurat object, removing genes to be excluded for
+#' integration and downstream analysis.
+#'
+#' It calls list_exclude_genes to build the list of genes to remove.
+#'
+#' @param scdata Seurat object
+#' @param exclude_groups list of groups to exclude
+#' @param exclude_custom list of custom (user provided) genes to exclude
+#'
+#' @return Seurat object without excluded genes
+#' @export
+#'
+remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
+  message("Excluding genes...")
+  message("Number of genes before excluding: ", nrow(scdata))
+
+  all_genes <- scdata@misc$gene_annotations$input
+
+  # build list of genes to exclude
+  exclude_genes <- list_exclude_genes(all_genes, exclude_groups, exclude_custom)
+
+  # only subset if there are genes to remove.
+  # Seurat removes reductions when subsetting
+  if (length(exclude_genes) > 0) {
+    message("Total number of genes to exlude: ", length(exclude_genes))
+
+    # subset using input (either ensID, ensID + sym or sym, depending on dataset)
+    # subset.Seurat requires genes to keep.
+    keep_genes <- scdata@misc$gene_annotations$input[-exclude_genes]
+    scdata <- subset(scdata, features = keep_genes)
+  }
+
+  message("Number of genes after excluding: ", nrow(scdata))
+
+  return(scdata)
+}
+
+
+#' Build list of genes to exclude
+#'
+#' This function builds the union of gene indices to exclude, joining all groups.
+#' To do so, it calls all the required list_* functions, getting the exclude gene
+#' ids and joins them.
+#'
+#' @param all_genes character vector, gene_annotations$input
+#' @param exclude_groups list of groups to exclude
+#' @param exclude_custom list of custom (user provided) genes to exclude
+#'
+#' @return integer vector of gene indices to exclude
+#' @export
+#'
+list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
+
+  gene_lists <- list("cellCycle" = build_cc_gene_list,
+                     "ribosomal" = NULL,
+                     "mitochondrial" = NULL)
+
+  exclude_gene_indices <- c()
+
+  for (group in exclude_groups) {
+    list_fun <- gene_lists[[group]]
+    exclude_gene_indices <- c(exclude_gene_indices, list_fun(all_genes))
+  }
+
+  # in case there's a custom list of genes to exclude
+  if (length(exclude_custom > 0)) {
+    exclude_custom_indices <- na.omit(match(unlist(exclude_custom), all_genes))
+    exclude_gene_indices <- c(exclude_gene_indices, exclude_custom_indices)
+  }
+
+  # remove duplicates
+  return(unique(exclude_gene_indices))
+}
+
+
+#' Make list of cell cycle genes
+#'
+#' Uses cell cycle gene list from Tirosh et. al. 2016, bundled with Seurat.
+#'
+#' For now it's only useful for Homo sapiens. But could be easily extended to mice
+#' converting the human gene names to their orthologs in mice, as suggested by
+#' satijalab in [this github issue](https://github.com/satijalab/seurat/issues/2493#issuecomment-575702274)
+#'
+#' @param all_genes character vector, gene_annotations$input
+#'
+#' @return integer vector of cell cycle gene indices
+#' @export
+#'
+build_cc_gene_list <- function(all_genes) {
+  message("Excluding Cell Cycle genes...")
+
+  # TODO: change when adding species input
+  human_cc_genes <- cc_genes[["human"]]
+  mouse_cc_genes <- cc_genes[["mouse"]]
+
+  # match human cc genes
+  human_cc_ens_indices <- na.omit(match(na.omit(human_cc_genes[["ensembl_id"]]), all_genes))
+  human_cc_sym_indices <- na.omit(match(human_cc_genes[["symbol"]], all_genes))
+
+  # match mouse cc genes
+  mouse_cc_ens_indices <- na.omit(match(mouse_cc_genes[["ensembl_id"]], all_genes))
+  mouse_cc_sym_indices <- na.omit(match(mouse_cc_genes[["symbol"]], all_genes))
+
+  # questionable bit of code. This should work for human, mice, human + mice
+  # and ignore other species, since matching is case sensitive.
+  cc_gene_indices <- unique(c(human_cc_ens_indices,
+                            human_cc_sym_indices,
+                            mouse_cc_ens_indices,
+                            mouse_cc_sym_indices))
+
+  message("Number of Cell Cycle genes to exclude: ",
+                  length(cc_gene_indices))
+
+  return(cc_gene_indices)
 }
 
 
@@ -332,7 +467,8 @@ add_metadata <- function(scdata, annot, experiment_id) {
   # Ensure index by rownames in scdata
   # TODO find a way to merge annotations of differen samples
   # annot <- annot[match(rownames(scdata), annot$input), ]
-  # scdata@misc[["gene_annotations"]] <- annot
+  scdata@misc[["gene_annotations"]] <- annot
+
 
   message("Storing color pool...")
   # We store the color pool in a slot in order to be able to access it during configureEmbedding

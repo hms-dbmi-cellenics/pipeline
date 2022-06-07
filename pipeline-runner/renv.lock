@@ -658,10 +658,10 @@
     },
     "fs": {
       "Package": "fs",
-      "Version": "1.5.0",
+      "Version": "1.5.2",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "44594a07a42e5f91fac9f93fda6d0109"
+      "Hash": "7c89603d81793f0d5486d91ab1fc6f1d"
     },
     "futile.logger": {
       "Package": "futile.logger",
@@ -841,11 +841,11 @@
       "Version": "1.2.6.9118",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "rigraph",
       "RemoteUsername": "igraph",
+      "RemoteRepo": "rigraph",
       "RemoteRef": "master",
       "RemoteSha": "46bfafd9623b4c9d6cbad9b6768ba3fb297fc06b",
+      "RemoteHost": "api.github.com",
       "Hash": "d0bc05b3feb0bb04b8f6aae3d4d14271"
     },
     "irlba": {
