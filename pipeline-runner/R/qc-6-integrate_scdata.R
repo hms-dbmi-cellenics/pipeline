@@ -172,7 +172,7 @@ run_seuratv4 <- function(scdata, config) {
   k.filter <- min(ceiling(sapply(data.split, ncol) / 2), 200)
   tryCatch(
     {
-      data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE)
+      data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE, reduction="rpca")
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs)
       Seurat::DefaultAssay(scdata) <- "integrated"
     },
