@@ -91,7 +91,7 @@ COPY aws_config /root/.aws/config
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
-COPY DESCRIPTION NAMESPACE init.R .
+COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
 ENTRYPOINT ["Rscript", "init.R"]
@@ -110,7 +110,7 @@ RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
-COPY DESCRIPTION NAMESPACE init.R .
+COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
 ENTRYPOINT ["Rscript", "init.R"]
