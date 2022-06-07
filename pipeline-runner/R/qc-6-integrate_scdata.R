@@ -31,7 +31,14 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   scdata <- merge_scdatas(scdata_list)
   # the sample already contain the metadata, check if the merged object already has the annotations
   # otherwise try to add it from one of the samples
-  #ascdata <- add_metadata(scdata, scdata_list$annot, input$experimentId)
+  # we grab the original annotations from sample 1 (only sample were they were stored), try to find
+  # a better way to do this
+  # another option is to add the partial annotations to each sample and then figure out how to merge them
+  # (should be easy with bio help)
+  # all samples contain the experiment ID
+  annot <- scdata_list[[1]]$annot
+  experiment_id <- scdata_list[[sample]]@misc[["experimentId"]]
+  ascdata <- add_metadata(scdata, annot, experiment_id)
 
 
   # flat_cells_id <- unname(unlist(cells_id))
@@ -323,12 +330,9 @@ get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
 add_metadata <- function(scdata, annot, experiment_id) {
 
   # Ensure index by rownames in scdata
-  annot <- annot[match(rownames(scdata), annot$input), ]
-  scdata@misc[["gene_annotations"]] <- annot
-
-  message("Storing cells id...")
-  # Keeping old version of ids starting from 0
-  scdata$cells_id <- 0:(ncol(scdata) - 1)
+  # TODO find a way to merge annotations of differen samples
+  # annot <- annot[match(rownames(scdata), annot$input), ]
+  # scdata@misc[["gene_annotations"]] <- annot
 
   message("Storing color pool...")
   # We store the color pool in a slot in order to be able to access it during configureEmbedding

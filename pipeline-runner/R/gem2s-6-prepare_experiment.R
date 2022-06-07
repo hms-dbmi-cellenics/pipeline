@@ -32,7 +32,8 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   # scdata <- add_metadata(scdata, prev_out$annot, input$experimentId)
   # prev_out$scdata <- scdata
-  scdata_list <- add_metadata_to_each(scdata_list, prev_out$annot, input$experimentId)
+  # scdata_list <- add_metadata_to_each(scdata_list, prev_out$annot, input$experimentId)
+  scdata_list <- add_metadata_to_each_2(scdata_list, prev_out$annot, input$experimentId)
   # saveRDS(scdata_list, '/debug/scdata_list.metadata.rds')
   prev_out$scdata_list <- scdata_list
 
@@ -71,6 +72,28 @@ merge_scdatas <- function(scdata_list) {
 }
 
 add_metadata_to_each <- function(scdata_list, annot, experiment_id) {
+
+  message("add_metadata_to_each")
+  message("names(scdata_list): ", names(scdata_list))
+  # we will add the raw annotations to the first sample so we can add them
+  # correctly once they are merged
+  scdata_list[[1]]$annot <- annot
+  for (sample in names(scdata_list)) {
+
+    message("Storing cells id...")
+    # Keeping old version of ids starting from 0
+    scdata_list[[sample]]$cells_id <- 0:(ncol(scdata_list[[sample]]) - 1)
+    scdata_list[[sample]]@misc[["experimentId"]] <- experiment_id
+    scdata_list[[sample]]@misc[["ingestionDate"]] <- Sys.time()
+  }
+
+  return(scdata_list)
+}
+
+# deprecated in favor of adding metadata to sample 1 and then retrieving it from there
+# this function would be more elegant if we find an easy way to merge the annotations after
+# scdata_list merginng
+add_metadata_to_each_2 <- function(scdata_list, annot, experiment_id) {
 
   message("add_metadata_to_each")
   message("names(scdata_list): ", names(scdata_list))
