@@ -49,7 +49,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # annot <- dplyr::distinct(annot)
   # print(names(annot))
   # scdata@misc[["gene_annotations"]] <- annot
-  annot <- NULL
+  annot <- scdata_list[[1]]@misc[["gene_annotations"]]
   scdata <- add_metadata(scdata, annot, experiment_id)
 
 
@@ -472,7 +472,7 @@ add_metadata <- function(scdata, annot, experiment_id) {
   # Ensure index by rownames in scdata
   # TODO find a way to merge annotations of differen samples
   # annot <- annot[match(rownames(scdata), annot$input), ]
-  # scdata@misc[["gene_annotations"]] <- annot
+  scdata@misc[["gene_annotations"]] <- annot
 
 
   message("Storing color pool...")

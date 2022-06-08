@@ -97,6 +97,7 @@ add_metadata_to_each_2 <- function(scdata_list, annot, experiment_id) {
 
   message("add_metadata_to_each")
   message("names(scdata_list): ", names(scdata_list))
+  # saveRDS(annot, '/debug/annot_list.xx.rds')
   for (sample in names(scdata_list)) {
   # for (scdata in scdata_list) {
     # Ensure index by rownames in scdata
