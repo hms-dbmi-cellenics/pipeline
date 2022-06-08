@@ -170,9 +170,15 @@ run_seuratv4 <- function(scdata, config) {
 
   # Try to integrate data (catch error most likely caused by too few cells)
   k.filter <- min(ceiling(sapply(data.split, ncol) / 2), 200)
+  reduc <- "rpca"
   tryCatch(
     {
-      data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE, reduction="rpca")
+      message("Finding integration anchors using CCA method")
+      sys.time.cca <- system.time(data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE))
+      message("*** Processing time CCA: user:", round(sys.time.cca[1],3), " system:", round(sys.time.cca[2],3), " elapsed:", round(sys.time.cca[3],3))
+      message("Finding integration anchors using RPCA method")
+      sys.time.rpca <- system.time(data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE, reduction = reduc))
+      message("*** Processing time RPCA: user:", round(sys.time.rpca[1],3), " system:", round(sys.time.rpca[2],3), " elapsed:", round(sys.time.rpca[3],3))
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs)
       Seurat::DefaultAssay(scdata) <- "integrated"
     },
