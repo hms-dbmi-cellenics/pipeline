@@ -27,8 +27,8 @@ spec:
           - name: SANDBOX_ID
             value: "{{ .Values.sandboxId }}"
           - name: AWS_ACCOUNT_ID
-            value: "{{ .Values.awsAccountId }}"
+            value: "{{ .Values.myAccount.accountId }}"
           - name: AWS_DEFAULT_REGION
-            value: "{{ .Values.awsRegion }}"
+            value: "{{ .Values.myAccount.region }}"
           - name: ACTIVITY_ARN
             value: "{{ .Values.activityArn }}"

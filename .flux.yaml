@@ -22,3 +22,8 @@ spec:
     git: git@github.com:hms-dbmi-cellenics/pipeline
     path: chart-infra/
     ref: FILLED_IN_BY_CI
+  valuesFrom:
+  - configMapKeyRef:
+      name: account-config
+      namespace: flux
+      key: account-config.yaml

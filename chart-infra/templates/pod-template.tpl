@@ -1,4 +1,5 @@
 {{/* Generate a template that can be used for both assigned and unassigned xperiments */}}
+# go templating language
 {{- define "pipeline.pod-template" -}}
     metadata:
       name: "{{ .Release.Name }}-server"
@@ -17,9 +18,9 @@
           - name: SANDBOX_ID
             value: "{{ .Values.sandboxId }}"
           - name: AWS_ACCOUNT_ID
-            value: "{{ .Values.awsAccountId }}"
+            value: "{{ .Values.myAccount.accountId }}"
           - name: AWS_DEFAULT_REGION
-            value: "{{ .Values.awsRegion }}"
+            value: "{{ .Values.myAccount.region }}"
         volumeMounts:
         - name: podinfo
           mountPath: /etc/podinfo
