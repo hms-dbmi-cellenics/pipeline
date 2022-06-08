@@ -181,7 +181,7 @@ jobs:
         name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
-          files: ./covr/coverage.xml
+          files: ./pieline-runner/covr/coverage.xml
 
       - id: push
         name: Push docker images to ECR
