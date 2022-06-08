@@ -163,6 +163,11 @@ run_seuratv4 <- function(scdata, config) {
   for (i in 1:length(data.split)) {
     data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = FALSE)
     data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], nfeatures = nfeatures, verbose = FALSE)
+    # PCA needs to be run also here
+    # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
+    # QUESTION: should we run it also after the integration (as the code currently does) or not?
+    data.split[[i]] <- Seurat::ScaleData(data.split[[i]], verbose = FALSE)
+    data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE)
   }
 
   # If Number of anchor cells is less than k.filter/2, there is likely to be an error:
@@ -173,12 +178,8 @@ run_seuratv4 <- function(scdata, config) {
   reduc <- "rpca"
   tryCatch(
     {
-      message("Finding integration anchors using CCA method")
-      sys.time.cca <- system.time(data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE))
-      message("*** Processing time CCA: user:", round(sys.time.cca[1],3), " system:", round(sys.time.cca[2],3), " elapsed:", round(sys.time.cca[3],3))
       message("Finding integration anchors using RPCA method")
-      sys.time.rpca <- system.time(data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE, reduction = reduc))
-      message("*** Processing time RPCA: user:", round(sys.time.rpca[1],3), " system:", round(sys.time.rpca[2],3), " elapsed:", round(sys.time.rpca[3],3))
+      data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE, reduction = reduc)
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs)
       Seurat::DefaultAssay(scdata) <- "integrated"
     },
