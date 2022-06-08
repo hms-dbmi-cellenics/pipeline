@@ -1,10 +1,12 @@
 human_cc_genes <- pipeline:::cc_genes[["human"]]
 
-mock_scdata <- function(rename_genes = c()) {
+mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
+  # replicate matrix columns n times to create a bigger mock dataset
+  pbmc_raw <- do.call("cbind", replicate(n_rep, pbmc_raw, simplify = FALSE))
 
   if (length(rename_genes) > 0) {
     # rename some genes to match cell cycle genes
@@ -15,38 +17,8 @@ mock_scdata <- function(rename_genes = c()) {
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
   # add samples
-  scdata$samples <- rep(c("123abc", "123def"), each = 40)
-  scdata$cells_id <- 0:79
-  scdata@misc$gene_annotations$input <- rownames(scdata)
-
-  # scale and PCA
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
-  scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
-  scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
-  scdata@misc[["active.reduction"]] <- "pca"
-
-  return(scdata)
-}
-
-mock_scdata_big <- function(rename_genes = c()) {
-  pbmc_raw <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-  pbmc_raw <- cbind.data.frame(pbmc_raw, pbmc_raw, pbmc_raw)
-
-  if (length(rename_genes) > 0) {
-    # rename some genes to match cell cycle genes
-    some_genes <- sample(1:nrow(pbmc_raw), length(rename_genes))
-    rownames(pbmc_raw)[some_genes] <- rename_genes
-  }
-
-  scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
-
-  # add samples
-  scdata$samples <- rep(c("123abc", "123def"), each = 120)
-  scdata$cells_id <- 0:239
+  scdata$samples <- rep(c("123abc", "123def"), each = ncol(scdata)/2)
+  scdata$cells_id <- 0:(ncol(scdata)-1)
   scdata@misc$gene_annotations$input <- rownames(scdata)
 
   # scale and PCA
@@ -209,14 +181,8 @@ test_that("remove_genes doesn't modify the object when there are no matches", {
 
 test_that("SeuratV4 integration works", {
 
-  # mock a bigger dataset to run Seurat v4 integration without skipping it - OPTION 1
-  scdata <- mock_scdata_big()
-
-  # mock a bigger dataset to run Seurat v4 integration without skipping it - OPTION 2
-  # scdata1 <- mock_scdata()
-  # scdata2 <- mock_scdata()
-  # scdata3 <- mock_scdata()
-  # scdata <- merge(x = scdata1, y = list(scdata2, scdata3))
+  # mock a bigger dataset to run Seurat v4 integration without skipping it
+  scdata <- mock_scdata(n_rep = 3)
 
   npcs <- get_npcs(scdata)
 
