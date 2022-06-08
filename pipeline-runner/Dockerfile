@@ -42,9 +42,6 @@ RUN R -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRU
     R -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
     strip --strip-debug $RENV_LIB/*/libs/*.so
 
-# remove unecessary R packages
-RUN R -e "remove.packages(c('remotes', 'renv'), .libPaths())"
-
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
 RUN Rscript get_sysdeps_run.R
