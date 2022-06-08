@@ -29,7 +29,37 @@ mock_scdata <- function(rename_genes = c()) {
   return(scdata)
 }
 
-test_that("Integrate scdata works",{
+mock_scdata_big <- function(rename_genes = c()) {
+  pbmc_raw <- read.table(
+    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
+    as.is = TRUE
+  )
+  pbmc_raw <- cbind.data.frame(pbmc_raw, pbmc_raw, pbmc_raw)
+
+  if (length(rename_genes) > 0) {
+    # rename some genes to match cell cycle genes
+    some_genes <- sample(1:nrow(pbmc_raw), length(rename_genes))
+    rownames(pbmc_raw)[some_genes] <- rename_genes
+  }
+
+  scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
+
+  # add samples
+  scdata$samples <- rep(c("123abc", "123def"), each = 120)
+  scdata$cells_id <- 0:239
+  scdata@misc$gene_annotations$input <- rownames(scdata)
+
+  # scale and PCA
+  scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
+  scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
+  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
+  scdata@misc[["active.reduction"]] <- "pca"
+
+  return(scdata)
+}
+
+test_that("Integrate scdata works", {
   scdata <- mock_scdata()
   cells_id <- 0:79
   config <- list(
@@ -39,10 +69,10 @@ test_that("Integrate scdata works",{
 
   scdata <- suppressWarnings(integrate_scdata(scdata, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_s4_class(scdata, "Seurat")
-  expect_equal(ncol(scdata),80)
+  expect_equal(ncol(scdata), 80)
 })
 
-test_that("Integrate scdata filters out cells ids",{
+test_that("Integrate scdata filters out cells ids", {
   scdata <- mock_scdata()
   cells_id <- 0:40
   config <- list(
@@ -51,7 +81,7 @@ test_that("Integrate scdata filters out cells ids",{
   )
 
   scdata <- suppressWarnings(integrate_scdata(scdata, config, "", cells_id, task_name = "dataIntegration"))$data
-  expect_lt(ncol(scdata),80)
+  expect_lt(ncol(scdata), 80)
 })
 
 test_that("harmony integration works", {
@@ -105,7 +135,6 @@ test_that("numPCs estimation works", {
 
 
 test_that("build_cc_gene_list correctly makes the list of cc genes when there are matches", {
-
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
   scdata <- suppressWarnings(mock_scdata(rename_genes = some_cc_genes))
@@ -115,12 +144,10 @@ test_that("build_cc_gene_list correctly makes the list of cc genes when there ar
   res <- build_cc_gene_list(all_genes)
 
   expect_setequal(res, expected_res)
-
 })
 
 
 test_that("build_cc_gene_list returns empty int vector when there aren't matches", {
-
   scdata <- suppressWarnings(mock_scdata())
   all_genes <- scdata@misc$gene_annotations$input
 
@@ -133,7 +160,6 @@ test_that("build_cc_gene_list returns empty int vector when there aren't matches
 
 
 test_that("list_exclude_genes adds custom genes to exclusion", {
-
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
   scdata <- suppressWarnings(mock_scdata(rename_genes = some_cc_genes))
@@ -147,11 +173,9 @@ test_that("list_exclude_genes adds custom genes to exclusion", {
   res <- list_exclude_genes(all_genes, list("cellCycle"), exclude_custom)
 
   expect_setequal(res, expected_res)
-
 })
 
 test_that("remove_genes removes the correct genes when there are genes to remove", {
-
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
   scdata <- suppressWarnings(mock_scdata(rename_genes = some_cc_genes))
@@ -170,17 +194,37 @@ test_that("remove_genes removes the correct genes when there are genes to remove
 
   expect_equal(nrow(res), nrow(scdata) - 17)
   expect_false(any(c(some_cc_genes, exclude_custom) %in% rownames(res)))
-
 })
 
 
 test_that("remove_genes doesn't modify the object when there are no matches", {
-
   scdata <- suppressWarnings(mock_scdata())
 
   # empty integer vector
   res <- remove_genes(scdata, exclude_groups = "cellCycle")
 
   expect_equal(res, scdata)
+})
 
+
+test_that("SeuratV4 integration works", {
+
+  # mock a bigger dataset to run Seurat v4 integration without skipping it - OPTION 1
+  scdata <- mock_scdata_big()
+
+  # mock a bigger dataset to run Seurat v4 integration without skipping it - OPTION 2
+  # scdata1 <- mock_scdata()
+  # scdata2 <- mock_scdata()
+  # scdata3 <- mock_scdata()
+  # scdata <- merge(x = scdata1, y = list(scdata2, scdata3))
+
+  npcs <- get_npcs(scdata)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = npcs),
+    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+  )
+
+  scdata <- suppressWarnings(run_dataIntegration(scdata, config))
+  expect_s4_class(scdata, "Seurat")
 })
