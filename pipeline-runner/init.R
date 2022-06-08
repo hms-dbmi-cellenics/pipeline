@@ -397,6 +397,7 @@ init <- function() {
             quit('no')
         }
 
+        message('input json: ', input_json)
         # parse data from state machine input
         input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
 
