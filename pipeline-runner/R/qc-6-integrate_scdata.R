@@ -21,12 +21,17 @@
 #   },
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+  saveRDS(scdata_list, '/debug/scdata_list.rds')
+  saveRDS(config, '/debug/config.rds')
+  saveRDS(cells_id, '/debug/cells_id.rds')
   for (sample in names(scdata_list)) {
     flat_cells_id <- unname(unlist(cells_id[[sample]]))
     scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cells_id)
     #scdata_subset[[sample]] <- aux
   }
 
+
+  message("going to integrate data after subsetting")
   # merge the data before integration
   scdata <- merge_scdatas(scdata_list)
   # the sample already contain the metadata, check if the merged object already has the annotations
@@ -41,7 +46,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # saveRDS(scdata , '/debug/scdata.xx.rds')
   # saveRDS(scdata_list, '/debug/scdata_list.xx.rds')
   # annot_list <- list()
-  # for (sample in scdata_list){
+  # for (sample in scd®ata_list){
   #     annot_list <- append(annot_list, sample@misc[["gene_annotations"]])
   #     print(names(sample@misc[["gene_annotations"]]))
   # }
@@ -116,7 +121,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 merge_scdatas <- function(scdata_list) {
   # saveRDS(scdata_list, '/debug/scdata_list.b4-merge.rds')
   # remove the samples slot before merging or it triggers error because it ain't expected
-  scdata_list$samples <- NULL
+  # scdata_list$samples <- NULL
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
