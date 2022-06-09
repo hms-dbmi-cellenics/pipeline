@@ -170,8 +170,12 @@ run_seuratv4 <- function(scdata, config) {
     # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
     # QUESTION: should we run it also after the integration (as the code currently does) or not?
     if (reduction == "rpca") {
+      message("Running PCA")
       data.split[[i]] <- Seurat::ScaleData(data.split[[i]], verbose = FALSE)
       data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE)
+    }
+    else {
+      message("PCA is not running before integration as CCA method is selected")
     }
   }
 
