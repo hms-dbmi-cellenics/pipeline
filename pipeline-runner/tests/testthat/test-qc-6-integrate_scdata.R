@@ -70,7 +70,7 @@ test_that("harmony integration works", {
 test_that("SeuratV4 integration doesnt error out with small dataset", {
   scdata <- mock_scdata()
   config <- list(
-    dimensionalityReduction = list(numPCs = 2),
+    dimensionalityReduction = list(numPCs = 2, method = "rpca"),
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
@@ -180,17 +180,78 @@ test_that("remove_genes doesn't modify the object when there are no matches", {
 
 
 test_that("SeuratV4 integration works", {
-
   # mock a bigger dataset to run Seurat v4 integration without skipping it
   scdata <- mock_scdata(n_rep = 3)
 
   npcs <- get_npcs(scdata)
 
   config <- list(
-    dimensionalityReduction = list(numPCs = npcs),
+    dimensionalityReduction = list(numPCs = npcs, method = "rpca"),
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
   scdata <- suppressWarnings(run_dataIntegration(scdata, config))
   expect_s4_class(scdata, "Seurat")
+})
+
+
+test_that("PCA is computed when RPCA method is selected within SeuratV4 integration", {
+  # mock a bigger dataset to run Seurat v4 integration without skipping it
+  scdata <- mock_scdata(n_rep = 3)
+
+  npcs <- get_npcs(scdata)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = npcs, method = "rpca"),
+    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+  )
+
+  expect_message(run_dataIntegration(scdata, config),"Running PCA")
+})
+
+
+test_that("PCA is not computed when CCA method is selected within SeuratV4 integration", {
+  # mock a bigger dataset to run Seurat v4 integration without skipping it
+  scdata <- mock_scdata(n_rep = 3)
+
+  npcs <- get_npcs(scdata)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = npcs, method = "cca"),
+    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+  )
+
+  expect_message(run_dataIntegration(scdata, config), "PCA is not running .*")
+})
+
+
+test_that("SeuratV4 integration finds integration anchors using RPCA method, if method in config is RPCA", {
+  # mock a bigger dataset to run Seurat v4 integration without skipping it
+  scdata <- mock_scdata(n_rep = 3)
+
+  npcs <- get_npcs(scdata)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = npcs, method = "rpca"),
+    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+  )
+
+  expect_message(scdata <- suppressWarnings(run_dataIntegration(scdata, config)), "Finding integration anchors using RPCA method")
+  expect_equal(scdata@commands$FindIntegrationAnchors$reduction, "pca")
+})
+
+
+test_that("SeuratV4 integration finds integration anchors using CCA method, if method in config is CCA", {
+  # mock a bigger dataset to run Seurat v4 integration without skipping it
+  scdata <- mock_scdata(n_rep = 3)
+
+  npcs <- get_npcs(scdata)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = npcs, method = "cca"),
+    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+  )
+
+  expect_message(scdata <- suppressWarnings(run_dataIntegration(scdata, config)), "Finding integration anchors using CCA method")
+  expect_equal(scdata@commands$FindIntegrationAnchors$reduction, "cca")
 })
