@@ -172,7 +172,7 @@ run_seuratv4 <- function(scdata, config) {
     if (reduction == "rpca") {
       message("Running PCA")
       data.split[[i]] <- Seurat::ScaleData(data.split[[i]], verbose = FALSE)
-      data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE)
+      data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE, npcs = npcs)
     }
     else {
       message("PCA is not running before integration as CCA method is selected")
