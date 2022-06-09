@@ -98,6 +98,8 @@ load('{task_name}_{sample_id}.RData', envir = task_env)
 ```
 
 ## Troubleshooting
+
+#### Linux Mint 20.3 Cinnamon
 1. 
 ```bash
 gem2s-runner-YZCcIZIOME | Error in curl::curl_fetch_memory(url, handle = handle) : 
@@ -107,7 +109,6 @@ gem2s-runner-YZCcIZIOME | Execution halted
 ```
 Turn off firewall or allow incoming traffic. This would allow AWS to send packages to the pipeline, which would otherwise be blocked by the firewall.
 
-#### Linux Mint 20.3 Cinnamon
-1. Open Firewall Configuration from the start menu.
+1. Open *Firewall Configuration* from the Start Menu.
 2. Select **Allow** in the **Outgoing** dropdown menu (Alternatively, set **Status** to OFF). 
 
