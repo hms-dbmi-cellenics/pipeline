@@ -100,7 +100,6 @@ load('{task_name}_{sample_id}.RData', envir = task_env)
 ## Troubleshooting
 
 #### Linux Mint 20.3 Cinnamon
-1. 
 ```bash
 gem2s-runner-YZCcIZIOME | Error in curl::curl_fetch_memory(url, handle = handle) : 
 gem2s-runner-YZCcIZIOME |   Timeout was reached: [172.17.0.1:4566] Connection timeout after 60001 ms
