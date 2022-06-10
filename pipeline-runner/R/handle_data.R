@@ -140,6 +140,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
 
+  message("Building the message")
   msg <- list(
     experimentId = input$experimentId,
     taskName = input$taskName,
@@ -153,6 +154,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     )
   )
 
+  message("Publishing the message")
   result <- sns$publish(
     Message = RJSONIO::toJSON(msg),
     TopicArn = pipeline_config$sns_topic,
@@ -164,6 +166,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
       )
     )
   )
+  message("Done publishing")
 
   return(result$MessageId)
 }

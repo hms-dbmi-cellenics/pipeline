@@ -34,6 +34,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   message("going to integrate data after subsetting")
   # merge the data before integration
   scdata <- merge_scdatas(scdata_list)
+  message("merge done")
   # the sample already contain the metadata, check if the merged object already has the annotations
   # otherwise try to add it from one of the samples
   # we grab the original annotations from sample 1 (only sample were they were stored), try to find
@@ -55,6 +56,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # print(names(annot))
   # scdata@misc[["gene_annotations"]] <- annot
   annot <- scdata_list[[1]]@misc[["gene_annotations"]]
+  message("adding metadata")
   scdata <- add_metadata(scdata, annot, experiment_id)
 
 
@@ -63,6 +65,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # main function
   set.seed(gem2s$random.seed)
   # saveRDS(config, '/debug/config.rds')
+  message("running data integration")
   scdata.integrated <- run_dataIntegration(scdata, config)
 
   # get  npcs from the UMAP call in integration functions
