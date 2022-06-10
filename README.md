@@ -96,3 +96,18 @@ load('{task_name}_{sample_id}.RData')
 task_env <- new.env()
 load('{task_name}_{sample_id}.RData', envir = task_env)
 ```
+
+## Troubleshooting
+
+#### Linux Mint 20.3 Cinnamon
+```bash
+Error in curl::curl_fetch_memory(url, handle = handle) : 
+Timeout was reached: [172.17.0.1:4566] Connection timeout after 60001 ms
+Calls: init ... request_fetch -> request_fetch.write_memory -> <Anonymous>
+Execution halted
+```
+Turn off firewall or allow incoming traffic. This would allow AWS to send packages to the pipeline, which would otherwise be blocked by the firewall.
+
+1. Open *Firewall Configuration* from the Start Menu.
+2. Select **Allow** in the **Outgoing** dropdown menu (Alternatively, set **Status** to OFF). 
+
