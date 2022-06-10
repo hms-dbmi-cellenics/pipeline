@@ -12,28 +12,27 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   config <- prev_out$config
   config_dataProcessing <- prev_out$qc_config
 
+  message("Constructing cell sets ...")
+  # scdata <- scdata_list[[sample]]
+  cell_sets <- get_cell_sets(scdata_list, input)
+
+  # cell sets file to s3
+  cell_sets_data <- RJSONIO::toJSON(cell_sets)
+
+  put_object_in_s3(pipeline_config,
+    bucket = pipeline_config$cell_sets_bucket,
+    object = charToRaw(cell_sets_data),
+    key = experiment_id
+  )
   i <- 0
   # for (scdata in scdata_list) {
   for (sample in names(scdata_list)) {
     message('Uploading: ', sample)
     i <- i + 1
-    message("Constructing cell sets ...")
-    scdata <- scdata_list[[sample]]
-    cell_sets <- get_cell_sets(scdata, input)
-
-    # cell sets file to s3
-    cell_sets_data <- RJSONIO::toJSON(cell_sets)
-
-    put_object_in_s3(pipeline_config,
-      bucket = pipeline_config$cell_sets_bucket,
-      object = charToRaw(cell_sets_data),
-      key = experiment_id
-    )
-
     # seurat object to s3
     message("Uploading Seurat Object to S3 ...")
     fpath <- file.path(tempdir(), "experiment.rds")
-    saveRDS(scdata, fpath, compress = FALSE)
+    # saveRDS(scdata, fpath, compress = FALSE)
 
     # can only upload up to 50Gb because part numbers can be any number from 1 to 10,000, inclusive.
     put_object_in_s3_multipart(pipeline_config,
@@ -71,7 +70,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 }
 
 # creates initial cell sets object
-get_cell_sets <- function(scdata, input) {
+get_cell_sets <- function(scdata_list, input) {
   scratchpad <- list(
     key = "scratchpad",
     name = "Custom cell sets",
@@ -81,24 +80,24 @@ get_cell_sets <- function(scdata, input) {
   )
 
   color_pool <- get_color_pool()
-  samples_set <- samples_sets(input, scdata, color_pool)
+  sample_cellsets <- build_sample_cellsets(input, scdata_list, color_pool)
 
   # remove used colors from pool
-  used <- seq_along(samples_set$children)
+  used <- seq_along(sample_cellsets$children)
   color_pool <- color_pool[-used]
 
   # Design cell_set meta_data for DynamoDB
-  cell_sets <- c(list(scratchpad), list(samples_set))
+  cell_sets <- c(list(scratchpad), list(sample_cellsets))
 
   if ("metadata" %in% names(input)) {
-    cell_sets <- c(cell_sets, meta_sets(input, scdata, color_pool))
+    cell_sets <- c(cell_sets, build_metadata_cellsets(input, scdata_list, color_pool))
   }
 
   cell_sets <- list(cellSets = cell_sets)
 }
 
 # cell_sets fn for seurat samples information
-samples_sets <- function(input, scdata, color_pool) {
+build_sample_cellsets <- function(input, scdata_list, color_pool) {
   cell_set <- list(
     key = "sample",
     name = "Samples",
@@ -108,19 +107,24 @@ samples_sets <- function(input, scdata, color_pool) {
   )
 
   # cells_sample <- scdata$samples
-  cells_sample <- names(scdata)
+  # cells_sample <- names(scdata)
+  # saveRDS(input, '/debug/input.alpha.gem7.rds')
   sample_ids <- unlist(input$sampleIds)
   sample_names <- unlist(input$sampleNames)
 
   # now the scdata contains only one sample so we don't really have to loop anymore
   # I've added this to keep the same cellsets structure but the nestig of $children
   # can probably be removed in the future
-  sample_ids <- scdata@meta.data$samples[[1]]
+  # sample_ids <- scdata@meta.data$samples[[1]]
+  # sample_ids <- names(scdata_list)
+  # assuming that accessing by index & key (ie sample_id) yields the same order might be dangerous
+  # gotta check if it's true in R
   for (i in seq_along(sample_ids)) {
+    scdata <- scdata_list[[i]]
     sample_id <- sample_ids[i]
     sample_name <- sample_names[i]
     # saveRDS(scdata, '/debug/scdata_cells_id.rds')
-    cell_ids <- scdata$cells_id[cells_sample == sample_id]
+    cell_ids <- scdata$cells_id
 
     cell_set$children[[i]] <- list(
       key = sample_id,
@@ -135,7 +139,7 @@ samples_sets <- function(input, scdata, color_pool) {
 
 
 # cell_sets fn for seurat metadata information
-meta_sets <- function(input, scdata, color_pool) {
+build_metadata_cellsets <- function(input, scdata_list, color_pool) {
   cell_set_list <- c()
   meta <- lapply(input$metadata, unlist)
 
@@ -164,7 +168,11 @@ meta_sets <- function(input, scdata, color_pool) {
 
     for (j in seq_along(values)) {
       value <- values[j]
-      cell_ids <- scdata$cells_id[scdata[[seurat_key]] == value]
+
+      cell_ids <- list()
+      for (scdata in scdata_list) {
+        cell_ids <- append(cell_ids,  scdata$cells_id[scdata[[seurat_key]] == value])
+      }
 
       cell_set$children[[j]] <- list(
         "key" = paste(key, value, sep = "-"),

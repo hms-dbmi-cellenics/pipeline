@@ -21,9 +21,9 @@
 #   },
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
-  saveRDS(scdata_list, '/debug/scdata_list.rds')
-  saveRDS(config, '/debug/config.rds')
-  saveRDS(cells_id, '/debug/cells_id.rds')
+  # saveRDS(scdata_list, '/debug/scdata_list.alpha.qc6.rds')
+  # saveRDS(config, '/debug/config.alpha.qc6.rds')
+  # saveRDS(cells_id, '/debug/cells_id.alpha.qc6.rds')
   for (sample in names(scdata_list)) {
     flat_cells_id <- unname(unlist(cells_id[[sample]]))
     scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cells_id)
@@ -80,6 +80,9 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   plot1_data <- unname(purrr::map2(scdata.integrated@reductions$umap@cell.embeddings[, 1], scdata.integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
     c("x" = x, "y" = y)
   }))
+
+  # saveRDS(scdata, '/debug/scdata.alpha.qc6.rds')
+
 
   # Adding color and sample id
   plot1_data <- purrr::map2(
