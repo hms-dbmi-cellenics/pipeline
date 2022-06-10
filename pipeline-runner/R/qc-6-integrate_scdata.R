@@ -33,6 +33,8 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 
   message("going to integrate data after subsetting")
   # merge the data before integration
+  message("total cells: ", sum(sapply(scdata_list, ncol)))
+
   scdata <- merge_scdatas(scdata_list)
   message("merge done")
   # the sample already contain the metadata, check if the merged object already has the annotations

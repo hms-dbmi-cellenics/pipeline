@@ -22,8 +22,7 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   samples <- names(scdata_list)
   # saveRDS(scdata_list, '/debug/scdata_list.alpha.gem6.rds')
   # saveRDS(pipeline_config, '/debug/pipeline_config.alpha.gem6.rds')
-  message("Merging Seurat Objects...")
-  message(sum(sapply(scdata_list, ncol)))
+  message("Total cells:", sum(sapply(scdata_list, ncol)))
 
   # scdata <- merge_scdatas(scdata_list)
 
