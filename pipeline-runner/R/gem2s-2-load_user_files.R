@@ -72,49 +72,8 @@ read_10x_files <- function(config, input_dir) {
       paste(sample_fpaths, collapse = " - ")
     )
 
-
-
-    annot <- read.delim(annot_fpath, header = FALSE)
-
-    if (ncol(annot) == 1 || annot[1, 2] == "Gene Expression") {
-      annot[, 2] <- annot[, 1]
-    }
-
-    feature_types <- get_feature_types(annot)
-
-    message("Features types is ", feature_types, "for sample ", sample)
-
-    if (feature_types == -1) {
-      annot[, c(1, 2)] <- annot[, c(2, 1)]
-      gene_column <- 2
-      feature_types <- 1
-    }
-
-    # Make unique the annot column 1 so it's equal to the gene names that read10X makes unique
-    # Only c1 needs make.unique because we copy c2 into c1 in annot if gene_column is 2
-    annot[, 1] <- make.unique(annot[, 1])
-
-
-    # Equalizing number of columns in case theres no Gene Expression column
-    annot <- annot[, c(1, 2)]
-    colnames(annot) <- c("input", "name")
-
+    annotations <- read_10x_annotations(annot_fpath, sample)
     counts <- Seurat::Read10X(sample_dir, gene.column = gene_column, unique.features = TRUE)
-
-    # Check existence of empty gene symbols in count matrix' rownames.
-    # If there are more than one the first will be empty, while the
-    # following will be ".1", ".2"... because Seurat runs make.unique
-    unnamed_genes <- c(which(rownames(counts) == ""), grep("^\\.[0-9]+", rownames(counts)))
-    # remove rows with empty names if < 0.1% of the total features.
-    if (length(unnamed_genes) != 0 & length(unnamed_genes) / nrow(counts) < 0.001) {
-      counts <- counts[-unnamed_genes,]
-      message(
-        sprintf(
-          "Removed %s rows with empty gene symbol from count matrix of sample %s",
-          length(unnamed_genes), sample
-        )
-      )
-    }
 
     if (is(counts, "list")) {
       slot <- "Gene Expression"
@@ -130,23 +89,11 @@ read_10x_files <- function(config, input_dir) {
       )
     )
 
-    # Check if there are any rows with empty gene symbol in the features file
-    # and remove them if < 0.1% of the total number of features
-    unnamed_ids <- which(annot[,1] == "")
-
-    if (length(unnamed_ids) != 0 & length(unnamed_ids) / nrow(annot) < 0.001) {
-      annot <- annot[-unnamed_ids,]
-      message(
-        sprintf(
-          "Removed %s rows with empty gene symbol from annotations table of sample %s",
-          length(unnamed_genes), sample
-        )
-      )
-    }
+    c(counts, annotations) %<-% filter_unnamed_features(counts, annotations, sample)
 
     counts_list[[sample]] <- counts
-    annot_list[[sample]] <- annot
-    feature_types_list[[sample]] <- feature_types
+    annot_list[[sample]] <- annotations[["annot"]]
+    feature_types_list[[sample]] <- annotations[["feature_types"]]
   }
 
   c(counts_list, annot_list) %<-% equalize_annotation_types(annot_list, counts_list, feature_types_list, samples)
@@ -263,6 +210,36 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   return(list(counts_list = counts_list, annot = annot))
 }
 
+read_10x_annotations <- function(annot_fpath, sample) {
+
+  annot <- read.delim(annot_fpath, header = FALSE)
+
+  if (ncol(annot) == 1 || annot[1, 2] == "Gene Expression") {
+    annot[, 2] <- annot[, 1]
+  }
+
+  feature_types <- get_feature_types(annot)
+
+  message("Features types is ", feature_types, "for sample ", sample)
+
+  if (feature_types == -1) {
+    annot[, c(1, 2)] <- annot[, c(2, 1)]
+    gene_column <- 2
+    feature_types <- 1
+  }
+
+  # Make unique the annot column 1 so it's equal to the gene names that read10X makes unique
+  # Only c1 needs make.unique because we copy c2 into c1 in annot if gene_column is 2
+  annot[, 1] <- make.unique(annot[, 1])
+
+
+  # Equalizing number of columns in case theres no Gene Expression column
+  annot <- annot[, c(1, 2)]
+  colnames(annot) <- c("input", "name")
+
+  return(list("annot" = annot, "feature_types" = feature_types))
+}
+
 format_annot <- function(annot_list) {
   annot <- unique(do.call("rbind", annot_list))
   colnames(annot) <- c("input", "name")
@@ -364,4 +341,44 @@ get_feature_types <- function(annot) {
   }
 
   return(feature_types[[1]] + feature_types[[2]])
+}
+
+filter_unnamed_features <- function(counts, annotations, sample) {
+
+  # Check existence of empty gene symbols in count matrix' rownames.
+  # If there are more than one the first will be empty, while the
+  # following will be ".1", ".2"... because Seurat runs make.unique
+  unnamed_genes <- c(which(rownames(counts) == ""), grep("^\\.[0-9]+", rownames(counts)))
+
+
+  # remove rows with empty names if < 0.1% of the total features.
+  if (length(unnamed_genes) != 0 & length(unnamed_genes) / nrow(counts) < 0.001) {
+    counts <- counts[-unnamed_genes,]
+    message(
+      sprintf(
+        "Removed %s rows with empty gene symbol from count matrix of sample %s",
+        length(unnamed_genes), sample
+      )
+    )
+  }
+
+  # Check if there are any rows with empty gene symbol in the features file
+  # and remove them if < 0.1% of the total number of features
+  unnamed_ids <- which(annotations[["annot"]][,1] == "")
+
+
+  if (length(unnamed_ids) != 0 & length(unnamed_ids) / nrow(annotations[["annot"]]) < 0.001) {
+    annotations[["annot"]] <- annotations[["annot"]][-unnamed_ids,]
+    message(
+      sprintf(
+        "Removed %s rows with empty gene symbol from annotations table of sample %s",
+        length(unnamed_ids), sample
+      )
+    )
+  }
+
+
+  return(list("counts" = counts, "annotations" = annotations))
+
+
 }
