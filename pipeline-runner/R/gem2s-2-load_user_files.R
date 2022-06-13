@@ -316,7 +316,7 @@ equalize_annotation_types <- function(annot_list, counts_list, feature_types_lis
 #' 1 is IDS/SYMBOL
 #' 2 is IDS/IDS
 #'
-#'
+#' @export
 #' @examples
 get_feature_types <- function(annot) {
   feature_types <- list()
