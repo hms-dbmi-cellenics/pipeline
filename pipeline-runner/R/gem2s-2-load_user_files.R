@@ -71,21 +71,8 @@ read_10x_files <- function(config, input_dir) {
       " --> ",
       paste(sample_fpaths, collapse = " - ")
     )
-    
-    # Check existence of empty gene symbols in count matrix' rownames.
-    # If there are more than one the first will be empty, while the
-    # following will be ".1", ".2"... because Seurat runs make.unique
-    unnamed_genes <- c(which(rownames(counts) == ""), grep("^\\.[0-9]+", rownames(counts)))
-    # remove rows with empty names if < 0.1% of the total features.
-    if (length(unnamed_genes) != 0 & length(unnamed_genes) / nrow(counts) < 0.001) {
-      counts <- counts[-unnamed_genes,]
-       message(
-        sprintf(
-          "Removed %s rows with empty gene symbol from count matrix of sample %s",
-          length(unnamed_genes), sample
-        )
-      )
-    }
+
+
 
     annot <- read.delim(annot_fpath, header = FALSE)
 
@@ -113,6 +100,21 @@ read_10x_files <- function(config, input_dir) {
     colnames(annot) <- c("input", "name")
 
     counts <- Seurat::Read10X(sample_dir, gene.column = gene_column, unique.features = TRUE)
+
+    # Check existence of empty gene symbols in count matrix' rownames.
+    # If there are more than one the first will be empty, while the
+    # following will be ".1", ".2"... because Seurat runs make.unique
+    unnamed_genes <- c(which(rownames(counts) == ""), grep("^\\.[0-9]+", rownames(counts)))
+    # remove rows with empty names if < 0.1% of the total features.
+    if (length(unnamed_genes) != 0 & length(unnamed_genes) / nrow(counts) < 0.001) {
+      counts <- counts[-unnamed_genes,]
+      message(
+        sprintf(
+          "Removed %s rows with empty gene symbol from count matrix of sample %s",
+          length(unnamed_genes), sample
+        )
+      )
+    }
 
     if (is(counts, "list")) {
       slot <- "Gene Expression"
