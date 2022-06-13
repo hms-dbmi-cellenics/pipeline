@@ -78,7 +78,7 @@ read_10x_files <- function(config, input_dir) {
       annot[, 2] <- annot[, 1]
     }
 
-    feature_types <- extract_feature_types(annot)
+    feature_types <- get_feature_types(annot)
 
     message("Features types is ", feature_types, "for sample ", sample)
 
