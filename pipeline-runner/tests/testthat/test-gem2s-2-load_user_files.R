@@ -306,7 +306,7 @@ test_that("equalize_annotation_types does nothing if all annotation types are th
   counts_list <- input$counts_list
   annot_list <- input$annot_list
 
-  res <- pipeline:::equalize_annotation_types(annot_list,counts_list,features_types_list)
+  res <- pipeline:::equalize_annotation_types(annot_list,counts_list,features_types_list, samples)
 
   expect_equal(res[[1]],counts_list)
   expect_equal(res[[2]],annot_list)
@@ -326,7 +326,7 @@ test_that("equalize_annotations does nothing if there are no samples with annota
   counts_list <- input$counts_list
   annot_list <- input$annot_list
 
-  res <- pipeline:::equalize_annotation_types(annot_list,counts_list,features_types_list)
+  res <- pipeline:::equalize_annotation_types(annot_list, counts_list, features_types_list, samples)
 
   expect_equal(res[[1]],counts_list)
   expect_equal(res[[2]],annot_list)
