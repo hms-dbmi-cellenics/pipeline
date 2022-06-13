@@ -1,3 +1,2 @@
 [default]
-region=$AWS_DEFAULT_REGION
 credential_process=aws sts assume-role-with-web-identity  --role-arn $AWS_ROLE_ARN  --role-session-name pipeline-server-run  --web-identity-token file://$AWS_WEB_IDENTITY_TOKEN_FILE  --duration-seconds 3600 | jq '.Credentials + {Version: 1}'
