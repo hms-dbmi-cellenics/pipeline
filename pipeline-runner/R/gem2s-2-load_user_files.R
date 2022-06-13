@@ -303,21 +303,19 @@ equalize_annotation_types <- function(annot_list, counts_list, feature_types_lis
   return(list(counts_list=counts_list, annot_list=annot_list))
 }
 
-#' extract_feature_types
+#' Determine the type of features in the annot data frame
 #'
-#' Determines the type of an annot data frame.
 #' Classifies the columns into either ensemblIds or symbols, and extracts a
 #' number that represents the combination.
-#' @param annot
+#' @param annot data.frame read from features file
 #'
 #' @return
-#' -1 is SYMBOl/IDS
+#' -1 is SYMBOL/IDS
 #' 0 is SYMBOL/ SYMBOL
 #' 1 is IDS/SYMBOL
 #' 2 is IDS/IDS
 #'
 #' @export
-#' @examples
 get_feature_types <- function(annot) {
   feature_types <- list()
 

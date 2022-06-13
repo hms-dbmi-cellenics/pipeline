@@ -2,20 +2,20 @@
 % Please edit documentation in R/gem2s-2-load_user_files.R
 \name{get_feature_types}
 \alias{get_feature_types}
-\title{extract_feature_types}
+\title{Determine the type of features in the annot data frame}
 \usage{
 get_feature_types(annot)
 }
 \arguments{
-\item{annot}{}
+\item{annot}{data.frame read from features file}
 }
 \value{
--1 is SYMBOl/IDS
+-1 is SYMBOL/IDS
 0 is SYMBOL/ SYMBOL
 1 is IDS/SYMBOL
 2 is IDS/IDS
 }
 \description{
-Determines the type of an annot data frame.
-Classifies the columns into either ensemblIds or symbols, and extracts a number that represents the combination.
+Classifies the columns into either ensemblIds or symbols, and extracts a
+number that represents the combination.
 }
