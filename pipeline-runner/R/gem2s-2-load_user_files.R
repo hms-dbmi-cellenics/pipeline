@@ -54,7 +54,7 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/inpu
 read_10x_files <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
-  features_types_list <- list()
+  feature_types_list <- list()
 
   samples <- config$samples
 
@@ -78,14 +78,14 @@ read_10x_files <- function(config, input_dir) {
       annot[, 2] <- annot[, 1]
     }
 
-    features_types <- extract_features_types(annot)
+    feature_types <- extract_feature_types(annot)
 
-    message("Features types is ", features_types, "for sample ", sample)
+    message("Features types is ", feature_types, "for sample ", sample)
 
-    if (features_types == -1) {
+    if (feature_types == -1) {
       annot[, c(1, 2)] <- annot[, c(2, 1)]
       gene_column <- 2
-      features_types <- 1
+      feature_types <- 1
     }
 
     # Make unique the annot column 1 so it's equal to the gene names that read10X makes unique
@@ -114,10 +114,10 @@ read_10x_files <- function(config, input_dir) {
 
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annot
-    features_types_list[[sample]] <- features_types
+    feature_types_list[[sample]] <- feature_types
   }
 
-  c(counts_list, annot_list) %<-% equalize_annotation_types(annot_list, counts_list, features_types_list, samples)
+  c(counts_list, annot_list) %<-% equalize_annotation_types(annot_list, counts_list, feature_types_list, samples)
   annot <- format_annot(annot_list)
 
   return(list(counts_list = counts_list, annot = annot))
@@ -256,24 +256,24 @@ format_annot <- function(annot_list) {
 }
 
 # Fix annotations makes annotations compatible between samples with different types.
-# The possible options for features_types at this stage are 0,1,2
+# The possible options for feature_types at this stage are 0,1,2
 #  0 is SYMBOL/ SYMBOL
 #  1 is IDS/SYMBOL
 #  2 is IDS/IDS
-equalize_annotation_types <- function(annot_list, counts_list, features_types_list, samples) {
-  if (any(features_types_list == 2) && any(features_types_list == 0) && !any(features_types_list == 1)) stop("Incompatible features detected.")
+equalize_annotation_types <- function(annot_list, counts_list, feature_types_list, samples) {
+  if (any(feature_types_list == 2) && any(feature_types_list == 0) && !any(feature_types_list == 1)) stop("Incompatible features detected.")
 
-  if (any(features_types_list == 1) && (any(features_types_list == 2) || any(features_types_list == 0))) {
-    annots_with_ids <- unique(do.call("rbind", annot_list[features_types_list == 1]))
+  if (any(feature_types_list == 1) && (any(feature_types_list == 2) || any(feature_types_list == 0))) {
+    annots_with_ids <- unique(do.call("rbind", annot_list[feature_types_list == 1]))
 
     annots_with_ids <- annots_with_ids[!duplicated(annots_with_ids$input), ]
 
     for (sample in samples) {
-      if (features_types_list[[sample]] == 0 || features_types_list[[sample]] == 2) {
+      if (feature_types_list[[sample]] == 0 || feature_types_list[[sample]] == 2) {
         sample_annot <- annot_list[[sample]]
 
         # Try to replace input column (currently symbols) in sample_annot with ids from annots_with_ids
-        if (features_types_list[[sample]] == 0) {
+        if (feature_types_list[[sample]] == 0) {
 
           matched_symbols_index <- match(sample_annot$input,annots_with_ids$name)
           is_in_annot_list <- which(sample_annot$input %in% annots_with_ids$name)
@@ -289,7 +289,7 @@ equalize_annotation_types <- function(annot_list, counts_list, features_types_li
         }
 
         # Try to replace names column (currently ids) in sample_annot with symbols from annots_with_ids
-        if (features_types_list[[sample]] == 2) {
+        if (feature_types_list[[sample]] == 2) {
           matched_ids_index <- match(sample_annot$input,annots_with_ids$input)
           is_in_annot_list <- which(sample_annot$input %in% annots_with_ids$input)
 
@@ -303,7 +303,7 @@ equalize_annotation_types <- function(annot_list, counts_list, features_types_li
   return(list(counts_list=counts_list, annot_list=annot_list))
 }
 
-#' extract_features_types
+#' extract_feature_types
 #'
 #' Determines the type of an annot data frame.
 #' Classifies the columns into either ensemblIds or symbols, and extracts a number that represents the combination.
@@ -318,20 +318,20 @@ equalize_annotation_types <- function(annot_list, counts_list, features_types_li
 #'
 #'
 #' @examples
-extract_features_types <- function(annot) {
-  features_types <- list()
+get_feature_types <- function(annot) {
+  feature_types <- list()
 
   annot_c1 <- annot[, 1]
   is_ens <- annot_c1[substr(annot_c1, 1, 3) == "ENS"]
-  features_types[[1]] <- length(is_ens) >= length(annot_c1) - length(is_ens)
+  feature_types[[1]] <- length(is_ens) >= length(annot_c1) - length(is_ens)
 
   annot_c2 <- annot[, 2]
   is_ens <- annot_c2[substr(annot_c2, 1, 3) == "ENS"]
-  features_types[[2]] <- length(is_ens) >= length(annot_c2) - length(is_ens)
+  feature_types[[2]] <- length(is_ens) >= length(annot_c2) - length(is_ens)
 
-  if (features_types[[1]] == FALSE && features_types[[2]] == TRUE) {
+  if (feature_types[[1]] == FALSE && feature_types[[2]] == TRUE) {
     return(-1)
   }
 
-  return(features_types[[1]] + features_types[[2]])
+  return(feature_types[[1]] + feature_types[[2]])
 }
