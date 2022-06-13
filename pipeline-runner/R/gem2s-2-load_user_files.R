@@ -320,27 +320,27 @@ equalize_annotation_types <- function(annot_list, counts_list, feature_types_lis
 #'
 #' @return
 #' -1 is SYMBOL/IDS
-#' 0 is SYMBOL/ SYMBOL
+#' 0 is SYMBOL/SYMBOL
 #' 1 is IDS/SYMBOL
 #' 2 is IDS/IDS
 #'
 #' @export
 get_feature_types <- function(annot) {
-  feature_types <- list()
+  feature_types <- c()
 
   annot_c1 <- annot[, 1]
   is_ens <- annot_c1[substr(annot_c1, 1, 3) == "ENS"]
-  feature_types[[1]] <- length(is_ens) >= length(annot_c1) - length(is_ens)
+  feature_types[1] <- length(is_ens) >= length(annot_c1) - length(is_ens)
 
   annot_c2 <- annot[, 2]
   is_ens <- annot_c2[substr(annot_c2, 1, 3) == "ENS"]
-  feature_types[[2]] <- length(is_ens) >= length(annot_c2) - length(is_ens)
+  feature_types[2] <- length(is_ens) >= length(annot_c2) - length(is_ens)
 
-  if (feature_types[[1]] == FALSE && feature_types[[2]] == TRUE) {
+  if (feature_types[1] == FALSE && feature_types[[2]] == TRUE) {
     return(-1)
   }
 
-  return(feature_types[[1]] + feature_types[[2]])
+  return(feature_types[1] + feature_types[2])
 }
 
 filter_unnamed_features <- function(counts, annotations, sample) {
@@ -379,6 +379,5 @@ filter_unnamed_features <- function(counts, annotations, sample) {
 
 
   return(list("counts" = counts, "annotations" = annotations))
-
 
 }
