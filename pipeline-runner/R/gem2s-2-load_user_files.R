@@ -220,7 +220,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
     )
 
     # Rhapsody data does not have ensemblIDs, but format_annot needs 2 cols
-    annot <- data.frame(input=features, name=features)
+    annot <- data.frame(input = features, name = features)
 
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annot
@@ -275,7 +275,7 @@ equalize_annotation_types <- function(annot_list, counts_list, feature_types_lis
         # Try to replace input column (currently symbols) in sample_annot with ids from annots_with_ids
         if (feature_types_list[[sample]] == 0) {
 
-          matched_symbols_index <- match(sample_annot$input,annots_with_ids$name)
+          matched_symbols_index <- match(sample_annot$input, annots_with_ids$name)
           is_in_annot_list <- which(sample_annot$input %in% annots_with_ids$name)
 
           sample_annot$input[is_in_annot_list] <- annots_with_ids$input[na.omit(matched_symbols_index)]
@@ -306,8 +306,8 @@ equalize_annotation_types <- function(annot_list, counts_list, feature_types_lis
 #' extract_feature_types
 #'
 #' Determines the type of an annot data frame.
-#' Classifies the columns into either ensemblIds or symbols, and extracts a number that represents the combination.
-#'
+#' Classifies the columns into either ensemblIds or symbols, and extracts a
+#' number that represents the combination.
 #' @param annot
 #'
 #' @return
