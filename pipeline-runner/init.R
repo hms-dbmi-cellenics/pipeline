@@ -99,16 +99,16 @@ load_config <- function(development_aws_server, api_version = "v1") {
 
     }
 
-    config[["samples_table"]] <- paste("samples", config$cluster_env, 242905224710, sep = "-")
-    config[["experiments_table"]] <- paste("experiments", config$cluster_env, 242905224710, sep = "-")
-    config[["originals_bucket"]] <- paste("biomage-originals", config$cluster_env, 242905224710, sep = "-")
-    config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, 242905224710, sep = "-")
-    config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, 242905224710, sep = "-")
-    config[["results_bucket"]] <- paste("worker-results", config$cluster_env, 242905224710, sep = "-")
-    config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, 242905224710, sep = "-")
-    config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, 242905224710, sep = "-")
-    config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, 242905224710, sep = "-")
-    config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, 242905224710, sep = "-")
+    config[["samples_table"]] <- paste("samples", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["experiments_table"]] <- paste("experiments", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["originals_bucket"]] <- paste("biomage-originals", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["results_bucket"]] <- paste("worker-results", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, config$aws_account_id, sep = "-")
 
     if (api_version == "v1") {
         config[["sns_topic"]] <- paste(
