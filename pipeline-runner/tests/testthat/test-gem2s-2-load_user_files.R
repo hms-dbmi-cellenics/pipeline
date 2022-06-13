@@ -94,21 +94,19 @@ test_that("load_user_files loads a 10x count matrix", {
     symbol = row.names(counts)
   )
 
-  outdir <- tempdir()
+  experiment_dir <- "./experiment_1"
   sample <- "sample_a"
-  sample_dir <- file.path(outdir, sample)
-  dir.create(sample_dir)
 
-  mock_cellranger_files(counts, features, sample_dir)
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
+
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
-  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
+  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   expect_true("counts_list" %in% names(out))
   expect_true(sample %in% names(out$counts_list))
 
   expect_s4_class(out$counts_list[[1]], "dgCMatrix")
-  unlink(sample_dir, recursive = TRUE)
 })
 
 
@@ -119,22 +117,19 @@ test_that("load_user_files generates feature annotation for 10x data", {
     symbol = row.names(counts)
   )
 
-  outdir <- tempdir()
+  experiment_dir <- "./experiment_1"
   sample <- "sample_a"
-  sample_dir <- file.path(outdir, sample)
-  dir.create(sample_dir)
 
-  mock_cellranger_files(counts, features, sample_dir)
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
-  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
+  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   expect_true("annot" %in% names(out))
   expect_true(
     all(c("input", "name", "original_name") %in% colnames(out$annot))
   )
 
-  unlink(sample_dir, recursive = TRUE)
 })
 
 
@@ -149,22 +144,19 @@ test_that("load_user_files deduplicates gene symbols for 10x data", {
     symbol = symbols
   )
 
-  outdir <- tempdir()
+  experiment_dir <- "./experiment_1"
   sample <- "sample_a"
-  sample_dir <- file.path(outdir, sample)
-  dir.create(sample_dir)
 
-  mock_cellranger_files(counts, features, sample_dir)
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
-  annot <- load_user_files(NULL, NULL, prev_out, outdir)$output$annot
+  annot <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output$annot
 
   # unique gene names is same as number of gene names
   expect_length(unique(annot$name), length(symbols))
 
   # unique original names is same as unique gene names
   expect_length(unique(annot$original_name), length(unique(symbols)))
-  unlink(sample_dir, recursive = TRUE)
 })
 
 
@@ -177,15 +169,13 @@ test_that("load_user_files uses appropriate feature columns for 10x data", {
     symbol = symbols
   )
 
-  outdir <- tempdir()
+  experiment_dir <- "./experiment_1"
   sample <- "sample_a"
-  sample_dir <- file.path(outdir, sample)
-  dir.create(sample_dir)
 
-  mock_cellranger_files(counts, features, sample_dir)
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
-  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
+  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   # ensembl ids are counts row names
   expect_equal(
@@ -199,7 +189,6 @@ test_that("load_user_files uses appropriate feature columns for 10x data", {
   # symbols are in column 'name' of annot
   expect_equal(out$annot$name, symbols)
 
-  unlink(sample_dir, recursive = TRUE)
 })
 
 
@@ -219,17 +208,15 @@ test_that("load_user_files loads 10x multisample experiments", {
 
   features2 <- data.frame(ensid = ensids2, symbols = symbols2)
 
-  outdir <- tempdir()
-  samples <- c("sample_a", "samble_b")
-  sample_dirs <- file.path(outdir, samples)
-  dir.create(sample_dirs[1])
-  dir.create(sample_dirs[2])
+  experiment_dir <- "./experiment_1"
+  samples <- c("sample_a", "sample_b")
 
-  mock_cellranger_files(counts, features, sample_dirs[1])
-  mock_cellranger_files(counts, features2, sample_dirs[2])
+  local_cellranger_experiment(counts, features, experiment_dir, samples[1])
+  local_cellranger_experiment(counts, features2, experiment_dir, samples[2])
+
 
   prev_out <- list(config = list(samples = samples, input = list(type = "10x")))
-  out <- load_user_files(NULL, NULL, prev_out, outdir)$output
+  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   # loaded both
   expect_equal(names(out$counts_list), samples)
@@ -244,7 +231,6 @@ test_that("load_user_files loads 10x multisample experiments", {
     length(c(ensids, ensids2))
   )
 
-  unlink(sample_dirs, recursive = TRUE)
 })
 
 test_that("read_10x_files returns error if files missing", {
@@ -254,12 +240,11 @@ test_that("read_10x_files returns error if files missing", {
     symbol = row.names(counts)
   )
 
-  outdir <- tempdir()
+  experiment_dir <- "./experiment_1"
   sample <- "sample_a"
-  sample_dir <- file.path(outdir, sample)
-  dir.create(sample_dir)
+  sample_dir <- file.path(experiment_dir, sample)
 
-  mock_cellranger_files(counts, features, sample_dir)
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
 
@@ -268,17 +253,16 @@ test_that("read_10x_files returns error if files missing", {
   # remove files one by one renaming
   for (file in files) {
     file.rename(file.path(sample_dir, file), file.path(sample_dir, "blah"))
-    expect_error(load_user_files(NULL, NULL, prev_out, outdir), "file missing")
+    expect_error(load_user_files(NULL, NULL, prev_out, experiment_dir), "file missing")
     file.rename(file.path(sample_dir, "blah"), file.path(sample_dir, file))
   }
 
   file <- "features.tsv.gz"
 
   file.rename(file.path(sample_dir, file), file.path(sample_dir, "blah"))
-  expect_error(supressWarnings(load_user_files(NULL, NULL, prev_out, outdir), "cannot open the connection"))
+  expect_error(supressWarnings(load_user_files(NULL, NULL, prev_out, experiment_dir), "cannot open the connection"))
   file.rename(file.path(sample_dir, "blah"), file.path(sample_dir, file))
 
-  unlink(sample_dir, recursive = TRUE)
 })
 
 test_that("get_feature_types properly determines types", {
