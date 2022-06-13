@@ -19,8 +19,6 @@
             value: "{{ .Values.sandboxId }}"
           - name: AWS_ACCOUNT_ID
             value: "{{ .Values.myAccount.accountId }}"
-          - name: AWS_DEFAULT_REGION
-            value: "{{ .Values.myAccount.region }}"
         volumeMounts:
         - name: podinfo
           mountPath: /etc/podinfo
