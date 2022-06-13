@@ -270,24 +270,37 @@ format_annot <- function(annot_list) {
 #  1 is IDS/SYMBOL
 #  2 is IDS/IDS
 equalize_annotation_types <- function(annot_list, counts_list, feature_types_list, samples) {
-  if (any(feature_types_list == 2) && any(feature_types_list == 0) && !any(feature_types_list == 1)) stop("Incompatible features detected.")
 
-  if (any(feature_types_list == 1) && (any(feature_types_list == 2) || any(feature_types_list == 0))) {
-    annots_with_ids <- unique(do.call("rbind", annot_list[feature_types_list == 1]))
+  if (any(feature_types_list == IDS_IDS) &&
+      any(feature_types_list == SYM_SYM) &&
+      !any(feature_types_list == IDS_SYM)) {
+    stop("Incompatible features detected.")
+  }
 
-    annots_with_ids <- annots_with_ids[!duplicated(annots_with_ids$input), ]
+  if (any(feature_types_list == IDS_SYM) &&
+      (any(feature_types_list == IDS_IDS) ||
+       any(feature_types_list == SYM_SYM))) {
+
+    annots_with_ids <-
+      unique(do.call("rbind", annot_list[feature_types_list == IDS_SYM]))
+
+    annots_with_ids <-
+      annots_with_ids[!duplicated(annots_with_ids$input),]
 
     for (sample in samples) {
-      if (feature_types_list[[sample]] == 0 || feature_types_list[[sample]] == 2) {
+      if (feature_types_list[[sample]] == SYM_SYM ||
+          feature_types_list[[sample]] == IDS_IDS) {
         sample_annot <- annot_list[[sample]]
 
         # Try to replace input column (currently symbols) in sample_annot with ids from annots_with_ids
-        if (feature_types_list[[sample]] == 0) {
+        if (feature_types_list[[sample]] == SYM_SYM) {
+          matched_symbols_index <-
+            match(sample_annot$input, annots_with_ids$name)
+          is_in_annot_list <-
+            which(sample_annot$input %in% annots_with_ids$name)
 
-          matched_symbols_index <- match(sample_annot$input, annots_with_ids$name)
-          is_in_annot_list <- which(sample_annot$input %in% annots_with_ids$name)
-
-          sample_annot$input[is_in_annot_list] <- annots_with_ids$input[na.omit(matched_symbols_index)]
+          sample_annot$input[is_in_annot_list] <-
+            annots_with_ids$input[na.omit(matched_symbols_index)]
 
           #This avoids duplicates after combining with the annotated df.
           #Leads to a mismatch in genes between samples but it seems like the best solution
@@ -298,11 +311,13 @@ equalize_annotation_types <- function(annot_list, counts_list, feature_types_lis
         }
 
         # Try to replace names column (currently ids) in sample_annot with symbols from annots_with_ids
-        if (feature_types_list[[sample]] == 2) {
-          matched_ids_index <- match(sample_annot$input,annots_with_ids$input)
-          is_in_annot_list <- which(sample_annot$input %in% annots_with_ids$input)
+        if (feature_types_list[[sample]] == IDS_IDS) {
+          matched_ids_index <- match(sample_annot$input, annots_with_ids$input)
+          is_in_annot_list <-
+            which(sample_annot$input %in% annots_with_ids$input)
 
-          sample_annot$name[is_in_annot_list] <- annots_with_ids$name[na.omit(matched_ids_index)]
+          sample_annot$name[is_in_annot_list] <-
+            annots_with_ids$name[na.omit(matched_ids_index)]
         }
 
         annot_list[[sample]] <- sample_annot
@@ -314,33 +329,31 @@ equalize_annotation_types <- function(annot_list, counts_list, feature_types_lis
 
 #' Determine the type of features in the annot data frame
 #'
-#' Classifies the columns into either ensemblIds or symbols, and extracts a
-#' number that represents the combination.
-#' @param annot data.frame read from features file
+#' Classifies the features file columns into either ensemblIds or symbols
 #'
-#' @return
-#' -1 is SYMBOL/IDS
-#' 0 is SYMBOL/SYMBOL
-#' 1 is IDS/SYMBOL
-#' 2 is IDS/IDS
+#' @param annot data.frame read from features file
+#' @return character vector indicating feature types
 #'
 #' @export
 get_feature_types <- function(annot) {
-  feature_types <- c()
+  is_ens_col1 <- startsWith(annot[[1]], "ENS")
+  pct_ens_col1 <- sum(is_ens_col1) / nrow(annot)
 
-  annot_c1 <- annot[, 1]
-  is_ens <- annot_c1[substr(annot_c1, 1, 3) == "ENS"]
-  feature_types[1] <- length(is_ens) >= length(annot_c1) - length(is_ens)
+  is_ens_col2 <- startsWith(annot[[2]], "ENS")
+  pct_ens_col2 <- sum(is_ens_col2) / nrow(annot)
 
-  annot_c2 <- annot[, 2]
-  is_ens <- annot_c2[substr(annot_c2, 1, 3) == "ENS"]
-  feature_types[2] <- length(is_ens) >= length(annot_c2) - length(is_ens)
+  is_ens <- c(pct_ens_col1 >= 0.5, pct_ens_col2 >= 0.5)
 
-  if (feature_types[1] == FALSE && feature_types[[2]] == TRUE) {
-    return(-1)
-  }
+  # reverse case, sym in first and id in second column
+  if (!is_ens[1] && is_ens[2]) return(SYM_IDS)
 
-  return(feature_types[1] + feature_types[2])
+  # regular cases. sum of booleans returns ints. convert to char to string match
+  feature_type <- switch(as.character(sum(is_ens)),
+                         "0" = SYM_SYM,
+                         "1" = IDS_SYM,
+                         "2" = IDS_IDS)
+
+  return(feature_type)
 }
 
 filter_unnamed_features <- function(counts, annotations, sample) {
