@@ -214,13 +214,15 @@ read_10x_annotations <- function(annot_fpath, sample, gene_column) {
 
   annot <- read.delim(annot_fpath, header = FALSE)
 
+  # duplicate first col if there is only one col with gene names/ids, or
+  # if there is a "Gene Expression" col
   if (ncol(annot) == 1 || annot[1, 2] == "Gene Expression") {
     annot[, 2] <- annot[, 1]
   }
 
   feature_types <- get_feature_types(annot)
 
-  message("Features types is ", feature_types, "for sample ", sample)
+  message("Feature types are ", feature_types, "for sample ", sample)
 
   if (feature_types == SYM_IDS) {
     annot[, c(1, 2)] <- annot[, c(2, 1)]
