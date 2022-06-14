@@ -62,7 +62,6 @@ read_10x_files <- function(config, input_dir) {
     sample_dir <- file.path(input_dir, sample)
     sample_fpaths <- list.files(sample_dir)
     annot_fpath <- file.path(sample_dir, "features.tsv.gz")
-    gene_column <- 1
 
     message("\nSample --> ", sample)
     message(
@@ -73,7 +72,7 @@ read_10x_files <- function(config, input_dir) {
     )
 
     annotations <- read_10x_annotations(annot_fpath, sample)
-    counts <- Seurat::Read10X(sample_dir, gene.column = gene_column, unique.features = TRUE)
+    counts <- Seurat::Read10X(sample_dir, gene.column = annotations[["gene_column"]], unique.features = TRUE)
 
     if (is(counts, "list")) {
       slot <- "Gene Expression"
@@ -210,7 +209,8 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   return(list(counts_list = counts_list, annot = annot))
 }
 
-read_10x_annotations <- function(annot_fpath, sample) {
+read_10x_annotations <- function(annot_fpath, sample, gene_column) {
+  gene_column <- 1
 
   annot <- read.delim(annot_fpath, header = FALSE)
 
@@ -237,7 +237,7 @@ read_10x_annotations <- function(annot_fpath, sample) {
   annot <- annot[, c(1, 2)]
   colnames(annot) <- c("input", "name")
 
-  return(list("annot" = annot, "feature_types" = feature_types))
+  return(list("annot" = annot, "feature_types" = feature_types, "gene_column" = gene_column))
 }
 
 format_annot <- function(annot_list) {
