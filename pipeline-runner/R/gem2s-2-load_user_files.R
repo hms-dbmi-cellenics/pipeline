@@ -224,18 +224,18 @@ read_10x_annotations <- function(annot_fpath, sample, gene_column) {
 
   message("Feature types are ", feature_types, "for sample ", sample)
 
+  # reverse annot cols if symbols are first
   if (feature_types == SYM_IDS) {
     annot[, c(1, 2)] <- annot[, c(2, 1)]
     gene_column <- 2
     feature_types <- IDS_SYM
   }
 
-  # Make unique the annot column 1 so it's equal to the gene names that read10X makes unique
-  # Only c1 needs make.unique because we copy c2 into c1 in annot if gene_column is 2
+  # make same names in annot seurat makes for count matrix.
+  # Only first col, we either copy or reverse order of the annot data.frame
   annot[, 1] <- make.unique(annot[, 1])
 
-
-  # Equalizing number of columns in case theres no Gene Expression column
+  # Equalizing number of columns in case there's no Gene Expression column
   annot <- annot[, c(1, 2)]
   colnames(annot) <- c("input", "name")
 
