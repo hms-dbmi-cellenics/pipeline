@@ -226,7 +226,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         'configureEmbedding' = embed_and_cluster
     )
 
-    #need this for embed_and_cluster
+    # need this for embed_and_cluster
     config$api_url <- pipeline_config$api_url
     config$auth_JWT <- input$authJWT
     config$api_version <- input$apiVersion
@@ -312,7 +312,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 #
 start_heartbeat <- function(task_token, aws_config) {
     library(tryCatchLog)
-    message("Starting hearbeat")
+    message("Starting heartbeat")
     states <- paws::sfn(config=aws_config)
 
     keep_running <- TRUE
@@ -332,7 +332,7 @@ start_heartbeat <- function(task_token, aws_config) {
             keep_running <- FALSE
         })
         i <- i + 1
-        # sleep until next hearbeat
+        # sleep until next heartbeat
         Sys.sleep(wait_time)
 
     }
@@ -397,9 +397,9 @@ init <- function() {
             quit('no')
         }
 
-        message('input json: ', input_json)
         # parse data from state machine input
         input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
+        message('Input json: ', input)
 
         # save logs to file
         debug_prefix <- file.path(input$experimentId, debug_timestamp)
