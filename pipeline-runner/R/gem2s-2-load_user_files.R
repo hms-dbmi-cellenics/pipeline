@@ -282,37 +282,31 @@ normalize_annotation_types <- function(annot_list, counts_list, feature_types_li
   if (any(feature_types_list == IDS_SYM) &&
       (any(feature_types_list == IDS_IDS) ||
        any(feature_types_list == SYM_SYM))) {
-
-    annot_with_ids <- make_annot_with_ids(annot_list, feature_types_list)
+    annot_with_ids <-
+      make_annot_with_ids(annot_list, feature_types_list)
 
     for (sample in samples) {
+      sample_annot <- annot_list[[sample]]
 
-      if (feature_types_list[[sample]] == SYM_SYM ||
-          feature_types_list[[sample]] == IDS_IDS) {
+      # Try to replace input column (currently symbols) in sample_annot
+      # with ids from annot_with_ids
+      if (feature_types_list[[sample]] == SYM_SYM) {
+        sample_annot <- sym_to_ids(sample_annot, annot_with_ids)
 
-        sample_annot <- annot_list[[sample]]
-
-        # Try to replace input column (currently symbols) in sample_annot
-        # with ids from annot_with_ids
-        if (feature_types_list[[sample]] == SYM_SYM) {
-
-          sample_annot <- sym_to_ids(sample_annot, annot_with_ids)
-
-          # The counts have been loaded with gene symbols so we need to replace
-          # the rownames with the ids
-          rownames(counts_list[[sample]]) <- sample_annot$input
-        }
-
-        # Try to replace names column (currently ids) in sample_annot
-        # with symbols from annot_with_ids
-        if (feature_types_list[[sample]] == IDS_IDS) {
-          sample_annot <- ids_to_sym(sample_annot, annot_with_ids)
-        }
-        annot_list[[sample]] <- sample_annot
+        # counts were loaded with symbols, we need to replace rownames with ids
+        rownames(counts_list[[sample]]) <- sample_annot$input
       }
+
+      # Try to replace names column (currently ids) in sample_annot
+      # with symbols from annot_with_ids
+      else if (feature_types_list[[sample]] == IDS_IDS) {
+        sample_annot <- ids_to_sym(sample_annot, annot_with_ids)
+      }
+      annot_list[[sample]] <- sample_annot
     }
   }
-  return(list(counts_list=counts_list, annot_list=annot_list))
+  return(list(counts_list = counts_list, annot_list = annot_list)
+  )
 }
 
 #' Determine the type of features in the annot data frame
