@@ -209,7 +209,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   return(list(counts_list = counts_list, annot = annot))
 }
 
-read_10x_annotations <- function(annot_fpath, sample, gene_column) {
+read_10x_annotations <- function(annot_fpath, sample) {
   gene_column <- 1
 
   annot <- read.delim(annot_fpath, header = FALSE)
@@ -283,45 +283,31 @@ normalize_annotation_types <- function(annot_list, counts_list, feature_types_li
       (any(feature_types_list == IDS_IDS) ||
        any(feature_types_list == SYM_SYM))) {
 
-    annots_with_ids <-
-      unique(do.call("rbind", annot_list[feature_types_list == IDS_SYM]))
-
-    annots_with_ids <-
-      annots_with_ids[!duplicated(annots_with_ids$input),]
+    annot_with_ids <- make_annot_with_ids(annot_list, feature_types_list)
 
     for (sample in samples) {
+
       if (feature_types_list[[sample]] == SYM_SYM ||
           feature_types_list[[sample]] == IDS_IDS) {
+
         sample_annot <- annot_list[[sample]]
 
-        # Try to replace input column (currently symbols) in sample_annot with ids from annots_with_ids
+        # Try to replace input column (currently symbols) in sample_annot
+        # with ids from annot_with_ids
         if (feature_types_list[[sample]] == SYM_SYM) {
-          matched_symbols_index <-
-            match(sample_annot$input, annots_with_ids$name)
-          is_in_annot_list <-
-            which(sample_annot$input %in% annots_with_ids$name)
 
-          sample_annot$input[is_in_annot_list] <-
-            annots_with_ids$input[na.omit(matched_symbols_index)]
+          sample_annot <- sym_to_ids(sample_annot, annot_with_ids)
 
-          #This avoids duplicates after combining with the annotated df.
-          #Leads to a mismatch in genes between samples but it seems like the best solution
-          sample_annot$input <- make.unique(sample_annot$input)
-
-          #The counts have been loaded with gene symbols so we need to replace the rownames with the ids
+          # The counts have been loaded with gene symbols so we need to replace
+          # the rownames with the ids
           rownames(counts_list[[sample]]) <- sample_annot$input
         }
 
-        # Try to replace names column (currently ids) in sample_annot with symbols from annots_with_ids
+        # Try to replace names column (currently ids) in sample_annot
+        # with symbols from annot_with_ids
         if (feature_types_list[[sample]] == IDS_IDS) {
-          matched_ids_index <- match(sample_annot$input, annots_with_ids$input)
-          is_in_annot_list <-
-            which(sample_annot$input %in% annots_with_ids$input)
-
-          sample_annot$name[is_in_annot_list] <-
-            annots_with_ids$name[na.omit(matched_ids_index)]
+          sample_annot <- ids_to_sym(sample_annot, annot_with_ids)
         }
-
         annot_list[[sample]] <- sample_annot
       }
     }
@@ -395,4 +381,41 @@ filter_unnamed_features <- function(counts, annotations, sample) {
 
   return(list("counts" = counts, "annotations" = annotations))
 
+}
+
+make_annot_with_ids <- function(annot_list, feature_types_list) {
+  annot_with_ids <-
+    unique(do.call("rbind", annot_list[feature_types_list == IDS_SYM]))
+
+  annot_with_ids <-
+    annot_with_ids[!duplicated(annot_with_ids$input),]
+
+  return(annot_with_ids)
+}
+
+sym_to_ids <- function(sample_annot, annot_with_ids) {
+  matched_symbols_index <-
+    match(sample_annot$input, annot_with_ids$name)
+  symbols_with_ids <-
+    which(sample_annot$input %in% annot_with_ids$name)
+
+  sample_annot$input[symbols_with_ids] <-
+    annot_with_ids$input[na.omit(matched_symbols_index)]
+
+  #This avoids duplicates after combining with the annotated df.
+  #Leads to a mismatch in genes between samples but it seems like the best solution
+  sample_annot$input <- make.unique(sample_annot$input)
+
+  return(sample_annot)
+}
+
+ids_to_sym <- function(sample_annot, annot_with_ids) {
+  matched_ids_index <- match(sample_annot$input, annot_with_ids$input)
+  symbols_with_ids <-
+    which(sample_annot$input %in% annot_with_ids$input)
+
+  sample_annot$name[symbols_with_ids] <-
+    annot_with_ids$name[na.omit(matched_ids_index)]
+
+  return(sample_annot)
 }
