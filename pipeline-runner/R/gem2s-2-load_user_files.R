@@ -222,10 +222,10 @@ read_10x_annotations <- function(annot_fpath, sample) {
 
   message("Features types is ", feature_types, "for sample ", sample)
 
-  if (feature_types == -1) {
+  if (feature_types == SYM_IDS) {
     annot[, c(1, 2)] <- annot[, c(2, 1)]
     gene_column <- 2
-    feature_types <- 1
+    feature_types <- IDS_SYM
   }
 
   # Make unique the annot column 1 so it's equal to the gene names that read10X makes unique
