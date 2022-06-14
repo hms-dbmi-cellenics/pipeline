@@ -95,7 +95,7 @@ read_10x_files <- function(config, input_dir) {
     feature_types_list[[sample]] <- annotations[["feature_types"]]
   }
 
-  c(counts_list, annot_list) %<-% equalize_annotation_types(annot_list, counts_list, feature_types_list, samples)
+  c(counts_list, annot_list) %<-% normalize_annotation_types(annot_list, counts_list, feature_types_list, samples)
   annot <- format_annot(annot_list)
 
   return(list(counts_list = counts_list, annot = annot))
@@ -271,7 +271,7 @@ format_annot <- function(annot_list) {
 #  0 is SYMBOL/ SYMBOL
 #  1 is IDS/SYMBOL
 #  2 is IDS/IDS
-equalize_annotation_types <- function(annot_list, counts_list, feature_types_list, samples) {
+normalize_annotation_types <- function(annot_list, counts_list, feature_types_list, samples) {
 
   if (any(feature_types_list == IDS_IDS) &&
       any(feature_types_list == SYM_SYM) &&
