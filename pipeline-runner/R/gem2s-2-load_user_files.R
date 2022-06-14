@@ -266,11 +266,28 @@ format_annot <- function(annot_list) {
   return(annot)
 }
 
-# Fix annotations makes annotations compatible between samples with different types.
-# The possible options for feature_types at this stage are 0,1,2
-#  0 is SYMBOL/ SYMBOL
-#  1 is IDS/SYMBOL
-#  2 is IDS/IDS
+
+#' normalize annotation types
+#'
+#' This function makes annotations compatible between samples with different types.
+#' There are three possible options for feature_types at this stage:
+#' 0. SYM_SYM
+#' 1. IDS_SYM
+#' 2. IDS_IDS
+#'
+#' In the case of combination of homogeneous samples (SYM_SYM and IDS_IDS) we need
+#' a "key" sample (IDS_SYM), in which case it'll try to infer symbols from ids or
+#' viceversa. In case of absence of a key sample, this will throw an error, due
+#' to incompatible features.
+#'
+#' @param annot_list list of annotation data.frames
+#' @param counts_list list of count matrices
+#' @param feature_types_list list of feature types
+#' @param samples list of samples
+#'
+#' @return list with normalized annotations and count matrices
+#' @export
+#'
 normalize_annotation_types <- function(annot_list, counts_list, feature_types_list, samples) {
 
   if (any(feature_types_list == IDS_IDS) &&
@@ -338,13 +355,87 @@ get_feature_types <- function(annot) {
   return(feature_type)
 }
 
+
+#' Make key annotation data.frame
+#'
+#' This function takes the annotation data.frames which contain both symbols and
+#' ids and creates a key data.frame, to be used for conversion of symbols to ids
+#' or viceversa.
+#'
+#' @param annot_list list of annotation data.frames
+#' @param feature_types_list list of feature types
+#'
+#' @return data.frame of ids and symbols
+#' @export
+#'
+make_annot_with_ids <- function(annot_list, feature_types_list) {
+  annot_with_ids <-
+    unique(do.call("rbind", annot_list[feature_types_list == IDS_SYM]))
+
+  annot_with_ids <-
+    annot_with_ids[!duplicated(annot_with_ids$input),]
+
+  return(annot_with_ids)
+}
+
+#' Convert symbols to ids using key data.frame
+#'
+#' This function tries to convert symbols to ids using the key data.frame created
+#' with `make_annot_with_ids`. In case there's no ID available, it keeps the
+#' existing symbol.
+#'
+#' @param sample_annot data.frame of annotations
+#' @param annot_with_ids data.frame of annotations with IDs. Key data.frame
+#'
+#' @return
+#' @export
+#'
+sym_to_ids <- function(sample_annot, annot_with_ids) {
+  matched_symbols_index <-
+    match(sample_annot$input, annot_with_ids$name)
+  symbols_with_ids <-
+    which(sample_annot$input %in% annot_with_ids$name)
+
+  sample_annot$input[symbols_with_ids] <-
+    annot_with_ids$input[na.omit(matched_symbols_index)]
+
+  #This avoids duplicates after combining with the annotated df.
+  #Leads to a mismatch in genes between samples but it seems like the best solution
+  sample_annot$input <- make.unique(sample_annot$input)
+
+  return(sample_annot)
+}
+
+#' Convert IDS to symbols using key data.frame
+#'
+#' This function tries to convert IDs to symbols using the key data.frame created
+#' with `make_annot_with_ids`. In case there's no symbol available, it keeps the
+#' existing ID
+#'
+#' @param sample_annot data.frame of annotations
+#' @param annot_with_ids data.frame of annotations with IDs. Key data.frame
+#'
+#' @return
+#' @export
+#'
+ids_to_sym <- function(sample_annot, annot_with_ids) {
+  matched_ids_index <- match(sample_annot$input, annot_with_ids$input)
+  symbols_with_ids <-
+    which(sample_annot$input %in% annot_with_ids$input)
+
+  sample_annot$name[symbols_with_ids] <-
+    annot_with_ids$name[na.omit(matched_ids_index)]
+
+  return(sample_annot)
+}
+
+
 filter_unnamed_features <- function(counts, annotations, sample) {
 
   # Check existence of empty gene symbols in count matrix' rownames.
   # If there are more than one the first will be empty, while the
   # following will be ".1", ".2"... because Seurat runs make.unique
-  unnamed_genes <- c(which(rownames(counts) == ""), grep("^\\.[0-9]+", rownames(counts)))
-
+  unnamed_genes <- grep("^\\.[0-9]+$|^$", rownames(counts))
 
   # remove rows with empty names if < 0.1% of the total features.
   if (length(unnamed_genes) != 0 & length(unnamed_genes) / nrow(counts) < 0.001) {
@@ -375,41 +466,4 @@ filter_unnamed_features <- function(counts, annotations, sample) {
 
   return(list("counts" = counts, "annotations" = annotations))
 
-}
-
-make_annot_with_ids <- function(annot_list, feature_types_list) {
-  annot_with_ids <-
-    unique(do.call("rbind", annot_list[feature_types_list == IDS_SYM]))
-
-  annot_with_ids <-
-    annot_with_ids[!duplicated(annot_with_ids$input),]
-
-  return(annot_with_ids)
-}
-
-sym_to_ids <- function(sample_annot, annot_with_ids) {
-  matched_symbols_index <-
-    match(sample_annot$input, annot_with_ids$name)
-  symbols_with_ids <-
-    which(sample_annot$input %in% annot_with_ids$name)
-
-  sample_annot$input[symbols_with_ids] <-
-    annot_with_ids$input[na.omit(matched_symbols_index)]
-
-  #This avoids duplicates after combining with the annotated df.
-  #Leads to a mismatch in genes between samples but it seems like the best solution
-  sample_annot$input <- make.unique(sample_annot$input)
-
-  return(sample_annot)
-}
-
-ids_to_sym <- function(sample_annot, annot_with_ids) {
-  matched_ids_index <- match(sample_annot$input, annot_with_ids$input)
-  symbols_with_ids <-
-    which(sample_annot$input %in% annot_with_ids$input)
-
-  sample_annot$name[symbols_with_ids] <-
-    annot_with_ids$name[na.omit(matched_ids_index)]
-
-  return(sample_annot)
 }
