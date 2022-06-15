@@ -527,7 +527,7 @@ test_that("read_10x_files removes rows with empty feature names both in count ma
 })
 
 
-test_that("read_10x_files removes single row with empty feature names both in count matrix and annotation if present and < 0.1%", {
+test_that("read_10x_files removes rows without annotations", {
   # mock count matrix replicating it 10 times to mock a matrix with < 0.1% of empty features
   counts <- mock_counts()[rep(seq_len(nrow(mock_counts())), each = 10), ]
   rownames(counts)[2] <- ""
@@ -551,35 +551,6 @@ test_that("read_10x_files removes single row with empty feature names both in co
 
   expect_equal(length(which(rownames(counts_list[[1]]) == "")), 0)
   expect_equal(length(which(annot[, 1] == "")), 0)
-})
-
-
-test_that("read_10x_files doesn't remove any rows with empty feature names both in count matrix and annotation if present and >= 0.1%", {
-  counts <- mock_counts()
-  rownames(counts)[2] <- ""
-  rownames(counts)[3] <- ".1"
-
-  features <- data.frame(
-    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
-    symbol = row.names(counts)
-  )
-  features[2:3, 1:2] <- ""
-
-  experiment_dir <- "./experiment_1"
-  sample <- "sample_a"
-
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
-
-  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
-
-  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
-
-  counts_list <- out$counts_list
-  annot <- out$annot
-
-  expect_equal(nrow(counts), nrow(counts_list[[1]]))
-  # expect_equal(nrow(features), nrow(annot))  # decomment this line and delete the following line when make unique will be added in format_annot [BIOMAGE-1817]
-  expect_equal(length(which(annot[, 1] == "")), 1)
 })
 
 
