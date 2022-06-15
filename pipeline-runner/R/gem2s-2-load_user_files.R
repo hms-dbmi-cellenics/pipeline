@@ -430,6 +430,22 @@ ids_to_sym <- function(sample_annot, annot_with_ids) {
 }
 
 
+#' Try to fix genes without name or remove them
+#'
+#' This function checks if genes whose annotations in the count matrix (`rownames(counts)`)
+#' are empty, can be annotated with a different column from the features file,
+#' read into the `annotations[["annot"]]` table. If it can, they are replaced everywhere
+#' (both in the count matrix and in all columns of the annotations table). In case
+#' the other columns do not provide a better annotation, they are removed from
+#' the count matrix and annotations table.
+#'
+#' @param counts count matrix
+#' @param annotations list of annotations data.frame, feature types and gene_column
+#' @param sample character specifying current sample
+#'
+#' @return
+#' @export
+#'
 filter_unnamed_features <- function(counts, annotations, sample) {
   # Check existence of empty gene symbols in count rownames
   # first will be empty; then ".1" because make.unique.
