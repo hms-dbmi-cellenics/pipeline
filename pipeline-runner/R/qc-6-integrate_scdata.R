@@ -168,7 +168,6 @@ run_seuratv4 <- function(scdata, config) {
     data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], nfeatures = nfeatures, verbose = FALSE)
     # PCA needs to be run also here
     # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
-    # QUESTION: should we run it also after the integration (as the code currently does) or not?
     if (reduction == "rpca") {
       message("Running PCA")
       data.split[[i]] <- Seurat::ScaleData(data.split[[i]], verbose = FALSE)
