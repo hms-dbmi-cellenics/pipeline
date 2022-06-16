@@ -186,8 +186,8 @@ run_seuratv4 <- function(scdata, config) {
   k.filter <- min(ceiling(sapply(data.split, ncol) / 2), 200)
   tryCatch(
     {
-      if (reduction == "rpca") message("Finding integration anchors using RPCA method")
-      if (reduction == "cca") message("Finding integration anchors using CCA method")
+      if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
+      if (reduction == "cca") message("Finding integration anchors using CCA reduction")
       data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE, reduction = reduction)
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs)
       Seurat::DefaultAssay(scdata) <- "integrated"
