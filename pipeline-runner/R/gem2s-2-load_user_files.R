@@ -461,19 +461,16 @@ filter_unnamed_features <- function(counts, annotations, sample) {
   if (any(keep_ids)) {
 
     rownames(counts)[unnamed_genes_idx][keep_ids] <-
-      annotations$annot$original_name[unnamed_genes_idx][keep_ids]
+      annotations$annot$name[unnamed_genes_idx][keep_ids]
 
     rownames(annotations$annot)[unnamed_genes_idx][keep_ids] <-
-      annotations$annot$original_name[unnamed_genes_idx][keep_ids]
+      annotations$annot$name[unnamed_genes_idx][keep_ids]
 
     annotations$annot$input[unnamed_genes_idx][keep_ids] <-
-      annotations$annot$original_name[unnamed_genes_idx][keep_ids]
-
-    annotations$annot$name[unnamed_genes_idx][keep_ids] <-
-      annotations$annot$original_name[unnamed_genes_idx][keep_ids]
+      annotations$annot$name[unnamed_genes_idx][keep_ids]
 
     message("Replaced ", length(which(keep_ids)),
-            "empty gene names with their ensembl IDs")
+            "empty gene names with available not empty annotation.")
 
   }
 
