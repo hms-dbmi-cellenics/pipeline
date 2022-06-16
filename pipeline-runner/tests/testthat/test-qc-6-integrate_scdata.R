@@ -236,7 +236,7 @@ test_that("SeuratV4 integration finds integration anchors using RPCA method, if 
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(scdata <- suppressWarnings(run_dataIntegration(scdata, config)), "Finding integration anchors using RPCA method")
+  expect_message(scdata <- suppressWarnings(run_dataIntegration(scdata, config)), "Finding integration anchors using RPCA reduction")
   expect_equal(scdata@commands$FindIntegrationAnchors$reduction, "pca")
 })
 
@@ -252,6 +252,6 @@ test_that("SeuratV4 integration finds integration anchors using CCA method, if m
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(scdata <- suppressWarnings(run_dataIntegration(scdata, config)), "Finding integration anchors using CCA method")
+  expect_message(scdata <- suppressWarnings(run_dataIntegration(scdata, config)), "Finding integration anchors using CCA reduction")
   expect_equal(scdata@commands$FindIntegrationAnchors$reduction, "cca")
 })
