@@ -18,7 +18,7 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
 
   # add samples
   scdata$samples <- rep(c("123abc", "123def"), each = ncol(scdata) / 2)
-  scdata$cells_id <- 0:(ncol(scdata)-1)
+  scdata$cells_id <- 0:(ncol(scdata) - 1)
   scdata@misc$gene_annotations$input <- rownames(scdata)
 
   # scale and PCA
