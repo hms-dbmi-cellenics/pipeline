@@ -206,7 +206,7 @@ test_that("PCA is computed when RPCA method is selected within SeuratV4 integrat
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(run_dataIntegration(scdata, config),"Running PCA")
+  expect_message(run_dataIntegration(scdata, config), "Running PCA")
 })
 
 
