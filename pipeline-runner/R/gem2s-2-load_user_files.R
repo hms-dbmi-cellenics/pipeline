@@ -77,7 +77,7 @@ read_10x_files <- function(config, input_dir) {
     if (is(counts, "list")) {
       slot <- "Gene Expression"
       # questionable: grab first slot if no slot named gene expression
-      if (!slot %in% names(counts)) slot <- names(counts)[1]
+      if (!(slot %in% names(counts))) slot <- names(counts)[1]
       counts <- counts[[slot]]
     }
 
