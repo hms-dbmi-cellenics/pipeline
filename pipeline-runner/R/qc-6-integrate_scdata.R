@@ -152,6 +152,9 @@ run_seuratv4 <- function(scdata, config) {
   # for data integration
   npcs <- config$dimensionalityReduction$numPCs
 
+  # get reduction method to find integration anchors
+  reduction <- config$dimensionalityReduction$method
+
   # grep in case misspelled
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
@@ -163,6 +166,16 @@ run_seuratv4 <- function(scdata, config) {
   for (i in 1:length(data.split)) {
     data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = FALSE)
     data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], nfeatures = nfeatures, verbose = FALSE)
+    # PCA needs to be run also here
+    # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
+    if (reduction == "rpca") {
+      message("Running PCA")
+      data.split[[i]] <- Seurat::ScaleData(data.split[[i]], verbose = FALSE)
+      data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE, npcs = npcs)
+    }
+    else {
+      message("PCA is not running before integration as CCA method is selected")
+    }
   }
 
   # If Number of anchor cells is less than k.filter/2, there is likely to be an error:
@@ -172,7 +185,9 @@ run_seuratv4 <- function(scdata, config) {
   k.filter <- min(ceiling(sapply(data.split, ncol) / 2), 200)
   tryCatch(
     {
-      data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE)
+      if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
+      if (reduction == "cca") message("Finding integration anchors using CCA reduction")
+      data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE, reduction = reduction)
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs)
       Seurat::DefaultAssay(scdata) <- "integrated"
     },
