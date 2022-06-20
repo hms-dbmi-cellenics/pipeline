@@ -99,8 +99,6 @@ load_config <- function(development_aws_server, api_version = "v1") {
 
     }
 
-    config[["samples_table"]] <- paste("samples", config$cluster_env, config$aws_account_id, sep = "-")
-    config[["experiments_table"]] <- paste("experiments", config$cluster_env, config$aws_account_id, sep = "-")
     config[["originals_bucket"]] <- paste("biomage-originals", config$cluster_env, config$aws_account_id, sep = "-")
     config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, config$aws_account_id, sep = "-")
     config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, config$aws_account_id, sep = "-")
