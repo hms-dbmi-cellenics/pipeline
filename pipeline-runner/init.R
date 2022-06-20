@@ -227,6 +227,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     #need this for embed_and_cluster
     config$api_url <- pipeline_config$api_url
     config$auth_JWT <- input$authJWT
+    config$api_version <- input$apiVersion
 
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
@@ -410,7 +411,7 @@ init <- function() {
 
         tryCatchLog({
                 # Refresh pipeline_config with the new task input
-                pipeline_config <- load_config(input$server, api_version = input$apiVersion %||% "v1")
+                pipeline_config <- load_config(input$server, api_version = input$apiVersion)
 
                 wrapper(input, pipeline_config)
 
