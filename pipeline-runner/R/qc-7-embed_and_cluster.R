@@ -9,6 +9,7 @@ embed_and_cluster <-
            sample_id,
            cells_id,
            task_name = "configureEmbedding") {
+
     message("starting clusters")
     clustering_method <- config$clusteringSettings$method
     methodSettings <-
@@ -24,6 +25,7 @@ embed_and_cluster <-
     update_sets_through_api(
       formated_cell_sets,
       config$api_url,
+      config$api_version,
       scdata@misc$experimentId,
       clustering_method,
       config$auth_JWT
@@ -74,13 +76,14 @@ format_cell_sets_object <-
 update_sets_through_api <-
   function(cell_sets_object,
            api_url,
+           api_version,
            experiment_id,
            cell_set_key,
            auth_JWT) {
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
     httr::PATCH(
-      paste0(api_url, "/v1/experiments/", experiment_id, "/cellSets"),
+      paste0(api_url, "/", api_version, "/experiments/", experiment_id, "/cellSets"),
       body = list(list(
         "$match" = list(query = httr_query, value = list("$remove" = TRUE))
       ),

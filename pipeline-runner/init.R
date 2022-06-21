@@ -99,16 +99,14 @@ load_config <- function(development_aws_server, api_version = "v1") {
 
     }
 
-    config[["samples_table"]] <- paste("samples", config$cluster_env, sep = "-")
-    config[["experiments_table"]] <- paste("experiments", config$cluster_env, sep = "-")
-    config[["originals_bucket"]] <- paste("biomage-originals", config$cluster_env, sep = "-")
-    config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, sep = "-")
-    config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, sep = "-")
-    config[["results_bucket"]] <- paste("worker-results", config$cluster_env, sep = "-")
-    config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, sep = "-")
-    config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
-    config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, sep = "-")
-    config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, sep = "-")
+    config[["originals_bucket"]] <- paste("biomage-originals", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["results_bucket"]] <- paste("worker-results", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, config$aws_account_id, sep = "-")
 
     if (api_version == "v1") {
         config[["sns_topic"]] <- paste(
@@ -229,6 +227,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     #need this for embed_and_cluster
     config$api_url <- pipeline_config$api_url
     config$auth_JWT <- input$authJWT
+    config$api_version <- input$apiVersion
 
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
@@ -412,7 +411,7 @@ init <- function() {
 
         tryCatchLog({
                 # Refresh pipeline_config with the new task input
-                pipeline_config <- load_config(input$server, api_version = input$apiVersion %||% "v1")
+                pipeline_config <- load_config(input$server, api_version = input$apiVersion)
 
                 wrapper(input, pipeline_config)
 
