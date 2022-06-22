@@ -69,7 +69,6 @@ FROM builder AS dev
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 RUN apt update && apt -y install git
 RUN pip install memory_profiler
-# RUN git clone https://github.com/pythonprofilers/memory_profiler.git && cd memory_profiler && pip3 install .
 
 # start app
 ADD R ./R

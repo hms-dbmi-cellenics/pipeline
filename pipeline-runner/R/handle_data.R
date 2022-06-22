@@ -52,7 +52,7 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   sample_ids <- sapply(samples, function(x) strsplit(x$Key, "/")[[1]][[2]])
   message("reaload_scdata sample_ids 01: ", sample_ids)
   message("samples: ", samples)
-  scdata <- list()
+  scdata_list <- list()
   for (sample in samples) {
     key <- sample$Key
     message("sample: ", sample)
@@ -63,12 +63,13 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
     )
     obj <- readRDS(rawConnection(body))
     sample_id <- strsplit(key, "/")[[1]][[2]]
-    scdata[[sample_id]] <- obj
+    scdata_list[[sample_id]] <- obj
   }
 
+  # saveRDS(scdata_list, '/debug/scdata_list.hd.rds')
   #scdata$samples <- samples
 
-  return(scdata)
+  return(scdata_list)
 }
 
 load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, samples) {
