@@ -37,6 +37,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     )
   }
 
+  message("Samples uploaded")
+
   cluster_env <- pipeline_config$cluster_env
 
   experiment_data <- list(
