@@ -28,8 +28,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   message('ExperimentID: ', experiment_id)
  for (sample in names(scdata_list)) {
     message('Uploading: ', sample)
-    message("scdata_list[[sample]]: ")
-    message(scdata_list[[sample]])
+    # message("scdata_list[[sample]]: ")
+    # message(scdata_list[[sample]])
     # seurat object to s3
     message("Uploading Seurat Object to S3 ...")
     fpath <- file.path(tempdir(), "experiment.rds")
