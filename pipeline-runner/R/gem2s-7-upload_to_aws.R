@@ -25,13 +25,16 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     key = experiment_id
   )
 
+  message('ExperimentID: ', experiment_id)
  for (sample in names(scdata_list)) {
     message('Uploading: ', sample)
+    message("scdata_list[[sample]]: ")
+    message(scdata_list[[sample]])
     # seurat object to s3
     message("Uploading Seurat Object to S3 ...")
     fpath <- file.path(tempdir(), "experiment.rds")
     saveRDS(scdata_list[[sample]], fpath, compress = FALSE)
-
+    message("Created fpath")
     # can only upload up to 50Gb because part numbers can be any number from 1 to 10,000, inclusive.
     put_object_in_s3_multipart(pipeline_config,
       bucket = pipeline_config$source_bucket,
@@ -40,6 +43,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     )
   }
 
+  quit(status=1)
 
   cluster_env <- pipeline_config$cluster_env
 
