@@ -313,12 +313,10 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
   message(sprintf("Putting %s in %s from object %s", key, bucket, object))
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  message("Created s3 handle")
   multipart <- s3$create_multipart_upload(
     Bucket = bucket,
     Key = key
   )
-  message("Created s3 handle")
   resp <- NULL
   on.exit({
     if (is.null(resp) || inherits(resp, "try-error")) {
