@@ -399,7 +399,7 @@ sym_to_ids <- function(sample_annot, annot_with_ids) {
   symbols_with_idx_in_annot <-
     which(sample_annot$input %in% annot_with_ids$name)
 
-  sample_annot$input[symbols_with_ids] <-
+  sample_annot$input[symbols_with_idx_in_annot] <-
     annot_with_ids$input[na.omit(symbols_with_idx_in_annot)]
 
   #This avoids duplicates after combining with the annotated df.
