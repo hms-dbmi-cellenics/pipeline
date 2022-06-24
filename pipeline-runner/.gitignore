@@ -1,3 +1,4 @@
 .Rproj.user
 tests/testthat/testthat-problems.rds
 .DS_Store
+.vscode
