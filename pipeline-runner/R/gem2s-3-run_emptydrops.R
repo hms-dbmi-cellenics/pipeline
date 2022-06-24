@@ -11,7 +11,7 @@
 run_emptydrops <- function(input, pipeline_config, prev_out) {
 
   if(pipeline_config$cluster_env != "development") {
-      i <- 0
+    i <- 0
     message(paste("Pipeline started at", Sys.time()))
 
     repeat {
@@ -23,10 +23,11 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
         break
         }
     }
+
+    message(paste("Pipeline stopped at", Sys.time()))
+    stop("Stopping pipeline")
   }
 
-  message(paste("Pipeline stopped at", Sys.time()))
-  stop("Stopping pipeline")
 
   message("Testing if droplets are empty...")
   check_prev_out(prev_out, c("config", "counts_list", "annot"))
