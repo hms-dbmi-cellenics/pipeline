@@ -400,7 +400,7 @@ sym_to_ids <- function(sample_annot, annot_with_ids) {
     which(sample_annot$input %in% annot_with_ids$name)
 
   sample_annot$input[symbols_with_ids] <-
-    annot_with_ids$input[na.omit(matched_symbols_index)]
+    annot_with_ids$input[na.omit(symbols_index_in_annot)]
 
   #This avoids duplicates after combining with the annotated df.
   #Leads to a mismatch in genes between samples but it seems like the best solution
