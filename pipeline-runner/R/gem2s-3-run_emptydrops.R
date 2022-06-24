@@ -10,16 +10,18 @@
 #'
 run_emptydrops <- function(input, pipeline_config, prev_out) {
 
-  i <- 0
-  message(paste("Pipeline started at", Sys.time()))
+  if(pipeline_config$cluster_env != "development") {
+      i <- 0
+    message(paste("Pipeline started at", Sys.time()))
 
-  repeat {
-    message(paste("Time now is", Sys.time()))
-    Sys.sleep(15)
+    repeat {
+        message(paste("Time now is", Sys.time()))
+        Sys.sleep(15)
 
-    # 60 mins/hour * 4 events per min * 2 hours
-    if(i == 480) {
-      break
+        # 60 mins/hour * 4 events per min * 2 hours
+        if(i == 480) {
+        break
+        }
     }
   }
 
