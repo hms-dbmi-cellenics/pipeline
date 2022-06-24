@@ -462,15 +462,13 @@ filter_unnamed_features <- function(counts, annotations, sample) {
   # replace count rownames and gene annotations
   # Using two masks to avoid storing large boolean vectors
   if (any(keep_ids)) {
+    available_gene_symbols <- annotations$annot$name[unnamed_genes_idx][keep_ids]
+    
+    rownames(counts)[unnamed_genes_idx][keep_ids] <- available_gene_symbols
 
-    rownames(counts)[unnamed_genes_idx][keep_ids] <-
-      annotations$annot$name[unnamed_genes_idx][keep_ids]
+    rownames(annotations$annot)[unnamed_genes_idx][keep_ids] <- available_gene_symbols
 
-    rownames(annotations$annot)[unnamed_genes_idx][keep_ids] <-
-      annotations$annot$name[unnamed_genes_idx][keep_ids]
-
-    annotations$annot$input[unnamed_genes_idx][keep_ids] <-
-      annotations$annot$name[unnamed_genes_idx][keep_ids]
+    annotations$annot$input[unnamed_genes_idx][keep_ids] <- available_gene_symbols
 
     message("Replaced ", length(which(keep_ids)),
             "empty gene names with available not empty annotation.")
