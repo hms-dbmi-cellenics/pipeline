@@ -396,11 +396,11 @@ make_annot_with_ids <- function(annot_list, feature_types_list) {
 sym_to_ids <- function(sample_annot, annot_with_ids) {
   symbol_idx_in_annot <-
     match(sample_annot$input, annot_with_ids$name)
-  symbols_with_ids <-
+  symbols_with_idx_in_annot <-
     which(sample_annot$input %in% annot_with_ids$name)
 
   sample_annot$input[symbols_with_ids] <-
-    annot_with_ids$input[na.omit(symbol_idx_in_annot)]
+    annot_with_ids$input[na.omit(symbols_with_idx_in_annot)]
 
   #This avoids duplicates after combining with the annotated df.
   #Leads to a mismatch in genes between samples but it seems like the best solution
