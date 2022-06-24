@@ -228,6 +228,7 @@ read_10x_annotations <- function(annot_fpath, sample) {
   # reverse annot cols if symbols are first
   if (feature_types == SYM_IDS) {
     annot[, c(1, 2)] <- annot[, c(2, 1)]
+    # Read10x reads from the feature file which is not modified, but contains IDS in the second column. Use gene_column to indicate to Read10x from where to read the ids. 
     gene_column <- 2
     feature_types <- IDS_SYM
   }
