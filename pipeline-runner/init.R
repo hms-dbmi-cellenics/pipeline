@@ -409,6 +409,21 @@ init <- function() {
             stderr = "/tmp/err"
         )
 
+        i <- 0
+        message(paste("Pipeline started at", Sys.time()))
+
+        repeat {
+            message(paste("Time now is", activity_arn))
+            Sys.sleep(15)
+
+            # 60 mins/hour * 4 events per min * 2 hours
+            if(i == 4) {
+                break
+            }
+        }
+
+        stop("Stopping pipeline")
+
         tryCatchLog({
                 # Refresh pipeline_config with the new task input
                 pipeline_config <- load_config(input$server, api_version = input$apiVersion)
