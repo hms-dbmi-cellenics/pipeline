@@ -214,8 +214,9 @@ read_10x_annotations <- function(annot_fpath, sample) {
 
   annot <- read.delim(annot_fpath, header = FALSE)
 
-  # duplicate first col if there is only one col with gene names/ids, or
-  # if there is a "Gene Expression" col
+  # Some feature files have less columns than expected.
+  # Duplicate first column if there is only one column with gene names/ids, or
+  # if there is a "Gene Expression" column
   if (ncol(annot) == 1 || annot[1, 2] == "Gene Expression") {
     annot[, 2] <- annot[, 1]
   }
