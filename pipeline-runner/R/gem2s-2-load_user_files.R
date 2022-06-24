@@ -342,7 +342,7 @@ get_feature_types <- function(annot) {
   is_ens_col2 <- startsWith(annot[[2]], "ENS")
   pct_ens_col2 <- sum(is_ens_col2) / nrow(annot)
 
-  is_ens <- c(pct_ens_col1 >= 0.5, pct_ens_col2 >= 0.5)
+  is_ens <- c(pct_ens_col1, pct_ens_col2) >= 0.5
 
   # reverse case, sym in first and id in second column
   if (!is_ens[1] && is_ens[2]) return(SYM_IDS)
