@@ -394,7 +394,7 @@ make_annot_with_ids <- function(annot_list, feature_types_list) {
 #' @export
 #'
 sym_to_ids <- function(sample_annot, annot_with_ids) {
- symbols_index_in_annot <-
+  symbols_index_in_annot <-
     match(sample_annot$input, annot_with_ids$name)
   symbols_with_ids <-
     which(sample_annot$input %in% annot_with_ids$name)
