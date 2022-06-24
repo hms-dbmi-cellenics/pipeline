@@ -235,7 +235,7 @@ read_10x_annotations <- function(annot_fpath, sample) {
 
   # Make the names in annot the same as the ones in the Read10x generated count matrix
   # Since Seurat uses makes.unique, we need to as well.
-  # Only for the first column, at this stage column 1 are the matrix rownames.
+  # Only for the first column, at this stage column 1 are the counts matrix rownames.
   annot[, 1] <- make.unique(annot[, 1])
 
   # Equalizing number of columns in case there's no Gene Expression column
