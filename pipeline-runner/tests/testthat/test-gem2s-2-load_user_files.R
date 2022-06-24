@@ -304,7 +304,7 @@ test_that("normalize_annotation_types does nothing if all annotation types are t
   expect_equal(res[[2]],annot_list)
 })
 
-test_that("equalize_annotations does nothing if there are no samples with annotations",{
+test_that("normalize_annotation_types does nothing if there are no samples with annotations",{
   input <- mock_lists()
 
   features_types_list <- list(sample1=get_feature_types(input$annot_list$sample1),sample2=get_feature_types(input$annot_list$sample2))
