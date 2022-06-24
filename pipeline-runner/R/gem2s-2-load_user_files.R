@@ -477,9 +477,9 @@ filter_unnamed_features <- function(counts, annotations, sample) {
 
   # remove remaining rows if there are any
   if (any(!keep_ids)) {
-  counts <- counts[-unnamed_genes_idx[!keep_ids], ]
-  annotations$annot <- annotations$annot[-unnamed_genes_idx[!keep_ids], ]
-
+  genes_to_remove <- unnamed_genes_idx[!keep_ids]
+  counts <- counts[-genes_to_remove, ]
+  annotations$annot <- annotations$annot[-genes_to_remove, ]
   message("Removed ",
           length(unnamed_genes_idx[!keep_ids]),
           "genes without annotations")
