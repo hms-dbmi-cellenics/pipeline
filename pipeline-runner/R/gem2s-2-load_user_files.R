@@ -422,12 +422,12 @@ sym_to_ids <- function(sample_annot, annot_with_ids) {
 #' @export
 #'
 ids_to_sym <- function(sample_annot, annot_with_ids) {
-  matched_ids_index <- match(sample_annot$input, annot_with_ids$input)
-  symbols_with_ids <-
+  ids_index_in_annot <- match(sample_annot$input, annot_with_ids$input)
+  ids_with_symbols_in_annot <-
     which(sample_annot$input %in% annot_with_ids$input)
 
-  sample_annot$name[symbols_with_ids] <-
-    annot_with_ids$name[na.omit(matched_ids_index)]
+  sample_annot$name[ids_with_symbols_in_annot] <-
+    annot_with_ids$name[na.omit(ids_index_in_annot)]
 
   return(sample_annot)
 }
