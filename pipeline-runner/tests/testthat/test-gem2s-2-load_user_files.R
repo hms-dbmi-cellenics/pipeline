@@ -541,7 +541,7 @@ test_that("normalize_annotation_types throws with incompatible feature types", {
 
   # sample 2 with symbols only
   input$annot_list$sample2$input <- input$annot_list$sample2$name
-  rownames(input$counts_list$sample2) <- sample2_annot$input
+  rownames(input$counts_list$sample2) <- input$annot_list$sample2$input
 
 
   feature_types_list <- lapply(input$annot_list, get_feature_types)
