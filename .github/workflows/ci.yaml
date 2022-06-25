@@ -282,13 +282,11 @@ jobs:
           | yq w -d1 - spec.chart.ref "$CHART_REF" \
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
           | yq w -d1 - spec.values.clusterEnv "$KUBERNETES_ENV" \
-          | yq w -d1 - spec.values.awsAccountId --tag '!!str' "${{ steps.setup-aws.outputs.aws-account-id }}" \
-          | yq w -d1 - spec.values.awsRegion "${{ secrets.AWS_DEFAULT_REGION }}" \
           | yq w -d1 - spec.values.pipelineRunner.image "$IMAGE_NAME-pipeline-runner" \
           | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.values.memoryRequest "$MEMORY_REQUEST" \
           | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \
-          | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/pipeline-role-$KUBERNETES_ENV" \
+          | yq w -d1 - spec.values.serviceAccount.iamRole "pipeline-role-$KUBERNETES_ENV" \
           | yq w -d1 - "metadata.annotations[filter.fluxcd.io/pipelineRunner]" "glob:$IMAGE_GLOB-pipeline-runner" \
           > $DEPLOYMENT_NAME.yaml
 
@@ -320,6 +318,19 @@ jobs:
           user_email: 'ci@biomage.net'
           user_name: 'Biomage CI/CD'
 
+      - name: Push production/develop template to releases
+        if:
+          (matrix.environment == 'production' && github.event_name == 'release' && github.event.action == 'released') || (matrix.environment == 'develop' && github.event_name == 'push')
+        uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source_file: '${{ steps.fill-metadata.outputs.deployment-name }}.yaml'
+          destination_repo: '${{ github.repository_owner }}/releases'
+          destination_folder: '${{ steps.fill-metadata.outputs.kubernetes-env }}'
+          user_email: 'ci@biomage.net'
+          user_name: 'Biomage CI/CD'
+
       - name: Change name of deployment file for staging deployment
         if:
           (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
@@ -339,6 +350,19 @@ jobs:
           source_file: '${{ steps.fill-metadata.outputs.ref-dashed }}.yaml'
           destination_repo: '${{ github.repository_owner }}/iac'
           destination_folder: 'releases/staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}'
+          user_email: 'ci@biomage.net'
+          user_name: 'Biomage CI/CD'
+
+      - name: Push staging deployment template to releases
+        if:
+          (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
+        uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source_file: '${{ steps.fill-metadata.outputs.ref-dashed }}.yaml'
+          destination_repo: '${{ github.repository_owner }}/releases'
+          destination_folder: 'staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}'
           user_email: 'ci@biomage.net'
           user_name: 'Biomage CI/CD'
 
