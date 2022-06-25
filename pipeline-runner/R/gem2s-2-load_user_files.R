@@ -209,6 +209,20 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   return(list(counts_list = counts_list, annot = annot))
 }
 
+#' Load and parse annotations from the feature files
+#'
+#' This function reads the features file into a data.frame, and takes steps
+#' towards its standardization, converting it to a two-column data.frame, the first column
+#' being the same as the rownames of the count matrix (ideally ensemblIDs), and
+#' the second either the gene symbols if they are available or a copy of the gene IDs.
+#'
+#' @param annot_fpath chraracter path to features file
+#' @param sample character sample id
+#'
+#' @return list of annotations data.frame
+#' @export
+#'
+#' @examples
 read_10x_annotations <- function(annot_fpath, sample) {
   gene_column <- 1
 
@@ -228,7 +242,8 @@ read_10x_annotations <- function(annot_fpath, sample) {
   # reverse annot cols if symbols are first
   if (feature_types == SYM_IDS) {
     annot[, c(1, 2)] <- annot[, c(2, 1)]
-    # Read10x reads from the feature file which is not modified, but contains IDS in the second column. Use gene_column to indicate to Read10x from where to read the ids. 
+    # Read10x reads from the feature file which is not modified by us, but contains IDS
+    # in the second column. Use gene_column to indicate to Read10x from where to read the ids.
     gene_column <- 2
     feature_types <- IDS_SYM
   }
@@ -471,7 +486,7 @@ filter_unnamed_features <- function(counts, annotations, sample) {
     annotations$annot$input[unnamed_genes_idx][keep_ids] <- available_gene_symbols
 
     message("Replaced ", length(which(keep_ids)),
-            "empty gene names with available not empty annotation.")
+            " empty gene names with available not empty annotation.")
 
   }
 
@@ -482,7 +497,7 @@ filter_unnamed_features <- function(counts, annotations, sample) {
   annotations$annot <- annotations$annot[-genes_to_remove, ]
   message("Removed ",
           length(unnamed_genes_idx[!keep_ids]),
-          "genes without annotations")
+          " genes without annotations")
   }
 
   return(list("counts" = counts, "annotations" = annotations))
