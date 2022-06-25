@@ -315,8 +315,7 @@ normalize_annotation_types <- function(annot_list, counts_list, feature_types_li
   }
 
   if (any(feature_types_list == IDS_SYM) &&
-      (any(feature_types_list == IDS_IDS) ||
-       any(feature_types_list == SYM_SYM))) {
+      any(feature_types_list == IDS_IDS) || any(feature_types_list == SYM_SYM)) {
     annot_with_ids <-
       make_annot_with_ids(annot_list, feature_types_list)
 
@@ -415,7 +414,7 @@ sym_to_ids <- function(sample_annot, annot_with_ids) {
     which(sample_annot$input %in% annot_with_ids$name)
 
   sample_annot$input[symbols_with_ids_in_annot] <-
-    annot_with_ids$input[na.omit(symbols_with_ids_in_annot)]
+    annot_with_ids$input[na.omit(symbol_idx_in_annot)]
 
   #This avoids duplicates after combining with the annotated df.
   #Leads to a mismatch in genes between samples but it seems like the best solution
