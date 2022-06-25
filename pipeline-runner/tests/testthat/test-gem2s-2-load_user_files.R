@@ -207,6 +207,31 @@ test_that("load_user_files uses appropriate feature columns for 10x data", {
 
 })
 
+test_that("load_user_files uses first column if no Gene Expression column present in features file", {
+  counts <- mock_counts()
+  print(nrow(counts))
+
+  symbols <- row.names(counts)
+  # create features without Gene Expression slot
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
+    symbol = symbols,
+    type = c(rep("bla", 42), rep("not this one", nrow(counts)-42))
+  )
+
+  experiment_dir <- "./experiment_1"
+  sample <- "sample_a"
+
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
+
+  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
+
+  # expect we keep only the rows corresponding to the first slot
+  expect_equal(nrow(out$counts_list$sample_a), 42)
+
+})
+
 
 test_that("load_user_files loads 10x multisample experiments", {
   counts <- mock_counts()
@@ -278,6 +303,54 @@ test_that("read_10x_files returns error if files missing", {
   file.rename(file.path(sample_dir, file), file.path(sample_dir, "blah"))
   expect_error(supressWarnings(load_user_files(NULL, NULL, prev_out, experiment_dir), "cannot open the connection"))
   file.rename(file.path(sample_dir, "blah"), file.path(sample_dir, file))
+
+})
+
+test_that("read_10x_annotations inverts columns if Gene Expression in second position", {
+
+  counts <- mock_counts()
+  # inverted symbol and colums
+  features <- data.frame(
+    symbol = row.names(counts),
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts)))
+  )
+
+  experiment_dir <- "./experiment_1"
+  sample <- "sample_a"
+  annot_fpath <- file.path(experiment_dir, sample, "features.tsv.gz")
+
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
+
+  res <- read_10x_annotations(annot_fpath, sample)
+
+  # check original features are inverted. (true by design)
+  expect_equal(get_feature_types(features), SYM_IDS)
+
+  expect_equal(get_feature_types(res$annot), IDS_SYM)
+  expect_equal(res$feature_types, IDS_SYM)
+  expect_equal(res$gene_column, 2)
+
+})
+
+test_that("read_10x_annotations duplicates column if there's only one column in features file", {
+  counts <- mock_counts()
+  # only one column in features file
+
+  features <- data.frame(
+    ensid = paste0("ENSFAKE", seq_len(nrow(counts)))
+  )
+
+  experiment_dir <- "./experiment_1"
+  sample <- "sample_a"
+  annot_fpath <- file.path(experiment_dir, sample, "features.tsv.gz")
+
+  local_cellranger_experiment(counts, features, experiment_dir, sample)
+
+  res <- read_10x_annotations(annot_fpath, sample)
+
+  expect_equal(ncol(res$annot), 2)
+  expect_equal(res$annot$name, res$annot$input)
+  expect_equal(res$annot$name, features$ensid)
 
 })
 
@@ -457,6 +530,35 @@ test_that("normalize_annotation_types properly infers ids with more than 2 sampl
   expect_equal(res$annot_list$sample2, expected_annot)
   expect_equal(rownames(res$counts_list$sample2),
                res$annot_list$sample2$input)
+})
+
+test_that("normalize_annotation_types throws with incompatible feature types", {
+
+  input <- mock_lists()
+
+  # sample 1 with ids only
+  input$annot_list$sample1$name <- input$annot_list$sample1$input
+
+  # sample 2 with symbols only
+  input$annot_list$sample2$input <- input$annot_list$sample2$name
+  rownames(input$counts_list$sample2) <- sample2_annot$input
+
+
+  feature_types_list <- lapply(input$annot_list, get_feature_types)
+
+  # check incompatible types (true by design)
+  expect_equal(feature_types_list$sample1, IDS_IDS)
+  expect_equal(feature_types_list$sample2, SYM_SYM)
+
+
+  expect_error(
+    normalize_annotation_types(
+      input$annot_list,
+      input$counts_list,
+      feature_types_list,
+      samples = list("sample1", "sample2")
+    ), "Incompatible features detected.")
+
 })
 
 test_that("duplicated genes dont lead to any rowname duplication",{

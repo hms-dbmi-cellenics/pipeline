@@ -237,7 +237,7 @@ read_10x_annotations <- function(annot_fpath, sample) {
 
   feature_types <- get_feature_types(annot)
 
-  message("Feature types are ", feature_types, "for sample ", sample)
+  message("Feature types are ", feature_types, " for sample ", sample)
 
   # reverse annot cols if symbols are first
   if (feature_types == SYM_IDS) {
