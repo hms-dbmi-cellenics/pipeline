@@ -477,7 +477,7 @@ filter_unnamed_features <- function(counts, annotations, sample) {
   # Using two masks to avoid storing large boolean vectors
   if (any(keep_ids)) {
     available_gene_symbols <- annotations$annot$name[unnamed_genes_idx][keep_ids]
-    
+
     rownames(counts)[unnamed_genes_idx][keep_ids] <- available_gene_symbols
 
     rownames(annotations$annot)[unnamed_genes_idx][keep_ids] <- available_gene_symbols
@@ -491,12 +491,12 @@ filter_unnamed_features <- function(counts, annotations, sample) {
 
   # remove remaining rows if there are any
   if (any(!keep_ids)) {
-  genes_to_remove <- unnamed_genes_idx[!keep_ids]
-  counts <- counts[-genes_to_remove, ]
-  annotations$annot <- annotations$annot[-genes_to_remove, ]
-  message("Removed ",
-          length(unnamed_genes_idx[!keep_ids]),
-          " genes without annotations")
+    genes_to_remove <- unnamed_genes_idx[!keep_ids]
+    counts <- counts[-genes_to_remove,]
+    annotations$annot <- annotations$annot[-genes_to_remove,]
+    message("Removed ",
+            length(unnamed_genes_idx[!keep_ids]),
+            " genes without annotations")
   }
 
   return(list("counts" = counts, "annotations" = annotations))
