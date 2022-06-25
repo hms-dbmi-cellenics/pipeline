@@ -289,10 +289,10 @@ test_that("get_feature_types properly determines types", {
     sample4 = data.frame(ENSID = paste0("gene", 1:5), SYMBOL = paste0("ENS", 1:5))
   )
 
-  expect_equal(pipeline:::get_feature_types(annot_list[["sample1"]]), IDS_SYM)
-  expect_equal(pipeline:::get_feature_types(annot_list[["sample2"]]), SYM_SYM)
-  expect_equal(pipeline:::get_feature_types(annot_list[["sample3"]]), IDS_IDS)
-  expect_equal(pipeline:::get_feature_types(annot_list[["sample4"]]), SYM_IDS)
+  expect_equal(get_feature_types(annot_list[["sample1"]]), IDS_SYM)
+  expect_equal(get_feature_types(annot_list[["sample2"]]), SYM_SYM)
+  expect_equal(get_feature_types(annot_list[["sample3"]]), IDS_IDS)
+  expect_equal(get_feature_types(annot_list[["sample4"]]), SYM_IDS)
 })
 
 test_that("get_feature_types identifies mixed columns", {
@@ -301,8 +301,8 @@ test_that("get_feature_types identifies mixed columns", {
     sample2 = data.frame(ENSID = c(paste0("ENS", 1:4),paste0("gene",1:6)), SYMBOL = paste0("gene", 1:10))
   )
 
-  expect_equal(pipeline:::get_feature_types(annot_list[["sample1"]]),IDS_SYM)
-  expect_true(pipeline:::get_feature_types(annot_list[["sample2"]])==SYM_SYM)
+  expect_equal(get_feature_types(annot_list[["sample1"]]),IDS_SYM)
+  expect_true(get_feature_types(annot_list[["sample2"]])==SYM_SYM)
 })
 
 
@@ -314,7 +314,7 @@ test_that("normalize_annotation_types does nothing if all annotation types are t
   counts_list <- input$counts_list
   annot_list <- input$annot_list
 
-  res <- pipeline:::normalize_annotation_types(annot_list,counts_list,features_types_list, samples)
+  res <- normalize_annotation_types(annot_list,counts_list,features_types_list, samples)
 
   expect_equal(res[[1]],counts_list)
   expect_equal(res[[2]],annot_list)
@@ -334,7 +334,7 @@ test_that("normalize_annotation_types does nothing if there are no samples with 
   counts_list <- input$counts_list
   annot_list <- input$annot_list
 
-  res <- pipeline:::normalize_annotation_types(annot_list, counts_list, features_types_list, samples)
+  res <- normalize_annotation_types(annot_list, counts_list, features_types_list, samples)
 
   expect_equal(res[[1]],counts_list)
   expect_equal(res[[2]],annot_list)
@@ -351,7 +351,7 @@ test_that("normalize_annotation_types infers gene ids from symbols and corrects 
 
   features_types_list <- list(sample1=get_feature_types(input$annot_list$sample1),sample2=get_feature_types(input$annot_list$sample2))
 
-  res <- pipeline:::normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+  res <-normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
 
   expect_equal(res$annot_list$sample2, input$annot_list$sample1)
   expect_equal(rownames(res$counts_list$sample2), res$annot_list$sample2$input)
@@ -367,7 +367,7 @@ test_that("normalize_annotation_types infers gene symbols from ids",{
 
   features_types_list <- list(sample1=get_feature_types(input$annot_list$sample1),sample2=get_feature_types(input$annot_list$sample2))
 
-  res <- pipeline:::normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+  res <- normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
 
   expect_equal(res$annot_list$sample2,input$annot_list$sample1)
   expect_equal(rownames(res$counts_list$sample2),input$annot_list$sample2$input)
@@ -384,7 +384,7 @@ test_that("normalize_annotation_types infers ids with incomplete match",{
 
   features_types_list <- list(sample1=get_feature_types(input$annot_list$sample1),sample2=get_feature_types(input$annot_list$sample2))
 
-  res <- pipeline:::normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+  res <- normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
 
   expected_annot <- input$annot_list$sample1
   expected_annot$input[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
@@ -405,7 +405,7 @@ test_that("normalize_annotation_types infers symbols with incomplete match and d
 
   features_types_list <- list(sample1=get_feature_types(input$annot_list$sample1),sample2=get_feature_types(input$annot_list$sample2))
 
-  res <- pipeline:::normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+  res <- normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
 
   expected_annot <- input$annot_list$sample1
   expected_annot$input[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
@@ -478,7 +478,7 @@ test_that("duplicated genes dont lead to any rowname duplication",{
 
   features_types_list <- list(sample1=get_feature_types(input$annot_list$sample1),sample2=get_feature_types(input$annot_list$sample2))
 
-  res <- pipeline:::normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+  res <- normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
 
   expected_annot <- annot
   expected_annot$input[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
@@ -502,7 +502,7 @@ test_that("Mislabeling of features types to symbols results in no changes",{
 
   features_types_list <- list(sample1=get_feature_types(input$annot_list$sample1),sample2=get_feature_types(input$annot_list$sample2))
 
-  res <- pipeline:::normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+  res <- normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
 
   expect_equal(res$annot_list$sample2,input$annot_list$sample2)
   expect_equal(rownames(res$counts_list$sample2),input$annot_list$sample2$input)
@@ -520,7 +520,7 @@ test_that("Mislabeling of features types to ids results in no changes",{
 
   features_types_list <- list(sample1=get_feature_types(input$annot_list$sample1),sample2=get_feature_types(input$annot_list$sample2))
 
-  res <- pipeline:::normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+  res <- normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
 
   expect_equal(res$annot_list$sample2,input$annot_list$sample2)
   expect_equal(rownames(res$counts_list$sample2),input$annot_list$sample2$input)
