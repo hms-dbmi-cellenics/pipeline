@@ -25,6 +25,22 @@ mock_counts <- function() {
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
+
+  counts <- as.matrix(pbmc_raw, rownames.force = TRUE)
+  counts <- Matrix::Matrix(counts, sparse = TRUE)
+  return(counts)
+}
+
+mock_annotations <- function(counts) {
+  # pbmc_raw dataset has gene names as rownames.
+  # the annotations data.frame input column contains the rownames of the
+  # count matrix.
+  annot <- data.frame(
+    input = rownames(counts),
+    name = paste0("ENSFAKE", seq_len(nrow(counts)))
+  )
+
+  return(list("annot" = annot))
 }
 
 local_cellranger_experiment <- function(counts, features, experiment_dir, sample_dir, env = parent.frame()) {
@@ -36,16 +52,16 @@ local_cellranger_experiment <- function(counts, features, experiment_dir, sample
 
 }
 
-mock_lists <- function(){
+mock_lists <- function() {
   counts <- mock_counts()
-  symbols <- row.names(counts)
+  symbols <- rownames(counts)
   ensids <- paste0("ENSFAKE", seq_len(nrow(counts)))
   features <- data.frame(input = ensids, name = symbols)
   rownames(counts) <- ensids
 
-  counts_list <- list(sample1=counts,sample2=counts)
-  annot_list <- list(sample1=features,sample2=features)
-  return(list(counts_list=counts_list,annot_list=annot_list))
+  counts_list <- list("sample1" = counts, "sample2" = counts)
+  annot_list <- list("sample1" = features, "sample2" = features)
+  return(list("counts_list" = counts_list, "annot_list" = annot_list))
 }
 
 test_that("format_annot keeps unique rows", {
@@ -401,33 +417,46 @@ test_that("normalize_annotation_types infers symbols with incomplete match and d
 })
 
 test_that("normalize_annotation_types properly infers ids with more than 2 samples",{
+
   input <- mock_lists()
 
   annot <- input$annot_list$sample1
   counts <- input$counts_list$sample1
 
-  input$counts_list$sample3 <- counts[1:(nrow(counts)/2),]
-  input$annot_list$sample3 <- annot[1:(nrow(annot)/2),]
+  input$counts_list$sample3 <- counts[1:(nrow(counts) / 2), ]
+  input$annot_list$sample3 <- annot[1:(nrow(annot) / 2), ]
 
-  input$counts_list$sample1 <- counts[(nrow(counts)/2):nrow(counts),]
-  input$annot_list$sample1 <- annot[(nrow(annot)/2):nrow(annot),]
+  input$counts_list$sample1 <- counts[(nrow(counts) / 2):nrow(counts), ]
+  input$annot_list$sample1 <- annot[(nrow(annot) / 2):nrow(annot), ]
 
   sample2_annot <- input$annot_list$sample2
-  sample2_annot$name[1:nrow(sample2_annot)%%2==1] <- paste0("gene",(1:(nrow(sample2_annot)/2)))
+  sample2_annot$name[seq(1, nrow(sample2_annot), 2)] <-
+    paste0("gene", (1:(nrow(sample2_annot) / 2)))
   sample2_annot$input <- sample2_annot$name
   rownames(input$counts_list$sample2) <- sample2_annot$input
   input$annot_list$sample2 <- sample2_annot
 
-  features_types_list <- list(sample1=get_feature_types(input$annot_list$sample1),sample2=get_feature_types(input$annot_list$sample2))
 
-  res <- pipeline:::normalize_annotation_types(input$annot_list,input$counts_list,features_types_list,samples=list("sample1","sample2"))
+  feature_types_list <- lapply(input$annot_list, get_feature_types)
+
+  res <-
+    normalize_annotation_types(
+      input$annot_list,
+      input$counts_list,
+      feature_types_list,
+      samples = list("sample1", "sample2", "sample3")
+    )
 
   expected_annot <- annot
-  expected_annot$input[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
-  expected_annot$name[1:nrow(expected_annot)%%2==1] <- paste0("gene",(1:(nrow(expected_annot)/2)))
+  expected_annot$input[seq(1, nrow(expected_annot), 2)] <-
+    paste0("gene", (1:(nrow(expected_annot) / 2)))
 
-  expect_equal(res$annot_list$sample2,expected_annot)
-  expect_equal(rownames(res$counts_list$sample2),res$annot_list$sample2$input)
+  expected_annot$name[seq(1, nrow(expected_annot), 2)] <-
+    paste0("gene", (1:(nrow(expected_annot) / 2)))
+
+  expect_equal(res$annot_list$sample2, expected_annot)
+  expect_equal(rownames(res$counts_list$sample2),
+               res$annot_list$sample2$input)
 })
 
 test_that("duplicated genes dont lead to any rowname duplication",{
@@ -498,84 +527,92 @@ test_that("Mislabeling of features types to ids results in no changes",{
 })
 
 
-test_that("read_10x_files removes rows with empty feature names both in count matrix and annotation if present and < 0.1%", {
-  # mock count matrix replicating it 10 times to mock a matrix with < 0.1% of empty features
-  counts <- mock_counts()[rep(seq_len(nrow(mock_counts())), each = 10), ]
+test_that("filter_unnamed_features removes one row without annotations", {
+  counts <- mock_counts()
   rownames(counts)[2] <- ""
-  rownames(counts)[3] <- ".1"
 
-  features <- data.frame(
-    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
-    symbol = row.names(counts)
-  )
-  features[2:3, 1:2] <- ""
+  annotations <- mock_annotations(counts)
+  annotations$annot[2, 1:2] <- ""
 
-  experiment_dir <- "./experiment_1"
-  sample <- "sample_a"
+  res <- filter_unnamed_features(counts, annotations, "sample")
 
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
+  res_annot <- res$annotations$annot
 
-  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  expect_equal(length(which(rownames(res$counts) == "")), 0)
+  expect_equal(length(which(res_annot[, 1] == "")), 0)
 
-  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
+  expect_equal(nrow(res$counts), nrow(counts) - 1)
+  expect_equal(nrow(res_annot), nrow(annotations$annot) - 1)
 
-  counts_list <- out$counts_list
-  annot <- out$annot
-
-  expect_equal(length(which(rownames(counts_list[[1]]) == "")), 0)
-  expect_equal(length(which(annot[, 1] == "")), 0)
 })
 
 
-test_that("read_10x_files removes rows without annotations", {
-  # mock count matrix replicating it 10 times to mock a matrix with < 0.1% of empty features
-  counts <- mock_counts()[rep(seq_len(nrow(mock_counts())), each = 10), ]
-  rownames(counts)[2] <- ""
+test_that("filter_unnamed_features removes many rows with empty annotations", {
 
-  features <- data.frame(
-    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
-    symbol = row.names(counts)
-  )
-  features[2, 1:2] <- ""
-
-  experiment_dir <- "./experiment_1"
-  sample <- "sample_a"
-
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
-
-  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
-
-  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
-  counts_list <- out$counts_list
-  annot <- out$annot
-
-  expect_equal(length(which(rownames(counts_list[[1]]) == "")), 0)
-  expect_equal(length(which(annot[, 1] == "")), 0)
-})
-
-
-test_that("read_10x_files doesn't remove any rows if no rows with empty rownames are present", {
   counts <- mock_counts()
 
-  features <- data.frame(
-    ensid = paste0("ENSFAKE", seq_len(nrow(counts))),
-    symbol = row.names(counts)
-  )
+  nameless_genes <- sample(1:nrow(counts), size = 10)
+  names_of_nameless_genes <- c("", paste0(".", 1:9))
 
-  experiment_dir <- "./experiment_1"
-  sample <- "sample_a"
+  rownames(counts)[nameless_genes] <- names_of_nameless_genes
 
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
+  annotations <- mock_annotations(counts)
+  annotations$annot[nameless_genes, 1:2] <- names_of_nameless_genes
 
-  prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
+  res <- filter_unnamed_features(counts, annotations, "sample")
+  res_annot <- res$annotations$annot
 
-  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
+  expect_equal(length(which(rownames(res$counts) == "")), 0)
+  expect_equal(length(which(res_annot[, 1] == "")), 0)
 
-  counts_list <- out$counts_list
-  annot <- out$annot
+  expect_equal(nrow(res$counts), nrow(counts) - 10)
+  expect_equal(nrow(res_annot), nrow(annotations$annot) - 10)
+})
 
-  expect_equal(length(which(rownames(counts_list[[1]]) == "")), 0)
-  expect_equal(length(which(annot[, 1] == "")), 0)
-  expect_equal(nrow(counts), nrow(counts_list[[1]]))
-  expect_equal(nrow(features), nrow(annot))
+
+test_that("filter_unnamed_features doesn't remove anything if no empty rownames are present", {
+  counts <- mock_counts()
+  annotations <- mock_annotations(counts)
+
+  res <- filter_unnamed_features(counts, annotations, "sample")
+
+  res_annot <- res$annotations$annot
+
+  # check there aren't any empty (true by design)
+  expect_equal(length(which(rownames(res$counts) == "")), 0)
+  expect_equal(length(which(res_annot[, 1] == "")), 0)
+
+  # check that no rows are removed
+  expect_equal(nrow(res$counts), nrow(counts))
+  expect_equal(nrow(res_annot), nrow(annotations$annot))
+})
+
+test_that("filter_unnamed_features replaces annotations if available", {
+
+  unnamed_pat <- "^\\.[0-9]+$|^$"
+  counts <- mock_counts()
+
+  # replace true names for the make.unique product of many empty strings.
+  # which are .1, .2, etc
+  nameless_genes <- sample(1:nrow(counts), size = 10)
+  names_of_nameless_genes <- c("", paste0(".", 1:9))
+  rownames(counts)[nameless_genes] <- names_of_nameless_genes
+
+  # add some IDs to be able to match for them
+  some_real_names_for_nameless_genes <- paste0("not_a_name_", 1:5)
+
+  annotations <- mock_annotations(counts)
+  annotations$annot[nameless_genes, 1:2] <- names_of_nameless_genes
+  annotations$annot[nameless_genes[sample(1:10, 5)], 2] <- some_real_names_for_nameless_genes
+
+
+  res <- filter_unnamed_features(counts, annotations, "sample")
+  res_annot <- res$annotations$annot
+
+  expect_equal(length(grep(unnamed_pat, res$counts)), 0)
+  expect_equal(length(grep(unnamed_pat, res_annot[, 1])), 0)
+
+  expect_equal(nrow(res$counts), nrow(counts) - 5)
+  expect_equal(nrow(res_annot), nrow(annotations$annot) - 5)
+
 })
