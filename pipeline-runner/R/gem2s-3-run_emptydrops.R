@@ -9,24 +9,6 @@
 #' @export
 #'
 run_emptydrops <- function(input, pipeline_config, prev_out) {
-
-i <- 0
-message(paste("Pipeline started at", Sys.time()))
-
-repeat {
-    message(paste("Time now is", Sys.time()))
-    Sys.sleep(15)
-
-    # 60 mins/hour * 4 events per min * 2 hours
-    if(i == 480) {
-        break
-    }
-}
-
-message(paste("Pipeline stopped at", Sys.time()))
-stop("Stopping pipeline")
-
-
   message("Testing if droplets are empty...")
   check_prev_out(prev_out, c("config", "counts_list", "annot"))
 

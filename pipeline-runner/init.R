@@ -135,6 +135,12 @@ run_processing_step <- function(scdata, config, tasks,task_name, cells_id,sample
     message("Config:")
     str(config)
 
+    message(paste("Pipeline started at", Sys.time()))
+    # Sleep for 10 mins for each step
+    message("Sleeping for 10 mins")
+    Sys.sleep(10 * 60)
+    message(paste("Time now is", Sys.time()))
+
     # run task and time it
     tstart <- Sys.time()
 
