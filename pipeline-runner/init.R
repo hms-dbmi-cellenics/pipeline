@@ -396,7 +396,7 @@ init <- function() {
         debug_prefix <- file.path(input$experimentId, debug_timestamp)
         dump_folder <- file.path(DEBUG_PATH, debug_prefix)
         flog.appender(appender.tee(file.path(dump_folder, "logs.txt")))
-
+ 
         # start heartbeat as a different process in the background
         message("Starting heartbeat")
         # message inside r_bg will ONLY be printed into /tmp/[out|err]

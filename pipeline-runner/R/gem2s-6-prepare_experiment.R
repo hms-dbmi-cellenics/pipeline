@@ -12,6 +12,12 @@
 #'
 #' @export
 #'
+#'
+myFun <- function(n = 5000) {
+    a <- do.call(paste0, replicate(5, sample(LETTERS, n, TRUE), FALSE))
+    paste0(a, sprintf("%04d", sample(9999, n, TRUE)), sample(LETTERS, n, TRUE))
+}
+
 prepare_experiment <- function(input, pipeline_config, prev_out) {
   message("Preparing experiment ...")
   check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list")
@@ -21,6 +27,22 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   samples <- names(scdata_list)
 
   message("Merging Seurat Objects...")
+  x <- myFun(100000000) # 7.2GB
+  Sys.sleep(10)
+  message("Merging Seurat Objects...2")
+  x <- myFun(100000000) # 7.2GB
+  Sys.sleep(10)
+  message("Merging Seurat Objects...3")
+  x <- myFun(100000000) # 7.2GB
+  Sys.sleep(10)
+  message("Merging Seurat Objects...4")
+  x <- myFun(100000000) # 7.2GB
+  Sys.sleep(10)
+  message("Merging Seurat Objects...5")
+  x <- myFun(100000000) # 7.2GB
+  Sys.sleep(10)
+  message("Merging Seurat Objects...6")
+  x <- myFun(100000000) # 7.2GB
   scdata <- merge_scdatas(scdata_list)
 
   #If subsetting all cells, Seurat will not reorder the cells in the object. We need to subset to [-1] and [1] and merge to shuffle.
