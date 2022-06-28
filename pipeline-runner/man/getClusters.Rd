@@ -9,9 +9,6 @@ getClusters(clustering_method, resolution, data)
 \arguments{
 \item{data}{}
 }
-\value{
-
-}
 \description{
 Get Clusters
 }
