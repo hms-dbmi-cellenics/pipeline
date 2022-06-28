@@ -9,9 +9,6 @@ generate_first_step_ids(scdata)
 \arguments{
 \item{scdata}{}
 }
-\value{
-
-}
 \description{
 Title
 }

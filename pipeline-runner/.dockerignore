@@ -1,0 +1,4 @@
+renv/*
+.Rproj.user/*
+.Rhistory
+pipeline-runner.Rproj

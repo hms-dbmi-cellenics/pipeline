@@ -1,44 +1,76 @@
 # Create builder step
 # pull official base image and use it as builder
-FROM r-base:4.0.5 AS builder
-WORKDIR /src
+FROM rocker/r-ver:4.2.0 AS builder
+WORKDIR /src/pipeline-runner
 
-# install required debian packages for R installation
-ENV DEBIAN_FRONTEND noninteractive
-COPY requirements_debian.txt .
-RUN apt-get update && \
-    apt-mark hold r-base-core r-base-dev && \
-    apt-get -y upgrade
-RUN cat requirements_debian.txt | xargs apt-get -y install --no-install-recommends
-
-# default BLAS/LAPACK issue: Seurat::FindIntegrationAnchors finds ~30 vs ~13,000 anchors
-RUN update-alternatives --set libblas.so.3-x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/atlas/libblas.so.3
-
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# install required debian packages to install R packages
+COPY setup/install_debian_packages.sh .
+COPY setup/sysdeps_build_debian.txt .
+RUN cat sysdeps_build_debian.txt | xargs ./install_debian_packages.sh
 
 # add GitHub PAT if required for GitHub installations.
 ARG GITHUB_PAT
 ENV GITHUB_PAT $GITHUB_PAT
 RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
-# install required R packages for the pipeline.
+# renv library
+ENV RENV_LIB=/src/lib
+
+# add renv library to .libPaths
+RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
+
+# install renv to install required R packages
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -e "remotes::install_github('rstudio/renv@0.13.2')"
+    R -e "remotes::install_github('rstudio/renv@0.15.5')" && \
+    R -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
 # an initial lockfile is used to avoid frequent re-installs
 # use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
-COPY renv.lock.init .
-RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(lockfile='renv.lock.init')"
+# delete renv cache
+# strip debug from shared libraries
+# see http://dirk.eddelbuettel.com/blog/2017/08/20/#010_stripping_shared_libraries
+COPY ./renv.lock.init .
+RUN R -e "renv::restore(lockfile='renv.lock.init', library = '$RENV_LIB')" && \
+    R -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
+    strip --strip-debug $RENV_LIB/*/libs/*.so
+
+RUN R -e "renv::deactivate()"
 
 # use renv::snapshot() while R dependency updates are quick to build
-COPY renv.lock .
-RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock', clean = TRUE)"
+COPY ./renv.lock .
+RUN R -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRUE)" && \
+    R -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
+    strip --strip-debug $RENV_LIB/*/libs/*.so
+
+# determine system run-time deps
+COPY setup/get_sysdeps_run.R .
+RUN Rscript get_sysdeps_run.R
+
+# ---------------------------------------------------
+# COMMON MINIMAL BUILD
+# ---------------------------------------------------
+FROM rocker/r-ver:4.2.0 AS common
+WORKDIR /src/pipeline-runner
+
+# get source code and R packages
+COPY --from=builder /src /src
+
+# add renv library to .libPaths
+ENV RENV_LIB=/src/lib
+RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
+
+# install runtime system deps
+# cleanup setup files
+RUN echo "python3-pip" >> sysdeps_run.txt && \
+    echo "wget" >> sysdeps_run.txt && \
+    cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
+    rm -rf *
 
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
-FROM builder AS prod
+FROM common AS prod
 
 # add jq and aws cli so we can get identities using AWS IRSA roles
 #
@@ -47,21 +79,27 @@ FROM builder AS prod
 #
 # see at https://github.com/paws-r/paws/blob/main/docs/credentials.md for how PAWS
 # handles this
-#
-RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && chmod +x ./jq && cp jq /usr/bin && \
-    pip install awscli
+RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
+    chmod +x ./jq && \
+    cp jq /usr/bin && \
+    pip install PyYAML==3.10 && \
+    pip install awscli==1.25.0
+
 COPY aws_config /root/.aws/config
 
-# start app
+# add R package files and runner
 ADD R ./R
-COPY init.R .
+ADD tests ./tests
+COPY DESCRIPTION NAMESPACE init.R ./
+
+# start app
 ENTRYPOINT ["Rscript", "init.R"]
 
 
 # ---------------------------------------------------
 # DEVELOPMENT BUILD
 # ---------------------------------------------------
-FROM builder AS dev
+FROM common AS dev
 
 # install Radian for interactive R shell
 # also install watchdog to automatically restart
@@ -70,8 +108,11 @@ RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 RUN apt update && apt -y install git
 RUN pip install memory_profiler
 
-# start app
+# add R package files and runner
 ADD R ./R
-COPY init.R .
+ADD tests ./tests
+COPY DESCRIPTION NAMESPACE init.R ./
+
+# start app
 COPY start.sh start.sh
 ENTRYPOINT ["./start.sh"]
