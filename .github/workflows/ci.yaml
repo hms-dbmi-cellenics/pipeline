@@ -151,12 +151,14 @@ jobs:
       - id: build
         name: Build Docker images
         run: |-
-          docker build --target builder \
+          docker buildx build --target builder \
+            --platform linux/amd64,linux/arm64 \
             --cache-from=$PREVIOUS_IMAGE_NAME-builder \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-builder .
 
-          docker build --target prod \
+          docker buildx build --target prod \
+            --platform linux/amd64,linux/arm64 \
             --cache-from=$IMAGE_NAME-builder \
             --cache-from=$PREVIOUS_IMAGE_NAME \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
