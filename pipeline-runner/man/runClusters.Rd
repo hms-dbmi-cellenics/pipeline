@@ -9,9 +9,6 @@ runClusters(clustering_method, resolution, data)
 \arguments{
 \item{data}{}
 }
-\value{
-
-}
 \description{
 Title
 }

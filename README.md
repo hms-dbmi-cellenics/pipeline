@@ -56,7 +56,7 @@ First make sure the project library is synchronized with the lockfile:
 renv::restore()
 ```
 
-**NOTE**: To restore Bioconductor packages your R version needs to be the same as in the [Dockerfile](pipeline-runner/Dockerfile) (4.0.5).
+**NOTE**: To restore Bioconductor packages your R version needs to be the same as in the [Dockerfile](pipeline-runner/Dockerfile) (4.2.0).
 
 `install.packages(...)` and use them (e.g. `dplyr::left_join(...)`) as you normally would. Then, update the lockfile:
 
