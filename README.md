@@ -68,13 +68,14 @@ commit the changes to the lockfile (used to install dependencies in the Dockerfi
 
 ### Development dependencies
 
-Packages used for interactive development, such as devtools, usethis or roxygen2
-and their dependencies should not be added to the lockfile, since they are not 
-required at runtime. `renv` has been configured to ignore them. 
+Packages used for interactive development, such as `devtools`, `usethis`, `roxygen2`,
+`styler` and the R `languageserver` (to develop R in vscode!) and their dependencies
+should not be added to the lockfile, since they are not required at runtime. 
+`renv` has been configured to ignore them. 
 
 To install them, run the following block, with no arguments. This installs all
 packages in the DESCRIPTION file, which includes the development dependencies in
-the Suggest section.
+the Suggests section.
 
 ```R
 renv::install()
