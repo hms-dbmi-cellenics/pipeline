@@ -10,12 +10,8 @@ get_feature_types(annot)
 \item{annot}{data.frame read from features file}
 }
 \value{
--1 is SYMBOL/IDS
-0 is SYMBOL/ SYMBOL
-1 is IDS/SYMBOL
-2 is IDS/IDS
+character vector indicating feature types
 }
 \description{
-Classifies the columns into either ensemblIds or symbols, and extracts a
-number that represents the combination.
+Classifies the features file columns into either ensemblIds or symbols
 }
