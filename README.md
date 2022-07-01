@@ -80,6 +80,20 @@ the Suggest section.
 renv::install()
 ```
 
+### Running tests locally
+
+There are several ways to run tests locally. The easiest one being using the Rstudio
+shortcut `Cmd + shift + T`.
+
+Other ways to run tests locally:
+
+```R
+devtools::test()
+```
+
+```R
+testthat::test_local()
+```
 
 ## Debugging locally
 
