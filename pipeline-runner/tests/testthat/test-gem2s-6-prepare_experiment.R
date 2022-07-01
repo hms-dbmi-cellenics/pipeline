@@ -54,7 +54,7 @@ test_that("prepare_experiment merges multiple SeuratObjects", {
   prev_out <- mock_prev_out(samples = c("a", "b", "c"))
   scdata_list <- prev_out$scdata_list
 
-  task_out <- expect_warning(prepare_experiment(NULL, NULL, prev_out)$output)
+  task_out <- suppressWarnings(prepare_experiment(NULL, NULL, prev_out)$output)
 
   scdata <- task_out$scdata
 
@@ -65,10 +65,10 @@ test_that("prepare_experiment shuffles cells after merge", {
   prev_out <- mock_prev_out(samples = c("a", "b", "c"))
   scdata_list <- prev_out$scdata_list
 
-  task_out <- expect_warning(prepare_experiment(NULL, NULL, prev_out)$output)
+  task_out <- suppressWarnings(prepare_experiment(NULL, NULL, prev_out)$output)
 
   scdata <- task_out$scdata
-  merged_scdatas <- expect_warning(merge_scdatas(scdata_list))
+  merged_scdatas <- suppressWarnings(merge_scdatas(scdata_list))
 
   set.seed(gem2s$random.seed)
   shuffle_mask <- sample(colnames(merged_scdatas))
@@ -118,7 +118,7 @@ test_object <- function() {
   prev_out <- mock_prev_out(samples = c("a", "b", "c"))
   scdata_list <- prev_out$scdata_list
 
-  task_out <- expect_warning(prepare_experiment(NULL, NULL, prev_out)$output)
+  task_out <- prepare_experiment(NULL, NULL, prev_out)$output
 
   scdata <- task_out$scdata
 
@@ -172,5 +172,6 @@ test_object <- function() {
 }
 
 test_that("prepare_experiment creates a valid Seurat object", {
-  test_object()
+  expect_true(TRUE)
+  suppressWarnings(test_object())
 })

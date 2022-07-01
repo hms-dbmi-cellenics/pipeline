@@ -14,7 +14,8 @@ Depends:
     R (>= 4.2.0)
 Imports:
     batchelor,
-    covr
+    covr,
+    data.table
 Suggests: 
     devtools,
     httptest,
