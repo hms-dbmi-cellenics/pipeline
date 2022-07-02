@@ -28,10 +28,16 @@ buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
 }
 
 load_config <- function(development_aws_server, api_version = "v1") {
-    label_path <- "/etc/podinfo/labels"
-    aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset="242905224710")
-    aws_region <- Sys.getenv("AWS_DEFAULT_REGION", unset="eu-west-1")
+    tryCatchLog({
+        aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID")
+        aws_region <- Sys.getenv("AWS_DEFAULT_REGION")
+    },
+    error = function(e) {
+        message("ERROR: AWS_ACCOUNT_ID or AWS_DEFAULT_REGION environment variables are not defined")
+        keep_running <- FALSE
+    })
 
+    label_path <- "/etc/podinfo/labels"
     activity_arn <- NA
 
     repeat {
@@ -303,7 +309,6 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 # reimport tryCatchLog & initialize states again.
 #
 start_heartbeat <- function(task_token, aws_config) {
-    library(tryCatchLog)
     message("Starting hearbeat")
     states <- paws::sfn(config=aws_config)
 
