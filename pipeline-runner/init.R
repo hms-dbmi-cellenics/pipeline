@@ -28,14 +28,11 @@ buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
 }
 
 load_config <- function(development_aws_server, api_version = "v1") {
-    tryCatchLog({
-        aws_account_id <- Sys.getenv("AWS_ACCOUNT_IDD")
-        aws_region <- Sys.getenv("AWS_DEFAULT_REGION")
-    },
-    error = function(e) {
-        message("ERROR: AWS_ACCOUNT_IDD or AWS_DEFAULT_REGION environment variables are not defined")
-        keep_running <- FALSE
-    })
+    if(!exists("AWS_ACCOUNT_IDD") || !exists("AWS_DEFAULT_REGION")){
+        stop("ERROR: AWS_ACCOUNT_IDD or AWS_DEFAULT_REGION environment variables are not defined")
+    }
+    aws_account_id <- Sys.getenv("AWS_ACCOUNT_IDD")
+    aws_region <- Sys.getenv("AWS_DEFAULT_REGION")
 
     label_path <- "/etc/podinfo/labels"
     activity_arn <- NA
