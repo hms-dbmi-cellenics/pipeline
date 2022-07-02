@@ -29,11 +29,11 @@ buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
 
 load_config <- function(development_aws_server, api_version = "v1") {
     tryCatchLog({
-        aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID")
+        aws_account_id <- Sys.getenv("AWS_ACCOUNT_IDD")
         aws_region <- Sys.getenv("AWS_DEFAULT_REGION")
     },
     error = function(e) {
-        message("ERROR: AWS_ACCOUNT_ID or AWS_DEFAULT_REGION environment variables are not defined")
+        message("ERROR: AWS_ACCOUNT_IDD or AWS_DEFAULT_REGION environment variables are not defined")
         keep_running <- FALSE
     })
 
