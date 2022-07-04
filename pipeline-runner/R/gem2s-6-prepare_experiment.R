@@ -20,29 +20,15 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   scdata_list <- prev_out$scdata_list
   samples <- names(scdata_list)
-  # saveRDS(scdata_list, '/debug/scdata_list.alpha.gem6.rds')
-  # saveRDS(pipeline_config, '/debug/pipeline_config.alpha.gem6.rds')
+
   message("Total cells:", sum(sapply(scdata_list, ncol)))
 
-  # scdata <- merge_scdatas(scdata_list)
-
-  #If subsetting all cells, Seurat will not reorder the cells in the object. We need to subset to [-1] and [1] and merge to shuffle.
-  set.seed(gem2s$random.seed)
-  # shuffle_mask <- sample(colnames(scdata))
-  # scdata <- merge(scdata[,shuffle_mask[1]],scdata[,shuffle_mask[-1]])
-
-  # scdata <- add_metadata(scdata, prev_out$annot, input$experimentId)
-  # prev_out$scdata <- scdata
-  # scdata_list <- add_metadata_to_each(scdata_list, prev_out$annot, input$experimentId)
-  scdata_list <- add_metadata_to_each_2(scdata_list, prev_out$annot, input$experimentId)
-  # saveRDS(scdata_list, '/debug/scdata_list.metadata.rds')
+  scdata_list <- add_metadata_to_samples(scdata_list, prev_out$annot, input$experimentId)
   prev_out$scdata_list <- scdata_list
 
   # construct default QC config and update prev out
   message("Constructing default QC configuration...")
   any_filtered <- !(length(prev_out$edrops) == length(samples))
-  # NEEDED ? -> looks like yes, it's actually added by createSeurat?
-  # scdata_list$samples <- samples
   prev_out$qc_config <- construct_qc_config(scdata_list, any_filtered)
 
   res <- list(
@@ -54,73 +40,24 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
-#' Merge scdatas: merge rds files in input list
-#'
-#' @param scdata_list
-#'
-#' @return
-#' @export
-#'
-#' @examples
-merge_scdatas <- function(scdata_list) {
-  if (length(scdata_list) == 1) {
-    scdata <- scdata_list[[1]]
-  } else {
-    scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
-  }
-
-  return(scdata)
-}
-
-add_metadata_to_each <- function(scdata_list, annot, experiment_id) {
-
-  message("add_metadata_to_each")
-  message("names(scdata_list): ", names(scdata_list))
-  # we will add the raw annotations to the first sample so we can add them
-  # correctly once they are merged
-  scdata_list[[1]]$annot <- annot
-  for (sample in names(scdata_list)) {
-
-    message("Storing cells id...")
-    # Keeping old version of ids starting from 0
-    scdata_list[[sample]]$cells_id <- 0:(ncol(scdata_list[[sample]]) - 1)
-    scdata_list[[sample]]@misc[["experimentId"]] <- experiment_id
-    scdata_list[[sample]]@misc[["ingestionDate"]] <- Sys.time()
-  }
-
-  return(scdata_list)
-}
-
-# deprecated in favor of adding metadata to sample 1 and then retrieving it from there
-# this function would be more elegant if we find an easy way to merge the annotations after
-# scdata_list merginng
-add_metadata_to_each_2 <- function(scdata_list, annot, experiment_id) {
-
-  message("add_metadata_to_each")
-  message("names(scdata_list): ", names(scdata_list))
-  # saveRDS(annot, '/debug/annot_list.xx.rds')
+# TODO add description
+add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
+  # cell_ids need to be consecutive among the samples and each sample can have different sizes
+  # so we need to keep track of start IDs
   start <- 0
-  end <- 0
   for (sample in names(scdata_list)) {
-    end <- end + (ncol(scdata_list[[sample]]) - 1)
-  # for (scdata in scdata_list) {
-    # Ensure index by rownames in scdata
+    end <- start + (ncol(scdata_list[[sample]]) - 1)
+
+    # select only the annotations of the current sample
     annot <- annot[match(rownames(scdata_list[[sample]]), annot$input), ]
     scdata_list[[sample]]@misc[["gene_annotations"]] <- annot
 
-    message("Storing cells id...")
-    # Keeping old version of ids starting from 0
-    scdata_list[[sample]]$cells_id <- start:end
-
-    message("Storing color pool...")
-    # We store the color pool in a slot in order to be able to access it during configureEmbedding
-    scdata_list[[sample]]@misc[["color_pool"]] <- get_color_pool()
+    # add the experiment ID so it's available later
     scdata_list[[sample]]@misc[["experimentId"]] <- experiment_id
-    scdata_list[[sample]]@misc[["ingestionDate"]] <- Sys.time()
 
-    # update cells_id indices
+    # generate sample cell IDs
+    scdata_list[[sample]]$cells_id <- start:end
     start <- end + 1
-    end <- start
   }
 
   return(scdata_list)

@@ -21,52 +21,17 @@
 #   },
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
-  # saveRDS(scdata_list, '/debug/scdata_list.alpha.qc6.rds')
-  # saveRDS(config, '/debug/config.alpha.qc6.rds')
-  # saveRDS(cells_id, '/debug/cells_id.alpha.qc6.rds')
+  # subset each of the samples before merging them
   for (sample in names(scdata_list)) {
     flat_cells_id <- unname(unlist(cells_id[[sample]]))
     scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cells_id)
-    #scdata_subset[[sample]] <- aux
   }
 
-
-  message("going to integrate data after subsetting")
-  # merge the data before integration
-  message("total cells: ", sum(sapply(scdata_list, ncol)))
-
+  message("Total cells: ", sum(sapply(scdata_list, ncol)))
   scdata <- merge_scdatas(scdata_list)
-  message("merge done")
-  # the sample already contain the metadata, check if the merged object already has the annotations
-  # otherwise try to add it from one of the samples
-  # we grab the original annotations from sample 1 (only sample were they were stored), try to find
-  # a better way to do this
-  # another option is to add the partial annotations to each sample and then figure out how to merge them
-  # (should be easy with bio help)
-  # all samples contain the experiment ID
-  # annot <- scdata_list[[1]]$annot
-  experiment_id <- scdata_list[[sample]]@misc[["experimentId"]]
-  # saveRDS(scdata , '/debug/scdata.xx.rds')
-  # saveRDS(scdata_list, '/debug/scdata_list.xx.rds')
-  # annot_list <- list()
-  # for (sample in scd®ata_list){
-  #     annot_list <- append(annot_list, sample@misc[["gene_annotations"]])
-  #     print(names(sample@misc[["gene_annotations"]]))
-  # }
-  # annot <- dplyr::bind_rows(annot_list, .name_repair = "universal")
-  # annot <- dplyr::distinct(annot)
-  # print(names(annot))
-  # scdata@misc[["gene_annotations"]] <- annot
-  annot <- scdata_list[[1]]@misc[["gene_annotations"]]
-  message("adding metadata")
-  scdata <- add_metadata(scdata, annot, experiment_id)
 
-
-  # flat_cells_id <- unname(unlist(cells_id))
-  # scdata <- subset_ids(scdata, flat_cells_id)
   # main function
-  set.seed(gem2s$random.seed)
-  # saveRDS(config, '/debug/config.rds')
+  set.seed(RANDOM_SEED)
   message("running data integration")
   scdata.integrated <- run_dataIntegration(scdata, config)
 
@@ -85,9 +50,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   plot1_data <- unname(purrr::map2(scdata.integrated@reductions$umap@cell.embeddings[, 1], scdata.integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
     c("x" = x, "y" = y)
   }))
-
-  # saveRDS(scdata, '/debug/scdata.alpha.qc6.rds')
-
 
   # Adding color and sample id
   plot1_data <- purrr::map2(
@@ -127,9 +89,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 }
 
 merge_scdatas <- function(scdata_list) {
-  # saveRDS(scdata_list, '/debug/scdata_list.b4-merge.rds')
-  # remove the samples slot before merging or it triggers error because it ain't expected
-  # scdata_list$samples <- NULL
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
@@ -137,6 +96,14 @@ merge_scdatas <- function(scdata_list) {
   }
 
   scdata@misc <- scdata_list[[1]]@misc
+
+  # If subsetting all cells, Seurat will not reorder the cells in the object.
+  # We need to subset to [-1] and [1] and merge to shuffle.
+  set.seed(RANDOM_SEED)
+  shuffle_mask <- sample(colnames(scdata))
+  scdata <- merge(scdata[,shuffle_mask[1]],scdata[,shuffle_mask[-1]])
+
+  scdata <- add_metadata(scdata, scdata_list)
 
   return(scdata)
 }
@@ -494,16 +461,17 @@ build_cc_gene_list <- function(all_genes) {
   return(cc_gene_indices)
 }
 
+# add_metadata adds the metadata present in scdata_list into the merged scdata object
+add_metadata <- function(scdata, scdata_list) {
+  experiment_id <- scdata_list[[1]]@misc[["experimentId"]]
 
-add_metadata <- function(scdata, annot, experiment_id) {
+  annot_list <- list()
+  for (sample in names(scdata_list)) {
+    annot_list[[sample]] <- scdata_list[[sample]]@misc[["gene_annotations"]]
+  }
 
-  # Ensure index by rownames in scdata
-  # TODO find a way to merge annotations of differen samples
-  # annot <- annot[match(rownames(scdata), annot$input), ]
-  scdata@misc[["gene_annotations"]] <- annot
+  scdata@misc[["gene_annotations"]] <- format_annot(annot_list)
 
-
-  message("Storing color pool...")
   # We store the color pool in a slot in order to be able to access it during configureEmbedding
   scdata@misc[["color_pool"]] <- get_color_pool()
   scdata@misc[["experimentId"]] <- experiment_id

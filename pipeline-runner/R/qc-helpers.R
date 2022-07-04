@@ -51,7 +51,7 @@ remove_cell_ids <- function(pipeline_config, experiment_id) {
 get_positions_to_keep <- function(scdata, num_cells_to_downsample) {
   # Downsample plotData
   num_cells_to_downsample <- downsample_plotdata(ncol(scdata), num_cells_to_downsample)
-  set.seed(gem2s$random.seed)
+  set.seed(RANDOM_SEED)
   cells_position_to_keep <- sample(1:ncol(scdata), num_cells_to_downsample, replace = FALSE)
   cells_position_to_keep <- sort(cells_position_to_keep)
 
@@ -71,7 +71,6 @@ get_positions_to_keep <- function(scdata, num_cells_to_downsample) {
 #' @export
 #'
 subset_ids <- function(scdata, cells_id) {
-  # meta_data_subset <- scdata@meta.data[match(cells_id, scdata@meta.data$cells_id), ]
   meta_data_subset <- scdata@meta.data[match(cells_id, scdata@meta.data$cells_id), ]
   current_cells <- rownames(meta_data_subset)
   scdata <- subset_safe(scdata, cells = current_cells)

@@ -94,7 +94,7 @@ filter_low_cellsize <- function(scdata, config, sample_id, cells_id, task_name =
 #' @importFrom magrittr %>%
 #'
 get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE) {
-  set.seed(gem2s$random.seed)
+  set.seed(RANDOM_SEED)
   plot_data <- list()
   numis <- unname(sample_subset$nCount_RNA)
   ord <- order(numis, decreasing = TRUE)

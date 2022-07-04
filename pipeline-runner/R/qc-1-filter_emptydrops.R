@@ -23,6 +23,8 @@ filter_emptydrops <- function(scdata, config, sample_id, cells_id, task_name = "
     return(list(data = scdata[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
   }
 
+  # TODO this is probably not needed because it's the first filter and it has not been yet applied
+  # so the cells_id are the ones generate in gem2s
   scdata.sample <- subset_ids(scdata[[sample_id]], cells_id.sample)
 
   FDR <- config$filterSettings$FDR
