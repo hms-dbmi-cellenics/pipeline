@@ -151,14 +151,12 @@ jobs:
       - id: build
         name: Build Docker images
         run: |-
-          docker buildx build --target builder \
-            --platform linux/amd64,linux/arm64 \
+          docker build --target builder \
             --cache-from=$PREVIOUS_IMAGE_NAME-builder \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-builder .
 
-          docker buildx build --target prod \
-            --platform linux/amd64,linux/arm64 \
+          docker build --target prod \
             --cache-from=$IMAGE_NAME-builder \
             --cache-from=$PREVIOUS_IMAGE_NAME \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
@@ -174,7 +172,7 @@ jobs:
       #     docker run \
       #       --entrypoint /bin/bash \
       #       -v $(pwd)/covr:/covr $IMAGE_NAME \
-      #       -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
+      #       -c "R -e ov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
 
       #   env:
       #     IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
