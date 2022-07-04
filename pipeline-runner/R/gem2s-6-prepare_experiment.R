@@ -114,7 +114,6 @@ add_metadata_to_each_2 <- function(scdata_list, annot, experiment_id) {
 
     message("Storing color pool...")
     # We store the color pool in a slot in order to be able to access it during configureEmbedding
-    scdata_list[[sample]]@misc[["color_pool"]] <- get_color_pool()
     scdata_list[[sample]]@misc[["experimentId"]] <- experiment_id
     scdata_list[[sample]]@misc[["ingestionDate"]] <- Sys.time()
 
