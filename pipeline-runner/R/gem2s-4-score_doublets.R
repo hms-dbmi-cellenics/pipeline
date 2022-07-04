@@ -11,6 +11,8 @@
 score_doublets <- function(input, pipeline_config, prev_out) {
   message("Calculating probability of droplets being doublets...")
 
+  stop("some error")
+
   # NOTE: edrops is not required
   check_prev_out(prev_out, c("config", "counts_list", "annot"))
 
