@@ -1,6 +1,5 @@
 # constructs default QC configuration for merged SeuratObject
 construct_qc_config <- function(scdata_list, any_filtered) {
-  # samples <- scdata_list$samples
   samples <- names(scdata_list)
 
   # classifier
@@ -153,6 +152,7 @@ get_sample_mitochondrial_config <- function(scdata_list.sample, config) {
   return(config.sample)
 }
 
+
 # threshold for doublet score is the max score given to a singlet (above score => doublets)
 get_dblscore_config <- function(scdata_list, config) {
   probabilityThreshold <- max(scdata_list$doublet_scores[scdata_list$doublet_class == "singlet"], na.rm = TRUE)
@@ -171,7 +171,6 @@ get_gene_umi_config <- function(scdata_list, config) {
 }
 
 
-
 duplicate_config_per_sample <- function(step_config, config, samples) {
   for (sample in unique(samples)) {
     config[[sample]] <- step_config
@@ -181,32 +180,23 @@ duplicate_config_per_sample <- function(step_config, config, samples) {
   return(config)
 }
 
+
 add_custom_config_per_sample <- function(generate_sample_config, config, scdata_list) {
-
   # We update the config file, so to be able to access the raw config we create a copy
-  config.raw <- config
-
-  message("add_custom_config_per_sample")
-  message("11 samples: ", names(scdata_list))
-  samples <- names(scdata_list)
-
-  # sample_ids <- sapply(scdata_list$samples, function(x) strsplit(x$Key, "/")[[1]][[2]])
-  # message("11 sample_ids: ", sample_ids)
-
-  # message("names(scdata_list$samples): ", names(scdata_list$samples))
+  raw_config <- config
 
   for (sample in names(scdata_list)) {
     # subset the Seurat object to a single sample
-    scdata_list.sample <- scdata_list[[sample]]
+    sample_data <- scdata_list[[sample]]
 
     # run the function to generate config for a sample
-    config.sample <- generate_sample_config(scdata_list.sample, config.raw)
+    sample_config <- generate_sample_config(sample_data, raw_config)
 
     # update sample config thresholds
-    config[[sample]] <- config.sample
+    config[[sample]] <- sample_config
 
     # add auto settings
-    config[[sample]]$defaultFilterSettings <- config.sample$filterSettings
+    config[[sample]]$defaultFilterSettings <- sample_config$filterSettings
   }
 
   return(config)
