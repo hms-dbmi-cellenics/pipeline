@@ -15,7 +15,7 @@
 #'                          - linear and spline: for each there is only one element:
 #'                             - p.level: which refers to  confidence level for deviation from the main trend
 #'
-#' @param scdata \code{SeuratObject}
+#' @param scdata_list list of \code{SeuratObject}
 #' @param sample_id value in \code{scdata$samples} to apply filter for
 #' @param task_name name of task: \code{'numGenesVsNumUmis'}
 #' @param num_cells_to_downsample maximum number of cells for returned plots

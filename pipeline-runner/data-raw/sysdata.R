@@ -2,7 +2,7 @@
 gem2s <- list(
   max.edrops.fdr = 0.001,
   max.empty.counts = 100,
-  max.empty.drops = 50,
+  max.empty.drops = 50
 )
 
 RANDOM_SEED <- 42
@@ -37,6 +37,7 @@ IDS_IDS <- "ids_ids"
 
 usethis::use_data(
   gem2s,
+  RANDOM_SEED,
   DEBUG_PATH,
   file_names_v1,
   file_types_by_technology,
