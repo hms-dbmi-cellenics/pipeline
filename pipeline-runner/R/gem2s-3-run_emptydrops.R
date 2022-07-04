@@ -9,6 +9,9 @@
 #' @export
 #'
 run_emptydrops <- function(input, pipeline_config, prev_out) {
+
+    stop("some error")
+
   message("Testing if droplets are empty...")
   check_prev_out(prev_out, c("config", "counts_list", "annot"))
 
