@@ -102,24 +102,14 @@ build_sample_cellsets <- function(input, scdata_list, color_pool) {
     type = "metadataCategorical"
   )
 
-  # cells_sample <- scdata$samples
-  # cells_sample <- names(scdata)
-  # saveRDS(input, '/debug/input.alpha.gem7.rds')
   sample_ids <- unlist(input$sampleIds)
   sample_names <- unlist(input$sampleNames)
 
-  # now the scdata contains only one sample so we don't really have to loop anymore
-  # I've added this to keep the same cellsets structure but the nestig of $children
-  # can probably be removed in the future
-  # sample_ids <- scdata@meta.data$samples[[1]]
-  # sample_ids <- names(scdata_list)
-  # assuming that accessing by index & key (ie sample_id) yields the same order might be dangerous
-  # gotta check if it's true in R
   for (i in seq_along(sample_ids)) {
     scdata <- scdata_list[[i]]
     sample_id <- sample_ids[i]
     sample_name <- sample_names[i]
-    # saveRDS(scdata, '/debug/scdata_cells_id.rds')
+
     cell_ids <- scdata$cells_id
 
     cell_set$children[[i]] <- list(
