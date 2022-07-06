@@ -23,8 +23,8 @@
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
   # subset each of the samples before merging them
   for (sample in names(scdata_list)) {
-    flat_cells_id <- unname(unlist(cells_id[[sample]]))
-    scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cells_id)
+    flat_cell_ids <- unname(unlist(cells_id[[sample]]))
+    scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cell_ids)
   }
 
   message("Total cells: ", sum(sapply(scdata_list, ncol)))
@@ -33,28 +33,28 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # main function
   set.seed(RANDOM_SEED)
   message("running data integration")
-  scdata.integrated <- run_dataIntegration(scdata, config)
+  scdata_integrated <- run_dataIntegration(scdata, config)
 
   # get  npcs from the UMAP call in integration functions
-  npcs <- length(scdata.integrated@commands$RunUMAP@params$dims)
+  npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
   message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
   config$dimensionalityReduction$numPCs <- npcs
 
-  var_explained <- get_explained_variance(scdata.integrated)
+  var_explained <- get_explained_variance(scdata_integrated)
 
   # This same numPCs will be used throughout the platform.
-  scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+  scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
 
-  scdata.integrated <- colorObject(scdata.integrated)
-  cells_order <- rownames(scdata.integrated@meta.data)
-  plot1_data <- unname(purrr::map2(scdata.integrated@reductions$umap@cell.embeddings[, 1], scdata.integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
+  scdata_integrated <- colorObject(scdata_integrated)
+  cells_order <- rownames(scdata_integrated@meta.data)
+  plot1_data <- unname(purrr::map2(scdata_integrated@reductions$umap@cell.embeddings[, 1], scdata_integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
     c("x" = x, "y" = y)
   }))
 
   # Adding color and sample id
   plot1_data <- purrr::map2(
     plot1_data,
-    unname(scdata.integrated@meta.data[cells_order, "samples"]),
+    unname(scdata_integrated@meta.data[cells_order, "samples"]),
     function(x, y) {
       append(x, list("sample" = y))
     }
@@ -62,7 +62,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 
   plot1_data <- purrr::map2(
     plot1_data,
-    unname(scdata.integrated@meta.data[cells_order, "color_samples"]),
+    unname(scdata_integrated@meta.data[cells_order, "color_samples"]),
     function(x, y) {
       append(x, list("col" = y))
     }
@@ -79,7 +79,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
-    data = scdata.integrated,
+    data = scdata_integrated,
     new_ids = cells_id,
     config = config,
     plotData = plots

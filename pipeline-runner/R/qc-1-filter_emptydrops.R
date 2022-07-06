@@ -19,7 +19,7 @@
 filter_emptydrops <- function(scdata_list, config, sample_id, cells_id, task_name = "classifier", num_cells_to_downsample = 6000) {
   sample_cell_ids <- cells_id[[sample_id]]
   message("Number of cells IDs: ", length(sample_cell_ids))
-  message("Number of cells: ", ncol(scdata_list[[[sample_id]]]))
+  message("Number of cells: ", ncol(scdata_list[[sample_id]]))
 
   if (length(sample_cell_ids) == 0) {
     return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
