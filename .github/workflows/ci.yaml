@@ -58,6 +58,7 @@ jobs:
     outputs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
       tag: ${{ steps.ref.outputs.tag }}
+      commit-sha: ${{ steps.ref.outputs.commit-sha }}
     defaults:
       run:
         working-directory: ${{ matrix.project }}
@@ -87,8 +88,10 @@ jobs:
           if [ "${{ github.event_name }}" = "release" ] && [ "${{ github.event.action }}" = "released" ]; then
             echo "::set-output name=tag::$REF_ID"
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "::set-output name=commit-sha::${{ github.event.pull_request.head.sha }}"
             echo "::set-output name=tag::$REF_ID-${{ github.event.pull_request.head.sha }}"
           else
+            echo "::set-output name=commit-sha::$GITHUB_SHA"
             echo "::set-output name=tag::$REF_ID-$GITHUB_SHA"
           fi
 
@@ -264,7 +267,7 @@ jobs:
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="1"
-            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$COMMIT_SHA/*}"
             MEMORY_REQUEST="29Gi"
           fi
 
@@ -273,7 +276,7 @@ jobs:
             CHART_REF="STAGING_CHART_REF"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="0"
-            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$COMMIT_SHA/*}"
             MEMORY_REQUEST="4Gi"
           fi
 
@@ -300,6 +303,7 @@ jobs:
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
           IMAGE_TAG: ${{ needs.build-docker.outputs.tag }}
+          COMMIT_SHA: ${{ needs.build-docker.ouputs.commit-sha }}
 
       - name: Push production/develop template to releases
         if:
