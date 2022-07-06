@@ -48,38 +48,19 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   create_seurat(NULL, NULL, prev_out)$output
 }
 
+test_that("prepare_experiment returns list of seurat objects", {})
 
+# test_that("prepare_experiment merges multiple SeuratObjects", {
+#   prev_out <- mock_prev_out(samples = c("a", "b", "c"))
+#   scdata_list <- prev_out$scdata_list
+#
+#   task_out <- suppressWarnings(prepare_experiment(NULL, NULL, prev_out)$output)
+#
+#   scdata <- task_out$scdata
+#
+#   expect_equal(ncol(scdata), sum(sapply(scdata_list, ncol)))
+# })
 
-test_that("prepare_experiment merges multiple SeuratObjects", {
-  prev_out <- mock_prev_out(samples = c("a", "b", "c"))
-  scdata_list <- prev_out$scdata_list
-
-  task_out <- suppressWarnings(prepare_experiment(NULL, NULL, prev_out)$output)
-
-  scdata <- task_out$scdata
-
-  expect_equal(ncol(scdata), sum(sapply(scdata_list, ncol)))
-})
-
-test_that("prepare_experiment shuffles cells after merge", {
-  prev_out <- mock_prev_out(samples = c("a", "b", "c"))
-  scdata_list <- prev_out$scdata_list
-
-  task_out <- suppressWarnings(prepare_experiment(NULL, NULL, prev_out)$output)
-
-  scdata <- task_out$scdata
-  merged_scdatas <- suppressWarnings(merge_scdatas(scdata_list))
-
-  set.seed(gem2s$random.seed)
-  shuffle_mask <- sample(colnames(merged_scdatas))
-
-  expect_equal(ncol(scdata), ncol(merged_scdatas))
-  expect_equal(merged_scdatas$samples[shuffle_mask],scdata$samples)
-  expect_true(all(shuffle_mask == colnames(scdata)))
-  expect_false(all(shuffle_mask == colnames(merged_scdatas)))
-  expect_true(all(merged_scdatas$samples[1:ncol(scdata_list[[1]])]=="a"))
-  expect_false(all(scdata$samples[1:ncol(scdata_list[[1]])]=="a"))
-})
 
 test_that("prepare_experiment ensures gene_annotations are indexed the same as scdata", {
   prev_out <- mock_prev_out()

@@ -28,7 +28,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   }
 
   message("Total cells: ", sum(sapply(scdata_list, ncol)))
-  scdata <- merge_scdatas(scdata_list)
+  scdata <- create_scdata(scdata_list)
 
   # main function
   set.seed(RANDOM_SEED)
@@ -88,22 +88,50 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   return(result)
 }
 
-merge_scdatas <- function(scdata_list) {
+#' create seurat object
+#'
+#' merge, shuffle and add metadata to list of seurat objects.
+#'
+#' @param scdata_list
+#'
+#' @return
+#' @export
+#'
+create_scdata <- function(scdata_list) {
+
+  scdata <- merge_scdata_list(scdata)
+  scdata <- shuffle_scdata(scdata)
+  scdata <- add_metadata(scdata, scdata_list)
+
+  return(scdata)
+}
+
+merge_scdata_list <- function(scdata_list) {
+
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
     scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
   }
 
-  scdata@misc <- scdata_list[[1]]@misc
+  return(scdata)
+
+}
+
+#' Title
+#'
+#' @param scdata
+#'
+#' @return
+#' @export
+#'
+shuffle_scdata <- function(scdata) {
 
   # If subsetting all cells, Seurat will not reorder the cells in the object.
   # We need to subset to [-1] and [1] and merge to shuffle.
   set.seed(RANDOM_SEED)
   shuffle_mask <- sample(colnames(scdata))
   scdata <- merge(scdata[,shuffle_mask[1]],scdata[,shuffle_mask[-1]])
-
-  scdata <- add_metadata(scdata, scdata_list)
 
   return(scdata)
 }
@@ -463,6 +491,9 @@ build_cc_gene_list <- function(all_genes) {
 
 # add_metadata adds the metadata present in scdata_list into the merged scdata object
 add_metadata <- function(scdata, scdata_list) {
+
+  #TODO add comment about misc
+  scdata@misc <- scdata_list[[1]]@misc
   experiment_id <- scdata_list[[1]]@misc[["experimentId"]]
 
   annot_list <- list()

@@ -1,5 +1,43 @@
 human_cc_genes <- cc_genes[["human"]]
 
+mock_prev_out <- function(samples = "sample_a", counts = NULL) {
+  if (is.null(counts)) {
+    counts <- DropletUtils:::simCounts()
+    colnames(counts) <- paste0("cell", seq_len(ncol(counts)))
+  }
+
+  eout <- DropletUtils::emptyDrops(counts)
+
+  counts_list <- list()
+  edrops <- list()
+  doublet_scores <- list()
+
+  for (sample in samples) {
+    counts_list[[sample]] <- counts
+    edrops[[sample]] <- eout
+    doublet_scores[[sample]] <- mock_doublet_scores(counts)
+  }
+
+  annot <- data.frame(name = row.names(counts), input = row.names(counts))
+
+  # as passed to create_seurat
+  prev_out <- list(
+    counts_list = counts_list,
+    edrops = edrops,
+    doublet_scores = doublet_scores,
+    annot = annot,
+    config = list(name = "project name")
+  )
+
+  # call create_seurat to get prev_out to pass to prepare_experiment
+  prev_out <- create_seurat(NULL, NULL, prev_out)$output
+
+
+  prev_out$scdata_list <- add_metadata_to_samples(prev_out$scdata_list, annot = annot, experiment_id = "expid")
+
+  return(prev_out)
+}
+
 mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
@@ -254,4 +292,35 @@ test_that("SeuratV4 integration finds integration anchors using CCA method, if m
 
   expect_message(scdata <- suppressWarnings(run_dataIntegration(scdata, config)), "Finding integration anchors using CCA reduction")
   expect_equal(scdata@commands$FindIntegrationAnchors$reduction, "cca")
+})
+
+
+test_that("merge_scdata_list correctly merges seurat objects", {
+  prev_out <- mock_prev_out(samples = c("a", "b", "c"))
+  scdata_list <- prev_out$scdata_list
+
+
+  scdata <- suppressWarnings(merge_scdata_list(scdata_list))
+
+  expect_equal(sum(unlist(lapply(scdata_list, ncol))), ncol(scdata))
+  expect_true(all(scdata$samples[1:ncol(scdata_list[[1]])] == "a"))
+
+})
+
+
+test_that("merge_scdatas correctly suffles cells", {
+  prev_out <- mock_prev_out(samples = c("a", "b", "c"))
+  scdata_list <- prev_out$scdata_list
+
+  scdata <- suppressWarnings(merge_scdata_list(scdata_list))
+  shuffled_scdata <- shuffle_scdata(scdata)
+
+
+  set.seed(RANDOM_SEED)
+  shuffle_mask <- sample(colnames(scdata))
+
+  expect_equal(shuffled_scdata$samples, scdata$samples[shuffle_mask])
+  expect_true(all(shuffle_mask == colnames(shuffled_scdata)))
+  expect_false(all(shuffled_scdata$samples[1:ncol(scdata_list[[1]])] == "a"))
+
 })
