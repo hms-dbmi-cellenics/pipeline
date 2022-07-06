@@ -35,28 +35,25 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   # If the task is after data integration, we need to get scdata from processed_matrix
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
+
   if (match(task_name, task_names) > integration_index) {
     bucket <- pipeline_config$processed_bucket
   } else {
     bucket <- pipeline_config$source_bucket
   }
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  message(bucket)
-  message(paste(experiment_id, "r.rds", sep = "/"))
+
 
   objects <- s3$list_objects(
     Bucket = bucket,
     Prefix = experiment_id
   )
   samples <- objects$Contents
-  sample_ids <- sapply(samples, function(x) strsplit(x$Key, "/")[[1]][[2]])
-  message("reaload_scdata sample_ids 01: ", sample_ids)
-  message("samples: ", samples)
+
   scdata_list <- list()
   for (sample in samples) {
     key <- sample$Key
-    message("sample: ", sample)
-    message("key: ", key)
+
     c(body, ...rest) %<-% s3$get_object(
       Bucket = bucket,
       Key = paste(key, sep = "/")
@@ -65,9 +62,6 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
     sample_id <- strsplit(key, "/")[[1]][[2]]
     scdata_list[[sample_id]] <- obj
   }
-
-  # saveRDS(scdata_list, '/debug/scdata_list.hd.rds')
-  #scdata$samples <- samples
 
   return(scdata_list)
 }
@@ -198,7 +192,7 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
 
   error_msg <- list()
 
-  # TODO - REMOVE THE DUPLICATE EXPERIMETN ID FROM INPUT RESPONSE
+  # TODO - REMOVE THE DUPLICATE EXPERIMENT ID FROM INPUT RESPONSE
 
   error_msg$experimentId <- input$experimentId
   error_msg$taskName <- input$taskName
