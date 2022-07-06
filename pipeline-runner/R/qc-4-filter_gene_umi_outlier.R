@@ -82,16 +82,26 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
   # get evenly spaced predictions on downsampled data for plotting lines
   xrange <- range(downsampled_data$log_molecules)
   newdata <- data.frame(log_molecules = seq(xrange[1], xrange[2], length.out = 10))
-  line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = 1 - p.level))
 
-  line_preds <- cbind(newdata, line_preds) %>%
-    dplyr::select(-fit) %>%
-    dplyr::rename(lower_cutoff = lwr, upper_cutoff = upr)
+  pred_int_values <- seq(0,1,0.01)
+  line_preds_list <-list()
+  i = 1
+  for (pred in pred_int_values) {
+    line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = pred))
+
+    line_preds <- cbind(newdata, line_preds) %>%
+      dplyr::select(-fit) %>%
+      dplyr::rename(lower_cutoff = lwr, upper_cutoff = upr)
+
+    line_preds_list[[i]] <- purrr::transpose(line_preds)
+    i <- i+1
+  }
 
   plot_data <- list(
     pointsData = purrr::transpose(downsampled_data),
-    linesData = purrr::transpose(line_preds)
+    linesData = line_preds_list
   )
+
 
   # Populate with filter statistics and plot data
   filter_stats <- list(
