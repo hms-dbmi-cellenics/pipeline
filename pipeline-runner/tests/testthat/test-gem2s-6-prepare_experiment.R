@@ -85,16 +85,30 @@ test_that("prepare_experiment ensures gene_annotations are indexed correctly for
 
 })
 
-test_that("prepare_experiment adds 0 indexed cell_ids and other metadata to scdata", {
-  prev_out <- mock_prev_out()
+test_that("prepare_experiment adds 0 indexed cell_ids to each sample in scdata_list", {
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples = samples)
   input <- list(experimentId = "1234")
-  scdata <- prepare_experiment(input, NULL, prev_out)$output$scdata
 
-  added_to_misc <- c("gene_annotations", "color_pool", "experimentId", "ingestionDate")
-  expect_true(all(added_to_misc %in% names(scdata@misc)))
+  scdata_list <- prepare_experiment(input, NULL, prev_out)$output$scdata
 
-  added_ids <- unname(scdata$cells_id)
-  expected_ids <- seq(0, ncol(scdata) - 1)
+  added_to_misc <- c("gene_annotations", "experimentId")
+
+  for (sample in samples) {
+  expect_true(all(added_to_misc %in% names(scdata_list[[sample]]@misc)))
+  }
+
+  # list of added cell_ids per sample in scdata_list
+  added_ids <- purrr::map(scdata_list, ~unname(.$cells_id))
+
+  expected_ids <- list()
+  start <- 0
+  for (sample in samples) {
+    end <- start + ncol(scdata_list[[sample]]) - 1
+    expected_ids[[sample]] <- seq(start, end)
+    start <- end + 1
+  }
+
   expect_equal(added_ids, expected_ids)
 })
 
