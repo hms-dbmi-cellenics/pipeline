@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        project: ['pipeline-runner']
+        project: ["pipeline-runner"]
     outputs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
       image-tag: ${{ steps.ref.outputs.image-tag }}
@@ -186,7 +186,7 @@ jobs:
           docker run \
             --entrypoint /bin/bash \
             -v $(pwd)/covr:/covr $IMAGE_NAME \
-            -c "R -e ov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
+            -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
 
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
@@ -226,7 +226,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        environment: ['production', 'staging', 'develop']
+        environment: ["production", "staging", "develop"]
     steps:
       - id: checkout
         name: Check out source code
@@ -308,21 +308,19 @@ jobs:
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
 
       - name: Push production/develop template to releases
-        if:
-          (matrix.environment == 'production' && github.event_name == 'release' && github.event.action == 'released') || (matrix.environment == 'develop' && github.event_name == 'push')
+        if: (matrix.environment == 'production' && github.event_name == 'release' && github.event.action == 'released') || (matrix.environment == 'develop' && github.event_name == 'push')
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source_file: '${{ steps.fill-metadata.outputs.deployment-name }}.yaml'
-          destination_repo: '${{ github.repository_owner }}/releases'
-          destination_folder: '${{ steps.fill-metadata.outputs.kubernetes-env }}'
-          user_email: 'ci@biomage.net'
-          user_name: 'Biomage CI/CD'
+          source_file: "${{ steps.fill-metadata.outputs.deployment-name }}.yaml"
+          destination_repo: "${{ github.repository_owner }}/releases"
+          destination_folder: "${{ steps.fill-metadata.outputs.kubernetes-env }}"
+          user_email: "ci@biomage.net"
+          user_name: "Biomage CI/CD"
 
       - name: Change name of deployment file for staging deployment
-        if:
-          (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
+        if: (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
         env:
           DEPLOYMENT_NAME: ${{ steps.fill-metadata.outputs.deployment-name }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
@@ -330,17 +328,16 @@ jobs:
           mv $DEPLOYMENT_NAME.yaml $REF_ID.yaml
 
       - name: Push staging deployment template to releases
-        if:
-          (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
+        if: (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
           source_file: ${{ needs.build-docker.outputs.ref-id }}.yaml
-          destination_repo: '${{ github.repository_owner }}/releases'
-          destination_folder: 'staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}'
-          user_email: 'ci@biomage.net'
-          user_name: 'Biomage CI/CD'
+          destination_repo: "${{ github.repository_owner }}/releases"
+          destination_folder: "staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}"
+          user_email: "ci@biomage.net"
+          user_name: "Biomage CI/CD"
 
       - id: send-to-slack
         name: Send failure notification to Slack
