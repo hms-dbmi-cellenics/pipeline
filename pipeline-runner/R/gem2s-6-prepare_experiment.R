@@ -49,8 +49,9 @@ add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
     end <- start + (ncol(scdata_list[[sample]]) - 1)
 
     # select only the annotations of the current sample
-    annot <- annot[match(rownames(scdata_list[[sample]]), annot$input), ]
-    scdata_list[[sample]]@misc[["gene_annotations"]] <- annot
+    sample_annotations_idx <- match(rownames(scdata_list[[sample]]), annot$input)
+    sample_annot <- annot[sample_annotations_idx, ]
+    scdata_list[[sample]]@misc[["gene_annotations"]] <- sample_annot
 
     # add the experiment ID so it's available later
     scdata_list[[sample]]@misc[["experimentId"]] <- experiment_id

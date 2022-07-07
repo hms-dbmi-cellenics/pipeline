@@ -62,16 +62,27 @@ test_that("prepare_experiment returns list of seurat objects", {})
 # })
 
 
-test_that("prepare_experiment ensures gene_annotations are indexed the same as scdata", {
-  prev_out <- mock_prev_out()
+test_that("prepare_experiment ensures gene_annotations are indexed correctly for each sample", {
 
-  # shuffle gene order of annot
-  annot <- prev_out$annot
-  prev_out$annot <- annot[sample(nrow(annot)), ]
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples = samples)
 
-  scdata <- prepare_experiment(NULL, NULL, prev_out)$output$scdata
+  # remove some genes from each sample
+  prev_out$counts_list$a <- prev_out$counts_list$a[-c(1:9), ]
+  prev_out$counts_list$b <- prev_out$counts_list$b[-c(21:30), ]
+  prev_out$counts_list$c <- prev_out$counts_list$c[-c(5:25), ]
 
-  expect_equal(row.names(scdata), scdata@misc$gene_annotations$input)
+  # TODO: refactor mocking
+  # re-create seurat object
+  prev_out <- create_seurat(NULL, NULL, prev_out)$output
+  scdata_list <- prepare_experiment(NULL, NULL, prev_out)$output$scdata
+
+  # we expect that the input in gene_annotations is the same as the rownames of
+  # each sample seurat object
+  for (sample in samples) {
+    expect_equal(scdata_list[[sample]]@misc$gene_annotations$input, rownames(scdata_list[[sample]]))
+  }
+
 })
 
 test_that("prepare_experiment adds 0 indexed cell_ids and other metadata to scdata", {
