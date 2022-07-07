@@ -308,7 +308,7 @@ jobs:
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
-          COMMIT_SHA: ${{ needs.build-docker.ouputs.commit-sha }}
+          COMMIT_SHA: ${{ needs.build-docker.outputs.commit-sha }}
 
       - name: Push production/develop template to releases
         if:
