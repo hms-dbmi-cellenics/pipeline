@@ -88,13 +88,15 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   return(result)
 }
 
-#' create seurat object
+#' Create the merged Seurat object
 #'
-#' merge, shuffle and add metadata to list of seurat objects.
+#' This function takes care of merging the sample seurat objects, shuffling
+#' and adding the metadata to the complete Seurat object. It does so by calling
+#' the corresponding functions.
 #'
 #' @param scdata_list
 #'
-#' @return
+#' @return SeuratObject
 #' @export
 #'
 create_scdata <- function(scdata_list) {
@@ -106,6 +108,16 @@ create_scdata <- function(scdata_list) {
   return(scdata)
 }
 
+#' Merge the list of sample Seurat objects
+#'
+#' If the list contains more than one seurat object, it merges them all. Else,
+#' returns the only element.
+#'
+#' @param scdata_list list of SeuratObjects
+#'
+#' @return SeuratObject
+#' @export
+#'
 merge_scdata_list <- function(scdata_list) {
 
   if (length(scdata_list) == 1) {
@@ -118,11 +130,14 @@ merge_scdata_list <- function(scdata_list) {
 
 }
 
-#' Title
+#' Shuffle the cells in a SeuratObject
 #'
-#' @param scdata
+#' This function shuffles the cells in a Seurat object, to allow the UI to make
+#' shuffled scatterplots, avoiding a sample bias when plotting.
 #'
-#' @return
+#' @param scdata SeuratObject
+#'
+#' @return SeuratObject
 #' @export
 #'
 shuffle_scdata <- function(scdata) {
@@ -489,7 +504,18 @@ build_cc_gene_list <- function(all_genes) {
   return(cc_gene_indices)
 }
 
-# add_metadata adds the metadata present in scdata_list into the merged scdata object
+#' Add the metadata present in scdata_list into the merged SeuratObject
+#'
+#' This function adds metadata, some of which is present in the sample SeuratObjects
+#' (the experimentID, the gene annotations), and some that is not (the color pool)
+#' to the merged SeuratObject.
+#'
+#' @param scdata SeuratObject
+#' @param scdata_list list of sample SeuratObjects
+#'
+#' @return SeuratObject with added metadata
+#' @export
+#'
 add_metadata <- function(scdata, scdata_list) {
 
   #TODO add comment about misc

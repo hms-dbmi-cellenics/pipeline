@@ -4,10 +4,10 @@
 \alias{generate_first_step_ids}
 \title{Title}
 \usage{
-generate_first_step_ids(scdata)
+generate_first_step_ids(scdata_list)
 }
 \arguments{
-\item{scdata}{}
+\item{scdata_list}{}
 }
 \description{
 Title

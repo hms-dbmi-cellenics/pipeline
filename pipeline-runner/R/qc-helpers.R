@@ -5,7 +5,6 @@
 #' @return
 #' @export
 #'
-#' @examples
 generate_first_step_ids <- function(scdata_list) {
   # message('gen: ', scdata_list$samples)
   # saveRDS(scdata_list, '/debug/scdata.gen.1.rds')
@@ -187,7 +186,6 @@ calc_filter_stats <- function(scdata) {
 #' @return
 #' @export
 #'
-#' @examples
 runClusters <- function(clustering_method, resolution, data) {
   data <- getClusters(clustering_method, resolution, data)
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
@@ -209,7 +207,6 @@ runClusters <- function(clustering_method, resolution, data) {
 #' @return
 #' @export
 #'
-#' @examples
 getClusters <- function(clustering_method, resolution, data) {
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]

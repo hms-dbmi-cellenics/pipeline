@@ -5,7 +5,7 @@
 \title{STEP 2. Cell size distribution filter}
 \usage{
 filter_low_cellsize(
-  scdata,
+  scdata_list,
   config,
   sample_id,
   cells_id,
