@@ -57,7 +57,8 @@ jobs:
         project: ['pipeline-runner']
     outputs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
-      tag: ${{ steps.ref.outputs.tag }}
+      image-tag: ${{ steps.ref.outputs.image-tag }}
+      ref-id: ${{ steps.ref.outputs.ref-id }}
     defaults:
       run:
         working-directory: ${{ matrix.project }}
@@ -72,8 +73,7 @@ jobs:
           # This will take a ref like `refs/heads/master`
           # and turn it into `refs-heads-master`
           REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
-
-          echo THIS BUILD HOTFIX/RELEASE IS RUNNING!! WOOT!
+          echo "::set-output name=ref-id::$REF_ID"
 
           # the final tag is something like:
           # refs-heads-master-a4f8bc313dae
@@ -85,12 +85,20 @@ jobs:
           # in PR synch the latest commit of the branch is found in github.event.pull_request.head.sha instead
 
           if [ "${{ github.event_name }}" = "release" ] && [ "${{ github.event.action }}" = "released" ]; then
-            echo "::set-output name=tag::$REF_ID"
+            COMMIT_SHA=""
+            IMAGE_TAG=$REF_ID
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "::set-output name=tag::$REF_ID-${{ github.event.pull_request.head.sha }}"
+            COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
+            IMAGE_TAG="$REF_ID-$COMMIT_SHA"
           else
-            echo "::set-output name=tag::$REF_ID-$GITHUB_SHA"
+            COMMIT_SHA=$GITHUB_SHA
+            IMAGE_TAG="$REF_ID-$COMMIT_SHA"
           fi
+
+          # IMAGE_TAG is used in the Build Docker Image step.
+          # We can easily build the image-tag from REF_ID and COMMIT_SHA for non-production releases.
+          # But we can not easily create the image tag for production releases, so we're bulding it here
+          echo "::set-output name=image-tag::$IMAGE_TAG"
 
           # This will take a GitHub repo name like `hms-dbmi-cellenics/releases`
           # and turns it into `releases`. This will be the name of the
@@ -169,7 +177,7 @@ jobs:
             --tag $IMAGE_NAME .
         env:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
           GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
 
       - id: codecov
@@ -181,7 +189,7 @@ jobs:
             -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
 
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
 
       - id: upload-coverage
         name: Upload coverage to Codecov
@@ -198,7 +206,7 @@ jobs:
           echo Pushing image $IMAGE_NAME to ECR.
           docker push $IMAGE_NAME
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
 
       - id: send-to-slack
         name: Send failure notification to Slack
@@ -244,18 +252,16 @@ jobs:
       - id: fill-metadata
         name: Fill out a new HelmRelease resource
         run: |-
-          REF_DASHED=$(echo $GITHUB_REF | sed 's/\//-/g')
           DEPLOYMENT_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
           echo "::set-output name=deployment-name::$DEPLOYMENT_NAME"
-          echo "::set-output name=ref-dashed::$REF_DASHED"
 
           if [ "${{ matrix.environment }}" = "production" ]; then
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="production"
             REPLICA_COUNT="3"
-            SHORT_TAG_REF=${REF_DASHED/refs-tags-/}
-            IMAGE_GLOB="${IMAGE_TAG/$SHORT_TAG_REF/*}"
+            VERSION_NUMBER=${REF_ID/refs-tags-/}
+            IMAGE_GLOB="${REF_ID/$VERSION_NUMBER/*}"
             MEMORY_REQUEST="29Gi"
           fi
 
@@ -264,7 +270,7 @@ jobs:
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="1"
-            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="$REF_ID-*"
             MEMORY_REQUEST="29Gi"
           fi
 
@@ -273,7 +279,7 @@ jobs:
             CHART_REF="STAGING_CHART_REF"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="0"
-            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="$REF_ID-*"
             MEMORY_REQUEST="4Gi"
           fi
 
@@ -298,8 +304,8 @@ jobs:
 
           cat $DEPLOYMENT_NAME.yaml
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-          IMAGE_TAG: ${{ needs.build-docker.outputs.tag }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
+          REF_ID: ${{ needs.build-docker.outputs.ref-id }}
 
       - name: Push production/develop template to releases
         if:
@@ -319,9 +325,9 @@ jobs:
           (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
         env:
           DEPLOYMENT_NAME: ${{ steps.fill-metadata.outputs.deployment-name }}
-          REF_DASHED: ${{ steps.fill-metadata.outputs.ref-dashed }}
+          REF_ID: ${{ needs.build-docker.outputs.ref-id }}
         run: |-
-          mv $DEPLOYMENT_NAME.yaml $REF_DASHED.yaml
+          mv $DEPLOYMENT_NAME.yaml $REF_ID.yaml
 
       - name: Push staging deployment template to releases
         if:
@@ -330,7 +336,7 @@ jobs:
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source_file: '${{ steps.fill-metadata.outputs.ref-dashed }}.yaml'
+          source_file: ${{ needs.build-docker.outputs.ref-id }}.yaml
           destination_repo: '${{ github.repository_owner }}/releases'
           destination_folder: 'staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}'
           user_email: 'ci@biomage.net'
