@@ -330,7 +330,7 @@ jobs:
           DEPLOYMENT_NAME: ${{ steps.fill-metadata.outputs.deployment-name }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
         run: |-
-          mv $DEPLOYMENT_NAME.yaml $REF_DASHED.yaml
+          mv $DEPLOYMENT_NAME.yaml $REF_ID.yaml
 
       - name: Push staging deployment template to releases
         if:
