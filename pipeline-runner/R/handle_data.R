@@ -30,20 +30,20 @@ upload_cells_id <- function(pipeline_config, object_key, cells_id) {
   return(object_key)
 }
 
+reload_scdata_from_s3 <- function (s3, experiment_id) {
+  bucket <- pipeline_config$processed_bucket
+  message(bucket)
+  message(paste(experiment_id, "r.rds", sep = "/"))
 
-reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
-  # If the task is after data integration, we need to get scdata from processed_matrix
-  task_names <- names(tasks)
-  integration_index <- match("dataIntegration", task_names)
-
-  if (match(task_name, task_names) > integration_index) {
-    bucket <- pipeline_config$processed_bucket
-  } else {
-    bucket <- pipeline_config$source_bucket
-  }
-  s3 <- paws::s3(config = pipeline_config$aws_config)
-
-
+  c(body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = paste(experiment_id, "r.rds", sep = "/")
+  )
+  obj <- readRDS(rawConnection(body))
+  return(obj)
+}
+reload_scdata_list_from_s3 <- function (s3, experiment_id) {
+  bucket <- pipeline_config$source_bucket
   objects <- s3$list_objects(
     Bucket = bucket,
     Prefix = experiment_id
@@ -66,6 +66,24 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   return(scdata_list)
 }
 
+# reload_data_from_s3 will reload:
+# * scdata_list for all steps before integration (included)
+# * scdata file for all steps after data integration
+reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
+  task_names <- names(tasks)
+  integration_index <- match("dataIntegration", task_names)
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+
+  # If the task is after data integration, we need to get scdata from processed_matrix
+  if (match(task_name, task_names) > integration_index) {
+    return(reload_scdata_from_s3(s3))
+  }
+
+  # Otherwise, return scdata_list
+  return(reload_scdata_list_from_s3(s3))
+
+}
+
 load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, samples) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
   object_list <- s3$list_objects(
@@ -79,6 +97,9 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
 
+  # ASK GERMAN in the case where we are past integrating data we just don't load anything
+  # why is that?
+  # ADD some comment here to make it clear
   if (match(task_name, task_names) <= integration_index) {
     for (object in object_list$Contents) {
       key <- object$Key
