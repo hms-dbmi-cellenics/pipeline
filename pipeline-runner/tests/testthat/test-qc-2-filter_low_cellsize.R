@@ -31,11 +31,16 @@ test_that("filter_low_cellsize removes cells", {
   scdata <- mock_scdata()
   config <- mock_config(mcs = 10000)
   cells_id <- mock_ids()
+  sample_id <- "123abc"
 
-  out <- filter_low_cellsize(scdata, config, "123abc", cells_id)
+  scdata_list <- list(scdata)
+  names(scdata_list) <- sample_id
 
-  expect_equal(ncol(out$data), ncol(scdata))
-  expect_lt(length(out$new_ids$`123abc`), length(cells_id$`123abc`))
+  out <- filter_low_cellsize(scdata_list, config, sample_id, cells_id)
+
+  expect_equal(ncol(out$data[[sample_id]]), ncol(scdata_list[[sample_id]]))
+  expect_lt(length(out$new_ids[[sample_id]]), length(cells_id[[sample_id]]))
+
   expect_equal(length(out$new_ids$`123def`), length(cells_id$`123def`))
 })
 
