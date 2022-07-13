@@ -2,9 +2,11 @@
 #'
 #' cell_size_distribution_filter function
 #'
-#' This is a simplest filter that looks at the shape of the cell size (# of UMIs per cell) distribution and looks for some local minima, minimum of second derivative, etc.
-#' To separate the large cell barcodes that correspond to real cells from the tail containing 'empty droplets'.
-#' This can be a useful first guess. The settings for such a filter can also contain a simple "min cell size" setting.
+#' This is a simplest filter that looks at the shape of the cell size (# of UMIs
+#' per cell) distribution and looks for some local minima, minimum of second derivative, etc.
+#' To separate the large cell barcodes that correspond to real cells from the
+#' tail containing 'empty droplets'. This can be a useful first guess. The settings
+#'for such a filter can also contain a simple "min cell size" setting.
 #'
 #' @param config list containing the following information
 #'          - enable: true/false. Refering to apply or not the filter.
