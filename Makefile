@@ -19,8 +19,9 @@ endif
 install: 
 	@echo "Installing local runner"
 	@(cd ./local-runner && npm install)
-	@echo "Installing R env packages"
+	@echo "Installing renv packages"
 	@(cd ./pipeline-runner && R -e "renv::restore()")
+	@(cd ./pipeline-runner && R -e "renv::install()")
 build: 
 	@(cd ./local-runner && npm run build)
 test:
