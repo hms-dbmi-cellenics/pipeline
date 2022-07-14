@@ -1,8 +1,3 @@
-mock_ids <- function() {
-  # TODO: parametrize sample ids
-  return(list("123abc" = 0:39, "123def" = 40:79))
-}
-
 mock_config <- function(mcs = 100, auto_settings = FALSE, enabled_on = TRUE) {
   config <- list(
     auto = auto_settings,
