@@ -101,11 +101,11 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 #'
 create_scdata <- function(scdata_list) {
 
-  scdata <- merge_scdata_list(scdata)
-  scdata <- shuffle_scdata(scdata)
-  scdata <- add_metadata(scdata, scdata_list)
+  merged_scdatas <- merge_scdata_list(scdata_list)
+  merged_scdatas <- shuffle_scdata(merged_scdatas)
+  merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
-  return(scdata)
+  return(merged_scdatas)
 }
 
 #' Merge the list of sample Seurat objects
