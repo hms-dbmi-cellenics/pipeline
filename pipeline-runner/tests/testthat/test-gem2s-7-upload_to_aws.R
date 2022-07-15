@@ -1,13 +1,3 @@
-mock_config <- function(metadata = NULL) {
-  config <- list(
-    sampleNames = list("a", "b", "c"),
-    sampleIds = list("123abc", "123def", "123ghi"),
-    metadata = metadata
-  )
-
-  return(config)
-}
-
 mock_doublet_scores <- function(counts) {
   doublet_scores <- runif(ncol(counts))
   doublet_class <- ifelse(doublet_scores < 0.8, "singlet", "doublet")
@@ -20,7 +10,28 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-mock_prev_out <- function(samples = "sample_a", counts = NULL) {
+mock_scdata_list = function (config) {
+  prev_out <- mock_prev_out(config)
+  scdata_list <- prev_out$scdata_list
+
+  task_out <- prepare_experiment(NULL, NULL, prev_out)$output
+  scdata_list <- task_out$scdata_list
+}
+
+mock_config <- function(metadata = NULL) {
+  config <- list(
+    name = "project name",
+    sampleNames = list("a", "b", "c"),
+    sampleIds = list("123abc", "123def", "123ghi"),
+    metadata = metadata
+  )
+
+  return(config)
+}
+
+mock_prev_out <- function(config, counts = NULL) {
+  sampleIds <- config$sampleIds
+
   if (is.null(counts)) {
     counts <- DropletUtils:::simCounts()
     colnames(counts) <- paste0("cell", seq_len(ncol(counts)))
@@ -32,10 +43,10 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   edrops <- list()
   doublet_scores <- list()
 
-  for (sample in samples) {
-    counts_list[[sample]] <- counts
-    edrops[[sample]] <- eout
-    doublet_scores[[sample]] <- mock_doublet_scores(counts)
+  for (sampleId in sampleIds) {
+    counts_list[[sampleId]] <- counts
+    edrops[[sampleId]] <- eout
+    doublet_scores[[sampleId]] <- mock_doublet_scores(counts)
   }
 
   # as passed to create_seurat
@@ -44,21 +55,11 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
     edrops = edrops,
     doublet_scores = doublet_scores,
     annot = data.frame(name = row.names(counts), input = row.names(counts)),
-    config = list(name = "project name")
+    config = config
   )
 
   # call create_seurat to get prev_out to pass to prepare_experiment
-  create_seurat(NULL, NULL, prev_out)$output
-}
-
-
-mock_scdata_list = function (config) {
-  samples <- config$sampleIds
-  prev_out <- mock_prev_out(samples )
-  scdata_list <- prev_out$scdata_list
-
-  task_out <- prepare_experiment(NULL, NULL, prev_out)$output
-  scdata_list <- task_out$scdata_list
+  return(create_seurat(NULL, NULL, prev_out)$output)
 }
 
 test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
@@ -92,7 +93,7 @@ test_that("get_cell_sets adds correct cell ids for each sample", {
 
 
 test_that("get_cell_sets adds a single metadata column", {
-  metadata <- list(Group = list("Hello", "WT2"))
+  metadata <- list(Group = list("Hello", "WT2", "WT2"))
   config <- mock_config(metadata)
   scdata_list <- mock_scdata_list(config)
 
@@ -109,9 +110,15 @@ test_that("get_cell_sets adds a single metadata column", {
   # cell ids are correct for each child
   for (group_name in group_names) {
     group_cells <- group_set$children[[which(group_names == group_name)]]$cellIds
-    expected_cells <- unname(scdata_list$cells_id)[scdata_list$Group == group_name]
 
-    expect_equal(group_cells, expected_cells)
+    expected_cells <- unname(scdata_list[[2]]$cells_id)[scdata_list$Group == group_name]
+
+    expected_cells <- append(
+      expected_cells,
+      unname(scdata_list[[3]]$cells_id)[scdata_list$Group == group_name]
+    )
+
+    expect_equal(unlist(group_cells), expected_cells)
   }
 })
 
