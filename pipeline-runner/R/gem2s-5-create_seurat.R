@@ -15,7 +15,11 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   check_prev_out(prev_out, check_names)
 
   # destructure previous output: config, counts_list, annot, and doublet_scores
-  list2env(prev_out, envir = environment())
+  config <- prev_out$config
+  counts_list <- prev_out$counts_list
+  annot <- prev_out$annot
+  doublet_scores <- prev_out$doublet_scores
+  edrops <- prev_out$edrops
 
   samples <- names(counts_list)
   scdata_list <- list()
@@ -70,20 +74,20 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
 # construct metadata for each SeuratObject
 construct_metadata <- function(counts, sample, config) {
   message("Constructing metadata df...")
-  metadata <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
+  metadata_df <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
 
   # Add "metadata" if exists in config
-  rest <- config$metadata
-  if (!is.null(rest)) {
-    rest <- lapply(rest, unlist)
-    rest <- data.frame(rest, row.names = config$samples, check.names = FALSE)
-    metadata[names(rest)] <- rest[sample, ]
+  user_metadata <- config$metadata
+  if (!is.null(user_metadata)) {
+    user_metadata <- lapply(user_metadata, unlist)
+    user_metadata <- data.frame(user_metadata, row.names = config$samples, check.names = FALSE)
+    metadata_df[names(user_metadata)] <- user_metadata[sample, ]
   }
 
   # make syntactically valid column names
-  colnames(metadata) <- make.names(colnames(metadata), unique = TRUE)
+  colnames(metadata_df) <- make.names(colnames(metadata_df), unique = TRUE)
 
-  return(metadata)
+  return(metadata_df)
 }
 
 # add mitochondrial percent to SeuratObject
