@@ -22,7 +22,7 @@ mock_config <- function(metadata = NULL) {
   config <- list(
     name = "project name",
     sampleNames = list("a", "b", "c"),
-    sampleIds = list("123abc", "123def", "123ghi"),
+    samples = list("123abc", "123def", "123ghi"),
     metadata = metadata
   )
 
@@ -30,7 +30,7 @@ mock_config <- function(metadata = NULL) {
 }
 
 mock_prev_out <- function(config, counts = NULL) {
-  sampleIds <- config$sampleIds
+  samples <- config$samples
 
   if (is.null(counts)) {
     counts <- DropletUtils:::simCounts()
@@ -43,7 +43,7 @@ mock_prev_out <- function(config, counts = NULL) {
   edrops <- list()
   doublet_scores <- list()
 
-  for (sampleId in sampleIds) {
+  for (sampleId in samples) {
     counts_list[[sampleId]] <- counts
     edrops[[sampleId]] <- eout
     doublet_scores[[sampleId]] <- mock_doublet_scores(counts)
@@ -57,7 +57,6 @@ mock_prev_out <- function(config, counts = NULL) {
     annot = data.frame(name = row.names(counts), input = row.names(counts)),
     config = config
   )
-
   # call create_seurat to get prev_out to pass to prepare_experiment
   return(create_seurat(NULL, NULL, prev_out)$output)
 }
@@ -83,14 +82,13 @@ test_that("get_cell_sets adds correct cell ids for each sample", {
   sample_sets <- cell_sets$cellSets[[which(sets_key == "sample")]]
   samples_key <- sapply(sample_sets$children, `[[`, "key")
 
-  for (sample_id in config$sampleIds) {
+  for (sample_id in config$samples) {
     sample_cells <- sample_sets$children[[which(samples_key == sample_id)]]$cellIds
     expected_cells <- unname(scdata_list[[sample_id]]$cells_id)
 
     expect_equal(sample_cells, expected_cells)
   }
 })
-
 
 test_that("get_cell_sets adds a single metadata column", {
   metadata <- list(Group = list("Hello", "WT2", "WT2"))
@@ -105,7 +103,6 @@ test_that("get_cell_sets adds a single metadata column", {
 
   group_set <- cell_sets$cellSets[[which(keys == "Group")]]
   group_names <- sapply(group_set$children, `[[`, "name")
-
 
   # cell ids are correct for each child
   for (group_name in group_names) {
