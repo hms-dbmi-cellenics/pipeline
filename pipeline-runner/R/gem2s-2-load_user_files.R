@@ -229,7 +229,7 @@ read_10x_annotations <- function(annot_fpath, sample) {
   annot <- read.delim(annot_fpath, header = FALSE)
 
   # Remove features that are not "Gene Expression"
-  if (ncol(annot) > 2) {
+  if (ncol(annot) > 2 && length(grep("Gene Expression", annot$V3)) > 0) {
     annot <- annot %>% dplyr::filter(V3 == "Gene Expression")
   }
 
