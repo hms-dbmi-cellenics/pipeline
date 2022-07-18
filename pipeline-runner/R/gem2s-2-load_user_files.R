@@ -228,6 +228,11 @@ read_10x_annotations <- function(annot_fpath, sample) {
 
   annot <- read.delim(annot_fpath, header = FALSE)
 
+  # Remove features that are not "Gene Expression"
+  if (ncol(annot) > 2) {
+    annot <- annot %>% dplyr::filter(V3 == "Gene Expression")
+  }
+
   # Some feature files have less columns than expected.
   # Duplicate first column if there is only one column with gene names/ids, or
   # if there is a "Gene Expression" column
@@ -252,11 +257,6 @@ read_10x_annotations <- function(annot_fpath, sample) {
   # Since Seurat uses makes.unique, we need to as well.
   # Only for the first column, at this stage column 1 are the counts matrix rownames.
   annot[, 1] <- make.unique(annot[, 1])
-
-  # Remove features that are not "Gene Expression"
-  if (ncol(annot)>2) {
-    annot <- annot %>% dplyr::filter(V3 == "Gene Expression")
-  }
 
   # Equalizing number of columns in case there's no Gene Expression column
   annot <- annot[, c(1, 2)]
