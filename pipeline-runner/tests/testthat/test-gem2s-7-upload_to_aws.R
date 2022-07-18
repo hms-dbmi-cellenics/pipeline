@@ -64,7 +64,7 @@ mock_prev_out <- function(config, counts = NULL) {
 
 test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
   config <- mock_config()
-  scdata_list <- (config)
+  scdata_list <- mock_scdata_list(config)
 
   cell_sets <- get_cell_sets(scdata_list, config)
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
