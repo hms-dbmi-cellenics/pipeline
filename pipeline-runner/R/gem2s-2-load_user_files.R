@@ -253,6 +253,9 @@ read_10x_annotations <- function(annot_fpath, sample) {
   # Only for the first column, at this stage column 1 are the counts matrix rownames.
   annot[, 1] <- make.unique(annot[, 1])
 
+  # Remove features that are not "Gene Expression"
+  annot <- annot %>% dplyr::filter(V3 == "Gene Expression")
+
   # Equalizing number of columns in case there's no Gene Expression column
   annot <- annot[, c(1, 2)]
   colnames(annot) <- c("input", "name")
