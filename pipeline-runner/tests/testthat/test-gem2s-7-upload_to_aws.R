@@ -75,8 +75,9 @@ test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
 test_that("get_cell_sets adds correct cell ids for each sample", {
   config <- mock_config()
   scdata_list <- mock_scdata_list(config)
+  input <- list(sampleIds = config$samples, sampleNames = config$sampleNames)
 
-  cell_sets <- get_cell_sets(scdata_list, config)
+  cell_sets <- get_cell_sets(scdata_list, input)
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
 
   sample_sets <- cell_sets$cellSets[[which(sets_key == "sample")]]
