@@ -254,7 +254,9 @@ read_10x_annotations <- function(annot_fpath, sample) {
   annot[, 1] <- make.unique(annot[, 1])
 
   # Remove features that are not "Gene Expression"
-  annot <- annot %>% dplyr::filter(V3 == "Gene Expression")
+  if (ncol(annot)>2) {
+    annot <- annot %>% dplyr::filter(V3 == "Gene Expression")
+  }
 
   # Equalizing number of columns in case there's no Gene Expression column
   annot <- annot[, c(1, 2)]
