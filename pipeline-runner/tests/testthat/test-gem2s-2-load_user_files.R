@@ -31,7 +31,7 @@ mock_counts <- function() {
   return(counts)
 }
 
-mock_annotations <- function(counts) {
+mock_annotations <- function(counts, multiome = "no") {
   # pbmc_raw dataset has gene names as rownames.
   # the annotations data.frame input column contains the rownames of the
   # count matrix.
@@ -39,6 +39,16 @@ mock_annotations <- function(counts) {
     input = rownames(counts),
     name = paste0("ENSFAKE", seq_len(nrow(counts)))
   )
+
+  if (multiome == "yes") {
+    peaks <- data.frame(
+      input = paste0("PEAKFAKE", seq_len(10)),
+      name = paste0("PEAKFAKE", seq_len(10))
+    )
+    annot <- rbind(annot, peaks)
+    annot$type <- c(rep("Gene Expression", nrow(counts)),
+                    rep("Peaks", 10))
+  }
 
   return(list("annot" = annot))
 }
@@ -717,4 +727,20 @@ test_that("filter_unnamed_features replaces annotations if available", {
   expect_equal(nrow(res$counts), nrow(counts) - 5)
   expect_equal(nrow(res_annot), nrow(annotations$annot) - 5)
 
+})
+
+test_that("read_10x_annotations removes features different from Gene Expression", {
+  counts <- mock_counts()
+
+  annotations <- mock_annotations(counts, multiome = "yes")
+
+  experiment_dir <- "./experiment_1"
+  sample <- "sample_a"
+  annot_fpath <- file.path(experiment_dir, sample, "features.tsv.gz")
+
+  local_cellranger_experiment(counts, annotations, experiment_dir, sample)
+
+  res <- read_10x_annotations(annot_fpath, sample)
+
+  expect_equal(nrow(counts), nrow(res$annot))
 })
