@@ -18,15 +18,25 @@ mock_scdata_list = function (config) {
   scdata_list <- task_out$scdata_list
 }
 
-mock_config <- function(metadata = NULL) {
-  config <- list(
+mock_input <- function(metadata = NULL) {
+  input <- list(
     name = "project name",
     sampleNames = list("a", "b", "c"),
-    samples = list("123abc", "123def", "123ghi"),
+    sampleIds = list("123abc", "123def", "123ghi"),
     metadata = metadata
   )
 
-  return(config)
+  return(input)
+}
+
+mock_config <- function(input) {
+  config <- list(
+    name = input$name,
+    samples = input$sampleIds,
+    metadata = input$metadata
+  )
+
+  return (config)
 }
 
 mock_prev_out <- function(config, counts = NULL) {
@@ -62,10 +72,12 @@ mock_prev_out <- function(config, counts = NULL) {
 }
 
 test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
-  config <- mock_config()
+  input <- mock_input()
+  config <- mock_config(input)
+
   scdata_list <- mock_scdata_list(config)
 
-  cell_sets <- get_cell_sets(scdata_list, config)
+  cell_sets <- get_cell_sets(scdata_list, input)
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
 
   expect_setequal(keys, c("scratchpad", "sample"))
@@ -73,9 +85,9 @@ test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
 
 
 test_that("get_cell_sets adds correct cell ids for each sample", {
-  config <- mock_config()
+  input <- mock_input()
+  config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
-  input <- list(sampleIds = config$samples, sampleNames = config$sampleNames)
 
   cell_sets <- get_cell_sets(scdata_list, input)
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
@@ -93,10 +105,11 @@ test_that("get_cell_sets adds correct cell ids for each sample", {
 
 test_that("get_cell_sets adds a single metadata column", {
   metadata <- list(Group = list("Hello", "WT2", "WT2"))
-  config <- mock_config(metadata)
+  input <- mock_input(metadata)
+  config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
 
-  cell_sets <- get_cell_sets(scdata_list, config)
+  cell_sets <- get_cell_sets(scdata_list, input)
 
   # have it as a key
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
@@ -122,11 +135,12 @@ test_that("get_cell_sets adds a single metadata column", {
 
 
 test_that("get_cell_sets uses user-supplied syntactically invalid metadata column names", {
-  metadata <- list("TRUE" = list("Hello", "WT2"))
-  config <- mock_config(metadata)
+  metadata <- list("TRUE" = list("Hello", "WT2", "WT2"))
+  input <- mock_input(metadata)
+  config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
 
-  cell_sets <- get_cell_sets(scdata_list, config)
+  cell_sets <- get_cell_sets(scdata_list, input)
 
   # have TRUE as a key
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
@@ -146,11 +160,12 @@ test_that("get_cell_sets uses user-supplied syntactically invalid metadata colum
 
 
 test_that("get_cell_sets adds two metadata columns", {
-  metadata <- list(Group1 = list("Hello", "WT2"), Group2 = list("WT", "WT"))
-  config <- mock_config(metadata)
+  metadata <- list(Group1 = list("Hello", "WT2", "WT2"), Group2 = list("WT", "WT", "WTA"))
+  input <- mock_input(metadata)
+  config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
 
-  cell_sets <- get_cell_sets(scdata_list, config)
+  cell_sets <- get_cell_sets(scdata_list, input)
 
   # have as keys
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
@@ -164,11 +179,12 @@ test_that("get_cell_sets adds two metadata columns", {
 
 
 test_that("get_cell_sets uses unique colors for each cell set", {
-  metadata <- list(Group1 = list("Hello", "WT2"), Group2 = list("WT", "WT"))
-  config <- mock_config(metadata)
+  metadata <- list(Group1 = list("Hello", "WT2", "WT2"), Group2 = list("WT", "WT", "WTA"))
+  input <- mock_input(metadata)
+  config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
 
-  cell_sets <- get_cell_sets(scdata_list, config)
+  cell_sets <- get_cell_sets(scdata_list, input)
 
   flat_cell_sets <- unlist(cell_sets)
   colors <- flat_cell_sets[grepl("[.]color", names(flat_cell_sets))]
@@ -179,22 +195,23 @@ test_that("get_cell_sets uses unique colors for each cell set", {
 
 
 test_that("get_cell_sets without metadata matches snapshot", {
-  config <- mock_config()
+  input <- mock_input()
+  config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
 
-  cell_sets <- get_cell_sets(scdata_list, config)
+  cell_sets <- get_cell_sets(scdata_list, input)
   expect_snapshot(str(cell_sets))
 })
 
 
 test_that("get_cell_sets with two metadata groups matches snapshot", {
-  metadata <- list(Group1 = list("Hello", "WT2"), Group2 = list("WT", "WT"))
-
-  config <- mock_config(metadata)
+  metadata <- list(Group1 = list("Hello", "WT2", "WT2"), Group2 = list("WT", "WT", "WT124"))
+  input <- mock_input(metadata)
+  config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
 
   scdata_list@misc <- list(metadata_lookups = c(Group1 = "Group1", Group2 = "Group2"))
-  cell_sets <- get_cell_sets(scdata_list, config)
+  cell_sets <- get_cell_sets(scdata_list, input)
 
   expect_snapshot(str(cell_sets))
 })
