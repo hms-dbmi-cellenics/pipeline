@@ -118,19 +118,18 @@ test_that("get_cell_sets adds a single metadata column", {
   group_set <- cell_sets$cellSets[[which(keys == "Group")]]
   group_names <- sapply(group_set$children, `[[`, "name")
 
-  # cell ids are correct for each child
-  for (group_name in group_names) {
-    group_cells <- group_set$children[[which(group_names == group_name)]]$cellIds
+  sample_set <- cell_sets$cellSets[[which(keys == "sample")]]
+  sample_names <- sapply(sample_set$children, `[[`, "name")
 
-    expected_cells <- unname(scdata_list[[2]]$cells_id)[scdata_list$Group == group_name]
 
-    expected_cells <- append(
-      expected_cells,
-      unname(scdata_list[[3]]$cells_id)[scdata_list$Group == group_name]
-    )
+  # Check that each sample/metadata intersection contains the correct cell ids
+  group_wt2_cell_ids <- unlist(group_set$children[[which(group_names == 'WT2')]]$cellId)
 
-    expect_equal(unlist(group_cells), expected_cells)
-  }
+  samples_in_wt2 <- c("123def", "123ghi")
+  samples_in_wt2_cell_sets = purrr::keep(sample_set$children, \(x) x[["key"]] %in% samples_in_wt2)
+  samples_in_wt2_cell_ids = unlist(lapply(samples_in_wt2_cell_sets, `[[`, "cellIds"))
+
+  expect_equal(group_wt2_cell_ids, samples_in_wt2_cell_ids)
 })
 
 
