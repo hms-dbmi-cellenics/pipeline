@@ -111,18 +111,17 @@ test_that("get_cell_sets adds a single metadata column", {
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
-  # have it as a key
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
+  # has sample key as one of the keys
   expect_setequal(keys, c("scratchpad", "sample", "Group"))
 
+  # Check that each sample/metadata intersection contains the correct cell ids
   group_set <- cell_sets$cellSets[[which(keys == "Group")]]
   group_names <- sapply(group_set$children, `[[`, "name")
 
   sample_set <- cell_sets$cellSets[[which(keys == "sample")]]
   sample_names <- sapply(sample_set$children, `[[`, "name")
 
-
-  # Check that each sample/metadata intersection contains the correct cell ids
   group_wt2_cell_ids <- unlist(group_set$children[[which(group_names == 'WT2')]]$cellId)
 
   samples_in_wt2 <- c("123def", "123ghi")
@@ -141,20 +140,24 @@ test_that("get_cell_sets uses user-supplied syntactically invalid metadata colum
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
-  # have TRUE as a key
+  # has sample key as one of the keys
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
-  expect_true("TRUE" %in% keys)
+  expect_setequal(keys, c("scratchpad", "sample", "TRUE"))
 
+  # Check that each sample/metadata intersection contains the correct cell ids
   group_set <- cell_sets$cellSets[[which(keys == "TRUE")]]
   group_names <- sapply(group_set$children, `[[`, "name")
 
-  # cell ids are correct for each child
-  for (group_name in group_names) {
-    group_cells <- group_set$children[[which(group_names == group_name)]]$cellIds
-    expected_cells <- unname(scdata_list$cells_id)[scdata_list$TRUE. == group_name]
+  sample_set <- cell_sets$cellSets[[which(keys == "sample")]]
+  sample_names <- sapply(sample_set$children, `[[`, "name")
 
-    expect_equal(group_cells, expected_cells)
-  }
+  group_wt2_cell_ids <- unlist(group_set$children[[which(group_names == 'WT2')]]$cellId)
+
+  samples_in_wt2 <- c("123def", "123ghi")
+  samples_in_wt2_cell_sets = purrr::keep(sample_set$children, \(x) x[["key"]] %in% samples_in_wt2)
+  samples_in_wt2_cell_ids = unlist(lapply(samples_in_wt2_cell_sets, `[[`, "cellIds"))
+
+  expect_equal(group_wt2_cell_ids, samples_in_wt2_cell_ids)
 })
 
 
