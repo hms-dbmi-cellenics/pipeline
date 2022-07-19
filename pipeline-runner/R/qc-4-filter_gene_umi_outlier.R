@@ -83,7 +83,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
   xrange <- range(downsampled_data$log_molecules)
   newdata <- data.frame(log_molecules = seq(xrange[1], xrange[2], length.out = 10))
 
-  pred_int_values <- seq(0,1,0.01)
+  pred_int_values <- sort(c(seq(0,1,0.01), 0.999, 0.9999, 0.99999, 0.999999))
   line_preds_list <-list()
   i = 1
   for (pred in pred_int_values) {
