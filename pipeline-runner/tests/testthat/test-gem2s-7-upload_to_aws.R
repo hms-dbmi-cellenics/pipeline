@@ -166,10 +166,11 @@ test_that("get_cell_sets adds two metadata columns", {
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
   expect_setequal(keys, c("scratchpad", "sample", "Group1", "Group2"))
 
-  # check that Group2 has all cells
-  group2_set <- cell_sets$cellSets[[which(keys == "Group2")]]
-  group2_cells <- group2_set$children[[1]]$cellIds
-  expect_equal(group2_cells, unname(scdata_list$cells_id))
+  check_metadata_cell_ids("Group1", "Hello", c("123abc"), cell_sets)
+  check_metadata_cell_ids("Group1", "WT2", c("123def", "123ghi"), cell_sets)
+
+  check_metadata_cell_ids("Group2", "WT", c("123abc", "123def"), cell_sets)
+  check_metadata_cell_ids("Group2", "WTA", c( "123ghi"), cell_sets)
 })
 
 
