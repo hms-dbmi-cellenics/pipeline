@@ -134,6 +134,7 @@ test_that("get_cell_sets adds a single metadata column", {
 
   # Check that each sample/metadata intersection contains the correct cell ids
   check_metadata_cell_ids("Group", "WT2", c("123def", "123ghi"), cell_sets)
+  check_metadata_cell_ids("Group", "Hello", c("123abc"), cell_sets)
 })
 
 test_that("get_cell_sets uses user-supplied syntactically invalid metadata column names", {
@@ -148,20 +149,8 @@ test_that("get_cell_sets uses user-supplied syntactically invalid metadata colum
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
   expect_setequal(keys, c("scratchpad", "sample", "TRUE"))
 
-  # Check that each sample/metadata intersection contains the correct cell ids
-  group_set <- cell_sets$cellSets[[which(keys == "TRUE")]]
-  group_names <- sapply(group_set$children, `[[`, "name")
-
-  sample_set <- cell_sets$cellSets[[which(keys == "sample")]]
-  sample_names <- sapply(sample_set$children, `[[`, "name")
-
-  group_wt2_cell_ids <- unlist(group_set$children[[which(group_names == 'WT2')]]$cellId)
-
-  samples_in_wt2 <- c("123def", "123ghi")
-  samples_in_wt2_cell_sets = purrr::keep(sample_set$children, \(x) x[["key"]] %in% samples_in_wt2)
-  samples_in_wt2_cell_ids = unlist(lapply(samples_in_wt2_cell_sets, `[[`, "cellIds"))
-
-  expect_equal(group_wt2_cell_ids, samples_in_wt2_cell_ids)
+  check_metadata_cell_ids("TRUE", "WT2", c("123def", "123ghi"), cell_sets)
+  check_metadata_cell_ids("TRUE", "Hello", c("123abc"), cell_sets)
 })
 
 
