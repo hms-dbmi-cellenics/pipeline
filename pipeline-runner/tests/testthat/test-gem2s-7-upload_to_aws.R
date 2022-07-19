@@ -1,3 +1,5 @@
+set.seed(1)
+
 mock_doublet_scores <- function(counts) {
   doublet_scores <- runif(ncol(counts))
   doublet_class <- ifelse(doublet_scores < 0.8, "singlet", "doublet")
@@ -206,7 +208,6 @@ test_that("get_cell_sets with two metadata groups matches snapshot", {
   config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
 
-  scdata_list@misc <- list(metadata_lookups = c(Group1 = "Group1", Group2 = "Group2"))
   cell_sets <- get_cell_sets(scdata_list, input)
 
   expect_snapshot(str(cell_sets))
