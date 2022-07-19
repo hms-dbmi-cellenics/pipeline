@@ -71,6 +71,23 @@ mock_prev_out <- function(config, counts = NULL) {
   return(create_seurat(NULL, NULL, prev_out)$output)
 }
 
+check_metadata_cell_ids <- function(metadata_key, metadata_value, sample_keys, cell_sets) {
+  keys <- sapply(cell_sets$cellSets, `[[`, "key")
+
+  metadata_set <- cell_sets$cellSets[[which(keys == metadata_key)]]
+  metadata_name <- sapply(metadata_set$children, `[[`, "name")
+
+  sample_set <- cell_sets$cellSets[[which(keys == "sample")]]
+  sample_names <- sapply(sample_set$children, `[[`, "name")
+
+  metadata_cell_ids <- unlist(metadata_set$children[[which(metadata_name == metadata_value)]]$cellId)
+
+  sample_cell_sets = purrr::keep(sample_set$children, \(x) x[["key"]] %in% sample_keys)
+  sample_cell_ids = unlist(lapply(sample_cell_sets, `[[`, "cellIds"))
+
+  expect_equal(metadata_cell_ids, sample_cell_ids)
+}
+
 test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
   input <- mock_input()
   config <- mock_config(input)
@@ -116,21 +133,8 @@ test_that("get_cell_sets adds a single metadata column", {
   expect_setequal(keys, c("scratchpad", "sample", "Group"))
 
   # Check that each sample/metadata intersection contains the correct cell ids
-  group_set <- cell_sets$cellSets[[which(keys == "Group")]]
-  group_names <- sapply(group_set$children, `[[`, "name")
-
-  sample_set <- cell_sets$cellSets[[which(keys == "sample")]]
-  sample_names <- sapply(sample_set$children, `[[`, "name")
-
-  group_wt2_cell_ids <- unlist(group_set$children[[which(group_names == 'WT2')]]$cellId)
-
-  samples_in_wt2 <- c("123def", "123ghi")
-  samples_in_wt2_cell_sets = purrr::keep(sample_set$children, \(x) x[["key"]] %in% samples_in_wt2)
-  samples_in_wt2_cell_ids = unlist(lapply(samples_in_wt2_cell_sets, `[[`, "cellIds"))
-
-  expect_equal(group_wt2_cell_ids, samples_in_wt2_cell_ids)
+  check_metadata_cell_ids("Group", "WT2", c("123def", "123ghi"), cell_sets)
 })
-
 
 test_that("get_cell_sets uses user-supplied syntactically invalid metadata column names", {
   metadata <- list("TRUE" = list("Hello", "WT2", "WT2"))
