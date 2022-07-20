@@ -56,7 +56,7 @@ First make sure the project library is synchronized with the lockfile:
 renv::restore()
 ```
 
-**NOTE**: To restore Bioconductor packages your R version needs to be the same as in the [Dockerfile](pipeline-runner/Dockerfile) (4.0.5).
+**NOTE**: To restore Bioconductor packages your R version needs to be the same as in the [Dockerfile](pipeline-runner/Dockerfile) (4.2.0).
 
 `install.packages(...)` and use them (e.g. `dplyr::left_join(...)`) as you normally would. Then, update the lockfile:
 
@@ -66,7 +66,35 @@ renv::snapshot()
 
 commit the changes to the lockfile (used to install dependencies in the Dockerfile). See [renv docs](https://rstudio.github.io/renv/) for more info.
 
+### Development dependencies
 
+Packages used for interactive development, such as `devtools`, `usethis`, `roxygen2`,
+`styler` and the R `languageserver` (to develop R in vscode!) and their dependencies
+should not be added to the lockfile, since they are not required at runtime. 
+`renv` has been configured to ignore them. 
+
+To install them, run the following block, with no arguments. This installs all
+packages in the DESCRIPTION file, which includes the development dependencies in
+the Suggests section.
+
+```R
+renv::install()
+```
+
+### Running tests locally
+
+There are several ways to run tests locally. The easiest one being using the Rstudio
+shortcut `Cmd + shift + T`.
+
+Other ways to run tests locally:
+
+```R
+devtools::test()
+```
+
+```R
+testthat::test_local()
+```
 
 ## Debugging locally
 
@@ -110,4 +138,3 @@ Turn off firewall or allow incoming traffic. This would allow AWS to send packag
 
 1. Open *Firewall Configuration* from the Start Menu.
 2. Select **Allow** in the **Outgoing** dropdown menu (Alternatively, set **Status** to OFF). 
-
