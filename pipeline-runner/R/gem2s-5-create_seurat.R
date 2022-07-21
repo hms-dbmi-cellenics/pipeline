@@ -80,7 +80,7 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
 #' @return data.frame of sample metadata
 #'
 construct_metadata <- function(counts, sample, config) {
-  message("Constructing metadata df...")
+  message("Constructing metadata data.frame...")
   metadata_df <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
 
   # Add "metadata" if exists in config
