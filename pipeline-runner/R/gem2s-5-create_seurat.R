@@ -68,10 +68,17 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
 }
 
 
-
-# NOTE: any changes here must be reflected in meta_sets
-
-# construct metadata for each SeuratObject
+#' Construct metadata for each SeuratObject
+#'
+#' This function creates a `data.frame` with the barcodes, sampleIDs and user supplied
+#' metadata that corresponds to each one.
+#'
+#' @param counts count matrix
+#' @param sample character sample ID
+#' @param config list containing experiment config
+#'
+#' @return data.frame of sample metadata
+#'
 construct_metadata <- function(counts, sample, config) {
   message("Constructing metadata df...")
   metadata_df <- data.frame(row.names = colnames(counts), samples = rep(sample, ncol(counts)))
