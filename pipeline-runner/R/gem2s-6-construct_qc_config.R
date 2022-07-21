@@ -1,4 +1,14 @@
-# constructs default QC configuration for merged SeuratObject
+#' Constructs default QC configuration
+#'
+#' This function returns the default parameters used during QC as a nested list.
+#' It is sent to the API, which in turn saves it as a jsonb object in the PostgreSQL
+#' database.
+#'
+#' @param scdata_list list of seurat objects
+#' @param any_filtered boolean indicating if barcodes were filtered by the emptyDrops.
+#'
+#' @return list of QC configuration parameters
+#'
 construct_qc_config <- function(scdata_list, any_filtered) {
   samples <- names(scdata_list)
 
