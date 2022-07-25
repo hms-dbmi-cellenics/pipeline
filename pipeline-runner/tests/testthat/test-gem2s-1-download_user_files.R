@@ -62,7 +62,7 @@ local_create_samples <- function(project, samples, compressed = FALSE, env = par
   files <- create_samples(bucket, project, samples, compressed, env)
 
   # the api creates several directories (one per sample), so we have to remove
-  # then all, passing  a character vector with all dirnames
+  # them all, passing a character vector with all directory names
   withr::defer(unlink(unique(dirname(files)), recursive = TRUE), envir = env)
 
   withr::defer(unlink(bucket, recursive = TRUE), envir = env)
