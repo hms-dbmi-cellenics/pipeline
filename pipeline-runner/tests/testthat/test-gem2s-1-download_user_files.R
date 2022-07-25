@@ -105,7 +105,7 @@ stubbed_download_user_files <- function(input, pipeline_config, prev_out = list(
   )
 
   # where makes sure where we are stubbing the what calls.
-  mockery::stub(where = download_user_files, what = "paws::s3", how=mockedS3)
+  mockery::stub(where = download_user_files, what = "paws::s3", how = mockedS3)
   mockery::stub(get_gem2s_file, "s3$list_objects", mockedS3$list_objects)
 
   mockery::stub(download_user_files, "file.path", stub_file.path)
