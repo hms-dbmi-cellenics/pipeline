@@ -123,44 +123,60 @@ build_sample_cellsets <- function(input, scdata_list, color_pool) {
 }
 
 
-# cell_sets fn for seurat metadata information
+
+#' Create cellsets from user-supplied metadata
+#'
+#' This function creates the cellsets for the user-supplied metadata (in data
+#' management module). It also takes care of assigning a color from the color pool
+#' to each cellset.
+#'
+#' @param input list
+#' @param scdata_list list of Seurat objects
+#' @param color_pool list of colors to use
+#'
+#' @return list of cellsets
+#' @export
+#'
 build_metadata_cellsets <- function(input, scdata_list, color_pool) {
   cell_set_list <- c()
-  meta <- lapply(input$metadata, unlist)
+  user_metadata <- lapply(input$metadata, unlist)
 
   # user-supplied metadata track names
-  keys <- names(meta)
+  metadata_names <- names(user_metadata)
 
-  # syntactically valid metadata names as stored in scdata
-  # same names as used in construct_metadata including internal 'samples' column (dropped)
-  seurat_keys <- make.names(c("samples", keys), unique = TRUE)[-1]
+  # user supplied metadata names must be made syntactically valid, as seurat does.
+  # We use them to access the cell ids stored in the seurat object, to create the
+  # cellsets. The same names as used in construct_metadata including internal
+  # 'samples' column which is dropped after making the names.
+  valid_metadata_names <- make.names(c("samples", metadata_names), unique = TRUE)[-1]
 
   color_index <- 1
-  for (i in seq_along(keys)) {
-    key <- keys[i]
-    seurat_key <- seurat_keys[i]
+  for (i in seq_along(metadata_names)) {
+    user_metadata_name <- metadata_names[i]
+    valid_metadata_name <- valid_metadata_names[i]
 
     cell_set <- list(
-      "key" = key,
-      "name" = key,
+      "key" = user_metadata_name,
+      "name" = user_metadata_name,
       "rootNode" = TRUE,
       "children" = c(),
       "type" = "metadataCategorical"
     )
 
     # values of current metadata track
-    values <- unique(meta[[i]])
+    values <- unique(user_metadata[[i]])
 
     for (j in seq_along(values)) {
       value <- values[j]
 
       cell_ids <- list()
       for (scdata in scdata_list) {
-        cell_ids <- append(cell_ids,  scdata$cells_id[scdata[[seurat_key]] == value])
+        cells_in_value <- scdata[[valid_metadata_name]] == value
+        cell_ids <- append(cell_ids,  scdata$cells_id[cells_in_value])
       }
 
       cell_set$children[[j]] <- list(
-        "key" = paste(key, value, sep = "-"),
+        "key" = paste(user_metadata_name, value, sep = "-"),
         "name" = value,
         "color" = color_pool[color_index],
         "cellIds" = unname(cell_ids)
