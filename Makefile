@@ -17,9 +17,14 @@ endif
 # Targets
 #--------------------------------------------------
 install: 
+	@echo "Installing local runner"
 	@(cd ./local-runner && npm install)
+	@echo "Installing R env packages"
+	@(cd ./pipeline-runner && R -e "renv::restore()")
 build: 
 	@(cd ./local-runner && npm run build)
+test:
+	@(cd ./pipeline-runner && R -e "devtools::test()")
 run: build run-only
 run-only:
 	@(cd ./local-runner && npm start)

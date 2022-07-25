@@ -65,6 +65,7 @@ load_config <- function(development_aws_server) {
         pod_name = Sys.getenv("K8S_POD_NAME", "local"),
         activity_arn = activity_arn,
         api_url = paste0("http://api-",sandbox,".api-",sandbox,".svc.cluster.local:3000"),
+        api_version = "v2"
         debug_config = list(
             step = Sys.getenv("DEBUG_STEP", ""),
             path = Sys.getenv("DEBUG_PATH", "")
@@ -109,7 +110,7 @@ load_config <- function(development_aws_server) {
     config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, config$aws_account_id, sep = "-")
     config[["sns_topic"]] <- paste(
         paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
-        config$cluster_env, config$sandbox_id, "v2", sep = "-"
+        config$cluster_env, config$sandbox_id, config$api_version, sep = "-"
     )
 
     return(config)
