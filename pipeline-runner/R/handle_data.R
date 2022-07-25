@@ -76,11 +76,11 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
 
   # If the task is after data integration, we need to get scdata from processed_matrix
   if (match(task_name, task_names) > integration_index) {
-    return(reload_scdata_from_s3(s3))
+    return(reload_scdata_from_s3(s3, experiment_id))
   }
 
   # Otherwise, return scdata_list
-  return(reload_scdata_list_from_s3(s3))
+  return(reload_scdata_list_from_s3(s3, experiment_id))
 
 }
 
