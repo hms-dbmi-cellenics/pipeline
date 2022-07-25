@@ -27,7 +27,7 @@ buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
     return(activity_arn)
 }
 
-load_config <- function(development_aws_server, api_version = "v1") {
+load_config <- function(development_aws_server) {
     label_path <- "/etc/podinfo/labels"
     aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset="242905224710")
     aws_region <- Sys.getenv("AWS_DEFAULT_REGION", unset="eu-west-1")
@@ -65,6 +65,7 @@ load_config <- function(development_aws_server, api_version = "v1") {
         pod_name = Sys.getenv("K8S_POD_NAME", "local"),
         activity_arn = activity_arn,
         api_url = paste0("http://api-",sandbox,".api-",sandbox,".svc.cluster.local:3000"),
+        api_version = "v2",
         debug_config = list(
             step = Sys.getenv("DEBUG_STEP", ""),
             path = Sys.getenv("DEBUG_PATH", "")
@@ -107,18 +108,10 @@ load_config <- function(development_aws_server, api_version = "v1") {
     config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, config$aws_account_id, sep = "-")
     config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, config$aws_account_id, sep = "-")
     config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, config$aws_account_id, sep = "-")
-
-    if (api_version == "v1") {
-        config[["sns_topic"]] <- paste(
-            paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
-            config$cluster_env, config$sandbox_id, sep = "-"
-        )
-    } else if (api_version == "v2") {
-        config[["sns_topic"]] <- paste(
-            paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
-            config$cluster_env, config$sandbox_id, "v2", sep = "-"
-        )
-    }
+    config[["sns_topic"]] <- paste(
+        paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
+        config$cluster_env, config$sandbox_id, config$api_version, sep = "-"
+    )
 
     return(config)
 }
@@ -227,7 +220,6 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     #need this for embed_and_cluster
     config$api_url <- pipeline_config$api_url
     config$auth_JWT <- input$authJWT
-    config$api_version <- input$apiVersion
 
     if (!exists("scdata")) {
         message("No single-cell data has been loaded, reloading from S3...")
@@ -411,7 +403,7 @@ init <- function() {
 
         tryCatchLog({
                 # Refresh pipeline_config with the new task input
-                pipeline_config <- load_config(input$server, api_version = input$apiVersion)
+                pipeline_config <- load_config(input$server)
 
                 wrapper(input, pipeline_config)
 
