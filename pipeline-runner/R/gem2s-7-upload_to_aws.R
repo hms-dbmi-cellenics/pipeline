@@ -13,7 +13,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   qc_config <- prev_out$qc_config
 
   message("Constructing cell sets ...")
-  # scdata <- scdata_list[[sample]]
   cell_sets <- get_cell_sets(scdata_list, input)
 
   # cell sets file to s3
