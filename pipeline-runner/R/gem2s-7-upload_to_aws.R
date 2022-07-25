@@ -10,7 +10,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   # destructure what need from prev_out
   scdata_list <- prev_out$scdata_list
   config <- prev_out$config
-  config_dataProcessing <- prev_out$qc_config
+  qc_config <- prev_out$qc_config
 
   message("Constructing cell sets ...")
   # scdata <- scdata_list[[sample]]
@@ -49,7 +49,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       organism = config$organism,
       type = config$input$type
     ),
-    processingConfig = config_dataProcessing
+    processingConfig = qc_config
   )
 
   res <- list(
