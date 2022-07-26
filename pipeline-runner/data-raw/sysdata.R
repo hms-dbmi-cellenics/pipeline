@@ -37,7 +37,7 @@ IDS_IDS <- "ids_ids"
 usethis::use_data(
   gem2s,
   DEBUG_PATH,
-  file_names_v1,
+  file_names,
   file_types_by_technology,
   SYM_IDS,
   SYM_SYM,
