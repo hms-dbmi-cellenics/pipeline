@@ -244,10 +244,10 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message('task_name: ', task_name)
         if(task_name == names(tasks)[1]){
             message('generate_first_step_ids')
-            assign("cells_id", generate_first_step_ids(data), pos = ".GlobalEnv")
+            assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
         }else if(task_name %in% names(tasks)){
             message('load_cells_id_from_s3')
-            samples <- names(data)
+            samples <- names(scdata)
             assign("cells_id", load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples), pos = ".GlobalEnv")
         }else{
             stop("Invalid task name given: ", task_name)
@@ -257,7 +257,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
     # call function to run and update global variable
     c(
-        data,new_ids,...rest_of_results
+        data, new_ids,...rest_of_results
     ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
 
     message("Comparison between cell ids")

@@ -30,7 +30,7 @@ upload_cells_id <- function(pipeline_config, object_key, cells_id) {
   return(object_key)
 }
 
-reload_scdata_from_s3 <- function (s3, experiment_id) {
+reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$processed_bucket
   message(bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
@@ -42,7 +42,7 @@ reload_scdata_from_s3 <- function (s3, experiment_id) {
   obj <- readRDS(rawConnection(body))
   return(obj)
 }
-reload_scdata_list_from_s3 <- function (s3, experiment_id) {
+reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$source_bucket
   objects <- s3$list_objects(
     Bucket = bucket,
@@ -76,11 +76,11 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
 
   # If the task is after data integration, we need to get scdata from processed_matrix
   if (match(task_name, task_names) > integration_index) {
-    return(reload_scdata_from_s3(s3, experiment_id))
+    return(reload_scdata_from_s3(s3, pipeline_config, experiment_id))
   }
 
   # Otherwise, return scdata_list
-  return(reload_scdata_list_from_s3(s3, experiment_id))
+  return(reload_scdata_list_from_s3(s3, pipeline_config, experiment_id))
 
 }
 
