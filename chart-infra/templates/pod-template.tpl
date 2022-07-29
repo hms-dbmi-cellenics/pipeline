@@ -9,6 +9,12 @@
     spec:
       restartPolicy: Always
       serviceAccountName: 'deployment-runner'
+      nodeSelector:
+        size: xl
+      tolerations:
+        - key: size
+          value: xl
+          effect: NoExecute
       containers:
       - name: "{{ .Release.Name }}"
         image: "{{ .Values.pipelineRunner.image }}"
