@@ -97,9 +97,8 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
 
-  # ASK GERMAN in the case where we are past integrating data we just don't load anything
-  # why is that?
-  # ADD some comment here to make it clear
+  # after data integration the cell ids are no longer used because there is no filtering
+  # so they are not loaded
   if (match(task_name, task_names) <= integration_index) {
     for (object in object_list$Contents) {
       key <- object$Key

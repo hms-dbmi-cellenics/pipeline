@@ -252,16 +252,13 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         data, new_ids,...rest_of_results
     ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
 
-    message("Comparison between cell ids")
-    message("Old ids length ",length(cells_id[[sample_id]]))
-    message("New ids length ",length(new_ids[[sample_id]]))
-
     assign("cells_id", new_ids, pos = ".GlobalEnv")
 
     task_names <- names(tasks)
     integration_index <- match("dataIntegration", task_names)
     task_index <- match(task_name, task_names)
     if(task_index < integration_index){
+        message("Filtered cell ids from ", length(cells_id[[sample_id]]), " to ", length(new_ids[[sample_id]]))
         next_task <- names(tasks)[[task_index+1]]
         object_key <- paste0(experiment_id,"/",next_task,"/",sample_id,".rds")
         upload_cells_id(pipeline_config,object_key,cells_id)
