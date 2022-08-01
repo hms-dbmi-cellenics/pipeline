@@ -17,7 +17,7 @@ file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x")
 )
 
-file_names_v1 <- list(
+file_names <- list(
   barcodes10x = "barcodes.tsv.gz",
   features10x = "features.tsv.gz",
   matrix10x = "matrix.mtx.gz"
@@ -39,7 +39,7 @@ usethis::use_data(
   gem2s,
   RANDOM_SEED,
   DEBUG_PATH,
-  file_names_v1,
+  file_names,
   file_types_by_technology,
   SYM_IDS,
   SYM_SYM,
