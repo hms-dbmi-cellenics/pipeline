@@ -432,3 +432,81 @@ build_cc_gene_list <- function(all_genes) {
 
   return(cc_gene_indices)
 }
+
+run_scvi <- function(scdata, config) {
+
+  settings <- config$dataIntegration$methodSettings[["scvi"]]
+
+  nfeatures <- settings$numGenes
+  normalization <- settings$normalisation
+  npcs <- config$dimensionalityReduction$numPCs
+
+  # grep in case misspelled
+  #if (grepl("lognorm", normalization, ignore.case = TRUE))
+  normalization <- "LogNormalize"
+
+  message("Integrating with SCVI")
+
+  scdata <-
+    Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
+  scdata <-
+    Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
+  top_2000_features <-
+    head(Seurat::VariableFeatures(scdata), 2000)
+
+
+  message("Setup python packages")
+
+  # reticulate::install_miniconda()
+  # reticulate::conda_install(packages = c("scvi"), python_version = "3.10")
+  # import the required python packages
+  # scanpy <- reticulate::import("scanpy", convert = FALSE)
+  scvi <- reticulate::import("scvi", convert = FALSE)
+
+  message("Converting to AnnData")
+  # we only need 2000 HVG. scvi can handle all, but it's not necessary and waste
+  # resources. Convert to AnnData
+  adata <-
+    sceasy::convertFormat(
+      scdata[top_2000_features],
+      from = "seurat",
+      to = "anndata",
+      main_layer = "counts",
+      drop_single_values = FALSE
+    )
+
+  message("Setup AnnData")
+  # run setup_anndata
+  scvi$model$SCVI$setup_anndata(adata, batch_key = "orig.ident")
+
+  message("Creating SCVI model")
+  # create the model
+  model = scvi$model$SCVI(adata, n_layers=as.integer(2), n_latent=as.integer(30), gene_likelihood="nb")
+
+  message("Training SCVI model")
+  # train the model
+  model$train(max_epochs = as.integer(50))
+
+  message("Extracting embedding, and adding to Seurat Object")
+  # get the latent represenation
+  latent = model$get_latent_representation()
+
+  # put it back in our original Seurat object
+  latent <- as.matrix(latent)
+  rownames(latent) <-  colnames(scdata)
+  scdata[["scvi"]] <-
+    Seurat::CreateDimReducObject(
+      embeddings = latent,
+      key = "scvi_",
+      assay = Seurat::DefaultAssay(scdata)
+    )
+
+  # remove the adata object and cleanup
+  rm(adata)
+  gc()
+
+  scdata <- add_dispersions(scdata)
+  scdata@misc[["active.reduction"]] <- "scvi"
+
+  return(scdata)
+}
