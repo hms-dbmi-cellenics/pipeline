@@ -253,7 +253,6 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
 
     message("Comparison between cell ids")
-    # saveRDS(cells_id, '/debug/cells_id.rds')
     message("Old ids length ",length(cells_id[[sample_id]]))
     message("New ids length ",length(new_ids[[sample_id]]))
 

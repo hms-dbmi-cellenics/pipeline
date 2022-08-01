@@ -66,9 +66,6 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   scdata_sample1 <- subset(scdata, samples == sample_1_id)
   scdata_sample2 <- subset(scdata, samples == sample_2_id)
 
-  # normalize, scale, pca
-  #scdata_sample1 <- scdata_preprocessing(scdata_sample1)
-  #scdata_sample2 <- scdata_preprocessing(scdata_sample2)
 
   scdata_list <- list(scdata_sample1, scdata_sample2)
   names(scdata_list) <- c(sample_1_id, sample_2_id)

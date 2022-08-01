@@ -137,19 +137,6 @@ test_that("filter_gene_umi_outlier return the appropriate plot data", {
 })
 
 
-# test_that("filter_gene_umi_outlier skips if no barcodes for this sample", {
-#   # single outlier in single sample
-#   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(with_outlier = T)
-#   config <- mock_config()
-#   cells_id <- mock_ids()
-#   out <- filter_gene_umi_outlier(scdata_list, config, 'not a sample', cells_id)
-#
-#     expect_equal(ncol(out$data[[sample_1_id]]), ncol(scdata_list[[sample_1_id]]))
-#     expect_equal(ncol(out$data[[sample_2_id]]), ncol(scdata_list[[sample_2_id]]))
-#
-#     expect_equal(out$new_ids[[sample_1_id]],0:39)
-#     expect_equal(out$new_ids[[sample_2_id]],40:79)
-# })
 
 test_that("filter_gene_umi_outlier gives different results with spline fit", {
   # single outlier in single sample

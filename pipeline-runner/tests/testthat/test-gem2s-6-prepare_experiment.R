@@ -48,17 +48,6 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   create_seurat(NULL, NULL, prev_out)$output
 }
 
-# test_that("prepare_experiment merges multiple SeuratObjects", {
-#   prev_out <- mock_prev_out(samples = c("a", "b", "c"))
-#   scdata_list <- prev_out$scdata_list
-#
-#   task_out <- suppressWarnings(prepare_experiment(NULL, NULL, prev_out)$output)
-#
-#   scdata <- task_out$scdata
-#
-#   expect_equal(ncol(scdata), sum(sapply(scdata_list, ncol)))
-# })
-
 
 test_that("prepare_experiment ensures gene_annotations are indexed correctly for each sample", {
 
