@@ -41,7 +41,6 @@ mock_color_pool <- function(n) {
 
 stub_update_sets_through_api <- function(cell_sets_object,
                                           api_url,
-                                          api_version,
                                           experiment_id,
                                           cell_set_key,
                                           auth_JWT) {
@@ -129,7 +128,7 @@ test_that("runClusters uses active.reduction in misc slot", {
 with_fake_http(
   test_that("update_sets_through_api sends patch request", {
     expect_PATCH(
-      update_sets_through_api(list(), "api_url", "v1", "experiment_id", "cell_set_key", "auth")
+      update_sets_through_api(list(), "api_url", "experiment_id", "cell_set_key", "auth")
     )
   })
 )
@@ -226,7 +225,6 @@ stub_format_cell_sets_object <- function(cell_sets, clustering_method, color_poo
 stub_update_sets_through_api <- function(
   cell_sets_object,
   api_url,
-  api_version,
   experiment_id,
   cell_set_key,
   auth_JWT
