@@ -43,7 +43,7 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
     p_level <- config$filterSettings$regressionTypeSettings[[type]]$p.level
 
   p_level <- suppressWarnings(as.numeric(p_level))
-  if(is.na(p_level)) stop("p_level couldnt be interpreted as a number.")
+  if(is.na(p_level)) stop("p_level couldn't be interpreted as a number.")
 
   config$filterSettings$regressionTypeSettings[[type]]$p.level <- p_level
 
