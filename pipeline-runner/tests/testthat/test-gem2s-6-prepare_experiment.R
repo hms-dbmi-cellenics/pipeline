@@ -88,14 +88,18 @@ test_that("prepare_experiment adds 0 indexed cell_ids to each sample in scdata_l
   # list of added cell_ids per sample in scdata_list
   added_ids <- purrr::map(scdata_list, ~unname(.$cells_id))
 
-  expected_ids <- list()
+  set.seed(RANDOM_SEED)
+  total_cells <- sum(sapply(scdata_list, ncol))
+  cell_ids <- 0:total_cells-1
   start <- 0
+  expected_ids <- list()
   for (sample in samples) {
-    end <- start + ncol(scdata_list[[sample]]) - 1
-    expected_ids[[sample]] <- seq(start, end)
-    start <- end + 1
+    sample_size <- ncol(scdata_list[[sample]])
+    idxs <- sample(seq_along(cell_ids), sample_size)
+    expected_ids[[sample]] <- cell_ids[idxs]
+    # remove the selected cell ids for next samples
+    cell_ids <- cell_ids[-idxs]
   }
-
   expect_equal(added_ids, expected_ids)
 })
 

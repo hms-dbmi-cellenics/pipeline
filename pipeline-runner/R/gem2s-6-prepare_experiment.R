@@ -61,7 +61,7 @@ add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
     scdata_list[[sample]]@misc[["experimentId"]] <- experiment_id
 
     # sample cell ids to shuffle them
-    idxs = sample(seq_along(cell_ids), sample_size)
+    idxs <- sample(seq_along(cell_ids), sample_size)
     scdata_list[[sample]]$cells_id <- cell_ids[idxs]
     # remove the selected cell ids for next samples
     cell_ids <- cell_ids[-idxs]
