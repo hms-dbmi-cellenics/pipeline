@@ -40,13 +40,17 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
-# TODO add description
 add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
-  # cell_ids need to be consecutive among the samples and each sample can have different sizes
-  # so we need to keep track of start IDs
+  # cell ids will be generated at random in order to shuffle samples. it is done
+  # here because merging samples in QC means that shuffling the cells will not
+  # result in a shuffled cell_ids
+  set.seed(RANDOM_SEED)
+  total_cells <- sum(sapply(scdata_list, ncol))
+  cell_ids <- 0:total_cells-1
+
   start <- 0
   for (sample in names(scdata_list)) {
-    end <- start + (ncol(scdata_list[[sample]]) - 1)
+    sample_size <- ncol(scdata_list[[sample]])
 
     # select only the annotations of the current sample
     sample_annotations_idx <- match(rownames(scdata_list[[sample]]), annot$input)
@@ -56,9 +60,11 @@ add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
     # add the experiment ID so it's available later
     scdata_list[[sample]]@misc[["experimentId"]] <- experiment_id
 
-    # generate sample cell IDs
-    scdata_list[[sample]]$cells_id <- start:end
-    start <- end + 1
+    # sample cell ids to shuffle them
+    idxs = sample(seq_along(cell_ids), sample_size)
+    scdata_list[[sample]]$cells_id <- cell_ids[idxs]
+    # remove the selected cell ids for next samples
+    cell_ids <- cell_ids[-idxs]
   }
 
   return(scdata_list)

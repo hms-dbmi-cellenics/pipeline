@@ -102,7 +102,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 create_scdata <- function(scdata_list) {
 
   merged_scdatas <- merge_scdata_list(scdata_list)
-  merged_scdatas <- shuffle_scdata(merged_scdatas)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
   return(merged_scdatas)
@@ -128,27 +127,6 @@ merge_scdata_list <- function(scdata_list) {
 
   return(scdata)
 
-}
-
-#' Shuffle the cells in a SeuratObject
-#'
-#' This function shuffles the cells in a Seurat object, to allow the UI to make
-#' shuffled scatterplots, avoiding a sample bias when plotting.
-#'
-#' @param scdata SeuratObject
-#'
-#' @return SeuratObject
-#' @export
-#'
-shuffle_scdata <- function(scdata) {
-
-  # If subsetting all cells, Seurat will not reorder the cells in the object.
-  # We need to subset to [-1] and [1] and merge to shuffle.
-  set.seed(RANDOM_SEED)
-  shuffle_mask <- sample(colnames(scdata))
-  scdata <- merge(scdata[,shuffle_mask[1]],scdata[,shuffle_mask[-1]])
-
-  return(scdata)
 }
 
 # This function covers

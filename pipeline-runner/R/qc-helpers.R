@@ -7,10 +7,7 @@
 #'
 generate_first_step_ids <- function(scdata_list) {
   cells_id <- list()
-  for (sample in names(scdata_list)) {
-    # sample_id <- sample$Key
-    sample_id <- sample
-    message('sample_id: ', sample_id)
+  for (sample_id in names(scdata_list)) {
     cells_id[[sample_id]] <- scdata_list[[sample_id]]$cells_id
   }
   return(cells_id)

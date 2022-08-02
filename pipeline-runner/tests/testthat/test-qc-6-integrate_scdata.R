@@ -363,21 +363,3 @@ test_that("merge_scdata_list correctly merges seurat objects", {
   expect_true(all(scdata$samples[1:ncol(scdata_list[[1]])] == "a"))
 
 })
-
-
-test_that("merge_scdatas correctly suffles cells", {
-  prev_out <- mock_prev_out(samples = c("a", "b", "c"))
-  scdata_list <- prev_out$scdata_list
-
-  scdata <- suppressWarnings(merge_scdata_list(scdata_list))
-  shuffled_scdata <- shuffle_scdata(scdata)
-
-
-  set.seed(RANDOM_SEED)
-  shuffle_mask <- sample(colnames(scdata))
-
-  expect_equal(shuffled_scdata$samples, scdata$samples[shuffle_mask])
-  expect_true(all(shuffle_mask == colnames(shuffled_scdata)))
-  expect_false(all(shuffled_scdata$samples[1:ncol(scdata_list[[1]])] == "a"))
-
-})
