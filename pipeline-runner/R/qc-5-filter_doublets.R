@@ -36,7 +36,7 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
   probability_threshold <- config$filterSettings[["probabilityThreshold"]]
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_doubletScores', it is expected
-  # to get a value --> probability_threshold.
+  # to get a probability threshold value
   if (exists("auto", where = config)) {
     if (as.logical(toupper(config$auto))) {
       probability_threshold <- generate_default_values_doubletScores(sample_data)

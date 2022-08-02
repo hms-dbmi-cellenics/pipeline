@@ -110,7 +110,7 @@ test_that("prepare_experiment generates qc_config that matches snapshot", {
   task_out <- prepare_experiment(input, NULL, prev_out)$output
 
   # TODO fix snapshot test
-  #expect_snapshot(str(task_out$qc_config))
+  expect_snapshot(str(task_out$qc_config))
 })
 
 

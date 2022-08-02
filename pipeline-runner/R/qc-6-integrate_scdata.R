@@ -495,8 +495,8 @@ build_cc_gene_list <- function(all_genes) {
 #' @export
 #'
 add_metadata <- function(scdata, scdata_list) {
-
-  #TODO add comment about misc
+  # misc data is duplicated in each of the samples and it does not
+  # need to be merge so pick the data in the first one and add it to the merged dataset
   scdata@misc <- scdata_list[[1]]@misc
   experiment_id <- scdata_list[[1]]@misc[["experimentId"]]
 

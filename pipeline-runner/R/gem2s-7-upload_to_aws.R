@@ -28,7 +28,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     message("Uploading sample ", sample, " object to S3 ...")
     fpath <- file.path(tempdir(), "experiment.rds")
     saveRDS(scdata_list[[sample]], fpath, compress = FALSE)
-    # can only upload up to 50Gb because part numbers can be any number from 1 to 10,000, inclusive.
+    # can only upload up to 50Gb because multipart uploads work by uploading
+    # smaller chunks (parts) and the max amount of parts is 10,000.
     put_object_in_s3_multipart(pipeline_config,
       bucket = pipeline_config$source_bucket,
       object = fpath,
