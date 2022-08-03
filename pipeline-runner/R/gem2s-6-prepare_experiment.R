@@ -48,7 +48,6 @@ add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
   total_cells <- sum(sapply(scdata_list, ncol))
   cell_ids <- 0:total_cells-1
 
-  start <- 0
   for (sample in names(scdata_list)) {
     sample_size <- ncol(scdata_list[[sample]])
 
