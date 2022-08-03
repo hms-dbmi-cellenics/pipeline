@@ -1,4 +1,4 @@
-{{/* Generate a template that can be used for both assigned and unassigned xperiments */}}
+{{/* Generate a template that can be used for both assigned and unassigned experiments */}}
 # go templating language
 {{- define "pipeline.pod-template" -}}
     metadata:
@@ -9,6 +9,12 @@
     spec:
       restartPolicy: Always
       serviceAccountName: 'deployment-runner'
+      nodeSelector:
+        size: xl
+      tolerations:
+        - key: size
+          value: xl
+          effect: NoExecute
       containers:
       - name: "{{ .Release.Name }}"
         image: "{{ .Values.pipelineRunner.image }}"
