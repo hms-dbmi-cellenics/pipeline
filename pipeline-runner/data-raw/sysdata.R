@@ -2,9 +2,10 @@
 gem2s <- list(
   max.edrops.fdr = 0.001,
   max.empty.counts = 100,
-  max.empty.drops = 50,
-  random.seed = 42
+  max.empty.drops = 50
 )
+
+RANDOM_SEED <- 42
 
 # path where dump/log files are saved
 # mounted as a volume outside container to local-runner/debug
@@ -36,6 +37,7 @@ IDS_IDS <- "ids_ids"
 
 usethis::use_data(
   gem2s,
+  RANDOM_SEED,
   DEBUG_PATH,
   file_names,
   file_types_by_technology,
