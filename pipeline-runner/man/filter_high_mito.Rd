@@ -5,7 +5,7 @@
 \title{STEP 3. Mitochondrial content filter}
 \usage{
 filter_high_mito(
-  scdata_list,
+  scdata,
   config,
   sample_id,
   cells_id,

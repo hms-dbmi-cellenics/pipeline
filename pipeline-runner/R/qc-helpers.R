@@ -1,14 +1,15 @@
 #' Title
 #'
-#' @param scdata_list
+#' @param scdata
 #'
 #' @return
 #' @export
 #'
-generate_first_step_ids <- function(scdata_list) {
+#' @examples
+generate_first_step_ids <- function(scdata) {
   cells_id <- list()
-  for (sample_id in names(scdata_list)) {
-    cells_id[[sample_id]] <- scdata_list[[sample_id]]$cells_id
+  for (sample_id in unique(scdata$samples)) {
+    cells_id[[sample_id]] <- scdata$cells_id[scdata$samples == sample_id]
   }
   return(cells_id)
 }
@@ -44,7 +45,7 @@ remove_cell_ids <- function(pipeline_config, experiment_id) {
 get_positions_to_keep <- function(scdata, num_cells_to_downsample) {
   # Downsample plotData
   num_cells_to_downsample <- downsample_plotdata(ncol(scdata), num_cells_to_downsample)
-  set.seed(RANDOM_SEED)
+  set.seed(gem2s$random.seed)
   cells_position_to_keep <- sample(1:ncol(scdata), num_cells_to_downsample, replace = FALSE)
   cells_position_to_keep <- sort(cells_position_to_keep)
 
@@ -180,6 +181,7 @@ calc_filter_stats <- function(scdata) {
 #' @return
 #' @export
 #'
+#' @examples
 runClusters <- function(clustering_method, resolution, data) {
   data <- getClusters(clustering_method, resolution, data)
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
@@ -201,6 +203,7 @@ runClusters <- function(clustering_method, resolution, data) {
 #' @return
 #' @export
 #'
+#' @examples
 getClusters <- function(clustering_method, resolution, data) {
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]

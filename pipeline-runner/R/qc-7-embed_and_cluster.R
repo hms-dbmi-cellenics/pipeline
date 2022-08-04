@@ -9,6 +9,7 @@ embed_and_cluster <-
            sample_id,
            cells_id,
            task_name = "configureEmbedding") {
+
     message("starting clusters")
     clustering_method <- config$clusteringSettings$method
     methodSettings <-
@@ -77,7 +78,6 @@ update_sets_through_api <-
            experiment_id,
            cell_set_key,
            auth_JWT) {
-
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
     httr::PATCH(
