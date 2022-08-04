@@ -141,7 +141,7 @@ test_that("filter_gene_umi_outlier return the appropriate plot data", {
     expect_equal(names(lines_data[[1]][[1]]), c('log_molecules', 'lower_cutoff', 'upper_cutoff'))
 
     # has the correct number of pre-caluclated values
-    expect_equal(length(lines_data), length(c(seq(0,0.99,0.01), 0.999, 0.9999, 0.99999, 0.999999)))
+    expect_equal(length(lines_data), (length(c(seq(0,0.99,0.01), 0.999, 0.9999, 0.99999, 0.999999)) + 1))
 })
 
 

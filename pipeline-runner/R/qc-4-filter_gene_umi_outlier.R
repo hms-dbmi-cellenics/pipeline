@@ -58,7 +58,9 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
     p.level <- config$filterSettings$regressionTypeSettings[[type]]$p.level
 
   p.level <- suppressWarnings(as.numeric(p.level))
-  if(is.na(p.level)) stop("p.level couldnt be interpreted as a number.")
+  if (is.na(p.level)) stop("p.level couldnt be interpreted as a number.")
+
+  pred_int_auto <- 1 - p.level
 
   config$filterSettings$regressionTypeSettings[[type]]$p.level <- p.level
 
@@ -71,15 +73,18 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
 
   fit.data <- fit.data[order(fit.data$log_molecules), ]
 
-  if (type == 'spline') fit <- lm(log_genes ~ splines::bs(log_molecules), data = fit.data)
-  else fit <- MASS::rlm(log_genes ~ log_molecules, data = fit.data)
+  if (type == "spline") {
+    fit <- lm(log_genes ~ splines::bs(log_molecules), data = fit.data)
+  } else {
+    fit <- MASS::rlm(log_genes ~ log_molecules, data = fit.data)
+  }
 
   if (safeTRUE(config$enabled)) {
     # get the interval based on p.level parameter
     preds <- suppressWarnings(predict(fit, interval = "prediction", level = 1 - p.level))
 
     # filter outliers above/below cutoff bands
-    is.outlier <- fit.data$log_genes > preds[, 'upr'] | fit.data$log_genes < preds[, 'lwr']
+    is.outlier <- fit.data$log_genes > preds[, "upr"] | fit.data$log_genes < preds[, "lwr"]
     remaining_ids <- as.numeric(rownames(fit.data)[!is.outlier])
     remaining_ids <- remaining_ids[order(remaining_ids)]
   } else {
@@ -99,8 +104,9 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
   newdata <- data.frame(log_molecules = seq(xrange[1], xrange[2], length.out = 10))
 
   pred_int_values <- sort(c(seq(0, 0.99, 0.01), 0.999, 0.9999, 0.99999, 0.999999))
-  line_preds_list <-list()
-  i = 1
+  pred_int_values <- c(pred_int_values, pred_int_auto)
+  line_preds_list <- list()
+  i <- 1
   for (pred in pred_int_values) {
     line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = pred))
 
@@ -109,7 +115,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
       dplyr::rename(lower_cutoff = lwr, upper_cutoff = upr)
 
     line_preds_list[[i]] <- purrr::transpose(line_preds)
-    i <- i+1
+    i <- i + 1
   }
 
   plot_data <- list(
