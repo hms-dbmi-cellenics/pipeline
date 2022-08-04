@@ -30,7 +30,7 @@
 #'                          - linear and spline: for each there is only one element:
 #'                             - p.level: which refers to  confidence level for deviation from the main trend
 #'
-#' @param scdata_list list of \code{SeuratObject}
+#' @param scdata \code{SeuratObject}
 #' @param sample_id value in \code{scdata$samples} to apply filter for
 #' @param task_name name of task: \code{'numGenesVsNumUmis'}
 #' @param num_cells_to_downsample maximum number of cells for returned plots
@@ -39,25 +39,26 @@
 #' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 #'
 #'
-filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
-  sample_cell_ids <- cells_id[[sample_id]]
+filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
+  cells_id.sample <- cells_id[[sample_id]]
 
-  if (length(sample_cell_ids) == 0) {
-    return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
+  if (length(cells_id.sample) == 0) {
+    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
   }
 
-  sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
+  scdata.sample <- subset_ids(scdata, cells_id.sample)
 
   type <- config$filterSettings$regressionType
 
   # get p.level and update in config
   # defaults from "gene.vs.molecule.cell.filter" in pagoda2
   if (safeTRUE(config$auto))
-    p.level <- min(0.001, 1 / ncol(sample_data))
+    p.level <- min(0.001, 1 / ncol(scdata.sample))
   else
     p.level <- config$filterSettings$regressionTypeSettings[[type]]$p.level
 
   p.level <- suppressWarnings(as.numeric(p.level))
+
   if (is.na(p.level)) stop("p.level couldnt be interpreted as a number.")
 
   pred_int_auto <- 1 - p.level
@@ -66,9 +67,9 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
 
   # regress log10 molecules vs genes
   fit.data <- data.frame(
-    log_molecules = log10(sample_data$nCount_RNA),
-    log_genes = log10(sample_data$nFeature_RNA),
-    row.names = sample_data$cells_id
+    log_molecules = log10(scdata.sample$nCount_RNA),
+    log_genes = log10(scdata.sample$nFeature_RNA),
+    row.names = scdata.sample$cells_id
   )
 
   fit.data <- fit.data[order(fit.data$log_molecules), ]
@@ -88,13 +89,13 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
     remaining_ids <- as.numeric(rownames(fit.data)[!is.outlier])
     remaining_ids <- remaining_ids[order(remaining_ids)]
   } else {
-    remaining_ids <- sample_cell_ids
+    remaining_ids <- cells_id.sample
   }
 
   # downsample for plot data
-  nkeep <- downsample_plotdata(ncol(sample_data), num_cells_to_downsample)
+  nkeep <- downsample_plotdata(ncol(scdata.sample), num_cells_to_downsample)
 
-  set.seed(RANDOM_SEED)
+  set.seed(gem2s$random.seed)
   keep_rows <- sample(nrow(fit.data), nkeep)
   keep_rows <- sort(keep_rows)
   downsampled_data <- fit.data[keep_rows, ]
@@ -102,6 +103,8 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
   # get evenly spaced predictions on downsampled data for plotting lines
   xrange <- range(downsampled_data$log_molecules)
   newdata <- data.frame(log_molecules = seq(xrange[1], xrange[2], length.out = 10))
+
+  line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = 1 - p.level))
 
   pred_int_values <- sort(c(seq(0, 0.99, 0.01), 0.999, 0.9999, 0.99999, 0.999999))
   pred_int_values <- c(pred_int_values, pred_int_auto)
@@ -126,8 +129,8 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
 
   # Populate with filter statistics and plot data
   filter_stats <- list(
-    before = calc_filter_stats(sample_data),
-    after = calc_filter_stats(subset_ids(sample_data, remaining_ids))
+    before = calc_filter_stats(scdata.sample),
+    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
   )
 
   guidata <- list()
@@ -137,7 +140,7 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
   cells_id[[sample_id]] <- remaining_ids
 
   result <- list(
-    data = scdata_list,
+    data = scdata,
     new_ids = cells_id,
     config = config,
     plotData = guidata
