@@ -105,6 +105,8 @@ FROM common AS dev
 # also install watchdog to automatically restart
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+RUN apt update && apt -y install git
+RUN pip install memory_profiler
 
 # add R package files and runner
 ADD R ./R
@@ -112,4 +114,5 @@ ADD tests ./tests
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
-ENTRYPOINT ["Rscript", "init.R"]
+COPY start.sh start.sh
+ENTRYPOINT ["./start.sh"]

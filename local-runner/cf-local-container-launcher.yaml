@@ -30,7 +30,7 @@ Resources:
 
             docker_command = ' '.join([
               "docker run --rm -t",
-              f"--name {event['name']}-{random_string(10)}", 
+              f"--name {event['name']}-{random_string(10)}",
               f"{'-d' if event['detached'] else ''}",
               f"--env ACTIVITY_ARN={event.get('activityArn', '')}",
               f"--env HOST_IP=__HOST_IP__",
@@ -47,7 +47,7 @@ Resources:
       Timeout: 25
   QualityControlActivity:
     Type: AWS::StepFunctions::Activity
-    Properties: 
+    Properties:
       Name: biomage-qc-activity-development
   RemovePreviousPipelineContainers:
     Type: "AWS::Lambda::Function"

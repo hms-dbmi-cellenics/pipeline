@@ -5,7 +5,7 @@
 \title{STEP 2. Cell size distribution filter}
 \usage{
 filter_low_cellsize(
-  scdata,
+  scdata_list,
   config,
   sample_id,
   cells_id,
@@ -29,7 +29,9 @@ a list with the filtered seurat object by cell size ditribution, the config and 
 cell_size_distribution_filter function
 }
 \details{
-This is a simplest filter that looks at the shape of the cell size (# of UMIs per cell) distribution and looks for some local minima, minimum of second derivative, etc.
-To separate the large cell barcodes that correspond to real cells from the tail containing 'empty droplets'.
-This can be a useful first guess. The settings for such a filter can also contain a simple "min cell size" setting.
+This is a simplest filter that looks at the shape of the cell size (# of UMIs
+per cell) distribution and looks for some local minima, minimum of second derivative, etc.
+To separate the large cell barcodes that correspond to real cells from the
+tail containing 'empty droplets'. This can be a useful first guess. The settings
+for such a filter can also contain a simple "min cell size" setting.
 }
