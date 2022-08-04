@@ -23,7 +23,7 @@ spec:
         run: cleanup-operator
         sandboxId: "{{ .Values.sandboxId }}"
     spec:
-      serviceAccountName: cleanup-operator-xl
+      serviceAccountName: cleanup-operator
       containers:
       - args:
         - --namespace={{.Release.Namespace}}
@@ -47,12 +47,12 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: cleanup-operator-xl
+  name: cleanup-operator
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: cleanup-operator-xl
+  name: cleanup-operator
 rules:
 - apiGroups:
   - ""
@@ -75,11 +75,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: cleanup-operator-xl
+  name: cleanup-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: cleanup-operator-xl
+  name: cleanup-operator
 subjects:
 - kind: ServiceAccount
-  name: cleanup-operator-xl
+  name: cleanup-operator

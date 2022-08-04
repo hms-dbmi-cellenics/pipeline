@@ -1,14 +1,11 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: can-create-pipelines
+  name: can-create-pipeline-jobs
   namespace: {{ .Release.Namespace }}
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
 rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "patch", "delete"]
 - apiGroups: ["batch"]
   resources: ["jobs"]
   verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
@@ -29,7 +26,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: can-create-pipelines
+  name: can-create-pipeline-jobs
 subjects:
 - kind: ServiceAccount
   name: deployment-runner

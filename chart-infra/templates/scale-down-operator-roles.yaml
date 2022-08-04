@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: cleanup-operator
+  name: scale-down-operator
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: cleanup-operator
+  name: scale-down-operator
 rules:
 - apiGroups: [""]
   resources:
@@ -35,11 +35,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: cleanup-operator
+  name: scale-down-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: cleanup-operator
+  name: scale-down-operator
 subjects:
 - kind: ServiceAccount
-  name: cleanup-operator
+  name: scale-down-operator
