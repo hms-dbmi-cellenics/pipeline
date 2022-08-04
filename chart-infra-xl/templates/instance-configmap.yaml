@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: instance-config
+  namespace: {{.Release.Namespace}}
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
+data:
+  pipeline-runner: "{{ index .Values "pipeline-runner" "image" }}"

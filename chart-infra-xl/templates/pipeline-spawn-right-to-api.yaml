@@ -1,0 +1,36 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: can-create-pipelines
+  namespace: {{ .Release.Namespace }}
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
+rules:
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
+- apiGroups: ["helm.fluxcd.io"]
+  resources: ["helmreleases"]
+  verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: api-state-machine-can-spawn-pipeline-components
+  namespace: {{.Release.Namespace}}
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: can-create-pipelines
+subjects:
+- kind: ServiceAccount
+  name: deployment-runner
+  namespace: {{ regexReplaceAll "^pipeline-" .Release.Namespace "api-" }}
+- kind: Group
+  apiGroup: rbac.authorization.k8s.io
+  name: state-machine-runner-group
