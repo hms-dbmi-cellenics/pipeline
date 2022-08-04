@@ -50,19 +50,19 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
 
   type <- config$filterSettings$regressionType
 
-  # get p_level and update in config
+  # get p.level and update in config
   # defaults from "gene.vs.molecule.cell.filter" in pagoda2
   if (safeTRUE(config$auto))
-    p_level <- min(0.001, 1 / ncol(sample_data))
+    p.level <- min(0.001, 1 / ncol(sample_data))
   else
-    p_level <- config$filterSettings$regressionTypeSettings[[type]]$p.level
+    p.level <- config$filterSettings$regressionTypeSettings[[type]]$p.level
 
-  p_level <- suppressWarnings(as.numeric(p_level))
-  if (is.na(p_level)) stop("p.level couldnt be interpreted as a number.")
+  p.level <- suppressWarnings(as.numeric(p.level))
+  if (is.na(p.level)) stop("p.level couldnt be interpreted as a number.")
 
-  pred_int_auto <- 1 - p_level
+  pred_int_auto <- 1 - p.level
 
-  config$filterSettings$regressionTypeSettings[[type]]$p.level <- p_level
+  config$filterSettings$regressionTypeSettings[[type]]$p.level <- p.level
 
   # regress log10 molecules vs genes
   fit.data <- data.frame(
@@ -80,8 +80,8 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
   }
 
   if (safeTRUE(config$enabled)) {
-    # get the interval based on p_level parameter
-    preds <- suppressWarnings(predict(fit, interval = "prediction", level = 1 - p_level))
+    # get the interval based on p.level parameter
+    preds <- suppressWarnings(predict(fit, interval = "prediction", level = 1 - p.level))
 
     # filter outliers above/below cutoff bands
     is.outlier <- fit.data$log_genes > preds[, "upr"] | fit.data$log_genes < preds[, "lwr"]
