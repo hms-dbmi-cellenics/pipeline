@@ -15,7 +15,7 @@
 #'                          - linear and spline: for each there is only one element:
 #'                             - p.level: which refers to  confidence level for deviation from the main trend
 #'
-#' @param scdata \code{SeuratObject}
+#' @param scdata_list list of \code{SeuratObject}
 #' @param sample_id value in \code{scdata$samples} to apply filter for
 #' @param task_name name of task: \code{'numGenesVsNumUmis'}
 #' @param num_cells_to_downsample maximum number of cells for returned plots
@@ -24,34 +24,34 @@
 #' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 #'
 #'
-filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
-  cells_id.sample <- cells_id[[sample_id]]
+filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, task_name = "numGenesVsNumUmis", num_cells_to_downsample = 6000) {
+  sample_cell_ids <- cells_id[[sample_id]]
 
-  if (length(cells_id.sample) == 0) {
-    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
+  if (length(sample_cell_ids) == 0) {
+    return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata, cells_id.sample)
+  sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
 
   type <- config$filterSettings$regressionType
 
-  # get p.level and update in config
+  # get p_level and update in config
   # defaults from "gene.vs.molecule.cell.filter" in pagoda2
   if (safeTRUE(config$auto))
-    p.level <- min(0.001, 1 / ncol(scdata.sample))
+    p_level <- min(0.001, 1 / ncol(sample_data))
   else
-    p.level <- config$filterSettings$regressionTypeSettings[[type]]$p.level
+    p_level <- config$filterSettings$regressionTypeSettings[[type]]$p.level
 
-  p.level <- suppressWarnings(as.numeric(p.level))
-  if(is.na(p.level)) stop("p.level couldnt be interpreted as a number.")
+  p_level <- suppressWarnings(as.numeric(p_level))
+  if(is.na(p_level)) stop("p_level couldn't be interpreted as a number.")
 
-  config$filterSettings$regressionTypeSettings[[type]]$p.level <- p.level
+  config$filterSettings$regressionTypeSettings[[type]]$p.level <- p_level
 
   # regress log10 molecules vs genes
   fit.data <- data.frame(
-    log_molecules = log10(scdata.sample$nCount_RNA),
-    log_genes = log10(scdata.sample$nFeature_RNA),
-    row.names = scdata.sample$cells_id
+    log_molecules = log10(sample_data$nCount_RNA),
+    log_genes = log10(sample_data$nFeature_RNA),
+    row.names = sample_data$cells_id
   )
 
   fit.data <- fit.data[order(fit.data$log_molecules), ]
@@ -60,21 +60,21 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
   else fit <- MASS::rlm(log_genes ~ log_molecules, data = fit.data)
 
   if (safeTRUE(config$enabled)) {
-    # get the interval based on p.level parameter
-    preds <- suppressWarnings(predict(fit, interval = "prediction", level = 1 - p.level))
+    # get the interval based on p_level parameter
+    preds <- suppressWarnings(predict(fit, interval = "prediction", level = 1 - p_level))
 
     # filter outliers above/below cutoff bands
     is.outlier <- fit.data$log_genes > preds[, 'upr'] | fit.data$log_genes < preds[, 'lwr']
     remaining_ids <- as.numeric(rownames(fit.data)[!is.outlier])
     remaining_ids <- remaining_ids[order(remaining_ids)]
   } else {
-    remaining_ids <- cells_id.sample
+    remaining_ids <- sample_cell_ids
   }
 
   # downsample for plot data
-  nkeep <- downsample_plotdata(ncol(scdata.sample), num_cells_to_downsample)
+  nkeep <- downsample_plotdata(ncol(sample_data), num_cells_to_downsample)
 
-  set.seed(gem2s$random.seed)
+  set.seed(RANDOM_SEED)
   keep_rows <- sample(nrow(fit.data), nkeep)
   keep_rows <- sort(keep_rows)
   downsampled_data <- fit.data[keep_rows, ]
@@ -82,7 +82,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
   # get evenly spaced predictions on downsampled data for plotting lines
   xrange <- range(downsampled_data$log_molecules)
   newdata <- data.frame(log_molecules = seq(xrange[1], xrange[2], length.out = 10))
-  line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = 1 - p.level))
+  line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = 1 - p_level))
 
   line_preds <- cbind(newdata, line_preds) %>%
     dplyr::select(-fit) %>%
@@ -95,8 +95,8 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
 
   # Populate with filter statistics and plot data
   filter_stats <- list(
-    before = calc_filter_stats(scdata.sample),
-    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
+    before = calc_filter_stats(sample_data),
+    after = calc_filter_stats(subset_ids(sample_data, remaining_ids))
   )
 
   guidata <- list()
@@ -106,7 +106,7 @@ filter_gene_umi_outlier <- function(scdata, config, sample_id, cells_id, task_na
   cells_id[[sample_id]] <- remaining_ids
 
   result <- list(
-    data = scdata,
+    data = scdata_list,
     new_ids = cells_id,
     config = config,
     plotData = guidata
