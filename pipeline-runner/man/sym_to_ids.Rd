@@ -11,6 +11,9 @@ sym_to_ids(sample_annot, annot_with_ids)
 
 \item{annot_with_ids}{data.frame of annotations with IDs. Key data.frame}
 }
+\value{
+data.frame of annotations
+}
 \description{
 This function tries to convert symbols to ids using the key data.frame created
 with \code{make_annot_with_ids}. In case there's no ID available, it keeps the

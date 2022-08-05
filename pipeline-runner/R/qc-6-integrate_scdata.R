@@ -20,33 +20,41 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "dataIntegration") {
-  flat_cells_id <- unname(unlist(cells_id))
-  scdata <- subset_ids(scdata, flat_cells_id)
+integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+  # subset each of the samples before merging them
+  for (sample in names(scdata_list)) {
+    flat_cell_ids <- unname(unlist(cells_id[[sample]]))
+    scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cell_ids)
+  }
+
+  message("Total cells: ", sum(sapply(scdata_list, ncol)))
+  scdata <- create_scdata(scdata_list)
+
   # main function
-  set.seed(gem2s$random.seed)
-  scdata.integrated <- run_dataIntegration(scdata, config)
+  set.seed(RANDOM_SEED)
+  message("running data integration")
+  scdata_integrated <- run_dataIntegration(scdata, config)
 
   # get  npcs from the UMAP call in integration functions
-  npcs <- length(scdata.integrated@commands$RunUMAP@params$dims)
+  npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
   message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
   config$dimensionalityReduction$numPCs <- npcs
 
-  var_explained <- get_explained_variance(scdata.integrated)
+  var_explained <- get_explained_variance(scdata_integrated)
 
   # This same numPCs will be used throughout the platform.
-  scdata.integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+  scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
 
-  scdata.integrated <- colorObject(scdata.integrated)
-  cells_order <- rownames(scdata.integrated@meta.data)
-  plot1_data <- unname(purrr::map2(scdata.integrated@reductions$umap@cell.embeddings[, 1], scdata.integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
+  scdata_integrated <- colorObject(scdata_integrated)
+  cells_order <- rownames(scdata_integrated@meta.data)
+  plot1_data <- unname(purrr::map2(scdata_integrated@reductions$umap@cell.embeddings[, 1], scdata_integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
     c("x" = x, "y" = y)
   }))
 
   # Adding color and sample id
   plot1_data <- purrr::map2(
     plot1_data,
-    unname(scdata.integrated@meta.data[cells_order, "samples"]),
+    unname(scdata_integrated@meta.data[cells_order, "samples"]),
     function(x, y) {
       append(x, list("sample" = y))
     }
@@ -54,7 +62,7 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
 
   plot1_data <- purrr::map2(
     plot1_data,
-    unname(scdata.integrated@meta.data[cells_order, "color_samples"]),
+    unname(scdata_integrated@meta.data[cells_order, "color_samples"]),
     function(x, y) {
       append(x, list("col" = y))
     }
@@ -71,13 +79,54 @@ integrate_scdata <- function(scdata, config, sample_id, cells_id, task_name = "d
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
-    data = scdata.integrated,
+    data = scdata_integrated,
     new_ids = cells_id,
     config = config,
     plotData = plots
   )
 
   return(result)
+}
+
+#' Create the merged Seurat object
+#'
+#' This function takes care of merging the sample seurat objects, shuffling
+#' and adding the metadata to the complete Seurat object. It does so by calling
+#' the corresponding functions.
+#'
+#' @param scdata_list
+#'
+#' @return SeuratObject
+#' @export
+#'
+create_scdata <- function(scdata_list) {
+
+  merged_scdatas <- merge_scdata_list(scdata_list)
+  merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
+
+  return(merged_scdatas)
+}
+
+#' Merge the list of sample Seurat objects
+#'
+#' If the list contains more than one seurat object, it merges them all. Else,
+#' returns the only element.
+#'
+#' @param scdata_list list of SeuratObjects
+#'
+#' @return SeuratObject
+#' @export
+#'
+merge_scdata_list <- function(scdata_list) {
+
+  if (length(scdata_list) == 1) {
+    scdata <- scdata_list[[1]]
+  } else {
+    scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
+  }
+
+  return(scdata)
+
 }
 
 # This function covers
@@ -432,3 +481,37 @@ build_cc_gene_list <- function(all_genes) {
 
   return(cc_gene_indices)
 }
+
+#' Add the metadata present in scdata_list into the merged SeuratObject
+#'
+#' This function adds metadata, some of which is present in the sample SeuratObjects
+#' (the experimentID, the gene annotations), and some that is not (the color pool)
+#' to the merged SeuratObject.
+#'
+#' @param scdata SeuratObject
+#' @param scdata_list list of sample SeuratObjects
+#'
+#' @return SeuratObject with added metadata
+#' @export
+#'
+add_metadata <- function(scdata, scdata_list) {
+  # misc data is duplicated in each of the samples and it does not
+  # need to be merge so pick the data in the first one and add it to the merged dataset
+  scdata@misc <- scdata_list[[1]]@misc
+  experiment_id <- scdata_list[[1]]@misc[["experimentId"]]
+
+  annot_list <- list()
+  for (sample in names(scdata_list)) {
+    annot_list[[sample]] <- scdata_list[[sample]]@misc[["gene_annotations"]]
+  }
+
+  scdata@misc[["gene_annotations"]] <- format_annot(annot_list)
+
+  # We store the color pool in a slot in order to be able to access it during configureEmbedding
+  scdata@misc[["color_pool"]] <- get_color_pool()
+  scdata@misc[["experimentId"]] <- experiment_id
+  scdata@misc[["ingestionDate"]] <- Sys.time()
+
+  return(scdata)
+}
+

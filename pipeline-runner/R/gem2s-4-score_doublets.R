@@ -55,7 +55,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 #' @return data.frame with doublet scores and assigned classes
 #'
 compute_sample_doublet_scores <- function(sample_counts) {
-  set.seed(gem2s$random.seed)
+  set.seed(RANDOM_SEED)
   sce <- scDblFinder::scDblFinder(sample_counts)
   doublet_res <- data.frame(
     row.names = colnames(sce),
