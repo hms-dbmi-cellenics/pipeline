@@ -222,6 +222,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 #' @return list of annotations data.frame
 #' @export
 #'
+#' @examples
 read_10x_annotations <- function(annot_fpath, sample) {
   gene_column <- 1
 
@@ -408,7 +409,7 @@ make_annot_with_ids <- function(annot_list, feature_types_list) {
 #' @param sample_annot data.frame of annotations
 #' @param annot_with_ids data.frame of annotations with IDs. Key data.frame
 #'
-#' @return data.frame of annotations
+#' @return
 #' @export
 #'
 sym_to_ids <- function(sample_annot, annot_with_ids) {
@@ -436,7 +437,7 @@ sym_to_ids <- function(sample_annot, annot_with_ids) {
 #' @param sample_annot data.frame of annotations
 #' @param annot_with_ids data.frame of annotations with IDs. Key data.frame
 #'
-#' @return data.frame of annotations
+#' @return
 #' @export
 #'
 ids_to_sym <- function(sample_annot, annot_with_ids) {
@@ -464,7 +465,7 @@ ids_to_sym <- function(sample_annot, annot_with_ids) {
 #' @param annotations list of annotations data.frame, feature types and gene_column
 #' @param sample character specifying current sample
 #'
-#' @return list of counts and annotations
+#' @return
 #' @export
 #'
 filter_unnamed_features <- function(counts, annotations, sample) {
