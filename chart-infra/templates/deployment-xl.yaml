@@ -18,6 +18,7 @@ spec:
       labels:
         type: 'pipeline'
         sandboxId: "{{ .Values.sandboxId }}"
+        size: xl
     spec:
       restartPolicy: Always
       serviceAccountName: 'deployment-runner'

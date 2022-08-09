@@ -5,6 +5,7 @@
       name: "{{ .Release.Name }}-server"
       labels:
         type: 'pipeline'
+        size: 'default'
         sandboxId: "{{ .Values.sandboxId }}"
     spec:
       restartPolicy: Always
