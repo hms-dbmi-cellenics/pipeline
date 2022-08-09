@@ -55,6 +55,7 @@ load_config <- function(development_aws_server) {
             break
         }
     }
+
     sandbox <- Sys.getenv("SANDBOX_ID", "default")
     config <- list(
         cluster_env = Sys.getenv("CLUSTER_ENV", "development"),
@@ -64,6 +65,7 @@ load_config <- function(development_aws_server) {
         pod_name = Sys.getenv("K8S_POD_NAME", "local"),
         activity_arn = activity_arn,
         api_url = paste0("http://api-",sandbox,".api-",sandbox,".svc.cluster.local:3000"),
+        api_version = "v2",
         debug_config = list(
             step = Sys.getenv("DEBUG_STEP", ""),
             path = Sys.getenv("DEBUG_PATH", "")
@@ -98,19 +100,18 @@ load_config <- function(development_aws_server) {
 
     }
 
-    config[["samples_table"]] <- paste("samples", config$cluster_env, sep = "-")
-    config[["experiments_table"]] <- paste("experiments", config$cluster_env, sep = "-")
-    config[["originals_bucket"]] <- paste("biomage-originals", config$cluster_env, sep = "-")
-    config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, sep = "-")
-    config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, sep = "-")
-    config[["results_bucket"]] <- paste("worker-results", config$cluster_env, sep = "-")
-    config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, sep = "-")
-    config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, sep = "-")
-    config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, sep = "-")
-    config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, sep = "-")
+    config[["originals_bucket"]] <- paste("biomage-originals", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["results_bucket"]] <- paste("worker-results", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, config$aws_account_id, sep = "-")
+    config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, config$aws_account_id, sep = "-")
     config[["sns_topic"]] <- paste(
-      paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
-      config$cluster_env, config$sandbox_id, sep = "-")
+        paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
+        config$cluster_env, config$sandbox_id, config$api_version, sep = "-"
+    )
 
     return(config)
 }
@@ -146,7 +147,6 @@ run_processing_step <- function(scdata, config, tasks,task_name, cells_id,sample
 #
 
 run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
-
     # list of task functions named by task name
     tasks <- list(
         "downloadGem" = download_user_files,
@@ -217,7 +217,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         'configureEmbedding' = embed_and_cluster
     )
 
-    #need this for embed_and_cluster
+    # need this for embed_and_cluster
     config$api_url <- pipeline_config$api_url
     config$auth_JWT <- input$authJWT
 
@@ -226,7 +226,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
         # assign it to the global environment so we can
         # persist it across runs of the wrapper
-        assign("scdata", reload_scdata_from_s3(pipeline_config, experiment_id, task_name, tasks), pos = ".GlobalEnv")
+        assign("scdata", reload_data_from_s3(pipeline_config, experiment_id, task_name, tasks), pos = ".GlobalEnv")
 
         message("Single-cell data loaded.")
     }
@@ -236,7 +236,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         if(task_name == names(tasks)[1]){
             assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
         }else if(task_name %in% names(tasks)){
-            samples <- unique(scdata$samples)
+            samples <- names(scdata)
             assign("cells_id", load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples), pos = ".GlobalEnv")
         }else{
             stop("Invalid task name given: ", task_name)
@@ -246,12 +246,8 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
     # call function to run and update global variable
     c(
-        data,new_ids,...rest_of_results
+        data, new_ids,...rest_of_results
     ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
-
-    message("Comparison between cell ids")
-    message("Old ids length ",length(cells_id[[sample_id]]))
-    message("New ids length ",length(new_ids[[sample_id]]))
 
     assign("cells_id", new_ids, pos = ".GlobalEnv")
 
@@ -259,6 +255,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     integration_index <- match("dataIntegration", task_names)
     task_index <- match(task_name, task_names)
     if(task_index < integration_index){
+        message("Filtered cell ids from ", length(cells_id[[sample_id]]), " to ", length(new_ids[[sample_id]]))
         next_task <- names(tasks)[[task_index+1]]
         object_key <- paste0(experiment_id,"/",next_task,"/",sample_id,".rds")
         upload_cells_id(pipeline_config,object_key,cells_id)
@@ -296,7 +293,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 #
 start_heartbeat <- function(task_token, aws_config) {
     library(tryCatchLog)
-    message("Starting hearbeat")
+    message("Starting heartbeat")
     states <- paws::sfn(config=aws_config)
 
     keep_running <- TRUE
@@ -316,7 +313,7 @@ start_heartbeat <- function(task_token, aws_config) {
             keep_running <- FALSE
         })
         i <- i + 1
-        # sleep until next hearbeat
+        # sleep until next heartbeat
         Sys.sleep(wait_time)
 
     }
@@ -329,18 +326,17 @@ start_heartbeat <- function(task_token, aws_config) {
 #
 # Calls the appropiate process: data processing pipeline or gem2s.
 #
-wrapper <- function(input) {
+wrapper <- function(input, pipeline_config) {
     task_name <- input$taskName
     message("------\nStarting task: ", task_name, '\n')
     message("Input:")
     str(input)
     message("")
 
-
     # common to gem2s and data processing
     server <- input$server
     input <- input[names(input) != "server"]
-    pipeline_config <- load_config(server)
+
     process_name <- input$processName
 
     if (process_name == 'qc') {
@@ -384,6 +380,7 @@ init <- function() {
 
         # parse data from state machine input
         input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
+        message('Input json: ', input)
 
         # save logs to file
         debug_prefix <- file.path(input$experimentId, debug_timestamp)
@@ -403,9 +400,10 @@ init <- function() {
         )
 
         tryCatchLog({
+                # Refresh pipeline_config with the new task input
+                pipeline_config <- load_config(input$server)
 
-
-                wrapper(input)
+                wrapper(input, pipeline_config)
 
                 message('Send task success\n------\n')
                 states$send_task_success(

@@ -23,23 +23,23 @@
         ..$ enabled       : logi TRUE
         ..$ auto          : logi TRUE
         ..$ filterSettings:List of 2
-        .. ..$ method        : chr "absolute_threshold"
+        .. ..$ method        : chr "absoluteThreshold"
         .. ..$ methodSettings:List of 1
-        .. .. ..$ absolute_threshold:List of 2
+        .. .. ..$ absoluteThreshold:List of 2
         .. .. .. ..$ maxFraction: num 0.1
         .. .. .. ..$ binStep    : num 0.3
         ..$ sample_a      :List of 3
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 2
-        .. .. ..$ method        : chr "absolute_threshold"
+        .. .. ..$ method        : chr "absoluteThreshold"
         .. .. ..$ methodSettings:List of 1
-        .. .. .. ..$ absolute_threshold:List of 2
+        .. .. .. ..$ absoluteThreshold:List of 2
         .. .. .. .. ..$ maxFraction: num 0
         .. .. .. .. ..$ binStep    : num 0.3
         .. ..$ defaultFilterSettings:List of 2
-        .. .. ..$ method        : chr "absolute_threshold"
+        .. .. ..$ method        : chr "absoluteThreshold"
         .. .. ..$ methodSettings:List of 1
-        .. .. .. ..$ absolute_threshold:List of 2
+        .. .. .. ..$ absoluteThreshold:List of 2
         .. .. .. .. ..$ maxFraction: num 0
         .. .. .. .. ..$ binStep    : num 0.3
        $ classifier          :List of 5
@@ -72,14 +72,14 @@
         .. .. ..$ regressionType        : chr "linear"
         .. .. ..$ regressionTypeSettings:List of 2
         .. .. .. ..$ linear:List of 1
-        .. .. .. .. ..$ p.level: num 0.00013
+        .. .. .. .. ..$ p.level: num 0.000131
         .. .. .. ..$ spline:List of 1
         .. .. .. .. ..$ p.level: num 0.001
         .. ..$ defaultFilterSettings:List of 2
         .. .. ..$ regressionType        : chr "linear"
         .. .. ..$ regressionTypeSettings:List of 2
         .. .. .. ..$ linear:List of 1
-        .. .. .. .. ..$ p.level: num 0.00013
+        .. .. .. .. ..$ p.level: num 0.000131
         .. .. .. ..$ spline:List of 1
         .. .. .. .. ..$ p.level: num 0.001
        $ doubletScores       :List of 4
@@ -126,7 +126,7 @@
         .. .. .. ..$ distanceMetric : chr "cosine"
         .. .. ..$ tsne:List of 2
         .. .. .. ..$ perplexity  : num 30
-        .. .. .. ..$ learningRate: num 640
+        .. .. .. ..$ learningRate: num 200
         ..$ clusteringSettings:List of 2
         .. ..$ method        : chr "louvain"
         .. ..$ methodSettings:List of 1

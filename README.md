@@ -56,7 +56,7 @@ First make sure the project library is synchronized with the lockfile:
 renv::restore()
 ```
 
-**NOTE**: To restore Bioconductor packages your R version needs to be the same as in the [Dockerfile](pipeline-runner/Dockerfile) (4.0.5).
+**NOTE**: To restore Bioconductor packages your R version needs to be the same as in the [Dockerfile](pipeline-runner/Dockerfile) (4.2.0).
 
 `install.packages(...)` and use them (e.g. `dplyr::left_join(...)`) as you normally would. Then, update the lockfile:
 
@@ -66,7 +66,35 @@ renv::snapshot()
 
 commit the changes to the lockfile (used to install dependencies in the Dockerfile). See [renv docs](https://rstudio.github.io/renv/) for more info.
 
+### Development dependencies
 
+Packages used for interactive development, such as `devtools`, `usethis`, `roxygen2`,
+`styler` and the R `languageserver` (to develop R in vscode!) and their dependencies
+should not be added to the lockfile, since they are not required at runtime. 
+`renv` has been configured to ignore them. 
+
+To install them, run the following block, with no arguments. This installs all
+packages in the DESCRIPTION file, which includes the development dependencies in
+the Suggests section.
+
+```R
+renv::install()
+```
+
+### Running tests locally
+
+There are several ways to run tests locally. The easiest one being using the Rstudio
+shortcut `Cmd + shift + T`.
+
+Other ways to run tests locally:
+
+```R
+devtools::test()
+```
+
+```R
+testthat::test_local()
+```
 
 ## Debugging locally
 
@@ -96,3 +124,17 @@ load('{task_name}_{sample_id}.RData')
 task_env <- new.env()
 load('{task_name}_{sample_id}.RData', envir = task_env)
 ```
+
+## Troubleshooting
+
+#### Linux Mint 20.3 Cinnamon
+```bash
+Error in curl::curl_fetch_memory(url, handle = handle) : 
+Timeout was reached: [172.17.0.1:4566] Connection timeout after 60001 ms
+Calls: init ... request_fetch -> request_fetch.write_memory -> <Anonymous>
+Execution halted
+```
+Turn off firewall or allow incoming traffic. This would allow AWS to send packages to the pipeline, which would otherwise be blocked by the firewall.
+
+1. Open *Firewall Configuration* from the Start Menu.
+2. Select **Allow** in the **Outgoing** dropdown menu (Alternatively, set **Status** to OFF). 

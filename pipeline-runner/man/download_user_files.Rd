@@ -4,7 +4,12 @@
 \alias{download_user_files}
 \title{Download user files from S3}
 \usage{
-download_user_files(input, pipeline_config, prev_out = list())
+download_user_files(
+  input,
+  pipeline_config,
+  prev_out = list(),
+  input_dir = "/input"
+)
 }
 \arguments{
 \item{input}{The input object from the request}
@@ -12,6 +17,8 @@ download_user_files(input, pipeline_config, prev_out = list())
 \item{pipeline_config}{result of \code{load_config}}
 
 \item{prev_out}{\code{list()} that is added to in each with gem2s task.}
+
+\item{input_dir}{A string, where the s3 object is going to be stored}
 }
 \value{
 list where 'output' slot has config used by \code{load_user_files}

@@ -1,4 +1,9 @@
-mock_cellranger_files <- function(sample_dir, compressed) {
+mock_cellranger_files <- function(sample_dir, compressed, sample_id) {
+  features_path <- file.path(sample_dir, paste("features10x", "path", sample_id, sep = "-"))
+  barcodes_path <- file.path(sample_dir, paste("barcodes10x", "path", sample_id, sep = "-"))
+  matrix_path <- file.path(sample_dir, paste("matrix10x", "path", sample_id, sep = "-"))
+
+
   counts <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
@@ -10,7 +15,6 @@ mock_cellranger_files <- function(sample_dir, compressed) {
   )
 
   # save features
-  features_path <- file.path(sample_dir, "features.tsv")
   write.table(features,
     features_path,
     col.names = FALSE,
@@ -21,36 +25,27 @@ mock_cellranger_files <- function(sample_dir, compressed) {
 
   # save barcodes
   barcodes <- colnames(counts)
-  barcodes_path <- file.path(sample_dir, "barcodes.tsv")
   writeLines(barcodes, barcodes_path)
 
   # save Matrix
   if (is(counts, "data.frame")) counts <- as.matrix(counts)
   sparse.mat <- Matrix::Matrix(counts, sparse = TRUE)
-  matrix_path <- file.path(sample_dir, "matrix.mtx")
   Matrix::writeMM(sparse.mat, matrix_path)
 
   files <- c(features_path, barcodes_path, matrix_path)
 
-  if (compressed) {
-    R.utils::gzip(features_path)
-    R.utils::gzip(barcodes_path)
-    R.utils::gzip(matrix_path)
-
-    files <- paste0(files, ".gz")
-  }
-
   return(files)
 }
 
-create_samples <- function(bucket, project, samples, compressed) {
+create_samples <- function(bucket, project, samples, compressed, env) {
   # helper to create samples in project in bucket, like S3
   files <- c()
 
   for (id in samples) {
-    f <- file.path(bucket, project, id)
-    dir.create(f, recursive = TRUE)
-    these_files <- mock_cellranger_files(f, compressed)
+    f <- paste(bucket, id, sep = "-")
+    dir.create(f)
+
+    these_files <- mock_cellranger_files(f, compressed, id)
     files <- c(files, these_files)
   }
 
@@ -63,7 +58,13 @@ local_create_samples <- function(project, samples, compressed = FALSE, env = par
   bucket <- "./a_fake_bucket"
   dir.create(bucket)
 
-  files <- create_samples(bucket, project, samples, compressed)
+
+  files <- create_samples(bucket, project, samples, compressed, env)
+
+  # the api creates several directories (one per sample), so we have to remove
+  # them all, passing a character vector with all directory names
+  withr::defer(unlink(unique(dirname(files)), recursive = TRUE), envir = env)
+
   withr::defer(unlink(bucket, recursive = TRUE), envir = env)
 
   list(bucket = bucket, files = files)
@@ -86,7 +87,7 @@ stub_s3_list_objects <- function(Bucket, Prefix) {
   list(Contents = l2)
 }
 
-stub_s3_get_objects <- function(Bucket, Key) {
+stub_s3_get_object <- function(Bucket, Key) {
   # returns a list of the raw file read from the mocked s3 bucket.
   list(body = readBin(Key, what = "raw"), rest = list())
 }
@@ -98,13 +99,21 @@ stub_file.path <- function(...) {
 stubbed_download_user_files <- function(input, pipeline_config, prev_out = list()) {
   # helper to simplify calls to the stubbed function
 
-  # where makes sure where we are stubbing the what calls.
-  mockery::stub(where = download_user_files, what = "paws::s3", how = NA)
-  mockery::stub(download_user_files, "s3$list_objects", stub_s3_list_objects)
-  mockery::stub(download_user_files, "file.path", stub_file.path)
-  mockery::stub(download_user_files, "s3$get_object", stub_s3_get_objects)
+  mockedS3 <- list(
+    list_objects=stub_s3_list_objects,
+    get_object=stub_s3_get_object
+  )
 
-  res <- download_user_files(input, pipeline_config, prev_out)
+  # where makes sure where we are stubbing the what calls.
+  mockery::stub(where = download_user_files, what = "paws::s3", how = mockedS3)
+  mockery::stub(get_gem2s_file, "s3$list_objects", mockedS3$list_objects)
+
+  mockery::stub(download_user_files, "file.path", stub_file.path)
+  mockery::stub(get_gem2s_file, "file.path", stub_file.path)
+
+  mockery::stub(download_and_store, "s3$get_object", mockedS3$get_object)
+
+  res <- download_user_files(input, pipeline_config, input_dir = "./input", prev_out = prev_out)
   # download_user_files creates a "/input" folder in the pod. defer deleting
   # it during tests.
   withr::defer(unlink("./input", recursive = TRUE), envir = parent.frame())
@@ -117,14 +126,26 @@ mock_sample_ids <- function(n_samples = 1) {
 }
 
 mock_input <- function(samples) {
+  sample_s3_paths <- list()
+
+  for (sample_id in samples) {
+    sample_s3_paths[sample_id] <- list(
+      "barcodes10x" = paste("barcodes10x", "path", sample_id, sep = "-"),
+      "features10x" = paste("features10x", "path", sample_id, sep = "-"),
+      "matrix10x" = paste("matrix10x", "path", sample_id, sep = "-")
+    )
+  }
+
   input <- list(
     projectId = "projectID",
     sampleIds = as.list(samples),
     sampleNames = as.list(paste0(samples, "_name")),
+    sampleS3Paths = sample_s3_paths,
     experimentName = "test_exp",
     input = list(type = "techno")
   )
 }
+
 
 test_that("download_user_files downloads user's files. one sample", {
   samples <- mock_sample_ids()
