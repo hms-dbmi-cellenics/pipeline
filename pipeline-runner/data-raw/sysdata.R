@@ -2,7 +2,8 @@
 gem2s <- list(
   max.edrops.fdr = 0.001,
   max.empty.counts = 100,
-  max.empty.drops = 50
+  max.empty.drops = 50,
+  random.seed = 42
 )
 
 RANDOM_SEED <- 42

@@ -9,6 +9,7 @@ embed_and_cluster <-
            sample_id,
            cells_id,
            task_name = "configureEmbedding") {
+
     message("starting clusters")
     clustering_method <- config$clusteringSettings$method
     methodSettings <-

@@ -2,18 +2,33 @@
 #'
 #' Eliminates cells based on a p value and a linear regression generated from numGenes vs numUmis
 #'
-#' This filter focuses on filter cells that are far from the behaviour of the relationship between the number of genes (it measures the number of
-#' genes in a cell that has at least one count) and the number of UMIs/molecules (the total number of counts in a cell).
+#' This filter focuses on filter cells that are far from the behaviour of the
+#' relationship between the number of genes (it measures the number of
+#' genes in a cell that has at least one count) and the number of UMIs/molecules
+#' (the total number of counts in a cell).
+#' The cutoff bands for filtering are derived from the prediction interval.
+#' Prediction interval represents the likelihood that the predicted value will be
+#' between the upper and lower limits of the prediction interval.
+#' Prediction intervals are similar to confidence intervals, but on top of the sampling
+#' uncertainty, they also express uncertainty around a single value.
+#' They must account for the uncertainty in estimating the population mean,
+#' plus the random variation of the individual values.
+#' Higher prediction interval means higher probability of the value to be inside
+#' the range. Consequently, the size of the interval will be wider.
+#' The higher the prediction level, the less stringent we are when filtering the cells.
+#' Conversely, the lower the prediction level, the more stringent we are,
+#' and we exclude more cells that are far from the behaviour of the relationship
+#' between the number of genes and the number of UMIs/molecules.
 #'
 #' @param config list containing the following information
-#'          - enable: true/false. Refering to apply or not the filter.
+#'          - enable: true/false. Referring to apply or not the filter.
 #'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
 #'          to call generate_default_values_numGenesVsNumUmis)
 #'          - filterSettings: slot with thresholds
 #'              - regressionType: String. Regression to be used: {linear or spline}
 #'              - regressionTypeSettings: list with the config settings for all the regression type options
 #'                          - linear and spline: for each there is only one element:
-#'                             - p.level: which refers to  confidence level for deviation from the main trend
+#'                             - p_level: which refers to  confidence level for deviation from the main trend
 #'
 #' @param scdata_list list of \code{SeuratObject}
 #' @param sample_id value in \code{scdata$samples} to apply filter for
@@ -56,15 +71,18 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
 
   fit.data <- fit.data[order(fit.data$log_molecules), ]
 
-  if (type == 'spline') fit <- lm(log_genes ~ splines::bs(log_molecules), data = fit.data)
-  else fit <- MASS::rlm(log_genes ~ log_molecules, data = fit.data)
+  if (type == "spline") {
+    fit <- lm(log_genes ~ splines::bs(log_molecules), data = fit.data)
+  } else {
+    fit <- MASS::rlm(log_genes ~ log_molecules, data = fit.data)
+  }
 
   if (safeTRUE(config$enabled)) {
     # get the interval based on p_level parameter
     preds <- suppressWarnings(predict(fit, interval = "prediction", level = 1 - p_level))
 
     # filter outliers above/below cutoff bands
-    is.outlier <- fit.data$log_genes > preds[, 'upr'] | fit.data$log_genes < preds[, 'lwr']
+    is.outlier <- fit.data$log_genes > preds[, "upr"] | fit.data$log_genes < preds[, "lwr"]
     remaining_ids <- as.numeric(rownames(fit.data)[!is.outlier])
     remaining_ids <- remaining_ids[order(remaining_ids)]
   } else {
@@ -84,14 +102,28 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
   newdata <- data.frame(log_molecules = seq(xrange[1], xrange[2], length.out = 10))
   line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = 1 - p_level))
 
-  line_preds <- cbind(newdata, line_preds) %>%
-    dplyr::select(-fit) %>%
-    dplyr::rename(lower_cutoff = lwr, upper_cutoff = upr)
+  line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = 1 - p_level))
+
+  pred_int_values <- sort(c(seq(0, 0.99, 0.01), 0.999, 0.9999, 0.99999, 0.999999))
+  pred_int_values <- c(pred_int_values, pred_int_auto)
+  line_preds_list <- list()
+  i <- 1
+  for (pred in pred_int_values) {
+    line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = pred))
+
+    line_preds <- cbind(newdata, line_preds) %>%
+      dplyr::select(-fit) %>%
+      dplyr::rename(lower_cutoff = lwr, upper_cutoff = upr)
+
+    line_preds_list[[i]] <- purrr::transpose(line_preds)
+    i <- i + 1
+  }
 
   plot_data <- list(
     pointsData = purrr::transpose(downsampled_data),
-    linesData = purrr::transpose(line_preds)
+    linesData = line_preds_list
   )
+
 
   # Populate with filter statistics and plot data
   filter_stats <- list(

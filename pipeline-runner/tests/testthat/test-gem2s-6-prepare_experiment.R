@@ -103,7 +103,6 @@ test_that("prepare_experiment adds 0 indexed cell_ids to each sample in scdata_l
   expect_equal(added_ids, expected_ids)
 })
 
-
 test_that("prepare_experiment generates qc_config that matches snapshot", {
   prev_out <- mock_prev_out()
   input <- list(experimentId = "1234")

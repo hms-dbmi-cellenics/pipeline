@@ -8,7 +8,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   project_id <- input$projectId
 
   # destructure what need from prev_out
-  scdata_list <- prev_out$scdata_list
+  scdata <- prev_out$scdata
   config <- prev_out$config
   qc_config <- prev_out$qc_config
 
@@ -61,7 +61,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   )
 
   message("\nUpload to AWS step complete.")
-
   return(res)
 }
 
