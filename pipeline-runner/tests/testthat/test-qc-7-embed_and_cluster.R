@@ -41,7 +41,6 @@ mock_color_pool <- function(n) {
 
 stub_update_sets_through_api <- function(cell_sets_object,
                                           api_url,
-                                          api_version,
                                           experiment_id,
                                           cell_set_key,
                                           auth_JWT) {
@@ -129,7 +128,7 @@ test_that("runClusters uses active.reduction in misc slot", {
 with_fake_http(
   test_that("update_sets_through_api sends patch request", {
     expect_PATCH(
-      update_sets_through_api(list(), "api_url", "v1", "experiment_id", "cell_set_key", "auth")
+      update_sets_through_api(list(), "api_url", "experiment_id", "cell_set_key", "auth")
     )
   })
 )
@@ -224,11 +223,10 @@ test_that("format_cell_sets_object returns empty children on empty cellset", {
 stub_runClusters <- function(clustering_method, resolution, data) {}
 stub_format_cell_sets_object <- function(cell_sets, clustering_method, color_pool) {}
 stub_update_sets_through_api <- function(
-  cell_sets_object, 
-  api_url, 
-  api_version,
-  experiment_id, 
-  cell_set_key, 
+  cell_sets_object,
+  api_url,
+  experiment_id,
+  cell_set_key,
   auth_JWT
   ) {}
 
@@ -236,11 +234,11 @@ stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_
   mockery::stub(embed_and_cluster,
                 "runClusters",
                 stub_runClusters)
-  
+
   mockery::stub(embed_and_cluster,
                 "format_cell_sets_object",
                 stub_format_cell_sets_object)
-  
+
   mockery::stub(embed_and_cluster,
                 "update_sets_through_api",
                 stub_update_sets_through_api)
@@ -276,4 +274,6 @@ test_that("embed_and_cluster works", {
   task_name <- "configureEmbedding"
 
   stubbed_embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
+  # to avoid skipping empty test
+  expect_true(TRUE)
 })

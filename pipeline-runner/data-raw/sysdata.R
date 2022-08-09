@@ -16,7 +16,7 @@ file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x")
 )
 
-file_names_v1 <- list(
+file_names <- list(
   barcodes10x = "barcodes.tsv.gz",
   features10x = "features.tsv.gz",
   matrix10x = "matrix.mtx.gz"
@@ -27,11 +27,22 @@ source("data-raw/cell_cycle_genes.R")
 cc_genes <- list("human" = human_cc_genes,
                  "mouse" = mouse_cc_genes)
 
+# annotation type constants
+SYM_IDS <- "sym_ids"
+SYM_SYM <- "sym_sym"
+IDS_SYM <- "ids_sym"
+IDS_IDS <- "ids_ids"
+
+
 usethis::use_data(
   gem2s,
   DEBUG_PATH,
-  file_names_v1,
+  file_names,
   file_types_by_technology,
+  SYM_IDS,
+  SYM_SYM,
+  IDS_SYM,
+  IDS_IDS,
   cc_genes,
   internal = TRUE,
   overwrite = TRUE
