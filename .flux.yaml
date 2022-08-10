@@ -17,7 +17,7 @@ metadata:
 spec:
   releaseName: FILLED_IN_BY_CI
   chart:
-    git: https://github.com/hms-dbmi-cellenics/pipeline
+    git: https://github.com/biomage-org/pipeline
     path: chart-infra/
     ref: FILLED_IN_BY_CI
   valuesFrom:
