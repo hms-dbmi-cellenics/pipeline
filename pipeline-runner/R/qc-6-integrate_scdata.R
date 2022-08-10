@@ -248,17 +248,15 @@ run_seuratv4 <- function(scdata, config) {
       warning("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
       # An ideal solution would be to launch an error to the UI, however, for now, we will skip the integration method.
       print("Skipping integration step")
-      scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
     }
   )
 
+  scdata <- normalize_data(scdata, normalization, "seuratv4", nfeatures)
   scdata@misc <- misc
-  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
   scdata <- add_dispersions(scdata)
   scdata@misc[["active.reduction"]] <- "pca"
 
-  # scale and run PCA
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  # run PCA
   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
 
   return(scdata)
@@ -512,7 +510,9 @@ add_metadata <- function(scdata, scdata_list) {
 
 normalize_data <- function(scdata, normalization_method, integration_method, nfeatures) {
   if (normalization_method == "LogNormalize") {
-    scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
+    if(Seurat::DefaultAssay(scdata) == "RNA") {
+      scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
+    }
     scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
     if (integration_method != "fastmnn") {
       scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
