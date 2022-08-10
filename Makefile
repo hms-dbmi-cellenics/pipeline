@@ -21,9 +21,10 @@ install:
 	@(cd ./local-runner && npm install)
 	@echo "Installing R env packages"
 	@(cd ./pipeline-runner && R -e "renv::restore()")
-build: 
+update-sysdata: 
     # regenerate sysdata.rda env file
-	@(cd ./pipeline-runner && Rscript data-raw/sysdata.R)
+	@(cd ./pipeline-runner && Rscript data-raw/sysdata.R)	
+build: 
 	@(cd ./local-runner && npm run build)
 test:
 	@(cd ./pipeline-runner && R -e "devtools::test()")
