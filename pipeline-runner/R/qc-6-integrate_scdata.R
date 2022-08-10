@@ -525,7 +525,6 @@ add_metadata <- function(scdata, scdata_list) {
 #' @return normalized and scaled SeuratObject
 #' @export
 #'
-#' @examples
 normalize_data <- function(scdata, normalization_method, integration_method, nfeatures) {
   if (normalization_method == "LogNormalize") {
     if (Seurat::DefaultAssay(scdata) == "RNA") {
