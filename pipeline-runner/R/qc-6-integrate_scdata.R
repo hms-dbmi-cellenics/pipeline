@@ -535,4 +535,5 @@ normalize_data <- function(scdata, normalization_method, integration_method, nfe
       scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
     }
   }
+  return(scdata)
 }

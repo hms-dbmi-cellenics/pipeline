@@ -363,3 +363,16 @@ test_that("merge_scdata_list correctly merges seurat objects", {
   expect_true(all(scdata$samples[1:ncol(scdata_list[[1]])] == "a"))
 
 })
+
+
+test_that("normalize_data doesn't scale data if integration method is FastMNN", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  merged_scdata <- create_scdata(scdata_list)
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2),
+    dataIntegration = list(method = "fastmnn", methodSettings = list(fastmnn = list(numGenes = 1000, normalisation = "logNormalize")))
+  )
+
+  merged_scdata <- normalize_data(merged_scdata, "logNormalize", config$dataIntegration$method, config$dataIntegration$methodSettings$fastmnn$numGenes)
+  expect_equal(dim(merged_scdata@assays$RNA@scale.data), c(0,0))
+})
