@@ -181,9 +181,8 @@ run_harmony <- function(scdata, config) {
   # grep in case misspelled
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
-  scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  scdata <- normalize_data(scdata, normalization, "harmony", nfeatures)
+
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
   scdata <- harmony::RunHarmony(scdata, group.by.vars = "samples")
   scdata <- add_dispersions(scdata)
@@ -213,13 +212,11 @@ run_seuratv4 <- function(scdata, config) {
   # Currently, we only support Seurat V4 pipeline for the multisample integration
   data.split <- Seurat::SplitObject(scdata, split.by = "samples")
   for (i in 1:length(data.split)) {
-    data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = FALSE)
-    data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], nfeatures = nfeatures, verbose = FALSE)
+    data.split[[i]] <- normalize_data(data.split[[i]], normalization, "seuratv4", nfeatures)
     # PCA needs to be run also here
     # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
     if (reduction == "rpca") {
       message("Running PCA")
-      data.split[[i]] <- Seurat::ScaleData(data.split[[i]], verbose = FALSE)
       data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE, npcs = npcs)
     }
     else {
@@ -278,8 +275,7 @@ run_fastmnn <- function(scdata, config) {
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
 
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
-  scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
+  scdata <- normalize_data(scdata, normalization, "fastmnn", nfeatures)
   scdata <- add_dispersions(scdata)
 
   # @misc slots not preserved so transfer
@@ -302,13 +298,11 @@ run_unisample <- function(scdata, config) {
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
   # in unisample we only need to normalize
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
-  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+  scdata <- normalize_data(scdata, normalization, "unisample", nfeatures)
   scdata <- add_dispersions(scdata)
   scdata@misc[["active.reduction"]] <- "pca"
 
-  # scale and run PCA
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  # run PCA
   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
 
   return(scdata)
@@ -515,3 +509,13 @@ add_metadata <- function(scdata, scdata_list) {
   return(scdata)
 }
 
+
+normalize_data <- function(scdata, normalization_method, integration_method, nfeatures) {
+  if (normalization_method == "LogNormalize") {
+    scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
+    scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+    if (integration_method != "fastmnn") {
+      scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+    }
+  }
+}
