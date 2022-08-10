@@ -133,7 +133,7 @@ test_that("filter_gene_umi_outlier return the appropriate plot data", {
 
   # has the right names
   expect_equal(names(points_data[[1]]), c("log_molecules", "log_genes"))
-  expect_equal(names(lines_data[[1]]), c("log_molecules", "lower_cutoff", "upper_cutoff"))
+  expect_equal(names(lines_data[[1]][[1]]), c("log_molecules", "lower_cutoff", "upper_cutoff"))
 })
 
 

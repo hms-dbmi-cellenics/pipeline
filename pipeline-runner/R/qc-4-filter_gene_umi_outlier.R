@@ -60,6 +60,8 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
   p_level <- suppressWarnings(as.numeric(p_level))
   if(is.na(p_level)) stop("p_level couldn't be interpreted as a number.")
 
+  pred_int_auto <- 1 - p_level
+
   config$filterSettings$regressionTypeSettings[[type]]$p.level <- p_level
 
   # regress log10 molecules vs genes
