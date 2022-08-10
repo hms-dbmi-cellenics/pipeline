@@ -23,6 +23,7 @@ install:
 	@(cd ./pipeline-runner && R -e "renv::restore()")
 update-sysdata: 
     # regenerate sysdata.rda env file
+    # this step depends on your local R installation to run 
 	@(cd ./pipeline-runner && Rscript data-raw/sysdata.R)	
 build: 
 	@(cd ./local-runner && npm run build)
