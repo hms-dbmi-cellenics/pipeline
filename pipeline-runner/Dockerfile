@@ -57,11 +57,8 @@ COPY --from=builder /src /src
 
 # add renv library to .libPaths
 ENV RENV_LIB=/src/lib
-RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
-
-# install runtime system deps
-# cleanup setup files
-RUN echo "python3-pip" >> sysdeps_run.txt && \
+RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site && \
+    echo "python3-pip" >> sysdeps_run.txt && \
     echo "wget" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
@@ -104,7 +101,8 @@ FROM common AS dev
 # install Radian for interactive R shell
 # also install watchdog to automatically restart
 # when source files change
-RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+RUN pip install -U jedi radian PyYAML watchdog[watchmedo]  memory_profiler && \
+    apt update && apt -y install git && rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
 
 # add R package files and runner
 ADD R ./R
