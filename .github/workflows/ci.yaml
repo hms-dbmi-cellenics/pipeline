@@ -154,11 +154,12 @@ jobs:
       - id: pull-latest-image
         name: Pull latest Docker images from mainline
         run: |-
-          echo Pulling $IMAGE_NAME from ECR.
-          docker pull $IMAGE_NAME || true
+          NEW_IMAGE_NAME=242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:refs-heads-master-77301d8f1b65371a45811727fa76bedfe2205d45-pipeline-runner
+          echo Pulling $NEW_IMAGE_NAME from ECR.
+          docker pull $NEW_IMAGE_NAME || true
 
-          echo Pulling $IMAGE_NAME-builder from ECR.
-          docker pull $IMAGE_NAME-builder || true
+          echo Pulling $NEW_IMAGE_NAME-builder from ECR.
+          docker pull $NEW_IMAGE_NAME-builder || true
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
 
