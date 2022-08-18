@@ -128,7 +128,8 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     ),
     response = list(
       error = FALSE
-    )
+    ),
+    pipelineVersion = pipeline_version
   )
 
   result <- sns$publish(
