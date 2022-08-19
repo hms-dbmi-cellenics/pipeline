@@ -209,7 +209,6 @@ run_seuratv4 <- function(scdata, config) {
   # @misc slots not preserved so transfer
   misc <- scdata@misc
 
-  # Currently, we only support Seurat V4 pipeline for the multisample integration
   data.split <- Seurat::SplitObject(scdata, split.by = "samples")
   for (i in 1:length(data.split)) {
     data.split[[i]] <- normalize_data(data.split[[i]], normalization, "seuratv4", nfeatures)
