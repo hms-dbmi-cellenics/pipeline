@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/hms-dbmi-cellenics/pipeline/branch/master/graph/badge.svg?token=kQ19q1EenW)](https://codecov.io/gh/hms-dbmi-cellenics/pipeline)
+[![codecov](https://codecov.io/gh/biomage-org/pipeline/branch/master/graph/badge.svg?token=kQ19q1EenW)](https://codecov.io/gh/biomage-org/pipeline)
 # Cellenics Pipeline
 
 The Cellenics pipeline project for dependency-managed work processing.
