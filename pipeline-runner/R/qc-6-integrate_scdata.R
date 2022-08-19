@@ -515,7 +515,25 @@ add_metadata <- function(scdata, scdata_list) {
 #' Normalize data according to the specific normalization method
 #'
 #' This function normalize the data taking into account the integration method.
-#' If the integration method is fastMNN, it will skip ScaleData() because
+#'
+#' @param scdata SeuratObject
+#' @param normalization_method normalization method
+#' @param integration_method integration method
+#' @param nfeatures number of features to pass to Seurat::FindVariableFeatures()
+#'
+#' @return normalized and scaled SeuratObject
+#' @export
+#'
+normalize_data <- function(scdata, normalization_method, integration_method, nfeatures) {
+  if (normalization_method == "LogNormalize") {
+    scdata <- log_normalize(scdata, normalization_method, integration_method, nfeatures)
+  }
+  return(scdata)
+}
+
+#' Perform log normalization
+#'
+#' #' If the integration method is fastMNN, it will skip ScaleData() because
 #' fastMNN already performs its own scaling.
 #' If the integration method is SeuratV4, the default assay will be set to "integrated",
 #' in this case NormalizeData() will not work (see the [integration vignette](https://satijalab.org/seurat/articles/integration_introduction.html)),
@@ -529,15 +547,13 @@ add_metadata <- function(scdata, scdata_list) {
 #' @return normalized and scaled SeuratObject
 #' @export
 #'
-normalize_data <- function(scdata, normalization_method, integration_method, nfeatures) {
-  if (normalization_method == "LogNormalize") {
-    if (Seurat::DefaultAssay(scdata) == "RNA") {
-      scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
-    }
-    scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
-    if (integration_method != "fastmnn") {
-      scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
-    }
+log_normalize <- function(scdata, normalization_method, integration_method, nfeatures) {
+  if (Seurat::DefaultAssay(scdata) == "RNA") {
+    scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
+  }
+  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+  if (integration_method != "fastmnn") {
+    scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   }
   return(scdata)
 }
