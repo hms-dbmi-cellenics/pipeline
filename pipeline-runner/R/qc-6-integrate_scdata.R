@@ -233,7 +233,7 @@ run_seuratv4 <- function(scdata, config) {
       if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
       if (reduction == "cca") message("Finding integration anchors using CCA reduction")
       data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE, reduction = reduction)
-      scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs)
+      scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
       Seurat::DefaultAssay(scdata) <- "integrated"
     },
     error = function(e) { # Specifying error message
@@ -250,6 +250,11 @@ run_seuratv4 <- function(scdata, config) {
     }
   )
 
+  # After normalizing and integrating the splitted Seurat objects individually,
+  # here we call the normalization function again on the integrated object.
+  # In this case, NormalizeData() will be skipped if integration was successful because when
+  # normalization.method = "LogNormalize", the integrated data is returned to
+  # the data slot and can be treated as log-normalized, corrected data.
   scdata <- normalize_data(scdata, normalization, "seuratv4", nfeatures)
   scdata@misc <- misc
   scdata <- add_dispersions(scdata)
