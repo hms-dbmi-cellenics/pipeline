@@ -1,4 +1,3 @@
-
 mock_sns <- function(config) {
     return(
         list(publish = function (Message, TopicArn, MessageAttributes) {
@@ -27,6 +26,10 @@ test_that("send_gem2s_update_to_api completes successfully", {
 
 stub_put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
     return(NULL)
+}
+
+stub_put_object_in_s3 <- function(Bucket, Key, Body) {
+  return(NULL)
 }
 
 test_that("upload_debug_folder_to_s3 completes successfully", {
@@ -63,8 +66,6 @@ test_that("upload_debug_folder_to_s3 completes successfully", {
 
 
 test_that("upload_matrix_to_s3 completes successfully", {
-
-
     # mock things
     data <- matrix()
     pipeline_config <- list(processed_bucket = 'processed-bucket')
@@ -75,5 +76,15 @@ test_that("upload_matrix_to_s3 completes successfully", {
     # generates correct S3 key
     key <- upload_matrix_to_s3(pipeline_config, experiment_id, data)
     expect_equal(key, '1234/r.rds')
+})
 
+test_that("send_output_to_api completes successfully", {
+    c(pipeline_config, input, plot_data_keys, output) %<-% send_output_to_api_mock_data
+
+    mockery::stub(send_output_to_api, 's3$put_object', stub_put_object_in_s3)
+    mockery::stub(send_output_to_api, 'paws::sns', mock_sns)
+
+    response <- send_output_to_api(pipeline_config, input, plot_data_keys, output)
+
+    expect_true(response == 'ok')
 })

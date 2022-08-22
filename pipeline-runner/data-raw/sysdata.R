@@ -35,6 +35,7 @@ SYM_SYM <- "sym_sym"
 IDS_SYM <- "ids_sym"
 IDS_IDS <- "ids_ids"
 
+pipeline_version <- 1
 
 usethis::use_data(
   gem2s,
@@ -47,6 +48,7 @@ usethis::use_data(
   IDS_SYM,
   IDS_IDS,
   cc_genes,
+  pipeline_version,
   internal = TRUE,
   overwrite = TRUE
 )
