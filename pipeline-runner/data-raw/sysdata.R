@@ -35,7 +35,7 @@ SYM_SYM <- "sym_sym"
 IDS_SYM <- "ids_sym"
 IDS_IDS <- "ids_ids"
 
-pipeline_version <- 1
+pipeline_version <- 2
 
 usethis::use_data(
   gem2s,
