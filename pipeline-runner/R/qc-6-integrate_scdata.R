@@ -250,11 +250,8 @@ run_seuratv4 <- function(scdata, config) {
     }
   )
 
-  # After normalizing and integrating the splitted Seurat objects individually,
-  # here we call the normalization function again on the integrated object.
-  # In this case, NormalizeData() will be skipped if integration was successful because when
-  # normalization.method = "LogNormalize", the integrated data is returned to
-  # the data slot and can be treated as log-normalized, corrected data.
+  # seurat v4 requires to call the normalize_data function before (on single objects)
+  # and after integration (on the integrated object)
   scdata <- normalize_data(scdata, normalization, "seuratv4", nfeatures)
   scdata@misc <- misc
   scdata <- add_dispersions(scdata)
