@@ -8,7 +8,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   project_id <- input$projectId
 
   # destructure what need from prev_out
-  scdata <- prev_out$scdata
+  scdata_list <- prev_out$scdata_list
   config <- prev_out$config
   qc_config <- prev_out$qc_config
 
