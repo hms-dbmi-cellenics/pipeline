@@ -21,61 +21,15 @@
 #   },
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
-  # subset each of the samples before merging them
-  for (sample in names(scdata_list)) {
-    flat_cell_ids <- unname(unlist(cells_id[[sample]]))
-    scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cell_ids)
-  }
 
-  message("Total cells: ", sum(sapply(scdata_list, ncol)))
-  scdata <- create_scdata(scdata_list)
+  scdata <- create_scdata(scdata_list, cells_id)
 
   # main function
   set.seed(RANDOM_SEED)
   message("running data integration")
   scdata_integrated <- run_dataIntegration(scdata, config)
 
-  # get  npcs from the UMAP call in integration functions
-  npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
-  message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
-  config$dimensionalityReduction$numPCs <- npcs
-
-  var_explained <- get_explained_variance(scdata_integrated)
-
-  # This same numPCs will be used throughout the platform.
-  scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
-
-  scdata_integrated <- colorObject(scdata_integrated)
-  cells_order <- rownames(scdata_integrated@meta.data)
-  plot1_data <- unname(purrr::map2(scdata_integrated@reductions$umap@cell.embeddings[, 1], scdata_integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
-    c("x" = x, "y" = y)
-  }))
-
-  # Adding color and sample id
-  plot1_data <- purrr::map2(
-    plot1_data,
-    unname(scdata_integrated@meta.data[cells_order, "samples"]),
-    function(x, y) {
-      append(x, list("sample" = y))
-    }
-  )
-
-  plot1_data <- purrr::map2(
-    plot1_data,
-    unname(scdata_integrated@meta.data[cells_order, "color_samples"]),
-    function(x, y) {
-      append(x, list("col" = y))
-    }
-  )
-
-  plot2_data <- unname(purrr::map2(1:min(50,length(var_explained)), var_explained, function(x, y) {
-    c("PC" = x, "percentVariance" = y)
-  }))
-
-  plots <- list()
-  plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
-  plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
-
+  plots <- integration_plot_data()
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
@@ -88,6 +42,54 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   return(result)
 }
 
+
+integration_plot_data <- function () {
+# get  npcs from the UMAP call in integration functions
+npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
+message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
+config$dimensionalityReduction$numPCs <- npcs
+
+var_explained <- get_explained_variance(scdata_integrated)
+
+# This same numPCs will be used throughout the platform.
+scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+
+scdata_integrated <- colorObject(scdata_integrated)
+cells_order <- rownames(scdata_integrated@meta.data)
+plot1_data <- unname(purrr::map2(scdata_integrated@reductions$umap@cell.embeddings[, 1], scdata_integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
+  c("x" = x, "y" = y)
+}))
+
+Adding color and sample id
+plot1_data <- purrr::map2(
+  plot1_data,
+  unname(scdata_integrated@meta.data[cells_order, "samples"]),
+  function(x, y) {
+    append(x, list("sample" = y))
+  }
+)
+
+plot1_data <- purrr::map2(
+  plot1_data,
+  unname(scdata_integrated@meta.data[cells_order, "color_samples"]),
+  function(x, y) {
+    append(x, list("col" = y))
+  }
+)
+
+
+plot2_data <- unname(purrr::map2(1:min(50,length(var_explained)), var_explained, function(x, y) {
+  c("PC" = x, "percentVariance" = y)
+}))
+
+plots <- list()
+plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
+plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
+
+return(plots)
+}
+
+
 #' Create the merged Seurat object
 #'
 #' This function takes care of merging the sample seurat objects, shuffling
@@ -99,13 +101,33 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 #' @return SeuratObject
 #' @export
 #'
-create_scdata <- function(scdata_list) {
+create_scdata <- function(scdata_list, cells_id) {
 
+  scdata_list <- subset_scdata_list(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
   return(merged_scdatas)
 }
+
+#' Subset each sample
+#'
+#' @param scdata_list
+#' @param cells_id
+#'
+#' @return
+#' @export
+#'
+subset_scdata_list <- function(scdata_list, cells_id) {
+  for (sample in names(scdata_list)) {
+    flat_cell_ids <- unname(unlist(cells_id[[sample]]))
+    scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cell_ids)
+  }
+
+  message("Total cells: ", sum(sapply(scdata_list, ncol)))
+  return(scdata_list)
+}
+
 
 #' Merge the list of sample Seurat objects
 #'
