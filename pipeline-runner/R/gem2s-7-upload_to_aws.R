@@ -24,6 +24,9 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     key = experiment_id
   )
 
+  # remove previous existing data
+  remove_bucket_folder(pipeline_config, pipeline_config$source_bucket, experiment_id)
+
  for (sample in names(scdata_list)) {
     message("Uploading sample ", sample, " object to S3 ...")
     fpath <- file.path(tempdir(), "experiment.rds")

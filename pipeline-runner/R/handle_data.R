@@ -1,3 +1,19 @@
+remove_bucket_folder <- function(pipeline_config, bucket, folder) {
+  keys_to_remove <- list()
+
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+  object_list <- s3$list_objects(bucket, Prefix = paste0(folder, "/"))
+  for (object in object_list$Contents) {
+    keys_to_remove <- append(keys_to_remove, object$Key)
+    s3$delete_object(
+      Bucket = bucket,
+      Key = object$Key
+    )
+  }
+
+  message("Removed files from ", bucket, ": ", paste0(keys_to_remove, sep=' '))
+}
+
 remove_cell_ids <- function(pipeline_config, experiment_id) {
   tasks <- list(
       'cellSizeDistribution',
@@ -20,7 +36,7 @@ remove_cell_ids <- function(pipeline_config, experiment_id) {
       )
     }
   }
-  message("Cell ids keys deleted: ", keys_to_remove)
+  message("Cell ids keys deleted: ", paste0(keys_to_remove, sep=' '))
 }
 
 upload_cells_id <- function(pipeline_config, object_key, cells_id) {
@@ -42,6 +58,7 @@ reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
   obj <- readRDS(rawConnection(body))
   return(obj)
 }
+
 reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$source_bucket
   objects <- s3$list_objects(
