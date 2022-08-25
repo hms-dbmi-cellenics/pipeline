@@ -14,70 +14,57 @@
 #'
 prepare_experiment <- function(input, pipeline_config, prev_out) {
   message("Preparing experiment ...")
+
   check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list")
   check_prev_out(prev_out, check_names)
 
   scdata_list <- prev_out$scdata_list
   samples <- names(scdata_list)
 
-  message("Merging Seurat Objects...")
-  scdata <- merge_scdatas(scdata_list)
+  message("Total cells:", sum(sapply(scdata_list, ncol)))
 
-  #If subsetting all cells, Seurat will not reorder the cells in the object. We need to subset to [-1] and [1] and merge to shuffle.
-  set.seed(gem2s$random.seed)
-  shuffle_mask <- sample(colnames(scdata))
-  scdata <- merge(scdata[,shuffle_mask[1]],scdata[,shuffle_mask[-1]])
-
-  scdata <- add_metadata(scdata, prev_out$annot, input$experimentId)
-  prev_out$scdata <- scdata
+  scdata_list <- add_metadata_to_samples(scdata_list, prev_out$annot, input$experimentId)
+  prev_out$scdata_list <- scdata_list
 
   # construct default QC config and update prev out
   message("Constructing default QC configuration...")
   any_filtered <- !(length(prev_out$edrops) == length(samples))
-  prev_out$qc_config <- construct_qc_config(scdata, any_filtered)
+  prev_out$qc_config <- construct_qc_config(scdata_list, any_filtered)
 
   res <- list(
     data = list(),
     output = prev_out
   )
 
-  message("\nPreperation for AWS upload step complete.")
+  message("\nPreparation for AWS upload step complete.")
   return(res)
 }
 
-#' Merge scdatas: merge rds files in input list
-#'
-#' @param scdata_list
-#'
-#' @return
-#' @export
-#'
-#' @examples
-merge_scdatas <- function(scdata_list) {
-  if (length(scdata_list) == 1) {
-    scdata <- scdata_list[[1]]
-  } else {
-    scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
+add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
+  # cell ids will be generated at random in order to shuffle samples. it is done
+  # here because merging samples in QC means that shuffling the cells will not
+  # result in a shuffled cell_ids
+  set.seed(RANDOM_SEED)
+  total_cells <- sum(sapply(scdata_list, ncol))
+  cell_ids <- 0:total_cells-1
+
+  for (sample in names(scdata_list)) {
+    sample_size <- ncol(scdata_list[[sample]])
+
+    # select only the annotations of the current sample
+    sample_annotations_idx <- match(rownames(scdata_list[[sample]]), annot$input)
+    sample_annot <- annot[sample_annotations_idx, ]
+    scdata_list[[sample]]@misc[["gene_annotations"]] <- sample_annot
+
+    # add the experiment ID so it's available later
+    scdata_list[[sample]]@misc[["experimentId"]] <- experiment_id
+
+    # sample cell ids to shuffle them
+    idxs <- sample(seq_along(cell_ids), sample_size)
+    scdata_list[[sample]]$cells_id <- cell_ids[idxs]
+    # remove the selected cell ids for next samples
+    cell_ids <- cell_ids[-idxs]
   }
 
-  return(scdata)
-}
-
-add_metadata <- function(scdata, annot, experiment_id) {
-
-  # Ensure index by rownames in scdata
-  annot <- annot[match(rownames(scdata), annot$input), ]
-  scdata@misc[["gene_annotations"]] <- annot
-
-  message("Storing cells id...")
-  # Keeping old version of ids starting from 0
-  scdata$cells_id <- 0:(ncol(scdata) - 1)
-
-  message("Storing color pool...")
-  # We store the color pool in a slot in order to be able to access it during configureEmbedding
-  scdata@misc[["color_pool"]] <- get_color_pool()
-  scdata@misc[["experimentId"]] <- experiment_id
-  scdata@misc[["ingestionDate"]] <- Sys.time()
-
-  return(scdata)
+  return(scdata_list)
 }
