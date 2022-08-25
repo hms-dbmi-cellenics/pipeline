@@ -15,28 +15,7 @@ remove_bucket_folder <- function(pipeline_config, bucket, folder) {
 }
 
 remove_cell_ids <- function(pipeline_config, experiment_id) {
-  tasks <- list(
-      'cellSizeDistribution',
-      'mitochondrialContent',
-      'numGenesVsNumUmis',
-      'doubletScores',
-      'dataIntegration',
-      'configureEmbedding'
-    )
-  keys_to_remove <- list()
-
-  s3 <- paws::s3(config = pipeline_config$aws_config)
-  for (task_name in tasks) {
-    object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
-    for (object in object_list$Contents) {
-      keys_to_remove <- append(keys_to_remove, object$Key)
-      s3$delete_object(
-        Bucket = pipeline_config$cells_id_bucket,
-        Key = object$Key
-      )
-    }
-  }
-  message("Cell ids keys deleted: ", paste0(keys_to_remove, sep=' '))
+  remove_bucket_folder(pipeline_config, pipeline_config$cells_id_bucket, experiment_id)
 }
 
 upload_cells_id <- function(pipeline_config, object_key, cells_id) {
