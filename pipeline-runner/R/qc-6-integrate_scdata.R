@@ -21,7 +21,6 @@
 #   },
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
-
   scdata <- create_scdata(scdata_list, cells_id)
 
   # main function
@@ -43,50 +42,50 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 }
 
 
-integration_plot_data <- function () {
-# get  npcs from the UMAP call in integration functions
-npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
-message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
-config$dimensionalityReduction$numPCs <- npcs
+integration_plot_data <- function() {
+  # get  npcs from the UMAP call in integration functions
+  npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
+  message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
+  config$dimensionalityReduction$numPCs <- npcs
 
-var_explained <- get_explained_variance(scdata_integrated)
+  var_explained <- get_explained_variance(scdata_integrated)
 
-# This same numPCs will be used throughout the platform.
-scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+  # This same numPCs will be used throughout the platform.
+  scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
 
-scdata_integrated <- colorObject(scdata_integrated)
-cells_order <- rownames(scdata_integrated@meta.data)
-plot1_data <- unname(purrr::map2(scdata_integrated@reductions$umap@cell.embeddings[, 1], scdata_integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
-  c("x" = x, "y" = y)
-}))
+  scdata_integrated <- colorObject(scdata_integrated)
+  cells_order <- rownames(scdata_integrated@meta.data)
+  plot1_data <- unname(purrr::map2(scdata_integrated@reductions$umap@cell.embeddings[, 1], scdata_integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
+    c("x" = x, "y" = y)
+  }))
 
-Adding color and sample id
-plot1_data <- purrr::map2(
-  plot1_data,
-  unname(scdata_integrated@meta.data[cells_order, "samples"]),
-  function(x, y) {
-    append(x, list("sample" = y))
-  }
-)
+  # Adding color and sample id
+  plot1_data <- purrr::map2(
+    plot1_data,
+    unname(scdata_integrated@meta.data[cells_order, "samples"]),
+    function(x, y) {
+      append(x, list("sample" = y))
+    }
+  )
 
-plot1_data <- purrr::map2(
-  plot1_data,
-  unname(scdata_integrated@meta.data[cells_order, "color_samples"]),
-  function(x, y) {
-    append(x, list("col" = y))
-  }
-)
+  plot1_data <- purrr::map2(
+    plot1_data,
+    unname(scdata_integrated@meta.data[cells_order, "color_samples"]),
+    function(x, y) {
+      append(x, list("col" = y))
+    }
+  )
 
 
-plot2_data <- unname(purrr::map2(1:min(50,length(var_explained)), var_explained, function(x, y) {
-  c("PC" = x, "percentVariance" = y)
-}))
+  plot2_data <- unname(purrr::map2(1:min(50, length(var_explained)), var_explained, function(x, y) {
+    c("PC" = x, "percentVariance" = y)
+  }))
 
-plots <- list()
-plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
-plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
+  plots <- list()
+  plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
+  plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
 
-return(plots)
+  return(plots)
 }
 
 
@@ -102,7 +101,6 @@ return(plots)
 #' @export
 #'
 create_scdata <- function(scdata_list, cells_id) {
-
   scdata_list <- subset_scdata_list(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
@@ -140,7 +138,6 @@ subset_scdata_list <- function(scdata_list, cells_id) {
 #' @export
 #'
 merge_scdata_list <- function(scdata_list) {
-
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
@@ -148,7 +145,6 @@ merge_scdata_list <- function(scdata_list) {
   }
 
   return(scdata)
-
 }
 
 # This function covers
@@ -173,7 +169,7 @@ run_dataIntegration <- function(scdata, config) {
   Seurat::DefaultAssay(scdata) <- "RNA"
 
   # remove cell cycle genes if needed
-  if(length(exclude_groups) > 0) {
+  if (length(exclude_groups) > 0) {
     message("\n------\n")
     scdata <- remove_genes(scdata, exclude_groups)
     message("\n------\n")
@@ -239,8 +235,7 @@ run_seuratv4 <- function(scdata, config) {
     if (reduction == "rpca") {
       message("Running PCA")
       data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE, npcs = npcs)
-    }
-    else {
+    } else {
       message("PCA is not running before integration as CCA method is selected")
     }
   }
@@ -433,10 +428,11 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
 #' @export
 #'
 list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
-
-  gene_lists <- list("cellCycle" = build_cc_gene_list,
-                     "ribosomal" = NULL,
-                     "mitochondrial" = NULL)
+  gene_lists <- list(
+    "cellCycle" = build_cc_gene_list,
+    "ribosomal" = NULL,
+    "mitochondrial" = NULL
+  )
 
   exclude_gene_indices <- c()
 
@@ -486,13 +482,17 @@ build_cc_gene_list <- function(all_genes) {
 
   # questionable bit of code. This should work for human, mice, human + mice
   # and ignore other species, since matching is case sensitive.
-  cc_gene_indices <- unique(c(human_cc_ens_indices,
-                            human_cc_sym_indices,
-                            mouse_cc_ens_indices,
-                            mouse_cc_sym_indices))
+  cc_gene_indices <- unique(c(
+    human_cc_ens_indices,
+    human_cc_sym_indices,
+    mouse_cc_ens_indices,
+    mouse_cc_sym_indices
+  ))
 
-  message("Number of Cell Cycle genes to exclude: ",
-                  length(cc_gene_indices))
+  message(
+    "Number of Cell Cycle genes to exclude: ",
+    length(cc_gene_indices)
+  )
 
   return(cc_gene_indices)
 }
