@@ -8,7 +8,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   project_id <- input$projectId
 
   # destructure what need from prev_out
-  scdata <- prev_out$scdata
+  scdata_list <- prev_out$scdata_list
   config <- prev_out$config
   qc_config <- prev_out$qc_config
 
@@ -23,6 +23,9 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     object = charToRaw(cell_sets_data),
     key = experiment_id
   )
+
+  # remove previous existing data
+  remove_bucket_folder(pipeline_config, pipeline_config$source_bucket, experiment_id)
 
  for (sample in names(scdata_list)) {
     message("Uploading sample ", sample, " object to S3 ...")
