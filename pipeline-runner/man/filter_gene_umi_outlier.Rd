@@ -5,7 +5,7 @@
 \title{STEP 4. Number of genes vs UMIs filter}
 \usage{
 filter_gene_umi_outlier(
-  scdata,
+  scdata_list,
   config,
   sample_id,
   cells_id,
@@ -14,7 +14,7 @@ filter_gene_umi_outlier(
 )
 }
 \arguments{
-\item{scdata}{\code{SeuratObject}}
+\item{scdata_list}{list of \code{SeuratObject}}
 
 \item{config}{list containing the following information
 - enable: true/false. Referring to apply or not the filter.
