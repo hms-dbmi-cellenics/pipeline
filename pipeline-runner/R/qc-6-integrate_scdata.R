@@ -547,15 +547,14 @@ log_normalize <- function(scdata, normalization_method, integration_method, nfea
 #'
 #' Reshapes table to an UI compatible format for elbow/scree plot.
 #'
-#' @param scdata_integrated
-#' @param config
-#' @param task_name
-#' @param var_explained
+#' @param scdata_integrated integrated seurat object
+#' @param config list
+#' @param task_name character
+#' @param var_explained numeric
 #'
 #' @return list of plot data
 #' @export
 #'
-#' @examples
 generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_explained) {
 
   cells_order <- rownames(scdata_integrated@meta.data)

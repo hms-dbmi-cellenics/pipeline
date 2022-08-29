@@ -20,9 +20,4 @@ normalized and scaled SeuratObject
 }
 \description{
 This function normalize the data taking into account the integration method.
-If the integration method is fastMNN, it will skip ScaleData() because
-fastMNN already performs its own scaling.
-If the integration method is SeuratV4, the default assay will be set to "integrated",
-in this case NormalizeData() will not work (see the \href{https://satijalab.org/seurat/articles/integration_introduction.html}{integration vignette}),
-so here it's skipped.
 }
