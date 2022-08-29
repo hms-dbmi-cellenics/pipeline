@@ -101,7 +101,7 @@ integration_plot_data <- function() {
 #' @export
 #'
 create_scdata <- function(scdata_list, cells_id) {
-  scdata_list <- subset_scdata_list(scdata_list, cells_id)
+  scdata_list <- remove_filtered_cells(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
@@ -116,7 +116,7 @@ create_scdata <- function(scdata_list, cells_id) {
 #' @return
 #' @export
 #'
-subset_scdata_list <- function(scdata_list, cells_id) {
+remove_filtered_cells <- function(scdata_list, cells_id) {
   for (sample in names(scdata_list)) {
     flat_cell_ids <- unname(unlist(cells_id[[sample]]))
     scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cell_ids)
