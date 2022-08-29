@@ -379,6 +379,18 @@ test_that("merge_scdata_list correctly merges seurat objects", {
 
 })
 
+test_that("merge_scdata_list returns first element of list if only one sample", {
+  prev_out <- mock_prev_out()
+  scdata_list <- prev_out$scdata_list
+
+
+  scdata <- suppressWarnings(merge_scdata_list(scdata_list))
+
+  expect_equal(sum(unlist(lapply(scdata_list, ncol))), ncol(scdata))
+  expect_true(all(scdata$samples[1:ncol(scdata_list[[1]])] == "sample_a"))
+  expect_equal(prev_out$scdata_list[[1]], scdata)
+})
+
 
 test_that("normalize_data doesn't scale data if integration method is FastMNN", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
