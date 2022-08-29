@@ -391,6 +391,27 @@ test_that("merge_scdata_list returns first element of list if only one sample", 
   expect_equal(prev_out$scdata_list[[1]], scdata)
 })
 
+test_that("run_dataIntegration calls remove_genes if there are groups to exclude", {
+
+  n_rename <- 10
+  some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(rename_genes = some_cc_genes)
+  cells_id <- mock_ids()
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2, excludeGeneCategories = "cellCycle"),
+    dataIntegration = list(method = "harmony", methodSettings = list(
+      harmony = list(numGenes = 10, normalisation = "logNormalize")
+    ))
+  )
+
+  expect_message(
+    suppressWarnings(run_dataIntegration(merged_scdata, config)),
+    paste0("*Number of Cell Cycle genes to exclude: ", n_rename, "*")
+  )
+})
+
 
 test_that("normalize_data doesn't scale data if integration method is FastMNN", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
