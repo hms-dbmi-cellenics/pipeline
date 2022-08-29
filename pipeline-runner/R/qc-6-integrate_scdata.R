@@ -40,7 +40,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 
   scdata_integrated <- colorObject(scdata_integrated)
 
-  plots <- integration_plot_data(scdata_integrated, config, task_name, var_explained)
+  plots <- generate_elbow_plot_data(scdata_integrated, config, task_name, var_explained)
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
@@ -54,7 +54,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 }
 
 
-integration_plot_data <- function(scdata_integrated, config, task_name, var_explained) {
+generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_explained) {
 
   cells_order <- rownames(scdata_integrated@meta.data)
 
