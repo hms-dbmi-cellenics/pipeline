@@ -79,7 +79,7 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 #' and adding the metadata to the complete Seurat object. It does so by calling
 #' the corresponding functions.
 #'
-#' @param scdata_list
+#' @param scdata_list list of SeuratObjects
 #'
 #' @return SeuratObject
 #' @export
@@ -92,12 +92,12 @@ create_scdata <- function(scdata_list, cells_id) {
   return(merged_scdatas)
 }
 
-#' Subset each sample
+#' For each sample, remove filtered cells from the Seurat object
 #'
-#' @param scdata_list
-#' @param cells_id
+#' @param scdata_list list of SeuratObjects
+#' @param cells_id list of cells ids to keep
 #'
-#' @return
+#' @return list of filtered SeuratObjects
 #' @export
 #'
 remove_filtered_cells <- function(scdata_list, cells_id) {
