@@ -28,7 +28,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   message("running data integration")
   scdata_integrated <- run_dataIntegration(scdata, config)
 
-  plots <- integration_plot_data()
+  plots <- integration_plot_data(scdata_integrated, config)
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
@@ -42,7 +42,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 }
 
 
-integration_plot_data <- function() {
+integration_plot_data <- function(scdata_integrated, config) {
   # get  npcs from the UMAP call in integration functions
   npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
   message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
