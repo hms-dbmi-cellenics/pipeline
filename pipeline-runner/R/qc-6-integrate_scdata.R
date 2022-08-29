@@ -58,32 +58,13 @@ integration_plot_data <- function(scdata_integrated, config, task_name, var_expl
 
   cells_order <- rownames(scdata_integrated@meta.data)
 
-  # plot1_data <- unname(purrr::map2(scdata_integrated@reductions$umap@cell.embeddings[, 1], scdata_integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
-  #   c("x" = x, "y" = y)
-  # }))
-  #
-  # # Adding color and sample id
-  # plot1_data <- purrr::map2(
-  #   plot1_data,
-  #   unname(scdata_integrated@meta.data[cells_order, "samples"]),
-  #   function(x, y) {
-  #     append(x, list("sample" = y))
-  #   }
-  # )
-  #
-  # plot1_data <- purrr::map2(
-  #   plot1_data,
-  #   unname(scdata_integrated@meta.data[cells_order, "color_samples"]),
-  #   function(x, y) {
-  #     append(x, list("col" = y))
-  #   }
-  # )
+  # plot1_data is an empty list because it is not used anymore by the UI
+  plot1_data <- list()
 
   plot2_data <- unname(purrr::map2(1:min(50, length(var_explained)), var_explained, function(x, y) {
     c("PC" = x, "percentVariance" = y)
   }))
 
-  plot1_data <- list()
   plots <- list()
   plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
   plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
