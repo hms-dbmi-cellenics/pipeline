@@ -16,10 +16,10 @@ endif
 #--------------------------------------------------
 # Targets
 #--------------------------------------------------
-install: 
+install:
 	@echo "Installing local runner"
 	@(cd ./local-runner && npm install)
-	@echo "Installing R env packages"
+	@echo "Installing renv packages"
 	@(cd ./pipeline-runner && R -e "renv::restore()")
 update-sysdata: 
     # regenerate sysdata.rda env file
