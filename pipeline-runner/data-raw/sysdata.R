@@ -6,6 +6,8 @@ gem2s <- list(
   random.seed = 42
 )
 
+RANDOM_SEED <- 42
+
 # path where dump/log files are saved
 # mounted as a volume outside container to local-runner/debug
 DEBUG_PATH <- "/debug"
@@ -33,9 +35,11 @@ SYM_SYM <- "sym_sym"
 IDS_SYM <- "ids_sym"
 IDS_IDS <- "ids_ids"
 
+pipeline_version <- 2
 
 usethis::use_data(
   gem2s,
+  RANDOM_SEED,
   DEBUG_PATH,
   file_names,
   file_types_by_technology,
@@ -44,6 +48,7 @@ usethis::use_data(
   IDS_SYM,
   IDS_IDS,
   cc_genes,
+  pipeline_version,
   internal = TRUE,
   overwrite = TRUE
 )

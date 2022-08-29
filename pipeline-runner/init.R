@@ -217,7 +217,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         'configureEmbedding' = embed_and_cluster
     )
 
-    #need this for embed_and_cluster
+    # need this for embed_and_cluster
     config$api_url <- pipeline_config$api_url
     config$auth_JWT <- input$authJWT
 
@@ -226,7 +226,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
         # assign it to the global environment so we can
         # persist it across runs of the wrapper
-        assign("scdata", reload_scdata_from_s3(pipeline_config, experiment_id, task_name, tasks), pos = ".GlobalEnv")
+        assign("scdata", reload_data_from_s3(pipeline_config, experiment_id, task_name, tasks), pos = ".GlobalEnv")
 
         message("Single-cell data loaded.")
     }
@@ -236,7 +236,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         if(task_name == names(tasks)[1]){
             assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
         }else if(task_name %in% names(tasks)){
-            samples <- unique(scdata$samples)
+            samples <- names(scdata)
             assign("cells_id", load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples), pos = ".GlobalEnv")
         }else{
             stop("Invalid task name given: ", task_name)
@@ -246,12 +246,8 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
     # call function to run and update global variable
     c(
-        data,new_ids,...rest_of_results
+        data, new_ids,...rest_of_results
     ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
-
-    message("Comparison between cell ids")
-    message("Old ids length ",length(cells_id[[sample_id]]))
-    message("New ids length ",length(new_ids[[sample_id]]))
 
     assign("cells_id", new_ids, pos = ".GlobalEnv")
 
@@ -259,6 +255,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     integration_index <- match("dataIntegration", task_names)
     task_index <- match(task_name, task_names)
     if(task_index < integration_index){
+        message("Filtered cell ids from ", length(cells_id[[sample_id]]), " to ", length(new_ids[[sample_id]]))
         next_task <- names(tasks)[[task_index+1]]
         object_key <- paste0(experiment_id,"/",next_task,"/",sample_id,".rds")
         upload_cells_id(pipeline_config,object_key,cells_id)
@@ -296,7 +293,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 #
 start_heartbeat <- function(task_token, aws_config) {
     library(tryCatchLog)
-    message("Starting hearbeat")
+    message("Starting heartbeat")
     states <- paws::sfn(config=aws_config)
 
     keep_running <- TRUE
@@ -316,7 +313,7 @@ start_heartbeat <- function(task_token, aws_config) {
             keep_running <- FALSE
         })
         i <- i + 1
-        # sleep until next hearbeat
+        # sleep until next heartbeat
         Sys.sleep(wait_time)
 
     }
@@ -383,6 +380,7 @@ init <- function() {
 
         # parse data from state machine input
         input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
+        message('Input json: ', input)
 
         # save logs to file
         debug_prefix <- file.path(input$experimentId, debug_timestamp)

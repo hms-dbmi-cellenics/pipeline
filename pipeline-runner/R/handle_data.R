@@ -1,26 +1,21 @@
-remove_cell_ids <- function(pipeline_config, experiment_id) {
-  tasks <- list(
-      'cellSizeDistribution',
-      'mitochondrialContent',
-      'numGenesVsNumUmis',
-      'doubletScores',
-      'dataIntegration',
-      'configureEmbedding'
-    )
+remove_bucket_folder <- function(pipeline_config, bucket, folder) {
   keys_to_remove <- list()
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  for (task_name in tasks) {
-    object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
-    for (object in object_list$Contents) {
-      keys_to_remove <- append(keys_to_remove, object$Key)
-      s3$delete_object(
-        Bucket = pipeline_config$cells_id_bucket,
-        Key = object$Key
-      )
-    }
+  object_list <- s3$list_objects(bucket, Prefix = paste0(folder, "/"))
+  for (object in object_list$Contents) {
+    keys_to_remove <- append(keys_to_remove, object$Key)
+    s3$delete_object(
+      Bucket = bucket,
+      Key = object$Key
+    )
   }
-  message("Cell ids keys deleted: ", keys_to_remove)
+
+  message("Removed files from ", bucket, ": ", paste0(keys_to_remove, sep=' '))
+}
+
+remove_cell_ids <- function(pipeline_config, experiment_id) {
+  remove_bucket_folder(pipeline_config, pipeline_config$cells_id_bucket, experiment_id)
 }
 
 upload_cells_id <- function(pipeline_config, object_key, cells_id) {
@@ -30,17 +25,8 @@ upload_cells_id <- function(pipeline_config, object_key, cells_id) {
   return(object_key)
 }
 
-
-reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
-  # If the task is after data integration, we need to get scdata from processed_matrix
-  task_names <- names(tasks)
-  integration_index <- match("dataIntegration", task_names)
-  if (match(task_name, task_names) > integration_index) {
-    bucket <- pipeline_config$processed_bucket
-  } else {
-    bucket <- pipeline_config$source_bucket
-  }
-  s3 <- paws::s3(config = pipeline_config$aws_config)
+reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
+  bucket <- pipeline_config$processed_bucket
   message(bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
 
@@ -52,9 +38,54 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   return(obj)
 }
 
+reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
+  bucket <- pipeline_config$source_bucket
+  objects <- s3$list_objects(
+    Bucket = bucket,
+    Prefix = experiment_id
+  )
+  samples <- objects$Contents
+
+  scdata_list <- list()
+  for (sample in samples) {
+    key <- sample$Key
+
+    c(body, ...rest) %<-% s3$get_object(
+      Bucket = bucket,
+      Key = paste(key, sep = "/")
+    )
+    obj <- readRDS(rawConnection(body))
+    sample_id <- strsplit(key, "/")[[1]][[2]]
+    scdata_list[[sample_id]] <- obj
+  }
+
+  return(scdata_list)
+}
+
+# reload_data_from_s3 will reload:
+# * scdata_list for all steps before integration (included)
+# * scdata file for all steps after data integration
+reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
+  task_names <- names(tasks)
+  integration_index <- match("dataIntegration", task_names)
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+
+  # If the task is after data integration, we need to get scdata from processed_matrix
+  if (match(task_name, task_names) > integration_index) {
+    return(reload_scdata_from_s3(s3, pipeline_config, experiment_id))
+  }
+
+  # Otherwise, return scdata_list
+  return(reload_scdata_list_from_s3(s3, pipeline_config, experiment_id))
+
+}
+
 load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, samples) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
+  object_list <- s3$list_objects(
+                    Bucket = pipeline_config$cells_id_bucket,
+                    Prefix = paste0(experiment_id, "/", task_name, "/")
+                  )
   message(pipeline_config$cells_id_bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
   cells_id <- list()
@@ -62,6 +93,8 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
 
+  # after data integration the cell ids are no longer used because there is no filtering
+  # so they are not loaded
   if (match(task_name, task_names) <= integration_index) {
     for (object in object_list$Contents) {
       key <- object$Key
@@ -118,6 +151,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
 
+  message("Building the message")
   msg <- list(
     experimentId = input$experimentId,
     taskName = input$taskName,
@@ -128,9 +162,11 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     ),
     response = list(
       error = FALSE
-    )
+    ),
+    pipelineVersion = pipeline_version
   )
 
+  message("Publishing the message")
   result <- sns$publish(
     Message = RJSONIO::toJSON(msg),
     TopicArn = pipeline_config$sns_topic,
@@ -142,6 +178,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
       )
     )
   )
+  message("Done publishing")
 
   return(result$MessageId)
 }
@@ -172,7 +209,7 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
 
   error_msg <- list()
 
-  # TODO - REMOVE THE DUPLICATE EXPERIMETN ID FROM INPUT RESPONSE
+  # TODO - REMOVE THE DUPLICATE EXPERIMENT ID FROM INPUT RESPONSE
 
   error_msg$experimentId <- input$experimentId
   error_msg$taskName <- input$taskName
@@ -287,7 +324,6 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
   message(sprintf("Putting %s in %s from object %s", key, bucket, object))
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
-
   multipart <- s3$create_multipart_upload(
     Bucket = bucket,
     Key = key
@@ -302,6 +338,7 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
       )
     }
   })
+  message("Uploading multiparts")
   resp <- try({
     parts <- upload_multipart_parts(s3, bucket, object, key, multipart$UploadId)
     s3$complete_multipart_upload(
