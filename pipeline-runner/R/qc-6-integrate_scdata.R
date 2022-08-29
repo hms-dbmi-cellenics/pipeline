@@ -54,25 +54,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 }
 
 
-generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_explained) {
-
-  cells_order <- rownames(scdata_integrated@meta.data)
-
-  # plot1_data is an empty list because it is not used anymore by the UI
-  plot1_data <- list()
-
-  plot2_data <- unname(purrr::map2(1:min(50, length(var_explained)), var_explained, function(x, y) {
-    c("PC" = x, "percentVariance" = y)
-  }))
-
-  plots <- list()
-  plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
-  plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
-
-  return(plots)
-}
-
-
 #' Create the merged Seurat object
 #'
 #' This function takes care of merging the sample seurat objects, shuffling
@@ -559,4 +540,36 @@ log_normalize <- function(scdata, normalization_method, integration_method, nfea
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   }
   return(scdata)
+}
+
+
+#' generate elbow plot data
+#'
+#' Reshapes table to an UI compatible format for elbow/scree plot.
+#'
+#' @param scdata_integrated
+#' @param config
+#' @param task_name
+#' @param var_explained
+#'
+#' @return list of plot data
+#' @export
+#'
+#' @examples
+generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_explained) {
+
+  cells_order <- rownames(scdata_integrated@meta.data)
+
+  # plot1_data is an empty list because it is not used anymore by the UI
+  plot1_data <- list()
+
+  plot2_data <- unname(purrr::map2(1:min(50, length(var_explained)), var_explained, function(x, y) {
+    c("PC" = x, "percentVariance" = y)
+  }))
+
+  plots <- list()
+  plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
+  plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
+
+  return(plots)
 }
