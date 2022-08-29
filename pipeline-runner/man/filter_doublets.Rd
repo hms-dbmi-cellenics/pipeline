@@ -5,7 +5,7 @@
 \title{STEP 5. Doublet score filter}
 \usage{
 filter_doublets(
-  scdata,
+  scdata_list,
   config,
   sample_id,
   cells_id,

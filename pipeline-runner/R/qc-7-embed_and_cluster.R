@@ -78,6 +78,7 @@ update_sets_through_api <-
            experiment_id,
            cell_set_key,
            auth_JWT) {
+
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
     httr::PATCH(

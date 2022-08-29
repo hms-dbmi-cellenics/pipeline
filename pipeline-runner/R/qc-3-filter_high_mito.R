@@ -19,45 +19,45 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
-filter_high_mito <- function(scdata, config, sample_id, cells_id, task_name = "mitochondrialContent", num_cells_to_downsample = 6000) {
-  cells_id.sample <- cells_id[[sample_id]]
+filter_high_mito <- function(scdata_list, config, sample_id, cells_id, task_name = "mitochondrialContent", num_cells_to_downsample = 6000) {
+  sample_cell_ids <- cells_id[[sample_id]]
 
-  if (length(cells_id.sample) == 0) {
-    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
+  if (length(sample_cell_ids) == 0) {
+    return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata, cells_id.sample)
+  sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
 
   # Check if the experiment has MT-content
-  if (!"percent.mt" %in% colnames(scdata@meta.data)) {
+  if (!"percent.mt" %in% colnames(scdata_list[[sample_id]]@meta.data)) {
     message("Warning! No MT-content has been computed for this experiment!")
     guidata <- list()
-    return(list(data = scdata, config = config, plotData = guidata))
+    return(list(data = scdata_list[[sample_id]], config = config, plotData = guidata))
   }
 
-  maxFraction <- config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction
+  max_fraction <- config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction
 
-  plot_data <- generate_mito_plot_data(scdata.sample)
+  plot_data <- generate_mito_plot_data(sample_data)
 
   if (exists("auto", where = config)) {
     if (as.logical(toupper(config$auto))) {
-      maxFraction <- generate_default_values_mitochondrialContent(scdata.sample, config)
+      max_fraction <- generate_default_values_mitochondrialContent(sample_data, config)
     }
   }
 
   if (as.logical(toupper(config$enabled))) {
-    remaining_ids <- scdata.sample@meta.data$cells_id[scdata.sample$percent.mt <= maxFraction * 100]
+    remaining_ids <- sample_data@meta.data$cells_id[sample_data$percent.mt <= max_fraction * 100]
   } else {
-    remaining_ids <- cells_id.sample
+    remaining_ids <- sample_cell_ids
   }
 
-  config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- maxFraction
+  config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- max_fraction
 
   # Downsample plotData
-  num_cells_to_downsample <- downsample_plotdata(ncol(scdata.sample), num_cells_to_downsample)
+  num_cells_to_downsample <- downsample_plotdata(ncol(sample_data), num_cells_to_downsample)
 
-  set.seed(gem2s$random.seed)
-  cells_position_to_keep <- sample(1:ncol(scdata.sample), num_cells_to_downsample, replace = FALSE)
+  set.seed(RANDOM_SEED)
+  cells_position_to_keep <- sample(1:ncol(sample_data), num_cells_to_downsample, replace = FALSE)
   cells_position_to_keep <- sort(cells_position_to_keep)
   plot1_data <- plot_data$plot1_data[cells_position_to_keep]
   plot2_data <- plot_data$plot2_data[cells_position_to_keep]
@@ -71,8 +71,8 @@ filter_high_mito <- function(scdata, config, sample_id, cells_id, task_name = "m
 
   # populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata.sample),
-    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
+    before = calc_filter_stats(sample_data),
+    after = calc_filter_stats(subset_ids(sample_data, remaining_ids))
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- filter_stats
@@ -80,7 +80,7 @@ filter_high_mito <- function(scdata, config, sample_id, cells_id, task_name = "m
   cells_id[[sample_id]] <- remaining_ids
 
   result <- list(
-    data = scdata,
+    data = scdata_list,
     new_ids = cells_id,
     config = config,
     plotData = guidata

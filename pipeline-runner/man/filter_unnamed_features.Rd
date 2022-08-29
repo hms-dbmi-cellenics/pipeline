@@ -13,6 +13,9 @@ filter_unnamed_features(counts, annotations, sample)
 
 \item{sample}{character specifying current sample}
 }
+\value{
+list of counts and annotations
+}
 \description{
 This function checks if genes whose annotations in the count matrix (\code{rownames(counts)})
 are empty, can be annotated with a different column from the features file,
