@@ -21,12 +21,15 @@
 #   },
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+  message("Started create_scdata for sample ", sample_id, "\n")
   scdata <- create_scdata(scdata_list, cells_id)
+  message("Finished create_scdata for sample ", sample_id, "\n")
 
   # main function
   set.seed(RANDOM_SEED)
-  message("running data integration")
+  message("Started data integration")
   scdata_integrated <- run_dataIntegration(scdata, config)
+  message("Finished data integration")
 
   # get  npcs from the UMAP call in integration functions
   npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
@@ -66,8 +69,11 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 #' @export
 #'
 create_scdata <- function(scdata_list, cells_id) {
+  message("Removing filtered cells")
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
+  message("Merging scdata list")
   merged_scdatas <- merge_scdata_list(scdata_list)
+  message("Adding metadata")
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
   return(merged_scdatas)
