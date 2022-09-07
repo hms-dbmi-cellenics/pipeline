@@ -146,7 +146,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   return(result$MessageId)
 }
 
-send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input) {
+send_pipeline_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input, string_value) {
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
   # TODO -REMOVE DUPLICATE AUTHJWT IN RESPONSE

@@ -22,7 +22,7 @@ download_and_store <- function(bucket, key, file_path, s3) {
 #'
 #' @export
 #'
-get_gem2s_file <- function(input, originals_bucket, input_dir, s3) {
+download_s3_files <- function(input, originals_bucket, input_dir, s3) {
   project_id <- input$projectId
   sample_ids <- input$sampleIds
   sample_s3_paths <- input$sampleS3Paths
@@ -35,7 +35,11 @@ get_gem2s_file <- function(input, originals_bucket, input_dir, s3) {
       s3_path <- sample_s3_paths[[sample_id]][[file_type]]
 
       local_fpath <- file.path(input_dir, sample_id, file_names[[file_type]])
+      message('saving to: ', local_fpath)
       download_and_store(originals_bucket, s3_path, local_fpath, s3)
+      message('loading')
+      blah <- readRDS(local_fpath)
+      print(str(blah))
     }
   }
 }
@@ -53,7 +57,7 @@ get_gem2s_file <- function(input, originals_bucket, input_dir, s3) {
 download_user_files <- function(input, pipeline_config, prev_out = list(), input_dir= "/input") {
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
-  get_gem2s_file(input, pipeline_config$originals_bucket, input_dir, s3)
+  download_s3_files(input, pipeline_config$originals_bucket, input_dir, s3)
 
   config <- list(
     name = input$experimentName,

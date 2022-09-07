@@ -13,7 +13,8 @@ DEBUG_PATH <- "/debug"
 # File management, it needs to match the sample_file_type enum in sql
 # (they are originally defined in 20220304184711_schema.js in the api)
 file_types_by_technology <- list(
-  "10x" = list("barcodes10x", "features10x", "matrix10x")
+  "10x" = list("barcodes10x", "features10x", "matrix10x"),
+  "seurat" = list("seurat")
 )
 
 file_names <- list(
