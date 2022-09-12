@@ -112,7 +112,7 @@ merge_scdata_list <- function(scdata_list) {
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
-    scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
+    scdata <- merge(scdata_list[[1]], y = scdata_list[-1], merge.data = FALSE)
   }
 
   return(scdata)
