@@ -20,7 +20,8 @@ file_types_by_technology <- list(
 file_names <- list(
   barcodes10x = "barcodes.tsv.gz",
   features10x = "features.tsv.gz",
-  matrix10x = "matrix.mtx.gz"
+  matrix10x = "matrix.mtx.gz",
+  seurat = "r.rds"
 )
 
 source("data-raw/cell_cycle_genes.R")
