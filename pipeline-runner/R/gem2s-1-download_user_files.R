@@ -27,22 +27,19 @@ download_s3_files <- function(input, originals_bucket, input_dir, s3) {
   sample_ids <- input$sampleIds
   sample_s3_paths <- input$sampleS3Paths
   technology <- input$input$type
-
   unlink(input_dir, recursive = TRUE)
 
   for (sample_id in sample_ids) {
+
     for (file_type in file_types_by_technology[[technology]]) {
       s3_path <- sample_s3_paths[[sample_id]][[file_type]]
 
       local_fpath <- file.path(input_dir, sample_id, file_names[[file_type]])
-      message('saving to: ', local_fpath)
       download_and_store(originals_bucket, s3_path, local_fpath, s3)
-      message('loading')
-      blah <- readRDS(local_fpath)
-      print(str(blah))
     }
   }
 }
+
 
 #' Download user files from S3
 #'
