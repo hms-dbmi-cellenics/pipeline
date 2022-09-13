@@ -46,7 +46,7 @@ add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
   # result in a shuffled cell_ids
   set.seed(RANDOM_SEED)
   total_cells <- sum(sapply(scdata_list, ncol))
-  cell_ids <- 0:total_cells-1
+  cell_ids <- 0:(total_cells-1)
 
   for (sample in names(scdata_list)) {
     sample_size <- ncol(scdata_list[[sample]])
