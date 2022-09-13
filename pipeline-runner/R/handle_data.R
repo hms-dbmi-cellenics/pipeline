@@ -47,7 +47,6 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id, samp
       Key = paste(experiment_id, sample_id, "r.rds", sep = "/")
     )
     obj <- readRDS(rawConnection(body))
-    sample_id <- strsplit(key, "/")[[1]][[2]]
     scdata_list[[sample_id]] <- obj
   }
 
