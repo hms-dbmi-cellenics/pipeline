@@ -202,6 +202,11 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     sample_id <- input$sampleUuid
     debug_config <- pipeline_config$debug_config
 
+    sample_ids <- names(config)
+    message("\n\n\n *** ")
+    message(sample_ids)
+    message("\n\n\n *** ")
+
     if (sample_id != "") {
         config <- config[[sample_id]]
         input$config <- config
@@ -226,7 +231,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
         # assign it to the global environment so we can
         # persist it across runs of the wrapper
-        assign("scdata", reload_data_from_s3(pipeline_config, experiment_id, task_name, tasks), pos = ".GlobalEnv")
+        assign("scdata", reload_data_from_s3(pipeline_config, experiment_id, task_name, tasks, sample_ids), pos = ".GlobalEnv")
 
         message("Single-cell data loaded.")
     }
@@ -244,10 +249,16 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message("Cells id loaded.")
     }
 
+    saveRDS(config, '/debug/initial_config.rds')
+    saveRDS(input, '/debug/initial_input.rds')
+
     # call function to run and update global variable
     c(
         data, new_ids,...rest_of_results
     ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
+
+    saveRDS(config, paste0('/debug/config', task_name, ".rds"))
+    saveRDS(input, paste0('/debug/input', task_name, ".rds"))
 
     assign("cells_id", new_ids, pos = ".GlobalEnv")
 

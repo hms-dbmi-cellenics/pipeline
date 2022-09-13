@@ -38,7 +38,7 @@ reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
   return(obj)
 }
 
-reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
+reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id, sample_ids) {
   bucket <- pipeline_config$source_bucket
   objects <- s3$list_objects(
     Bucket = bucket,
@@ -59,13 +59,15 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
     scdata_list[[sample_id]] <- obj
   }
 
+  scdata_list <- scdata_list[sample_ids]
+
   return(scdata_list)
 }
 
 # reload_data_from_s3 will reload:
 # * scdata_list for all steps before integration (included)
 # * scdata file for all steps after data integration
-reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
+reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, sample_ids) {
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
   s3 <- paws::s3(config = pipeline_config$aws_config)
@@ -76,7 +78,7 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
   }
 
   # Otherwise, return scdata_list
-  return(reload_scdata_list_from_s3(s3, pipeline_config, experiment_id))
+  return(reload_scdata_list_from_s3(s3, pipeline_config, experiment_id, sample_ids))
 
 }
 
