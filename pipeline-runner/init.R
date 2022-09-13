@@ -378,92 +378,92 @@ wrapper <- function(input, pipeline_config) {
 # Loads configuration and repeats the wrapper call until no more messages are received.
 #
 init <- function() {
-    pipeline_config <- load_config('host.docker.internal')
-    message("Loaded pipeline config")
-    states <- paws::sfn(config=pipeline_config$aws_config)
-    message("Loaded step function")
+  pipeline_config <- load_config('host.docker.internal')
+  message("Loaded pipeline config")
+  states <- paws::sfn(config=pipeline_config$aws_config)
+  message("Loaded step function")
 
-    print(sessionInfo())
+  print(sessionInfo())
 
-    flog.layout(layout.simple)
-    flog.threshold(ERROR)
+  flog.layout(layout.simple)
+  flog.threshold(ERROR)
 
-    message("Waiting for tasks")
+  message("Waiting for tasks")
 
-    repeat {
-        c(task_token, input_json) %<-% states$get_activity_task(
-            activityArn = pipeline_config$activity_arn,
-            workerName = pipeline_config$pod_name
-        )
+  repeat {
+    c(task_token, input_json) %<-% states$get_activity_task(
+      activityArn = pipeline_config$activity_arn,
+      workerName = pipeline_config$pod_name
+    )
 
-        if(is.null(task_token) || !length(task_token) || task_token == "") {
-            message('No input received during last poll, shutting down...')
-            quit('no')
-        }
-
-        # parse data from state machine input
-        input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
-
-        # save logs to file
-        debug_prefix <- file.path(input$experimentId, debug_timestamp)
-        dump_folder <- file.path(DEBUG_PATH, debug_prefix)
-        flog.appender(appender.tee(file.path(dump_folder, "logs.txt")))
-
-        # start heartbeat as a different process in the background
-        message("Starting heartbeat")
-        # message inside r_bg will ONLY be printed into /tmp/[out|err]
-        # to see them
-        # 1. log into the R container
-        # 2. cat /tmp/out or tail -f /tmp/out
-        heartbeat_proc <- r_bg(func=start_heartbeat, args=list(
-            task_token, pipeline_config$aws_config),
-            stdout = "/tmp/out",
-            stderr = "/tmp/err"
-        )
-
-        tryCatchLog({
-            # Refresh pipeline_config with the new task input
-            pipeline_config <- load_config(input$server)
-
-            wrapper(input, pipeline_config)
-
-            message('Send task success\n------\n')
-            states$send_task_success(
-                taskToken = task_token,
-                output = "{}"
-            )
-        },
-        error = function(e) {
-            flog.error("🚩 ---------")
-            sample_text <- ifelse(is.null(input$sampleUuid),
-                                  "",
-                                  paste0(" for sample ", input$sampleUuid))
-
-            error_txt <- paste0("R error at filter step ",
-                                input$taskName, sample_text, "! : ", e$message)
-
-            message(error_txt)
-            states$send_task_failure(
-                taskToken = task_token,
-                error = "We had an issue while processing your data.",
-                cause = error_txt
-            )
-
-            send_pipeline_fail_update(pipeline_config, input, error_txt)
-            message("Sent task failure to state machine task: ", task_token)
-
-            if (pipeline_config$cluster_env != 'development') {
-                upload_debug_folder_to_s3(debug_prefix, pipeline_config)
-            }
-
-            message("recovered from error:", e$message)
-        },
-        write.error.dump.file = TRUE,
-        write.error.dump.folder = dump_folder)
-
-        # kill heartbeat process
-        heartbeat_proc$kill()
+    if(is.null(task_token) || !length(task_token) || task_token == "") {
+      message('No input received during last poll, shutting down...')
+      quit('no')
     }
+
+    # parse data from state machine input
+    input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
+
+    # save logs to file
+    debug_prefix <- file.path(input$experimentId, debug_timestamp)
+    dump_folder <- file.path(DEBUG_PATH, debug_prefix)
+    flog.appender(appender.tee(file.path(dump_folder, "logs.txt")))
+
+    # start heartbeat as a different process in the background
+    message("Starting heartbeat")
+    # message inside r_bg will ONLY be printed into /tmp/[out|err]
+    # to see them
+    # 1. log into the R container
+    # 2. cat /tmp/out or tail -f /tmp/out
+    heartbeat_proc <- r_bg(func=start_heartbeat, args=list(
+      task_token, pipeline_config$aws_config),
+      stdout = "/tmp/out",
+      stderr = "/tmp/err"
+    )
+
+    tryCatchLog({
+      # Refresh pipeline_config with the new task input
+      pipeline_config <- load_config(input$server)
+
+      wrapper(input, pipeline_config)
+
+      message('Send task success\n------\n')
+      states$send_task_success(
+        taskToken = task_token,
+        output = "{}"
+      )
+    },
+    error = function(e) {
+      flog.error("🚩 ---------")
+      sample_text <- ifelse(is.null(input$sampleUuid),
+                            "",
+                            paste0(" for sample ", input$sampleUuid))
+
+      error_txt <- paste0("R error at filter step ",
+                          input$taskName, sample_text, "! : ", e$message)
+
+      message(error_txt)
+      states$send_task_failure(
+        taskToken = task_token,
+        error = "We had an issue while processing your data.",
+        cause = error_txt
+      )
+
+      send_pipeline_fail_update(pipeline_config, input, error_txt)
+      message("Sent task failure to state machine task: ", task_token)
+
+      if (pipeline_config$cluster_env != 'development') {
+        upload_debug_folder_to_s3(debug_prefix, pipeline_config)
+      }
+
+      message("recovered from error:", e$message)
+    },
+    write.error.dump.file = TRUE,
+    write.error.dump.folder = dump_folder)
+
+    # kill heartbeat process
+    heartbeat_proc$kill()
+  }
 }
 
 init()
