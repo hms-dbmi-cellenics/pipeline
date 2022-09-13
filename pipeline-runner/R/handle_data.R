@@ -39,27 +39,17 @@ reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
 }
 
 reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id, sample_ids) {
-  bucket <- pipeline_config$source_bucket
-  objects <- s3$list_objects(
-    Bucket = bucket,
-    Prefix = experiment_id
-  )
-  samples <- objects$Contents
 
   scdata_list <- list()
-  for (sample in samples) {
-    key <- sample$Key
-
+  for (sample_id in sample_ids) {
     c(body, ...rest) %<-% s3$get_object(
-      Bucket = bucket,
-      Key = paste(key, sep = "/")
+      Bucket = pipeline_config$source_bucket,
+      Key = paste(experiment_id, sample_id, "r.rds", sep = "/")
     )
     obj <- readRDS(rawConnection(body))
     sample_id <- strsplit(key, "/")[[1]][[2]]
     scdata_list[[sample_id]] <- obj
   }
-
-  scdata_list <- scdata_list[sample_ids]
 
   return(scdata_list)
 }
