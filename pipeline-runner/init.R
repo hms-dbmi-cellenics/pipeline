@@ -203,9 +203,6 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     debug_config <- pipeline_config$debug_config
 
     sample_ids <- names(config)
-    message("\n\n\n *** ")
-    message(sample_ids)
-    message("\n\n\n *** ")
 
     if (sample_id != "") {
         config <- config[[sample_id]]
