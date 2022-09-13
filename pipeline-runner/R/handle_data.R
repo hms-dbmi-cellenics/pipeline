@@ -185,6 +185,8 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
     string_value <- "PipelineResponse"
   } else if (process_name == "gem2s") {
     string_value <- "GEM2SResponse"
+  } else if (process_name == "seurat") {
+    string_value <- "SeuratResponse"
   } else {
     message(paste("Invalid process_name given: ", process_name))
     return()

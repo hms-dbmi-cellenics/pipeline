@@ -158,17 +158,16 @@ run_pipeline_step <- function(task_name, input, pipeline_config, prev_out, tasks
     return(res)
 }
 
-
 call_gem2s <- function(task_name, input, pipeline_config) {
     # list of task functions named by task name
     tasks <- list(
-      "downloadGem" = download_user_files,
-      "preproc" = load_user_files,
-      "emptyDrops" = run_emptydrops,
-      "doubletScores" = score_doublets,
-      "createSeurat" = create_seurat,
-      "prepareExperiment" = prepare_experiment,
-      "uploadToAWS" = upload_to_aws
+        "downloadGem" = download_user_files,
+        "preproc" = load_user_files,
+        "emptyDrops" = run_emptydrops,
+        "doubletScores" = score_doublets,
+        "createSeurat" = create_seurat,
+        "prepareExperiment" = prepare_experiment,
+        "uploadToAWS" = upload_to_aws
     )
 
     experiment_id <- input$experimentId
@@ -187,51 +186,24 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 }
 
 call_seurat <- function(task_name, input, pipeline_config) {
-  # list of task functions named by task name
-  tasks <- list(
-    "downloadSeurat" = download_user_files,
-    "preprocSeurat" = load_seurat_object,
-    "uploadToAWS" = upload_seurat_to_aws
-  )
+    # list of task functions named by task name
+    tasks <- list(
+        "downloadSeurat" = download_user_files,
+        "preprocSeurat" = load_seurat,
+        "uploadToAWS" = upload_seurat_to_aws
+    )
 
-  experiment_id <- input$experimentId
+    experiment_id <- input$experimentId
 
-  # initial step
-  if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+    # initial step
+    if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
 
-  c(data, task_out) %<-% run_pipeline_step(task_name, input, pipeline_config, prev_out, tasks)
-  assign("prev_out", task_out, pos = ".GlobalEnv")
+    c(data, task_out) %<-% run_pipeline_step(task_name, input, pipeline_config, prev_out, tasks)
+    assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'SEURATResponse')
-  return(message_id)
+    message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'SeuratResponse')
+    return(message_id)
 }
-
-load_seurat_object <- function(input, pipeline_config, prev_out, input_dir = "/input") {
-
-  # destructure previous output
-  print(input)
-  config <- prev_out$config
-  dataset_name <- config$samples
-  dataset_dir <- file.path(input_dir, dataset_name)
-  dataset_fpath <- list.files(dataset_dir)
-  message('Loading:', dataset_fpath)
-
-  scdata <- readRDS(dataset_fpath)
-  message('Loaded scdata!!!')
-  str(scdata)
-
-
-  res <- list(
-    data = list(),
-    scdata = scdata
-  )
-}
-
-
-upload_seurat_to_aws <- function(task_name, input, pipeline_config, prev_out) {
-  cell_sets <- get_cell_sets(prev_out$scdata, input)
-}
-
 
 #
 # call_data_processing
@@ -450,42 +422,42 @@ init <- function() {
         )
 
         tryCatchLog({
-                # Refresh pipeline_config with the new task input
-                pipeline_config <- load_config(input$server)
+            # Refresh pipeline_config with the new task input
+            pipeline_config <- load_config(input$server)
 
-                wrapper(input, pipeline_config)
+            wrapper(input, pipeline_config)
 
-                message('Send task success\n------\n')
-                states$send_task_success(
-                    taskToken = task_token,
-                    output = "{}"
-                )
+            message('Send task success\n------\n')
+            states$send_task_success(
+                taskToken = task_token,
+                output = "{}"
+            )
         },
-            error = function(e) {
-                flog.error("🚩 ---------")
-                sample_text <- ifelse(is.null(input$sampleUuid),
-                                      "",
-                                      paste0(" for sample ", input$sampleUuid))
+        error = function(e) {
+            flog.error("🚩 ---------")
+            sample_text <- ifelse(is.null(input$sampleUuid),
+                                  "",
+                                  paste0(" for sample ", input$sampleUuid))
 
-                error_txt <- paste0("R error at filter step ",
-                                    input$taskName, sample_text, "! : ", e$message)
+            error_txt <- paste0("R error at filter step ",
+                                input$taskName, sample_text, "! : ", e$message)
 
-                message(error_txt)
-                states$send_task_failure(
-                    taskToken = task_token,
-                    error = "We had an issue while processing your data.",
-                    cause = error_txt
-                )
+            message(error_txt)
+            states$send_task_failure(
+                taskToken = task_token,
+                error = "We had an issue while processing your data.",
+                cause = error_txt
+            )
 
-                send_pipeline_fail_update(pipeline_config, input, error_txt)
-                message("Sent task failure to state machine task: ", task_token)
+            send_pipeline_fail_update(pipeline_config, input, error_txt)
+            message("Sent task failure to state machine task: ", task_token)
 
-                if (pipeline_config$cluster_env != 'development') {
-                    upload_debug_folder_to_s3(debug_prefix, pipeline_config)
-                }
+            if (pipeline_config$cluster_env != 'development') {
+                upload_debug_folder_to_s3(debug_prefix, pipeline_config)
+            }
 
-                message("recovered from error:", e$message)
-            },
+            message("recovered from error:", e$message)
+        },
         write.error.dump.file = TRUE,
         write.error.dump.folder = dump_folder)
 
