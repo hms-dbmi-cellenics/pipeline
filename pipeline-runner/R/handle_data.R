@@ -38,8 +38,13 @@ reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
   return(obj)
 }
 
-reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id, sample_ids) {
+# get_nnzero will return how many non-zero counts the count matrix has
+# it is used to order samples according to their size
+get_nnzero <- function (x) {
+  return(length(x@assays[["RNA"]]@counts@i))
+}
 
+reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id, sample_ids) {
   scdata_list <- list()
   for (sample_id in sample_ids) {
     c(body, ...rest) %<-% s3$get_object(
@@ -49,6 +54,9 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id, samp
     obj <- readRDS(rawConnection(body))
     scdata_list[[sample_id]] <- obj
   }
+
+  # order samples according to their size to make the merge independent of samples order in the UI
+  scdata_list <- scdata_list[ order( sapply(scdata_list, get_nnzero) ) ]
 
   return(scdata_list)
 }

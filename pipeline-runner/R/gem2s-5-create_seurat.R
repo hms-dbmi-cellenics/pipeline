@@ -21,8 +21,8 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   doublet_scores <- prev_out$doublet_scores
   edrops <- prev_out$edrops
 
-  samples <- names(counts_list)
   scdata_list <- list()
+  samples <- names(counts_list)
   for (sample in samples) {
     message("\nCreating SeuratObject for sample --> ", sample)
 
