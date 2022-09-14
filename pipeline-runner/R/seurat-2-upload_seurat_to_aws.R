@@ -10,12 +10,20 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 
   scdata <- format_seurat(scdata, experiment_id)
 
-  # TODO: change sample ids/names in so that get appropriate cell sets
+  # change sample ids/names in so that get sample cell sets
+  input <- add_samples_to_input(scdata, input)
+  scdata <- change_sample_names_to_ids(scdata, input)
   cell_sets <- get_cell_sets(scdata, input)
 
-  # TODO: add louvain clusters
+  # add louvain clusters
+  cluster_sets <- data.frame(
+    cluster = scdata$seurat_clusters,
+    cell_ids = scdata$cells_id
+  ) %>%
+    format_cell_sets_object('louvain', scdata@misc$color_pool)
 
   # cell sets file to s3
+  cell_sets$cellSets <- c(list(cluster_sets), cell_sets$cellSets)
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
 
   put_object_in_s3(pipeline_config,
@@ -58,6 +66,20 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   return(res)
 
 
+}
+
+add_samples_to_input <- function(scdata, input) {
+  samples <- unique(scdata$samples)
+  input$sampleNames <- samples
+  input$sampleIds <- uuid::UUIDgenerate(n = length(samples))
+  return(input)
+}
+
+change_sample_names_to_ids <- function(scdata, input) {
+  sample_ids <- input$sampleIds
+  names(sample_ids) <- input$sampleNames
+  scdata$samples <- sample_ids[scdata$samples]
+  return(scdata)
 }
 
 # add 'cells_id'
