@@ -90,7 +90,7 @@ test_that("prepare_experiment adds 0 indexed cell_ids to each sample in scdata_l
 
   set.seed(RANDOM_SEED)
   total_cells <- sum(sapply(scdata_list, ncol))
-  cell_ids <- 0:total_cells-1
+  cell_ids <- 0:(total_cells-1)
   start <- 0
   expected_ids <- list()
   for (sample in samples) {
