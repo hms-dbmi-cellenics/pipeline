@@ -38,24 +38,15 @@ reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
   return(obj)
 }
 
-reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
-  bucket <- pipeline_config$source_bucket
-  objects <- s3$list_objects(
-    Bucket = bucket,
-    Prefix = experiment_id
-  )
-  samples <- objects$Contents
+reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id, sample_ids) {
 
   scdata_list <- list()
-  for (sample in samples) {
-    key <- sample$Key
-
+  for (sample_id in sample_ids) {
     c(body, ...rest) %<-% s3$get_object(
-      Bucket = bucket,
-      Key = paste(key, sep = "/")
+      Bucket = pipeline_config$source_bucket,
+      Key = paste(experiment_id, sample_id, "r.rds", sep = "/")
     )
     obj <- readRDS(rawConnection(body))
-    sample_id <- strsplit(key, "/")[[1]][[2]]
     scdata_list[[sample_id]] <- obj
   }
 
@@ -65,7 +56,7 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
 # reload_data_from_s3 will reload:
 # * scdata_list for all steps before integration (included)
 # * scdata file for all steps after data integration
-reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
+reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, sample_ids) {
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
   s3 <- paws::s3(config = pipeline_config$aws_config)
@@ -76,7 +67,7 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
   }
 
   # Otherwise, return scdata_list
-  return(reload_scdata_list_from_s3(s3, pipeline_config, experiment_id))
+  return(reload_scdata_list_from_s3(s3, pipeline_config, experiment_id, sample_ids))
 
 }
 
