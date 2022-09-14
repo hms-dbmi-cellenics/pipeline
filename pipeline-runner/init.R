@@ -202,8 +202,6 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     sample_id <- input$sampleUuid
     debug_config <- pipeline_config$debug_config
 
-    sample_ids <- input$sampleIds
-
     if (sample_id != "") {
         config <- config[[sample_id]]
         input$config <- config
@@ -228,7 +226,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
 
         # assign it to the global environment so we can
         # persist it across runs of the wrapper
-        assign("scdata", reload_data_from_s3(pipeline_config, experiment_id, task_name, tasks, sample_ids), pos = ".GlobalEnv")
+        assign("scdata", reload_data_from_s3(pipeline_config, experiment_id, task_name, tasks), pos = ".GlobalEnv")
 
         message("Single-cell data loaded.")
     }

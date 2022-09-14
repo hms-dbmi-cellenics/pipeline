@@ -44,19 +44,29 @@ get_nnzero <- function (x) {
   return(length(x@assays[["RNA"]]@counts@i))
 }
 
-reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id, sample_ids) {
+reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
+  bucket <- pipeline_config$source_bucket
+  objects <- s3$list_objects(
+    Bucket = bucket,
+    Prefix = experiment_id
+  )
+  samples <- objects$Contents
+
   scdata_list <- list()
-  for (sample_id in sample_ids) {
+  for (sample in samples) {
+    key <- sample$Key
+
     c(body, ...rest) %<-% s3$get_object(
-      Bucket = pipeline_config$source_bucket,
-      Key = paste(experiment_id, sample_id, "r.rds", sep = "/")
+      Bucket = bucket,
+      Key = paste(key, sep = "/")
     )
     obj <- readRDS(rawConnection(body))
+    sample_id <- strsplit(key, "/")[[1]][[2]]
     scdata_list[[sample_id]] <- obj
   }
 
   # order samples according to their size to make the merge independent of samples order in the UI
-  scdata_list <- scdata_list[ order( sapply(scdata_list, get_nnzero) ) ]
+  scdata_list <- scdata_list[ order( sapply(scdata_list, get_nnzero), decreasing=TRUE ) ]
 
   return(scdata_list)
 }
@@ -64,7 +74,7 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id, samp
 # reload_data_from_s3 will reload:
 # * scdata_list for all steps before integration (included)
 # * scdata file for all steps after data integration
-reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, sample_ids) {
+reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
   s3 <- paws::s3(config = pipeline_config$aws_config)
@@ -75,7 +85,7 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
   }
 
   # Otherwise, return scdata_list
-  return(reload_scdata_list_from_s3(s3, pipeline_config, experiment_id, sample_ids))
+  return(reload_scdata_list_from_s3(s3, pipeline_config, experiment_id))
 
 }
 
