@@ -202,7 +202,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     sample_id <- input$sampleUuid
     debug_config <- pipeline_config$debug_config
 
-    sample_ids <- names(config)
+    sample_ids <- input$sampleIds
 
     if (sample_id != "") {
         config <- config[[sample_id]]
