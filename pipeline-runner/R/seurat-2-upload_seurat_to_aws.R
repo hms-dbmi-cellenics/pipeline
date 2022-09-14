@@ -12,14 +12,13 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 
   # change sample ids/names in so that get sample cell sets
   input <- add_samples_to_input(scdata, input)
+  input <- add_metadata_to_input(scdata, input)
   scdata <- change_sample_names_to_ids(scdata, input)
   cell_sets <- get_cell_sets(scdata, input)
 
   # add louvain clusters
-  cluster_sets <- data.frame(
-    cluster = scdata$seurat_clusters,
-    cell_ids = scdata$cells_id
-  ) %>%
+  cluster_sets <- data.frame(cluster = scdata$seurat_clusters,
+                             cell_ids = scdata$cells_id) %>%
     format_cell_sets_object('louvain', scdata@misc$color_pool)
 
   # cell sets file to s3
@@ -81,6 +80,50 @@ change_sample_names_to_ids <- function(scdata, input) {
   scdata$samples <- sample_ids[scdata$samples]
   return(scdata)
 }
+
+add_metadata_to_input <- function(scdata, input) {
+  group_cols <- find_group_columns(scdata)
+
+  metadata <- list()
+  meta_vals <- scdata@meta.data[!duplicated(scdata$samples), ]
+
+  for (col in group_cols) {
+    metadata[[col]] <- meta_vals[, col]
+  }
+
+  if (length(group_cols)) {
+    input$metadata <- metadata
+  }
+
+  return(input)
+}
+
+# get column names that are consistent with sample groups
+find_group_columns <- function(scdata) {
+  meta <- scdata@meta.data
+
+  ndistinct_sample <- meta |>
+    dplyr::group_by(samples) |>
+    dplyr::summarise_all(dplyr::n_distinct)
+
+  ndistinct <- meta |>
+    dplyr::summarise_all(dplyr::n_distinct)
+
+  nsamples <- length(unique(scdata$samples))
+
+  # group columns must:
+  # - have fewer than the number of samples
+  # - have at least two values
+  # - have only one value per sample
+  too.many <- ndistinct >= nsamples
+  too.few <- ndistinct <= 1
+  one.per.sample <- apply(ndistinct_sample, 2, function(x) all(x == 1))
+  group.cols <- names(ndistinct)[!too.many & !too.few & one.per.sample]
+
+  return(group.cols)
+}
+
+
 
 # add 'cells_id'
 # 'samples' must be already added
