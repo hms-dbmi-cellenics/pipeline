@@ -44,6 +44,10 @@ get_nnzero <- function (x) {
   return(length(x@assays[["RNA"]]@counts@i))
 }
 
+order_by_size <- function(scdata_list) {
+    return(scdata_list <- scdata_list[ order( sapply(scdata_list, get_nnzero), decreasing=TRUE ) ])
+}
+
 reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$source_bucket
   objects <- s3$list_objects(
@@ -66,7 +70,7 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
   }
 
   # order samples according to their size to make the merge independent of samples order in the UI
-  scdata_list <- scdata_list[ order( sapply(scdata_list, get_nnzero), decreasing=TRUE ) ]
+  scdata_list <- order_by_size(scdata_list)
 
   return(scdata_list)
 }
