@@ -158,7 +158,7 @@ send_pipeline_update_to_api <- function(pipeline_config, experiment_id, task_nam
     MessageAttributes = list(
       type = list(
         DataType = "String",
-        StringValue = "GEM2SResponse",
+        StringValue = string_value,
         BinaryValue = NULL
       )
     )

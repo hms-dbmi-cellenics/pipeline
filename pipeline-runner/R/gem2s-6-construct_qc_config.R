@@ -1,5 +1,5 @@
 # constructs default QC configuration for merged SeuratObject
-construct_qc_config <- function(scdata, any_filtered) {
+construct_qc_config <- function(scdata, any_filtered = FALSE) {
   samples <- scdata$samples
 
   # classifier

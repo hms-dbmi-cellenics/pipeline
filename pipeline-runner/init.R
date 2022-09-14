@@ -189,8 +189,8 @@ call_seurat <- function(task_name, input, pipeline_config) {
     # list of task functions named by task name
     tasks <- list(
         "downloadSeurat" = download_user_files,
-        "preprocSeurat" = load_seurat,
-        "uploadToAWS" = upload_seurat_to_aws
+        "processSeurat" = load_seurat,
+        "uploadSeuratToAWS" = upload_seurat_to_aws
     )
 
     experiment_id <- input$experimentId

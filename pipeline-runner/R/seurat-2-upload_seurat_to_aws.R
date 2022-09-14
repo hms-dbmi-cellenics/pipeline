@@ -25,10 +25,11 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   )
 
 
-  # embedding settings
-  qc_config <- construct_saved_config(scdata)
-
-
+  # replicate qc config for simplicity
+  # could also create a 'seurat_config' column in experiment table and change the ui/api around more
+  qc_config <- construct_qc_config(scdata)
+  qc_config$configureEmbedding$embeddingSettings$useSaved <- TRUE
+  qc_config$configureEmbedding$embeddingSettings$method <- DefaultDimReduc(scdata)
 
   # seurat object to s3
   object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
@@ -59,8 +60,6 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 
 }
 
-
-
 # add 'cells_id'
 # 'samples' must be already added
 # current input$metadata not yet implemented
@@ -82,35 +81,18 @@ format_seurat <- function(scdata, experiment_id) {
   stopifnot('pca' %in% Seurat::Reductions(scdata))
   scdata@misc$active.reduction <- 'pca'
 
+  # need to mock processing config
+  metadata_cols <- list('percent.mt' = 0, 'doublet_scores' = 0, 'doublet_class' = 'singlet')
+  scdata <- mock_metadata(scdata, metadata_cols)
+
   return(scdata)
 }
 
-construct_saved_config <- function(scdata) {
+mock_metadata <- function(scdata, metadata_cols) {
+  for (col in names(metadata_cols)) {
+    if (is.null(scdata@meta.data[[col]]))
+      scdata[[col]] <- metadata_cols[[col]]
+  }
 
-  # embedding
-  config <- list(
-    configureEmbedding <- list(
-      embeddingSettings = list(
-        method = "umap",
-        useSaved = TRUE,
-        methodSettings = list(
-          umap = list(
-            minimumDistance = 0.3,
-            distanceMetric = "cosine"
-          ),
-          tsne = list(
-            perplexity = min(30, ncol(scdata) / 100),
-            learningRate = max(200, ncol(scdata) / 12)
-          )
-        )
-      ),
-      clusteringSettings = list(
-        method = "louvain",
-        useSaved = TRUE,
-        methodSettings = list(louvain = list(resolution = 0.8))
-      )
-    )
-  )
-
-  return(config)
+  return(scdata)
 }
