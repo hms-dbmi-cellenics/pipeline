@@ -78,6 +78,7 @@ mock_ids <- function() {
   return(list("123abc" = 0:39, "123def" = 40:79))
 }
 
+
 scdata_preprocessing <- function(scdata) {
 
   # scale and PCA
@@ -114,6 +115,20 @@ test_that("Integrate scdata works", {
   integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_s4_class(integrated_scdata, "Seurat")
   expect_equal(ncol(integrated_scdata), 80)
+})
+
+test_that("Integrate scdata is not affected by sample order", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  scdata_list_rev <- scdata_list[c(sample_2_id, sample_1_id)]
+  cells_id <- mock_ids()
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2),
+    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+  )
+
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata_rev <- suppressWarnings(integrate_scdata(scdata_list_rev, config, "", cells_id, task_name = "dataIntegration"))$data
+  expect_equal(integrated_scdata, integrated_scdata_rev)
 })
 
 test_that("Integrate scdata filters out cells ids", {

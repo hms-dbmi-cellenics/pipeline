@@ -21,6 +21,9 @@
 #   },
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+  # the following operations give different results depending on sample order
+  # make sure they are ordered according to their matrices size
+  scdata_list <- order_by_size(scdata_list)
   message("Started create_scdata for sample ", sample_id, "\n")
   scdata <- create_scdata(scdata_list, cells_id)
   message("Finished create_scdata for sample ", sample_id, "\n")
