@@ -21,6 +21,9 @@
 #   },
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+  # the following operations give different results depending on sample order
+  # make sure they are ordered according to their matrices size
+  scdata_list <- order_by_size(scdata_list)
   message("Started create_scdata for sample ", sample_id, "\n")
   scdata <- create_scdata(scdata_list, cells_id)
   message("Finished create_scdata for sample ", sample_id, "\n")
@@ -69,11 +72,8 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 #' @export
 #'
 create_scdata <- function(scdata_list, cells_id) {
-  message("Removing filtered cells")
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
-  message("Merging scdata list")
   merged_scdatas <- merge_scdata_list(scdata_list)
-  message("Adding metadata")
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
   return(merged_scdatas)

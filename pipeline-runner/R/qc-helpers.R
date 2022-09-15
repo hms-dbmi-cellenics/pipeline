@@ -199,7 +199,7 @@ getClusters <- function(clustering_method, resolution, data) {
     if (!graph_name %in% names(data)) {
       data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
     }
-    data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm, random.seed = 3)
+    data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm, random.seed = RANDOM_SEED)
   }
   return(data)
 }
