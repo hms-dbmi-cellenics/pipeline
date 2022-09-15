@@ -121,7 +121,7 @@ test_that("filter_high_mito can be set to auto", {
 
 test_that("data without percent.mt outliers uses the max percentage as the threshold", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
-  set.seed(gem2s$random.seed)
+  set.seed(RANDOM_SEED)
 
   scdata_sample_1 <- scdata_list[[sample_1_id]]
 
