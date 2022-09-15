@@ -156,9 +156,6 @@ calc_filter_stats <- function(scdata) {
 #' @export
 #'
 runClusters <- function(clustering_method, resolution, data) {
-  message('clustering_method: ', clustering_method)
-  message('resolution: ', resolution)
-  # saveRDS(data, '/debug/cluster_data.rds')
   data <- getClusters(clustering_method, resolution, data)
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   # In the meta data slot the clustering is stored with the resolution used to calculate it

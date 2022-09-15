@@ -56,7 +56,6 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
   )
   samples <- objects$Contents
 
-  message('xSamples: ', samples)
   scdata_list <- list()
   for (sample in samples) {
     key <- sample$Key
@@ -70,14 +69,8 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
     scdata_list[[sample_id]] <- obj
   }
 
-  message('before order: ', paste(names(scdata_list), collapse=" "))
-  message(paste(sapply(scdata_list, get_nnzero), collapse=" "))
   # order samples according to their size to make the merge independent of samples order in the UI
-  scdata_list <- order_by_size(scdata_list)
-  message('after order: ', paste(names(scdata_list), collapse=" "))
-  message(paste(sapply(scdata_list, get_nnzero), collapse=" "))
-
-  return(scdata_list)
+  return(order_by_size(scdata_list))
 }
 
 # reload_data_from_s3 will reload:
