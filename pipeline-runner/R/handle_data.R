@@ -45,7 +45,7 @@ get_nnzero <- function (x) {
 }
 
 order_by_size <- function(scdata_list) {
-    return(scdata_list <- scdata_list[ order( sapply(scdata_list, get_nnzero), decreasing=TRUE ) ])
+    return(scdata_list <- scdata_list[ order( sapply(scdata_list, get_nnzero)) ])
 }
 
 reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
@@ -56,6 +56,7 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
   )
   samples <- objects$Contents
 
+  message('xSamples: ', samples)
   scdata_list <- list()
   for (sample in samples) {
     key <- sample$Key
@@ -69,8 +70,12 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
     scdata_list[[sample_id]] <- obj
   }
 
+  message('before order: ', paste(names(scdata_list), collapse=" "))
+  message(paste(sapply(scdata_list, get_nnzero), collapse=" "))
   # order samples according to their size to make the merge independent of samples order in the UI
   scdata_list <- order_by_size(scdata_list)
+  message('after order: ', paste(names(scdata_list), collapse=" "))
+  message(paste(sapply(scdata_list, get_nnzero), collapse=" "))
 
   return(scdata_list)
 }

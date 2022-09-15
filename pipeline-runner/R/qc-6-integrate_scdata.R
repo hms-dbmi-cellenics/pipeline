@@ -70,11 +70,15 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 #'
 create_scdata <- function(scdata_list, cells_id) {
   message("Removing filtered cells")
+  message('order: ', paste(names(scdata_list), collapse=" "))
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
   message("Merging scdata list")
+  message('order: ', paste(names(scdata_list), collapse=" "))
   merged_scdatas <- merge_scdata_list(scdata_list)
   message("Adding metadata")
+  message('order: ', paste(names(scdata_list), collapse=" "))
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
+  message('order: ', paste(names(scdata_list), collapse=" "))
 
   return(merged_scdatas)
 }

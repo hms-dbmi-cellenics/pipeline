@@ -48,7 +48,10 @@ add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
   total_cells <- sum(sapply(scdata_list, ncol))
   cell_ids <- 0:(total_cells-1)
 
-  for (sample in names(scdata_list)) {
+  # we need to iterate always in the same order because we are assigning the cell ids
+  # at random and we want the relation cell <-> ID to be always the same to avoid
+  # any changes in downstream analysis (like in the clustering)
+  for (sample in names(order_by_size(scdata_list))) {
     sample_size <- ncol(scdata_list[[sample]])
 
     # select only the annotations of the current sample
