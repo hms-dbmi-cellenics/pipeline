@@ -42,6 +42,7 @@ compute_sample_edrops <- function(sample_counts) {
     message("Detected sample as filtered --> Skipping emptyDrops.")
     sample_edrops <- NULL
   } else {
+    set.seed(RANDOM_SEED)
     sample_edrops <- DropletUtils::emptyDrops(sample_counts)
   }
 
