@@ -25,6 +25,24 @@
         resources:
           requests:
             memory: "{{ .Values.memoryRequest }}"
+      - name: datadog-agent
+        image: datadog/agent
+        env:
+        - name: DD_API_KEY
+          value: "{{ .Values.myAccount.datadogApiKey }}"
+        - name: DD_SITE
+          value: "datadoghq.eu"
+        - name: DD_EKS_FARGATE
+          value: "true"
+        - name: DD_CLUSTER_NAME
+          value: "biomage-{{ .Values.kubernetes.env }}"
+        - name: DD_KUBERNETES_POD_LABELS_AS_TAGS
+          value: '{"*": "pod_label_%%label%%"}'
+        - name: DD_KUBERNETES_KUBELET_NODENAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
       volumes:
       - name: podinfo
         downwardAPI:
