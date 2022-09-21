@@ -10,7 +10,7 @@ pbapply <- function(X, FUN, ...) apply(X, FUN, ...)
 pbsapply <- function(X, FUN, ...) sapply(X, FUN, ...)
 
 # used by DropletUtils::EmptyDrops
-# seems to be mostly useful for multicore which Cellenics doesn't use
+# can replace with built-in pseudo random number generator (slower)
 generateSeedVectors <- function(nseeds, nwords = 2L) {
   res <- sample(-.Machine$integer.max:.Machine$integer.max,
                  nwords*nseeds,
