@@ -1,12 +1,13 @@
-{{- if ne .Values.sandboxId "default" }}
+# Deploy cluster role binding only for production default
+{{- if and (eq .Values.sandboxId "default") (eq .Values.kubernetes.env "production") }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: "datadog-agent-{{ Values.namespace }}"
+  name: "datadog-sidecar-{{ Values.namespace }}"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: datadog-agent
+  name: datadog-sidecar-rbac
 subjects:
   - kind: ServiceAccount
     name: deployment-runner
