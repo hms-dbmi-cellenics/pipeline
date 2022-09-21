@@ -24,7 +24,7 @@ to call generate_default_values_numGenesVsNumUmis)
 - regressionType: String. Regression to be used: {linear or spline}
 - regressionTypeSettings: list with the config settings for all the regression type options
 - linear and spline: for each there is only one element:
-- p.level: which refers to  confidence level for deviation from the main trend}
+- p_level: which refers to  confidence level for deviation from the main trend}
 
 \item{sample_id}{value in \code{scdata$samples} to apply filter for}
 

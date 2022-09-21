@@ -7,15 +7,15 @@ mock_sns <- function(config) {
     ))
 }
 
-test_that("send_gem2s_update_to_api completes successfully", {
+test_that("send_pipeline_update_to_api completes successfully", {
     pipeline_config <- list(
         sns_topic = 'ExampleTopic',
         aws_config = NULL
     )
 
-    mockery::stub(send_gem2s_update_to_api, 'paws::sns', mock_sns)
+    mockery::stub(send_pipeline_update_to_api, 'paws::sns', mock_sns)
 
-    response <- send_gem2s_update_to_api(pipeline_config,
+    response <- send_pipeline_update_to_api(pipeline_config,
                             experiment_id = 'dfgdfg',
                             task_name = 'dsfdsdf',
                             data = 1:5,
