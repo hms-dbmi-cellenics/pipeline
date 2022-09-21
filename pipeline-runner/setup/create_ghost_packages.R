@@ -12,12 +12,13 @@ pbsapply <- function(X, FUN, ...) sapply(X, FUN, ...)
 # used by DropletUtils::EmptyDrops
 # seems to be mostly useful for multicore which Cellenics doesn't use
 generateSeedVectors <- function(nseeds, nwords = 2L) {
-  lapply(seq_len(nseeds),
-         function(i) {
-           sample(-.Machine$integer.max:.Machine$integer.max,
-                  nwords,
-                  replace = TRUE)
-         })
+  res <- sample(-.Machine$integer.max:.Machine$integer.max,
+                 nwords*nseeds,
+                 replace = TRUE)
+
+  res <- split(res, ceiling(seq_along(res)/nwords))
+  names(res) <- NULL
+  return(res)
 }
 
 alt_fnames <- c('theme_cowplot', 'pblapply', 'pbapply', 'pbsapply', 'generateSeedVectors')
