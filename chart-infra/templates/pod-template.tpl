@@ -36,6 +36,12 @@
           value: "true"
         - name: DD_CLUSTER_NAME
           value: "biomage-{{ .Values.kubernetes.env }}"
+        - name: DD_LOGS_ENABLED
+          value: true
+        - name: DD_CONTAINER_EXCLUDE
+          value: "name:.*"
+        - name: DD_CONTAINER_INCLUDE
+          value: "kube_namespace:{{ .Release.Namespace }}"
         - name: DD_KUBERNETES_POD_LABELS_AS_TAGS
           value: '{"*": "pod_label_%%label%%"}'
         - name: DD_KUBERNETES_KUBELET_NODENAME
