@@ -35,7 +35,7 @@
         - name: DD_EKS_FARGATE
           value: "true"
         - name: DD_CLUSTER_NAME
-          value: "biomage-{{ .Values.kubernetes.env }}"
+          value: "biomage-{{ .Values.clusterEnv }}"
         - name: DD_LOGS_ENABLED
           value: "true"
         - name: DD_CONTAINER_EXCLUDE
