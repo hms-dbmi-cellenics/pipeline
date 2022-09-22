@@ -37,7 +37,7 @@
         - name: DD_CLUSTER_NAME
           value: "biomage-{{ .Values.kubernetes.env }}"
         - name: DD_LOGS_ENABLED
-          value: true
+          value: "true"
         - name: DD_CONTAINER_EXCLUDE
           value: "name:.*"
         - name: DD_CONTAINER_INCLUDE
