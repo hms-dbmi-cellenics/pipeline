@@ -1,5 +1,3 @@
-# Deploy cluster role binding only for production default
-{{- if and (eq .Values.sandboxId "default") (eq .Values.kubernetes.env "production") }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -12,4 +10,3 @@ subjects:
   - kind: ServiceAccount
     name: deployment-runner
     namespace: "{{.Release.Namespace}}"
-{{- end }}
