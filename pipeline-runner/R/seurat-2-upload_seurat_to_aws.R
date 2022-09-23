@@ -129,6 +129,9 @@ find_group_columns <- function(scdata) {
 # 'samples' must be already added
 # current input$metadata not yet implemented
 format_seurat <- function(scdata, experiment_id) {
+
+  scdata <- add_samples_col(scdata)
+
   scdata$cells_id <- seq_len(ncol(scdata))-1
 
   # add gene annotations
@@ -149,6 +152,20 @@ format_seurat <- function(scdata, experiment_id) {
   # need to mock processing config
   metadata_cols <- list('percent.mt' = 0, 'doublet_scores' = 0, 'doublet_class' = 'singlet')
   scdata <- mock_metadata(scdata, metadata_cols)
+
+  return(scdata)
+}
+
+# use 'samples' or 'sample' if present, otherwise assume one sample
+add_samples_col <- function(scdata) {
+  in.meta <- c('samples', 'sample') %in% colnames(scdata@meta.data)
+
+  if (!any(in.meta)) {
+    scdata$samples <- 'NA'
+  } else {
+    sample_col <- c('samples', 'sample')[which(in.meta)[1]]
+    scdata$samples <- scdata@meta.data[[sample_col]]
+  }
 
   return(scdata)
 }
