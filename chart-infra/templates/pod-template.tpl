@@ -36,14 +36,14 @@
           value: "true"
         - name: DD_CLUSTER_NAME
           value: "biomage-{{ .Values.clusterEnv }}"
+        # Disable log collection by DD agent
+        # because we use FluentBit for Fargate log collection
         - name: DD_LOGS_ENABLED
-          value: "true"
+          value: "false"
         - name: DD_CONTAINER_EXCLUDE
           value: "name:.*"
-        - name: DD_CONTAINER_INCLUDE
-          value: "kube_namespace:{{ .Release.Namespace }}"
         - name: DD_KUBERNETES_POD_LABELS_AS_TAGS
-          value: '{"*": "pod_label_%%label%%"}'
+          value: '{"*": "%%label%%"}'
         - name: DD_KUBERNETES_KUBELET_NODENAME
           valueFrom:
             fieldRef:
