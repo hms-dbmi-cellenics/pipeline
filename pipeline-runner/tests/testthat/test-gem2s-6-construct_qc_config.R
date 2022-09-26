@@ -26,9 +26,9 @@ test_that("cellsize filter is disabled by default and classifier if pre-filtered
   qc_config <- construct_qc_config(list(scdata), any_filtered = TRUE)
 
   for (sample in unique(samples)) {
-    expect_false(qc_config$classifier[[sample]]enabled)
-    expect_true(qc_config$classifier[[sample]]prefiltered)
-    expect_false(qc_config$cellSizeDistribution[[sample]]enabled)
+    expect_false(qc_config$classifier[[sample]]$enabled)
+    expect_true(qc_config$classifier[[sample]]$prefiltered)
+    expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
   }
 })
 
@@ -39,7 +39,7 @@ test_that("cellsize filter is disabled by default and classifier if not pre-filt
   qc_config <- construct_qc_config(list(scdata), any_filtered = FALSE)
 
   for (sample in unique(samples)) {
-    expect_false(qc_config$cellSizeDistribution[[samples]]enabled)
-    expect_true(qc_config$classifier[[samples]]enabled)
+    expect_false(qc_config$cellSizeDistribution[[samples]]$enabled)
+    expect_true(qc_config$classifier[[samples]]$enabled)
   }
 })
