@@ -12,16 +12,17 @@
 construct_qc_config <- function(scdata_list, any_filtered) {
   samples <- names(scdata_list)
 
+  # default_classifier_config <- list(
+  #   enabled = !any_filtered,
+  #   prefiltered = any_filtered,
+  #   auto = TRUE,
+  #   filterSettings = list(FDR = 0.01)
+  # )
+  
   # classifier
-  default_classifier_config <- list(
-    enabled = !any_filtered,
-    prefiltered = any_filtered,
-    auto = TRUE,
-    filterSettings = list(FDR = 0.01)
-  )
-
   classifier_config_to_duplicate <- list(
     enabled = !any_filtered,
+    prefiltered = any_filtered,
     auto = TRUE,
     filterSettings = list(FDR = 0.01)
   )
