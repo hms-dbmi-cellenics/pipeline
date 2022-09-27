@@ -20,7 +20,7 @@ mock_scdata <- function() {
 }
 
 
-test_that("cellsize filter is disabled by default and classifier if pre-filtered", {
+test_that("cellsize filter is disabled by default and classifier is pre-filtered", {
   scdata <- mock_scdata()
   samples <- names(list(scdata))
   qc_config <- construct_qc_config(list(scdata), any_filtered = TRUE)
@@ -33,13 +33,14 @@ test_that("cellsize filter is disabled by default and classifier if pre-filtered
 })
 
 
-test_that("cellsize filter is disabled by default and classifier if not pre-filtered", {
+test_that("cellsize filter is disabled by default and classifier is not pre-filtered", {
   scdata <- mock_scdata()
   samples <- names(list(scdata))
   qc_config <- construct_qc_config(list(scdata), any_filtered = FALSE)
   for (sample in unique(samples)) {
     expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
     expect_true(qc_config$classifier[[sample]]$enabled)
+    expect_false(qc_config$classifier[[sample]]$prefiltered)
   }
 })
 
