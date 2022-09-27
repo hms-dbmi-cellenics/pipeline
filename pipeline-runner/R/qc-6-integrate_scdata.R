@@ -266,7 +266,10 @@ run_unisample <- function(scdata, config) {
 }
 
 add_dispersions <- function(scdata) {
-  vars <- Seurat::HVFInfo(object = scdata, assay = "RNA", selection.method = "vst")
+  vars <- Seurat::HVFInfo(object = scdata)
+  # rename for worker (in case sct)
+  colnames(vars) <- c('mean', 'variance', 'variance.standardized')
+
   annotations <- scdata@misc[["gene_annotations"]]
   vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
   vars$ENSEMBL <- rownames(vars)
