@@ -108,8 +108,8 @@ build_sample_cellsets <- function(input, scdata_list, color_pool) {
   sample_names <- unlist(input$sampleNames)
 
   for (i in seq_along(sample_ids)) {
-    scdata <- scdata_list[[i]]
     sample_id <- sample_ids[i]
+    scdata <- scdata_list[[sample_id]]
     sample_name <- sample_names[i]
 
     cell_ids <- scdata$cells_id
