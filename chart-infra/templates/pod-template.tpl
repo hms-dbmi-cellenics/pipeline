@@ -37,11 +37,13 @@
         - name: DD_CLUSTER_NAME
           value: "biomage-{{ .Values.clusterEnv }}"
         # Disable log collection by DD agent
-        # because we use FluentBit for Fargate log collection
+        # because we push logs to Cloudwatch
         - name: DD_LOGS_ENABLED
           value: "false"
         - name: DD_CONTAINER_EXCLUDE
           value: "name:.*"
+        - name: DD_CONTAINER_INCLUDE_METRICS
+          value: "name:pipeline"
         - name: DD_KUBERNETES_POD_LABELS_AS_TAGS
           value: '{"*": "%%label%%"}'
         - name: DD_KUBERNETES_KUBELET_NODENAME
