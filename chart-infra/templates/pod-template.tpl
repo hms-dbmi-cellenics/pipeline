@@ -36,6 +36,8 @@
           value: "true"
         - name: DD_CLUSTER_NAME
           value: "biomage-{{ .Values.clusterEnv }}"
+        - name: DD_TAGS
+          values: "{{ .Values.datadogTags }}"
         # Disable log collection by DD agent
         # because we push logs to Cloudwatch
         - name: DD_LOGS_ENABLED
