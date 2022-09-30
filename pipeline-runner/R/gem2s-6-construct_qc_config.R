@@ -11,35 +11,29 @@
 #'
 construct_qc_config <- function(scdata_list, any_filtered) {
   samples <- names(scdata_list)
-
+  
   # classifier
-  config.classifier <- list(
+  classifier_config_to_duplicate <- list(
     enabled = !any_filtered,
     prefiltered = any_filtered,
     auto = TRUE,
     filterSettings = list(FDR = 0.01)
   )
 
-  classifier_config_to_duplicate <- list(
-    enabled = !any_filtered,
-    auto = TRUE,
-    filterSettings = list(FDR = 0.01)
-  )
-
-  config.classifier <- duplicate_config_per_sample(classifier_config_to_duplicate, config.classifier, samples)
+  config.classifier <- duplicate_config_per_sample(classifier_config_to_duplicate, samples)
 
 
   # cell size
-  config.cellSizeDistribution <- list(
+  default_cellSizeDistribution_config <- list(
     enabled = FALSE,
     auto = TRUE,
     filterSettings = list(minCellSize = 1080, binStep = 200)
   )
 
-  config.cellSizeDistribution <- add_custom_config_per_sample(get_cellsize_config, config.cellSizeDistribution, scdata_list)
+  config.cellSizeDistribution <- add_custom_config_per_sample(get_cellsize_config, default_cellSizeDistribution_config, scdata_list)
 
   # mito
-  config.mitochondrialContent <- list(
+  default_mitochondrialContent_config <- list(
     enabled = TRUE,
     auto = TRUE,
     filterSettings = list(
@@ -53,10 +47,10 @@ construct_qc_config <- function(scdata_list, any_filtered) {
     )
   )
 
-  config.mitochondrialContent <- add_custom_config_per_sample(get_sample_mitochondrial_config, config.mitochondrialContent, scdata_list)
+  config.mitochondrialContent <- add_custom_config_per_sample(get_sample_mitochondrial_config, default_mitochondrialContent_config, scdata_list)
 
   # ngenes vs umis
-  config.numGenesVsNumUmis <- list(
+  default_numGenesVsNumUmis_config <- list(
     enabled = TRUE,
     auto = TRUE,
     filterSettings = list(
@@ -68,11 +62,11 @@ construct_qc_config <- function(scdata_list, any_filtered) {
     )
   )
 
-  config.numGenesVsNumUmis <- add_custom_config_per_sample(get_gene_umi_config, config.numGenesVsNumUmis, scdata_list)
+  config.numGenesVsNumUmis <- add_custom_config_per_sample(get_gene_umi_config, default_numGenesVsNumUmis_config, scdata_list)
 
 
   # doublet scores
-  config.doubletScores <- list(
+  default_doubletScores_config <- list(
     enabled = TRUE,
     auto = TRUE,
     filterSettings = list(
@@ -81,7 +75,7 @@ construct_qc_config <- function(scdata_list, any_filtered) {
     )
   )
 
-  config.doubletScores <- add_custom_config_per_sample(get_dblscore_config, config.doubletScores, scdata_list)
+  config.doubletScores <- add_custom_config_per_sample(get_dblscore_config, default_doubletScores_config, scdata_list)
 
   # data integration
   config.dataIntegration <- list(
@@ -147,6 +141,7 @@ get_cellsize_config <- function(scdata_list, config) {
 get_sample_mitochondrial_config <- function(scdata_list.sample, config) {
 
   config.sample <- list(
+    enabled = TRUE,
     auto = TRUE,
     filterSettings = list(
       method = "absoluteThreshold",
@@ -181,7 +176,8 @@ get_gene_umi_config <- function(scdata_list, config) {
 }
 
 
-duplicate_config_per_sample <- function(step_config, config, samples) {
+duplicate_config_per_sample <- function(step_config, samples) {
+  config <- list()
   for (sample in unique(samples)) {
     config[[sample]] <- step_config
     config[[sample]]$defaultFilterSettings <- step_config$filterSettings
@@ -191,10 +187,10 @@ duplicate_config_per_sample <- function(step_config, config, samples) {
 }
 
 
-add_custom_config_per_sample <- function(generate_sample_config, config, scdata_list) {
+add_custom_config_per_sample <- function(generate_sample_config, default_config, scdata_list) {
   # We update the config file, so to be able to access the raw config we create a copy
-  raw_config <- config
-
+  raw_config <- default_config
+  config <- list()
   for (sample in names(scdata_list)) {
     # subset the Seurat object to a single sample
     sample_data <- scdata_list[[sample]]

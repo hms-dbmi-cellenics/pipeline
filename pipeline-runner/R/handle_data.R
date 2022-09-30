@@ -34,7 +34,7 @@ reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
     Bucket = bucket,
     Key = paste(experiment_id, "r.rds", sep = "/")
   )
-  obj <- readRDS(rawConnection(body))
+  obj <- readRDS(gzcon(rawConnection(body)))
   return(obj)
 }
 
@@ -64,7 +64,7 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
       Bucket = bucket,
       Key = paste(key, sep = "/")
     )
-    obj <- readRDS(rawConnection(body))
+    obj <- readRDS(gzcon(rawConnection(body)))
     sample_id <- strsplit(key, "/")[[1]][[2]]
     scdata_list[[sample_id]] <- obj
   }
