@@ -311,15 +311,14 @@ format_annot <- function(annot_list) {
 #' @export
 #'
 normalize_annotation_types <- function(annot_list, counts_list, feature_types_list, samples) {
-
   if (any(feature_types_list == IDS_IDS) &&
-      any(feature_types_list == SYM_SYM) &&
-      !any(feature_types_list == IDS_SYM)) {
+    any(feature_types_list == SYM_SYM) &&
+    !any(feature_types_list == IDS_SYM)) {
     stop("Incompatible features detected.")
   }
 
   if (any(feature_types_list == IDS_SYM) &&
-      any(feature_types_list == IDS_IDS) || any(feature_types_list == SYM_SYM)) {
+    any(feature_types_list == IDS_IDS) || any(feature_types_list == SYM_SYM)) {
     annot_with_ids <-
       make_annot_with_ids(annot_list, feature_types_list)
 
@@ -343,8 +342,7 @@ normalize_annotation_types <- function(annot_list, counts_list, feature_types_li
       annot_list[[sample]] <- sample_annot
     }
   }
-  return(list(counts_list = counts_list, annot_list = annot_list)
-  )
+  return(list(counts_list = counts_list, annot_list = annot_list))
 }
 
 #' Determine the type of features in the annot data frame
@@ -365,13 +363,16 @@ get_feature_types <- function(annot) {
   is_ens <- c(pct_ens_col1, pct_ens_col2) >= 0.5
 
   # reverse case, sym in first and id in second column
-  if (!is_ens[1] && is_ens[2]) return(SYM_IDS)
+  if (!is_ens[1] && is_ens[2]) {
+    return(SYM_IDS)
+  }
 
   # regular cases. sum of booleans returns ints. convert to char to string match
   feature_type <- switch(as.character(sum(is_ens)),
-                         "0" = SYM_SYM,
-                         "1" = IDS_SYM,
-                         "2" = IDS_IDS)
+    "0" = SYM_SYM,
+    "1" = IDS_SYM,
+    "2" = IDS_IDS
+  )
 
   return(feature_type)
 }
@@ -394,7 +395,7 @@ make_annot_with_ids <- function(annot_list, feature_types_list) {
     unique(do.call("rbind", annot_list[feature_types_list == IDS_SYM]))
 
   annot_with_ids <-
-    annot_with_ids[!duplicated(annot_with_ids$input),]
+    annot_with_ids[!duplicated(annot_with_ids$input), ]
 
   return(annot_with_ids)
 }
@@ -420,8 +421,8 @@ sym_to_ids <- function(sample_annot, annot_with_ids) {
   sample_annot$input[symbols_with_ids_in_annot] <-
     annot_with_ids$input[na.omit(symbol_idx_in_annot)]
 
-  #This avoids duplicates after combining with the annotated df.
-  #Leads to a mismatch in genes between samples but it seems like the best solution
+  # This avoids duplicates after combining with the annotated df.
+  # Leads to a mismatch in genes between samples but it seems like the best solution
   sample_annot$input <- make.unique(sample_annot$input)
 
   return(sample_annot)
@@ -488,21 +489,23 @@ filter_unnamed_features <- function(counts, annotations, sample) {
 
     annotations$annot$input[unnamed_genes_idx][keep_ids] <- available_gene_symbols
 
-    message("Replaced ", length(which(keep_ids)),
-            " empty gene names with available not empty annotation.")
-
+    message(
+      "Replaced ", length(which(keep_ids)),
+      " empty gene names with available not empty annotation."
+    )
   }
 
   # remove remaining rows if there are any
   if (any(!keep_ids)) {
     genes_to_remove <- unnamed_genes_idx[!keep_ids]
-    counts <- counts[-genes_to_remove,]
-    annotations$annot <- annotations$annot[-genes_to_remove,]
-    message("Removed ",
-            length(unnamed_genes_idx[!keep_ids]),
-            " genes without annotations")
+    counts <- counts[-genes_to_remove, ]
+    annotations$annot <- annotations$annot[-genes_to_remove, ]
+    message(
+      "Removed ",
+      length(unnamed_genes_idx[!keep_ids]),
+      " genes without annotations"
+    )
   }
 
   return(list("counts" = counts, "annotations" = annotations))
-
 }
