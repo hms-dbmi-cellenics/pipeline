@@ -24,15 +24,22 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # the following operations give different results depending on sample order
   # make sure they are ordered according to their matrices size
   scdata_list <- order_by_size(scdata_list)
-  message("Started create_scdata for sample ", sample_id, "\n")
-  scdata <- create_scdata(scdata_list, cells_id)
-  message("Finished create_scdata for sample ", sample_id, "\n")
+  message("Started create_sketches for sample ", sample_id, "\n")
+  sketches_list <- create_sketches(scdata_list, cells_id)
+  message("Finished create_sketches for sample ", sample_id, "\n")
+  message("Started merge_sketches for sample ", sample_id, "\n")
+  sketches <- merge_sketches(sketches_list)
+  message("Finished merge_sketches for sample ", sample_id, "\n")
 
   # main function
   set.seed(RANDOM_SEED)
-  message("Started data integration")
-  scdata_integrated <- run_dataIntegration(scdata, config)
-  message("Finished data integration")
+  message("Started sketches data integration")
+  sketches_integrated <- run_dataIntegration(sketches, config)
+  message("Finished sketches data integration")
+
+  message("Started learn integration from sketches and apply to whole data")
+  scdata_integrated <- learn_from_sketches(scdata_list, sketches_list, sketches_integrated)
+  message("Finished learn integration from sketches and apply to whole data")
 
   # get  npcs from the UMAP call in integration functions
   npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
@@ -71,12 +78,18 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 #' @return SeuratObject
 #' @export
 #'
-create_scdata <- function(scdata_list, cells_id) {
+create_sketches <- function(scdata_list, cells_id) {
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
-  merged_scdatas <- merge_scdata_list(scdata_list)
-  merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
+  sketches_list <- perform_geomsketch(scdata_list)
 
-  return(merged_scdatas)
+  return(sketches_list)
+}
+
+merge_sketches <- function(sketches_list) {
+  merged_sketches <- merge_scdata_list(sketches_list)
+  merged_sketches <- add_metadata(merged_sketches, sketches_list)
+
+  return(merged_sketches)
 }
 
 #' For each sample, remove filtered cells from the Seurat object
@@ -125,10 +138,12 @@ merge_scdata_list <- function(scdata_list) {
 run_dataIntegration <- function(scdata, config) {
 
   # get method and settings
-  method <- config$dataIntegration$method
-  npcs <- config$dimensionalityReduction$numPCs
+  # method <- config$dataIntegration$method
+  # npcs <- config$dimensionalityReduction$numPCs
   exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
 
+  method <- "harmony"
+  npcs <- 50
 
   nsamples <- length(unique(scdata$samples))
   if (nsamples == 1) {
@@ -577,4 +592,63 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
   plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
 
   return(plots)
+}
+
+
+perform_geomsketch <- function(scdata_list) {
+  for (i in 1:length(scdata_list)) {
+    sketches_list[[i]] <- Geosketch(object = scdata_list[[i]], reduction = "pca", dims = 50, num.cells = ncol(scdata_list[[i]])/2)
+  }
+  return(sketches_list)
+}
+
+Geosketch <- function(object, reduction, dims, num.cells) {
+  if(!exists("geosketch")) {
+    geosketch <- reticulate::import("geosketch")
+  }
+  stopifnot(reduction %in% names(object@reductions))
+  stopifnot(ncol(object@reductions[[reduction]]) >= dims)
+
+  embeddings <- object@reductions[[reduction]]@cell.embeddings[, 1:dims]
+  index <- unlist(geosketch$gs(embeddings, as.integer(num.cells),  one_indexed = TRUE))
+  sketch <- object[, index]
+  return(sketch)
+}
+
+# get embeddings from splitted Seurat object
+embeddings_to_list <- function(data, reduction) {
+  embed <- list()
+  for (i in 1:length(data)) {
+    embed[[i]] <- data[[i]]@reductions[[reduction]]@cell.embeddings[, 1:dims]
+  }
+  return(embed)
+}
+
+learn_from_sketches <- function(scdata_list, sketches_list, sketches_integrated) {
+  # get embeddings from splitted Seurat object
+  embeddings_orig <- embeddings_to_list(scdata_list, "pca")
+  embeddings_sketch <- embeddings_to_list(sketches_list, "pca")
+  # we have to split back the integrated object to make it usable in the python script
+  sketches_integrated_split <- Seurat::SplitObject(sketches_integrated, split.by = "samples")
+  embeddings_sketch_int <- embeddings_to_list(sketches_integrated_split, "harmony")
+
+  # use python script to learn integration from sketches and apply to whole dataset
+  source_python("R/learn-apply-transformation.py")
+  learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
+
+  # replace learned integrated embeddings (WORKING)
+  reduction <- "harmony"
+  transf_scdata <- scdata_list
+  for (i in 1:length(transf_scdata)) {
+    rownames(learned_int[[i]]) <- rownames(data_split[[i]]@reductions[[reduction]]@cell.embeddings)
+    colnames(learned_int[[i]]) <- colnames(data_split[[i]]@reductions[[reduction]]@cell.embeddings)
+    transf_scdata[[i]]@reductions[[reduction]]@cell.embeddings <- learned_int[[i]]
+  }
+  learned_int_merged <- as.matrix(do.call(rbind.data.frame, learned_int))
+  transf_scdata_merged <- merge_scdata_list(transf_scdata)
+
+  transf_scdata_merged[["harmony"]] <- Seurat::CreateDimReducObject(embeddings = learned_int_merged, key = "harmony_", assay = Seurat::DefaultAssay(transf_scdata_merged))
+  transf_scdata_merged <- Seurat::RunUMAP(transf_scdata_merged, reduction = "harmony", dims = 1:50, verbose = FALSE)
+
+  return(transf_scdata_merged)
 }
