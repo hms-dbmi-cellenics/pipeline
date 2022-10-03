@@ -8,7 +8,7 @@ mock_rhapsody_matrix <- function(counts, sample_dir) {
   counts$Cell_Index <- as.integer(factor(counts$barcode))
   counts$RSEC_Adjusted_Molecules <- counts$DBEC_Adjusted_Molecules + 5
 
-  matrix_path <- file.path(sample_dir, "expression_data.st.gz")
+  matrix_path <- file.path(sample_dir, file_names[["rhapsody"]])
 
   # prepend some of that nice header
   header <- c(
@@ -115,7 +115,7 @@ test_that("parse_rhapsody_matrix keeps the counts where it counts (correct gene-
   input_dir <- "./input"
 
   # read original table and get vector of expected values (originals)
-  original_path <- file.path(input_dir, names(samples), "expression_data.st.gz")
+  original_path <- file.path(input_dir, names(samples), file_names[["rhapsody"]])
   original <- data.table::fread(original_path)
   expected_values <- original$DBEC_Adjusted_Molecules
 
