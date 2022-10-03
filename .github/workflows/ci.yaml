@@ -180,22 +180,22 @@ jobs:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
           GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
 
-      - id: codecov
-        name: Generate codecov report
-        run: |-
-          docker run \
-            --entrypoint /bin/bash \
-            -v $(pwd)/covr:/covr $IMAGE_NAME \
-            -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
+      #- id: codecov
+      #  name: Generate codecov report
+      #  run: |-
+      #    docker run \
+      #      --entrypoint /bin/bash \
+      #      -v $(pwd)/covr:/covr $IMAGE_NAME \
+      #      -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
 
-        env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
+      #  env:
+      #    IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
 
-      - id: upload-coverage
-        name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          files: ./pipeline-runner/covr/coverage.xml
+      #- id: upload-coverage
+      #  name: Upload coverage to Codecov
+      #  uses: codecov/codecov-action@v2
+      #  with:
+      #    files: ./pipeline-runner/covr/coverage.xml
 
       - id: push
         name: Push docker images to ECR
