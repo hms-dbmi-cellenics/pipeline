@@ -1,41 +1,29 @@
 #' STEP 3. Mitochondrial content filter
 #'
-#' This is a simplest filter that looks at a threshold value for the
-#' mitochondrial content.
+#' This is a simplest filter that looks at a threshold value for the mitochondrial content.
 #'
-#' To separate cells with low MT-content from the ones that have a high
-#' MT-content what makes us think that are dead. This can be a useful first
-#' guess. The settings for such a filter can also contain a simple
-#' "probabilityThreshold" setting.
+#' To separate cells with low MT-content from the ones that have a high MT-content what makes us think that are dead.
+#' This can be a useful first guess. The settings for such a filter can also contain a simple "probabilityThreshold" setting.
 #'
 #' @param config list containing the following information
 #'          - enable: true/false. Refering to apply or not the filter.
-#'          - auto: true/false. 'True' indicates that the filter setting need to
-#'          be changed depending on some sensible value (it requires
+#'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
 #'          to call generate_default_values_mitochondrialContent)
 #'          - filterSettings: slot with thresholds
 #'                  - method: String. Method to be used {absoluteThreshold}
-#'                  - methodSettings: List with the method as key and contain
-#'                  all the filterSettings for this specific method.
+#'                  - methodSettings: List with the method as key and contain all the filterSettings for this specific method.
 #'                          * absoluteThreshold: based on a cut-off threshold
-#'                                  - maxFraction: Float. maximun pct MT-content
-#'                                  that we considere for a alive cell
+#'                                  - maxFraction: Float. maximun pct MT-content that we considere for a alive cell
 #'                                  - binStep: Float. Bin size for the histogram
 #'                          * we are supposed to add more methods ....
 #' @export
-#' @return a list with the filtered seurat object by mitochondrial content, the
-#'   config and the plot values
+#' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
 filter_high_mito <- function(scdata_list, config, sample_id, cells_id, task_name = "mitochondrialContent", num_cells_to_downsample = 6000) {
   sample_cell_ids <- cells_id[[sample_id]]
 
   if (length(sample_cell_ids) == 0) {
-    return(list(
-      data = scdata_list[[sample_id]],
-      new_ids = cells_id,
-      config = config,
-      plotData = list()
-    ))
+    return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
   }
 
   sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
@@ -44,11 +32,7 @@ filter_high_mito <- function(scdata_list, config, sample_id, cells_id, task_name
   if (!"percent.mt" %in% colnames(scdata_list[[sample_id]]@meta.data)) {
     message("Warning! No MT-content has been computed for this experiment!")
     guidata <- list()
-    return(list(
-      data = scdata_list[[sample_id]],
-      config = config,
-      plotData = guidata
-    ))
+    return(list(data = scdata_list[[sample_id]], config = config, plotData = guidata))
   }
 
   max_fraction <- config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction
@@ -110,9 +94,8 @@ generate_default_values_mitochondrialContent <- function(scdata, config) {
     is.out <- scuttle::isOutlier(scdata$percent.mt, type = "higher")
 
     threshold <- ifelse(!sum(is.out),
-      max(scdata$percent.mt),
-      min(scdata$percent.mt[is.out])
-    ) / 100
+                        max(scdata$percent.mt),
+                        min(scdata$percent.mt[is.out])) / 100
   }
 
   return(threshold)
