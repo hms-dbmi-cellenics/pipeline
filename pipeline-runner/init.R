@@ -42,7 +42,8 @@ load_config <- function(development_aws_server) {
             activity_arn <- buildActivityArn(aws_region, aws_account_id, activity_id)
         }
 
-        # if we didn't find an activity in podinfo try to get the from the env (means we are running locally)
+        # if we didn't find an activity in podinfo try to get the from the env
+        # (means we are running locally)
         if (is.na(activity_arn)) {
             activity_arn <- Sys.getenv("ACTIVITY_ARN", unset = NA)
         }
@@ -74,8 +75,8 @@ load_config <- function(development_aws_server) {
 
     config[["aws_config"]] <- list(region = config$aws_region)
 
-    # running in linux needs the IP of the host to work. If it is set as an environment variable (by makefile) honor it instead of the
-    # provided parameter
+    # running in linux needs the IP of the host to work. If it is set as an
+    # env variable (by makefile) honor it instead of the provided parameter
     overriden_server <- Sys.getenv("HOST_IP", "")
     if (overriden_server != "") {
         development_aws_server <- overriden_server
@@ -188,13 +189,15 @@ call_gem2s <- function(task_name, input, pipeline_config) {
     return(message_id)
 }
 
-#
+
 # call_data_processing
-# Runs step @task_name of the data processing pipeline, send plot data to s3 and output message to api.
+# Runs step @task_name of the data processing pipeline, send plot data to s3 and
+# output message to api.
 # IN task_name: str, name of the step.
-# IN input: json str, config settings for all samples, current sample uuid, uploadCountMatrix (whether or not to upload after step)
-# IN pipeline_config: json str, environment config resulting from the load_config function
-#
+# IN input: json str, config settings for all samples, current sample uuid,
+#   uploadCountMatrix (whether or not to upload after step)
+# IN pipeline_config: json str, environment config resulting from the
+#   load_config function
 call_data_processing <- function(task_name, input, pipeline_config) {
     experiment_id <- input$experimentId
     config <- input$config
@@ -282,17 +285,15 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     return(message_id)
 }
 
-#
-# start_heartbeat(task_token, aws_config)
+
 # IN task_token, aws_config
 #
 # Sends a heartbeat to the state machine every 'wait_time' seconds
-# Once the task is completed the heartbeat will fail accordingly with a
-# task timeout and exit the loop and a new heartbeat will be set up by next task.
-# This method is invoked with `callr::r_bg` which creates a new process which does not inherit
-# the current workspace or memory, only the provided parameters; that's why we need to
-# reimport tryCatchLog & initialize states again.
-#
+# Once the task is completed the heartbeat will fail accordingly with a task
+# timeout and exit the loop and a new heartbeat will be set up by next task.
+# This method is invoked with `callr::r_bg` which creates a new process which
+# does not inherit the current workspace or memory, only the provided
+# parameters; that's why we need to reimport tryCatchLog & re-initialize states.
 start_heartbeat <- function(task_token, aws_config) {
     library(tryCatchLog)
     message("Starting heartbeat")
@@ -355,7 +356,8 @@ wrapper <- function(input, pipeline_config) {
 
 #
 # Init()
-# Loads configuration and repeats the wrapper call until no more messages are received.
+# Loads configuration and repeats the wrapper call until no more  messages are
+# received.
 #
 init <- function() {
     pipeline_config <- load_config("host.docker.internal")
@@ -383,7 +385,7 @@ init <- function() {
 
         # parse data from state machine input
         input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
-        message("Input json: ", print(input))
+        message("Input json: ", input)
 
         # save logs to file
         debug_prefix <- file.path(input$experimentId, debug_timestamp)
