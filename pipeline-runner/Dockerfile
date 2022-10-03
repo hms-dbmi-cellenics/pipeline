@@ -44,21 +44,12 @@ RUN R -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRU
 
 # install miniconda and geosketch
 # clean conda
-# RUN apt-get update && apt-get upgrade -y
-# RUN apt-get install -y python3.8-venv
 ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 RUN R -e "Sys.setenv(RETICULATE_PYTHON = 'root/.virtualenvs/r-reticulate/bin/python')" && \
     R -e "reticulate::install_miniconda()" && \
-#    R -e "reticulate::virtualenv_install('r-reticulate', 'geosketch')" && \
     R -e "reticulate::conda_install('r-reticulate', 'geosketch', pip = TRUE)" && \
- #   R -e "reticulate::conda_install(packages = 'geosketch', python_version='3.6.15', channel = 'bioconda')" && \
-#    R -e "reticulate::py_install('geosketch')" && \
     R -e "geosketch <- reticulate::import('geosketch')" && \
- #   R -e "reticulate::use_python('/src/r-miniconda/lib/python3.10')" && \
- #    R -e "reticulate::virtualenv_create('gsk')" && \
- #    R -e "reticulate::use_virtualenv('gsk')" && \
-  #   R -e "reticulate::virtualenv_install('gsk', 'geosketch')" && \
-   #  R -e "geosketch <- reticulate::import('geosketch')" && \
+    R -e "reticulate::conda_install('r-reticulate', 'scanorama', pip = TRUE)" && \
      CONDA_PATH=$(R -e "cat(reticulate::conda_binary())") && \
     $CONDA_PATH clean --force-pkgs-dirs -y
 
