@@ -138,7 +138,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 
   for (sample in samples) {
     sample_dir <- file.path(input_dir, sample)
-    sample_fpaths <- file.path(sample_dir, "expression_data.st.gz")
+    sample_fpaths <- file.path(sample_dir, file_names[["rhapsody"]])
 
     message("\nSample --> ", sample)
     message(
