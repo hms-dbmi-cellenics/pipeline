@@ -1,4 +1,4 @@
-buildActivityArn <- function(aws_region, aws_account_id, activity_id) {
+build_activity_arn <- function(aws_region, aws_account_id, activity_id) {
     if (is.na(activity_id)) {
         return(NA)
     }
@@ -20,9 +20,17 @@ load_config <- function(development_aws_server) {
     repeat {
         # if /etc/podinfo/labels exists we are running in a remote aws pod
         if (file.exists(label_path)) {
-            labels <- read.csv(label_path, sep = "=", row.names = 1, header = FALSE)
+            labels <- read.csv(label_path,
+                sep = "=",
+                row.names = 1,
+                header = FALSE
+            )
             activity_id <- labels["activityId", ]
-            activity_arn <- buildActivityArn(aws_region, aws_account_id, activity_id)
+            activity_arn <- build_activity_arn(
+                aws_region,
+                aws_account_id,
+                activity_id
+            )
         }
 
         # if we didn't find an activity in podinfo try to get the from the env
@@ -281,13 +289,20 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     if (upload_count_matrix) {
         assign("scdata", data, pos = ".GlobalEnv")
         object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
-        message("Count matrix uploaded to ", pipeline_config$processed_bucket, " with key ", object_key)
+        message(
+            "Count matrix uploaded to ", pipeline_config$processed_bucket,
+            " with key ", object_key
+        )
     }
 
     # send result to API
     message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
     ttask <- format(Sys.time() - tstart, digits = 2)
-    message("⏱️ Time to upload ", task_name, " objects for sample ", sample_id, ": ", ttask)
+    message(
+        "⏱️ Time to upload ", task_name,
+        " objects for sample ", sample_id,
+        ": ", ttask
+    )
 
     return(message_id)
 }
