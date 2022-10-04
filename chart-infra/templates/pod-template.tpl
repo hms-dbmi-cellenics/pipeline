@@ -13,12 +13,12 @@
       - name: "{{ .Release.Name }}"
         image: "{{ .Values.pipelineRunner.image }}"
         env:
-          - name: CLUSTER_ENV
-            value: "{{ .Values.clusterEnv }}"
-          - name: SANDBOX_ID
-            value: "{{ .Values.sandboxId }}"
-          - name: AWS_ACCOUNT_ID
-            value: "{{ .Values.myAccount.accountId }}"
+        - name: CLUSTER_ENV
+          value: "{{ .Values.clusterEnv }}"
+        - name: SANDBOX_ID
+          value: "{{ .Values.sandboxId }}"
+        - name: AWS_ACCOUNT_ID
+          value: "{{ .Values.myAccount.accountId }}"
         volumeMounts:
         - name: podinfo
           mountPath: /etc/podinfo
@@ -59,7 +59,7 @@
       - name: podinfo
         downwardAPI:
           items:
-            - path: "labels"
-              fieldRef:
-                fieldPath: metadata.labels
+          - path: "labels"
+            fieldRef:
+              fieldPath: metadata.labels
 {{- end -}}
