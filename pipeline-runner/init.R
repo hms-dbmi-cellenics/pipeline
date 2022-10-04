@@ -244,10 +244,12 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         message("Cells id loaded.")
     }
 
+
     # call function to run and update global variable
     c(
         data, new_ids,...rest_of_results
     ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
+
 
     assign("cells_id", new_ids, pos = ".GlobalEnv")
 

@@ -46,8 +46,12 @@ add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
   # result in a shuffled cell_ids
   set.seed(RANDOM_SEED)
   total_cells <- sum(sapply(scdata_list, ncol))
-  cell_ids <- 0:total_cells-1
+  cell_ids <- 0:(total_cells-1)
 
+  # we need to iterate always in the same order because we are assigning the cell ids
+  # at random and we want the relation cell <-> ID to be always the same to avoid
+  # any changes in downstream analysis (like in the clustering)
+  scdata_list <- order_by_size(scdata_list)
   for (sample in names(scdata_list)) {
     sample_size <- ncol(scdata_list[[sample]])
 

@@ -21,19 +21,18 @@
 #   },
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
-  # subset each of the samples before merging them
-  for (sample in names(scdata_list)) {
-    flat_cell_ids <- unname(unlist(cells_id[[sample]]))
-    scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cell_ids)
-  }
-
-  message("Total cells: ", sum(sapply(scdata_list, ncol)))
-  scdata <- create_scdata(scdata_list)
+  # the following operations give different results depending on sample order
+  # make sure they are ordered according to their matrices size
+  scdata_list <- order_by_size(scdata_list)
+  message("Started create_scdata for sample ", sample_id, "\n")
+  scdata <- create_scdata(scdata_list, cells_id)
+  message("Finished create_scdata for sample ", sample_id, "\n")
 
   # main function
   set.seed(RANDOM_SEED)
-  message("running data integration")
+  message("Started data integration")
   scdata_integrated <- run_dataIntegration(scdata, config)
+  message("Finished data integration")
 
   # get  npcs from the UMAP call in integration functions
   npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
@@ -46,36 +45,8 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
 
   scdata_integrated <- colorObject(scdata_integrated)
-  cells_order <- rownames(scdata_integrated@meta.data)
-  plot1_data <- unname(purrr::map2(scdata_integrated@reductions$umap@cell.embeddings[, 1], scdata_integrated@reductions$umap@cell.embeddings[, 2], function(x, y) {
-    c("x" = x, "y" = y)
-  }))
 
-  # Adding color and sample id
-  plot1_data <- purrr::map2(
-    plot1_data,
-    unname(scdata_integrated@meta.data[cells_order, "samples"]),
-    function(x, y) {
-      append(x, list("sample" = y))
-    }
-  )
-
-  plot1_data <- purrr::map2(
-    plot1_data,
-    unname(scdata_integrated@meta.data[cells_order, "color_samples"]),
-    function(x, y) {
-      append(x, list("col" = y))
-    }
-  )
-
-  plot2_data <- unname(purrr::map2(1:min(50,length(var_explained)), var_explained, function(x, y) {
-    c("PC" = x, "percentVariance" = y)
-  }))
-
-  plots <- list()
-  plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
-  plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
-
+  plots <- generate_elbow_plot_data(scdata_integrated, config, task_name, var_explained)
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
@@ -88,24 +59,44 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   return(result)
 }
 
+
 #' Create the merged Seurat object
 #'
 #' This function takes care of merging the sample seurat objects, shuffling
 #' and adding the metadata to the complete Seurat object. It does so by calling
 #' the corresponding functions.
 #'
-#' @param scdata_list
+#' @param scdata_list list of SeuratObjects
 #'
 #' @return SeuratObject
 #' @export
 #'
-create_scdata <- function(scdata_list) {
-
+create_scdata <- function(scdata_list, cells_id) {
+  scdata_list <- remove_filtered_cells(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
   return(merged_scdatas)
 }
+
+#' For each sample, remove filtered cells from the Seurat object
+#'
+#' @param scdata_list list of SeuratObjects
+#' @param cells_id list of cells ids to keep
+#'
+#' @return list of filtered SeuratObjects
+#' @export
+#'
+remove_filtered_cells <- function(scdata_list, cells_id) {
+  for (sample in names(scdata_list)) {
+    flat_cell_ids <- unname(unlist(cells_id[[sample]]))
+    scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cell_ids)
+  }
+
+  message("Total cells: ", sum(sapply(scdata_list, ncol)))
+  return(scdata_list)
+}
+
 
 #' Merge the list of sample Seurat objects
 #'
@@ -118,15 +109,13 @@ create_scdata <- function(scdata_list) {
 #' @export
 #'
 merge_scdata_list <- function(scdata_list) {
-
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
-    scdata <- merge(scdata_list[[1]], y = scdata_list[-1])
+    scdata <- merge(scdata_list[[1]], y = scdata_list[-1], merge.data = FALSE)
   }
 
   return(scdata)
-
 }
 
 # This function covers
@@ -151,7 +140,7 @@ run_dataIntegration <- function(scdata, config) {
   Seurat::DefaultAssay(scdata) <- "RNA"
 
   # remove cell cycle genes if needed
-  if(length(exclude_groups) > 0) {
+  if (length(exclude_groups) > 0) {
     message("\n------\n")
     scdata <- remove_genes(scdata, exclude_groups)
     message("\n------\n")
@@ -181,9 +170,8 @@ run_harmony <- function(scdata, config) {
   # grep in case misspelled
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
-  scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  scdata <- normalize_data(scdata, normalization, "harmony", nfeatures)
+
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
   scdata <- harmony::RunHarmony(scdata, group.by.vars = "samples")
   scdata <- add_dispersions(scdata)
@@ -210,19 +198,15 @@ run_seuratv4 <- function(scdata, config) {
   # @misc slots not preserved so transfer
   misc <- scdata@misc
 
-  # Currently, we only support Seurat V4 pipeline for the multisample integration
   data.split <- Seurat::SplitObject(scdata, split.by = "samples")
   for (i in 1:length(data.split)) {
-    data.split[[i]] <- Seurat::NormalizeData(data.split[[i]], normalization.method = normalization, verbose = FALSE)
-    data.split[[i]] <- Seurat::FindVariableFeatures(data.split[[i]], nfeatures = nfeatures, verbose = FALSE)
+    data.split[[i]] <- normalize_data(data.split[[i]], normalization, "seuratv4", nfeatures)
     # PCA needs to be run also here
     # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
     if (reduction == "rpca") {
       message("Running PCA")
-      data.split[[i]] <- Seurat::ScaleData(data.split[[i]], verbose = FALSE)
       data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE, npcs = npcs)
-    }
-    else {
+    } else {
       message("PCA is not running before integration as CCA method is selected")
     }
   }
@@ -237,7 +221,7 @@ run_seuratv4 <- function(scdata, config) {
       if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
       if (reduction == "cca") message("Finding integration anchors using CCA reduction")
       data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE, reduction = reduction)
-      scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs)
+      scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
       Seurat::DefaultAssay(scdata) <- "integrated"
     },
     error = function(e) { # Specifying error message
@@ -251,17 +235,17 @@ run_seuratv4 <- function(scdata, config) {
       warning("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
       # An ideal solution would be to launch an error to the UI, however, for now, we will skip the integration method.
       print("Skipping integration step")
-      scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
     }
   )
 
+  # seurat v4 requires to call the normalize_data function before (on single objects)
+  # and after integration (on the integrated object)
+  scdata <- normalize_data(scdata, normalization, "seuratv4", nfeatures)
   scdata@misc <- misc
-  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
   scdata <- add_dispersions(scdata)
   scdata@misc[["active.reduction"]] <- "pca"
 
-  # scale and run PCA
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  # run PCA
   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
 
   return(scdata)
@@ -278,8 +262,7 @@ run_fastmnn <- function(scdata, config) {
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
 
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
-  scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
+  scdata <- normalize_data(scdata, normalization, "fastmnn", nfeatures)
   scdata <- add_dispersions(scdata)
 
   # @misc slots not preserved so transfer
@@ -302,13 +285,11 @@ run_unisample <- function(scdata, config) {
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
   # in unisample we only need to normalize
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE)
-  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+  scdata <- normalize_data(scdata, normalization, "unisample", nfeatures)
   scdata <- add_dispersions(scdata)
   scdata@misc[["active.reduction"]] <- "pca"
 
-  # scale and run PCA
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  # run PCA
   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
 
   return(scdata)
@@ -418,10 +399,11 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
 #' @export
 #'
 list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
-
-  gene_lists <- list("cellCycle" = build_cc_gene_list,
-                     "ribosomal" = NULL,
-                     "mitochondrial" = NULL)
+  gene_lists <- list(
+    "cellCycle" = build_cc_gene_list,
+    "ribosomal" = NULL,
+    "mitochondrial" = NULL
+  )
 
   exclude_gene_indices <- c()
 
@@ -471,13 +453,17 @@ build_cc_gene_list <- function(all_genes) {
 
   # questionable bit of code. This should work for human, mice, human + mice
   # and ignore other species, since matching is case sensitive.
-  cc_gene_indices <- unique(c(human_cc_ens_indices,
-                            human_cc_sym_indices,
-                            mouse_cc_ens_indices,
-                            mouse_cc_sym_indices))
+  cc_gene_indices <- unique(c(
+    human_cc_ens_indices,
+    human_cc_sym_indices,
+    mouse_cc_ens_indices,
+    mouse_cc_sym_indices
+  ))
 
-  message("Number of Cell Cycle genes to exclude: ",
-                  length(cc_gene_indices))
+  message(
+    "Number of Cell Cycle genes to exclude: ",
+    length(cc_gene_indices)
+  )
 
   return(cc_gene_indices)
 }
@@ -515,3 +501,80 @@ add_metadata <- function(scdata, scdata_list) {
   return(scdata)
 }
 
+
+#' Normalize data according to the specific normalization method
+#'
+#' This function normalize the data taking into account the integration method.
+#'
+#' @param scdata SeuratObject
+#' @param normalization_method normalization method
+#' @param integration_method integration method
+#' @param nfeatures number of features to pass to Seurat::FindVariableFeatures()
+#'
+#' @return normalized and scaled SeuratObject
+#' @export
+#'
+normalize_data <- function(scdata, normalization_method, integration_method, nfeatures) {
+  if (normalization_method == "LogNormalize") {
+    scdata <- log_normalize(scdata, normalization_method, integration_method, nfeatures)
+  }
+  return(scdata)
+}
+
+#' Perform log normalization
+#'
+#' #' If the integration method is fastMNN, it will skip ScaleData() because
+#' fastMNN already performs its own scaling.
+#' If the integration method is SeuratV4, the default assay will be set to "integrated",
+#' in this case NormalizeData() will not work (see the [integration vignette](https://satijalab.org/seurat/articles/integration_introduction.html)),
+#' so here it's skipped.
+#'
+#' @param scdata SeuratObject
+#' @param normalization_method normalization method
+#' @param integration_method integration method
+#' @param nfeatures number of features to pass to Seurat::FindVariableFeatures()
+#'
+#' @return normalized and scaled SeuratObject
+#' @export
+#'
+log_normalize <- function(scdata, normalization_method, integration_method, nfeatures) {
+  if (Seurat::DefaultAssay(scdata) == "RNA") {
+    scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
+  }
+  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+  if (integration_method != "fastmnn") {
+    scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  }
+  return(scdata)
+}
+
+
+#' generate elbow plot data
+#'
+#' Reshapes table to an UI compatible format for elbow/scree plot.
+#'
+#' @param scdata_integrated integrated seurat object
+#' @param config list
+#' @param task_name character
+#' @param var_explained numeric
+#'
+#' @return list of plot data
+#' @export
+#'
+generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_explained) {
+
+  cells_order <- rownames(scdata_integrated@meta.data)
+
+  # plot1_data is an empty list because it is not used anymore by the UI
+  plot1_data <- list()
+
+  plot2_data <- unname(purrr::map2(1:min(50, length(var_explained)), var_explained, function(x, y) {
+    c("PC" = x, "percentVariance" = y)
+  }))
+
+  plots <- list()
+  plots[generate_gui_uuid("", task_name, 0)] <- list(plot1_data)
+  plots[generate_gui_uuid("", task_name, 1)] <- list(plot2_data)
+
+  return(plots)
+}
