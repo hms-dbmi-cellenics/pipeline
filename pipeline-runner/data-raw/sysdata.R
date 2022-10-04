@@ -1,3 +1,14 @@
+bucket_list <- list(
+  originals_bucket = "biomage-originals",
+  source_bucket = "biomage-source",
+  processed_bucket = "processed-matrix",
+  results_bucket = "worker-results",
+  cells_id_bucket = "biomage-filtered-cells",
+  plot_data_bucket = "plots-tables",
+  cell_sets_bucket = "cell-sets",
+  debug_bucket = "biomage-pipeline-debug"
+)
+
 # constants used in GEM2S
 gem2s <- list(
   max.edrops.fdr = 0.001,
@@ -41,6 +52,7 @@ IDS_IDS <- "ids_ids"
 pipeline_version <- 2
 
 usethis::use_data(
+  bucket_list,
   gem2s,
   RANDOM_SEED,
   DEBUG_PATH,

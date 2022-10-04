@@ -100,14 +100,13 @@ load_config <- function(development_aws_server) {
         }, ns = "paws.common")
     }
 
-    config[["originals_bucket"]] <- paste("biomage-originals", config$cluster_env, config$aws_account_id, sep = "-")
-    config[["source_bucket"]] <- paste("biomage-source", config$cluster_env, config$aws_account_id, sep = "-")
-    config[["processed_bucket"]] <- paste("processed-matrix", config$cluster_env, config$aws_account_id, sep = "-")
-    config[["results_bucket"]] <- paste("worker-results", config$cluster_env, config$aws_account_id, sep = "-")
-    config[["cells_id_bucket"]] <- paste("biomage-filtered-cells", config$cluster_env, config$aws_account_id, sep = "-")
-    config[["plot_data_bucket"]] <- paste("plots-tables", config$cluster_env, config$aws_account_id, sep = "-")
-    config[["cell_sets_bucket"]] <- paste("cell-sets", config$cluster_env, config$aws_account_id, sep = "-")
-    config[["debug_bucket"]] <- paste("biomage-pipeline-debug", config$cluster_env, config$aws_account_id, sep = "-")
+    bucket_list <- lapply(bucket_list,
+        paste, config$cluster_env, config$aws_account_id,
+        sep = "-"
+    )
+
+    config <- append(config, bucket_list)
+
     config[["sns_topic"]] <- paste(
         paste("arn:aws:sns", config$aws_region, config$aws_account_id, "work-results", sep = ":"),
         config$cluster_env, config$sandbox_id, config$api_version,
