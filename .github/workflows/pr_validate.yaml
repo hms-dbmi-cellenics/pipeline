@@ -41,14 +41,13 @@ jobs:
       - id: extract-staging
         name: Check staging URL
         run: |-
-        
-          REPO_NAME=${{ github.event.repository.name }}
+          ORG_NAME=${{ github.repository_owner }}
 
-          if [ $REPO_NAME = 'hms-dbmi-cellenics' ]; then
+          if [ $ORG_NAME = 'hms-dbmi-cellenics' ]; then
             REGEX="#### Link to staging deployment URL \(or set N\/A\)\s?\r\n(https:\/\/ui-(.+)\.staging\.single-cell-platform\.net|N\/A)"
           fi
 
-          if [ $REPO_NAME = 'biomage-org' ]; then
+          if [ $ORG_NAME = 'biomage-org' ]; then
             REGEX="#### Link to staging deployment URL \(or set N\/A\)\s?\r\n(https:\/\/ui-(.+)\.scp-staging\.biomage\.net|N\/A)"
           fi
 
