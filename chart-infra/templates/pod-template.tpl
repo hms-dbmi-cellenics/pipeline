@@ -25,7 +25,7 @@
         resources:
           requests:
             memory: "{{ .Values.memoryRequest }}"
-{{- if eq .Values.myAccount.datadogEnabled "false" }}
+{{- if eq .Values.myAccount.datadogEnabled "true" }}
       - name: datadog-agent
         image: datadog/agent
         env:
