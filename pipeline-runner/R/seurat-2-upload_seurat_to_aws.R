@@ -17,8 +17,10 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   cell_sets <- get_cell_sets(scdata, input)
 
   # add louvain clusters
-  cluster_sets <- data.frame(cluster = scdata$seurat_clusters,
-                             cell_ids = scdata$cells_id) %>%
+  cluster_sets <- data.frame(
+    cluster = scdata$seurat_clusters,
+    cell_ids = scdata$cells_id
+  ) %>%
     format_cell_sets_object('louvain', scdata@misc$color_pool)
 
   # cell sets file to s3
@@ -28,17 +30,16 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   put_object_in_s3(pipeline_config,
                    bucket = pipeline_config$cell_sets_bucket,
                    object = charToRaw(cell_sets_data),
-                   key = experiment_id
-  )
-
+                   key = experiment_id)
 
   # replicate qc config for simplicity
   # could also create a 'seurat_config' column in experiment table and change the ui/api around more
   qc_config <- construct_qc_config(scdata)
   qc_config$configureEmbedding$embeddingSettings$useSaved <- TRUE
-  qc_config$configureEmbedding$embeddingSettings$method <- DefaultDimReduc(scdata)
+  qc_config$configureEmbedding$embeddingSettings$method <- SeuratObject::DefaultDimReduc(scdata)
 
   # seurat object to s3
+  scdata <- strip_scdata(scdata)
   object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
   message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
 
@@ -63,8 +64,25 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 
   message("\nUpload to AWS step complete.")
   return(res)
+}
 
+strip_scdata <- function(scdata) {
+  # worker only uses 'RNA' assay
+  Seurat::DefaultAssay(scdata) <- 'RNA'
+  remove_assays <- setdiff(names(scdata@assays), 'RNA')
+  for (assay in remove_assays) scdata@assays[[assay]] <- NULL
 
+  # scale.data used as input to PCA (done)
+  scdata[['RNA']]@scale.data <- matrix()
+
+  # graphs used for clustering (done)
+  scdata@graphs <- list()
+
+  # only keep used default reduction
+  remove_reductions <- setdiff(names(scdata@reductions), SeuratObject::DefaultDimReduc(scdata))
+  for (reduction in remove_reductions) scdata@reductions[[reduction]] <- NULL
+
+  return(scdata)
 }
 
 add_samples_to_input <- function(scdata, input) {
