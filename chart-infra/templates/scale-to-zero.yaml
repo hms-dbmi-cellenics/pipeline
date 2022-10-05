@@ -19,14 +19,14 @@ spec:
             sandboxId: "{{ .Values.sandboxId }}"
         spec:
           containers:
-          - name: service-scheduled-job
-            image: 'bitnami/kubectl:latest'
-            args:
-            - scale
-            - '--replicas=0'
-            - deploy
-            - pipeline
-            resources: {}
+            - name: service-scheduled-job
+              image: 'bitnami/kubectl:latest'
+              args:
+                - scale
+                - '--replicas=0'
+                - deploy
+                - pipeline
+              resources: {}
           restartPolicy: Never
           serviceAccountName: cleanup-operator
           serviceAccount: cleanup-operator
