@@ -614,7 +614,7 @@ perform_geomsketch <- function(scdata) {
   scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
-  scdata_sketches <- Geosketch(object = scdata, reduction = "pca", dims = 50, num.cells = round(ncol(scdata)/2))
+  scdata_sketches <- Geosketch(object = scdata, reduction = "pca", dims = 50, num.cells = round(ncol(scdata)*5/100))
   return(scdata_sketches)
 }
 
