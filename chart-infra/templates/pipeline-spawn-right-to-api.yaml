@@ -6,9 +6,9 @@ metadata:
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
 rules:
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get", "list", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -22,9 +22,9 @@ roleRef:
   kind: Role
   name: can-create-pipelines
 subjects:
-  - kind: ServiceAccount
-    name: deployment-runner
-    namespace: {{ regexReplaceAll "^pipeline-" .Release.Namespace "api-" }}
-  - kind: Group
-    apiGroup: rbac.authorization.k8s.io
-    name: state-machine-runner-group
+- kind: ServiceAccount
+  name: deployment-runner
+  namespace: {{ regexReplaceAll "^pipeline-" .Release.Namespace "api-" }}
+- kind: Group
+  apiGroup: rbac.authorization.k8s.io
+  name: state-machine-runner-group

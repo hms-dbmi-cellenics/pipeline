@@ -8,29 +8,29 @@ kind: Role
 metadata:
   name: cleanup-operator
 rules:
-  - apiGroups: [""]
-    resources:
-      - pods
-    verbs:
-      - get
-      - list
-      - watch
-      - delete
-  - apiGroups: ["batch", "extensions"]
-    resources:
-      - jobs
-    verbs:
-      - get
-      - list
-      - watch
-      - delete
-  - apiGroups: ["apps"]
-    resources:
-      - deployments
-      - deployments/scale
-    verbs:
-      - get
-      - patch
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  - delete
+- apiGroups: ["batch", "extensions"]
+  resources:
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+  - delete
+- apiGroups: ["apps"]
+  resources:
+  - deployments
+  - deployments/scale
+  verbs:
+  - get
+  - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -41,5 +41,5 @@ roleRef:
   kind: Role
   name: cleanup-operator
 subjects:
-  - kind: ServiceAccount
-    name: cleanup-operator
+- kind: ServiceAccount
+  name: cleanup-operator
