@@ -14,19 +14,23 @@ DEBUG_PATH <- "/debug"
 # File management, it needs to match the sample_file_type enum in sql
 # (they are originally defined in 20220304184711_schema.js in the api)
 file_types_by_technology <- list(
-  "10x" = list("barcodes10x", "features10x", "matrix10x")
+  "10x" = list("barcodes10x", "features10x", "matrix10x"),
+  "rhapsody" = list("rhapsody")
 )
 
 file_names <- list(
   barcodes10x = "barcodes.tsv.gz",
   features10x = "features.tsv.gz",
-  matrix10x = "matrix.mtx.gz"
+  matrix10x = "matrix.mtx.gz",
+  rhapsody = "expression_data.st.gz"
 )
 
 source("data-raw/cell_cycle_genes.R")
 
-cc_genes <- list("human" = human_cc_genes,
-                 "mouse" = mouse_cc_genes)
+cc_genes <- list(
+  "human" = human_cc_genes,
+  "mouse" = mouse_cc_genes
+)
 
 # annotation type constants
 SYM_IDS <- "sym_ids"

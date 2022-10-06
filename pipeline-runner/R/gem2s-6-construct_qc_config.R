@@ -1,17 +1,17 @@
 #' Constructs default QC configuration
 #'
 #' This function returns the default parameters used during QC as a nested list.
-#' It is sent to the API, which in turn saves it as a jsonb object in the PostgreSQL
-#' database.
+#' It is sent to the API, which in turn saves it as a jsonb object in the
+#' PostgreSQL database.
 #'
 #' @param scdata_list list of seurat objects
-#' @param any_filtered boolean indicating if barcodes were filtered by the emptyDrops.
+#' @param any_filtered bool indicating if barcodes were filtered by emptyDrops
 #'
 #' @return list of QC configuration parameters
 #'
 construct_qc_config <- function(scdata_list, any_filtered) {
   samples <- names(scdata_list)
-  
+
   # classifier
   classifier_config_to_duplicate <- list(
     enabled = !any_filtered,
@@ -139,7 +139,6 @@ get_cellsize_config <- function(scdata_list, config) {
 }
 
 get_sample_mitochondrial_config <- function(scdata_list.sample, config) {
-
   config.sample <- list(
     enabled = TRUE,
     auto = TRUE,
@@ -192,7 +191,7 @@ add_custom_config_per_sample <- function(generate_sample_config, default_config,
   raw_config <- default_config
   config <- list()
   for (sample in names(scdata_list)) {
-    # subset the Seurat object to a single sample
+    # subset the Seurat object list to a single sample
     sample_data <- scdata_list[[sample]]
 
     # run the function to generate config for a sample
