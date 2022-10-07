@@ -2,7 +2,6 @@
 library(Seurat)
 library(zeallot)
 library(tryCatchLog)
-library(futile.logger)
 library(magrittr)
 
 # time stamp used for directory to store log/dump files in event of error

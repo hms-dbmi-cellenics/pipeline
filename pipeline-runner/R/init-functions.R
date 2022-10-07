@@ -57,6 +57,7 @@ load_config <- function(development_aws_server) {
     sandbox_id = sandbox,
     aws_account_id = aws_account_id,
     aws_region = aws_region,
+    aws_config = list(region = aws_region),
     pod_name = Sys.getenv("K8S_POD_NAME", "local"),
     activity_arn = activity_arn,
     api_url = paste0("http://api-", sandbox, ".api-", sandbox, ".svc.cluster.local:3000"),
@@ -66,8 +67,6 @@ load_config <- function(development_aws_server) {
       path = Sys.getenv("DEBUG_PATH", "")
     )
   )
-
-  config[["aws_config"]] <- list(region = config$aws_region)
 
   # running in linux needs the IP of the host to work. If it is set as an
   # environment variable (by makefile) honor it instead of the provided
@@ -118,7 +117,6 @@ load_config <- function(development_aws_server) {
 
 run_processing_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, debug_config) {
   if (!task_name %in% names(tasks)) stop("Invalid task: ", task_name)
-
 
   handle_debug(scdata, config, task_name, sample_id, debug_config)
 
@@ -390,8 +388,8 @@ init <- function() {
 
   print(sessionInfo())
 
-  flog.layout(layout.simple)
-  flog.threshold(ERROR)
+  futile.logger::flog.layout(futile.logger::layout.simple)
+  futile.logger::flog.threshold(futile.logger::ERROR)
 
   message("Waiting for tasks")
 
@@ -413,7 +411,9 @@ init <- function() {
     # save logs to file
     debug_prefix <- file.path(input$experimentId, debug_timestamp)
     dump_folder <- file.path(DEBUG_PATH, debug_prefix)
-    flog.appender(appender.tee(file.path(dump_folder, "logs.txt")))
+    futile.logger::flog.appender(
+      futile.logger::appender.tee(file.path(dump_folder, "logs.txt"))
+    )
 
     # start heartbeat as a different process in the background
     message("Starting heartbeat")
@@ -443,7 +443,7 @@ init <- function() {
         )
       },
       error = function(e) {
-        flog.error("🚩 ---------")
+        futile.logger::flog.error("🚩 ---------")
         sample_text <- ifelse(is.null(input$sampleUuid),
           "",
           paste0(" for sample ", input$sampleUuid)
