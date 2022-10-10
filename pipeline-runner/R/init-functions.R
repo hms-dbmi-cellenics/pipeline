@@ -1,3 +1,10 @@
+#' Build activity ARN
+#'
+#' @param aws_region character
+#' @param aws_account_id character
+#' @param activity_id character
+#'
+#' @return string of activity ARN
 build_activity_arn <- function(aws_region, aws_account_id, activity_id) {
   if (is.na(activity_id)) {
     return(NA)
@@ -10,6 +17,15 @@ build_activity_arn <- function(aws_region, aws_account_id, activity_id) {
   return(activity_arn)
 }
 
+
+#' Load the pipeline step config
+#'
+#' Waits for the activity ARN to be assigned. Once it is, it creates a config
+#' list with pod, AWS, api, and debug information.
+#'
+#' @param development_aws_server
+#'
+#' @return list with config parameters
 load_config <- function(development_aws_server) {
   label_path <- "/etc/podinfo/labels"
   aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset = "242905224710")
@@ -115,8 +131,25 @@ load_config <- function(development_aws_server) {
   return(config)
 }
 
-run_processing_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, debug_config) {
-  if (!task_name %in% names(tasks)) stop("Invalid task: ", task_name)
+
+#' Run qc pipeline step
+#'
+#' Calls the corresponding task_name QC pipeline step function.
+#'
+#' @param scdata Seurat Object
+#' @param config list of configuration parameters
+#' @param tasks list of pipeline tasks
+#' @param task_name character
+#' @param cells_id list of filtered cell ids
+#' @param sample_id character
+#' @param debug_config list of debug parameters
+#'
+#' @return list of task results
+#'
+run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, debug_config) {
+  if (!task_name %in% names(tasks)) {
+    stop("Invalid task: ", task_name)
+  }
 
   handle_debug(scdata, config, task_name, sample_id, debug_config)
 
@@ -139,14 +172,24 @@ run_processing_step <- function(scdata, config, tasks, task_name, cells_id, samp
   return(out)
 }
 
-#
-# input needs:
-# sampleIds for all samples
-# sampleNames for all samples
-# projectId
-# pipeline_config as defined by load_config
-#
 
+#' Run GEM2S step
+#'
+#' Calls the corresponding task_name GEM2S step function.
+#'
+#' The input list only contains experiment level parameters, such as project ID,
+#' and sample names. It's only used for downloading user files.
+#'
+#' @param task_name character
+#' @param input list
+#'  - sampleIds character
+#'  - sampleNames character
+#'  - projectId character
+#' @param pipeline_config list as defined by load_config
+#' @param prev_out list output from previous step
+#'
+#' @return list of task results
+#'
 run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
   # list of task functions named by task name
   tasks <- list(
@@ -165,14 +208,26 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
   task <- tasks[[task_name]]
 
   tstart <- Sys.time()
-  res <- task(input, pipeline_config, prev_out)
+  out <- task(input, pipeline_config, prev_out)
   ttask <- format(Sys.time() - tstart, digits = 2)
   message("⏱️ Time to complete ", task_name, ": ", ttask, "\n")
 
-  return(res)
+  return(out)
 }
 
 
+#' Call gem2s
+#'
+#' Runs step `task_name` of the GEM2S pipeline, sends output message to the API
+#'
+#' @param task_name character name of the step
+#' @param input list containing
+#'   - experimentID
+#'   - sample IDs, names and S3 paths
+#' @param pipeline_config list as defined by load_config
+#'
+#' @return character message id
+#'
 call_gem2s <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
 
@@ -191,17 +246,22 @@ call_gem2s <- function(task_name, input, pipeline_config) {
   return(message_id)
 }
 
-#
-# call_data_processing Runs step @task_name of the data processing pipeline,
-# send plot data to s3 and output message to api. IN task_name: str, name of the
-# step.
 
-# IN input: json str, config settings for all samples, current sample
-#   uuid, uploadCountMatrix (whether or not to upload after step)
-# IN pipeline_config: json str, environment config resulting from the load_config
-#   function
-#
-call_data_processing <- function(task_name, input, pipeline_config) {
+#' Call QC pipeline
+#'
+#' Runs step `task_name` of the data processing pipeline, sends plot data to s3
+#' and the output message to the API
+#'
+#' @param task_name character name of the step
+#' @param input list containing:
+#'   - step parameters for all samples
+#'   - current sample UUID
+#'   - uploadCountMatrix (wether or not to upload matrix after step)
+#' @param pipeline_config list as defined by load_config
+#'
+#' @return character message id
+#'
+call_qc <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
   config <- input$config
   upload_count_matrix <- input$uploadCountMatrix
@@ -260,7 +320,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
   # call function to run and update global variable
   c(
     data, new_ids, ...rest_of_results
-  ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
+  ) %<-% run_qc_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
 
 
   assign("cells_id", new_ids, pos = ".GlobalEnv")
@@ -304,17 +364,23 @@ call_data_processing <- function(task_name, input, pipeline_config) {
   return(message_id)
 }
 
-#
-# start_heartbeat(task_token, aws_config)
-# IN task_token, aws_config
-#
-# Sends a heartbeat to the state machine every 'wait_time' seconds Once the task
-# is completed the heartbeat will fail accordingly with a task timeout and exit
-# the loop and a new heartbeat will be set up by next task. This method is
-# invoked with `callr::r_bg` which creates a new process which does not inherit
-# the current workspace or memory, only the provided parameters; that's why we
-# need to reimport tryCatchLog & initialize states again.
-#
+
+#' Run heartbeat in the background
+#'
+#' Sends a heartbeat to the state machine every 'wait_time' seconds Once the task
+#' is completed the heartbeat will fail accordingly with a task timeout and exit
+#' the loop and a new heartbeat will be set up by next task. This method is
+#' invoked with `callr::r_bg` which creates a new process which does not inherit
+#' the current workspace or memory, only the provided parameters; that's why we
+#' need to re-import `tryCatchLog` & initialize states again.
+#'
+#' @param task_token character authorization token
+#' @param aws_config
+#'
+#' @return
+#' @export
+#'
+#' @examples
 start_heartbeat <- function(task_token, aws_config) {
   library(tryCatchLog)
   message("Starting heartbeat")
@@ -344,19 +410,29 @@ start_heartbeat <- function(task_token, aws_config) {
   }
 }
 
-#
-# Wrapper(input_json)
-# IN input_json: json input from message. Input should have:
-# taskname, server, extra config parameters.
-#
-# Calls the appropiate process: data processing pipeline or gem2s.
-#
+
+#' calls the appropiate process, QC or gem2s
+#'
+#' @param input list with parsed input json. should contain:
+#'   - taskname
+#'   - extra config parameters
+#' @param pipeline_config list as generated by load_config
+#'
+#' @return
+#'
 wrapper <- function(input, pipeline_config) {
   task_name <- input$taskName
   message("------\nStarting task: ", task_name, "\n")
   message("Input:")
   str(input)
   message("")
+
+  input_rds_fname <- paste0("/debug/", task_name, ".json")
+  if (!file.exists(input_rds_fname)) {
+    message("creating input rds for ", task_name)
+    input_out <- list(input = input, pipeline_config = pipeline_config)
+    jsonlite::write_json(input_out, input_rds_fname, pretty = TRUE)
+  }
 
   # common to gem2s and data processing
   server <- input$server
@@ -365,7 +441,7 @@ wrapper <- function(input, pipeline_config) {
   process_name <- input$processName
 
   if (process_name == "qc") {
-    message_id <- call_data_processing(task_name, input, pipeline_config)
+    message_id <- call_qc(task_name, input, pipeline_config)
   } else if (process_name == "gem2s") {
     message_id <- call_gem2s(task_name, input, pipeline_config)
   } else {
@@ -375,11 +451,12 @@ wrapper <- function(input, pipeline_config) {
   return(message_id)
 }
 
-#
-# Init()
-# Loads configuration and repeats the wrapper call until no more messages are
-# received.
-#
+
+#' run the pipeline
+#'
+#' Loads configurations and repeats the wrapper call until no more messages are
+#' received
+#'
 init <- function() {
   pipeline_config <- load_config("host.docker.internal")
   message("Loaded pipeline config")
