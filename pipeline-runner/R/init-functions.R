@@ -440,6 +440,42 @@ wrapper <- function(input, pipeline_config) {
   return(message_id)
 }
 
+#' Pipeline error handler
+#'
+#' Pretty prints errors, sends roport to the API, and uploads debug output to
+#' S3 if the pipeline is running in a pod.
+#'
+#' @param e error object
+#'
+pipeline_error_handler <- function(e) {
+  futile.logger::flog.error("🚩 ---------")
+  sample_text <- ifelse(is.null(input$sampleUuid),
+                        "",
+                        paste0(" for sample ", input$sampleUuid)
+  )
+
+  error_txt <- paste0(
+    "R error at filter step ",
+    input$taskName, sample_text, "! : ", e$message
+  )
+
+  message(error_txt)
+  states$send_task_failure(
+    taskToken = task_token,
+    error = "We had an issue while processing your data.",
+    cause = error_txt
+  )
+
+  send_pipeline_fail_update(pipeline_config, input, error_txt)
+  message("Sent task failure to state machine task: ", task_token)
+
+  if (pipeline_config$cluster_env != "development") {
+    upload_debug_folder_to_s3(debug_prefix, pipeline_config)
+  }
+
+  message("recovered from error:", e$message)
+}
+
 
 #' run the pipeline
 #'
@@ -508,34 +544,7 @@ init <- function() {
           output = "{}"
         )
       },
-      error = function(e) {
-        futile.logger::flog.error("🚩 ---------")
-        sample_text <- ifelse(is.null(input$sampleUuid),
-          "",
-          paste0(" for sample ", input$sampleUuid)
-        )
-
-        error_txt <- paste0(
-          "R error at filter step ",
-          input$taskName, sample_text, "! : ", e$message
-        )
-
-        message(error_txt)
-        states$send_task_failure(
-          taskToken = task_token,
-          error = "We had an issue while processing your data.",
-          cause = error_txt
-        )
-
-        send_pipeline_fail_update(pipeline_config, input, error_txt)
-        message("Sent task failure to state machine task: ", task_token)
-
-        if (pipeline_config$cluster_env != "development") {
-          upload_debug_folder_to_s3(debug_prefix, pipeline_config)
-        }
-
-        message("recovered from error:", e$message)
-      },
+      error = pipeline_error_handler,
       write.error.dump.file = TRUE,
       write.error.dump.folder = dump_folder
     )
