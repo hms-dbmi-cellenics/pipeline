@@ -33,7 +33,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   scdata_sketches = ""
   if (geomsketch == TRUE) {
     message("Started calculating sketches")
-    perc_num_cells <- 5
+    perc_num_cells <- 5 # This is hardcoded for now, but it could be changed from the UI in the future
     scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
     scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
@@ -166,7 +166,6 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
 
   # we need RNA assay to compute the integrated matrix
   Seurat::DefaultAssay(scdata) <- "RNA"
-  Seurat::DefaultAssay(scdata_sketches) <- "RNA"
 
   # remove cell cycle genes if needed
   if (length(exclude_groups) > 0) {
@@ -177,7 +176,8 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
 
   integration_function <- get(paste0("run_", method))
 
-  if (geosketch == TRUE) {
+  if (geomsketch == TRUE) {
+    Seurat::DefaultAssay(scdata_sketches) <- "RNA"
     scdata_int <- integration_function(scdata_sketches, config)
     message("Started learning from sketches")
     scdata <- learn_from_sketches(scdata, scdata_sketches, scdata_int, method)
@@ -196,7 +196,7 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
     message("Finished learning from sketches")
   }
   else {
-    scdata_int <- integration_function(scdata, config)
+    scdata <- integration_function(scdata, config)
   }
 
   if (is.null(npcs)) {
