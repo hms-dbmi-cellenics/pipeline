@@ -20,22 +20,28 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", geomsketch = FALSE) {
   # the following operations give different results depending on sample order
   # make sure they are ordered according to their matrices size
   scdata_list <- order_by_size(scdata_list)
   message("Started create_scdata for sample ", sample_id, "\n")
   scdata <- create_scdata(scdata_list, cells_id)
-  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
-  scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
   message("Finished create_scdata for sample ", sample_id, "\n")
 
   # main function
   set.seed(RANDOM_SEED)
-  scdata_sketches <- perform_geomsketch(scdata)
+  scdata_sketches = ""
+  if (geomsketch == TRUE) {
+    message("Started calculating sketches")
+    perc_num_cells <- 5
+    scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
+    scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+    scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
+    scdata_sketches <- perform_geomsketch(scdata, perc_num_cells)
+    message("Finished calculating sketches")
+  }
   message("Started data integration")
-  scdata_integrated <- run_dataIntegration(scdata, scdata_sketches, config)
+  scdata_integrated <- run_dataIntegration(scdata, scdata_sketches, config, geomsketch)
   message("Finished data integration")
 
   # get  npcs from the UMAP call in integration functions
@@ -123,19 +129,18 @@ merge_scdata_list <- function(scdata_list) {
 }
 
 
-learn_from_sketches <- function (scdata, scdata_sketches, scdata_int) {
+learn_from_sketches <- function (scdata, scdata_sketches, scdata_int, method) {
   # get embeddings from splitted Seurat object
   embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:50])
   embeddings_sketch <- list(scdata_sketches@reductions[["pca"]]@cell.embeddings[, 1:50])
-  embeddings_sketch_int <- list(scdata_int@reductions[["harmony"]]@cell.embeddings[, 1:50])
+  embeddings_sketch_int <- list(scdata_int@reductions[[method]]@cell.embeddings[, 1:50])
 
   # use python script to learn integration from sketches and apply to whole dataset
   reticulate::source_python("R/learn-apply-transformation.py")
   learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
   rownames(learned_int[[1]]) <- colnames(scdata)
 
-  scdata[["harmony"]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = "harmony_", assay = Seurat::DefaultAssay(scdata))
-  # scdata <- Seurat::RunUMAP(scdata, reduction = "harmony", dims = 1:50, verbose = FALSE)
+  scdata[[method]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = paste0(method,"_"), assay = Seurat::DefaultAssay(scdata))
 
   return(scdata)
 }
@@ -145,11 +150,10 @@ learn_from_sketches <- function (scdata, scdata_sketches, scdata_int) {
 #   - Integrate the data using the variable "type" (in case of data integration method is selected) and normalize using LogNormalize method.
 #   - Compute PCA analysis
 #   - To visualize the results of the batch effect, an UMAP with default setting has been made.
-run_dataIntegration <- function(scdata, scdata_sketches, config) {
+run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
 
   # get method and settings
-  # method <- config$dataIntegration$method
-  method <- "harmony"
+  method <- config$dataIntegration$method
   npcs <- config$dimensionalityReduction$numPCs
   exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
 
@@ -172,12 +176,28 @@ run_dataIntegration <- function(scdata, scdata_sketches, config) {
   }
 
   integration_function <- get(paste0("run_", method))
-  scdata_int <- integration_function(scdata_sketches, config)
 
-  message("Started learning from sketched")
-  scdata <- learn_from_sketches(scdata, scdata_sketches, scdata_int)
-  scdata@misc[["active.reduction"]] <- "harmony"
-  message("Finished learning from sketched")
+  if (geosketch == TRUE) {
+    scdata_int <- integration_function(scdata_sketches, config)
+    message("Started learning from sketches")
+    scdata <- learn_from_sketches(scdata, scdata_sketches, scdata_int, method)
+    if (method == "harmony") {
+      scdata@misc[["active.reduction"]] <- "harmony"
+    }
+    if (method == "seuratv4") {
+      scdata@misc[["active.reduction"]] <- "pca"
+    }
+    if (method == "fastmnn") {
+      scdata@misc[["active.reduction"]] <- "mnn"
+    }
+    if (method == "unisample") {
+      scdata@misc[["active.reduction"]] <- "pca"
+    }
+    message("Finished learning from sketches")
+  }
+  else {
+    scdata_int <- integration_function(scdata, config)
+  }
 
   if (is.null(npcs)) {
     npcs <- get_npcs(scdata)
@@ -610,15 +630,15 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 }
 
 
-perform_geomsketch <- function(scdata) {
+perform_geomsketch <- function(scdata, perc_num_cells) {
   scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
-  scdata_sketches <- Geosketch(object = scdata, reduction = "pca", dims = 50, num.cells = round(ncol(scdata)*5/100))
+  scdata_sketches <- Geosketch(object = scdata, reduction = "pca", dims = 50, num_cells = round(ncol(scdata)*perc_num_cells/100))
   return(scdata_sketches)
 }
 
-Geosketch <- function(object, reduction, dims, num.cells) {
+Geosketch <- function(object, reduction, dims, num_cells) {
   if(!exists("geosketch")) {
     geosketch <- reticulate::import("geosketch")
   }
@@ -626,7 +646,7 @@ Geosketch <- function(object, reduction, dims, num.cells) {
   stopifnot(ncol(object@reductions[[reduction]]) >= dims)
 
   embeddings <- object@reductions[[reduction]]@cell.embeddings[, 1:dims]
-  index <- unlist(geosketch$gs(embeddings, as.integer(num.cells),  one_indexed = TRUE))
+  index <- unlist(geosketch$gs(embeddings, as.integer(num_cells),  one_indexed = TRUE))
   sketch <- object[, index]
   return(sketch)
 }
