@@ -153,7 +153,7 @@ test_that("harmony integration works", {
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config))
+  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config = config, scdata_sketches = "", geomsketch = F))
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
@@ -166,7 +166,7 @@ test_that("SeuratV4 integration doesnt error out with small dataset", {
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config))
+  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config = config, scdata_sketches = "", geomsketch = F))
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
@@ -179,7 +179,7 @@ test_that("Unisample integration works", {
     dataIntegration = list(method = "unisample", methodSettings = list(unisample = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config))
+  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config = config, scdata_sketches = "", geomsketch = F))
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
@@ -192,7 +192,7 @@ test_that("FastMNN is not working", {
     dataIntegration = list(method = "fastmnn", methodSettings = list(fastmnn = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_error(suppressWarnings(run_dataIntegration(merged_scdata, config)))
+  expect_error(suppressWarnings(run_dataIntegration(merged_scdata, config = config, scdata_sketches = "", geomsketch = F)))
 })
 
 test_that("numPCs estimation works", {
@@ -301,7 +301,7 @@ test_that("SeuratV4 integration works", {
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config))
+  merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config = config, scdata_sketches = "", geomsketch = F))
   expect_s4_class(merged_scdata, "Seurat")
 })
 
@@ -320,7 +320,7 @@ test_that("PCA is computed when RPCA method is selected within SeuratV4 integrat
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(run_dataIntegration(merged_scdata, config), "Running PCA")
+  expect_message(run_dataIntegration(merged_scdata, config = config, scdata_sketches = "", geomsketch = F), "Running PCA")
 })
 
 
@@ -338,7 +338,7 @@ test_that("PCA is not computed when CCA method is selected within SeuratV4 integ
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(run_dataIntegration(merged_scdata, config), "PCA is not running .*")
+  expect_message(run_dataIntegration(merged_scdata, config = config, scdata_sketches = "", geomsketch = F), "PCA is not running .*")
 })
 
 
@@ -356,7 +356,7 @@ test_that("SeuratV4 integration finds integration anchors using RPCA method, if 
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config)), "Finding integration anchors using RPCA reduction")
+  expect_message(merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config = config, scdata_sketches = "", geomsketch = F)), "Finding integration anchors using RPCA reduction")
   expect_equal(merged_scdata@commands$FindIntegrationAnchors$reduction, "pca")
 })
 
@@ -375,7 +375,7 @@ test_that("SeuratV4 integration finds integration anchors using CCA method, if m
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config)), "Finding integration anchors using CCA reduction")
+  expect_message(merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config = config, scdata_sketches = "", geomsketch = F)), "Finding integration anchors using CCA reduction")
   expect_equal(merged_scdata@commands$FindIntegrationAnchors$reduction, "cca")
 })
 
@@ -418,7 +418,7 @@ test_that("run_dataIntegration calls remove_genes if there are groups to exclude
   )
 
   expect_message(
-    suppressWarnings(run_dataIntegration(merged_scdata, config)),
+    suppressWarnings(run_dataIntegration(merged_scdata, config = config, scdata_sketches = "", geomsketch = F)),
     paste0("*Number of Cell Cycle genes to exclude: ", n_rename, "*")
   )
 })
