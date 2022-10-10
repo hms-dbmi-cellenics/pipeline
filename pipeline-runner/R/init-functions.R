@@ -427,13 +427,6 @@ wrapper <- function(input, pipeline_config) {
   str(input)
   message("")
 
-  input_rds_fname <- paste0("/debug/", task_name, ".json")
-  if (!file.exists(input_rds_fname)) {
-    message("creating input rds for ", task_name)
-    input_out <- list(input = input, pipeline_config = pipeline_config)
-    jsonlite::write_json(input_out, input_rds_fname, pretty = TRUE)
-  }
-
   # common to gem2s and data processing
   server <- input$server
   input <- input[names(input) != "server"]
