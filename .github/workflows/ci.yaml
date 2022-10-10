@@ -299,6 +299,7 @@ jobs:
           | yq w -d1 - spec.values.memoryRequest "$MEMORY_REQUEST" \
           | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \
           | yq w -d1 - spec.values.serviceAccount.iamRole "pipeline-role-$KUBERNETES_ENV" \
+          | yq w -d1 - spec.values.datadogTags "kube_namespace:$DEPLOYMENT_NAME-$SANDBOX_ID" \
           | yq w -d1 - "metadata.annotations[filter.fluxcd.io/pipelineRunner]" "glob:$IMAGE_GLOB-pipeline-runner" \
           > $DEPLOYMENT_NAME.yaml
 
