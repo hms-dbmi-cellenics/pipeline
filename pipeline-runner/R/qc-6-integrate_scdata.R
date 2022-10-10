@@ -20,7 +20,7 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", geomsketch = FALSE) {
+integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", geomsketch = TRUE, perc_num_cells = 5) {
   # the following operations give different results depending on sample order
   # make sure they are ordered according to their matrices size
   scdata_list <- order_by_size(scdata_list)
@@ -33,7 +33,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   scdata_sketches = ""
   if (geomsketch == TRUE) {
     message("Started calculating sketches")
-    perc_num_cells <- 5 # This is hardcoded for now, but it could be changed from the UI in the future
     scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
     scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
@@ -129,11 +128,11 @@ merge_scdata_list <- function(scdata_list) {
 }
 
 
-learn_from_sketches <- function (scdata, scdata_sketches, scdata_int, method) {
+learn_from_sketches <- function (scdata, scdata_sketches, scdata_int, method, npcs) {
   # get embeddings from splitted Seurat object
-  embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:50])
-  embeddings_sketch <- list(scdata_sketches@reductions[["pca"]]@cell.embeddings[, 1:50])
-  embeddings_sketch_int <- list(scdata_int@reductions[[method]]@cell.embeddings[, 1:50])
+  embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:npcs])
+  embeddings_sketch <- list(scdata_sketches@reductions[["pca"]]@cell.embeddings[, 1:npcs])
+  embeddings_sketch_int <- list(scdata_int@reductions[[method]]@cell.embeddings[, 1:npcs])
 
   # use python script to learn integration from sketches and apply to whole dataset
   reticulate::source_python("R/learn-apply-transformation.py")
@@ -176,11 +175,18 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
 
   integration_function <- get(paste0("run_", method))
 
+  scdata@misc[["active.reduction"]] <- "pca"
+  if (is.null(npcs)) {
+    npcs <- get_npcs(scdata)
+    message("Number of PCs: ", npcs)
+  }
+
   if (geomsketch == TRUE) {
     Seurat::DefaultAssay(scdata_sketches) <- "RNA"
     scdata_int <- integration_function(scdata_sketches, config)
     message("Started learning from sketches")
-    scdata <- learn_from_sketches(scdata, scdata_sketches, scdata_int, method)
+    scdata <- learn_from_sketches(scdata, scdata_sketches, scdata_int, method, npcs)
+    scdata@misc$geomsketch <- TRUE
     if (method == "harmony") {
       scdata@misc[["active.reduction"]] <- "harmony"
     }
@@ -199,10 +205,6 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
     scdata <- integration_function(scdata, config)
   }
 
-  if (is.null(npcs)) {
-    npcs <- get_npcs(scdata)
-    message("Number of PCs: ", npcs)
-  }
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
   scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
