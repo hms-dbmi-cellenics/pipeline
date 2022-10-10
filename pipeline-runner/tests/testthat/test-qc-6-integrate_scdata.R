@@ -71,7 +71,6 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   names(scdata_list) <- c(sample_1_id, sample_2_id)
 
   return(list(scdata_list, sample_1_id, sample_2_id))
-
 }
 
 mock_ids <- function() {
@@ -89,7 +88,6 @@ scdata_preprocessing <- function(scdata) {
   scdata@misc[["active.reduction"]] <- "pca"
 
   return(scdata)
-
 }
 
 mock_doublet_scores <- function(counts) {
@@ -391,7 +389,6 @@ test_that("merge_scdata_list correctly merges seurat objects", {
 
   expect_equal(sum(unlist(lapply(scdata_list, ncol))), ncol(scdata))
   expect_true(all(scdata$samples[1:ncol(scdata_list[[1]])] == "a"))
-
 })
 
 test_that("merge_scdata_list returns first element of list if only one sample", {
@@ -407,7 +404,6 @@ test_that("merge_scdata_list returns first element of list if only one sample", 
 })
 
 test_that("run_dataIntegration calls remove_genes if there are groups to exclude", {
-
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(rename_genes = some_cc_genes)
@@ -438,5 +434,31 @@ test_that("normalize_data doesn't scale data if integration method is FastMNN", 
   )
 
   merged_scdata <- normalize_data(merged_scdata, "logNormalize", config$dataIntegration$method, config$dataIntegration$methodSettings$fastmnn$numGenes)
-  expect_equal(dim(merged_scdata@assays$RNA@scale.data), c(0,0))
+  expect_equal(dim(merged_scdata@assays$RNA@scale.data), c(0, 0))
+})
+
+
+test_that("integrate_scdata runs Geomsketch if geomsketch is TRUE", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  cells_id <- mock_ids()
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2),
+    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+  )
+
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", geomsketch = T, perc_num_cells = 50))$data
+  expect_true(integrated_scdata@misc$geomsketch)
+})
+
+
+test_that("integrate_scdata doesn't run Geomsketch if geomsketch is FALSE", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  cells_id <- mock_ids()
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2),
+    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+  )
+
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", geomsketch = FALSE))$data
+  expect_true(is.null(integrated_scdata@misc$geomsketch))
 })
