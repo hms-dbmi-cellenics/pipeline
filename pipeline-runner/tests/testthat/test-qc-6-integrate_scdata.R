@@ -446,10 +446,9 @@ test_that("perform_geomsketch generates the correct number of sketches", {
     dimensionalityReduction = list(numPCs = 2),
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
-  # integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", geomsketch = T, perc_num_cells = 50))$data
-  # expect_true(sketched_data@misc$geomsketch)
+
   sketched_data <- perform_geomsketch(merged_scdata, perc_num_cells = 5)
-  expect_equal(ncol(sketched_data), round(ncol(merged_scdata)*5/100))
+  expect_equal(ncol(sketched_data), round(ncol(merged_scdata) * 5 / 100))
 })
 
 
@@ -474,6 +473,7 @@ test_that("integrate_scdata run Geomsketch if geomsketch is TRUE", {
     dimensionalityReduction = list(numPCs = 2),
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
+
   integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", geomsketch = T, perc_num_cells = 50))$data
   expect_true(integrated_scdata@misc$geomsketch)
 })
