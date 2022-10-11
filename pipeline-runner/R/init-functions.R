@@ -510,7 +510,7 @@ init <- function() {
   states <- paws::sfn(config = pipeline_config$aws_config)
   message("Loaded step function")
 
-  message(sessionInfo())
+  sessionInfo()
 
   futile.logger::flog.layout(futile.logger::layout.simple)
   futile.logger::flog.threshold(futile.logger::ERROR)
