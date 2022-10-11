@@ -425,6 +425,7 @@ start_heartbeat <- function(task_token, aws_config) {
     stdout = "/tmp/out",
     stderr = "/tmp/err"
   )
+    return(heartbeat_proc)
 }
 
 
@@ -538,7 +539,7 @@ init <- function() {
       futile.logger::appender.tee(file.path(dump_folder, "logs.txt"))
     )
 
-    start_heartbeat(task_token, pipeline_config$aws_config)
+    heartbeat_proc <- start_heartbeat(task_token, pipeline_config$aws_config)
 
     tryCatchLog(
       {
