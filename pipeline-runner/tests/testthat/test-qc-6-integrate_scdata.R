@@ -466,7 +466,7 @@ test_that("integrate_scdata doesn't run Geomsketch if geomsketch is FALSE", {
 })
 
 
-test_that("integrate_scdata doesn't run Geomsketch if geomsketch is TRUE", {
+test_that("integrate_scdata run Geomsketch if geomsketch is TRUE", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
@@ -475,5 +475,5 @@ test_that("integrate_scdata doesn't run Geomsketch if geomsketch is TRUE", {
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
   integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", geomsketch = T, perc_num_cells = 50))$data
-  expect_true(sketched_data@misc$geomsketch)
+  expect_true(integrated_scdata@misc$geomsketch)
 })
