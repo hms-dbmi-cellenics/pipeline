@@ -59,10 +59,9 @@ load_config <- function(development_aws_server) {
       message("No activity ARN label set yet, waiting...")
       Sys.sleep(5)
     } else {
-      message(paste(
-        "Welcome to Biomage R pipeline, activity arn",
-        activity_arn
-      ))
+      message("Welcome to the pipeline")
+
+      message(activity_arn)
       break
     }
   }
@@ -440,7 +439,7 @@ start_heartbeat <- function(task_token, aws_config) {
 #'
 wrapper <- function(input, pipeline_config) {
   task_name <- input$taskName
-  message("------\nStarting task: ", task_name, "\n")
+  message("\n------\nStarting task: ", task_name, "\n")
   message("Input:")
   str(input)
   message("")
@@ -530,7 +529,6 @@ init <- function() {
 
     # parse data from state machine input
     input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
-    message("Input json: ", input)
 
     # save logs to file
     debug_prefix <- file.path(input$experimentId, debug_timestamp)
