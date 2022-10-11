@@ -2,20 +2,20 @@
 % Please edit documentation in R/init-functions.R
 \name{start_heartbeat}
 \alias{start_heartbeat}
-\title{Run heartbeat in the background}
+\title{Start heartbeat as a background process}
 \usage{
 start_heartbeat(task_token, aws_config)
 }
 \arguments{
 \item{task_token}{character authorization token}
 
-\item{aws_config}{}
+\item{aws_config}{list of parameters to access AWS step functions}
 }
 \description{
-Sends a heartbeat to the state machine every 'wait_time' seconds Once the task
-is completed the heartbeat will fail accordingly with a task timeout and exit
-the loop and a new heartbeat will be set up by next task. This method is
-invoked with \code{callr::r_bg} which creates a new process which does not inherit
-the current workspace or memory, only the provided parameters; that's why we
-need to re-import \code{tryCatchLog} & initialize states again.
+messages inside the background process will ONLY be printed into
+\verb{/tmp/[out|err]}. To see them:
+\enumerate{
+\item log into the R container
+\item \code{cat /tmp/out} or \code{tail -f /tmp/out}
+}
 }

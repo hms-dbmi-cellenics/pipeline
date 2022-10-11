@@ -375,9 +375,9 @@ call_qc <- function(task_name, input, pipeline_config) {
 #' need to re-import `tryCatchLog` & initialize states again.
 #'
 #' @param task_token character authorization token
-#' @param aws_config
+#' @param aws_config list of parameters to access AWS step functions
 #'
-start_heartbeat <- function(task_token, aws_config) {
+pipeline_heartbeat <- function(task_token, aws_config) {
   library(tryCatchLog)
   message("Starting heartbeat")
   states <- paws::sfn(config = aws_config)
@@ -404,6 +404,27 @@ start_heartbeat <- function(task_token, aws_config) {
     # sleep until next heartbeat
     Sys.sleep(wait_time)
   }
+}
+
+#' Start heartbeat as a background process
+#'
+#' messages inside the background process will ONLY be printed into
+#' `/tmp/[out|err]`. To see them:
+#'  1. log into the R container
+#'  2. `cat /tmp/out` or `tail -f /tmp/out`
+#'
+#' @inheritParams pipeline_heartbeat
+#'
+start_heartbeat <- function(task_token, aws_config) {
+  message("Starting heartbeat")
+
+    heartbeat_proc <- callr::r_bg(
+    func = pipeline_heartbeat, args = list(
+      task_token, aws_config
+    ),
+    stdout = "/tmp/out",
+    stderr = "/tmp/err"
+  )
 }
 
 
@@ -450,8 +471,8 @@ wrapper <- function(input, pipeline_config) {
 pipeline_error_handler <- function(e) {
   futile.logger::flog.error("🚩 ---------")
   sample_text <- ifelse(is.null(input$sampleUuid),
-                        "",
-                        paste0(" for sample ", input$sampleUuid)
+    "",
+    paste0(" for sample ", input$sampleUuid)
   )
 
   error_txt <- paste0(
@@ -488,7 +509,7 @@ init <- function() {
   states <- paws::sfn(config = pipeline_config$aws_config)
   message("Loaded step function")
 
-  print(sessionInfo())
+  message(sessionInfo())
 
   futile.logger::flog.layout(futile.logger::layout.simple)
   futile.logger::flog.threshold(futile.logger::ERROR)
@@ -517,19 +538,7 @@ init <- function() {
       futile.logger::appender.tee(file.path(dump_folder, "logs.txt"))
     )
 
-    # start heartbeat as a different process in the background
-    message("Starting heartbeat")
-    # message inside r_bg will ONLY be printed into /tmp/[out|err]
-    # to see them
-    # 1. log into the R container
-    # 2. cat /tmp/out or tail -f /tmp/out
-    heartbeat_proc <- callr::r_bg(
-      func = start_heartbeat, args = list(
-        task_token, pipeline_config$aws_config
-      ),
-      stdout = "/tmp/out",
-      stderr = "/tmp/err"
-    )
+    start_heartbeat(task_token, pipeline_config$aws_config)
 
     tryCatchLog(
       {
