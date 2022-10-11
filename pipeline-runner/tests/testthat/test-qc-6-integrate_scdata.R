@@ -438,17 +438,17 @@ test_that("normalize_data doesn't scale data if integration method is FastMNN", 
 })
 
 
-test_that("integrate_scdata runs Geomsketch if geomsketch is TRUE", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
-  cells_id <- mock_ids()
-  config <- list(
-    dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
-  )
-
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", geomsketch = T, perc_num_cells = 50))$data
-  expect_true(integrated_scdata@misc$geomsketch)
-})
+# test_that("integrate_scdata runs Geomsketch if geomsketch is TRUE", {
+#   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+#   cells_id <- mock_ids()
+#   config <- list(
+#     dimensionalityReduction = list(numPCs = 2),
+#     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+#   )
+#
+#   integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", geomsketch = T, perc_num_cells = 50))$data
+#   expect_true(integrated_scdata@misc$geomsketch)
+# })
 
 
 test_that("integrate_scdata doesn't run Geomsketch if geomsketch is FALSE", {
