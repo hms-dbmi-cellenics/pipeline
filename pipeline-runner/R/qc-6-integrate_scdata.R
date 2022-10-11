@@ -20,7 +20,7 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", geomsketch = TRUE, perc_num_cells = 5) {
+integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", geomsketch = FALSE, perc_num_cells = 5) {
   # the following operations give different results depending on sample order
   # make sure they are ordered according to their matrices size
   scdata_list <- order_by_size(scdata_list)
