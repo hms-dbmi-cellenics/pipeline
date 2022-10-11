@@ -21,7 +21,7 @@
     "aws-sdk": "^2.847.0",
     "chalk": "^4.1.0",
     "docker-events": "0.0.2",
-    "dockerode": "^3.2.1",
+    "dockerode": "^3.3.4",
     "eslint": "^7.20.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
