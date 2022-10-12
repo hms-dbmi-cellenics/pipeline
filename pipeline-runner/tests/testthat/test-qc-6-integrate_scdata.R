@@ -438,19 +438,6 @@ test_that("normalize_data doesn't scale data if integration method is FastMNN", 
 })
 
 
-test_that("perform_geomsketch generates the correct number of sketches", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
-  cells_id <- mock_ids()
-  merged_scdata <- create_scdata(scdata_list, cells_id)
-  config <- list(
-    dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
-  )
-
-  sketched_data <- perform_geomsketch(merged_scdata, perc_num_cells = 5)
-  expect_equal(ncol(sketched_data), round(ncol(merged_scdata) * 5 / 100))
-})
-
 
 test_that("integrate_scdata doesn't run Geomsketch if geomsketch is FALSE", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
@@ -476,4 +463,32 @@ test_that("integrate_scdata run Geomsketch if geomsketch is TRUE", {
 
   integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", geomsketch = T, perc_num_cells = 50))$data
   expect_true(integrated_scdata@misc$geomsketch)
+})
+
+
+test_that("perform_geomsketch generates the correct number of sketches", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  cells_id <- mock_ids()
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2),
+    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+  )
+
+  perc_num_cells <- 5
+  sketched_data <- perform_geomsketch(merged_scdata, perc_num_cells)
+  expect_equal(ncol(sketched_data), round(ncol(merged_scdata) * perc_num_cells / 100))
+})
+
+
+test_that("integrate_scdata with Geomsketch adds the correct integration method to the Seurat object", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  cells_id <- mock_ids()
+   config <- list(
+    dimensionalityReduction = list(numPCs = 2),
+    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+  )
+
+   integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", geomsketch = T, perc_num_cells = 50))$data
+   expect_equal(integrated_scdata@misc[["active.reduction"]], "harmony")
 })
