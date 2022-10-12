@@ -8,7 +8,7 @@ mock_rhapsody_matrix <- function(counts, sample_dir) {
   counts$Cell_Index <- as.integer(factor(counts$barcode))
   counts$RSEC_Adjusted_Molecules <- counts$DBEC_Adjusted_Molecules + 5
 
-  matrix_path <- file.path(sample_dir, "expression_matrix.st")
+  matrix_path <- file.path(sample_dir, file_names[["rhapsody"]])
 
   # prepend some of that nice header
   header <- c(
@@ -61,7 +61,12 @@ test_that("load_user_files reads rhapsody files", {
 
   files <- local_rhapsody_experiment(samples)
 
-  prev_out <- list(config = list(samples = names(samples), input = list(type = "rhapsody")))
+  prev_out <- list(
+    config = list(
+      samples = names(samples),
+      input = list(type = "rhapsody")
+    )
+  )
   input_dir <- "./input"
 
   res <- load_user_files(NULL, NULL, prev_out, input_dir)
@@ -110,14 +115,16 @@ test_that("parse_rhapsody_matrix keeps the counts where it counts (correct gene-
   input_dir <- "./input"
 
   # read original table and get vector of expected values (originals)
-  original <- data.table::fread(file.path(input_dir, names(samples), "expression_matrix.st"))
+  original_path <- file.path(input_dir, names(samples), file_names[["rhapsody"]])
+  original <- data.table::fread(original_path)
   expected_values <- original$DBEC_Adjusted_Molecules
 
   res <- parse_rhapsody_matrix(config, input_dir)
 
-  # create row and column indices, to cbind and use matrix indexing to get values
-  # as a vector. Given that Simple Triplet sparse matrices basically contain vectors
-  # of row and column indices, we just transform them to ints, keeping order.
+  # create row and column indices, to cbind and use matrix indexing to get
+  # values as a vector. Given that Simple Triplet sparse matrices basically
+  # contain vectors of row and column indices, we just transform them to ints,
+  # keeping order.
   row_idx <- as.integer(factor(original$Gene))
   col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
 

@@ -30,7 +30,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
  for (sample in names(scdata_list)) {
     message("Uploading sample ", sample, " object to S3 ...")
     fpath <- file.path(tempdir(), "experiment.rds")
-    saveRDS(scdata_list[[sample]], fpath, compress = FALSE)
+    saveRDS(scdata_list[[sample]], fpath)
     # can only upload up to 50Gb because multipart uploads work by uploading
     # smaller chunks (parts) and the max amount of parts is 10,000.
     put_object_in_s3_multipart(pipeline_config,
@@ -108,8 +108,8 @@ build_sample_cellsets <- function(input, scdata_list, color_pool) {
   sample_names <- unlist(input$sampleNames)
 
   for (i in seq_along(sample_ids)) {
-    scdata <- scdata_list[[i]]
     sample_id <- sample_ids[i]
+    scdata <- scdata_list[[sample_id]]
     sample_name <- sample_names[i]
 
     cell_ids <- scdata$cells_id
