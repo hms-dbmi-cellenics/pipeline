@@ -187,13 +187,12 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
 
   integration_function <- get(paste0("run_", method))
 
-  scdata@misc[["active.reduction"]] <- "pca"
-  if (is.null(npcs)) {
-    npcs <- get_npcs(scdata)
-    message("Number of PCs: ", npcs)
-  }
-
   if (geomsketch == TRUE) {
+    scdata@misc[["active.reduction"]] <- "pca"
+    if (is.null(npcs)) {
+      npcs <- get_npcs(scdata)
+      message("Number of PCs: ", npcs)
+    }
     Seurat::DefaultAssay(scdata_sketches) <- "RNA"
     scdata_int <- integration_function(scdata_sketches, config)
     message("Started learning from sketches")
@@ -217,6 +216,10 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
     scdata <- integration_function(scdata, config)
   }
 
+  if (is.null(npcs)) {
+    npcs <- get_npcs(scdata)
+    message("Number of PCs: ", npcs)
+  }
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
   scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
