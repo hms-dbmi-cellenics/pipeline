@@ -130,16 +130,28 @@ merge_scdata_list <- function(scdata_list) {
 
 learn_from_sketches <- function (scdata, scdata_sketches, scdata_int, method, npcs) {
   # get embeddings from splitted Seurat object
+  if (method == "harmony") {
+    active.reduction <- "harmony"
+  }
+  if (method == "seuratv4") {
+    active.reduction <- "pca"
+  }
+  if (method == "fastmnn") {
+    active.reduction <- "mnn"
+  }
+  if (method == "unisample") {
+    active.reduction <- "pca"
+  }
   embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:npcs])
   embeddings_sketch <- list(scdata_sketches@reductions[["pca"]]@cell.embeddings[, 1:npcs])
-  embeddings_sketch_int <- list(scdata_int@reductions[[method]]@cell.embeddings[, 1:npcs])
+  embeddings_sketch_int <- list(scdata_int@reductions[[active.reduction]]@cell.embeddings[, 1:npcs])
 
   # use python script to learn integration from sketches and apply to whole dataset
   reticulate::source_python("/src/pipeline-runner/R/learn-apply-transformation.py")
   learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
   rownames(learned_int[[1]]) <- colnames(scdata)
 
-  scdata[[method]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = paste0(method,"_"), assay = Seurat::DefaultAssay(scdata))
+  scdata[[method]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = paste0(active.reduction,"_"), assay = Seurat::DefaultAssay(scdata))
 
   return(scdata)
 }
