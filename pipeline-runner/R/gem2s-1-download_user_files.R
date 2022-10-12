@@ -50,7 +50,7 @@ get_gem2s_file <- function(input, originals_bucket, input_dir, s3) {
 #' @return list where 'output' slot has config used by \code{load_user_files}
 #' @export
 #'
-download_user_files <- function(input, pipeline_config, prev_out = list(), input_dir= "/input") {
+download_user_files <- function(input, pipeline_config, prev_out = list(), input_dir = "/input") {
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
   get_gem2s_file(input, pipeline_config$originals_bucket, input_dir, s3)
