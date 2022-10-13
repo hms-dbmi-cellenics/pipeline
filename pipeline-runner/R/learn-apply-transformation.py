@@ -1,16 +1,8 @@
-import numpy as np
 from scanorama import transform
 from sklearn.neighbors import NearestNeighbors
 
 # Apply integrated coordinates back to full data.
 def apply_transf(unsketched_data, sketched_data, sketched_integrated_data):
-    labels = []
-    curr_label = 0
-    for i, a in enumerate(sketched_data):
-        labels += list(np.zeros(a.shape[0]) + curr_label)
-        curr_label += 1
-    labels = np.array(labels, dtype=int)
-
     for i, (X_unsketch, X_sketch) in enumerate(zip(unsketched_data, sketched_data)):
         X_int = sketched_integrated_data[i]
 
