@@ -3,21 +3,18 @@ from scanorama import transform
 from sklearn.neighbors import NearestNeighbors
 
 # Apply integrated coordinates back to full data.
-# datasets_dimred: original unsketched list of datasets
-# datasets_sketch: list of sketched datasets
-# datasets_int: list of sketched integrated datasets
-def apply_transf(datasets_dimred, datasets_sketch, datasets_int):
+def apply_transf(unsketched_data, sketched_data, sketched_integrated_data):
     labels = []
     curr_label = 0
-    for i, a in enumerate(datasets_sketch):
+    for i, a in enumerate(sketched_data):
         labels += list(np.zeros(a.shape[0]) + curr_label)
         curr_label += 1
     labels = np.array(labels, dtype=int)
 
-    for i, (X_dimred, X_sketch) in enumerate(zip(datasets_dimred, datasets_sketch)):
-        X_int = datasets_int[i]
+    for i, (X_unsketch, X_sketch) in enumerate(zip(unsketched_data, sketched_data)):
+        X_int = sketched_integrated_data[i]
 
-        neigh = NearestNeighbors(n_neighbors=3).fit(X_dimred)
+        neigh = NearestNeighbors(n_neighbors=3).fit(X_unsketch)
         _, neigh_idx = neigh.kneighbors(X_sketch)
 
         ds_idxs, ref_idxs = [], []
@@ -26,8 +23,8 @@ def apply_transf(datasets_dimred, datasets_sketch, datasets_int):
                 ds_idxs.append(neigh_idx[ref_idx, k_idx])
                 ref_idxs.append(ref_idx)
 
-        bias = transform(X_dimred, X_int, ds_idxs, ref_idxs, 15, batch_size=1000)
+        bias = transform(X_unsketch, X_int, ds_idxs, ref_idxs, 15, batch_size=1000)
 
-        datasets_int[i] = X_dimred + bias
+        sketched_integrated_data[i] = X_unsketch + bias
 
-    return datasets_int
+    return sketched_integrated_data
