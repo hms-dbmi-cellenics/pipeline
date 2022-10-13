@@ -20,7 +20,7 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", geomsketch = FALSE, perc_num_cells = 5) {
+integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", geosketch = FALSE, perc_num_cells = 5) {
   # the following operations give different results depending on sample order
   # make sure they are ordered according to their matrices size
   scdata_list <- order_by_size(scdata_list)
@@ -31,16 +31,16 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # main function
   set.seed(RANDOM_SEED)
   scdata_sketches = ""
-  if (geomsketch == TRUE) {
+  if (geosketch == TRUE) {
     message("Started calculating sketches")
     scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
     scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
-    scdata_sketches <- perform_geomsketch(scdata, perc_num_cells)
+    scdata_sketches <- perform_geosketch(scdata, perc_num_cells)
     message("Finished calculating sketches")
   }
   message("Started data integration")
-  scdata_integrated <- run_dataIntegration(scdata, scdata_sketches, config, geomsketch)
+  scdata_integrated <- run_dataIntegration(scdata, scdata_sketches, config, geosketch)
   message("Finished data integration")
 
   # get  npcs from the UMAP call in integration functions
@@ -161,7 +161,7 @@ learn_from_sketches <- function (scdata, scdata_sketches, scdata_int, method, np
 #   - Integrate the data using the variable "type" (in case of data integration method is selected) and normalize using LogNormalize method.
 #   - Compute PCA analysis
 #   - To visualize the results of the batch effect, an UMAP with default setting has been made.
-run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
+run_dataIntegration <- function(scdata, scdata_sketches, config, geosketch) {
 
   # get method and settings
   method <- config$dataIntegration$method
@@ -187,7 +187,7 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
 
   integration_function <- get(paste0("run_", method))
 
-  if (geomsketch == TRUE) {
+  if (geosketch == TRUE) {
     scdata@misc[["active.reduction"]] <- "pca"
     if (is.null(npcs)) {
       npcs <- get_npcs(scdata)
@@ -197,7 +197,7 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geomsketch) {
     scdata_int <- integration_function(scdata_sketches, config)
     message("Started learning from sketches")
     scdata <- learn_from_sketches(scdata, scdata_sketches, scdata_int, method, npcs)
-    scdata@misc$geomsketch <- TRUE
+    scdata@misc$geosketch <- TRUE
     if (method == "harmony") {
       scdata@misc[["active.reduction"]] <- "harmony"
     }
@@ -647,7 +647,7 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 }
 
 
-perform_geomsketch <- function(scdata, perc_num_cells) {
+perform_geosketch <- function(scdata, perc_num_cells) {
   scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
