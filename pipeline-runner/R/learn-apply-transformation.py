@@ -1,11 +1,6 @@
 import numpy as np
 from scanorama import transform
-from scipy.sparse import csr_matrix, find
-from sklearn.metrics.pairwise import rbf_kernel
 from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import normalize
-from subprocess import Popen
-from time import time
 
 # Apply integrated coordinates back to full data.
 # datasets_dimred: original unsketched list of datasets
