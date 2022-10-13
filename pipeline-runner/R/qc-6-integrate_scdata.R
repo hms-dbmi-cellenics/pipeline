@@ -125,35 +125,6 @@ merge_scdata_list <- function(scdata_list) {
 }
 
 
-learn_from_sketches <- function (scdata, scdata_sketches, scdata_int, method, npcs) {
-  # get embeddings from splitted Seurat object
-  if (method == "harmony") {
-    active.reduction <- "harmony"
-  }
-  if (method == "seuratv4") {
-    active.reduction <- "pca"
-  }
-  if (method == "fastmnn") {
-    active.reduction <- "mnn"
-  }
-  if (method == "unisample") {
-    active.reduction <- "pca"
-  }
-  embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:npcs])
-  embeddings_sketch <- list(scdata_sketches@reductions[["pca"]]@cell.embeddings[, 1:npcs])
-  embeddings_sketch_int <- list(scdata_int@reductions[[active.reduction]]@cell.embeddings[, 1:npcs])
-
-  # use python script to learn integration from sketches and apply to whole dataset
-  reticulate::source_python("/src/pipeline-runner/R/learn-apply-transformation.py")
-  learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
-  rownames(learned_int[[1]]) <- colnames(scdata)
-
-  scdata[[method]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = paste0(active.reduction,"_"), assay = Seurat::DefaultAssay(scdata))
-
-  return(scdata)
-}
-
-
 # This function covers
 #   - Integrate the data using the variable "type" (in case of data integration method is selected) and normalize using LogNormalize method.
 #   - Compute PCA analysis
@@ -196,18 +167,6 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geosketch) {
     message("Started learning from sketches")
     scdata <- learn_from_sketches(scdata, scdata_sketches, scdata_int, method, npcs)
     scdata@misc$geosketch <- TRUE
-    if (method == "harmony") {
-      scdata@misc[["active.reduction"]] <- "harmony"
-    }
-    if (method == "seuratv4") {
-      scdata@misc[["active.reduction"]] <- "pca"
-    }
-    if (method == "fastmnn") {
-      scdata@misc[["active.reduction"]] <- "mnn"
-    }
-    if (method == "unisample") {
-      scdata@misc[["active.reduction"]] <- "pca"
-    }
     message("Finished learning from sketches")
   }
   else {
@@ -663,6 +622,27 @@ Geosketch <- function(object, reduction, dims, num_cells) {
   sketch <- object[, index]
   return(sketch)
 }
+
+
+learn_from_sketches <- function (scdata, scdata_sketches, scdata_int, method, npcs) {
+  # get embeddings from splitted Seurat object
+  active.reduction <- scdata_int@misc[["active.reduction"]]
+  embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:npcs])
+  embeddings_sketch <- list(scdata_sketches@reductions[["pca"]]@cell.embeddings[, 1:npcs])
+  embeddings_sketch_int <- list(scdata_int@reductions[[active.reduction]]@cell.embeddings[, 1:npcs])
+
+  # use python script to learn integration from sketches and apply to whole dataset
+  reticulate::source_python("/src/pipeline-runner/R/learn-apply-transformation.py")
+  learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
+  rownames(learned_int[[1]]) <- colnames(scdata)
+
+  scdata[[method]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = paste0(active.reduction,"_"), assay = Seurat::DefaultAssay(scdata))
+
+  scdata@misc[["active.reduction"]] <- active.reduction
+
+  return(scdata)
+}
+
 
 run_pca <- function(scdata) {
   scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
