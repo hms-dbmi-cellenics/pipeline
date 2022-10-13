@@ -614,8 +614,8 @@ Geosketch <- function(object, reduction, dims, num_cells) {
   if(!exists("geosketch")) {
     geosketch <- reticulate::import("geosketch")
   }
-  stopifnot(reduction %in% names(object@reductions))
-  stopifnot(ncol(object@reductions[[reduction]]) >= dims)
+  stopifnot("Error: the requested reduction is not present in the Seurat object." = reduction %in% names(object@reductions))
+  stopifnot("Error: the number of cells is lower that the number of dimensions." = ncol(object@reductions[[reduction]]) >= dims)
 
   embeddings <- object@reductions[[reduction]]@cell.embeddings[, 1:dims]
   index <- unlist(geosketch$gs(embeddings, as.integer(num_cells),  one_indexed = TRUE))
