@@ -34,7 +34,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   if (geosketch == TRUE) {
     scdata <- run_pca(scdata)
     message("Started calculating sketches")
-    scdata_sketches <- perform_geosketch(scdata, perc_num_cells)
+    scdata_sketches <- perform_geosketch(scdata, reduction = "pca", dims = 50, num_cells = round(ncol(scdata)*perc_num_cells/100))
     message("Finished calculating sketches")
   }
   message("Started data integration")
@@ -604,12 +604,7 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 }
 
 
-perform_geosketch <- function(scdata, perc_num_cells) {
-  scdata_sketches <- Geosketch(object = scdata, reduction = "pca", dims = 50, num_cells = round(ncol(scdata)*perc_num_cells/100))
-  return(scdata_sketches)
-}
-
-Geosketch <- function(object, reduction, dims, num_cells) {
+perform_geosketch <- function(object, reduction, dims, num_cells) {
   if(!exists("geosketch")) {
     geosketch <- reticulate::import("geosketch")
   }
