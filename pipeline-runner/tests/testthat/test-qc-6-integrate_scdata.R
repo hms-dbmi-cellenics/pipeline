@@ -475,8 +475,11 @@ test_that("perform_geosketch generates the correct number of sketches", {
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
 
+  merged_scdata <- run_pca(merged_scdata)
+
   perc_num_cells <- 5
-  sketched_data <- perform_geosketch(merged_scdata, reduction = "pca", dims = 50, perc_num_cells)
+  num_cells <- round(ncol(merged_scdata) * perc_num_cells / 100)
+  sketched_data <- perform_geosketch(merged_scdata, reduction = "pca", dims = 50, num_cells)
   expect_equal(ncol(sketched_data), round(ncol(merged_scdata) * perc_num_cells / 100))
 })
 
