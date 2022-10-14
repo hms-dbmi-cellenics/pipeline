@@ -32,6 +32,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   set.seed(RANDOM_SEED)
   scdata_sketches <- ""
   if (geosketch == TRUE) {
+    scdata <- run_pca(scdata)
     message("Started calculating sketches")
     scdata_sketches <- perform_geosketch(scdata, perc_num_cells)
     message("Finished calculating sketches")
@@ -156,7 +157,6 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geosketch) {
   integration_function <- get(paste0("run_", method))
 
   if (geosketch == TRUE) {
-    scdata <- run_pca(scdata)
     scdata@misc[["active.reduction"]] <- "pca"
     if (is.null(npcs)) {
       npcs <- get_npcs(scdata)
@@ -605,7 +605,6 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 
 
 perform_geosketch <- function(scdata, perc_num_cells) {
-  scdata <- run_pca(scdata)
   scdata_sketches <- Geosketch(object = scdata, reduction = "pca", dims = 50, num_cells = round(ncol(scdata)*perc_num_cells/100))
   return(scdata_sketches)
 }
