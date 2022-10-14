@@ -34,7 +34,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   if (use_geosketch == TRUE) {
     scdata <- run_pca(scdata)
     message("Started calculating sketches")
-    scdata_sketches <- perform_geosketch(scdata, reduction = "pca", dims = 50, num_cells = round(ncol(scdata)*perc_num_cells/100))
+    scdata_sketches <- perform_geosketch(scdata, reduction = "pca", dims = 50, num_cells = round(ncol(scdata) * perc_num_cells / 100))
     message("Finished calculating sketches")
   }
   message("Started data integration")
@@ -168,8 +168,7 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, use_geosketch) 
     scdata <- learn_from_sketches(scdata, scdata_sketches, scdata_int, method, npcs)
     scdata@misc$geosketch <- TRUE
     message("Finished learning from sketches")
-  }
-  else {
+  } else {
     scdata <- integration_function(scdata, config)
   }
 
@@ -586,7 +585,6 @@ log_normalize <- function(scdata, normalization_method, integration_method, nfea
 #' @export
 #'
 generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_explained) {
-
   cells_order <- rownames(scdata_integrated@meta.data)
 
   # plot1_data is an empty list because it is not used anymore by the UI
@@ -604,21 +602,47 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 }
 
 
+#' Perform geometric sketching
+#'
+#' See https://github.com/brianhie/geosketch
+#'
+#' @param object Seurat object
+#' @param reduction Reduced dimensions to use for sketching
+#' @param dims Number of dimensions to use
+#' @param num_cells Number of desired cells
+#'
+#' @return Seurat object downsampled to desired number of cells
+#' @export
+#'
 perform_geosketch <- function(object, reduction, dims, num_cells) {
-  if(!exists("geosketch")) {
+  if (!exists("geosketch")) {
     geosketch <- reticulate::import("geosketch")
   }
   stopifnot("Error: the requested reduction is not present in the Seurat object." = reduction %in% names(object@reductions))
   stopifnot("Error: the number of cells is lower that the number of dimensions." = ncol(object@reductions[[reduction]]) >= dims)
 
   embeddings <- object@reductions[[reduction]]@cell.embeddings[, 1:dims]
-  index <- unlist(geosketch$gs(embeddings, as.integer(num_cells),  one_indexed = TRUE))
+  index <- unlist(geosketch$gs(embeddings, as.integer(num_cells), one_indexed = TRUE))
   sketch <- object[, index]
   return(sketch)
 }
 
 
-learn_from_sketches <- function (scdata, scdata_sketches, scdata_int, method, npcs) {
+#' Learn integration transformation from sketches
+#'
+#' Uses the integrated sketches to learn the integration transformation and
+#' apply it to the whole dataset
+#'
+#' @param scdata Seurat object
+#' @param scdata_sketches Sketched Seurat object
+#' @param scdata_int Sketched integrated Seurat object
+#' @param method Reduction method
+#' @param npcs Number of PCs
+#'
+#' @return Integrated Seurat object with original number of cells
+#' @export
+#'
+learn_from_sketches <- function(scdata, scdata_sketches, scdata_int, method, npcs) {
   # get embeddings from splitted Seurat object
   active.reduction <- scdata_int@misc[["active.reduction"]]
   embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:npcs])
@@ -630,7 +654,7 @@ learn_from_sketches <- function (scdata, scdata_sketches, scdata_int, method, np
   learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
   rownames(learned_int[[1]]) <- colnames(scdata)
 
-  scdata[[method]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = paste0(active.reduction,"_"), assay = Seurat::DefaultAssay(scdata))
+  scdata[[method]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = paste0(active.reduction, "_"), assay = Seurat::DefaultAssay(scdata))
 
   scdata@misc[["active.reduction"]] <- active.reduction
 
@@ -638,6 +662,17 @@ learn_from_sketches <- function (scdata, scdata_sketches, scdata_int, method, np
 }
 
 
+#' Run PCA
+#'
+#' Performs FindVariableFeatures and ScaleData,
+#' which are two required steps before RunPCA
+#'
+#' @param scdata Seurat object
+#'
+#' @return Seurat object with PCA slot
+#' @export
+#'
+#' @examples
 run_pca <- function(scdata) {
   scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
