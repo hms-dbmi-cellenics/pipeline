@@ -134,11 +134,15 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   annot_list <- list()
 
   samples <- config$samples
+  sample_options <- config$sampleOptions
+  # add samples as names to the list of options, to index by sample
+  names(sample_options) <- unlist(samples)
 
 
   for (sample in samples) {
     sample_dir <- file.path(input_dir, sample)
     sample_fpaths <- file.path(sample_dir, file_names[["rhapsody"]])
+    inlcude_abseq <- sample_options[[sample]]$includeAbSeq
 
     message("\nSample --> ", sample)
     message(
@@ -172,6 +176,11 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 
     # clean AbSeq names, removing symbols
     counts[, Gene := gsub("[\\|:]", "_", Gene)]
+
+    if (!inlcude_abseq) {
+      message("Remove abseq genes from sample ", sample)
+      counts <- counts[Gene != grepl("(p_?ab_?o)$", Gene), ]
+    }
 
     # we need the genes as ints to create the sparse matrix
     counts[, Gene := factor(Gene)]
