@@ -136,8 +136,6 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   samples <- config$samples
   sample_options <- config$sampleOptions
   
-  # add samples as names to the list of options, to index by sample
-  names(sample_options) <- unlist(samples)
 
 
   for (sample in samples) {
