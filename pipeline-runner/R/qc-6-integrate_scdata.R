@@ -20,7 +20,7 @@
 #       }
 #   },
 
-integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", geosketch = FALSE, perc_num_cells = 5) {
+integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", use_geosketch = FALSE, perc_num_cells = 5) {
   # the following operations give different results depending on sample order
   # make sure they are ordered according to their matrices size
   scdata_list <- order_by_size(scdata_list)
@@ -31,14 +31,14 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # main function
   set.seed(RANDOM_SEED)
   scdata_sketches <- ""
-  if (geosketch == TRUE) {
+  if (use_geosketch == TRUE) {
     scdata <- run_pca(scdata)
     message("Started calculating sketches")
     scdata_sketches <- perform_geosketch(scdata, reduction = "pca", dims = 50, num_cells = round(ncol(scdata)*perc_num_cells/100))
     message("Finished calculating sketches")
   }
   message("Started data integration")
-  scdata_integrated <- run_dataIntegration(scdata, scdata_sketches, config, geosketch)
+  scdata_integrated <- run_dataIntegration(scdata, scdata_sketches, config, use_geosketch)
   message("Finished data integration")
 
   # get  npcs from the UMAP call in integration functions
@@ -130,7 +130,7 @@ merge_scdata_list <- function(scdata_list) {
 #   - Integrate the data using the variable "type" (in case of data integration method is selected) and normalize using LogNormalize method.
 #   - Compute PCA analysis
 #   - To visualize the results of the batch effect, an UMAP with default setting has been made.
-run_dataIntegration <- function(scdata, scdata_sketches, config, geosketch) {
+run_dataIntegration <- function(scdata, scdata_sketches, config, use_geosketch) {
 
   # get method and settings
   method <- config$dataIntegration$method
@@ -156,7 +156,7 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, geosketch) {
 
   integration_function <- get(paste0("run_", method))
 
-  if (geosketch == TRUE) {
+  if (use_geosketch == TRUE) {
     scdata@misc[["active.reduction"]] <- "pca"
     if (is.null(npcs)) {
       npcs <- get_npcs(scdata)
