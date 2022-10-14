@@ -135,6 +135,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 
   samples <- config$samples
   sample_options <- config$sampleOptions
+  
   # add samples as names to the list of options, to index by sample
   names(sample_options) <- unlist(samples)
 
@@ -142,7 +143,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   for (sample in samples) {
     sample_dir <- file.path(input_dir, sample)
     sample_fpaths <- file.path(sample_dir, file_names[["rhapsody"]])
-    inlcude_abseq <- sample_options[[sample]]$includeAbSeq
+    include_abseq <- sample_options[[sample]]$includeAbSeq
 
     message("\nSample --> ", sample)
     message(
@@ -177,7 +178,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
     # clean AbSeq names, removing symbols
     counts[, Gene := gsub("[\\|:]", "_", Gene)]
 
-    if (!inlcude_abseq) {
+    if (!include_abseq) {
       message("Remove abseq genes from sample ", sample)
       counts <- counts[grepl("(p_?ab_?o)$", Gene, ignore.case = TRUE), ]
     }
