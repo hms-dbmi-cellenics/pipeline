@@ -35,7 +35,8 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   if (use_geosketch == TRUE) {
     scdata <- run_pca(scdata)
     message("Started calculating sketches")
-    scdata_sketches <- perform_geosketch(scdata, reduction = "pca", dims = 50, num_cells = round(ncol(scdata) * perc_num_cells / 100))
+    num_cells = round(ncol(scdata) * perc_num_cells / 100)
+    scdata_sketches <- perform_geosketch(scdata, reduction = "pca", dims = 50, num_cells = num_cells)
     message("Finished calculating sketches")
   }
   message("Started data integration")
