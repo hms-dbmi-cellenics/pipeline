@@ -164,7 +164,6 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, use_geosketch) 
       npcs <- get_npcs(scdata)
       message("Number of PCs: ", npcs)
     }
-    Seurat::DefaultAssay(scdata_sketches) <- "RNA"
     scdata_int <- integration_function(scdata_sketches, config)
     message("Started learning from sketches")
     scdata <- learn_from_sketches(scdata, scdata_sketches, scdata_int, method, npcs)
@@ -616,16 +615,17 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 #' @return Seurat object downsampled to desired number of cells
 #' @export
 #'
-perform_geosketch <- function(object, reduction, dims, num_cells) {
+perform_geosketch <- function(scdata, reduction, dims, num_cells) {
   if (!exists("geosketch")) {
     geosketch <- reticulate::import("geosketch")
   }
-  stopifnot("Error: the requested reduction is not present in the Seurat object." = reduction %in% names(object@reductions))
-  stopifnot("Error: the number of cells is lower that the number of dimensions." = ncol(object@reductions[[reduction]]) >= dims)
+  stopifnot("Error: the requested reduction is not present in the Seurat object." = reduction %in% names(scdata@reductions))
+  stopifnot("Error: the number of cells is lower that the number of dimensions." = ncol(scdata@reductions[[reduction]]) >= dims)
 
-  embeddings <- object@reductions[[reduction]]@cell.embeddings[, 1:dims]
+  embeddings <- scdata@reductions[[reduction]]@cell.embeddings[, 1:dims]
   index <- unlist(geosketch$gs(embeddings, as.integer(num_cells), one_indexed = TRUE))
-  sketch <- object[, index]
+  sketch <- scdata[, index]
+  Seurat::DefaultAssay(sketch) <- "RNA"
   return(sketch)
 }
 
