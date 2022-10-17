@@ -25,21 +25,21 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # the following operations give different results depending on sample order
   # make sure they are ordered according to their matrices size
   scdata_list <- order_by_size(scdata_list)
-  message("Started create_scdata for sample ", sample_id, "\n")
+  message("Started create_scdata")
   scdata <- create_scdata(scdata_list, cells_id)
-  message("Finished create_scdata for sample ", sample_id, "\n")
+  message("Finished create_scdata")
 
   # main function
   set.seed(RANDOM_SEED)
-  if (use_geosketch == TRUE) {
-    scdata <- run_pca(scdata)
-    num_cells <- round(ncol(scdata) * perc_num_cells / 100)
-    message("Started calculating sketches")
-    scdata_sketch <- run_geosketch(scdata, reduction = "pca", dims = 50, num_cells = num_cells)
-    message("Finished calculating sketches")
-  } else {
-    scdata_sketch <- NA
+  scdata_sketch <- NA
+  if (use_geosketch) {
+    c(scdata, scdata_sketch) %<-% run_geosketch(
+      scdata,
+      dims = 50,
+      perc_num_cells = perc_num_cells
+    )
   }
+
   message("Started data integration")
   scdata_integrated <- run_dataIntegration(scdata, scdata_sketch, config)
   message("Finished data integration")
@@ -159,18 +159,10 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
 
   integration_function <- get(paste0("run_", method))
 
-  if (!is.na(scdata_sketch)) {
-    scdata@misc[["active.reduction"]] <- "pca"
-    if (is.null(npcs)) {
-      npcs <- get_npcs(scdata)
-      message("Number of PCs: ", npcs)
-    }
-    scdata_sketch_integrated <- integration_function(scdata_sketch, config)
-    message("Started learning from sketches")
-    scdata <- learn_from_sketches(scdata, scdata_sketch, scdata_sketch_integrated, method, npcs)
-    message("Finished learning from sketches")
-  } else {
+  if (is.na(scdata_sketch)) {
     scdata <- integration_function(scdata, config)
+  } else {
+    scdata <- integrate_from_sketch(scdata, scdata_sketch, integration_function, config)
   }
 
   if (is.null(npcs)) {
@@ -183,6 +175,7 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
 
   return(scdata)
 }
+
 
 run_harmony <- function(scdata, config) {
   settings <- config$dataIntegration$methodSettings[["harmony"]]
@@ -615,18 +608,30 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 #' @return Seurat object downsampled to desired number of cells
 #' @export
 #'
-run_geosketch <- function(scdata, reduction, dims, num_cells) {
+run_geosketch <- function(scdata, dims, perc_num_cells) {
+
+  # geosketch needs PCA to be run
+  scdata <- run_pca(scdata)
+  reduction <- "pca"
+  num_cells <- round(ncol(scdata) * perc_num_cells / 100)
+
+  message("Geosketching to ", num_cells, " cells")
+
   if (!exists("geosketch")) {
     geosketch <- reticulate::import("geosketch")
   }
-  stopifnot("Error: the requested reduction is not present in the Seurat object." = reduction %in% names(scdata@reductions))
-  stopifnot("Error: the number of cells is lower that the number of dimensions." = ncol(scdata@reductions[[reduction]]) >= dims)
+  stopifnot(
+    "The requested reduction is not present in the Seurat object." = reduction %in% names(scdata@reductions),
+    "The number of cells is lower that the number of dimensions." = ncol(scdata@reductions[[reduction]]) >= dims
+  )
 
   embeddings <- scdata@reductions[[reduction]]@cell.embeddings[, 1:dims]
   index <- unlist(geosketch$gs(embeddings, as.integer(num_cells), one_indexed = TRUE))
   sketch <- scdata[, index]
   Seurat::DefaultAssay(sketch) <- "RNA"
-  return(sketch)
+  sketch@misc[["active.reduction"]] <- reduction
+
+  return(list(scdata, sketch))
 }
 
 
@@ -680,5 +685,43 @@ run_pca <- function(scdata) {
   scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
+  return(scdata)
+}
+
+#' Integrate using sketch data
+#'
+#' This function takes the sketched data, integrates it and then transfers the
+#' integration to the complete data set.
+#'
+#'
+#' @param scdata Seurat object - complete data set
+#' @param scdata_sketch Seurat object - sketch
+#' @param integration_function function
+#' @param config list - integration parameters
+#' @param method character - integration methods
+#'
+#' @return Integrated Seurat object
+#' @export
+#'
+integrate_from_sketch <- function(scdata, scdata_sketch, integration_function, config) {
+  scdata@misc[["active.reduction"]] <- "pca"
+  method <- config$dataIntegration$method
+  npcs <- config$dimensionalityReduction$numPCs
+
+  if (is.null(npcs)) {
+    npcs <- get_npcs(scdata)
+    message("Number of PCs: ", npcs)
+  }
+  scdata_sketch_integrated <- integration_function(scdata_sketch, config)
+  message("Learning from sketches")
+  scdata <- learn_from_sketches(
+    scdata,
+    scdata_sketch,
+    scdata_sketch_integrated,
+    method,
+    npcs
+  )
+  message("Finished learning from sketches")
+
   return(scdata)
 }
