@@ -51,7 +51,7 @@ load_config <- function(development_aws_server) {
             message("No activity ARN label set yet, waiting...")
             Sys.sleep(5)
         } else {
-            message(paste("Welcome to Biomage R pipeline, activity arn", activity_arn))
+            message(paste("Welcome to Cellenics R pipeline, activity arn", activity_arn))
             break
         }
     }
