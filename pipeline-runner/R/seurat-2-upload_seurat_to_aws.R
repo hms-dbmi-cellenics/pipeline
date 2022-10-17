@@ -39,7 +39,6 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   qc_config$configureEmbedding$embeddingSettings$method <- SeuratObject::DefaultDimReduc(scdata)
 
   # seurat object to s3
-  scdata <- strip_scdata(scdata)
   object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
   message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
 
@@ -64,25 +63,6 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 
   message("\nUpload to AWS step complete.")
   return(res)
-}
-
-strip_scdata <- function(scdata) {
-  # worker only uses 'RNA' assay
-  Seurat::DefaultAssay(scdata) <- 'RNA'
-  remove_assays <- setdiff(names(scdata@assays), 'RNA')
-  for (assay in remove_assays) scdata@assays[[assay]] <- NULL
-
-  # scale.data used as input to PCA (done)
-  scdata[['RNA']]@scale.data <- matrix()
-
-  # graphs used for clustering (done)
-  scdata@graphs <- list()
-
-  # only keep used default reduction
-  remove_reductions <- setdiff(names(scdata@reductions), SeuratObject::DefaultDimReduc(scdata))
-  for (reduction in remove_reductions) scdata@reductions[[reduction]] <- NULL
-
-  return(scdata)
 }
 
 add_samples_to_input <- function(scdata, input) {
@@ -156,16 +136,10 @@ format_seurat <- function(scdata, experiment_id) {
   rns <- row.names(scdata)
   scdata@misc$gene_annotations <- data.frame(input = rns, name = rns, original_name = rns)
 
-  # add dispersion
-  scdata <- add_dispersions(scdata)
-
   # other
   scdata@misc$experimentId <- experiment_id
   scdata@misc$color_pool <- get_color_pool()
   scdata@misc$ingestionData <- Sys.time()
-
-  stopifnot('pca' %in% Seurat::Reductions(scdata))
-  scdata@misc$active.reduction <- 'pca'
 
   # need to mock processing config
   metadata_cols <- list('percent.mt' = 0, 'doublet_scores' = 0, 'doublet_class' = 'singlet')
