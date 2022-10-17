@@ -9,15 +9,15 @@
 #' to the full data.
 #'
 #' @param config list containing the following information
-#'		- dataIntegration
-#'			- method: String. Method to be used. "harmony by default.
-#'			- methodSettings: List with the method as key and:
-#'				- numGenes: Numeric. Number of gene to be used.
-#'				- normalisation: String. Normalisation method to be used.
-#'		- dimensionalityReduction
-#'			- method: String. Method to be used. "rpca" by default.
-#'			- numPCs: Numeric. Number of principal components.
-#'			- excludeGeneCategories: List. Categories of genes to be excluded.
+#' 		- dataIntegration
+#' 			- method: String. Method to be used. "harmony by default.
+#' 			- methodSettings: List with the method as key and:
+#' 				- numGenes: Numeric. Number of gene to be used.
+#' 				- normalisation: String. Normalisation method to be used.
+#' 		- dimensionalityReduction
+#' 			- method: String. Method to be used. "rpca" by default.
+#' 			- numPCs: Numeric. Number of principal components.
+#' 			- excludeGeneCategories: List. Categories of genes to be excluded.
 #' @return a list with the integrated seurat object, the cell ids, the config and the plot values.
 #' @export
 #'
@@ -31,16 +31,17 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 
   # main function
   set.seed(RANDOM_SEED)
-  scdata_sketches <- ""
   if (use_geosketch == TRUE) {
     scdata <- run_pca(scdata)
+    num_cells <- round(ncol(scdata) * perc_num_cells / 100)
     message("Started calculating sketches")
-    num_cells = round(ncol(scdata) * perc_num_cells / 100)
-    scdata_sketches <- perform_geosketch(scdata, reduction = "pca", dims = 50, num_cells = num_cells)
+    scdata_sketch <- run_geosketch(scdata, reduction = "pca", dims = 50, num_cells = num_cells)
     message("Finished calculating sketches")
+  } else {
+    scdata_sketch <- NA
   }
   message("Started data integration")
-  scdata_integrated <- run_dataIntegration(scdata, scdata_sketches, config, use_geosketch)
+  scdata_integrated <- run_dataIntegration(scdata, scdata_sketch, config)
   message("Finished data integration")
 
   # get  npcs from the UMAP call in integration functions
@@ -132,7 +133,7 @@ merge_scdata_list <- function(scdata_list) {
 #   - Integrate the data using the variable "type" (in case of data integration method is selected) and normalize using LogNormalize method.
 #   - Compute PCA analysis
 #   - To visualize the results of the batch effect, an UMAP with default setting has been made.
-run_dataIntegration <- function(scdata, scdata_sketches, config, use_geosketch) {
+run_dataIntegration <- function(scdata, scdata_sketch, config) {
 
   # get method and settings
   method <- config$dataIntegration$method
@@ -158,16 +159,15 @@ run_dataIntegration <- function(scdata, scdata_sketches, config, use_geosketch) 
 
   integration_function <- get(paste0("run_", method))
 
-  if (use_geosketch == TRUE) {
+  if (!is.na(scdata_sketch)) {
     scdata@misc[["active.reduction"]] <- "pca"
     if (is.null(npcs)) {
       npcs <- get_npcs(scdata)
       message("Number of PCs: ", npcs)
     }
-    scdata_int <- integration_function(scdata_sketches, config)
+    scdata_sketch_integrated <- integration_function(scdata_sketch, config)
     message("Started learning from sketches")
-    scdata <- learn_from_sketches(scdata, scdata_sketches, scdata_int, method, npcs)
-    scdata@misc$geosketch <- TRUE
+    scdata <- learn_from_sketches(scdata, scdata_sketch, scdata_sketch_integrated, method, npcs)
     message("Finished learning from sketches")
   } else {
     scdata <- integration_function(scdata, config)
@@ -615,7 +615,7 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 #' @return Seurat object downsampled to desired number of cells
 #' @export
 #'
-perform_geosketch <- function(scdata, reduction, dims, num_cells) {
+run_geosketch <- function(scdata, reduction, dims, num_cells) {
   if (!exists("geosketch")) {
     geosketch <- reticulate::import("geosketch")
   }
@@ -636,29 +636,30 @@ perform_geosketch <- function(scdata, reduction, dims, num_cells) {
 #' apply it to the whole dataset
 #'
 #' @param scdata Seurat object
-#' @param scdata_sketches Sketched Seurat object
-#' @param scdata_int Sketched integrated Seurat object
+#' @param scdata_sketch Sketched Seurat object
+#' @param scdata_sketch_integrated Sketched integrated Seurat object
 #' @param method Reduction method
 #' @param npcs Number of PCs
 #'
 #' @return Integrated Seurat object with original number of cells
 #' @export
 #'
-learn_from_sketches <- function(scdata, scdata_sketches, scdata_int, method, npcs) {
+learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated, method, npcs) {
   # get embeddings from splitted Seurat object
-  active.reduction <- scdata_int@misc[["active.reduction"]]
+  active_reduction <- scdata_sketch_integrated@misc[["active.reduction"]]
   embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:npcs])
-  embeddings_sketch <- list(scdata_sketches@reductions[["pca"]]@cell.embeddings[, 1:npcs])
-  embeddings_sketch_int <- list(scdata_int@reductions[[active.reduction]]@cell.embeddings[, 1:npcs])
+  embeddings_sketch <- list(scdata_sketch@reductions[["pca"]]@cell.embeddings[, 1:npcs])
+  embeddings_sketch_int <- list(scdata_sketch_integrated@reductions[[active_reduction]]@cell.embeddings[, 1:npcs])
 
   # use python script to learn integration from sketches and apply to whole dataset
   reticulate::source_python("/src/pipeline-runner/R/learn-apply-transformation.py")
   learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
   rownames(learned_int[[1]]) <- colnames(scdata)
 
-  scdata[[method]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = paste0(active.reduction, "_"), assay = Seurat::DefaultAssay(scdata))
+  scdata[[method]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = paste0(active_reduction, "_"), assay = Seurat::DefaultAssay(scdata))
 
-  scdata@misc[["active.reduction"]] <- active.reduction
+  scdata@misc[["active.reduction"]] <- active_reduction
+  scdata@misc$geosketch <- TRUE
 
   return(scdata)
 }
