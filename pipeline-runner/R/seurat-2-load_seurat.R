@@ -4,9 +4,7 @@ load_seurat <- function(input, pipeline_config, prev_out, input_dir = "/input") 
   dataset_dir <- config$samples[1]
   dataset_fpath <- file.path(input_dir, dataset_dir, 'r.rds')
 
-  scdata <- RAppArmor::eval.secure(
-    reconstruct_seurat(dataset_fpath),
-    profile = 'read-seurat')
+  scdata <- RAppArmor::eval.secure(reconstruct_seurat(dataset_fpath),profile = 'read-seurat')
 
   prev_out$scdata <- scdata
 

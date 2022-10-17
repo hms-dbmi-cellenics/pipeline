@@ -36,12 +36,6 @@ RUN R -e "renv::restore(lockfile='renv.lock.init', library = '$RENV_LIB')" && \
 
 RUN R -e "renv::deactivate()"
 
-# install the apparmor profile
-COPY setup/read-seurat /etc/apparmor.d/rapparmor.d/
-
-# load the profiles into the kernel
-RUN sudo service apparmor restart
-
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
 RUN R -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRUE)" && \
@@ -64,6 +58,9 @@ COPY --from=builder /src /src
 # add renv library to .libPaths
 ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
+
+# install the apparmor profile
+COPY setup/read-seurat /etc/apparmor.d/rapparmor.d/
 
 # install runtime system deps
 # cleanup setup files

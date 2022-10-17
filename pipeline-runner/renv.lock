@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.2.0",
+    "Version": "4.2.1",
     "Repositories": [
       {
         "Name": "BioCsoft",
@@ -424,6 +424,17 @@
       "Repository": "CRAN",
       "Hash": "d128ea05a972d3e67c6f39de52c72bd7",
       "Requirements": []
+    },
+    "RAppArmor": {
+      "Package": "RAppArmor",
+      "Version": "3.2.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "OS_type": "unix",
+      "Hash": "85fc8530c4cfec7af96085ea458f4abb",
+      "Requirements": [
+        "unix"
+      ]
     },
     "RColorBrewer": {
       "Package": "RColorBrewer",
@@ -2780,6 +2791,15 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "ee3a0717cd6a7a190bb32b90ccf0178b",
+      "Requirements": []
+    },
+    "unix": {
+      "Package": "unix",
+      "Version": "1.5.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "OS_type": "unix",
+      "Hash": "44f6a77bf72bd30a3c7f7d8f63a6c505",
       "Requirements": []
     },
     "utf8": {
