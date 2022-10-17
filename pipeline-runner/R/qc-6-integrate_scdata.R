@@ -237,7 +237,13 @@ run_seuratv4 <- function(scdata, config) {
     {
       if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
       if (reduction == "cca") message("Finding integration anchors using CCA reduction")
-      data.anchors <- Seurat::FindIntegrationAnchors(object.list = data.split, dims = 1:npcs, k.filter = k.filter, verbose = TRUE, reduction = reduction)
+      data.anchors <- Seurat::FindIntegrationAnchors(
+        object.list = data.split,
+        dims = 1:npcs,
+        k.filter = k.filter,
+        verbose = TRUE,
+        reduction = reduction
+      )
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
       Seurat::DefaultAssay(scdata) <- "integrated"
     },
@@ -661,7 +667,11 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
   learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
   rownames(learned_int[[1]]) <- colnames(scdata)
 
-  scdata[[method]] <- Seurat::CreateDimReducObject(embeddings = learned_int[[1]], key = paste0(active_reduction, "_"), assay = Seurat::DefaultAssay(scdata))
+  scdata[[method]] <- Seurat::CreateDimReducObject(
+    embeddings = learned_int[[1]],
+    key = paste0(active_reduction, "_"),
+    assay = Seurat::DefaultAssay(scdata)
+  )
 
   scdata@misc[["active.reduction"]] <- active_reduction
   scdata@misc$geosketch <- TRUE
@@ -672,15 +682,14 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
 
 #' Run PCA
 #'
-#' Performs FindVariableFeatures and ScaleData,
-#' which are two required steps before RunPCA
+#' Performs FindVariableFeatures and ScaleData, which are two required steps
+#' before RunPCA
 #'
 #' @param scdata Seurat object
 #'
 #' @return Seurat object with PCA slot
 #' @export
 #'
-#' @examples
 run_pca <- function(scdata) {
   scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
