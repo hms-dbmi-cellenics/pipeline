@@ -60,7 +60,7 @@ download_user_files <- function(input, pipeline_config, prev_out = list(), input
     samples = input$sampleIds,
     organism = input$organism,
     input = list(type = input$input$type),
-    sampleOptions = input$sampleOptions,
+    sampleOptions = input$sampleOptions
   )
 
   if ("metadata" %in% names(input)) {
