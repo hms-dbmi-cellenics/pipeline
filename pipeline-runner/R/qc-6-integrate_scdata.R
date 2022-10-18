@@ -667,7 +667,7 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
   learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
   rownames(learned_int[[1]]) <- colnames(scdata)
 
-  scdata[[method]] <- Seurat::CreateDimReducObject(
+  scdata[[active_reduction]] <- Seurat::CreateDimReducObject(
     embeddings = learned_int[[1]],
     key = paste0(active_reduction, "_"),
     assay = Seurat::DefaultAssay(scdata)
