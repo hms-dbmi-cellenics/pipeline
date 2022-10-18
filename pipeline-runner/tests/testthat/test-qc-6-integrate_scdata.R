@@ -71,7 +71,6 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   names(scdata_list) <- c(sample_1_id, sample_2_id)
 
   return(list(scdata_list, sample_1_id, sample_2_id))
-
 }
 
 mock_ids <- function() {
@@ -89,7 +88,6 @@ scdata_preprocessing <- function(scdata) {
   scdata@misc[["active.reduction"]] <- "pca"
 
   return(scdata)
-
 }
 
 mock_doublet_scores <- function(counts) {
@@ -155,7 +153,7 @@ test_that("harmony integration works", {
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config))
+  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
@@ -168,7 +166,7 @@ test_that("SeuratV4 integration doesnt error out with small dataset", {
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config))
+  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
@@ -181,7 +179,7 @@ test_that("Unisample integration works", {
     dataIntegration = list(method = "unisample", methodSettings = list(unisample = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config))
+  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
@@ -194,7 +192,7 @@ test_that("FastMNN is not working", {
     dataIntegration = list(method = "fastmnn", methodSettings = list(fastmnn = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_error(suppressWarnings(run_dataIntegration(merged_scdata, config)))
+  expect_error(suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config)))
 })
 
 test_that("numPCs estimation works", {
@@ -303,7 +301,7 @@ test_that("SeuratV4 integration works", {
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config))
+  merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
   expect_s4_class(merged_scdata, "Seurat")
 })
 
@@ -322,7 +320,7 @@ test_that("PCA is computed when RPCA method is selected within SeuratV4 integrat
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(run_dataIntegration(merged_scdata, config), "Running PCA")
+  expect_message(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config), "Running PCA")
 })
 
 
@@ -340,7 +338,7 @@ test_that("PCA is not computed when CCA method is selected within SeuratV4 integ
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(run_dataIntegration(merged_scdata, config), "PCA is not running .*")
+  expect_message(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config), "PCA is not running .*")
 })
 
 
@@ -358,7 +356,7 @@ test_that("SeuratV4 integration finds integration anchors using RPCA method, if 
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config)), "Finding integration anchors using RPCA reduction")
+  expect_message(merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config)), "Finding integration anchors using RPCA reduction")
   expect_equal(merged_scdata@commands$FindIntegrationAnchors$reduction, "pca")
 })
 
@@ -377,7 +375,7 @@ test_that("SeuratV4 integration finds integration anchors using CCA method, if m
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, config)), "Finding integration anchors using CCA reduction")
+  expect_message(merged_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config)), "Finding integration anchors using CCA reduction")
   expect_equal(merged_scdata@commands$FindIntegrationAnchors$reduction, "cca")
 })
 
@@ -391,7 +389,6 @@ test_that("merge_scdata_list correctly merges seurat objects", {
 
   expect_equal(sum(unlist(lapply(scdata_list, ncol))), ncol(scdata))
   expect_true(all(scdata$samples[1:ncol(scdata_list[[1]])] == "a"))
-
 })
 
 test_that("merge_scdata_list returns first element of list if only one sample", {
@@ -407,7 +404,6 @@ test_that("merge_scdata_list returns first element of list if only one sample", 
 })
 
 test_that("run_dataIntegration calls remove_genes if there are groups to exclude", {
-
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(rename_genes = some_cc_genes)
@@ -422,7 +418,7 @@ test_that("run_dataIntegration calls remove_genes if there are groups to exclude
   )
 
   expect_message(
-    suppressWarnings(run_dataIntegration(merged_scdata, config)),
+    suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config)),
     paste0("*Number of Cell Cycle genes to exclude: ", n_rename, "*")
   )
 })
@@ -438,5 +434,64 @@ test_that("normalize_data doesn't scale data if integration method is FastMNN", 
   )
 
   merged_scdata <- normalize_data(merged_scdata, "logNormalize", config$dataIntegration$method, config$dataIntegration$methodSettings$fastmnn$numGenes)
-  expect_equal(dim(merged_scdata@assays$RNA@scale.data), c(0,0))
+  expect_equal(dim(merged_scdata@assays$RNA@scale.data), c(0, 0))
+})
+
+
+
+test_that("integrate_scdata doesn't run geosketch if use_geosketch is FALSE", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  cells_id <- mock_ids()
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2),
+    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+  )
+
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", use_geosketch = FALSE))$data
+  expect_true(is.null(integrated_scdata@misc$geosketch))
+})
+
+
+test_that("integrate_scdata run geosketch if use_geosketch is TRUE", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  cells_id <- mock_ids()
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2),
+    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+  )
+
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", use_geosketch = TRUE, perc_num_cells = 50))$data
+  expect_true(integrated_scdata@misc$geosketch)
+})
+
+
+test_that("run_geosketch generates the correct number of sketches", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  cells_id <- mock_ids()
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2),
+    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+  )
+
+  merged_scdata <- run_pca(merged_scdata)
+
+  perc_num_cells <- 5
+  num_cells <- round(ncol(merged_scdata) * perc_num_cells / 100)
+  c(scdata, scdata_sketch) %<-% run_geosketch(merged_scdata, dims = 50, perc_num_cells)
+  expect_equal(ncol(scdata_sketch), num_cells)
+})
+
+
+test_that("integrate_scdata with geosketch adds the correct integration method to the Seurat object", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  cells_id <- mock_ids()
+   config <- list(
+    dimensionalityReduction = list(numPCs = 2),
+    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+  )
+
+   integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", use_geosketch = TRUE, perc_num_cells = 50))$data
+   expect_equal(integrated_scdata@misc[["active.reduction"]], "harmony")
 })
