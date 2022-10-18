@@ -135,7 +135,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 
   samples <- config$samples
   sample_options <- config$sampleOptions
-  
+
 
 
   for (sample in samples) {
@@ -178,7 +178,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 
     if (!include_abseq) {
       message("Remove abseq genes from sample ", sample)
-      counts <- counts[grepl("(p_?ab_?o)$", Gene, ignore.case = TRUE), ]
+      counts <- counts[!grepl("(p_?ab_?o)$", Gene, ignore.case = TRUE), ]
     }
 
     # we need the genes as ints to create the sparse matrix
