@@ -480,7 +480,7 @@ test_that("run_geosketch generates the correct number of sketches", {
   perc_num_cells <- 5
   num_cells <- round(ncol(merged_scdata) * perc_num_cells / 100)
   c(scdata, scdata_sketch) %<-% run_geosketch(merged_scdata, dims = 50, perc_num_cells)
-  expect_equal(ncol(sketched_data), num_cells)
+  expect_equal(ncol(scdata_sketch), num_cells)
 })
 
 
