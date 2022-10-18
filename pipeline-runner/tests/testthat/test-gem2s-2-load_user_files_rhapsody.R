@@ -56,17 +56,32 @@ local_rhapsody_experiment <- function(samples, env = parent.frame()) {
   files
 }
 
+mock_prev_out <- function(samples, include_abseq) {
+
+  sample_options <- list()
+  for (sample in names(samples)) {
+    sample_options[[sample]] = list(includeAbSeq = include_abseq)
+  }
+
+  prev_out <- list(
+    config = list(
+      samples = names(samples),
+      input = list(type = "rhapsody"),
+      sampleOptions = sample_options
+    )
+  )
+
+  return(prev_out)
+}
+
+
 test_that("load_user_files reads rhapsody files", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
 
   files <- local_rhapsody_experiment(samples)
 
-  prev_out <- list(
-    config = list(
-      samples = names(samples),
-      input = list(type = "rhapsody")
-    )
-  )
+
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
   input_dir <- "./input"
 
   res <- load_user_files(NULL, NULL, prev_out, input_dir)
@@ -81,7 +96,8 @@ test_that("read_rhapsody_files reads a rhapsody matrix", {
 
   files <- local_rhapsody_experiment(samples)
 
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   res <- read_rhapsody_files(config, input_dir)
@@ -97,7 +113,8 @@ test_that("parse_rhapsody_matrix reads a rhapsody matrix", {
 
   files <- local_rhapsody_experiment(samples)
 
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   res <- parse_rhapsody_matrix(config, input_dir)
@@ -111,7 +128,8 @@ test_that("parse_rhapsody_matrix reads a rhapsody matrix", {
 test_that("parse_rhapsody_matrix keeps the counts where it counts (correct gene-cell-value)", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
   files <- local_rhapsody_experiment(samples)
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   # read original table and get vector of expected values (originals)
@@ -138,7 +156,8 @@ test_that("parse_rhapsody_matrix returns error if files are missing", {
 
   files <- local_rhapsody_experiment(samples)
 
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   # remove file
@@ -156,7 +175,8 @@ test_that("parse_rhapsody_matrix returns error if a column is invalid", {
 
   files <- local_rhapsody_experiment(samples)
 
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   # remove file
@@ -175,7 +195,8 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
 
   files <- local_rhapsody_experiment(samples)
 
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   # remove DBEC column
