@@ -9,13 +9,13 @@ construct_qc_config(scdata_list, any_filtered)
 \arguments{
 \item{scdata_list}{list of seurat objects}
 
-\item{any_filtered}{boolean indicating if barcodes were filtered by the emptyDrops.}
+\item{any_filtered}{bool indicating if barcodes were filtered by emptyDrops}
 }
 \value{
 list of QC configuration parameters
 }
 \description{
 This function returns the default parameters used during QC as a nested list.
-It is sent to the API, which in turn saves it as a jsonb object in the PostgreSQL
-database.
+It is sent to the API, which in turn saves it as a jsonb object in the
+PostgreSQL database.
 }
