@@ -19,8 +19,7 @@ which will start the container.
 How to execute tasks locally
 ----------------------------
 
-We use the Biomage-maintained project `hms-dbmi-cellenics/inframock` to create a local
-AWS environment that.
+We use `hms-dbmi-cellenics/inframock` to create a local AWS environment.
 
 Task execution is done through Step Function activities, which are created by
 other parts of the platform. You can use the project under `local-runner`

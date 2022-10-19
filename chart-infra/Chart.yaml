@@ -1,4 +1,4 @@
 apiVersion: v1
-description: Biomage pipeline infrastructure chart
+description: Cellenics pipeline infrastructure chart
 name: biomage-pipeline-infra-chart
 version: 1.0.0
