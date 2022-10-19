@@ -11,6 +11,7 @@
 #' @return list with 'output' slot containing \itemize{
 #'   \item{"counts_list"}{named list of dgCMatrix per sample}
 #'   \item{"annot"}{data.frame with gene ids and/or symbols}
+#'   }
 #' @export
 load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/input") {
   message("Loading user files...")
@@ -110,6 +111,7 @@ read_10x_files <- function(config, input_dir) {
 #' @return list containing \itemize{
 #'   \item{"counts_list"}{named list of dgCMatrix per sample}
 #'   \item{"annot"}{data.frame with gene symbols}
+#'   }
 #'
 read_rhapsody_files <- function(config, input_dir) {
 
@@ -128,6 +130,7 @@ read_rhapsody_files <- function(config, input_dir) {
 #' @return list containing \itemize{
 #'   \item{"counts_list"}{named list of dgCMatrix per sample}
 #'   \item{"annot"}{data.frame with gene symbols}
+#'   }
 #'
 parse_rhapsody_matrix <- function(config, input_dir) {
   counts_list <- list()

@@ -20,6 +20,7 @@ list with 'output' slot containing \itemize{
 \item{"counts_list"}{named list of dgCMatrix per sample}
 \item{"annot"}{data.frame with gene ids and/or symbols}
 }
+}
 \description{
 Checks technology used and dispatches call to correct reading function.
 In case of 10x, \code{annot} contains a data.frame from reading the
