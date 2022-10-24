@@ -30,8 +30,10 @@ reconstruct_seurat <- function(dataset_fpath) {
 
   scdata <- SeuratObject::CreateSeuratObject(
     counts,
-    meta.data = metadata
+    meta.data = metadata,
   )
+
+  scdata@misc$gene_dispersion <- dispersions
 
   red_name <- SeuratObject::DefaultDimReduc(user_scdata)
   check_type_is_safe(red_name)
@@ -48,6 +50,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   test_user_sparse_mat(data)
   scdata[['RNA']]@data <- data
   scdata@reductions[[red_name]] <- red
+
 
   return(scdata)
 }
