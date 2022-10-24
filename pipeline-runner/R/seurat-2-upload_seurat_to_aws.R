@@ -129,12 +129,7 @@ find_group_columns <- function(scdata) {
 format_seurat <- function(scdata, experiment_id) {
 
   scdata <- add_samples_col(scdata)
-
   scdata$cells_id <- seq_len(ncol(scdata))-1
-
-  # add gene annotations
-  rns <- row.names(scdata)
-  scdata@misc$gene_annotations <- data.frame(input = rns, name = rns, original_name = rns)
 
   # other
   scdata@misc$experimentId <- experiment_id

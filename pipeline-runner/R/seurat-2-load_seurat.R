@@ -18,6 +18,13 @@ load_seurat <- function(input, pipeline_config, prev_out, input_dir = "/input") 
 reconstruct_seurat <- function(dataset_fpath) {
 
   user_scdata <- readRDS(dataset_fpath)
+
+  # add gene annotations (needed to add dispersions)
+  rns <- row.names(user_scdata)
+  check_type_is_safe(rns)
+  gene_annotations <- data.frame(input = rns, name = rns, original_name = rns, row.names = rns)
+  user_scdata@misc$gene_annotations <- gene_annotations
+
   user_scdata <- add_dispersions(user_scdata)
   dispersions <- user_scdata@misc$gene_dispersion
   test_user_df(dispersions)
@@ -33,7 +40,9 @@ reconstruct_seurat <- function(dataset_fpath) {
     meta.data = metadata,
   )
 
+  # add dispersions and gene annotations to new scdata
   scdata@misc$gene_dispersion <- dispersions
+  scdata@misc$gene_annotations <- gene_annotations
 
   red_name <- SeuratObject::DefaultDimReduc(user_scdata)
   check_type_is_safe(red_name)
