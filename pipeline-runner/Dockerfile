@@ -67,9 +67,6 @@ COPY --from=builder /src /src
 ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
 
-# install the apparmor profile
-COPY setup/read-seurat /etc/apparmor.d/rapparmor.d/
-
 # install runtime system deps
 # cleanup setup files
 RUN echo "python3-pip" >> sysdeps_run.txt && \
