@@ -25,16 +25,18 @@ reconstruct_seurat <- function(dataset_fpath) {
   gene_annotations <- data.frame(input = rns, name = rns, original_name = rns, row.names = rns)
   user_scdata@misc$gene_annotations <- gene_annotations
 
+  # add dispersions
   user_scdata <- add_dispersions(user_scdata)
   dispersions <- user_scdata@misc$gene_dispersion
   test_user_df(dispersions)
 
-
+  # get counts and meta data
   counts <- user_scdata[['RNA']]@counts
   metadata <- user_scdata@meta.data
   test_user_df(metadata)
   test_user_sparse_mat(counts)
 
+  # reconstruct seurat object
   scdata <- SeuratObject::CreateSeuratObject(
     counts,
     meta.data = metadata,
@@ -44,22 +46,21 @@ reconstruct_seurat <- function(dataset_fpath) {
   scdata@misc$gene_dispersion <- dispersions
   scdata@misc$gene_annotations <- gene_annotations
 
+  # add dimensionality reduction
   red_name <- SeuratObject::DefaultDimReduc(user_scdata)
   check_type_is_safe(red_name)
-
   embedding <- user_scdata@reductions[[red_name]]@cell.embeddings
   test_user_df(embedding)
-
   red <- SeuratObject::CreateDimReducObject(
     embeddings = embedding,
     assay = 'RNA'
   )
+  scdata@reductions[[red_name]] <- red
 
+  # add logcounts
   data <- user_scdata[['RNA']]@data
   test_user_sparse_mat(data)
   scdata[['RNA']]@data <- data
-  scdata@reductions[[red_name]] <- red
-
 
   return(scdata)
 }
