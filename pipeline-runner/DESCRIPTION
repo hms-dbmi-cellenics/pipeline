@@ -13,10 +13,11 @@ License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
 Depends: 
     R (>= 4.2.0)
 Imports:
-    batchelor (== 1.12.1),
     covr,
+    magrittr,
     data.table
 Suggests: 
+    batchelor (== 1.12.1),
     devtools,
     httptest,
     languageserver,
