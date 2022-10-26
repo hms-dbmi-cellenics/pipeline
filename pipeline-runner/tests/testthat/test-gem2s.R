@@ -101,7 +101,7 @@ path_setup <- function() {
 
 
 make_snapshot_name <- function(step_n, experiment_id, output_name) {
-  paste("gem2s", step_n, experiment_id, paste0(output_name, ".R"), sep = "-")
+  paste("gem2s", step_n, experiment_id, output_name, sep = "-")
 }
 
 
@@ -159,11 +159,19 @@ test_gem2s_v2 <- function(experiment_id) {
 
     # snapshot qc_config independently as it is used frequently in QC tests
     qc_config <- res$output$qc_config
-    qc_config_snapshot_name <- make_snapshot_name(step_n, experiment_id, "qc_config")
+    qc_config_snapshot_name <- make_snapshot_name(step_n, experiment_id, "qc_config.R")
     withr::with_tempfile("tf_qc_config", {
       dump("qc_config", tf_qc_config)
       expect_snapshot_file(tf_qc_config, name = qc_config_snapshot_name)
     })
+
+    # fully snapshot final gem2s file (step 7 does not return the scdata_list)
+    snapshot_name <- make_snapshot_name(step_n, experiment_id, "out.R")
+    withr::with_tempfile("tf", {
+      dump("res", tf)
+      expect_snapshot_file(tf, name = snapshot_name)
+    })
+
 
     #gem2s 7
     step_n <- 7
@@ -178,17 +186,11 @@ test_gem2s_v2 <- function(experiment_id) {
       name = cellset_snapshot_name
     )
 
-    # fully snapshot final gem2s file
-    snapshot_name <- make_snapshot_name(step_n, experiment_id, "out")
-    withr::with_tempfile("tf", {
-      dump("res", tf)
-      expect_snapshot_file(tf, name = snapshot_name)
-    })
 
     # cleanup
     withr::defer(unlink(setup$pipeline_config$cell_sets_bucket, recursive = TRUE))
-    withr::defer(unlink(setup$pipeline_config$source_bucket, recursive = T))
-    withr::defer(unlink(file.path(setup$paths$mock_data, "temp"), recursive = T))
+    withr::defer(unlink(setup$pipeline_config$source_bucket, recursive = TRUE))
+    withr::defer(unlink(file.path(setup$paths$mock_data, "temp"), recursive = TRUE))
   })
 
 }
