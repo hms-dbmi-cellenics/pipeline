@@ -17,6 +17,7 @@ Imports:
     covr,
     data.table
 Suggests: 
+    diffviewer,
     devtools,
     httptest,
     languageserver,
