@@ -98,6 +98,7 @@ COPY aws_config /root/.aws/config
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
+ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
@@ -119,6 +120,7 @@ RUN pip install memory_profiler
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
+ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
