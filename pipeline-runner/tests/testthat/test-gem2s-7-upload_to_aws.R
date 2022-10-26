@@ -254,7 +254,7 @@ test_that("upload_to_aws tries to upload the correct files to aws", {
   }
 
   # cleanup
-  withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE)
+  withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
   withr::defer(unlink(pipeline_config$source_bucket, recursive = TRUE))
   withr::defer(unlink(file.path(paths$mock_data, "temp"), recursive = TRUE))
 
