@@ -18,6 +18,7 @@ Imports:
     magrittr,
     data.table
 Suggests: 
+    diffviewer,
     devtools,
     httptest,
     languageserver,
