@@ -1,101 +1,9 @@
-stub_remove_bucket_folder <-
-  function(pipeline_config, bucket, folder) {
-    # we cleanup inside the corresponding tests
-  }
-
-
-stub_tempdir <- function() {
-  # stub to write always to the same place and be able to capture written files
-  # consistently
-  base_path <- ifelse(basename(getwd()) == "pipeline-runner",
-                      "./tests/testthat",
-                      ".")
-
-  mock_path <- file.path(base_path,
-                         "mock_data")
-
-  temp_path <- file.path(mock_path, "temp")
-
-  if (!dir.exists(temp_path))
-    dir.create(temp_path, recursive = TRUE)
-
-  return(temp_path)
-}
-
-
-stub_put_object_in_s3_multipart <-
-  function(pipeline_config, bucket, object, key) {
-    # if we do not test the raw RDSs uploaded by upload_to_aws, we can remove
-    # this stub function
-    dir_path <- file.path(bucket, dirname(key))
-    if (!dir.exists(dir_path))
-      dir.create(dir_path, recursive = TRUE)
-    file.copy(object, file.path(bucket, key))
-  }
-
-
-stubbed_upload_to_aws <-
-  function(input, pipeline_config, prev_out) {
-    mockery::stub(upload_to_aws, "put_object_in_s3", stub_put_object_in_s3)
-    mockery::stub(upload_to_aws,
-                  "remove_bucket_folder",
-                  stub_remove_bucket_folder)
-    mockery::stub(upload_to_aws, "tempdir", stub_tempdir)
-    mockery::stub(upload_to_aws,
-                  "put_object_in_s3_multipart",
-                  stub_put_object_in_s3_multipart)
-
-    upload_to_aws(input, pipeline_config, prev_out)
-
-  }
-
-
-mock_pipeline_config <-
-  function(development_aws_server = "mock_aws_server") {
-    local_envvar(list("AWS_ACCOUNT_ID" = "000000000000",
-                      "ACTIVITY_ARN" = "mock_arn"))
-
-    pipeline_config <- load_config(development_aws_server)
-
-    base_path <- ifelse(basename(getwd()) == "pipeline-runner",
-                        "./tests/testthat",
-                        ".")
-
-
-    mock_path <- file.path(base_path,
-                           "mock_data")
-
-    # replace buckets with the local path
-    for (bucket in grep("bucket$", names(pipeline_config), value = TRUE)) {
-      pipeline_config[[bucket]] <- file.path(mock_path, bucket)
-    }
-
-    return(pipeline_config)
-
-  }
-
-
 load_experiment_input <- function(mock_data_path, experiment_id) {
   RJSONIO::fromJSON(file.path(
     mock_data_path,
     "input",
     paste(experiment_id, "input.json", sep = "-")
   ))
-
-}
-
-
-path_setup <- function() {
-  base_path <- ifelse(basename(getwd()) == "pipeline-runner",
-                      "./tests/testthat",
-                      ".")
-
-  mock_path <- file.path(base_path,
-                         "mock_data")
-
-  snaps_path <- file.path(base_path, "_snaps")
-
-  return(list(base = base_path, mock_data = mock_path, snaps = snaps_path))
 
 }
 
@@ -123,11 +31,9 @@ test_gem2s_v2 <- function(experiment_id) {
   test_that("some gem2s steps work", {
     setup <- gem2s_setup(experiment_id)
 
-    #step_n <- 1
-    res <- stubbed_download_user_files(setup$input, setup$pipeline_config)
+    # gem2s 1
 
-    # snapshot download_user_files output
-    #snapshot_name <- make_snapshot_name(step_n, experiment_id, "out")
+    res <- stubbed_download_user_files(setup$input, setup$pipeline_config)
     expect_snapshot(str(res, vec.len = 20))
 
     # gem2s 2
@@ -185,6 +91,8 @@ test_gem2s_v2 <- function(experiment_id) {
       file.path(setup$pipeline_config$cell_sets_bucket, experiment_id),
       name = cellset_snapshot_name
     )
+
+    # raw rds files
 
 
     # cleanup
