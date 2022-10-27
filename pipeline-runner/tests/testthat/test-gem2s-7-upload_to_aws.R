@@ -222,7 +222,7 @@ test_that("upload_to_aws tries to upload the correct files to aws", {
   config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
 
-  paths <- path_setup()
+  paths <- setup_test_paths()
 
   pipeline_config <- mock_pipeline_config()
 
