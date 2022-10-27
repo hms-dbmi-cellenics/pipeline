@@ -1,4 +1,5 @@
 load_experiment_input <- function(mock_data_path, experiment_id) {
+  # use RJSONIO because the pipeline parses with RJSONIO
   RJSONIO::fromJSON(file.path(
     mock_data_path,
     "input",
@@ -27,6 +28,23 @@ gem2s_setup <- function(experiment_id) {
 }
 
 
+#' Run gem2s sequentially and snapshot test each step
+#'
+#' The snapshots saved are only the structure of each steps output, except for
+#' the final object (the output to prepare experiment) which is completely saved
+#' as a text representation (using `dump`). That can be sourced and used as input
+#' for similar tests in QC.
+#'
+#' To run on other experiments two things are required:
+#'
+#' 1. add sample files to the `mock_data/originals_bucket` folder
+#' 2. create an `input.json` file, named like `<experiment_id>-input.json` and put it
+#'    in the `mock_data/input` folder. It should contain the correct sample file
+#'    ids (the name of the sample files in the `originals_bucket` folder) and
+#'    `experiment_id`
+#'
+#' @param experiment_id character
+#'
 test_gem2s <- function(experiment_id) {
   test_that("some gem2s steps work", {
     setup <- gem2s_setup(experiment_id)
