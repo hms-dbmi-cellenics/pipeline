@@ -125,8 +125,8 @@ RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux6
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
+ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
-
 
 
 # ---------------------------------------------------
