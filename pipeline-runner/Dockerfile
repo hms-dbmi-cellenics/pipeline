@@ -42,6 +42,14 @@ RUN R -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRU
     R -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
     strip --strip-debug $RENV_LIB/*/libs/*.so
 
+# install miniconda and geosketch
+# clean conda
+ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
+RUN R -e "reticulate::install_miniconda()" && \
+    R -e "reticulate::conda_install('r-reticulate', c('geosketch', 'scanorama'), pip = TRUE)" && \
+    CONDA_PATH=$(R -e "cat(reticulate::conda_binary())") && \
+    $CONDA_PATH clean --force-pkgs-dirs -y
+
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
 RUN Rscript get_sysdeps_run.R
@@ -51,6 +59,7 @@ RUN Rscript get_sysdeps_run.R
 # ---------------------------------------------------
 FROM rocker/r-ver:4.2.0 AS common
 WORKDIR /src/pipeline-runner
+ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 
 # get source code and R packages
 COPY --from=builder /src /src
@@ -65,7 +74,6 @@ RUN echo "python3-pip" >> sysdeps_run.txt && \
     echo "wget" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
-
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -90,6 +98,7 @@ COPY aws_config /root/.aws/config
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
+ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
@@ -135,6 +144,7 @@ RUN pip install memory_profiler
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
+ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
