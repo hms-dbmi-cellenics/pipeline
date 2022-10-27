@@ -15,7 +15,7 @@ make_snapshot_name <- function(step_n, experiment_id, output_name) {
 
 gem2s_setup <- function(experiment_id) {
 
-  paths <- path_setup()
+  paths <- setup_test_paths()
   input <- load_experiment_input(paths$mock_data, experiment_id)
   pipeline_config <- mock_pipeline_config()
 
@@ -27,7 +27,7 @@ gem2s_setup <- function(experiment_id) {
 }
 
 
-test_gem2s_v2 <- function(experiment_id) {
+test_gem2s <- function(experiment_id) {
   test_that("some gem2s steps work", {
     setup <- gem2s_setup(experiment_id)
 
@@ -92,9 +92,6 @@ test_gem2s_v2 <- function(experiment_id) {
       name = cellset_snapshot_name
     )
 
-    # raw rds files
-
-
     # cleanup
     withr::defer(unlink(setup$pipeline_config$cell_sets_bucket, recursive = TRUE))
     withr::defer(unlink(setup$pipeline_config$source_bucket, recursive = TRUE))
@@ -103,4 +100,4 @@ test_gem2s_v2 <- function(experiment_id) {
 
 }
 
-test_gem2s_v2("mock_experiment_id")
+test_gem2s("mock_experiment_id")
