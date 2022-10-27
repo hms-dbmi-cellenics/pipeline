@@ -31,12 +31,16 @@ load_config <- function(development_aws_server) {
     label_path <- "/etc/podinfo/labels"
     aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset="242905224710")
     aws_region <- Sys.getenv("AWS_DEFAULT_REGION", unset="eu-west-1")
+    running_in_batch <- Sys.getenv("BATCH", "false")
+    domain_name <- Sys.getenv("DOMAIN_NAME")
 
+    message("load_config: start")
     activity_arn <- NA
 
     repeat {
         # if /etc/podinfo/labels exists we are running in a remote aws pod
         if(file.exists(label_path)) {
+            message("load_config: label_path exists")
             labels <- read.csv(label_path, sep="=", row.names=1, header=FALSE)
             activity_id <- labels["activityId", ]
             activity_arn <- buildActivityArn(aws_region, aws_account_id, activity_id)
@@ -44,6 +48,7 @@ load_config <- function(development_aws_server) {
 
         # if we didn't find an activity in podinfo try to get the from the env (means we are running locally)
         if(is.na(activity_arn)) {
+            message("load_config: label_path exists")
             activity_arn <- Sys.getenv("ACTIVITY_ARN", unset = NA)
         }
 
@@ -72,11 +77,17 @@ load_config <- function(development_aws_server) {
         )
     )
 
+    # batch does not have access to the internal EKS cluster api URL, use the public one
+    if(runningInBatch == "true" && domain_name != "") {
+        config$api_url <- paste0("https://", domain_name)
+    }
+
     config[["aws_config"]] <- list(region = config$aws_region)
 
     # running in linux needs the IP of the host to work. If it is set as an environment variable (by makefile) honor it instead of the
     # provided parameter
     overriden_server = Sys.getenv("HOST_IP", "")
+    message("HOST_IP: ", overriden_server)
     if (overriden_server != "") {
         development_aws_server = overriden_server
     }
@@ -357,9 +368,11 @@ wrapper <- function(input, pipeline_config) {
 # Loads configuration and repeats the wrapper call until no more messages are received.
 #
 init <- function() {
+    message("init: start")
     pipeline_config <- load_config('host.docker.internal')
     message("Loaded pipeline config")
     states <- paws::sfn(config=pipeline_config$aws_config)
+    message(pipeline_config)
     message("Loaded step function")
 
     print(sessionInfo())
