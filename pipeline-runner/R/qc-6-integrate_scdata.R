@@ -136,7 +136,8 @@ merge_scdata_list <- function(scdata_list) {
 run_dataIntegration <- function(scdata, scdata_sketch, config) {
 
   # get method and settings
-  method <- config$dataIntegration$method
+  method <- "seuratv4"
+  # method <- config$dataIntegration$method
   npcs <- config$dimensionalityReduction$numPCs
   exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
 
@@ -201,10 +202,17 @@ run_seuratv4 <- function(scdata, config) {
   settings <- config$dataIntegration$methodSettings[["seuratv4"]]
 
   nfeatures <- settings$numGenes
-  normalization <- settings$normalisation
+
+  normalization <- "SCT"
+  # normalization <- settings$normalisation
 
   # for data integration
+  scdata <- run_pca(scdata)
   npcs <- config$dimensionalityReduction$numPCs
+  if (is.null(npcs)) {
+    npcs <- get_npcs(scdata)
+    message("Number of PCs: ", npcs)
+  }
 
   # get reduction method to find integration anchors
   reduction <- config$dimensionalityReduction$method
@@ -237,12 +245,19 @@ run_seuratv4 <- function(scdata, config) {
     {
       if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
       if (reduction == "cca") message("Finding integration anchors using CCA reduction")
+      if (normalization == "SCT") {
+        features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
+        data.split <- Seurat::PrepSCTIntegration(object.list = data.split, assay = "SCT",
+                                                 anchor.features = features)
+      }
       data.anchors <- Seurat::FindIntegrationAnchors(
         object.list = data.split,
         dims = 1:npcs,
         k.filter = k.filter,
         verbose = TRUE,
-        reduction = reduction
+        reduction = reduction,
+        normalization.method = normalization,
+        anchor.features = features
       )
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
       Seurat::DefaultAssay(scdata) <- "integrated"
@@ -263,9 +278,11 @@ run_seuratv4 <- function(scdata, config) {
 
   # seurat v4 requires to call the normalize_data function before (on single objects)
   # and after integration (on the integrated object)
-  scdata <- normalize_data(scdata, normalization, "seuratv4", nfeatures)
+  if (normalization == "LogNormalize") {
+    scdata <- normalize_data(scdata, normalization, "seuratv4", nfeatures)
+  }
   scdata@misc <- misc
-  scdata <- add_dispersions(scdata)
+  scdata <- add_dispersions(scdata, normalization)
   scdata@misc[["active.reduction"]] <- "pca"
 
   # run PCA
@@ -318,8 +335,14 @@ run_unisample <- function(scdata, config) {
   return(scdata)
 }
 
-add_dispersions <- function(scdata) {
-  vars <- Seurat::HVFInfo(object = scdata, assay = "RNA", selection.method = "vst")
+add_dispersions <- function(scdata, method) {
+  if (method == "SCT") {
+    vars <- Seurat::HVFInfo(object = scdata, assay = "integrated", selection.method = "sctransform")
+    # change colnames as they are when run with selection.method = "vst", otherwise will break the listGenes worker task
+    colnames(vars) <- c("mean", "variance", "variance.standardized")
+  } else {
+    vars <- Seurat::HVFInfo(object = scdata, assay = "RNA", selection.method = "vst")
+  }
   annotations <- scdata@misc[["gene_annotations"]]
   vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
   vars$ENSEMBL <- rownames(vars)
@@ -541,6 +564,10 @@ normalize_data <- function(scdata, normalization_method, integration_method, nfe
   if (normalization_method == "LogNormalize") {
     scdata <- log_normalize(scdata, normalization_method, integration_method, nfeatures)
   }
+
+  if (normalization_method == "SCT") {
+    scdata <- sctransform_normalization(scdata, normalization_method, integration_method, nfeatures)
+  }
   return(scdata)
 }
 
@@ -568,6 +595,16 @@ log_normalize <- function(scdata, normalization_method, integration_method, nfea
   if (integration_method != "fastmnn") {
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   }
+  return(scdata)
+}
+
+
+sctransform_normalization <- function(scdata, normalization_method, integration_method, nfeatures) {
+
+  message("Started normalization using SCTransform")
+  scdata <- Seurat::SCTransform(scdata, vst.flavor = "v2")
+  message("Finished normalization using SCTransform")
+
   return(scdata)
 }
 
@@ -694,6 +731,7 @@ run_pca <- function(scdata) {
   scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
+  scdata@misc[["active.reduction"]] <- "pca"
   return(scdata)
 }
 
