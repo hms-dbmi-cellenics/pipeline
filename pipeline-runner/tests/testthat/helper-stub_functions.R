@@ -207,7 +207,7 @@ stub_update_sets_through_api <- function(cell_sets_object,
                                          auth_JWT) {
   cellsets_bucket <- "./mock_data/cellsets_bucket"
   if (!dir.exists(cellsets_bucket)) {
-    dir.create(cellset_bucket)
+    dir.create(cellsets_bucket)
   }
   jsonlite::write_json(cell_sets_object,
                        file.path(cellsets_bucket, "cluster_cellsets.json"))
