@@ -198,3 +198,29 @@ stubbed_upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   upload_to_aws(input, pipeline_config, prev_out)
 }
+
+
+stub_update_sets_through_api <- function(cell_sets_object,
+                                         api_url,
+                                         experiment_id,
+                                         cell_set_key,
+                                         auth_JWT) {
+  cellsets_bucket <- "./mock_data/cellsets_bucket"
+  if (!dir.exists(cellsets_bucket)) {
+    dir.create(cellset_bucket)
+  }
+  jsonlite::write_json(cell_sets_object,
+                       file.path(cellsets_bucket, "cluster_cellsets.json"))
+  withr::defer(unlink(cellsets_bucket, recursive = T), envir = parent.frame(2))
+}
+
+stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name) {
+
+  mockery::stub(embed_and_cluster,
+                "update_sets_through_api",
+                stub_update_sets_through_api)
+
+  embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
+}
+
+
