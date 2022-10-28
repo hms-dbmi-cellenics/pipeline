@@ -221,5 +221,3 @@ stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_
 
   embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
 }
-
-
