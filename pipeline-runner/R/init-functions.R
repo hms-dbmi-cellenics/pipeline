@@ -30,6 +30,8 @@ load_config <- function(development_aws_server) {
   label_path <- "/etc/podinfo/labels"
   aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset = "242905224710")
   aws_region <- Sys.getenv("AWS_DEFAULT_REGION", unset = "eu-west-1")
+  running_in_batch <- Sys.getenv("BATCH", "false")
+  domain_name <- Sys.getenv("DOMAIN_NAME")
 
   activity_arn <- NA
 
@@ -82,6 +84,11 @@ load_config <- function(development_aws_server) {
       path = Sys.getenv("DEBUG_PATH", "")
     )
   )
+
+  # batch does not have access to the internal EKS cluster api URL, use the public one
+  if(running_in_batch == "true" && domain_name != "") {
+      config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
+  }
 
   # running in linux needs the IP of the host to work. If it is set as an
   # environment variable (by makefile) honor it instead of the provided

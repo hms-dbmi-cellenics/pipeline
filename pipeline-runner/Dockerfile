@@ -104,6 +104,30 @@ COPY DESCRIPTION NAMESPACE init.R ./
 # start app
 ENTRYPOINT ["Rscript", "init.R"]
 
+# ---------------------------------------------------
+# AWS BATCH BUILD
+# ---------------------------------------------------
+FROM common AS batch
+
+# add jq and aws cli so we can get identities using AWS IRSA roles
+#
+# see at https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html
+# for what IRSA roles are
+#
+# see at https://github.com/paws-r/paws/blob/main/docs/credentials.md for how PAWS
+# handles this
+RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
+    chmod +x ./jq && \
+    cp jq /usr/bin && \
+    pip install PyYAML==3.10 && \
+    pip install awscli==1.25.0
+
+# add R package files and runner
+ADD R ./R
+ADD tests ./tests
+ADD inst ./inst
+COPY DESCRIPTION NAMESPACE init.R ./
+
 
 # ---------------------------------------------------
 # DEVELOPMENT BUILD
