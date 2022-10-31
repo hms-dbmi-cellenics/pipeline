@@ -1,4 +1,4 @@
-# sequentially test qc
+# QC results are reproducible
 
     Code
       filtered_cells_id
@@ -459,6 +459,13 @@
 ---
 
     Code
+      rlang::hash(clean_scdata_list)
+    Output
+      [1] "2e9b8d83a9dbae6400c5471c83ee2748"
+
+---
+
+    Code
       str(clean_scdata_list, vec.len = 20)
     Output
       List of 2
@@ -588,11 +595,25 @@
 ---
 
     Code
+      rlang::hash(cells_id)
+    Output
+      [1] "d3664d9fabd4fb464ef6b8eb285ffad0"
+
+---
+
+    Code
       str(cells_id, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:359] 320 152 73 227 633 48 127 838 600 164 621 531 409 296 882 620 516 211 859 258 313 297 885 157 405 869 835 890 874| __truncated__ ...
        $ mock_sample_1_id: int [1:302] 894 202 851 518 475 14 761 399 671 446 542 294 455 718 370 176 391 259 10 710 220 156 304 727 54 616 33 438 814 4| __truncated__ ...
+
+---
+
+    Code
+      rlang::hash(guidata)
+    Output
+      [1] "af7b2d35abd5a00b51907c07cbf87d27"
 
 ---
 
@@ -1015,6 +1036,13 @@
 ---
 
     Code
+      rlang::hash(clean_scdata_list)
+    Output
+      [1] "2e9b8d83a9dbae6400c5471c83ee2748"
+
+---
+
+    Code
       str(clean_scdata_list, vec.len = 20)
     Output
       List of 2
@@ -1144,11 +1172,25 @@
 ---
 
     Code
+      rlang::hash(cells_id)
+    Output
+      [1] "d3664d9fabd4fb464ef6b8eb285ffad0"
+
+---
+
+    Code
       str(cells_id, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:359] 320 152 73 227 633 48 127 838 600 164 621 531 409 296 882 620 516 211 859 258 313 297 885 157 405 869 835 890 874| __truncated__ ...
        $ mock_sample_1_id: int [1:302] 894 202 851 518 475 14 761 399 671 446 542 294 455 718 370 176 391 259 10 710 220 156 304 727 54 616 33 438 814 4| __truncated__ ...
+
+---
+
+    Code
+      rlang::hash(guidata)
+    Output
+      [1] "42f8f7f28dd1dde48b516295125898b2"
 
 ---
 
@@ -1571,6 +1613,13 @@
 ---
 
     Code
+      rlang::hash(clean_scdata_list)
+    Output
+      [1] "2e9b8d83a9dbae6400c5471c83ee2748"
+
+---
+
+    Code
       str(clean_scdata_list, vec.len = 20)
     Output
       List of 2
@@ -1700,11 +1749,25 @@
 ---
 
     Code
+      rlang::hash(cells_id)
+    Output
+      [1] "21398cc2d59f58e94d9b65383943caa9"
+
+---
+
+    Code
       str(cells_id, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:350] 320 152 73 227 633 48 127 838 600 164 621 531 409 296 882 620 516 211 859 258 313 297 885 157 405 869 835 890 874| __truncated__ ...
        $ mock_sample_1_id: int [1:286] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
+
+---
+
+    Code
+      rlang::hash(guidata)
+    Output
+      [1] "8b145cfec7cbfbdeba33391e76ec0b0d"
 
 ---
 
@@ -2127,6 +2190,13 @@
 ---
 
     Code
+      rlang::hash(clean_scdata_list)
+    Output
+      [1] "2e9b8d83a9dbae6400c5471c83ee2748"
+
+---
+
+    Code
       str(clean_scdata_list, vec.len = 20)
     Output
       List of 2
@@ -2256,11 +2326,25 @@
 ---
 
     Code
+      rlang::hash(cells_id)
+    Output
+      [1] "ef8af6f945392284d8c8860e16f32cd2"
+
+---
+
+    Code
       str(cells_id, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: num [1:350] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 45 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 | __truncated__ ...
        $ mock_sample_1_id: num [1:285] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 38 42 50 51 54 55 63 65 68 70 71 74 76 78 80 82 91 94 95 98 100 105 117 11| __truncated__ ...
+
+---
+
+    Code
+      rlang::hash(guidata)
+    Output
+      [1] "56772520d5c0c75ad75f00b75cef4cff"
 
 ---
 
@@ -6644,6 +6728,13 @@
 ---
 
     Code
+      rlang::hash(clean_scdata_list)
+    Output
+      [1] "2e9b8d83a9dbae6400c5471c83ee2748"
+
+---
+
+    Code
       str(clean_scdata_list, vec.len = 20)
     Output
       List of 2
@@ -6773,11 +6864,25 @@
 ---
 
     Code
+      rlang::hash(cells_id)
+    Output
+      [1] "78ee5501ea5959a9c91d91a1ddaa125d"
+
+---
+
+    Code
       str(cells_id, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:338] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
        $ mock_sample_1_id: int [1:270] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 42 50 54 55 63 65 68 70 71 74 78 80 82 91 94 95 98 105 117 119 121 124 128| __truncated__ ...
+
+---
+
+    Code
+      rlang::hash(guidata)
+    Output
+      [1] "3cc715f38b3979ab9f02a5ccf64337b5"
 
 ---
 
@@ -7000,6 +7105,13 @@
 ---
 
     Code
+      rlang::hash(clean_scdata_list)
+    Output
+      [1] "d31775cfdef11a8daf2241fddbbcc741"
+
+---
+
+    Code
       str(clean_scdata_list, vec.len = 20)
     Output
       Formal class 'Seurat' [package "SeuratObject"] with 13 slots
@@ -7256,11 +7368,25 @@
 ---
 
     Code
+      rlang::hash(cells_id)
+    Output
+      [1] "78ee5501ea5959a9c91d91a1ddaa125d"
+
+---
+
+    Code
       str(cells_id, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:338] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
        $ mock_sample_1_id: int [1:270] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 42 50 54 55 63 65 68 70 71 74 78 80 82 91 94 95 98 105 117 119 121 124 128| __truncated__ ...
+
+---
+
+    Code
+      rlang::hash(guidata)
+    Output
+      [1] "f2b51bce78baf350ead60b78bb548549"
 
 ---
 
@@ -7374,6 +7500,13 @@
 ---
 
     Code
+      rlang::hash(clean_scdata_list)
+    Output
+      [1] "d31775cfdef11a8daf2241fddbbcc741"
+
+---
+
+    Code
       str(clean_scdata_list, vec.len = 20)
     Output
       Formal class 'Seurat' [package "SeuratObject"] with 13 slots
@@ -7630,11 +7763,25 @@
 ---
 
     Code
+      rlang::hash(cells_id)
+    Output
+      [1] "78ee5501ea5959a9c91d91a1ddaa125d"
+
+---
+
+    Code
       str(cells_id, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:338] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
        $ mock_sample_1_id: int [1:270] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 42 50 54 55 63 65 68 70 71 74 78 80 82 91 94 95 98 105 117 119 121 124 128| __truncated__ ...
+
+---
+
+    Code
+      rlang::hash(guidata)
+    Output
+      [1] "480a8ffaf8703c12704916bee8e21eaa"
 
 ---
 
