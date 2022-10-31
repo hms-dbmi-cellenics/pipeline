@@ -7810,4 +7810,3 @@
       str(snap_list$guidata, vec.len = 20)
     Output
        list()
-
