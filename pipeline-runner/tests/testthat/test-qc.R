@@ -1,113 +1,160 @@
-test_that("qc-1 filters empty drops",{
+library(Seurat)
+fdump <- function(var, file) {
+  dump(deparse(substitute(var, env = environment())), file = file)
+}
 
-  task_name <- "classifier"
-
-  base_path <- ifelse(basename(getwd()) == "pipeline-runner",
-                      "./tests/testthat",
-                      ".")
-
-  mock_path <- file.path(base_path,
-                         "mock_data")
-
-  pipeline_config <- mock_pipeline_config()
-
-  prev_out <-
-    readRDS(file.path(base_path, "_snaps/pipeline", "gem2s-6-out.rds"))
-
-  prev_out <- prev_out$output
-
-  scdata_list <- prev_out$scdata_list
-  config <- prev_out$qc_config[[task_name]]
-  experiment_id <- prev_out$scdata_list[[1]]@misc$experimentId
-
-
-  cells_id <-
-    readRDS(file.path(
-      base_path,
-      "_snaps/pipeline",
-      paste("qc-0", experiment_id, "filtered_cells.rds", sep = "-")
-    ))
-
+qc_step <- function(task_name, scdata_list, qc_step_config, cells_id) {
+  qc_function <- QC_TASK_LIST[[task_name]]
   guidata <- list()
-  out_config <- list()
-  out_data <- list()
   for (sample_id in names(scdata_list)) {
-    res <- filter_emptydrops(scdata_list, config[[sample_id]], sample_id, cells_id)
-    out_data[[sample_id]] <- res$data
-    cells_id[[sample_id]] <- res$new_ids
+    res <-
+      qc_function(scdata_list, qc_step_config[[sample_id]], sample_id, cells_id)
+    # update the cells_id "global variable"
+    cells_id <- res$new_ids
+    # update the scdata_list "global variable"
+    scdata_list <- res$data
+
+    # the plot data needs to be saved by sample_id
     guidata[[sample_id]] <- res$plotData
-    out_config[[sample_id]] <- res$config
+
+    # nothing is done with the config after it's assigned to rest_of_results
+    # out_config <- res$config
   }
 
+  return(list(
+    scdata_list = scdata_list,
+    cells_id = cells_id,
+    guidata = guidata
+  ))
+
+}
+
+clean_timestamp <- function(scdata) {
+  fixed_datetime <- as.POSIXct("1991-12-19 05:23:00", tz = "GMT")
+
+  for (slot in names(scdata@commands)) {
+    scdata@commands[[slot]]@time.stamp <- fixed_datetime
+  }
+
+  if ("ingestionDate" %in% names(scdata@misc)) {
+    scdata@misc$ingestionDate <- fixed_datetime
+  }
+
+  return(scdata)
+}
+
+snapshot_qc_output <- function(scdata_list, cells_id, guidata) {
   # scdata_list is returned for every sample, so we'll have duplicated stuff here.
-  withr::with_tempfile("temp_out_data", {
-    saveRDS(out_data, temp_out_data)
-    expect_snapshot_file(temp_out_data, name = paste("qc-1", experiment_id, "out_data.rds", sep = "-"))
-  })
+  if (is.list(scdata_list)) {
+    clean_scdata_list <- lapply(scdata_list, clean_timestamp)
+  }
+  else {
+    clean_scdata_list <- clean_timestamp(scdata_list)
+  }
 
-  # filtered cells are saved as a global variable and overwritten in each pipeline step
-  withr::with_tempfile("temp_cells_id", {
-    saveRDS(cells_id, temp_cells_id)
-    expect_snapshot_file(temp_cells_id, name = paste("qc-1", experiment_id, "filtered_cells.rds", sep = "-"))
-  })
+  expect_snapshot(str(clean_scdata_list, vec.len = 20))
+  expect_snapshot(str(cells_id, vec.len = 20))
+  expect_snapshot(str(guidata, vec.len = 20))
 
-  withr::with_tempfile("temp_guidata", {
-    saveRDS(guidata, temp_guidata)
-    expect_snapshot_file(temp_guidata, name = paste("qc-1", experiment_id, "guidata.rds", sep = "-"))
-  })
+}
 
-  withr::with_tempfile("temp_out_config", {
-    saveRDS(out_config, temp_out_config)
-    expect_snapshot_file(temp_out_config, name = paste("qc-1", experiment_id, "out_config.rds", sep = "-"))
-  })
+qc_setup <- function(experiment_id) {
+  paths <- setup_test_paths()
+  gem2s_snaps_path <- file.path(paths$snaps, "gem2s")
 
-})
+  gem2s_snap_basename <- paste("gem2s-6", experiment_id, sep = "-")
+  gem2s_out_name <- paste(gem2s_snap_basename, "out.R", sep = "-")
+  gem2s_qc_config_name <- paste(gem2s_snap_basename, "qc_config.R", sep = "-")
+
+  # load QC config from test-gem2s output
+  source(file.path(gem2s_snaps_path,  gem2s_qc_config_name))
+  # load the final test-gem2s output. it was named `res`
+  source(file.path(gem2s_snaps_path, gem2s_out_name))
+
+  if (experiment_id != res$output$scdata_list[[1]]@misc$experimentId) {
+    stop("experiment id does not match object sourced from gem2s test output")
+  }
+
+  return(
+    list(
+      prev_out = res,
+      qc_config = qc_config
+    )
+  )
+
+}
 
 
 test_qc <- function(experiment_id) {
   test_that("sequentially test qc", {
 
-    paths <- setup_test_paths()
-
+    # initial setup
+    setup <- qc_setup(experiment_id)
+    prev_out <- setup$prev_out
     pipeline_config <- mock_pipeline_config()
-    gem2s_out_name <- paste("gem2s-6", experiment_id, "out.R", sep = "-")
+    message(pipeline_config$cell_sets_bucket)
 
-    # the variable was called res
-    source(file.path(paths$base,
-                     "_snaps/gem2s",
-                     gem2s_out_name))
-    if (experiment_id != res$output$scdata_list[[1]]@misc$experimentId) {
-      stop("experiment id does not match object sourced from gem2s test output")
+
+    filtered_cells_id <- generate_first_step_ids(prev_out$output$scdata_list)
+    expect_snapshot(filtered_cells_id)
+
+
+    global_vars <- list(data = prev_out$output$scdata_list,
+                        new_ids = filtered_cells_id,
+                        config = list(),
+                        plotData = list())
+
+    QC_TASK_LIST$configureEmbedding <- "stubbed_embed_and_cluster"
+    tasks <- lapply(QC_TASK_LIST, get)
+
+    for (task_name in names(QC_TASK_LIST)) {
+
+      if (which(task_name == names(QC_TASK_LIST)) < which(names(QC_TASK_LIST) == "dataIntegration")) {
+
+        for (sample_id in names(prev_out$output$scdata_list)) {
+
+          config <- setup$qc_config[[task_name]][[sample_id]]
+
+          global_vars <- run_qc_step(
+            scdata = global_vars$data,
+            config = config,
+            tasks = tasks,
+            task_name = task_name,
+            cells_id = global_vars$new_ids,
+            sample_id = sample_id,
+            debug_config =  pipeline_config$debug_config
+          )
+        }
+
+        snapshot_qc_output(global_vars$data,
+                           global_vars$new_ids,
+                           global_vars$plotData)
+
+      } else {
+        config <- setup$qc_config[[task_name]]
+        global_vars <- run_qc_step(
+          scdata = global_vars$data,
+          config = config,
+          tasks = tasks,
+          task_name = task_name,
+          cells_id = global_vars$new_ids,
+          sample_id = "",
+          debug_config =  pipeline_config$debug_config
+        )
+
+        snapshot_qc_output(clean_timestamp(global_vars$data),
+                           global_vars$new_ids,
+                           global_vars$plotData)
+      }
     }
-
-    filtered_cells_id <- generate_first_step_ids(res$output$scdata_list)
-
-    withr::with_tempfile("tf", {
-      dump("filtered_cells_id", tf)
-      expect_snapshot_file(tf, name = paste("qc-0", experiment_id, "filtered_cells.R", sep = "-"))
-    })
-
-    # qc 1
-
-    task_name <- "classifier"
-
-    scdata_list <- prev_out$scdata_list
-    config <- prev_out$qc_config[[task_name]]
-    experiment_id <- prev_out$scdata_list[[1]]@misc$experimentId
-
-    guidata <- list()
-    out_config <- list()
-    out_data <- list()
-    for (sample_id in names(scdata_list)) {
-      res <- filter_emptydrops(scdata_list, config[[sample_id]], sample_id, cells_id)
-      out_data[[sample_id]] <- res$data
-      cells_id[[sample_id]] <- res$new_ids
-      guidata[[sample_id]] <- res$plotData
-      out_config[[sample_id]] <- res$config
-    }
-
-
-
+    expect_snapshot_file(file.path(pipeline_config$cell_sets_bucket, "cluster_cellsets.json"),
+                        name = "cluster_cell_sets.json")
+    withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = T))
   })
 
 }
+
+
+test_qc("mock_experiment_id")
+
+

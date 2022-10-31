@@ -205,13 +205,12 @@ stub_update_sets_through_api <- function(cell_sets_object,
                                          experiment_id,
                                          cell_set_key,
                                          auth_JWT) {
-  cellsets_bucket <- "./mock_data/cellsets_bucket"
+  cellsets_bucket <- "./mock_data/cell_sets_bucket"
   if (!dir.exists(cellsets_bucket)) {
     dir.create(cellsets_bucket)
   }
   jsonlite::write_json(cell_sets_object,
                        file.path(cellsets_bucket, "cluster_cellsets.json"))
-  withr::defer(unlink(cellsets_bucket, recursive = T), envir = parent.frame(2))
 }
 
 stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name) {
