@@ -132,7 +132,7 @@ test_qc <- function(experiment_id) {
     }
     expect_snapshot_file(file.path(pipeline_config$cell_sets_bucket, "cluster_cellsets.json"),
                         name = "cluster_cell_sets.json")
-    withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = T))
+    withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
   })
 
 }

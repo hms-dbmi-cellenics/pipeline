@@ -241,8 +241,10 @@ test_that("embed_and_cluster works", {
   cells_id <- "83abbeea-b664-499a-8e6e-d2dbae4c60a9"
   task_name <- "configureEmbedding"
 
+  cell_sets_bucket <- "./mock_data/cell_sets_bucket"
   stubbed_embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
-  expect_snapshot_file("./mock_data/cellset_bucket/cluster_cellsets.json",
+  expect_snapshot_file(file.path(cell_sets_bucket, "cluster_cellsets.json"),
                        name = "cluster_cell_sets.json")
+  withr::defer(unlink(cell_sets_bucket, recursive = TRUE))
 
 })
