@@ -2,14 +2,15 @@
 % Please edit documentation in R/init-functions.R
 \name{wrapper}
 \alias{wrapper}
-\title{calls the appropiate process, QC or gem2s}
+\title{calls the appropriate process, QC or gem2s}
 \usage{
 wrapper(input, pipeline_config)
 }
 \arguments{
 \item{input}{list with parsed input json. should contain:
 \itemize{
-\item taskname
+\item task name
+\item current sample_id
 \item extra config parameters
 }}
 
@@ -19,5 +20,5 @@ wrapper(input, pipeline_config)
 character message id
 }
 \description{
-calls the appropiate process, QC or gem2s
+calls the appropriate process, QC or gem2s
 }

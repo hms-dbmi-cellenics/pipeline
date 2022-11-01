@@ -4,10 +4,10 @@
 \alias{run_gem2s_step}
 \title{Run GEM2S step}
 \usage{
-run_gem2s_step(task_name, input, pipeline_config, prev_out)
+run_gem2s_step(prev_out, input, pipeline_config, tasks, task_name)
 }
 \arguments{
-\item{task_name}{character}
+\item{prev_out}{list output from previous step}
 
 \item{input}{list
 \itemize{
@@ -18,7 +18,7 @@ run_gem2s_step(task_name, input, pipeline_config, prev_out)
 
 \item{pipeline_config}{list as defined by load_config}
 
-\item{prev_out}{list output from previous step}
+\item{task_name}{character}
 }
 \value{
 list of task results

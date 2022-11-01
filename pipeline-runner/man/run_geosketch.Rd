@@ -4,16 +4,16 @@
 \alias{run_geosketch}
 \title{Perform geometric sketching}
 \usage{
-run_geosketch(scdata, reduction, dims, num_cells)
+run_geosketch(scdata, dims, perc_num_cells)
 }
 \arguments{
-\item{reduction}{Reduced dimensions to use for sketching}
-
 \item{dims}{Number of dimensions to use}
 
-\item{num_cells}{Number of desired cells}
-
 \item{object}{Seurat object}
+
+\item{reduction}{Reduced dimensions to use for sketching}
+
+\item{num_cells}{Number of desired cells}
 }
 \value{
 Seurat object downsampled to desired number of cells
