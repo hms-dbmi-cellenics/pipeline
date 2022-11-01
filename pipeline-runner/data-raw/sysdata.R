@@ -13,6 +13,32 @@ bucket_list <- list(
   debug_bucket = "biomage-pipeline-debug"
 )
 
+# list of task functions named by task name
+GEM2S_TASK_LIST <- list(
+  "downloadGem" = "download_user_files",
+  "preproc" = "load_user_files",
+  "emptyDrops" = "run_emptydrops",
+  "doubletScores" = "score_doublets",
+  "createSeurat" = "create_seurat",
+  "prepareExperiment" = "prepare_experiment",
+  "uploadToAWS" = "upload_to_aws"
+)
+
+# vector of task functions named by task name
+QC_TASK_LIST <- list(
+  "classifier" = "filter_emptydrops",
+  "cellSizeDistribution" = "filter_low_cellsize",
+  "mitochondrialContent" = "filter_high_mito",
+  "numGenesVsNumUmis" = "filter_gene_umi_outlier",
+  "doubletScores" = "filter_doublets",
+  "dataIntegration" = "integrate_scdata",
+  "configureEmbedding" = "embed_and_cluster"
+)
+
+# directory where download_user_files downloads user files
+INPUT_DIR <- "/input"
+
+
 # constants used in GEM2S
 gem2s <- list(
   max.edrops.fdr = 0.001,
@@ -59,6 +85,9 @@ usethis::use_data(
   debug_timestamp,
   bucket_list,
   gem2s,
+  GEM2S_TASK_LIST,
+  QC_TASK_LIST,
+  INPUT_DIR,
   RANDOM_SEED,
   DEBUG_PATH,
   file_names,
