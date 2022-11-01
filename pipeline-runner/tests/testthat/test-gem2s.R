@@ -1,3 +1,5 @@
+source("helper-stub_functions.R")
+
 load_experiment_input <- function(mock_data_path, experiment_id) {
   # use RJSONIO because the pipeline parses with RJSONIO
   RJSONIO::fromJSON(file.path(
