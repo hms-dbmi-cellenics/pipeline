@@ -4,7 +4,7 @@
 \alias{load_user_files}
 \title{Read user input files}
 \usage{
-load_user_files(input, pipeline_config, prev_out, input_dir = "/input")
+load_user_files(input, pipeline_config, prev_out, input_dir = INPUT_DIR)
 }
 \arguments{
 \item{input}{The input object from the request}
