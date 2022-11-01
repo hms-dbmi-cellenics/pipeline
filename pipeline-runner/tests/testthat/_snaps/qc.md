@@ -459,14 +459,15 @@
 ---
 
     Code
-      rlang::hash(clean_scdata_list)
+      task_name
+    Output
+      [1] "classifier"
+    Code
+      rlang::hash(snap_list$data)
     Output
       [1] "2e9b8d83a9dbae6400c5471c83ee2748"
-
----
-
     Code
-      str(clean_scdata_list, vec.len = 20)
+      str(snap_list$data, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
@@ -595,14 +596,15 @@
 ---
 
     Code
-      rlang::hash(cells_id)
+      task_name
+    Output
+      [1] "classifier"
+    Code
+      rlang::hash(snap_list$new_ids)
     Output
       [1] "d3664d9fabd4fb464ef6b8eb285ffad0"
-
----
-
     Code
-      str(cells_id, vec.len = 20)
+      str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:359] 320 152 73 227 633 48 127 838 600 164 621 531 409 296 882 620 516 211 859 258 313 297 885 157 405 869 835 890 874| __truncated__ ...
@@ -611,14 +613,15 @@
 ---
 
     Code
-      rlang::hash(guidata)
+      task_name
+    Output
+      [1] "classifier"
+    Code
+      rlang::hash(snap_list$guidata)
     Output
       [1] "af7b2d35abd5a00b51907c07cbf87d27"
-
----
-
     Code
-      str(guidata, vec.len = 20)
+      str(snap_list$guidata, vec.len = 20)
     Output
       List of 3
        $ mock_sample_1_id-classifier-0:List of 436
@@ -1036,14 +1039,15 @@
 ---
 
     Code
-      rlang::hash(clean_scdata_list)
+      task_name
+    Output
+      [1] "cellSizeDistribution"
+    Code
+      rlang::hash(snap_list$data)
     Output
       [1] "2e9b8d83a9dbae6400c5471c83ee2748"
-
----
-
     Code
-      str(clean_scdata_list, vec.len = 20)
+      str(snap_list$data, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
@@ -1172,14 +1176,15 @@
 ---
 
     Code
-      rlang::hash(cells_id)
+      task_name
+    Output
+      [1] "cellSizeDistribution"
+    Code
+      rlang::hash(snap_list$new_ids)
     Output
       [1] "d3664d9fabd4fb464ef6b8eb285ffad0"
-
----
-
     Code
-      str(cells_id, vec.len = 20)
+      str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:359] 320 152 73 227 633 48 127 838 600 164 621 531 409 296 882 620 516 211 859 258 313 297 885 157 405 869 835 890 874| __truncated__ ...
@@ -1188,14 +1193,15 @@
 ---
 
     Code
-      rlang::hash(guidata)
+      task_name
+    Output
+      [1] "cellSizeDistribution"
+    Code
+      rlang::hash(snap_list$guidata)
     Output
       [1] "42f8f7f28dd1dde48b516295125898b2"
-
----
-
     Code
-      str(guidata, vec.len = 20)
+      str(snap_list$guidata, vec.len = 20)
     Output
       List of 3
        $ mock_sample_1_id-cellSizeDistribution-0:List of 269
@@ -1613,14 +1619,15 @@
 ---
 
     Code
-      rlang::hash(clean_scdata_list)
+      task_name
+    Output
+      [1] "mitochondrialContent"
+    Code
+      rlang::hash(snap_list$data)
     Output
       [1] "2e9b8d83a9dbae6400c5471c83ee2748"
-
----
-
     Code
-      str(clean_scdata_list, vec.len = 20)
+      str(snap_list$data, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
@@ -1749,14 +1756,15 @@
 ---
 
     Code
-      rlang::hash(cells_id)
+      task_name
+    Output
+      [1] "mitochondrialContent"
+    Code
+      rlang::hash(snap_list$new_ids)
     Output
       [1] "21398cc2d59f58e94d9b65383943caa9"
-
----
-
     Code
-      str(cells_id, vec.len = 20)
+      str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:350] 320 152 73 227 633 48 127 838 600 164 621 531 409 296 882 620 516 211 859 258 313 297 885 157 405 869 835 890 874| __truncated__ ...
@@ -1765,14 +1773,15 @@
 ---
 
     Code
-      rlang::hash(guidata)
+      task_name
+    Output
+      [1] "mitochondrialContent"
+    Code
+      rlang::hash(snap_list$guidata)
     Output
       [1] "8b145cfec7cbfbdeba33391e76ec0b0d"
-
----
-
     Code
-      str(guidata, vec.len = 20)
+      str(snap_list$guidata, vec.len = 20)
     Output
       List of 3
        $ mock_sample_1_id-mitochondrialContent-0:List of 302
@@ -2190,14 +2199,15 @@
 ---
 
     Code
-      rlang::hash(clean_scdata_list)
+      task_name
+    Output
+      [1] "numGenesVsNumUmis"
+    Code
+      rlang::hash(snap_list$data)
     Output
       [1] "2e9b8d83a9dbae6400c5471c83ee2748"
-
----
-
     Code
-      str(clean_scdata_list, vec.len = 20)
+      str(snap_list$data, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
@@ -2326,14 +2336,15 @@
 ---
 
     Code
-      rlang::hash(cells_id)
+      task_name
+    Output
+      [1] "numGenesVsNumUmis"
+    Code
+      rlang::hash(snap_list$new_ids)
     Output
       [1] "ef8af6f945392284d8c8860e16f32cd2"
-
----
-
     Code
-      str(cells_id, vec.len = 20)
+      str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: num [1:350] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 45 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 | __truncated__ ...
@@ -2342,14 +2353,15 @@
 ---
 
     Code
-      rlang::hash(guidata)
+      task_name
+    Output
+      [1] "numGenesVsNumUmis"
+    Code
+      rlang::hash(snap_list$guidata)
     Output
       [1] "56772520d5c0c75ad75f00b75cef4cff"
-
----
-
     Code
-      str(guidata, vec.len = 20)
+      str(snap_list$guidata, vec.len = 20)
     Output
       List of 2
        $ mock_sample_1_id-numGenesVsNumUmis-0:List of 2
@@ -6728,14 +6740,15 @@
 ---
 
     Code
-      rlang::hash(clean_scdata_list)
+      task_name
+    Output
+      [1] "doubletScores"
+    Code
+      rlang::hash(snap_list$data)
     Output
       [1] "2e9b8d83a9dbae6400c5471c83ee2748"
-
----
-
     Code
-      str(clean_scdata_list, vec.len = 20)
+      str(snap_list$data, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
@@ -6864,14 +6877,15 @@
 ---
 
     Code
-      rlang::hash(cells_id)
+      task_name
+    Output
+      [1] "doubletScores"
+    Code
+      rlang::hash(snap_list$new_ids)
     Output
       [1] "78ee5501ea5959a9c91d91a1ddaa125d"
-
----
-
     Code
-      str(cells_id, vec.len = 20)
+      str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:338] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
@@ -6880,14 +6894,15 @@
 ---
 
     Code
-      rlang::hash(guidata)
+      task_name
+    Output
+      [1] "doubletScores"
+    Code
+      rlang::hash(snap_list$guidata)
     Output
       [1] "3cc715f38b3979ab9f02a5ccf64337b5"
-
----
-
     Code
-      str(guidata, vec.len = 20)
+      str(snap_list$guidata, vec.len = 20)
     Output
       List of 2
        $ mock_sample_1_id-doubletScores-0:List of 285
@@ -7105,14 +7120,15 @@
 ---
 
     Code
-      rlang::hash(clean_scdata_list)
+      task_name
+    Output
+      [1] "dataIntegration"
+    Code
+      rlang::hash(snap_list$data)
     Output
       [1] "d31775cfdef11a8daf2241fddbbcc741"
-
----
-
     Code
-      str(clean_scdata_list, vec.len = 20)
+      str(snap_list$data, vec.len = 20)
     Output
       Formal class 'Seurat' [package "SeuratObject"] with 13 slots
         ..@ assays      :List of 1
@@ -7368,14 +7384,15 @@
 ---
 
     Code
-      rlang::hash(cells_id)
+      task_name
+    Output
+      [1] "dataIntegration"
+    Code
+      rlang::hash(snap_list$new_ids)
     Output
       [1] "78ee5501ea5959a9c91d91a1ddaa125d"
-
----
-
     Code
-      str(cells_id, vec.len = 20)
+      str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:338] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
@@ -7384,14 +7401,15 @@
 ---
 
     Code
-      rlang::hash(guidata)
+      task_name
+    Output
+      [1] "dataIntegration"
+    Code
+      rlang::hash(snap_list$guidata)
     Output
       [1] "f2b51bce78baf350ead60b78bb548549"
-
----
-
     Code
-      str(guidata, vec.len = 20)
+      str(snap_list$guidata, vec.len = 20)
     Output
       List of 2
        $ dataIntegration-0: list()
@@ -7500,14 +7518,15 @@
 ---
 
     Code
-      rlang::hash(clean_scdata_list)
+      task_name
+    Output
+      [1] "configureEmbedding"
+    Code
+      rlang::hash(snap_list$data)
     Output
       [1] "d31775cfdef11a8daf2241fddbbcc741"
-
----
-
     Code
-      str(clean_scdata_list, vec.len = 20)
+      str(snap_list$data, vec.len = 20)
     Output
       Formal class 'Seurat' [package "SeuratObject"] with 13 slots
         ..@ assays      :List of 1
@@ -7763,14 +7782,15 @@
 ---
 
     Code
-      rlang::hash(cells_id)
+      task_name
+    Output
+      [1] "configureEmbedding"
+    Code
+      rlang::hash(snap_list$new_ids)
     Output
       [1] "78ee5501ea5959a9c91d91a1ddaa125d"
-
----
-
     Code
-      str(cells_id, vec.len = 20)
+      str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:338] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
@@ -7779,14 +7799,15 @@
 ---
 
     Code
-      rlang::hash(guidata)
+      task_name
+    Output
+      [1] "configureEmbedding"
+    Code
+      rlang::hash(snap_list$guidata)
     Output
       [1] "480a8ffaf8703c12704916bee8e21eaa"
-
----
-
     Code
-      str(guidata, vec.len = 20)
+      str(snap_list$guidata, vec.len = 20)
     Output
        list()
 

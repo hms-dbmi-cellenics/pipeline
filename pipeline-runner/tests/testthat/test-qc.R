@@ -50,23 +50,33 @@ clean_timestamp <- function(scdata) {
 }
 
 
-snapshot_qc_output <- function(scdata_list, cells_id, guidata) {
+snapshot_qc_output <- function(task_name, snap_list) {
   # scdata_list is returned for every sample, so we'll have duplicated stuff here.
-  if (is.list(scdata_list)) {
-    clean_scdata_list <- lapply(scdata_list, clean_timestamp)
+  if (is.list(snap_list$data)) {
+    snap_list$data <- lapply(snap_list$data, clean_timestamp)
   }
   else {
-    clean_scdata_list <- clean_timestamp(scdata_list)
+    snap_list$data <- clean_timestamp(snap_list$data)
   }
 
-  expect_snapshot(rlang::hash(clean_scdata_list))
-  expect_snapshot(str(clean_scdata_list, vec.len = 20))
+  # repeating instead of lapply to get easier to interpret snapshots
+  expect_snapshot({
+    task_name
+    rlang::hash(snap_list$data)
+    str(snap_list$data, vec.len = 20)
+  })
 
-  expect_snapshot(rlang::hash(cells_id))
-  expect_snapshot(str(cells_id, vec.len = 20))
+  expect_snapshot({
+    task_name
+    rlang::hash(snap_list$new_ids)
+    str(snap_list$new_ids, vec.len = 20)
+  })
 
-  expect_snapshot(rlang::hash(guidata))
-  expect_snapshot(str(guidata, vec.len = 20))
+  expect_snapshot({
+    task_name
+    rlang::hash(snap_list$guidata)
+    str(snap_list$guidata, vec.len = 20)
+  })
 
 }
 
@@ -94,7 +104,7 @@ test_qc <- function(experiment_id) {
 
 
     for (task_name in names(QC_TASK_LIST)) {
-      # the config changes at the integration step (no more independent samples)
+      # config changes at the integration step (no more independent samples)
       if (which(task_name == names(QC_TASK_LIST)) < which(names(QC_TASK_LIST) == "dataIntegration")) {
 
         for (sample_id in names(prev_out$output$scdata_list)) {
@@ -125,13 +135,24 @@ test_qc <- function(experiment_id) {
         )
       }
 
-      snapshot_qc_output(global_vars$data,
-                         global_vars$new_ids,
-                         global_vars$plotData)
+        snapshot_qc_output(
+          task_name,
+          list(
+            data = global_vars$data,
+            new_ids = global_vars$new_ids,
+            guidata = global_vars$plotData
+          )
+        )
 
     }
-    expect_snapshot_file(file.path(pipeline_config$cell_sets_bucket, "cluster_cellsets.json"),
-                        name = "cluster_cell_sets.json")
+    # snapshot final cellsets file
+    expect_snapshot_file(
+      file.path(pipeline_config$cell_sets_bucket,
+                "cluster_cellsets.json"),
+      name = "cluster_cell_sets.json"
+      )
+
+    # cleanup
     withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
   })
 
