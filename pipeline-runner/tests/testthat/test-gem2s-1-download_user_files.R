@@ -1,3 +1,4 @@
+source("helper-stub_functions.R")
 mock_cellranger_files <- function(sample_dir, compressed, sample_id) {
   features_path <- file.path(sample_dir, paste("features10x", "path", sample_id, sep = "-"))
   barcodes_path <- file.path(sample_dir, paste("barcodes10x", "path", sample_id, sep = "-"))

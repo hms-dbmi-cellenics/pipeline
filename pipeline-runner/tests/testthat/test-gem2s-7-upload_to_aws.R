@@ -1,3 +1,4 @@
+source("helper-stub_functions.R")
 set.seed(1)
 
 mock_doublet_scores <- function(counts) {
