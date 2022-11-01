@@ -55,9 +55,14 @@ stubbed_download_user_files <- function(input, pipeline_config, prev_out = list(
                                prev_out = prev_out)
     # download_user_files creates a "/input" folder in the pod. defer deleting
     # it during tests.
-    withr::defer(unlink("./input", recursive = TRUE), envir = parent.frame())
+    withr::defer(unlink("./input", recursive = TRUE), envir = parent.frame(2))
 
     return(res)
+}
+
+stubbed_load_user_files <- function(input, pipeline_config, prev_out, input_dir) {
+  INPUT_DIR <- "./input"
+  return(load_user_files(input, pipeline_config, prev_out, INPUT_DIR))
 }
 
 
