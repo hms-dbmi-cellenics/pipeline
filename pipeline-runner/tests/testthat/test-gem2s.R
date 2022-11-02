@@ -248,11 +248,11 @@ test_gem2s <- function(experiment_id) {
     input <- load_experiment_input(paths$mock_data, experiment_id)
     pipeline_config <- mock_pipeline_config()
 
-    GEM2S_TASK_LIST$downloadGem <- "stubbed_download_user_files"
-    GEM2S_TASK_LIST$preproc <- "stubbed_load_user_files"
-    GEM2S_TASK_LIST$uploadToAWS <- "stubbed_upload_to_aws"
-
     tasks <- lapply(GEM2S_TASK_LIST, get)
+
+    tasks$downloadGem <- stubbed_download_user_files
+    tasks$preproc <- stubbed_load_user_files
+    tasks$uploadToAWS <- stubbed_upload_to_aws
 
     res <- list()
 
