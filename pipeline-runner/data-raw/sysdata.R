@@ -72,3 +72,5 @@ usethis::use_data(
   internal = TRUE,
   overwrite = TRUE
 )
+
+# add comment to a file that's never run
