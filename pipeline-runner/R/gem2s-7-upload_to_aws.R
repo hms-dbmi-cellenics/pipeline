@@ -1,4 +1,13 @@
 
+#' upload to aws
+#'
+#' @param input
+#' @param pipeline_config
+#' @param prev_out
+#'
+#' @return
+#' @export
+#'
 upload_to_aws <- function(input, pipeline_config, prev_out) {
   message("Uploading to AWS ...")
   check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list", "qc_config")
