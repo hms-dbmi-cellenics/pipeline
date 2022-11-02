@@ -1,5 +1,3 @@
-source("helper-stub_functions.R")
-
 mock_req <- function(type = "louvain") {
   req <- list(body =
                 list(
