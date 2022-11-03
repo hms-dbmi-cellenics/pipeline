@@ -213,6 +213,7 @@ stub_update_sets_through_api <- function(cell_sets_object,
                        file.path(cellsets_bucket, "cluster_cellsets.json"))
 }
 
+
 #' (Stubbed) Run clustering and embedding
 #'
 #' Stubs interactions with the API to be able to test the original function.
