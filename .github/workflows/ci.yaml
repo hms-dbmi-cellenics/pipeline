@@ -258,7 +258,7 @@ jobs:
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
-            REPLICA_COUNT="1"
+            REPLICA_COUNT="0"
             IMAGE_GLOB="$REF_ID-*"
             MEMORY_REQUEST="29Gi"
           fi
