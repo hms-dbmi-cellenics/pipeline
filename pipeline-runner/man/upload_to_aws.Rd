@@ -2,13 +2,20 @@
 % Please edit documentation in R/gem2s-7-upload_to_aws.R
 \name{upload_to_aws}
 \alias{upload_to_aws}
-\title{upload to aws}
+\title{Upload Seurat and cellsets objects to aws}
 \usage{
 upload_to_aws(input, pipeline_config, prev_out)
 }
 \arguments{
-\item{prev_out}{}
+\item{input}{The input object from the request}
+
+\item{pipeline_config}{result of \code{load_config}}
+
+\item{prev_out}{list with results appended in each gem2s task}
+}
+\value{
+list with experiment parameters
 }
 \description{
-upload to aws
+Upload Seurat and cellsets objects to aws
 }

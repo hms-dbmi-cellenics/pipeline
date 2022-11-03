@@ -1,11 +1,11 @@
 
-#' upload to aws
+#' Upload Seurat and cellsets objects to aws
 #'
-#' @param input
-#' @param pipeline_config
-#' @param prev_out
+#' @param input The input object from the request
+#' @param pipeline_config result of \code{load_config}
+#' @param prev_out list with results appended in each gem2s task
 #'
-#' @return
+#' @return list with experiment parameters
 #' @export
 #'
 upload_to_aws <- function(input, pipeline_config, prev_out) {

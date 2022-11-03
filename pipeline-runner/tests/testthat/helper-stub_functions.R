@@ -32,6 +32,16 @@ stub_file.path <- function(...) {
 }
 
 
+#' (stubbed) download user files
+#'
+#' Stubs interactions with S3 to be able to test the original function. Cleans
+#' up after itself.
+#'
+#' @inheritParams download_user_files
+#'
+#' @return list
+#' @export
+#'
 stubbed_download_user_files <- function(input, pipeline_config, prev_out = list()) {
     # helper to simplify calls to the stubbed function
 
@@ -60,6 +70,12 @@ stubbed_download_user_files <- function(input, pipeline_config, prev_out = list(
     return(res)
 }
 
+#' (stubbed) Read user input files
+#'
+#' @inheritSection load_user_files description params return
+#'
+#' @export
+#'
 stubbed_load_user_files <- function(input, pipeline_config, prev_out, input_dir) {
   INPUT_DIR <- "./input"
   return(load_user_files(input, pipeline_config, prev_out, INPUT_DIR))
@@ -161,6 +177,15 @@ stub_tempdir <- function() {
 }
 
 
+#' (stubbed) Upload Seurat and cellsets objects to aws
+#'
+#' Stubs interactions with S3 to be able to test the original function.
+#'
+#' @inheritParams upload_to_aws
+#'
+#' @return list with experiment parameters
+#' @export
+#'
 stubbed_upload_to_aws <- function(input, pipeline_config, prev_out) {
   mockery::stub(upload_to_aws, "put_object_in_s3", stub_put_object_in_s3)
   mockery::stub(upload_to_aws,
