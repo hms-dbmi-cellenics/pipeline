@@ -2,7 +2,6 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   message("Uploading to AWS ...")
 
   experiment_id <- input$experimentId
-  project_id <- input$projectId
 
   # destructure what need from prev_out
   scdata <- prev_out$scdata
@@ -10,7 +9,7 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 
   scdata <- format_seurat(scdata, experiment_id)
 
-  # change sample ids/names in so that get sample cell sets
+  # change sample ids/names so that get sample cell sets
   input <- add_samples_to_input(scdata, input)
   input <- add_metadata_to_input(scdata, input)
   scdata <- change_sample_names_to_ids(scdata, input)
@@ -134,7 +133,7 @@ format_seurat <- function(scdata, experiment_id) {
   # other
   scdata@misc$experimentId <- experiment_id
   scdata@misc$color_pool <- get_color_pool()
-  scdata@misc$ingestionData <- Sys.time()
+  scdata@misc$ingestionDate <- Sys.time()
 
   # need to mock processing config
   metadata_cols <- list('percent.mt' = 0, 'doublet_scores' = 0, 'doublet_class' = 'singlet')
