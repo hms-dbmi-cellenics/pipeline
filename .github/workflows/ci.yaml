@@ -244,6 +244,7 @@ jobs:
           DEPLOYMENT_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
           echo "::set-output name=deployment-name::$DEPLOYMENT_NAME"
 
+          # Deployment config for `production-default`
           if [ "${{ matrix.environment }}" = "production" ]; then
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
@@ -254,15 +255,17 @@ jobs:
             MEMORY_REQUEST="29Gi"
           fi
 
+          # Deployment config for `staging-default`
           if [ "${{ matrix.environment }}" = "develop" ]; then
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
-            REPLICA_COUNT="1"
+            REPLICA_COUNT="0"
             IMAGE_GLOB="$REF_ID-*"
             MEMORY_REQUEST="29Gi"
           fi
 
+          # Deployment config for other staging env i.e. non `default`
           if [ "${{ matrix.environment }}" = "staging" ]; then
             SANDBOX_ID="STAGING_SANDBOX_ID"
             CHART_REF="STAGING_CHART_REF"
