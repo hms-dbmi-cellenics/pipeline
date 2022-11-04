@@ -1,4 +1,13 @@
 
+#' Upload Seurat and cellsets objects to aws
+#'
+#' @param input The input object from the request
+#' @param pipeline_config result of \code{load_config}
+#' @param prev_out list with results appended in each gem2s task
+#'
+#' @return list with experiment parameters
+#' @export
+#'
 upload_to_aws <- function(input, pipeline_config, prev_out) {
   message("Uploading to AWS ...")
   check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list", "qc_config")

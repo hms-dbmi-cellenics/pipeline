@@ -13,6 +13,6 @@ run_pca(scdata)
 Seurat object with PCA slot
 }
 \description{
-Performs FindVariableFeatures and ScaleData,
-which are two required steps before RunPCA
+Performs FindVariableFeatures and ScaleData, which are two required steps
+before RunPCA
 }

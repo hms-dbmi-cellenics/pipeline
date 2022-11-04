@@ -1,0 +1,2 @@
+# ignore snapshots in dependency resolution
+/tests/testthat/_snaps/
