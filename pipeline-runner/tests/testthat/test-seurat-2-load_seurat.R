@@ -71,3 +71,4 @@ test_that("load_seurat fails if there is no reduction", {
   # clean up
   unlink(data_dir, recursive = TRUE)
 })
+

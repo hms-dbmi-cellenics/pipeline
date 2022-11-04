@@ -7,6 +7,16 @@ mock_sns <- function(config) {
     ))
 }
 
+mock_sns_error <- function(config) {
+  return(
+    list(publish = function (Message, TopicArn, MessageAttributes) {
+      return (list(Message = Message,
+                   TopicArn = TopicArn,
+                   MessageAttributes = MessageAttributes))
+    }
+    ))
+}
+
 test_that("send_pipeline_update_to_api completes successfully", {
     pipeline_config <- list(
         sns_topic = 'ExampleTopic',
@@ -76,4 +86,22 @@ test_that("upload_matrix_to_s3 completes successfully", {
     key <- upload_matrix_to_s3(pipeline_config, experiment_id, data)
     expect_equal(key, '1234/r.rds')
 
+})
+
+test_that("send_pipeline_fail_update has the correct StringValue", {
+  pipeline_config <- list(sns_topic = 'ExampleTopic')
+  input <- list(taskName = 'some_task', experimentId = '1234')
+  mockery::stub(send_pipeline_fail_update, 'paws::sns', mock_sns_error)
+
+  input$processName <- 'seurat'
+  seurat_response <- send_pipeline_fail_update(pipeline_config, input, error_message = NULL)
+  expect_equal(seurat_response$MessageAttributes$type$StringValue, 'SeuratResponse')
+
+  input$processName <- 'gem2s'
+  gem2s_response <- send_pipeline_fail_update(pipeline_config, input, error_message = NULL)
+  expect_equal(gem2s_response$MessageAttributes$type$StringValue, 'GEM2SResponse')
+
+  input$processName <- 'qc'
+  gem2s_response <- send_pipeline_fail_update(pipeline_config, input, error_message = NULL)
+  expect_equal(gem2s_response$MessageAttributes$type$StringValue, 'PipelineResponse')
 })
