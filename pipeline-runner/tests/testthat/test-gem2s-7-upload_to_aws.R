@@ -1,5 +1,3 @@
-source("helper-stub_functions.R")
-
 mock_doublet_scores <- function(counts) {
   set.seed(1)
   doublet_scores <- runif(ncol(counts))
