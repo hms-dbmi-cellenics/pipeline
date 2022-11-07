@@ -2,7 +2,6 @@
 # seurat in the setup.R file
 library(Seurat)
 
-source("helper-stub_functions.R")
 
 qc_setup <- function(experiment_id) {
   paths <- setup_test_paths()
@@ -38,7 +37,7 @@ qc_setup <- function(experiment_id) {
 #' @return seurat object with fixed time stamps
 #'
 clean_timestamp <- function(scdata) {
-  fixed_datetime <- as.POSIXct("1991-12-19 05:23:00", tz = "GMT")
+  fixed_datetime <- as.POSIXct("1991-12-19 05:23:00", tz = "UTC")
 
   for (slot in names(scdata@commands)) {
     scdata@commands[[slot]]@time.stamp <- fixed_datetime
@@ -92,8 +91,9 @@ test_qc <- function(experiment_id) {
     pipeline_config <- mock_pipeline_config()
 
     # load task functions, and use required stubs
-    QC_TASK_LIST$configureEmbedding <- "stubbed_embed_and_cluster"
     tasks <- lapply(QC_TASK_LIST, get)
+    tasks$configureEmbedding <- stubbed_embed_and_cluster
+
 
     filtered_cells_id <- generate_first_step_ids(prev_out$output$scdata_list)
     expect_snapshot(filtered_cells_id)
