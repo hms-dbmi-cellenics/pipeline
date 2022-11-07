@@ -2,7 +2,6 @@
 # seurat in the setup.R file
 library(Seurat)
 
-
 qc_setup <- function(experiment_id) {
   paths <- setup_test_paths()
   gem2s_snaps_path <- file.path(paths$snaps, "gem2s")
