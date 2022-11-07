@@ -20,7 +20,10 @@ reconstruct_seurat <- function(dataset_fpath) {
   user_scdata <- readRDS(dataset_fpath)
 
   # add gene annotations (needed to add dispersions)
-  rns <- row.names(user_scdata)
+  counts <- user_scdata[['RNA']]@counts
+  test_user_sparse_mat(counts)
+
+  rns <- row.names(counts)
   check_type_is_safe(rns)
   gene_annotations <- data.frame(input = rns, name = rns, original_name = rns, row.names = rns)
   user_scdata@misc$gene_annotations <- gene_annotations
@@ -31,10 +34,8 @@ reconstruct_seurat <- function(dataset_fpath) {
   test_user_df(dispersions)
 
   # get counts and meta data
-  counts <- user_scdata[['RNA']]@counts
   metadata <- user_scdata@meta.data
   test_user_df(metadata)
-  test_user_sparse_mat(counts)
 
   # reconstruct seurat object
   scdata <- SeuratObject::CreateSeuratObject(
