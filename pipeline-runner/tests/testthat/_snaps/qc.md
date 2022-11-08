@@ -7126,7 +7126,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "d31775cfdef11a8daf2241fddbbcc741"
+      [1] "5e1fb720e4a4ca7e78276b87ac675525"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7524,7 +7524,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "d31775cfdef11a8daf2241fddbbcc741"
+      [1] "5e1fb720e4a4ca7e78276b87ac675525"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7810,3 +7810,4 @@
       str(snap_list$guidata, vec.len = 20)
     Output
        list()
+

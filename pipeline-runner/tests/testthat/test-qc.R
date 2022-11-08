@@ -78,6 +78,16 @@ snapshot_qc_output <- function(task_name, snap_list) {
     str(snap_list$guidata, vec.len = 20)
   })
 
+  # snapshot full object at the last step that returns it.
+  if (task_name == "dataIntegration") {
+    experiment_id <- snap_list$data@misc$experimentId
+    snap_name <- paste(experiment_id, "integrated_scdata.R", sep = "-")
+    withr::with_tempfile("tf", {
+      dump("snap_list", tf)
+      expect_snapshot_file(tf, name = snap_name)
+    })
+  }
+
 }
 
 
@@ -104,6 +114,8 @@ test_qc <- function(experiment_id) {
                         plotData = list())
 
 
+    # this loop will have to be modified if the pipeline structure in
+    # init-functions.R changes.
     for (task_name in names(QC_TASK_LIST)) {
       # config changes at the integration step (no more independent samples)
       if (which(task_name == names(QC_TASK_LIST)) < which(names(QC_TASK_LIST) == "dataIntegration")) {
