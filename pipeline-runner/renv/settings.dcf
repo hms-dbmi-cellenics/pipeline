@@ -1,6 +1,6 @@
 bioconductor.version:
 external.libraries:
-ignored.packages: devtools, diffviewer, languageserver, roxygen2, styler,
+ignored.packages: devtools, diffviewer, languageserver, R.cache, roxygen2, styler,
     usethis
 package.dependency.fields: Imports, Depends, LinkingTo
 r.version:
