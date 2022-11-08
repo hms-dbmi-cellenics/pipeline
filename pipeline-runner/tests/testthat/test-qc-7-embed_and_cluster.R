@@ -39,30 +39,16 @@ mock_color_pool <- function(n) {
   paste0("color_", 1:n)
 }
 
-stub_update_sets_through_api <- function(cell_sets_object,
-                                          api_url,
-                                          experiment_id,
-                                          cell_set_key,
-                                          auth_JWT) {
 
-  # empty function to simplify mocking. we test patching independently.
-}
-
-stubbed_runClusters <- function(type, data) {
-  mockery::stub(runClusters,
-                "update_sets_through_api",
-                stub_update_sets_through_api)
-  resolution <- 0.8
-  runClusters(type, resolution, data)
-}
 
 test_that("runClusters returns correct keys", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
   expected_keys <- c("cluster", "cell_ids")
+  resolution <- 0.8
 
   for (algo in algos) {
-    res <- stubbed_runClusters(algo, data)
+    res <- runClusters(algo, resolution, data)
     expect_equal(names(res), expected_keys)
   }
 })
@@ -71,9 +57,11 @@ test_that("runClusters returns one value per cell", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
   expected_n_cells <- ncol(data)
+  resolution <- 0.8
+
 
   for (algo in algos) {
-    res <- stubbed_runClusters(algo, data)
+    res <- runClusters(algo, resolution, data)
     n_cells <- nrow(res)
 
     expect_equal(n_cells, expected_n_cells)
@@ -84,9 +72,11 @@ test_that("runClusters returns same order of barcodes as seurat object", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
   expected_barcodes <- colnames(data)
+  resolution <- 0.8
+
 
   for (algo in algos) {
-    res <- stubbed_runClusters(algo, data)
+    res <- runClusters(algo, resolution, data)
     barcodes <- rownames(res)
     expect_equal(barcodes, expected_barcodes)
   }
@@ -95,9 +85,10 @@ test_that("runClusters returns same order of barcodes as seurat object", {
 test_that("runClusters returns at least one cluster", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
+  resolution <- 0.8
 
   for (algo in algos) {
-    res <- stubbed_runClusters(algo, data)
+    res <- runClusters(algo, resolution, data)
     n_clusters <- length(unique(res$cluster))
     expect_gte(n_clusters, 1)
   }
@@ -106,6 +97,7 @@ test_that("runClusters returns at least one cluster", {
 test_that("runClusters uses active.reduction in misc slot", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
+  resolution <- 0.8
 
   # get error if no PCA/SNN graph
   blah_reduction <- data@reductions$pca
@@ -113,7 +105,7 @@ test_that("runClusters uses active.reduction in misc slot", {
   data@graphs$RNA_snn <- NULL
 
   for (algo in algos) {
-    expect_error(stubbed_runClusters(algo, data), "Cannot find 'pca'")
+    expect_error(runClusters(algo, resolution, data), "Cannot find 'pca'")
   }
 
   # will use active.reduction to get SNN graph
@@ -121,7 +113,7 @@ test_that("runClusters uses active.reduction in misc slot", {
   data@misc$active.reduction <- "blah_reduction"
 
   for (algo in algos) {
-    expect_error(stubbed_runClusters(algo, data), NA)
+    expect_error(runClusters(algo,resolution, data), NA)
   }
 })
 
@@ -220,31 +212,7 @@ test_that("format_cell_sets_object returns empty children on empty cellset", {
   }
 })
 
-stub_runClusters <- function(clustering_method, resolution, data) {}
-stub_format_cell_sets_object <- function(cell_sets, clustering_method, color_pool) {}
-stub_update_sets_through_api <- function(
-  cell_sets_object,
-  api_url,
-  experiment_id,
-  cell_set_key,
-  auth_JWT
-  ) {}
 
-stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name) {
-  mockery::stub(embed_and_cluster,
-                "runClusters",
-                stub_runClusters)
-
-  mockery::stub(embed_and_cluster,
-                "format_cell_sets_object",
-                stub_format_cell_sets_object)
-
-  mockery::stub(embed_and_cluster,
-                "update_sets_through_api",
-                stub_update_sets_through_api)
-
-  embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
-}
 
 test_that("embed_and_cluster works", {
   scdata <- mock_scdata()
@@ -273,7 +241,10 @@ test_that("embed_and_cluster works", {
   cells_id <- "83abbeea-b664-499a-8e6e-d2dbae4c60a9"
   task_name <- "configureEmbedding"
 
+  cell_sets_bucket <- "./mock_data/cell_sets_bucket"
   stubbed_embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
-  # to avoid skipping empty test
-  expect_true(TRUE)
+  expect_snapshot_file(file.path(cell_sets_bucket, "cluster_cellsets.json"),
+                       name = "cluster_cell_sets.json")
+  withr::defer(unlink(cell_sets_bucket, recursive = TRUE))
+
 })

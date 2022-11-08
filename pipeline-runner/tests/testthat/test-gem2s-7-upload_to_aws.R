@@ -1,6 +1,5 @@
-set.seed(1)
-
 mock_doublet_scores <- function(counts) {
+  set.seed(1)
   doublet_scores <- runif(ncol(counts))
   doublet_class <- ifelse(doublet_scores < 0.8, "singlet", "doublet")
 
@@ -47,6 +46,7 @@ mock_prev_out <- function(config, counts = NULL) {
   samples <- config$samples
 
   if (is.null(counts)) {
+    set.seed(1)
     counts <- DropletUtils:::simCounts()
     colnames(counts) <- paste0("cell", seq_len(ncol(counts)))
   }

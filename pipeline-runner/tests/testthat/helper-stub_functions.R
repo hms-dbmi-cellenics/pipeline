@@ -198,3 +198,36 @@ stubbed_upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   upload_to_aws(input, pipeline_config, prev_out)
 }
+
+
+stub_update_sets_through_api <- function(cell_sets_object,
+                                         api_url,
+                                         experiment_id,
+                                         cell_set_key,
+                                         auth_JWT) {
+  cellsets_bucket <- "./mock_data/cell_sets_bucket"
+  if (!dir.exists(cellsets_bucket)) {
+    dir.create(cellsets_bucket)
+  }
+  cellset_json <- RJSONIO::toJSON(cell_sets_object)
+  write(cellset_json, file.path(cellsets_bucket, "cluster_cellsets.json"))
+}
+
+
+#' (Stubbed) Run clustering and embedding
+#'
+#' Stubs interactions with the API to be able to test the original function.
+#'
+#' @inheritParams embed_and_cluster
+#'
+#' @return list with scdata, cell_ids and config
+#' @export
+#'
+stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name) {
+
+  mockery::stub(embed_and_cluster,
+                "update_sets_through_api",
+                stub_update_sets_through_api)
+
+  embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
+}
