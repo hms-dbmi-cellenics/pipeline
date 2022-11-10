@@ -248,6 +248,7 @@ jobs:
           if [ "${{ matrix.environment }}" = "production" ]; then
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
+            REF_TYPE="branch"
             KUBERNETES_ENV="production"
             REPLICA_COUNT="3"
             VERSION_NUMBER=${REF_ID/refs-tags-/}
@@ -259,6 +260,7 @@ jobs:
           if [ "${{ matrix.environment }}" = "develop" ]; then
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
+            REF_TYPE="branch"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="0"
             IMAGE_GLOB="$REF_ID-*"
@@ -269,6 +271,7 @@ jobs:
           if [ "${{ matrix.environment }}" = "staging" ]; then
             SANDBOX_ID="STAGING_SANDBOX_ID"
             CHART_REF="STAGING_CHART_REF"
+            REF_TYPE="commit"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="0"
             IMAGE_GLOB="$REF_ID-*"
@@ -278,21 +281,23 @@ jobs:
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
           echo "::set-output name=kubernetes-env::$KUBERNETES_ENV"
 
-          yq w -d1 .flux.yaml metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
-          | yq w -d0 - metadata.name "$DEPLOYMENT_NAME-$SANDBOX_ID" \
-          | yq w -d1 - metadata.name "$DEPLOYMENT_NAME" \
+          yq w -d0 .flux.yaml metadata.name "$DEPLOYMENT_NAME-$SANDBOX_ID" \
           | yq w -d0 - metadata.labels.sandboxId "$SANDBOX_ID" \
-          | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
-          | yq w -d1 - spec.chart.ref "$CHART_REF" \
-          | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
-          | yq w -d1 - spec.values.clusterEnv "$KUBERNETES_ENV" \
-          | yq w -d1 - spec.values.pipelineRunner.image "$IMAGE_NAME-pipeline-runner" \
-          | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
-          | yq w -d1 - spec.values.memoryRequest "$MEMORY_REQUEST" \
-          | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \
-          | yq w -d1 - spec.values.serviceAccount.iamRole "pipeline-role-$KUBERNETES_ENV" \
-          | yq w -d1 - spec.values.datadogTags "kube_namespace:$DEPLOYMENT_NAME-$SANDBOX_ID" \
-          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/pipelineRunner]" "glob:$IMAGE_GLOB-pipeline-runner" \
+          | yq w -d1 - metadata.name "$DEPLOYMENT_NAME" \
+          | yq w -d1 - metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
+          | yq w -d1 - spec.ref."$REF_TYPE" "$CHART_REF" \
+          | yq w -d2 - metadata.name "$DEPLOYMENT_NAME" \
+          | yq w -d2 - metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
+          | yq w -d2 - metadata.labels.sandboxId "$SANDBOX_ID" \
+          | yq w -d2 - spec.releaseName "$DEPLOYMENT_NAME" \
+          | yq w -d2 - spec.values.clusterEnv "$KUBERNETES_ENV" \
+          | yq w -d2 - spec.values.pipelineRunner.image "$IMAGE_NAME-pipeline-runner" \
+          | yq w -d2 - spec.values.sandboxId "$SANDBOX_ID" \
+          | yq w -d2 - spec.values.memoryRequest "$MEMORY_REQUEST" \
+          | yq w -d2 - spec.values.replicaCount $REPLICA_COUNT \
+          | yq w -d2 - spec.values.serviceAccount.iamRole "pipeline-role-$KUBERNETES_ENV" \
+          | yq w -d2 - spec.values.datadogTags "kube_namespace:$DEPLOYMENT_NAME-$SANDBOX_ID" \
+          | yq w -d2 - "metadata.annotations[filter.fluxcd.io/pipelineRunner]" "glob:$IMAGE_GLOB-pipeline-runner" \
           > $DEPLOYMENT_NAME.yaml
 
           cat $DEPLOYMENT_NAME.yaml
@@ -330,7 +335,7 @@ jobs:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
           source_file: ${{ needs.build-docker.outputs.ref-id }}.yaml
-          destination_repo: '${{ github.repository_owner }}/releases'
+          destination_repo: '${{ github.repository_owner }}/flux-v2-migration'
           destination_folder: 'staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}'
           user_email: 'ci@biomage.net'
           user_name: 'Biomage CI/CD'
