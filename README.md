@@ -101,30 +101,23 @@ testthat::test_local()
 There are two special test files, `test-gem2s.R` and `test-qc.R`. They run sequential
 snapshot tests for gem2s and qc respectively. They output, for each step, a summarised
 text representation of the current pipeline state, and a hash of the complete R
-object. They are compared to the snapshots, stored in the `pipeline-runner/tests/testthat/_snaps/`
-folder. In the case of a mismatch, the test fails and the new snapshot is stored
-by adding the `.new` suffix to the snapshot file name. They must be manually inspected
-and the differences accepted or rejected, according to the changes added to the 
-code.
+object. For more information on the workings of snapshot testing, see [testthat snapshots](https://testthat.r-lib.org/articles/snapshotting.html).
 
-the `testthat` package provides a wrapper around the `diffview` package for diffing
-inside Rstudio. So, after a snapshot test fails, you can run:
+In case of a test failure, you need to manually examine the difference between
+the new output and the original snapshot. To do so, either use your favorite `diff`
+tool, or the following `testthat` function, which opens an interactive diff tool:
 
 ```R
 testthat::snapshot_review()
 ```
 
-Review the file and accept the changes interactively. This will remove the `.new`
-suffix to the snapshot file and delete the old one.
-
-If using another tool to diff (since the previous method might hang on big diffd)
-you can run:
+To accept the new changes, you can either click on the `Accept` button in the interactive
+diff tool opened by [`snapshot_review()`](https://testthat.r-lib.org/reference/snapshot_accept.html),
+or run the following command:
 
 ```R
 testthat::snapshot_accept()
 ```
-
-to accept the changes, with the same effect as interactively accepting the changes.
 
 #### Adding test datasets to the snapshot tests
 
