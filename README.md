@@ -96,6 +96,48 @@ devtools::test()
 testthat::test_local()
 ```
 
+### snapshot tests
+
+There are two special test files, `test-gem2s.R` and `test-qc.R`. They run sequential
+snapshot tests for gem2s and qc respectively. They output, for each step, a summarised
+text representation of the current pipeline state, and a hash of the complete R
+object. They are compared to the snapshots, stored in the `pipeline-runner/tests/testthat/_snaps/`
+folder. In the case of a mismatch, the test fails and the new snapshot is stored
+by adding the `.new` suffix to the snapshot file name. They must be manually inspected
+and the differences accepted or rejected, according to the changes added to the 
+code.
+
+the `testthat` package provides a wrapper around the `diffview` package for diffing
+inside Rstudio. So, after a snapshot test fails, you can run:
+
+```R
+testthat::snapshot_review()
+```
+
+Review the file and accept the changes interactively. This will remove the `.new`
+suffix to the snapshot file and delete the old one.
+
+If using another tool to diff (since the previous method might hang on big diffd)
+you can run:
+
+```R
+testthat::snapshot_accept()
+```
+
+to accept the changes, with the same effect as interactively accepting the changes.
+
+#### Adding test datasets to the snapshot tests
+
+The tests were written trying to simplify the way to add new test datasets.
+Basically, two things are required:
+
+1. add sample files to the `pipeline-runner/tests/testthat/mock_data/originals_bucket` folder
+2. create an `input.json` file, named like `<experiment_id>-input.json` and put it
+   in the `pipeline-runner/tests/testthatmock_data/input` folder. It should 
+   contain the correct sample file ids (the name of the sample files in the
+   `originals_bucket` folder) and `experiment_id`
+
+
 ## Debugging locally
 
 **TLDR**: save something inside `/debug` in a data processing or gem2s step to
