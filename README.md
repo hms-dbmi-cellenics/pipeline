@@ -124,8 +124,8 @@ testthat::snapshot_accept()
 The tests were written trying to simplify the way to add new test datasets.
 Basically, two things are required:
 
-1. add sample files to the `pipeline-runner/tests/testthat/mock_data/originals_bucket` folder
-2. create an `input.json` file, named like `<experiment_id>-input.json` and put it
+1. Add sample files to the `pipeline-runner/tests/testthat/mock_data/originals_bucket` folder
+2. Create an `input.json` file, named like `<experiment_id>-input.json` and put it
    in the `pipeline-runner/tests/testthatmock_data/input` folder. It should 
    contain the correct sample file ids (the name of the sample files in the
    `originals_bucket` folder) and `experiment_id`
