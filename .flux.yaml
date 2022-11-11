@@ -11,7 +11,7 @@ metadata:
   name: FILLED_IN_BY_CI
   namespace: FILLED_IN_BY_CI
 spec:
-  interval: 10m0s
+  interval: 5m0s
   url: https://github.com/biomage-org/pipeline
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
@@ -24,9 +24,15 @@ metadata:
 spec:
   releaseName: FILLED_IN_BY_CI
   interval: 2m0s
-  chart: chart-infra/
+  chart:
+    spec:
+      chart: chart-infra/
+      sourceRef:
+        kind: GitRepository
+        name: FILLED_IN_BY_CI
+        namespace: FILLED_IN_BY_CI
   valuesFrom:
-  - configMapKeyRef:
+    - kind: ConfigMap
+      valuesKey: account-config.yaml
       name: account-config
-      namespace: flux
-      key: account-config.yaml
+      optional: false
