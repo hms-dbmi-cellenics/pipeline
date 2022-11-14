@@ -15,27 +15,56 @@ load_seurat <- function(input, pipeline_config, prev_out, input_dir = "/input") 
   return(res)
 }
 
+
 reconstruct_seurat <- function(dataset_fpath) {
 
-  user_scdata <- readRDS(dataset_fpath)
+  # read it
+  tryCatch(
+    user_scdata <- readRDS(dataset_fpath),
+    error = function(e) {
+      stop("ERROR_SEURAT_RDS", call. = FALSE)
+    })
 
-  # add gene annotations (needed to add dispersions)
-  counts <- user_scdata[['RNA']]@counts
-  test_user_sparse_mat(counts)
 
-  rns <- row.names(counts)
-  check_type_is_safe(rns)
+  # get counts
+  tryCatch({
+    counts <- user_scdata[['RNA']]@counts
+    test_user_sparse_mat(counts)
+    rns <- row.names(counts)
+    check_type_is_safe(rns)
+  },
+  error = function(e) {
+    stop('ERROR_SEURAT_COUNTS', call. = FALSE)
+  })
+
   gene_annotations <- data.frame(input = rns, name = rns, original_name = rns, row.names = rns)
   user_scdata@misc$gene_annotations <- gene_annotations
 
   # add dispersions
-  user_scdata <- add_dispersions(user_scdata)
-  dispersions <- user_scdata@misc$gene_dispersion
-  test_user_df(dispersions)
+  tryCatch({
+    user_scdata <- add_dispersions(user_scdata)
+    dispersions <- user_scdata@misc$gene_dispersion
+    test_user_df(dispersions)
+  },
+  error = function(e) {
+    stop('ERROR_SEURAT_HVFINFO', call. = FALSE)
+  })
 
-  # get counts and meta data
-  metadata <- user_scdata@meta.data
-  test_user_df(metadata)
+  # get meta data
+  tryCatch({
+    metadata <- user_scdata@meta.data
+    test_user_df(metadata)
+
+    # check for clusters
+  },
+  error = function(e) {
+    stop('ERROR_SEURAT_METADATA', call. = FALSE)
+  })
+
+  # check for clusters
+  if (!'seurat_clusters' %in% colnames(metadata))
+    stop('ERROR_SEURAT_METADATA', call. = FALSE)
+
 
   # reconstruct seurat object
   scdata <- SeuratObject::CreateSeuratObject(
@@ -47,21 +76,32 @@ reconstruct_seurat <- function(dataset_fpath) {
   scdata@misc$gene_dispersion <- dispersions
   scdata@misc$gene_annotations <- gene_annotations
 
+
   # add dimensionality reduction
-  red_name <- SeuratObject::DefaultDimReduc(user_scdata)
-  check_type_is_safe(red_name)
-  embedding <- user_scdata@reductions[[red_name]]@cell.embeddings
-  test_user_df(embedding)
-  red <- SeuratObject::CreateDimReducObject(
-    embeddings = embedding,
-    assay = 'RNA'
-  )
-  scdata@reductions[[red_name]] <- red
+  tryCatch({
+    red_name <- SeuratObject::DefaultDimReduc(user_scdata)
+    check_type_is_safe(red_name)
+    embedding <- user_scdata@reductions[[red_name]]@cell.embeddings
+    test_user_df(embedding)
+    red <- SeuratObject::CreateDimReducObject(
+      embeddings = embedding,
+      assay = 'RNA'
+    )
+    scdata@reductions[[red_name]] <- red
+  },
+  error = function(e) {
+    stop('ERROR_SEURAT_REDUCTION', call. = FALSE)
+  })
 
   # add logcounts
-  data <- user_scdata[['RNA']]@data
-  test_user_sparse_mat(data)
-  scdata[['RNA']]@data <- data
+  tryCatch({
+    data <- user_scdata[['RNA']]@data
+    test_user_sparse_mat(data)
+    scdata[['RNA']]@data <- data
+  },
+  error = function(e) {
+    stop('ERROR_SEURAT_LOGCOUNTS', call. = FALSE)
+  })
 
   return(scdata)
 }
@@ -90,7 +130,7 @@ check_type_is_safe <- function(x) {
   # recurse into lists until reach node
   if (typeof(x) == 'list') {
     lapply(x, check_type_is_safe)
-  } else {
-    stopifnot(typeof(x) %in% safe.types)
+  } else if (!typeof(x) %in% safe.types) {
+    stop('Unexpected data type in uploaded .rds file.')
   }
 }
