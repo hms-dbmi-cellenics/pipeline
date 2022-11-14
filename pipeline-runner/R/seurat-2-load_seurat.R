@@ -22,6 +22,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   tryCatch(
     user_scdata <- readRDS(dataset_fpath),
     error = function(e) {
+      message(e$message)
       stop("ERROR_SEURAT_RDS", call. = FALSE)
     })
 
@@ -34,6 +35,7 @@ reconstruct_seurat <- function(dataset_fpath) {
     check_type_is_safe(rns)
   },
   error = function(e) {
+    message(e$message)
     stop('ERROR_SEURAT_COUNTS', call. = FALSE)
   })
 
@@ -47,6 +49,7 @@ reconstruct_seurat <- function(dataset_fpath) {
     test_user_df(dispersions)
   },
   error = function(e) {
+    message(e$message)
     stop('ERROR_SEURAT_HVFINFO', call. = FALSE)
   })
 
@@ -54,16 +57,15 @@ reconstruct_seurat <- function(dataset_fpath) {
   tryCatch({
     metadata <- user_scdata@meta.data
     test_user_df(metadata)
-
-    # check for clusters
   },
   error = function(e) {
+    message(e$message)
     stop('ERROR_SEURAT_METADATA', call. = FALSE)
   })
 
   # check for clusters
   if (!'seurat_clusters' %in% colnames(metadata))
-    stop('ERROR_SEURAT_METADATA', call. = FALSE)
+    stop('ERROR_SEURAT_CLUSTERS', call. = FALSE)
 
 
   # reconstruct seurat object
@@ -90,6 +92,7 @@ reconstruct_seurat <- function(dataset_fpath) {
     scdata@reductions[[red_name]] <- red
   },
   error = function(e) {
+    message(e$message)
     stop('ERROR_SEURAT_REDUCTION', call. = FALSE)
   })
 
@@ -100,6 +103,7 @@ reconstruct_seurat <- function(dataset_fpath) {
     scdata[['RNA']]@data <- data
   },
   error = function(e) {
+    message(e$message)
     stop('ERROR_SEURAT_LOGCOUNTS', call. = FALSE)
   })
 
@@ -125,7 +129,7 @@ check_type_is_safe <- function(x) {
 
   # typeof determines the R internal type or storage mode of any object
   # whereas methods::is can be tricked by setting class inappropriately (e.g. disguising a function as a numeric)
-  safe.types <- c('character', 'double', 'integer', 'logical')
+  safe.types <- c('character', 'double', 'integer', 'logical', 'NULL')
 
   # recurse into lists until reach node
   if (typeof(x) == 'list') {
