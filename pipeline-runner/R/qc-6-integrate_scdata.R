@@ -236,20 +236,7 @@ run_seuratv4 <- function(scdata, config, npcs) {
       if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
       if (reduction == "cca") message("Finding integration anchors using CCA reduction")
       if (normalization == "SCT") {
-        features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
-        data.split <- Seurat::PrepSCTIntegration(
-          object.list = data.split, assay = "SCT",
-          anchor.features = features
-        )
-        data.anchors <- Seurat::FindIntegrationAnchors(
-          object.list = data.split,
-          dims = 1:npcs,
-          k.filter = k.filter,
-          verbose = TRUE,
-          reduction = reduction,
-          normalization.method = normalization,
-          anchor.features = features
-        )
+        data.anchors <- run_sct_workflow(data.split)
       }
       data.anchors <- Seurat::FindIntegrationAnchors(
         object.list = data.split,
@@ -288,6 +275,24 @@ run_seuratv4 <- function(scdata, config, npcs) {
   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
 
   return(scdata)
+}
+
+run_sct_workflow <- function(data.split) {
+  features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
+  data.split <- Seurat::PrepSCTIntegration(
+    object.list = data.split, assay = "SCT",
+    anchor.features = features
+  )
+  data.anchors <- Seurat::FindIntegrationAnchors(
+    object.list = data.split,
+    dims = 1:npcs,
+    k.filter = k.filter,
+    verbose = TRUE,
+    reduction = reduction,
+    normalization.method = normalization,
+    anchor.features = features
+  )
+  return(data.anchors)
 }
 
 run_fastmnn <- function(scdata, config, npcs) {
