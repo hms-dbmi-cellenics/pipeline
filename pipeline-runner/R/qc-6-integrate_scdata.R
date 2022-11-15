@@ -236,7 +236,7 @@ run_seuratv4 <- function(scdata, config, npcs) {
       if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
       if (reduction == "cca") message("Finding integration anchors using CCA reduction")
       if (normalization == "SCT") {
-        data.anchors <- run_sct_workflow(data.split, reduction, normalization, k.filter)
+        data.anchors <- run_sct_workflow(data.split, reduction, normalization, k.filter, npcs)
       }
       data.anchors <- Seurat::FindIntegrationAnchors(
         object.list = data.split,
@@ -294,7 +294,7 @@ run_seuratv4 <- function(scdata, config, npcs) {
 #' @return data.anchors to use for integration
 #' @export
 #'
-run_sct_workflow <- function(data.split, reduction, normalization, k.filter) {
+run_sct_workflow <- function(data.split, reduction, normalization, k.filter, npcs) {
   features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
   data.split <- Seurat::PrepSCTIntegration(
     object.list = data.split, assay = "SCT",
@@ -355,7 +355,7 @@ run_unisample <- function(scdata, config, npcs) {
 }
 
 add_dispersions <- function(scdata, method) {
-  if (method == "SCT") {
+  if (method == "SCT" & Seurat::DefaultAssay(scdata) == "integrated") {
     vars <- Seurat::HVFInfo(object = scdata, assay = "integrated", selection.method = "sctransform")
     # change colnames as they are when run with selection.method = "vst", otherwise will break the listGenes worker task
     colnames(vars) <- c("mean", "variance", "variance.standardized")
