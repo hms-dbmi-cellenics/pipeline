@@ -4,13 +4,8 @@
       str(task_out$qc_config)
     Output
       List of 7
-       $ cellSizeDistribution:List of 4
-        ..$ enabled       : logi FALSE
-        ..$ auto          : logi TRUE
-        ..$ filterSettings:List of 2
-        .. ..$ minCellSize: num 1080
-        .. ..$ binStep    : num 200
-        ..$ sample_a      :List of 4
+       $ cellSizeDistribution:List of 1
+        ..$ sample_a:List of 4
         .. ..$ enabled              : logi FALSE
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 2
@@ -19,16 +14,9 @@
         .. ..$ defaultFilterSettings:List of 2
         .. .. ..$ minCellSize: num 10
         .. .. ..$ binStep    : num 200
-       $ mitochondrialContent:List of 4
-        ..$ enabled       : logi TRUE
-        ..$ auto          : logi TRUE
-        ..$ filterSettings:List of 2
-        .. ..$ method        : chr "absoluteThreshold"
-        .. ..$ methodSettings:List of 1
-        .. .. ..$ absoluteThreshold:List of 2
-        .. .. .. ..$ maxFraction: num 0.1
-        .. .. .. ..$ binStep    : num 0.3
-        ..$ sample_a      :List of 3
+       $ mitochondrialContent:List of 1
+        ..$ sample_a:List of 4
+        .. ..$ enabled              : logi TRUE
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 2
         .. .. ..$ method        : chr "absoluteThreshold"
@@ -42,53 +30,35 @@
         .. .. .. ..$ absoluteThreshold:List of 2
         .. .. .. .. ..$ maxFraction: num 0
         .. .. .. .. ..$ binStep    : num 0.3
-       $ classifier          :List of 5
-        ..$ enabled       : logi TRUE
-        ..$ prefiltered   : logi FALSE
-        ..$ auto          : logi TRUE
-        ..$ filterSettings:List of 1
-        .. ..$ FDR: num 0.01
-        ..$ sample_a      :List of 4
+       $ classifier          :List of 1
+        ..$ sample_a:List of 5
         .. ..$ enabled              : logi TRUE
+        .. ..$ prefiltered          : logi FALSE
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 1
         .. .. ..$ FDR: num 0.01
         .. ..$ defaultFilterSettings:List of 1
         .. .. ..$ FDR: num 0.01
-       $ numGenesVsNumUmis   :List of 4
-        ..$ enabled       : logi TRUE
-        ..$ auto          : logi TRUE
-        ..$ filterSettings:List of 2
-        .. ..$ regressionType        : chr "linear"
-        .. ..$ regressionTypeSettings:List of 2
-        .. .. ..$ linear:List of 1
-        .. .. .. ..$ p.level: num 0.001
-        .. .. ..$ spline:List of 1
-        .. .. .. ..$ p.level: num 0.001
-        ..$ sample_a      :List of 4
+       $ numGenesVsNumUmis   :List of 1
+        ..$ sample_a:List of 4
         .. ..$ enabled              : logi TRUE
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 2
         .. .. ..$ regressionType        : chr "linear"
         .. .. ..$ regressionTypeSettings:List of 2
         .. .. .. ..$ linear:List of 1
-        .. .. .. .. ..$ p.level: num 0.000131
+        .. .. .. .. ..$ p.level: num 0.000132
         .. .. .. ..$ spline:List of 1
         .. .. .. .. ..$ p.level: num 0.001
         .. ..$ defaultFilterSettings:List of 2
         .. .. ..$ regressionType        : chr "linear"
         .. .. ..$ regressionTypeSettings:List of 2
         .. .. .. ..$ linear:List of 1
-        .. .. .. .. ..$ p.level: num 0.000131
+        .. .. .. .. ..$ p.level: num 0.000132
         .. .. .. ..$ spline:List of 1
         .. .. .. .. ..$ p.level: num 0.001
-       $ doubletScores       :List of 4
-        ..$ enabled       : logi TRUE
-        ..$ auto          : logi TRUE
-        ..$ filterSettings:List of 2
-        .. ..$ probabilityThreshold: num 0.5
-        .. ..$ binStep             : num 0.02
-        ..$ sample_a      :List of 4
+       $ doubletScores       :List of 1
+        ..$ sample_a:List of 4
         .. ..$ enabled              : logi TRUE
         .. ..$ auto                 : logi TRUE
         .. ..$ filterSettings       :List of 2

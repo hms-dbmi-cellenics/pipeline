@@ -1,0 +1,70 @@
+{
+  "projectId": [
+    "mock_experiment_id"
+  ],
+  "experimentId": [
+    "mock_experiment_id"
+  ],
+  "taskName": [
+    "preproc"
+  ],
+  "processName": [
+    "gem2s"
+  ],
+  "config": {},
+  "server": [
+    "mock_server"
+  ],
+  "experimentName": [
+    "mock_experiment"
+  ],
+  "organism": {},
+  "input": {
+    "type": [
+      "10x"
+    ]
+  },
+  "sampleIds": [
+    [
+      "mock_sample_1_id"
+    ],
+    [
+      "mock_sample_2_id"
+    ]
+  ],
+  "sampleNames": [
+    [
+      "mock_sample_1_name"
+    ],
+    [
+      "mock_sample_2_name"
+    ]
+  ],
+  "sampleS3Paths": {
+    "mock_sample_1_id": {
+      "matrix10x": [
+        "mock_sample_1_matrix_id"
+      ],
+      "barcodes10x": [
+        "mock_sample_1_barcodes_id"
+      ],
+      "features10x": [
+        "mock_sample_1_features_id"
+      ]
+    },
+    "mock_sample_2_id": {
+      "matrix10x": [
+        "mock_sample_2_matrix_id"
+      ],
+      "barcodes10x": [
+        "mock_sample_2_barcodes_id"
+      ],
+      "features10x": [
+        "mock_sample_2_features_id"
+      ]
+    }
+  },
+  "authJWT": [
+    "mock_auth_jwt"
+  ]
+}

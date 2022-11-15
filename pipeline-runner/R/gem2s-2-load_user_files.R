@@ -13,7 +13,7 @@
 #'   \item{"annot"}{data.frame with gene ids and/or symbols}
 #'   }
 #' @export
-load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/input") {
+load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_DIR) {
   message("Loading user files...")
   check_prev_out(prev_out, "config")
 

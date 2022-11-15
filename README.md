@@ -96,6 +96,41 @@ devtools::test()
 testthat::test_local()
 ```
 
+### snapshot tests
+
+There are two special test files, `test-gem2s.R` and `test-qc.R`. They run sequential
+snapshot tests for gem2s and qc respectively. They output, for each step, a summarised
+text representation of the current pipeline state, and a hash of the complete R
+object. For more information on the workings of snapshot testing, see [testthat snapshots](https://testthat.r-lib.org/articles/snapshotting.html).
+
+In case of a test failure, you need to manually examine the difference between
+the new output and the original snapshot. To do so, either use your favorite `diff`
+tool, or the following `testthat` function, which opens an interactive diff tool:
+
+```R
+testthat::snapshot_review()
+```
+
+To accept the new changes, you can either click on the `Accept` button in the interactive
+diff tool opened by [`snapshot_review()`](https://testthat.r-lib.org/reference/snapshot_accept.html),
+or run the following command:
+
+```R
+testthat::snapshot_accept()
+```
+
+#### Adding test datasets to the snapshot tests
+
+The tests were written trying to simplify the way to add new test datasets.
+Basically, two things are required:
+
+1. Add sample files to the `pipeline-runner/tests/testthat/mock_data/originals_bucket` folder
+2. Create an `input.json` file, named like `<experiment_id>-input.json` and put it
+   in the `pipeline-runner/tests/testthatmock_data/input` folder. It should 
+   contain the correct sample file ids (the name of the sample files in the
+   `originals_bucket` folder) and `experiment_id`
+
+
 ## Debugging locally
 
 **TLDR**: save something inside `/debug` in a data processing or gem2s step to

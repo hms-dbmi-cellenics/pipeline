@@ -732,7 +732,7 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
   embeddings_sketch_int <- list(scdata_sketch_integrated@reductions[[active_reduction]]@cell.embeddings[, 1:npcs])
 
   # use python script to learn integration from sketches and apply to whole dataset
-  reticulate::source_python("/src/pipeline-runner/R/learn-apply-transformation.py")
+  reticulate::source_python("/src/pipeline-runner/inst/python/learn-apply-transformation.py")
   learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
   rownames(learned_int[[1]]) <- colnames(scdata)
 

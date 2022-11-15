@@ -5,6 +5,7 @@ mock_counts <- function() {
   )
 }
 
+
 mock_doublet_scores <- function(counts) {
   doublet_scores <- runif(ncol(counts))
   doublet_class <- ifelse(doublet_scores < 0.8, "singlet", "doublet")
@@ -16,6 +17,7 @@ mock_doublet_scores <- function(counts) {
     doublet_scores = doublet_scores
   )
 }
+
 
 mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   if (is.null(counts)) {
@@ -71,6 +73,7 @@ test_that("prepare_experiment ensures gene_annotations are indexed correctly for
 
 })
 
+
 test_that("add_metadata_to_samples adds 0 indexed cell_ids to each sample in scdata_list", {
   samples <- c("a", "b", "c")
   prev_out <- mock_prev_out(samples = samples)
@@ -105,6 +108,7 @@ test_that("add_metadata_to_samples adds 0 indexed cell_ids to each sample in scd
   expect_equal(added_ids, expected_ids)
 })
 
+
 test_that("add_metadata_to_samples generated cell ids do not depend on sample order", {
   experiment_id <- "1234"
   samples <- c("a", "b", "c")
@@ -129,6 +133,7 @@ test_that("add_metadata_to_samples generated cell ids do not depend on sample or
     expect_equal(scdata_list[[sample]]$cells_id, scdata_list_rev[[sample]]$cells_id)
   }
 })
+
 
 test_that("prepare_experiment generates qc_config that matches snapshot", {
   prev_out <- mock_prev_out()
@@ -214,7 +219,6 @@ test_that("prepare_experiment properly populates the metadata slot", {
   }
 
 })
-
 
 
 test_that("Mitochondrial percentage is correct", {
