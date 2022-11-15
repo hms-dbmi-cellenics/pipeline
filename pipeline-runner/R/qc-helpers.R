@@ -1,8 +1,8 @@
-#' Title
+#' Generate the list of cell ids present in the experiment
 #'
-#' @param scdata_list
+#' @param scdata_list list of Seurat Objects
 #'
-#' @return
+#' @return list of cell ids present in the Seurat object
 #' @export
 #'
 generate_first_step_ids <- function(scdata_list) {
@@ -146,13 +146,13 @@ calc_filter_stats <- function(scdata) {
   )
 }
 
-#' Title
+#' Ruun clustering function
 #'
-#' @param clustering_method
-#' @param resolution
-#' @param data
+#' @param clustering_method character
+#' @param resolution numeric
+#' @param data Seurat Object
 #'
-#' @return
+#' @return data.frame
 #' @export
 #'
 runClusters <- function(clustering_method, resolution, data) {
@@ -169,11 +169,9 @@ runClusters <- function(clustering_method, resolution, data) {
 
 #' Get Clusters
 #'
-#' @param clustering_method
-#' @param resolution
-#' @param data
+#' @inheritParams runClusters
 #'
-#' @return
+#' @return Seurat object with clustering assignment
 #' @export
 #'
 getClusters <- function(clustering_method, resolution, data) {
