@@ -277,6 +277,23 @@ run_seuratv4 <- function(scdata, config, npcs) {
   return(scdata)
 }
 
+#' Prepare for integration after SCTransform
+#'
+#' This function runs the steps required to prepare the list of Seurat object normalized with
+#' SCTransform for integration, and finds the integration anchors.
+#' For further details see the documentation for
+#' \code{\link[Seurat:SelectIntegrationFeatures]{Seurat::SelectIntegrationFeatures()}},
+#' \code{\link[Seurat:PrepSCTIntegration]{Seurat::PrepSCTIntegration()}},
+#' and [sctransform_v2 vignette](https://satijalab.org/seurat/articles/sctransform_v2_vignette.html#perform-integration-using-pearson-residuals-1).
+#'
+#' @param data.split list of Seurat objects
+#' @param reduction reduction method
+#' @param normalization normalization method
+#' @param k.filter number of neighbors (k) to use when filtering anchors
+#'
+#' @return data.anchors to use for integration
+#' @export
+#'
 run_sct_workflow <- function(data.split, reduction, normalization, k.filter) {
   features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
   data.split <- Seurat::PrepSCTIntegration(
@@ -568,14 +585,14 @@ normalize_data <- function(scdata, normalization_method, integration_method, nfe
   }
 
   if (normalization_method == "SCT") {
-    scdata <- sctransform_normalization(scdata, normalization_method, integration_method, nfeatures)
+    scdata <- sctransform_normalization(scdata)
   }
   return(scdata)
 }
 
 #' Perform log normalization
 #'
-#' #' If the integration method is fastMNN, it will skip ScaleData() because
+#' If the integration method is fastMNN, it will skip ScaleData() because
 #' fastMNN already performs its own scaling.
 #' If the integration method is SeuratV4, the default assay will be set to "integrated",
 #' in this case NormalizeData() will not work (see the [integration vignette](https://satijalab.org/seurat/articles/integration_introduction.html)),
@@ -601,7 +618,18 @@ log_normalize <- function(scdata, normalization_method, integration_method, nfea
 }
 
 
-sctransform_normalization <- function(scdata, normalization_method, integration_method, nfeatures) {
+#' Perform normalization with SCTransform
+#'
+#' This function exploit the Seurat::SCTransform function.
+#' For further details see the \code{\link[Seurat:SCTransform]{Seurat::SCTransform()}}
+#' documentation.
+#'
+#' @param scdata Seurat object
+#'
+#' @return Seurat object normalized using SCTransform
+#' @export
+#'
+sctransform_normalization <- function(scdata) {
   message("Started normalization using SCTransform")
   # The conserve.memory parameter in Seurat::SCTransform if set to TRUE reduces the
   # memory foot print by preventing creation of entire residual matrix but
