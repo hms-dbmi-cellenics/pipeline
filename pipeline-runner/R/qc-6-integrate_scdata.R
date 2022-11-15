@@ -136,8 +136,7 @@ merge_scdata_list <- function(scdata_list) {
 run_dataIntegration <- function(scdata, scdata_sketch, config) {
 
   # get method and settings
-  method <- "seuratv4"
-  # method <- config$dataIntegration$method
+  method <- config$dataIntegration$method
   npcs <- config$dimensionalityReduction$numPCs
   if (is.null(npcs)) {
     scdata <- run_pca(scdata)
@@ -202,8 +201,8 @@ run_seuratv4 <- function(scdata, config, npcs) {
 
   nfeatures <- settings$numGenes
 
-  normalization <- "SCT"
-  # normalization <- settings$normalisation
+  # normalization <- "SCT" # TO REMOVE WHEN THE BUTTON IS IMPLEMENTED IN THE UI
+  normalization <- settings$normalisation
 
   # get reduction method to find integration anchors
   reduction <- config$dimensionalityReduction$method
