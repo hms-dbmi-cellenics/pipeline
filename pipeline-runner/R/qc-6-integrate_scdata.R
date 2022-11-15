@@ -242,15 +242,22 @@ run_seuratv4 <- function(scdata, config, npcs) {
           object.list = data.split, assay = "SCT",
           anchor.features = features
         )
+        data.anchors <- Seurat::FindIntegrationAnchors(
+          object.list = data.split,
+          dims = 1:npcs,
+          k.filter = k.filter,
+          verbose = TRUE,
+          reduction = reduction,
+          normalization.method = normalization,
+          anchor.features = features
+        )
       }
       data.anchors <- Seurat::FindIntegrationAnchors(
         object.list = data.split,
         dims = 1:npcs,
         k.filter = k.filter,
         verbose = TRUE,
-        reduction = reduction,
-        normalization.method = normalization,
-        anchor.features = features
+        reduction = reduction
       )
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
       Seurat::DefaultAssay(scdata) <- "integrated"
