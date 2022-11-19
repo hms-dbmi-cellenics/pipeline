@@ -1,3 +1,16 @@
+#' Loads a Seurat object provided by the user
+#'
+#' This functions is a thin wrapper around `reconstruct_seurat`, which is used to
+#' safely read, check, and reconstruct the Seurat object for downstream use.
+#'
+#'
+#' @param input The input params received from the api.
+#' @param pipeline_config List with S3 bucket name and SNS topics.
+#' @param prev_out 'output' slot from call to \code{download_user_files}
+#' @param input_dir A string, where the folder containing the downloaded
+#' Seurat object is stored
+#'
+#' @export
 load_seurat <- function(input, pipeline_config, prev_out, input_dir = "/input") {
 
   config <- prev_out$config
@@ -15,16 +28,28 @@ load_seurat <- function(input, pipeline_config, prev_out, input_dir = "/input") 
   return(res)
 }
 
-
+#' Reconstructs the Seurat object provided by the user
+#'
+#' The slots needed from the Seurat object are extracted and then their in-built types
+#' are strictly checked before creating a new Seurat object. This reconstruction and type
+#' checking prevents potentially malicious executable code  (e.g. type `closure` or `environment`)
+#' from being stored in the final Seurat object.
+#'
+#' @param dataset_fpath The path to the r.rds file containing the Seurat object.
+#'
+#' @return
+#' @export
 reconstruct_seurat <- function(dataset_fpath) {
 
   # read it
-  tryCatch(
-    user_scdata <- readRDS(dataset_fpath),
-    error = function(e) {
-      message(e$message)
-      stop("ERROR_SEURAT_RDS", call. = FALSE)
-    })
+  tryCatch({
+    user_scdata <- readRDS(dataset_fpath)
+    stopifnot(methods::is(user_scdata, 'Seurat'))
+  },
+  error = function(e) {
+    message(e$message)
+    stop("ERROR_SEURAT_RDS", call. = FALSE)
+  })
 
 
   # get counts
