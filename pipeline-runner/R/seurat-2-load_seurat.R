@@ -1,10 +1,25 @@
+#' Loads a Seurat object provided by the user
+#'
+#' This functions is a thin wrapper around `reconstruct_seurat`, which is used to
+#' safely read, check, and reconstruct the Seurat object for downstream use.
+#'
+#'
+#' @param input The input params received from the api.
+#' @param pipeline_config List with S3 bucket name and SNS topics.
+#' @param prev_out 'output' slot from call to \code{download_user_files}
+#' @param input_dir A string, where the folder containing the downloaded
+#' Seurat object is stored
+#'
+#' @export
 load_seurat <- function(input, pipeline_config, prev_out, input_dir = "/input") {
 
   config <- prev_out$config
   dataset_dir <- config$samples[1]
   dataset_fpath <- file.path(input_dir, dataset_dir, 'r.rds')
 
-  scdata <- reconstruct_seurat(dataset_fpath)
+  scdata <- RAppArmor::eval.secure(
+    reconstruct_seurat(dataset_fpath),
+    profile = 'seurat')
 
   prev_out$scdata <- scdata
 
@@ -15,7 +30,16 @@ load_seurat <- function(input, pipeline_config, prev_out, input_dir = "/input") 
   return(res)
 }
 
-
+#' Reconstructs the Seurat object provided by the user
+#'
+#'
+#'
+#' @param dataset_fpath The path to the r.rds file containing the Seurat object.
+#'
+#' @return
+#' @export
+#'
+#' @examples
 reconstruct_seurat <- function(dataset_fpath) {
 
   # read it

@@ -71,6 +71,7 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 # cleanup setup files
 RUN echo "python3-pip" >> sysdeps_run.txt && \
     echo "wget" >> sysdeps_run.txt && \
+    echo "apparmor-utils" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
@@ -113,6 +114,9 @@ FROM common AS dev
 # also install watchdog to automatically restart
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+
+# in production AppArmor profile is loaded in the host
+COPY setup/docker-pipeline /etc/apparmor.d/docker-pipeline
 
 # add R package files and runner
 ADD R ./R
