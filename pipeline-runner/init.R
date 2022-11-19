@@ -6,14 +6,6 @@ library(futile.logger)
 library(magrittr)
 library(callr)
 
-# load AppArmor profile in development
-# this is done on the host in production
-cluster_env <- Sys.getenv("CLUSTER_ENV", "development")
-if (cluster_env == 'development') {
-  system('/etc/init.d/apparmor restart')
-  system('apparmor_parser -r -W /etc/apparmor.d/docker-pipeline')
-}
-
 # time stamp used for directory to store log/dump files in event of error
 debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
 

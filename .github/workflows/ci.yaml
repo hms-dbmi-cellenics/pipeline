@@ -180,22 +180,14 @@ jobs:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
           GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
 
-      - id: setup-AppArmor
-        name: Setup AppArmor
-        run: |-
-          apt-get install -y libapparmor-dev apparmor-utils
-          cp setup/docker-pipeline /etc/apparmor.d/docker-pipeline
-          /etc/init.d/apparmor restart
-          apparmor_parser -r -W /etc/apparmor.d/docker-pipeline
-
       - id: codecov
         name: Generate codecov report
         run: |-
           docker run \
-            --security-opt "apparmor=docker-pipeline" \
             --entrypoint /bin/bash \
             -v $(pwd)/covr:/covr $IMAGE_NAME \
             -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
+
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
 
