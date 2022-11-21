@@ -201,8 +201,8 @@ run_seuratv4 <- function(scdata, config, npcs) {
 
   nfeatures <- settings$numGenes
 
-  # normalization <- "SCT" # TO REMOVE WHEN THE BUTTON IS IMPLEMENTED IN THE UI
-  normalization <- settings$normalisation
+  normalization <- "SCT" # TO REMOVE WHEN THE BUTTON IS IMPLEMENTED IN THE UI
+  # normalization <- settings$normalisation
 
   # get reduction method to find integration anchors
   reduction <- config$dimensionalityReduction$method
@@ -265,7 +265,13 @@ run_seuratv4 <- function(scdata, config, npcs) {
   # seurat v4 requires to call the normalize_data function before (on single objects)
   # and after integration (on the integrated object)
   if (normalization == "LogNormalize") {
-    scdata <- normalize_data(scdata, normalization, "seuratv4", nfeatures)
+    scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
+  }
+  # running LogNormalization on SCTransformed data for downstream analyses
+  if (normalization == "SCT") {
+    Seurat::DefaultAssay(scdata) <- "RNA"
+    scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
+    Seurat::DefaultAssay(scdata) <- "integrated"
   }
   scdata@misc <- misc
   scdata <- add_dispersions(scdata, normalization)
