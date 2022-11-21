@@ -104,7 +104,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   scdata@misc$gene_annotations <- gene_annotations
 
 
-  # add dimensionality reduction
+  # add default dimensionality reduction
   tryCatch({
     red_name <- SeuratObject::DefaultDimReduc(user_scdata)
     check_type_is_safe(red_name)
@@ -115,6 +115,21 @@ reconstruct_seurat <- function(dataset_fpath) {
       assay = 'RNA'
     )
     scdata@reductions[[red_name]] <- red
+  },
+  error = function(e) {
+    message(e$message)
+    stop('ERROR_SEURAT_REDUCTION', call. = FALSE)
+  })
+
+  # add pca dimensionality reduction
+  tryCatch({
+    pca <- user_scdata@reductions[['pca']]@cell.embeddings
+    test_user_df(pca)
+    red <- SeuratObject::CreateDimReducObject(
+      embeddings = pca,
+      assay = 'RNA'
+    )
+    scdata@reductions[['pca']] <- red
   },
   error = function(e) {
     message(e$message)
