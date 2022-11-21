@@ -286,7 +286,7 @@ jobs:
             select(di == 1).spec.values.r.memoryRequest = strenv(MEMORY_REQUEST) |
             select(di == 1).spec.values.serviceAccount.iamRole = "worker-role-" + strenv(KUBERNETES_ENV) |
             select(di == 1).spec.values.datadogTags = "kube_namespace:" + strenv(DEPLOYMENT_NAME) + "-" + strenv(SANDBOX_ID) |
-            select(di == 1).metadata.annotations["filter.fluxcd.io/pipelineRunner"] = "glob:" + strenv(IMAGE_GLOB) + "-pipeline-runner" |
+            select(di == 1).metadata.annotations["filter.fluxcd.io/pipelineRunner"] = "glob:" + strenv(IMAGE_GLOB) + "-pipeline-runner"
           ' .flux.yaml > $DEPLOYMENT_NAME.yaml
 
           cat $DEPLOYMENT_NAME.yaml
