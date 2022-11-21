@@ -236,15 +236,11 @@ run_seuratv4 <- function(scdata, config, npcs) {
       if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
       if (reduction == "cca") message("Finding integration anchors using CCA reduction")
       if (normalization == "SCT") {
-        data.anchors <- run_sct_workflow(data.split, reduction, normalization, k.filter, npcs)
+        data.anchors <- run_sct_int_workflow(data.split, reduction, normalization, k.filter, npcs)
       }
-      data.anchors <- Seurat::FindIntegrationAnchors(
-        object.list = data.split,
-        dims = 1:npcs,
-        k.filter = k.filter,
-        verbose = TRUE,
-        reduction = reduction
-      )
+      if (normalization == "LogNormalize") {
+        data.anchors <- run_lognorm_int_workflow(data.split, reduction, normalization, k.filter, npcs)
+      }
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
       Seurat::DefaultAssay(scdata) <- "integrated"
     },
@@ -283,6 +279,34 @@ run_seuratv4 <- function(scdata, config, npcs) {
   return(scdata)
 }
 
+
+#' Find integration anchors after LogNormalize
+#'
+#' This function finds the integration anchors for a list of Seurat objects
+#' that has been normalized with the log-normalization method.
+#'
+#' @param data.split list of Seurat objects
+#' @param reduction reduction method
+#' @param normalization normalization method
+#' @param k.filter number of neighbors (k) to use when filtering anchors
+#' @param npcs number of PCs
+#'
+#' @return data.anchors to use for integration
+#' @export
+#'
+run_lognorm_int_workflow <- function(data.split, reduction, normalization, k.filter, npcs) {
+  data.anchors <- Seurat::FindIntegrationAnchors(
+    object.list = data.split,
+    dims = 1:npcs,
+    k.filter = k.filter,
+    normalization.method = normalization,
+    verbose = TRUE,
+    reduction = reduction
+  )
+  return(data.anchors)
+}
+
+
 #' Prepare for integration after SCTransform
 #'
 #' This function runs the steps required to prepare the list of Seurat object normalized with
@@ -296,11 +320,12 @@ run_seuratv4 <- function(scdata, config, npcs) {
 #' @param reduction reduction method
 #' @param normalization normalization method
 #' @param k.filter number of neighbors (k) to use when filtering anchors
+#' @param npcs number of PCs
 #'
 #' @return data.anchors to use for integration
 #' @export
 #'
-run_sct_workflow <- function(data.split, reduction, normalization, k.filter, npcs) {
+run_sct_int_workflow <- function(data.split, reduction, normalization, k.filter, npcs) {
   features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
   data.split <- Seurat::PrepSCTIntegration(
     object.list = data.split, assay = "SCT",
