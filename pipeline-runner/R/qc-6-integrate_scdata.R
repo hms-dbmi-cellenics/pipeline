@@ -274,6 +274,20 @@ run_seuratv4 <- function(scdata, config, npcs) {
 }
 
 
+#' Find integration anchors after LogNormalize
+#'
+#' This function finds the integration anchors for a list of Seurat objects
+#' that has been normalized with the log-normalization method.
+#'
+#' @param data.split list of Seurat objects
+#' @param reduction reduction method
+#' @param normalization normalization method
+#' @param k.filter number of neighbors (k) to use when filtering anchors
+#' @param npcs number of PCs
+#'
+#' @return data.anchors to use for integration
+#' @export
+#'
 run_lognorm_int_workflow <- function(data.split, reduction, normalization, k.filter, npcs) {
   data.anchors <- Seurat::FindIntegrationAnchors(
     object.list = data.split,
@@ -300,6 +314,7 @@ run_lognorm_int_workflow <- function(data.split, reduction, normalization, k.fil
 #' @param reduction reduction method
 #' @param normalization normalization method
 #' @param k.filter number of neighbors (k) to use when filtering anchors
+#' @param npcs number of PCs
 #'
 #' @return data.anchors to use for integration
 #' @export
