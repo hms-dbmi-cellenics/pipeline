@@ -284,7 +284,7 @@ jobs:
             select(di == 1).spec.values.pipelineRunner.image = strenv(IMAGE_NAME) + "-pipeline-runner" |
             select(di == 1).spec.values.sandboxId = strenv(SANDBOX_ID) |
             select(di == 1).spec.values.memoryRequest = strenv(MEMORY_REQUEST) |
-            select(di == 1).spec.values.replicaCount = strenv(REPLICA_COUNT) |
+            select(di == 1).spec.values.replicaCount = env(REPLICA_COUNT) |
             select(di == 1).spec.values.serviceAccount.iamRole = "pipeline-role-" + strenv(KUBERNETES_ENV) |
             select(di == 1).spec.values.datadogTags = "kube_namespace:" + strenv(DEPLOYMENT_NAME) + "-" + strenv(SANDBOX_ID) |
             select(di == 1).metadata.annotations["filter.fluxcd.io/pipelineRunner"] = "glob:" + strenv(IMAGE_GLOB) + "-pipeline-runner"
