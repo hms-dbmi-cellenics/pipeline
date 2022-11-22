@@ -233,67 +233,62 @@ jobs:
         name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - id: install-yq
-        name: Install yq for modifying the deployment spec.
-        run: |-
-          sudo wget https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 -O /usr/local/bin/yq && sudo chmod +x /usr/local/bin/yq
-
       - id: fill-metadata
         name: Fill out a new HelmRelease resource
         run: |-
-          DEPLOYMENT_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
+          export DEPLOYMENT_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
           echo "::set-output name=deployment-name::$DEPLOYMENT_NAME"
 
           # Deployment config for `production-default`
           if [ "${{ matrix.environment }}" = "production" ]; then
-            SANDBOX_ID="default"
-            CHART_REF="$GITHUB_SHA"
-            KUBERNETES_ENV="production"
-            REPLICA_COUNT="3"
-            VERSION_NUMBER=${REF_ID/refs-tags-/}
-            IMAGE_GLOB="${REF_ID/$VERSION_NUMBER/*}"
-            MEMORY_REQUEST="29Gi"
+            export SANDBOX_ID="default"
+            export CHART_REF="$GITHUB_SHA"
+            export KUBERNETES_ENV="production"
+            export REPLICA_COUNT="3"
+            export VERSION_NUMBER=${REF_ID/refs-tags-/}
+            export IMAGE_GLOB="${REF_ID/$VERSION_NUMBER/*}"
+            export MEMORY_REQUEST="29Gi"
           fi
 
           # Deployment config for `staging-default`
           if [ "${{ matrix.environment }}" = "develop" ]; then
-            SANDBOX_ID="default"
-            CHART_REF="$GITHUB_SHA"
-            KUBERNETES_ENV="staging"
-            REPLICA_COUNT="0"
-            IMAGE_GLOB="$REF_ID-*"
-            MEMORY_REQUEST="29Gi"
+            export SANDBOX_ID="default"
+            export CHART_REF="$GITHUB_SHA"
+            export KUBERNETES_ENV="staging"
+            export REPLICA_COUNT="0"
+            export IMAGE_GLOB="$REF_ID-*"
+            export MEMORY_REQUEST="29Gi"
           fi
 
           # Deployment config for other staging env i.e. non `default`
           if [ "${{ matrix.environment }}" = "staging" ]; then
-            SANDBOX_ID="STAGING_SANDBOX_ID"
-            CHART_REF="STAGING_CHART_REF"
-            KUBERNETES_ENV="staging"
-            REPLICA_COUNT="0"
-            IMAGE_GLOB="$REF_ID-*"
-            MEMORY_REQUEST="4Gi"
+            export SANDBOX_ID="STAGING_SANDBOX_ID"
+            export CHART_REF="STAGING_CHART_REF"
+            export KUBERNETES_ENV="staging"
+            export REPLICA_COUNT="0"
+            export IMAGE_GLOB="$REF_ID-*"
+            export MEMORY_REQUEST="4Gi"
           fi
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
           echo "::set-output name=kubernetes-env::$KUBERNETES_ENV"
 
-          yq w -d1 .flux.yaml metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
-          | yq w -d0 - metadata.name "$DEPLOYMENT_NAME-$SANDBOX_ID" \
-          | yq w -d1 - metadata.name "$DEPLOYMENT_NAME" \
-          | yq w -d0 - metadata.labels.sandboxId "$SANDBOX_ID" \
-          | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
-          | yq w -d1 - spec.chart.ref "$CHART_REF" \
-          | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
-          | yq w -d1 - spec.values.clusterEnv "$KUBERNETES_ENV" \
-          | yq w -d1 - spec.values.pipelineRunner.image "$IMAGE_NAME-pipeline-runner" \
-          | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
-          | yq w -d1 - spec.values.memoryRequest "$MEMORY_REQUEST" \
-          | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \
-          | yq w -d1 - spec.values.serviceAccount.iamRole "pipeline-role-$KUBERNETES_ENV" \
-          | yq w -d1 - spec.values.datadogTags "kube_namespace:$DEPLOYMENT_NAME-$SANDBOX_ID" \
-          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/pipelineRunner]" "glob:$IMAGE_GLOB-pipeline-runner" \
-          > $DEPLOYMENT_NAME.yaml
+          yq 'select(di == 0).metadata.name = strenv(DEPLOYMENT_NAME) + "-" + strenv(SANDBOX_ID) |
+            select(di == 0).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
+            select(di == 1).metadata.name = strenv(DEPLOYMENT_NAME) |
+            select(di == 1).metadata.namespace = strenv(DEPLOYMENT_NAME) + "-" + strenv(SANDBOX_ID) |
+            select(di == 1).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
+            select(di == 1).spec.chart.ref = strenv(CHART_REF) |
+            select(di == 1).spec.releaseName = strenv(DEPLOYMENT_NAME) |
+            select(di == 1).spec.values.clusterEnv = strenv(KUBERNETES_ENV) |
+            select(di == 1).spec.values.pipelineRunner.image = strenv(IMAGE_NAME) + "-pipeline-runner" |
+            select(di == 1).spec.values.sandboxId = strenv(SANDBOX_ID) |
+            select(di == 1).spec.values.memoryRequest = strenv(MEMORY_REQUEST) |
+            select(di == 1).spec.values.replicaCount = env(REPLICA_COUNT) |
+            select(di == 1).spec.values.serviceAccount.iamRole = "pipeline-role-" + strenv(KUBERNETES_ENV) |
+            select(di == 1).spec.values.datadogTags = "kube_namespace:" + strenv(DEPLOYMENT_NAME) + "-" + strenv(SANDBOX_ID) |
+            select(di == 1).metadata.annotations["filter.fluxcd.io/pipelineRunner"] = "glob:" + strenv(IMAGE_GLOB) + "-pipeline-runner"
+          ' .flux.yaml > $DEPLOYMENT_NAME.yaml
 
           cat $DEPLOYMENT_NAME.yaml
         env:
