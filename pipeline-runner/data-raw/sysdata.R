@@ -35,6 +35,17 @@ SYM_SYM <- "sym_sym"
 IDS_SYM <- "ids_sym"
 IDS_IDS <- "ids_ids"
 
+# pipeline error constants
+errors <- list(
+  ERROR_SEURAT_RDS = 'ERROR_SEURAT_RDS',
+  ERROR_SEURAT_COUNTS = 'ERROR_SEURAT_COUNTS',
+  ERROR_SEURAT_HVFINFO = 'ERROR_SEURAT_HVFINFO',
+  ERROR_SEURAT_METADATA = 'ERROR_SEURAT_METADATA',
+  ERROR_SEURAT_CLUSTERS = 'ERROR_SEURAT_CLUSTERS',
+  ERROR_SEURAT_REDUCTION = 'ERROR_SEURAT_REDUCTION',
+  ERROR_SEURAT_LOGCOUNTS = 'ERROR_SEURAT_LOGCOUNTS'
+)
+
 
 usethis::use_data(
   gem2s,
@@ -46,6 +57,7 @@ usethis::use_data(
   IDS_SYM,
   IDS_IDS,
   cc_genes,
+  errors,
   internal = TRUE,
   overwrite = TRUE
 )

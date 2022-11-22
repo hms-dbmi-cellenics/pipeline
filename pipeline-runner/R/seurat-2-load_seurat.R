@@ -48,7 +48,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop("ERROR_SEURAT_RDS", call. = FALSE)
+    stop(errors$ERROR_SEURAT_RDS, call. = FALSE)
   })
 
 
@@ -61,7 +61,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop('ERROR_SEURAT_COUNTS', call. = FALSE)
+    stop(errors$ERROR_SEURAT_COUNTS, call. = FALSE)
   })
 
   gene_annotations <- data.frame(input = rns, name = rns, original_name = rns, row.names = rns)
@@ -75,7 +75,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop('ERROR_SEURAT_HVFINFO', call. = FALSE)
+    stop(errors$ERROR_SEURAT_HVFINFO, call. = FALSE)
   })
 
   # get meta data
@@ -85,12 +85,12 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop('ERROR_SEURAT_METADATA', call. = FALSE)
+    stop(errors$ERROR_SEURAT_METADATA, call. = FALSE)
   })
 
   # check for clusters
   if (!'seurat_clusters' %in% colnames(metadata))
-    stop('ERROR_SEURAT_CLUSTERS', call. = FALSE)
+    stop(errors$ERROR_SEURAT_CLUSTERS, call. = FALSE)
 
 
   # reconstruct seurat object
@@ -118,7 +118,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop('ERROR_SEURAT_REDUCTION', call. = FALSE)
+    stop(errors$ERROR_SEURAT_REDUCTION, call. = FALSE)
   })
 
   # add pca dimensionality reduction
@@ -133,7 +133,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop('ERROR_SEURAT_REDUCTION', call. = FALSE)
+    stop(errors$ERROR_SEURAT_REDUCTION, call. = FALSE)
   })
 
   # add logcounts
@@ -144,7 +144,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop('ERROR_SEURAT_LOGCOUNTS', call. = FALSE)
+    stop(errors$ERROR_SEURAT_LOGCOUNTS, call. = FALSE)
   })
 
   return(scdata)

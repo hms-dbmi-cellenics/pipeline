@@ -373,6 +373,13 @@ wrapper <- function(input, pipeline_config) {
     return(message_id)
 }
 
+get_user_error <- function(msg) {
+  # check if error is a defined code with a corresponding message in the UI
+  if (msg %in% errors) return(msg)
+
+  return("We had an issue while processing your data.")
+}
+
 #
 # Init()
 # Loads configuration and repeats the wrapper call until no more messages are received.
@@ -445,7 +452,7 @@ init <- function() {
                 message(error_txt)
                 states$send_task_failure(
                     taskToken = task_token,
-                    error = "We had an issue while processing your data.",
+                    error = get_user_error(e$message),
                     cause = error_txt
                 )
 
