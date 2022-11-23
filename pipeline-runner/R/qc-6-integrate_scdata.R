@@ -201,7 +201,6 @@ run_seuratv4 <- function(scdata, config, npcs) {
 
   nfeatures <- settings$numGenes
 
-  # normalization <- "SCT" # TO REMOVE WHEN THE BUTTON IS IMPLEMENTED IN THE UI
   normalization <- settings$normalisation
 
   # get reduction method to find integration anchors
@@ -236,10 +235,17 @@ run_seuratv4 <- function(scdata, config, npcs) {
       if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
       if (reduction == "cca") message("Finding integration anchors using CCA reduction")
       if (normalization == "SCT") {
-        data.anchors <- run_sct_int_workflow(data.split, reduction, normalization, k.filter, npcs)
+        data.anchors <- prepare_sct_integration(data.split, reduction, normalization, k.filter, npcs)
       }
       if (normalization == "LogNormalize") {
-        data.anchors <- run_lognorm_int_workflow(data.split, reduction, normalization, k.filter, npcs)
+        data.anchors <- Seurat::FindIntegrationAnchors(
+          object.list = data.split,
+          dims = 1:npcs,
+          k.filter = k.filter,
+          normalization.method = normalization,
+          verbose = TRUE,
+          reduction = reduction
+        )
       }
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
       Seurat::DefaultAssay(scdata) <- "integrated"
@@ -280,33 +286,6 @@ run_seuratv4 <- function(scdata, config, npcs) {
 }
 
 
-#' Find integration anchors after LogNormalize
-#'
-#' This function finds the integration anchors for a list of Seurat objects
-#' that has been normalized with the log-normalization method.
-#'
-#' @param data.split list of Seurat objects
-#' @param reduction reduction method
-#' @param normalization normalization method
-#' @param k.filter number of neighbors (k) to use when filtering anchors
-#' @param npcs number of PCs
-#'
-#' @return data.anchors to use for integration
-#' @export
-#'
-run_lognorm_int_workflow <- function(data.split, reduction, normalization, k.filter, npcs) {
-  data.anchors <- Seurat::FindIntegrationAnchors(
-    object.list = data.split,
-    dims = 1:npcs,
-    k.filter = k.filter,
-    normalization.method = normalization,
-    verbose = TRUE,
-    reduction = reduction
-  )
-  return(data.anchors)
-}
-
-
 #' Prepare for integration after SCTransform
 #'
 #' This function runs the steps required to prepare the list of Seurat object normalized with
@@ -325,7 +304,7 @@ run_lognorm_int_workflow <- function(data.split, reduction, normalization, k.fil
 #' @return data.anchors to use for integration
 #' @export
 #'
-run_sct_int_workflow <- function(data.split, reduction, normalization, k.filter, npcs) {
+prepare_sct_integration <- function(data.split, reduction, normalization, k.filter, npcs) {
   features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
   data.split <- Seurat::PrepSCTIntegration(
     object.list = data.split, assay = "SCT",
@@ -616,7 +595,10 @@ normalize_data <- function(scdata, normalization_method, integration_method, nfe
   }
 
   if (normalization_method == "SCT") {
-    scdata <- sctransform_normalization(scdata)
+    message("Started normalization using SCTransform")
+    # conserve.memory parameter reduces the memory footprint but can significantly increase runtime
+    scdata <- Seurat::SCTransform(scdata, vst.flavor = "v2", conserve.memory = FALSE)
+    message("Finished normalization using SCTransform")
   }
   return(scdata)
 }
@@ -645,29 +627,6 @@ log_normalize <- function(scdata, normalization_method, integration_method, nfea
   if (integration_method != "fastmnn") {
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   }
-  return(scdata)
-}
-
-
-#' Perform normalization with SCTransform
-#'
-#' This function exploit the Seurat::SCTransform function.
-#' For further details see the \code{\link[Seurat:SCTransform]{Seurat::SCTransform()}}
-#' documentation.
-#'
-#' @param scdata Seurat object
-#'
-#' @return Seurat object normalized using SCTransform
-#' @export
-#'
-sctransform_normalization <- function(scdata) {
-  message("Started normalization using SCTransform")
-  # The conserve.memory parameter in Seurat::SCTransform if set to TRUE reduces the
-  # memory foot print by preventing creation of entire residual matrix but
-  # can lead to increased run time
-  scdata <- Seurat::SCTransform(scdata, vst.flavor = "v2", conserve.memory = FALSE)
-  message("Finished normalization using SCTransform")
-
   return(scdata)
 }
 
