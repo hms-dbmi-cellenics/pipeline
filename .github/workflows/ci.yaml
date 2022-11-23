@@ -284,7 +284,7 @@ jobs:
             select(di == 2).metadata.name = strenv(DEPLOYMENT_NAME) |
             select(di == 2).metadata.namespace = strenv(NAMESPACE) |
             select(di == 2).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
-            select(di == 2).spec.releaseName = strenv($DEPLOYMENT_NAME) |
+            select(di == 2).spec.releaseName = strenv(DEPLOYMENT_NAME) |
             select(di == 2).spec.chart.spec.sourceRef.name = strenv(DEPLOYMENT_NAME) |
             select(di == 2).spec.chart.spec.sourceRef.namespace = strenv(NAMESPACE) |
             select(di == 2).spec.values.clusterEnv = strenv(KUBERNETES_ENV) |
