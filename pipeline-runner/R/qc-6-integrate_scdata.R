@@ -201,8 +201,8 @@ run_seuratv4 <- function(scdata, config, npcs) {
 
   nfeatures <- settings$numGenes
 
-  normalization <- "SCT" # TO REMOVE WHEN THE BUTTON IS IMPLEMENTED IN THE UI
-  # normalization <- settings$normalisation
+  # normalization <- "SCT" # TO REMOVE WHEN THE BUTTON IS IMPLEMENTED IN THE UI
+  normalization <- settings$normalisation
 
   # get reduction method to find integration anchors
   reduction <- config$dimensionalityReduction$method
