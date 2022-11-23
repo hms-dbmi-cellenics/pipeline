@@ -246,7 +246,11 @@ jobs:
             export KUBERNETES_ENV="production"
             export REPLICA_COUNT="3"
             export VERSION_NUMBER=${REF_ID/refs-tags-/}
-            export IMAGE_GLOB="${REF_ID/$VERSION_NUMBER/*}"
+            export IMAGE_PATTERN="^(?P<version>[0-9]+\.[0-9]+\.[0-9])+$"
+            export IMAGE_EXTRACT='$version'
+            export IMAGE_POLICY_TYPE="semver"
+            export IMAGE_POLICY_KEY="range"
+            export IMAGE_POLICY_VALUE=">=0.0.0"
             export MEMORY_REQUEST="29Gi"
           fi
 
@@ -256,7 +260,11 @@ jobs:
             export CHART_REF="$GITHUB_SHA"
             export KUBERNETES_ENV="staging"
             export REPLICA_COUNT="0"
-            export IMAGE_GLOB="$REF_ID-*"
+            export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)$"
+            export IMAGE_EXTRACT='$timestamp'
+            export IMAGE_POLICY_TYPE="numerical"
+            export IMAGE_POLICY_KEY="order"
+            export IMAGE_POLICY_VALUE="asc"
             export MEMORY_REQUEST="29Gi"
           fi
 
@@ -266,7 +274,11 @@ jobs:
             export CHART_REF="FILLED_IN_BY_BIOMAGE_STAGE"
             export KUBERNETES_ENV="staging"
             export REPLICA_COUNT="0"
-            export IMAGE_GLOB="$REF_ID-*"
+            export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)$"
+            export IMAGE_EXTRACT='$timestamp'
+            export IMAGE_POLICY_TYPE="numerical"
+            export IMAGE_POLICY_KEY="order"
+            export IMAGE_POLICY_VALUE="asc"
             export MEMORY_REQUEST="4Gi"
           fi
 
@@ -274,6 +286,7 @@ jobs:
           echo "::set-output name=kubernetes-env::$KUBERNETES_ENV"
 
           export NAMESPACE="$DEPLOYMENT_NAME-$SANDBOX_ID"
+          export IMAGE_POLICY_TAG="{\"\$imagepolicy\": \"$NAMESPACE:$DEPLOYMENT_NAME:tag\"}"
 
           yq '
             select(di == 0).metadata.name = strenv(NAMESPACE) |
@@ -283,18 +296,28 @@ jobs:
             select(di == 1).spec.ref.branch = strenv(CHART_REF) |
             select(di == 2).metadata.name = strenv(DEPLOYMENT_NAME) |
             select(di == 2).metadata.namespace = strenv(NAMESPACE) |
-            select(di == 2).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
-            select(di == 2).spec.releaseName = strenv(DEPLOYMENT_NAME) |
-            select(di == 2).spec.chart.spec.sourceRef.name = strenv(DEPLOYMENT_NAME) |
-            select(di == 2).spec.chart.spec.sourceRef.namespace = strenv(NAMESPACE) |
-            select(di == 2).spec.values.clusterEnv = strenv(KUBERNETES_ENV) |
-            select(di == 2).spec.values.pipelineRunner.image = strenv(IMAGE_NAME) + "-pipeline-runner" |
-            select(di == 2).spec.values.sandboxId = strenv(SANDBOX_ID) |
-            select(di == 2).spec.values.memoryRequest = strenv(MEMORY_REQUEST) |
-            select(di == 2).spec.values.replicaCount = env(REPLICA_COUNT) |
-            select(di == 2).spec.values.serviceAccount.iamRole = "pipeline-role-" + strenv(KUBERNETES_ENV) |
-            select(di == 2).spec.values.datadogTags = "kube_namespace:" + strenv(NAMESPACE) |
-            select(di == 2).metadata.annotations["filter.fluxcd.io/pipelineRunner"] = "glob:" + strenv(IMAGE_GLOB) + "-pipeline-runner"
+            select(di == 2).spec.image = strenv(REGISTRY) + "/" + strenv(DEPLOYMENT_NAME) |
+            select(di == 3).metadata.name = strenv(DEPLOYMENT_NAME) |
+            select(di == 3).metadata.namespace = strenv(NAMESPACE) |
+            select(di == 3).spec.imageRepositoryRef.name = strenv(DEPLOYMENT_NAME) |
+            select(di == 3).spec.filterTags.pattern = strenv(IMAGE_PATTERN) |
+            select(di == 3).spec.filterTags.extract = strenv(IMAGE_EXTRACT) |
+            select(di == 3).spec.policy.[strenv(IMAGE_POLICY_TYPE)].[strenv(IMAGE_POLICY_KEY)] = strenv(IMAGE_POLICY_VALUE) |
+            select(di == 4).metadata.name = strenv(DEPLOYMENT_NAME) + "-image-update" |
+            select(di == 4).metadata.namespace = strenv(NAMESPACE) |
+            select(di == 5).metadata.name = strenv(DEPLOYMENT_NAME) |
+            select(di == 5).metadata.namespace = strenv(NAMESPACE) |
+            select(di == 5).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
+            select(di == 5).spec.releaseName = strenv(DEPLOYMENT_NAME) |
+            select(di == 5).spec.chart.spec.sourceRef.name = strenv(DEPLOYMENT_NAME) |
+            select(di == 5).spec.chart.spec.sourceRef.namespace = strenv(NAMESPACE) |
+            select(di == 5).spec.values.clusterEnv = strenv(KUBERNETES_ENV) |
+            select(di == 5).spec.values.pipelineRunner.image = strenv(IMAGE_NAME) + "-pipeline-runner" |
+            select(di == 5).spec.values.sandboxId = strenv(SANDBOX_ID) |
+            select(di == 5).spec.values.memoryRequest = strenv(MEMORY_REQUEST) |
+            select(di == 5).spec.values.replicaCount = env(REPLICA_COUNT) |
+            select(di == 5).spec.values.serviceAccount.iamRole = "pipeline-role-" + strenv(KUBERNETES_ENV) |
+            select(di == 5).spec.values.datadogTags = "kube_namespace:" + strenv(NAMESPACE)
           ' .flux.yaml > $DEPLOYMENT_NAME.yaml
 
           cat $DEPLOYMENT_NAME.yaml
