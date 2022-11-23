@@ -260,7 +260,7 @@ jobs:
             export CHART_REF="$GITHUB_SHA"
             export KUBERNETES_ENV="staging"
             export REPLICA_COUNT="0"
-            export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)$"
+            export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)"
             export IMAGE_EXTRACT='$timestamp'
             export IMAGE_POLICY_TYPE="numerical"
             export IMAGE_POLICY_KEY="order"
@@ -274,7 +274,7 @@ jobs:
             export CHART_REF="FILLED_IN_BY_BIOMAGE_STAGE"
             export KUBERNETES_ENV="staging"
             export REPLICA_COUNT="0"
-            export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)$"
+            export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)"
             export IMAGE_EXTRACT='$timestamp'
             export IMAGE_POLICY_TYPE="numerical"
             export IMAGE_POLICY_KEY="order"
