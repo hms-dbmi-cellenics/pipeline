@@ -12,7 +12,9 @@ metadata:
   namespace: FILLED_IN_BY_CI
 spec:
   interval: 5m0s
-  url: https://github.com/biomage-org/pipeline
+  url: https://github.com/biomage-org/worker
+  ref:
+    branch: "master"
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease

@@ -242,7 +242,6 @@ jobs:
           # Deployment config for `production-default`
           if [ "${{ matrix.environment }}" = "production" ]; then
             export SANDBOX_ID="default"
-            export CHART_REF="$GITHUB_SHA"
             export KUBERNETES_ENV="production"
             export REPLICA_COUNT="3"
             export VERSION_NUMBER=${REF_ID/refs-tags-/}
@@ -253,7 +252,6 @@ jobs:
           # Deployment config for `staging-default`
           if [ "${{ matrix.environment }}" = "develop" ]; then
             export SANDBOX_ID="default"
-            export CHART_REF="$GITHUB_SHA"
             export KUBERNETES_ENV="staging"
             export REPLICA_COUNT="0"
             export IMAGE_GLOB="$REF_ID-*"
@@ -263,7 +261,6 @@ jobs:
           # Deployment config for other staging env i.e. non `default`
           if [ "${{ matrix.environment }}" = "staging" ]; then
             export SANDBOX_ID="STAGING_SANDBOX_ID"
-            export CHART_REF="STAGING_CHART_REF"
             export KUBERNETES_ENV="staging"
             export REPLICA_COUNT="0"
             export IMAGE_GLOB="$REF_ID-*"
@@ -280,7 +277,6 @@ jobs:
             select(di == 0).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
             select(di == 1).metadata.name = strenv(DEPLOYMENT_NAME) |
             select(di == 1).metadata.namespace = strenv(NAMESPACE) |
-            select(di == 1).spec.ref.branch = strenv(CHART_REF) |
             select(di == 2).metadata.name = strenv(DEPLOYMENT_NAME) |
             select(di == 2).metadata.namespace = strenv(NAMESPACE) |
             select(di == 2).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
