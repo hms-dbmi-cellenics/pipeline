@@ -313,7 +313,7 @@ jobs:
             select(di == 5).spec.chart.spec.sourceRef.namespace = strenv(NAMESPACE) |
             select(di == 5).spec.values.clusterEnv = strenv(KUBERNETES_ENV) |
             select(di == 5).spec.values.pipelineRunner.image = strenv(IMAGE_NAME) + "-pipeline-runner" |
-            select(di == 6).spec.values.pipelineRunner.image line_comment = strenv(IMAGE_POLICY_TAG) |
+            select(di == 5).spec.values.pipelineRunner.image line_comment = strenv(IMAGE_POLICY_TAG) |
             select(di == 5).spec.values.sandboxId = strenv(SANDBOX_ID) |
             select(di == 5).spec.values.memoryRequest = strenv(MEMORY_REQUEST) |
             select(di == 5).spec.values.replicaCount = env(REPLICA_COUNT) |
