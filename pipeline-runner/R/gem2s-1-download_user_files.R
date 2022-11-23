@@ -1,3 +1,5 @@
+### TEST IMAGE CHANGE - REMOVE BEFORE MERGING
+
 # Download the file and stores the output in a file
 download_and_store <- function(bucket, key, file_path, s3) {
   fs::dir_create(dirname(file_path))
