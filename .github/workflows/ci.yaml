@@ -60,9 +60,6 @@ jobs:
       image-tag: ${{ steps.ref.outputs.image-tag }}
       ref-id: ${{ steps.ref.outputs.ref-id }}
       timestamp: ${{ steps.ref.outputs.timestamp }}
-    defaults:
-      run:
-        working-directory: ${{ matrix.project }}
     steps:
       - id: checkout
         name: Check out source code
@@ -262,7 +259,7 @@ jobs:
             export SANDBOX_ID="default"
             export CHART_REF="$GITHUB_SHA"
             export KUBERNETES_ENV="production"
-            export IMAGE_NAME=$IMAGE_TAG
+            export IMAGE_NAME=$IMAGE_TAG-pipeline-runner
             export REPLICA_COUNT="3"
             export VERSION_NUMBER=${REF_ID/refs-tags-/}
             export IMAGE_PATTERN="^refs-tags-(?P<version>[0-9]+\.[0-9]+\.[0-9]+)-pipeline-runner"
@@ -278,7 +275,7 @@ jobs:
             export SANDBOX_ID="default"
             export CHART_REF="$GITHUB_SHA"
             export KUBERNETES_ENV="staging"
-            export IMAGE_NAME="$IMAGE_TAG-$TIMESTAMP"
+            export IMAGE_NAME="$IMAGE_TAG-pipeline-runner-$TIMESTAMP"
             export REPLICA_COUNT="0"
             export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-pipeline-runner-(?P<timestamp>[0-9]+)"
             export IMAGE_EXTRACT='$timestamp'
@@ -293,7 +290,7 @@ jobs:
             export SANDBOX_ID="STAGING_SANDBOX_ID"
             export CHART_REF="FILLED_IN_BY_BIOMAGE_STAGE"
             export KUBERNETES_ENV="staging"
-            export IMAGE_NAME="$IMAGE_TAG-$TIMESTAMP"
+            export IMAGE_NAME="$IMAGE_TAG-pipeline-runner-$TIMESTAMP"
             export REPLICA_COUNT="0"
             export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-pipeline-runner-(?P<timestamp>[0-9]+)"
             export IMAGE_EXTRACT='$timestamp'
@@ -346,7 +343,7 @@ jobs:
 
           cat $DEPLOYMENT_NAME.yaml
         env:
-          IMAGE_TAG: ${{ format('{0}-{1}', needs.build-docker.outputs.image-tag, matrix.project) }}
+          IMAGE_TAG: ${{ needs.build-docker.outputs.image-tag }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ needs.build-docker.outputs.repo-name  }}
