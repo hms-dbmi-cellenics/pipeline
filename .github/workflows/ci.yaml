@@ -346,7 +346,7 @@ jobs:
 
           cat $DEPLOYMENT_NAME.yaml
         env:
-          IMAGE_TAG: ${{ needs.build-docker.outputs.image-tag, matrix.project) }}
+          IMAGE_TAG: ${{ format('{0}-{1}', needs.build-docker.outputs.image-tag, matrix.project) }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ needs.build-docker.outputs.repo-name  }}
