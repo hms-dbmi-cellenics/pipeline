@@ -106,9 +106,8 @@ jobs:
           # But we can not easily create the image tag for production releases, so we're bulding it here
           echo "::set-output name=image-tag::$IMAGE_TAG"
 
-          # TIMESTAMP is used to prefix images in the push docker images to ECR step.
-          # We DO NOT want builder and release images to be stamped with timestamp as it will make it
-          # impossible to find without queries to ECR. We only want to timestamp images for PRs and staging images.
+          # TIMESTAMP is used to postfix images in the "push docker images to ECR" step.
+          # We want to add timestamp tags for PR and staging images.
           echo "::set-output name=timestamp::$TIMESTAMP"
 
           # This will take a GitHub repo name like `biomage-org/releases`
@@ -215,15 +214,14 @@ jobs:
           docker push $IMAGE_NAME-builder
 
           echo Pushing image $IMAGE_NAME to ECR.
+          docker push $IMAGE_NAME
 
-          if[ -z "$TIMESTAMP" ]; then
-            OUTPUT_TAG="$IMAGE_NAME"
-          elif
-            OUTPUT_TAG="$IMAGE_NAME-$TIMESTAMP"
+          if[ ! -z "$TIMESTAMP" ]; then
+            echo Pushing timestamped $IMAGE_NAME to ECR
+
+            docker tag $IMAGE_NAME $IMAGE_NAME-$TIMESTAMP
+            docker push $IMAGE_NAME $IMAGE_NAME-$TIMESTAMP
           fi
-
-          docker tag $IMAGE_NAME $OUTPUT_TAG
-          docker push $OUTPUT_TAG
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
           TIMESTAMP: ${{ steps.ref.output.timestamp }}
