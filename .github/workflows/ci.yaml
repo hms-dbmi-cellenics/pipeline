@@ -220,7 +220,7 @@ jobs:
             echo Pushing timestamped $IMAGE_NAME to ECR
 
             docker tag $IMAGE_NAME $IMAGE_NAME-$TIMESTAMP
-            docker push $IMAGE_NAME $IMAGE_NAME-$TIMESTAMP
+            docker push $IMAGE_NAME-$TIMESTAMP
           fi
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
