@@ -60,6 +60,9 @@ jobs:
       image-tag: ${{ steps.ref.outputs.image-tag }}
       ref-id: ${{ steps.ref.outputs.ref-id }}
       timestamp: ${{ steps.ref.outputs.timestamp }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
     steps:
       - id: checkout
         name: Check out source code
