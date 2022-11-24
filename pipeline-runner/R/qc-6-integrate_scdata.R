@@ -138,11 +138,7 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
   # get method and settings
   method <- config$dataIntegration$method
   npcs <- config$dimensionalityReduction$numPCs
-  if (is.null(npcs)) {
-    scdata <- run_pca(scdata)
-    npcs <- get_npcs(scdata)
-    message("Number of PCs: ", npcs)
-  }
+
   exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
 
 
@@ -168,6 +164,11 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
     scdata <- integration_function(scdata, config, npcs)
   } else {
     scdata <- integrate_from_sketch(scdata, scdata_sketch, integration_function, config, npcs)
+  }
+
+  if (is.null(npcs)) {
+    npcs <- get_npcs(scdata)
+    message("Number of PCs: ", npcs)
   }
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
