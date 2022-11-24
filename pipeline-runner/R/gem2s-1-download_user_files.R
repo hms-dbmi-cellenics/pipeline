@@ -1,4 +1,4 @@
-### TEST IMAGE CHANGE - REMOVE BEFORE MERGING
+#  TEST FLUX IMAGE UPDATE - REMOVE TAG BEFORE MERGING
 
 # Download the file and stores the output in a file
 download_and_store <- function(bucket, key, file_path, s3) {
