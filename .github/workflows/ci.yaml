@@ -333,8 +333,10 @@ jobs:
             select(di == 5).spec.chart.spec.sourceRef.name = strenv(DEPLOYMENT_NAME) |
             select(di == 5).spec.chart.spec.sourceRef.namespace = strenv(NAMESPACE) |
             select(di == 5).spec.values.clusterEnv = strenv(KUBERNETES_ENV) |
-            select(di == 5).spec.values.pipelineRunner.image = strenv(IMAGE_TAG) |
-            select(di == 5).spec.values.pipelineRunner.image line_comment = strenv(IMAGE_POLICY_TAG) |
+            select(di == 5).spec.values.image.registry = strenv(REGISTRY) |
+            select(di == 5).spec.values.image.repository = strenv(GITHUB_REPOSITORY) |
+            select(di == 5).spec.values.image.tag = strenv(IMAGE_TAG) |
+            select(di == 5).spec.values.image.tag line_comment = strenv(IMAGE_POLICY_TAG) |
             select(di == 5).spec.values.sandboxId = strenv(SANDBOX_ID) |
             select(di == 5).spec.values.memoryRequest = strenv(MEMORY_REQUEST) |
             select(di == 5).spec.values.replicaCount = env(REPLICA_COUNT) |
