@@ -107,7 +107,8 @@ jobs:
           echo "::set-output name=image-tag::$IMAGE_TAG"
 
           # TIMESTAMP is used to postfix images in the "push docker images to ECR" step.
-          # We want to add timestamp tags for PR and staging images.
+          # The timestamp is used by Flux to auto update images for staging environments.
+          # Images for production uses semantic versioning to determine the latest image.
           echo "::set-output name=timestamp::$TIMESTAMP"
 
           # This will take a GitHub repo name like `biomage-org/releases`
