@@ -38,6 +38,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 
 
   prev_out$scdata_list <- scdata_list
+  prev_out$subset_experiment <- FALSE
   res <- list(
     data = list(),
     output = prev_out
