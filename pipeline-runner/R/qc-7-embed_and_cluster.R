@@ -57,7 +57,8 @@ format_cell_sets_object <-
       )
     for (cluster in sort(unique(cell_sets$cluster))) {
       cells <- cell_sets[cell_sets$cluster == cluster, "cell_ids"]
-      set_name <- ifelse(is.numeric(cluster), paste("Cluster", cluster), cluster)
+      is.num <- !is.na(as.numeric(cluster))
+      set_name <- ifelse(is.num, paste("Cluster", cluster), cluster)
 
       new_set <- list(
         key = paste0(clustering_method, "-", cluster),
