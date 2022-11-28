@@ -77,7 +77,6 @@ load_config <- function(development_aws_server) {
     aws_config = list(region = aws_region),
     pod_name = Sys.getenv("K8S_POD_NAME", "local"),
     activity_arn = activity_arn,
-    api_url = paste0("http://api-", sandbox, ".api-", sandbox, ".svc.cluster.local:3000"),
     api_version = "v2",
     debug_config = list(
       step = Sys.getenv("DEBUG_STEP", ""),
@@ -85,14 +84,11 @@ load_config <- function(development_aws_server) {
     )
   )
 
-  # batch does not have access to the internal EKS cluster api URL, use the public one
-  if(running_in_batch == "true" && domain_name != "") {
-      if (config$cluster_env == "staging") {
-        config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
-      }
-      if (config$cluster_env == "production") {
-        config$api_url <- paste0("https://api.", domain_name)
-      }
+  if (config$cluster_env == "staging") {
+    config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
+  }
+  if (config$cluster_env == "production") {
+    config$api_url <- paste0("https://api.", domain_name)
   }
 
   # running in linux needs the IP of the host to work. If it is set as an
