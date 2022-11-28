@@ -42,8 +42,8 @@ test_that("load_seurat has the correct structure", {
   annot <- scdata@misc$gene_annotations
   expect_setequal(colnames(annot), c('input', 'name', 'original_name'))
 
-  # only the default reduction is present
-  expect_equal(SeuratObject::DefaultDimReduc(orig_scdata), names(scdata@reductions))
+  # only the default and 'pca' reduction is present
+  expect_equal(c(SeuratObject::DefaultDimReduc(orig_scdata), 'pca'), names(scdata@reductions))
 
   # all metadata is preserved
   expect_equal(scdata@meta.data, orig_scdata@meta.data)
