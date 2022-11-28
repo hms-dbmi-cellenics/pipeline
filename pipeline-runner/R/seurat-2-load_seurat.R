@@ -51,7 +51,6 @@ reconstruct_seurat <- function(dataset_fpath) {
     stop(errors$ERROR_SEURAT_RDS, call. = FALSE)
   })
 
-
   # get counts
   tryCatch({
     counts <- user_scdata[['RNA']]@counts
