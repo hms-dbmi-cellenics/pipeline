@@ -16,14 +16,11 @@ construct_qc_config <- function(scdata_list, any_filtered, subset_experiment) {
 
   # classifier
   classifier_config_to_duplicate <- list(
-    enabled = !any_filtered,
+    enabled = !any_filtered && !subset_config,
     prefiltered = any_filtered,
     auto = TRUE,
     filterSettings = list(FDR = 0.01)
   )
-  if (subset_experiment == T) {
-    classifier_config_to_duplicate$enabled <- FALSE
-  }
 
   config.classifier <- duplicate_config_per_sample(classifier_config_to_duplicate, samples)
 
