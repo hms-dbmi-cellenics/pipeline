@@ -218,7 +218,7 @@ jobs:
           docker push $IMAGE_NAME
 
           if [ ! -z "$TIMESTAMP" ]; then
-            echo Pushing timestamped $IMAGE_NAME to ECR
+            echo Pushing timestamped image $IMAGE_NAME-$TIMESTAMP to ECR
 
             docker tag $IMAGE_NAME $IMAGE_NAME-$TIMESTAMP
             docker push $IMAGE_NAME-$TIMESTAMP
