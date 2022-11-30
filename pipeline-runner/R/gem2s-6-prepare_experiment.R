@@ -15,11 +15,11 @@
 prepare_experiment <- function(input, pipeline_config, prev_out) {
   message("Preparing experiment ...")
 
-  check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list", "subset_experiment")
+  check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list", "disable_qc_filters")
   check_prev_out(prev_out, check_names)
 
   scdata_list <- prev_out$scdata_list
-  subset_experiment <- prev_out$subset_experiment
+  disable_qc_filters <- prev_out$disable_qc_filters
   samples <- names(scdata_list)
 
   message("Total cells:", sum(sapply(scdata_list, ncol)))
@@ -30,7 +30,7 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   # construct default QC config and update prev out
   message("Constructing default QC configuration...")
   any_filtered <- !(length(prev_out$edrops) == length(samples))
-  prev_out$qc_config <- construct_qc_config(scdata_list, any_filtered, subset_experiment)
+  prev_out$qc_config <- construct_qc_config(scdata_list, any_filtered, disable_qc_filters)
 
   res <- list(
     data = list(),

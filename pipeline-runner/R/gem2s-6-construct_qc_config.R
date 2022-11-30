@@ -6,17 +6,17 @@
 #'
 #' @param scdata_list list of seurat objects
 #' @param any_filtered bool indicating if barcodes were filtered by emptyDrops
-#' @param subset_experiment bool indicating if the data derives from the
+#' @param disable_qc_filters bool indicating if the data derives from the
 #' subsetting of another experiment
 #'
 #' @return list of QC configuration parameters
 #'
-construct_qc_config <- function(scdata_list, any_filtered, subset_experiment) {
+construct_qc_config <- function(scdata_list, any_filtered, disable_qc_filters) {
   samples <- names(scdata_list)
 
   # classifier
   classifier_config_to_duplicate <- list(
-    enabled = !any_filtered && !subset_experiment,
+    enabled = !any_filtered && !disable_qc_filters,
     prefiltered = any_filtered,
     auto = TRUE,
     filterSettings = list(FDR = 0.01)
@@ -36,7 +36,7 @@ construct_qc_config <- function(scdata_list, any_filtered, subset_experiment) {
 
   # mito
   default_mitochondrialContent_config <- list(
-    enabled = !subset_experiment,
+    enabled = !disable_qc_filters,
     auto = TRUE,
     filterSettings = list(
       method = "absoluteThreshold",
@@ -53,7 +53,7 @@ construct_qc_config <- function(scdata_list, any_filtered, subset_experiment) {
 
   # ngenes vs umis
   default_numGenesVsNumUmis_config <- list(
-    enabled = !subset_experiment,
+    enabled = !disable_qc_filters,
     auto = TRUE,
     filterSettings = list(
       regressionType = "linear",
@@ -69,7 +69,7 @@ construct_qc_config <- function(scdata_list, any_filtered, subset_experiment) {
 
   # doublet scores
   default_doubletScores_config <- list(
-    enabled = !subset_experiment,
+    enabled = !disable_qc_filters,
     auto = TRUE,
     filterSettings = list(
       probabilityThreshold = 0.5,
