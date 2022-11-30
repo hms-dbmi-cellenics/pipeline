@@ -292,7 +292,7 @@ jobs:
           # Deployment config for other staging env i.e. non `default`
           if [ "${{ matrix.environment }}" = "staging" ]; then
             export SANDBOX_ID="STAGING_SANDBOX_ID"
-            export CHART_REF="FILLED_IN_BY_BIOMAGE_STAGE"
+            export CHART_REF="$GITHUB_HEAD_REF"
             export KUBERNETES_ENV="staging"
             export IMAGE_NAME="$IMAGE_TAG-pipeline-runner-$TIMESTAMP"
             export REPLICA_COUNT="0"
