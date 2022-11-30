@@ -16,7 +16,7 @@ construct_qc_config <- function(scdata_list, any_filtered, subset_experiment) {
 
   # classifier
   classifier_config_to_duplicate <- list(
-    enabled = !any_filtered && !subset_config,
+    enabled = !any_filtered && !subset_experiment,
     prefiltered = any_filtered,
     auto = TRUE,
     filterSettings = list(FDR = 0.01)
