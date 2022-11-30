@@ -77,6 +77,7 @@ load_config <- function(development_aws_server) {
     aws_config = list(region = aws_region),
     pod_name = Sys.getenv("K8S_POD_NAME", "local"),
     activity_arn = activity_arn,
+    api_url = paste0("http://api-", sandbox, ".api-", sandbox, ".svc.cluster.local:3000"),
     api_version = "v2",
     debug_config = list(
       step = Sys.getenv("DEBUG_STEP", ""),
