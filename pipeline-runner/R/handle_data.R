@@ -174,7 +174,8 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     response = list(
       error = FALSE
     ),
-    pipelineVersion = pipeline_version
+    pipelineVersion = pipeline_version,
+    apiUrl = pipeline_config$api_url
   )
 
   message("Publishing the message")
@@ -198,7 +199,14 @@ send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, 
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
   # TODO -REMOVE DUPLICATE AUTHJWT IN RESPONSE
-  msg <- c(data, taskName = list(task_name), experimentId = list(experiment_id), authJWT = list(input$auth_JWT), input = list(input))
+  msg <- c(
+    data, 
+    taskName = list(task_name),
+    experimentId = list(experiment_id),
+    authJWT = list(input$auth_JWT),
+    input = list(input),
+    apiUrl = pipeline_config$api_url
+  )
 
   result <- sns$publish(
     Message = RJSONIO::toJSON(msg),
@@ -226,6 +234,7 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
   error_msg$taskName <- input$taskName
   error_msg$response$error <- process_name
   error_msg$input <- input
+  error_msg$apiUrl <- pipeline_config$api_url
   sns <- paws::sns(config = pipeline_config$aws_config)
 
   string_value <- ""

@@ -4,7 +4,13 @@
 \alias{integrate_from_sketch}
 \title{Integrate using sketch data}
 \usage{
-integrate_from_sketch(scdata, scdata_sketch, integration_function, config)
+integrate_from_sketch(
+  scdata,
+  scdata_sketch,
+  integration_function,
+  config,
+  npcs
+)
 }
 \arguments{
 \item{scdata}{Seurat object - complete data set}
