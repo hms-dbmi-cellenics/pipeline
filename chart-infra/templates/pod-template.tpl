@@ -11,7 +11,7 @@
       serviceAccountName: 'deployment-runner'
       containers:
       - name: "{{ .Release.Name }}"
-        image: "{{ .Values.pipelineRunner.image }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         env:
           - name: CLUSTER_ENV
             value: "{{ .Values.clusterEnv }}"
