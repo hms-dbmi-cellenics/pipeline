@@ -293,9 +293,18 @@ jobs:
 
           # Deployment config for other staging env i.e. non `default`
           if [ "${{ matrix.environment }}" = "staging" ]; then
+
+            export CHART_REF="$GITHUB_HEAD_REF"
+
+            # $GITHUB_HEAD_REF references the source branch of the pull request in a workflow run
+            # $GITHUB_HEAD_REF does not have a value when we merge, because merging is counted as a "push" event to master branch
+            # Therefore we set this value to "master" manually
+            if [ -z "$CHART_REF" ]; then
+              export CHART_REF="master"
+            fi
+
             export SANDBOX_ID="STAGING_SANDBOX_ID"
             export CHART_REF_TYPE="branch"
-            export CHART_REF="$GITHUB_HEAD_REF"
             export KUBERNETES_ENV="staging"
             export IMAGE_NAME="$IMAGE_TAG-pipeline-runner-$TIMESTAMP"
             export REPLICA_COUNT="0"
