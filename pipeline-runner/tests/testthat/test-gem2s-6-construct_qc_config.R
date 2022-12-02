@@ -26,7 +26,7 @@ mock_scdata_list <- function() {
 
 test_that("cellsize filter is disabled by default and classifier is pre-filtered", {
   scdata_list <- mock_scdata_list()
-  qc_config <- construct_qc_config(scdata_list, any_filtered = TRUE)
+  qc_config <- construct_qc_config(scdata_list, any_filtered = TRUE, disable_qc_filters = FALSE)
 
   for (sample in names(scdata_list)) {
     expect_false(qc_config$classifier[[sample]]$enabled)
@@ -38,7 +38,7 @@ test_that("cellsize filter is disabled by default and classifier is pre-filtered
 
 test_that("cellsize filter is disabled by default and classifier is not pre-filtered", {
   scdata_list <- mock_scdata_list()
-  qc_config <- construct_qc_config(scdata_list, any_filtered = FALSE)
+  qc_config <- construct_qc_config(scdata_list, any_filtered = FALSE, disable_qc_filters = FALSE)
 
   for (sample in names(scdata_list)) {
     expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
@@ -47,3 +47,30 @@ test_that("cellsize filter is disabled by default and classifier is not pre-filt
   }
 })
 
+
+test_that("all filters are disabled when disable_qc_filters = TRUE and classifier is pre-filtered", {
+  scdata_list <- mock_scdata_list()
+  qc_config <- construct_qc_config(scdata_list, any_filtered = TRUE, disable_qc_filters = TRUE)
+
+  for (sample in names(scdata_list)) {
+    expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
+    expect_false(qc_config$mitochondrialContent[[sample]]$enabled)
+    expect_false(qc_config$classifier[[sample]]$enabled)
+    expect_false(qc_config$numGenesVsNumUmis[[sample]]$enabled)
+    expect_false(qc_config$doubletScores[[sample]]$enabled)
+  }
+})
+
+
+test_that("all filters are disabled when disable_qc_filters = TRUE and classifier is not pre-filtered", {
+  scdata_list <- mock_scdata_list()
+  qc_config <- construct_qc_config(scdata_list, any_filtered = FALSE, disable_qc_filters = TRUE)
+
+  for (sample in names(scdata_list)) {
+    expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
+    expect_false(qc_config$mitochondrialContent[[sample]]$enabled)
+    expect_false(qc_config$classifier[[sample]]$enabled)
+    expect_false(qc_config$numGenesVsNumUmis[[sample]]$enabled)
+    expect_false(qc_config$doubletScores[[sample]]$enabled)
+  }
+})

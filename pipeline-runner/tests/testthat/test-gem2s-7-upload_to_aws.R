@@ -231,7 +231,8 @@ test_that("upload_to_aws tries to upload the correct files to aws", {
                    annot = list(),
                    doublet_scores = list(),
                    scdata_list = scdata_list,
-                   qc_config = list("mock_qc_config"))
+                   qc_config = list("mock_qc_config"),
+                   disable_qc_filters = FALSE)
 
   res <- stubbed_upload_to_aws(input, pipeline_config, prev_out)
 
