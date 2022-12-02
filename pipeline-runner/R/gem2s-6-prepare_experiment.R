@@ -1,8 +1,7 @@
 #' Prepare experiment for upload to AWS
 #'
-#'  1) Merges the samples for the current experiment
-#'  2) Adds metadata: cellsId, color_pool, and gene annotation
-#'  3) Preparing QC configuration
+#'  1) Adds metadata: cellsId, color_pool, and gene annotation
+#'  2) Prepares QC configuration
 #'
 #' @inheritParams download_user_files
 #' @param prev_out  'output' slot from call to \code{create_seurat}

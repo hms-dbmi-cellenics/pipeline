@@ -249,6 +249,40 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 }
 
 
+#' Call subset gem2s
+#'
+#' Runs step `task_name` of the subset GEM2S pipeline, sends output message to the API
+#'
+#' @param task_name character name of the step
+#' @param input list containing
+#'   - parentExperimentId
+#'   - childExperimentId
+#'   - sample IDs, and names
+#' @param pipeline_config list as defined by load_config
+#'
+#' @return character message id
+#'
+call_subset_gem2s <- function(task_name, input, pipeline_config) {
+  experiment_id <- input$experimentId
+  # remove when it's added to the input
+  input$subset_experiment <- TRUE
+
+  if (!exists("prev_out")) {
+    remove_cell_ids(pipeline_config, experiment_id)
+    assign("prev_out", NULL, pos = ".GlobalEnv")
+  }
+
+  check_input(input)
+  tasks <- lapply(SUBSET_GEM2S_TASK_LIST, get)
+
+  c(data, task_out) %<-% run_gem2s_step(prev_out, input, pipeline_config, tasks, task_name)
+  assign("prev_out", task_out, pos = ".GlobalEnv")
+
+  message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
+
+  return(message_id)
+}
+
 #' Call QC pipeline
 #'
 #' Runs step `task_name` of the data processing pipeline, sends plot data to s3
@@ -258,7 +292,7 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 #' @param input list containing:
 #'   - step parameters for all samples
 #'   - current sample UUID
-#'   - uploadCountMatrix (wether or not to upload matrix after step)
+#'   - uploadCountMatrix (whether or not to upload matrix after step)
 #' @param pipeline_config list as defined by load_config
 #'
 #' @return character message id
@@ -450,6 +484,8 @@ wrapper <- function(input, pipeline_config) {
     message_id <- call_qc(task_name, input, pipeline_config)
   } else if (process_name == "gem2s") {
     message_id <- call_gem2s(task_name, input, pipeline_config)
+  } else if (process_name == "subsetGem2s") {
+    message_id <- call_subset_gem2s(task_name, input, pipeline_config)
   } else {
     stop("Process name not recognized.")
   }

@@ -24,6 +24,12 @@ GEM2S_TASK_LIST <- list(
   "uploadToAWS" = "upload_to_aws"
 )
 
+SUBSET_GEM2S_TASK_LIST <- list(
+  "subsetSeurat" = "create_subset_experiment",
+  "prepareExperiment" = "prepare_experiment",
+  "uploadToAWS" = "upload_to_aws"
+)
+
 # vector of task functions named by task name
 QC_TASK_LIST <- list(
   "classifier" = "filter_emptydrops",
@@ -37,7 +43,6 @@ QC_TASK_LIST <- list(
 
 # directory where download_user_files downloads user files
 INPUT_DIR <- "/input"
-
 
 # constants used in GEM2S
 gem2s <- list(

@@ -25,7 +25,7 @@ upload_cells_id <- function(pipeline_config, object_key, cells_id) {
   return(object_key)
 }
 
-reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
+load_processed_scdata <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$processed_bucket
   message(bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
@@ -45,10 +45,10 @@ get_nnzero <- function (x) {
 }
 
 order_by_size <- function(scdata_list) {
-    return(scdata_list <- scdata_list[ order( sapply(scdata_list, get_nnzero)) ])
+    return(scdata_list[order(sapply(scdata_list, get_nnzero))])
 }
 
-reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
+load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$source_bucket
   objects <- s3$list_objects(
     Bucket = bucket,
@@ -83,11 +83,11 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
 
   # If the task is after data integration, we need to get scdata from processed_matrix
   if (match(task_name, task_names) > integration_index) {
-    return(reload_scdata_from_s3(s3, pipeline_config, experiment_id))
+    return(load_processed_scdata(s3, pipeline_config, experiment_id))
   }
 
   # Otherwise, return scdata_list
-  return(reload_scdata_list_from_s3(s3, pipeline_config, experiment_id))
+  return(load_source_scdata_list(s3, pipeline_config, experiment_id))
 
 }
 
@@ -200,7 +200,7 @@ send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, 
   sns <- paws::sns(config = pipeline_config$aws_config)
   # TODO -REMOVE DUPLICATE AUTHJWT IN RESPONSE
   msg <- c(
-    data, 
+    data,
     taskName = list(task_name),
     experimentId = list(experiment_id),
     authJWT = list(input$auth_JWT),
