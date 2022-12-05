@@ -146,18 +146,7 @@ run_processing_step <- function(scdata, config, tasks,task_name, cells_id,sample
 # pipeline_config as defined by load_config
 #
 
-run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
-    # list of task functions named by task name
-    tasks <- list(
-        "downloadGem" = download_user_files,
-        "preproc" = load_user_files,
-        "emptyDrops" = run_emptydrops,
-        "doubletScores" = score_doublets,
-        "createSeurat" = create_seurat,
-        "prepareExperiment" = prepare_experiment,
-        "uploadToAWS" = upload_to_aws
-    )
-
+run_pipeline_step <- function(task_name, input, pipeline_config, prev_out, tasks) {
     if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
     task <- tasks[[task_name]]
 
@@ -169,22 +158,50 @@ run_gem2s_step <- function(task_name, input, pipeline_config, prev_out) {
     return(res)
 }
 
-
 call_gem2s <- function(task_name, input, pipeline_config) {
+    # list of task functions named by task name
+    tasks <- list(
+        "downloadGem" = download_user_files,
+        "preproc" = load_user_files,
+        "emptyDrops" = run_emptydrops,
+        "doubletScores" = score_doublets,
+        "createSeurat" = create_seurat,
+        "prepareExperiment" = prepare_experiment,
+        "uploadToAWS" = upload_to_aws
+    )
+
     experiment_id <- input$experimentId
+    check_input(input)
 
     if (!exists("prev_out")) {
         remove_cell_ids(pipeline_config, experiment_id)
         assign("prev_out", NULL, pos = ".GlobalEnv")
     }
 
-    check_input(input)
-
-    c(data, task_out) %<-% run_gem2s_step(task_name, input, pipeline_config, prev_out)
+    c(data, task_out) %<-% run_pipeline_step(task_name, input, pipeline_config, prev_out, tasks)
     assign("prev_out", task_out, pos = ".GlobalEnv")
 
-    message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
+    message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
+    return(message_id)
+}
 
+call_seurat <- function(task_name, input, pipeline_config) {
+    # list of task functions named by task name
+    tasks <- list(
+        "downloadSeurat" = download_user_files,
+        "processSeurat" = load_seurat,
+        "uploadSeuratToAWS" = upload_seurat_to_aws
+    )
+
+    experiment_id <- input$experimentId
+
+    # initial step
+    if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+
+    c(data, task_out) %<-% run_pipeline_step(task_name, input, pipeline_config, prev_out, tasks)
+    assign("prev_out", task_out, pos = ".GlobalEnv")
+
+    message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'SeuratResponse')
     return(message_id)
 }
 
@@ -196,16 +213,6 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 # IN pipeline_config: json str, environment config resulting from the load_config function
 #
 call_data_processing <- function(task_name, input, pipeline_config) {
-    experiment_id <- input$experimentId
-    config <- input$config
-    upload_count_matrix <- input$uploadCountMatrix
-    sample_id <- input$sampleUuid
-    debug_config <- pipeline_config$debug_config
-
-    if (sample_id != "") {
-        config <- config[[sample_id]]
-        input$config <- config
-    }
     # vector of task functions named by task name
     tasks <- list(
         'classifier' = filter_emptydrops,
@@ -216,6 +223,17 @@ call_data_processing <- function(task_name, input, pipeline_config) {
         'dataIntegration' = integrate_scdata,
         'configureEmbedding' = embed_and_cluster
     )
+
+    experiment_id <- input$experimentId
+    config <- input$config
+    upload_count_matrix <- input$uploadCountMatrix
+    sample_id <- input$sampleUuid
+    debug_config <- pipeline_config$debug_config
+
+    if (sample_id != "") {
+        config <- config[[sample_id]]
+        input$config <- config
+    }
 
     #need this for embed_and_cluster
     config$api_url <- pipeline_config$api_url
@@ -346,11 +364,20 @@ wrapper <- function(input, pipeline_config) {
         message_id <- call_data_processing(task_name, input, pipeline_config)
     } else if (process_name == 'gem2s') {
         message_id <- call_gem2s(task_name, input, pipeline_config)
+    } else if (process_name == 'seurat') {
+        message_id <- call_seurat(task_name, input, pipeline_config)
     } else {
         stop("Process name not recognized.")
     }
 
     return(message_id)
+}
+
+get_user_error <- function(msg) {
+  # check if error is a defined code with a corresponding message in the UI
+  if (msg %in% errors) return(msg)
+
+  return("We had an issue while processing your data.")
 }
 
 #
@@ -425,7 +452,7 @@ init <- function() {
                 message(error_txt)
                 states$send_task_failure(
                     taskToken = task_token,
-                    error = "We had an issue while processing your data.",
+                    error = get_user_error(e$message),
                     cause = error_txt
                 )
 

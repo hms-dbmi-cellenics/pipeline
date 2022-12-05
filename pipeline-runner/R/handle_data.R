@@ -146,7 +146,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   return(result$MessageId)
 }
 
-send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input) {
+send_pipeline_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input, string_value) {
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
   # TODO -REMOVE DUPLICATE AUTHJWT IN RESPONSE
@@ -158,7 +158,7 @@ send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, 
     MessageAttributes = list(
       type = list(
         DataType = "String",
-        StringValue = "GEM2SResponse",
+        StringValue = string_value,
         BinaryValue = NULL
       )
     )
@@ -185,6 +185,8 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
     string_value <- "PipelineResponse"
   } else if (process_name == "gem2s") {
     string_value <- "GEM2SResponse"
+  } else if (process_name == "seurat") {
+    string_value <- "SeuratResponse"
   } else {
     message(paste("Invalid process_name given: ", process_name))
     return()

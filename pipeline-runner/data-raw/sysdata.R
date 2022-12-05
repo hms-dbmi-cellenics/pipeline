@@ -13,13 +13,15 @@ DEBUG_PATH <- "/debug"
 # File management, it needs to match the sample_file_type enum in sql
 # (they are originally defined in 20220304184711_schema.js in the api)
 file_types_by_technology <- list(
-  "10x" = list("barcodes10x", "features10x", "matrix10x")
+  "10x" = list("barcodes10x", "features10x", "matrix10x"),
+  "seurat" = list("seurat")
 )
 
 file_names <- list(
   barcodes10x = "barcodes.tsv.gz",
   features10x = "features.tsv.gz",
-  matrix10x = "matrix.mtx.gz"
+  matrix10x = "matrix.mtx.gz",
+  seurat = "r.rds"
 )
 
 source("data-raw/cell_cycle_genes.R")
@@ -33,6 +35,17 @@ SYM_SYM <- "sym_sym"
 IDS_SYM <- "ids_sym"
 IDS_IDS <- "ids_ids"
 
+# pipeline error constants
+errors <- list(
+  ERROR_SEURAT_RDS = 'ERROR_SEURAT_RDS',
+  ERROR_SEURAT_COUNTS = 'ERROR_SEURAT_COUNTS',
+  ERROR_SEURAT_HVFINFO = 'ERROR_SEURAT_HVFINFO',
+  ERROR_SEURAT_METADATA = 'ERROR_SEURAT_METADATA',
+  ERROR_SEURAT_CLUSTERS = 'ERROR_SEURAT_CLUSTERS',
+  ERROR_SEURAT_REDUCTION = 'ERROR_SEURAT_REDUCTION',
+  ERROR_SEURAT_LOGCOUNTS = 'ERROR_SEURAT_LOGCOUNTS'
+)
+
 
 usethis::use_data(
   gem2s,
@@ -44,6 +57,7 @@ usethis::use_data(
   IDS_SYM,
   IDS_IDS,
   cc_genes,
+  errors,
   internal = TRUE,
   overwrite = TRUE
 )
