@@ -271,7 +271,7 @@ jobs:
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="1"
             IMAGE_GLOB="$REF_ID-*"
-            MEMORY_REQUEST="29Gi"
+            MEMORY_REQUEST="4Gi"
           fi
 
           if [ "${{ matrix.environment }}" = "staging" ]; then
