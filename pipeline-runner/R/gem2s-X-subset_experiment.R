@@ -1,19 +1,44 @@
-
-download_cellsets_file <- function(parent_experiment_id) {
-  # download parent experiment cellsets file from S3
-}
-
-parse_cellsets <- function(cellset_path, cellset_type) {
-  cellsets <- jsonlite::fromJSON(cellset_path, flatten = T)
+#' Extract cellset type as data.frame
+#'
+#' Gets the cellsets list and converts it to tidy tibble, keeping only the
+#' the required cellset type
+#'
+#' @param cellsets
+#' @param cellset_type
+#'
+#' @return
+#' @export
+#'
+parse_cellsets <- function(cellsets, cellset_type) {
 
   cellsets$cellSets |>
-    filter(key == cellset_type) %>%
+    dplyr::filter(key == cellset_type) %>%
     .$children |>
     as.data.frame() |>
-    as_tibble() |>
-    select(key, name, cellIds)
+    tibble::as_tibble() |>
+    dplyr::select(key, name, cellIds)
+}
+
+
+#' Filters cellsets, getting vector of cell_ids to keep
+#'
+#' @param cellsets_df data.frame
+#' @param cellset_keys character
+#'
+#' @return
+#' @export
+#'
+get_cell_ids <- function(cellsets_df, cellset_keys) {
+
+  cellsets_df |>
+    dplyr::filter(key %in% cellset_keys) |>
+    tidyr::unnest(cellIds) |>
+    dplyr::pull(cellIds) |>
+    unique()
 
 }
+
+
 
 create_subset_experiment <- function(input, pipeline_config) {
 

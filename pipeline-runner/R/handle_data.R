@@ -398,3 +398,20 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
 
   return(parts)
 }
+
+
+load_cellsets_file <- function(pipeline_config, experiment_id) {
+  message("loading cellsets file")
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+
+  bucket <- pipeline_config$cell_sets_bucket
+
+  c(body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = experiment_id
+  )
+
+  obj <- jsonlite::fromJSON(rawConnection(body), flatten = T)
+  return(obj)
+
+}
