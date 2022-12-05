@@ -271,7 +271,7 @@ jobs:
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="1"
             IMAGE_GLOB="$REF_ID-*"
-            MEMORY_REQUEST="4Gi"
+            MEMORY_REQUEST="29Gi"
           fi
 
           if [ "${{ matrix.environment }}" = "staging" ]; then
@@ -280,7 +280,7 @@ jobs:
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="0"
             IMAGE_GLOB="$REF_ID-*"
-            MEMORY_REQUEST="29Gi"
+            MEMORY_REQUEST="4Gi"
           fi
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
