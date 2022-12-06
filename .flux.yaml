@@ -13,8 +13,6 @@ metadata:
 spec:
   interval: 5m0s
   url: https://github.com/biomage-org/pipeline
-  ref:
-    branch: FILLED_IN_BY_CI
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta1
 kind: ImageRepository
