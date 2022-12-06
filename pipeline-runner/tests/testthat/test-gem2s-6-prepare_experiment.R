@@ -5,6 +5,7 @@ mock_counts <- function() {
   )
 }
 
+
 mock_doublet_scores <- function(counts) {
   doublet_scores <- runif(ncol(counts))
   doublet_class <- ifelse(doublet_scores < 0.8, "singlet", "doublet")
@@ -16,6 +17,7 @@ mock_doublet_scores <- function(counts) {
     doublet_scores = doublet_scores
   )
 }
+
 
 mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   if (is.null(counts)) {
@@ -49,129 +51,194 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
 }
 
 
+test_that("prepare_experiment ensures gene_annotations are indexed correctly for each sample", {
 
-test_that("prepare_experiment merges multiple SeuratObjects", {
-  prev_out <- mock_prev_out(samples = c("a", "b", "c"))
-  scdata_list <- prev_out$scdata_list
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples = samples)
 
-  task_out <- suppressWarnings(prepare_experiment(NULL, NULL, prev_out)$output)
+  # remove some genes from each sample
+  prev_out$counts_list$a <- prev_out$counts_list$a[-c(1:9), ]
+  prev_out$counts_list$b <- prev_out$counts_list$b[-c(21:30), ]
+  prev_out$counts_list$c <- prev_out$counts_list$c[-c(5:25), ]
 
-  scdata <- task_out$scdata
+  # re-create seurat object
+  prev_out <- create_seurat(NULL, NULL, prev_out)$output
+  scdata_list <- prepare_experiment(NULL, NULL, prev_out)$output$scdata
 
-  expect_equal(ncol(scdata), sum(sapply(scdata_list, ncol)))
+  # we expect that the input in gene_annotations is the same as the rownames of
+  # each sample seurat object
+  for (sample in samples) {
+    expect_equal(scdata_list[[sample]]@misc$gene_annotations$input, rownames(scdata_list[[sample]]))
+  }
+
 })
 
-test_that("prepare_experiment shuffles cells after merge", {
-  prev_out <- mock_prev_out(samples = c("a", "b", "c"))
+
+test_that("add_metadata_to_samples adds 0 indexed cell_ids to each sample in scdata_list", {
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples = samples)
+  experiment_id <- "1234"
+
   scdata_list <- prev_out$scdata_list
-
-  task_out <- suppressWarnings(prepare_experiment(NULL, NULL, prev_out)$output)
-
-  scdata <- task_out$scdata
-  merged_scdatas <- suppressWarnings(merge_scdatas(scdata_list))
-
-  set.seed(gem2s$random.seed)
-  shuffle_mask <- sample(colnames(merged_scdatas))
-
-  expect_equal(ncol(scdata), ncol(merged_scdatas))
-  expect_equal(merged_scdatas$samples[shuffle_mask],scdata$samples)
-  expect_true(all(shuffle_mask == colnames(scdata)))
-  expect_false(all(shuffle_mask == colnames(merged_scdatas)))
-  expect_true(all(merged_scdatas$samples[1:ncol(scdata_list[[1]])]=="a"))
-  expect_false(all(scdata$samples[1:ncol(scdata_list[[1]])]=="a"))
-})
-
-test_that("prepare_experiment ensures gene_annotations are indexed the same as scdata", {
-  prev_out <- mock_prev_out()
-
-  # shuffle gene order of annot
   annot <- prev_out$annot
-  prev_out$annot <- annot[sample(nrow(annot)), ]
+  scdata_list <- add_metadata_to_samples(scdata_list, annot, experiment_id)
 
-  scdata <- prepare_experiment(NULL, NULL, prev_out)$output$scdata
 
-  expect_equal(row.names(scdata), scdata@misc$gene_annotations$input)
-})
+  added_to_misc <- c("gene_annotations", "experimentId")
 
-test_that("prepare_experiment adds 0 indexed cell_ids and other metadata to scdata", {
-  prev_out <- mock_prev_out()
-  input <- list(experimentId = "1234")
-  scdata <- prepare_experiment(input, NULL, prev_out)$output$scdata
+  for (sample in samples) {
+    expect_true(all(added_to_misc %in% names(scdata_list[[sample]]@misc)))
+  }
 
-  added_to_misc <- c("gene_annotations", "color_pool", "experimentId", "ingestionDate")
-  expect_true(all(added_to_misc %in% names(scdata@misc)))
+  # list of added cell_ids per sample in scdata_list
+  added_ids <- purrr::map(scdata_list, ~unname(.$cells_id))
 
-  added_ids <- unname(scdata$cells_id)
-  expected_ids <- seq(0, ncol(scdata) - 1)
+  set.seed(RANDOM_SEED)
+  total_cells <- sum(sapply(scdata_list, ncol))
+  cell_ids <- 0:(total_cells-1)
+  start <- 0
+  expected_ids <- list()
+  for (sample in samples) {
+    sample_size <- ncol(scdata_list[[sample]])
+    idxs <- sample(seq_along(cell_ids), sample_size)
+    expected_ids[[sample]] <- cell_ids[idxs]
+    # remove the selected cell ids for next samples
+    cell_ids <- cell_ids[-idxs]
+  }
   expect_equal(added_ids, expected_ids)
 })
+
+
+test_that("add_metadata_to_samples generated cell ids do not depend on sample order", {
+  experiment_id <- "1234"
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples = samples)
+
+  scdata_list <- prev_out$scdata_list
+  # the ordering function relies on @counts@i parameter as a proxy for total number of cells
+  # we set it manually here to get a meaningful order in the test because otherwise
+  # all fake samples have the same length
+  scdata_list[[1]]@assays[["RNA"]]@counts@i <- 0:100
+  scdata_list[[2]]@assays[["RNA"]]@counts@i <- 0:50
+  scdata_list[[3]]@assays[["RNA"]]@counts@i <- 0:10
+  annot <- prev_out$annot
+  scdata_list <- add_metadata_to_samples(scdata_list, annot, experiment_id)
+
+  scdata_list_rev <- rev(scdata_list)
+  scdata_list_rev <- add_metadata_to_samples(scdata_list_rev, annot, experiment_id)
+
+  added_to_misc <- c("gene_annotations", "experimentId")
+
+  for (sample in samples) {
+    expect_equal(scdata_list[[sample]]$cells_id, scdata_list_rev[[sample]]$cells_id)
+  }
+})
+
 
 test_that("prepare_experiment generates qc_config that matches snapshot", {
   prev_out <- mock_prev_out()
   input <- list(experimentId = "1234")
   task_out <- prepare_experiment(input, NULL, prev_out)$output
 
+  # TODO fix snapshot test
   expect_snapshot(str(task_out$qc_config))
 })
 
-test_object <- function() {
-  prev_out <- mock_prev_out(samples = c("a", "b", "c"))
+
+test_that("prepare_experiment creates a list of valid Seurat objects", {
+
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples )
   scdata_list <- prev_out$scdata_list
 
   task_out <- prepare_experiment(NULL, NULL, prev_out)$output
+  scdata_list <- task_out$scdata_list
 
-  scdata <- task_out$scdata
 
-  test_that("prepare_experiment creates a valid Seurat object", {
+  expect_type(scdata_list, "list")
+  for (sample in samples) {
+    scdata <- scdata_list[[sample]]
     expect_type(scdata, "S4")
     expect_true(nrow(scdata) == 100, "Seurat")
     expect_true(scdata@active.assay == "RNA")
-  })
+  }
+})
 
-  test_that("prepare_experiment properly populates the misc slot", {
+
+test_that("prepare_experiment properly populates the misc slot", {
+
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples )
+  scdata_list <- prev_out$scdata_list
+
+  task_out <- prepare_experiment(NULL, NULL, prev_out)$output
+  scdata_list <- task_out$scdata_list
+
+  for (sample in samples) {
+
+    scdata <- scdata_list[[sample]]
     expect_type(scdata@misc, "list")
     misc <- scdata@misc
     expect_true("gene_annotations" %in% names(misc))
-    expect_true("color_pool" %in% names(misc))
-    expect_type(misc$color_pool, "character")
     expect_true(all(misc$gene_annotations$input == rownames(scdata)))
     expect_equal(sum(duplicated(misc$gene_annotations$name)), 0)
     # check that in duplicated positions (including the first) we have the gene id instead of the name.
-  })
+  }
 
-  test_that("prepare_experiment properly populates the metadata slot", {
-    md <- scdata@meta.data
+})
+
+
+test_that("prepare_experiment properly populates the metadata slot", {
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples)
+  scdata_list <- prev_out$scdata_list
+
+  task_out <- prepare_experiment(NULL, NULL, prev_out)$output
+  scdata_list <- task_out$scdata_list
+
+  for (sample in samples) {
+    scdata <- scdata_list[[sample]]
+
+    metadata <- scdata@meta.data
     annotations <- scdata@misc$gene_annotations
 
-    expect_type(md, "list")
-    expect_true(nrow(md) == ncol(scdata))
-    expect_true("barcode" %in% colnames(md))
-    expect_true(all(colnames(scdata) %in% rownames(md)))
-    expect_true("samples" %in% colnames(md))
+    expect_type(metadata, "list")
+    expect_true(nrow(metadata) == ncol(scdata))
+    expect_true("barcode" %in% colnames(metadata))
+    expect_true(all(colnames(scdata) %in% rownames(metadata)))
+    expect_true("samples" %in% colnames(metadata))
 
     if (any(grepl("^mt-", annotations$name, ignore.case = T))) {
-      expect_true("percent.mt" %in% colnames(md))
+      expect_true("percent.mt" %in% colnames(metadata))
     }
 
-    expect_true("doublet_scores" %in% colnames(md))
-    expect_true("cells_id" %in% colnames(md))
-    expect_true("samples" %in% colnames(md))
+    expect_true("doublet_scores" %in% colnames(metadata))
+    expect_true("cells_id" %in% colnames(metadata))
+    expect_true("samples" %in% colnames(metadata))
 
-    test_that("Cell ids are assigned correctly", {
-      cellNumber <- ncol(scdata@assays$RNA@data)
-      expect_equal(md$cells_id, 0:(cellNumber - 1))
-    })
+  }
 
-    test_that("Mitochondrial percentage is correct", {
-      expect_true(max(md$percent.mt) <= 100)
-      expect_true(min(md$percent.mt) >= 0)
-      #Verify that we have percent mt and not fraction
-      expect_true(max(md$percent.mt) > 1 || all(md$percent.mt == 0))
-    })
-  })
-}
+})
 
-test_that("prepare_experiment creates a valid Seurat object", {
-  expect_true(TRUE)
-  suppressWarnings(test_object())
+
+test_that("Mitochondrial percentage is correct", {
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples)
+  scdata_list <- prev_out$scdata_list
+
+  task_out <- prepare_experiment(NULL, NULL, prev_out)$output
+  scdata_list <- task_out$scdata_list
+
+  for (sample in samples) {
+    scdata <- scdata_list[[sample]]
+
+    metadata <- scdata@meta.data
+
+
+    expect_true(max(metadata$percent.mt) <= 100)
+    expect_true(min(metadata$percent.mt) >= 0)
+    #Verify that we have percent mt and not fraction
+    expect_true(max(metadata$percent.mt) > 1 || all(metadata$percent.mt == 0))
+
+  }
 })

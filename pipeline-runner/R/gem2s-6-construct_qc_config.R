@@ -1,36 +1,42 @@
-# constructs default QC configuration for merged SeuratObject
-construct_qc_config <- function(scdata, any_filtered = FALSE) {
-  samples <- scdata$samples
+#' Constructs default QC configuration
+#'
+#' This function returns the default parameters used during QC as a nested list.
+#' It is sent to the API, which in turn saves it as a jsonb object in the
+#' PostgreSQL database.
+#'
+#' @param scdata_list list of seurat objects
+#' @param any_filtered bool indicating if barcodes were filtered by emptyDrops
+#' @param disable_qc_filters bool indicating if the data derives from the
+#' subsetting of another experiment
+#'
+#' @return list of QC configuration parameters
+#'
+construct_qc_config <- function(scdata_list, any_filtered, disable_qc_filters) {
+  samples <- names(scdata_list)
 
   # classifier
-  config.classifier <- list(
-    enabled = !any_filtered,
+  classifier_config_to_duplicate <- list(
+    enabled = !any_filtered && !disable_qc_filters,
     prefiltered = any_filtered,
     auto = TRUE,
     filterSettings = list(FDR = 0.01)
   )
 
-  classifier_config_to_duplicate <- list(
-    enabled = !any_filtered,
-    auto = TRUE,
-    filterSettings = list(FDR = 0.01)
-  )
-
-  config.classifier <- duplicate_config_per_sample(classifier_config_to_duplicate, config.classifier, samples)
+  config.classifier <- duplicate_config_per_sample(classifier_config_to_duplicate, samples)
 
 
   # cell size
-  config.cellSizeDistribution <- list(
+  default_cellSizeDistribution_config <- list(
     enabled = FALSE,
     auto = TRUE,
     filterSettings = list(minCellSize = 1080, binStep = 200)
   )
 
-  config.cellSizeDistribution <- add_custom_config_per_sample(get_cellsize_config, config.cellSizeDistribution, scdata)
+  config.cellSizeDistribution <- add_custom_config_per_sample(get_cellsize_config, default_cellSizeDistribution_config, scdata_list)
 
   # mito
-  config.mitochondrialContent <- list(
-    enabled = TRUE,
+  default_mitochondrialContent_config <- list(
+    enabled = !disable_qc_filters,
     auto = TRUE,
     filterSettings = list(
       method = "absoluteThreshold",
@@ -43,11 +49,11 @@ construct_qc_config <- function(scdata, any_filtered = FALSE) {
     )
   )
 
-  config.mitochondrialContent <- add_custom_config_per_sample(get_sample_mitochondrial_config, config.mitochondrialContent, scdata)
+  config.mitochondrialContent <- add_custom_config_per_sample(get_sample_mitochondrial_config, default_mitochondrialContent_config, scdata_list)
 
   # ngenes vs umis
-  config.numGenesVsNumUmis <- list(
-    enabled = TRUE,
+  default_numGenesVsNumUmis_config <- list(
+    enabled = !disable_qc_filters,
     auto = TRUE,
     filterSettings = list(
       regressionType = "linear",
@@ -58,12 +64,12 @@ construct_qc_config <- function(scdata, any_filtered = FALSE) {
     )
   )
 
-  config.numGenesVsNumUmis <- add_custom_config_per_sample(get_gene_umi_config, config.numGenesVsNumUmis, scdata)
+  config.numGenesVsNumUmis <- add_custom_config_per_sample(get_gene_umi_config, default_numGenesVsNumUmis_config, scdata_list)
 
 
   # doublet scores
-  config.doubletScores <- list(
-    enabled = TRUE,
+  default_doubletScores_config <- list(
+    enabled = !disable_qc_filters,
     auto = TRUE,
     filterSettings = list(
       probabilityThreshold = 0.5,
@@ -71,7 +77,7 @@ construct_qc_config <- function(scdata, any_filtered = FALSE) {
     )
   )
 
-  config.doubletScores <- add_custom_config_per_sample(get_dblscore_config, config.doubletScores, scdata)
+  config.doubletScores <- add_custom_config_per_sample(get_dblscore_config, default_doubletScores_config, scdata_list)
 
   # data integration
   config.dataIntegration <- list(
@@ -102,8 +108,8 @@ construct_qc_config <- function(scdata, any_filtered = FALSE) {
           distanceMetric = "cosine"
         ),
         tsne = list(
-          perplexity = min(30, ncol(scdata) / 100),
-          learningRate = max(200, ncol(scdata) / 12)
+          perplexity = min(30, ncol(scdata_list) / 100),
+          learningRate = max(200, ncol(scdata_list) / 12)
         )
       )
     ),
@@ -128,15 +134,15 @@ construct_qc_config <- function(scdata, any_filtered = FALSE) {
 }
 
 
-get_cellsize_config <- function(scdata, config) {
-  minCellSize <- generate_default_values_cellSizeDistribution(scdata, config)
+get_cellsize_config <- function(scdata_list, config) {
+  minCellSize <- generate_default_values_cellSizeDistribution(scdata_list, config)
   config$filterSettings$minCellSize <- minCellSize
   return(config)
 }
 
-get_sample_mitochondrial_config <- function(scdata.sample, config) {
-
+get_sample_mitochondrial_config <- function(scdata_list.sample, config) {
   config.sample <- list(
+    enabled = config$enabled,
     auto = TRUE,
     filterSettings = list(
       method = "absoluteThreshold",
@@ -145,33 +151,34 @@ get_sample_mitochondrial_config <- function(scdata.sample, config) {
   )
 
   config.sample$filterSettings$methodSettings$absoluteThreshold <- list(
-    maxFraction = generate_default_values_mitochondrialContent(scdata.sample, config.sample),
+    maxFraction = generate_default_values_mitochondrialContent(scdata_list.sample, config.sample),
     binStep = 0.3
   )
 
   return(config.sample)
 }
 
+
 # threshold for doublet score is the max score given to a singlet (above score => doublets)
-get_dblscore_config <- function(scdata, config) {
-  probabilityThreshold <- max(scdata$doublet_scores[scdata$doublet_class == "singlet"], na.rm = TRUE)
+get_dblscore_config <- function(scdata_list, config) {
+  probabilityThreshold <- max(scdata_list$doublet_scores[scdata_list$doublet_class == "singlet"], na.rm = TRUE)
   config$filterSettings$probabilityThreshold <- probabilityThreshold
 
   return(config)
 }
 
 
-get_gene_umi_config <- function(scdata, config) {
+get_gene_umi_config <- function(scdata_list, config) {
   # Sensible values are based on the function "gene.vs.molecule.cell.filter" from the pagoda2 package
-  p.level <- min(0.001, 1 / ncol(scdata))
+  p.level <- min(0.001, 1 / ncol(scdata_list))
   config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level <- p.level
 
   return(config)
 }
 
 
-
-duplicate_config_per_sample <- function(step_config, config, samples) {
+duplicate_config_per_sample <- function(step_config, samples) {
+  config <- list()
   for (sample in unique(samples)) {
     config[[sample]] <- step_config
     config[[sample]]$defaultFilterSettings <- step_config$filterSettings
@@ -180,25 +187,23 @@ duplicate_config_per_sample <- function(step_config, config, samples) {
   return(config)
 }
 
-add_custom_config_per_sample <- function(generate_sample_config, config, scdata) {
 
+add_custom_config_per_sample <- function(generate_sample_config, default_config, scdata_list) {
   # We update the config file, so to be able to access the raw config we create a copy
-  config.raw <- config
-
-  samples <- scdata$samples
-
-  for (sample in unique(samples)) {
-    # subset the Seurat object to a single sample
-    scdata.sample <- scdata[, samples %in% sample]
+  raw_config <- default_config
+  config <- list()
+  for (sample in names(scdata_list)) {
+    # subset the Seurat object list to a single sample
+    sample_data <- scdata_list[[sample]]
 
     # run the function to generate config for a sample
-    config.sample <- generate_sample_config(scdata.sample, config.raw)
+    sample_config <- generate_sample_config(sample_data, raw_config)
 
     # update sample config thresholds
-    config[[sample]] <- config.sample
+    config[[sample]] <- sample_config
 
     # add auto settings
-    config[[sample]]$defaultFilterSettings <- config.sample$filterSettings
+    config[[sample]]$defaultFilterSettings <- sample_config$filterSettings
   }
 
   return(config)

@@ -37,6 +37,7 @@ mock_cellranger_files <- function(sample_dir, compressed, sample_id) {
   return(files)
 }
 
+
 create_samples <- function(bucket, project, samples, compressed, env) {
   # helper to create samples in project in bucket, like S3
   files <- c()
@@ -51,6 +52,7 @@ create_samples <- function(bucket, project, samples, compressed, env) {
 
   return(files)
 }
+
 
 local_create_samples <- function(project, samples, compressed = FALSE, env = parent.frame()) {
   # calls creates_samples but makes them "local" (in withr speech), deleting
@@ -124,6 +126,7 @@ stubbed_download_user_files <- function(input, pipeline_config, prev_out = list(
 mock_sample_ids <- function(n_samples = 1) {
   paste0("sample_", seq_len(n_samples))
 }
+
 
 mock_input <- function(samples) {
   sample_s3_paths <- list()

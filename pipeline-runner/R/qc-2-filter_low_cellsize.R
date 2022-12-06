@@ -2,9 +2,11 @@
 #'
 #' cell_size_distribution_filter function
 #'
-#' This is a simplest filter that looks at the shape of the cell size (# of UMIs per cell) distribution and looks for some local minima, minimum of second derivative, etc.
-#' To separate the large cell barcodes that correspond to real cells from the tail containing 'empty droplets'.
-#' This can be a useful first guess. The settings for such a filter can also contain a simple "min cell size" setting.
+#' This is a simplest filter that looks at the shape of the cell size (# of UMIs
+#' per cell) distribution and looks for some local minima, minimum of second derivative, etc.
+#' To separate the large cell barcodes that correspond to real cells from the
+#' tail containing 'empty droplets'. This can be a useful first guess. The settings
+#'for such a filter can also contain a simple "min cell size" setting.
 #'
 #' @param config list containing the following information
 #'          - enable: true/false. Refering to apply or not the filter.
@@ -16,43 +18,43 @@
 #' @export
 #' @return a list with the filtered seurat object by cell size ditribution, the config and the plot values
 #'
-filter_low_cellsize <- function(scdata, config, sample_id, cells_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
-  cells_id.sample <- cells_id[[sample_id]]
+filter_low_cellsize <- function(scdata_list, config, sample_id, cells_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
+  sample_cell_ids <- cells_id[[sample_id]]
 
-  if (length(cells_id.sample) == 0) {
-    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
+  if (length(sample_cell_ids) == 0) {
+    return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata, cells_id.sample)
+  sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
 
   minCellSize <- as.numeric(config$filterSettings$minCellSize)
 
   # extract plotting data of original data to return to plot slot later
-  plot_data <- get_bcranks_plot_data(scdata.sample, num_cells_to_downsample)
+  plot_data <- get_bcranks_plot_data(sample_data, num_cells_to_downsample)
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_cellSizeDistribution', it is expected
   # to get a list with two elements {minCellSize and binStep}
   if (exists("auto", where = config)) {
     if (as.logical(toupper(config$auto))) {
-      # config not really needed for this one (maybe later for threshold.low/high):
-      # HARDCODE Value. threshold.low
+      # config not really needed for this one (maybe later for threshold_low/high):
+      # HARDCODE Value. threshold_low
       # [ Parameter for function CalculateBarcodeInflections. Description: Ignore barcodes of rank below this threshold in inflection calculation]
-      threshold.low <- 1e2
-      # If there are less cells than the value threshold.low, the function CalculateBarcodeInflections fails. So we need to handle by not removing any cells, that is,
+      threshold_low <- 1e2
+      # If there are less cells than the value threshold_low, the function CalculateBarcodeInflections fails. So we need to handle by not removing any cells, that is,
       # consider the minCellSize as the minimun UMIs in the dataset.
       # This should be handled in a long-term by adding a different function for computing the default value.
-      if (ncol(scdata.sample) < threshold.low) {
-        minCellSize <- min(scdata.sample$nCount_RNA)
+      if (ncol(sample_data) < threshold_low) {
+        minCellSize <- min(sample_data$nCount_RNA)
       } else {
-        minCellSize <- generate_default_values_cellSizeDistribution(scdata.sample, config)
+        minCellSize <- generate_default_values_cellSizeDistribution(sample_data, config)
       }
     }
   }
 
   if (as.logical(toupper(config$enabled))) {
-    remaining_ids <- scdata.sample@meta.data$cells_id[scdata.sample$nCount_RNA >= minCellSize]
+    remaining_ids <- sample_data@meta.data$cells_id[sample_data$nCount_RNA >= minCellSize]
   } else {
-    remaining_ids <- cells_id.sample
+    remaining_ids <- sample_cell_ids
   }
 
   # update config
@@ -63,15 +65,15 @@ filter_low_cellsize <- function(scdata, config, sample_id, cells_id, task_name =
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- plot_data[["hist"]]
   # Populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata.sample),
-    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
+    before = calc_filter_stats(sample_data),
+    after = calc_filter_stats(subset_ids(sample_data, remaining_ids))
   )
   guidata[[generate_gui_uuid(sample_id, task_name, 3)]] <- filter_stats
 
   cells_id[[sample_id]] <- remaining_ids
 
   result <- list(
-    data = scdata,
+    data = scdata_list,
     new_ids = cells_id,
     config = config,
     plotData = guidata
@@ -94,7 +96,7 @@ filter_low_cellsize <- function(scdata, config, sample_id, cells_id, task_name =
 #' @importFrom magrittr %>%
 #'
 get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE) {
-  set.seed(gem2s$random.seed)
+  set.seed(RANDOM_SEED)
   plot_data <- list()
   numis <- unname(sample_subset$nCount_RNA)
   ord <- order(numis, decreasing = TRUE)
@@ -186,12 +188,12 @@ plot_knee_regions <- function(dt, thresh = 0.01) {
 # samples.
 generate_default_values_cellSizeDistribution <- function(scdata, config) {
   # `CalculateBarcodeInflections` including inflection point calculation
-  threshold.low <- if (ncol(scdata) <= 200) NULL else 100
+  threshold_low <- if (ncol(scdata) <= 200) NULL else 100
   scdata_tmp <- Seurat::CalculateBarcodeInflections(
     object = scdata,
     barcode.column = "nCount_RNA",
     group.column = "samples",
-    threshold.low = threshold.low
+    threshold.low = threshold_low
   )
   # returned is both the rank(s) as well as inflection point
   # extracting only inflection point(s)

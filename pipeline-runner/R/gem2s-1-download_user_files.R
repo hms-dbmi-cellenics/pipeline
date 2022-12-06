@@ -51,7 +51,7 @@ download_s3_files <- function(input, originals_bucket, input_dir, s3) {
 #' @return list where 'output' slot has config used by \code{load_user_files}
 #' @export
 #'
-download_user_files <- function(input, pipeline_config, prev_out = list(), input_dir= "/input") {
+download_user_files <- function(input, pipeline_config, prev_out = list(), input_dir = "/input") {
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
   download_s3_files(input, pipeline_config$originals_bucket, input_dir, s3)
@@ -60,7 +60,8 @@ download_user_files <- function(input, pipeline_config, prev_out = list(), input
     name = input$experimentName,
     samples = input$sampleIds,
     organism = input$organism,
-    input = list(type = input$input$type)
+    input = list(type = input$input$type),
+    sampleOptions = input$sampleOptions
   )
 
   if ("metadata" %in% names(input)) {

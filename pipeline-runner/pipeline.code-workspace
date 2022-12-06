@@ -5,11 +5,11 @@
 		}
 	],
 	"settings": {
-        "r.rterm.linux": "/usr/local/bin/radian",
-        "r.bracketedPaste": true,
+		"r.bracketedPaste": false,
 		"[r]": {
 			"editor.formatOnPaste": true,
 			"editor.formatOnSave": true,
 		},
+		"editor.tabSize": 2,
 	}
 }

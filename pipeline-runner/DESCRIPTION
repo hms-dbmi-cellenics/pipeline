@@ -14,8 +14,10 @@ Depends:
 Imports:
     batchelor (== 1.12.1),
     covr,
+    magrittr,
     data.table
 Suggests: 
+    diffviewer,
     devtools,
     httptest,
     languageserver,
