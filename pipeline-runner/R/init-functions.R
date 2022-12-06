@@ -39,9 +39,9 @@ load_config <- function(development_aws_server) {
     # if /etc/podinfo/labels exists we are running in a remote aws pod
     if (file.exists(label_path)) {
       labels <- read.csv(label_path,
-        sep = "=",
-        row.names = 1,
-        header = FALSE
+                         sep = "=",
+                         row.names = 1,
+                         header = FALSE
       )
       activity_id <- labels["activityId", ]
       activity_arn <- build_activity_arn(
@@ -87,12 +87,12 @@ load_config <- function(development_aws_server) {
 
   # batch does not have access to the internal EKS cluster api URL, use the public one
   if(running_in_batch == "true" && domain_name != "") {
-      if (config$cluster_env == "staging") {
-        config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
-      }
-      if (config$cluster_env == "production") {
-        config$api_url <- paste0("https://api.", domain_name)
-      }
+    if (config$cluster_env == "staging") {
+      config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
+    }
+    if (config$cluster_env == "production") {
+      config$api_url <- paste0("https://api.", domain_name)
+    }
   }
 
   # running in linux needs the IP of the host to work. If it is set as an
@@ -127,8 +127,8 @@ load_config <- function(development_aws_server) {
   }
 
   bucket_list <- lapply(bucket_list,
-    paste, config$cluster_env, config$aws_account_id,
-    sep = "-"
+                        paste, config$cluster_env, config$aws_account_id,
+                        sep = "-"
   )
 
   config <- append(config, bucket_list)
@@ -287,8 +287,8 @@ call_qc <- function(task_name, input, pipeline_config) {
     # assign it to the global environment so we can
     # persist it across runs of the wrapper
     assign("scdata",
-      reload_data_from_s3(pipeline_config, experiment_id, task_name, tasks),
-      pos = ".GlobalEnv"
+           reload_data_from_s3(pipeline_config, experiment_id, task_name, tasks),
+           pos = ".GlobalEnv"
     )
 
     message("Single-cell data loaded.")
@@ -301,8 +301,8 @@ call_qc <- function(task_name, input, pipeline_config) {
     } else if (task_name %in% names(tasks)) {
       samples <- names(scdata)
       assign("cells_id",
-        load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples),
-        pos = ".GlobalEnv"
+             load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples),
+             pos = ".GlobalEnv"
       )
     } else {
       stop("Invalid task name given: ", task_name)
@@ -355,6 +355,20 @@ call_qc <- function(task_name, input, pipeline_config) {
     ": ", ttask
   )
 
+  return(message_id)
+}
+
+call_seurat <- function(task_name, input, pipeline_config) {
+
+  experiment_id <- input$experimentId
+
+  # initial step
+  if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+
+  c(data, task_out) %<-% run_pipeline_step(task_name, input, pipeline_config, prev_out, SEURAT_TASK_LIST)
+  assign("prev_out", task_out, pos = ".GlobalEnv")
+
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'SeuratResponse')
   return(message_id)
 }
 
@@ -412,14 +426,14 @@ pipeline_heartbeat <- function(task_token, aws_config) {
 start_heartbeat <- function(task_token, aws_config) {
   message("Starting heartbeat")
 
-    heartbeat_proc <- callr::r_bg(
+  heartbeat_proc <- callr::r_bg(
     func = pipeline_heartbeat, args = list(
       task_token, aws_config
     ),
     stdout = "/tmp/out",
     stderr = "/tmp/err"
   )
-    return(heartbeat_proc)
+  return(heartbeat_proc)
 }
 
 
@@ -450,11 +464,20 @@ wrapper <- function(input, pipeline_config) {
     message_id <- call_qc(task_name, input, pipeline_config)
   } else if (process_name == "gem2s") {
     message_id <- call_gem2s(task_name, input, pipeline_config)
+  } else if (process_name == 'seurat') {
+    message_id <- call_seurat(task_name, input, pipeline_config)
   } else {
     stop("Process name not recognized.")
   }
 
   return(message_id)
+}
+
+get_user_error <- function(msg) {
+  # check if error is a defined code with a corresponding message in the UI
+  if (msg %in% errors) return(msg)
+
+  return("We had an issue while processing your data.")
 }
 
 #' Pipeline error handler
@@ -467,8 +490,8 @@ wrapper <- function(input, pipeline_config) {
 pipeline_error_handler <- function(e) {
   futile.logger::flog.error("🚩 ---------")
   sample_text <- ifelse(is.null(input$sampleUuid),
-    "",
-    paste0(" for sample ", input$sampleUuid)
+                        "",
+                        paste0(" for sample ", input$sampleUuid)
   )
 
   error_txt <- paste0(
@@ -479,7 +502,7 @@ pipeline_error_handler <- function(e) {
   message(error_txt)
   states$send_task_failure(
     taskToken = task_token,
-    error = "We had an issue while processing your data.",
+    error = get_user_error(e$message),
     cause = error_txt
   )
 

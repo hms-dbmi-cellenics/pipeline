@@ -35,6 +35,12 @@ QC_TASK_LIST <- list(
   "configureEmbedding" = "embed_and_cluster"
 )
 
+SEURAT_TASK_LIST <- list(
+  "downloadSeurat" = "download_user_files",
+  "processSeurat" = "load_seurat",
+  "uploadSeuratToAWS" = "upload_seurat_to_aws"
+)
+
 # directory where download_user_files downloads user files
 INPUT_DIR <- "/input"
 
