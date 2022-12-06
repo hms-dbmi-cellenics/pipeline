@@ -10,6 +10,10 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   uncheck-integration-test:
     name: Mark integration test as not run
@@ -91,20 +95,24 @@ jobs:
             COMMIT_SHA=""
             IMAGE_TAG=$REF_ID
             TIMESTAMP=""
+            BATCH_IMAGE_TAG=production
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
             COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
             TIMESTAMP=$TIMESTAMP
+            BATCH_IMAGE_TAG=$REF_ID
           else
             COMMIT_SHA=$GITHUB_SHA
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
             TIMESTAMP=$TIMESTAMP
+            BATCH_IMAGE_TAG=staging
           fi
 
           # IMAGE_TAG is used in the Build Docker Image step.
           # We can easily build the image-tag from REF_ID and COMMIT_SHA for non-production releases.
           # But we can not easily create the image tag for production releases, so we're bulding it here
           echo "::set-output name=image-tag::$IMAGE_TAG"
+          echo "::set-output name=batch-image-tag::$BATCH_IMAGE_TAG"
 
           # TIMESTAMP is used to postfix images in the "push docker images to ECR" step.
           # The timestamp is used by Flux to auto update images for staging environments.
@@ -116,6 +124,8 @@ jobs:
           # ECR repository.
           IMAGE_REPO_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
           echo "::set-output name=repo-name::$IMAGE_REPO_NAME"
+        # env:
+        #   PR_NUMBER: ${{ github.event.pull_request.number }}
 
       - id: ref-previous
         name: Format docker tag and repository name for the previous pushed image.
@@ -186,9 +196,16 @@ jobs:
             --cache-from=$PREVIOUS_IMAGE_NAME \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME .
+
+          docker build --target batch \
+            --cache-from=$IMAGE_NAME-builder \
+            --cache-from=$PREVIOUS_IMAGE_NAME \
+            --build-arg GITHUB_PAT=$GITHUB_PAT \
+            --tag $BATCH_IMAGE_NAME .
         env:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
+          BATCH_IMAGE_NAME: ${{ format('{0}/{1}:batch-{2}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.batch-image-tag) }}
           GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
 
       - id: codecov
@@ -217,6 +234,9 @@ jobs:
           echo Pushing image $IMAGE_NAME to ECR.
           docker push $IMAGE_NAME
 
+          echo Pushing batch image $BATCH_IMAGE_NAME to ECR.
+          docker push $BATCH_IMAGE_NAME
+
           if [ ! -z "$TIMESTAMP" ]; then
             echo Pushing timestamped image $IMAGE_NAME-$TIMESTAMP to ECR
 
@@ -225,6 +245,7 @@ jobs:
           fi
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
+          BATCH_IMAGE_NAME: ${{ format('{0}/{1}:batch-{2}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.batch-image-tag) }}
           TIMESTAMP: ${{ steps.ref.outputs.timestamp }}
 
   deploy:
