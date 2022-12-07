@@ -85,14 +85,17 @@ load_config <- function(development_aws_server) {
     )
   )
 
+
+  if (config$cluster_env == "staging") {
+    config$public_api_url <- paste0("https://api-", sandbox, ".", domain_name)
+  }
+  if (config$cluster_env == "production") {
+    config$public_api_url <- paste0("https://api.", domain_name)
+  }
+
   # batch does not have access to the internal EKS cluster api URL, use the public one
   if(running_in_batch == "true" && domain_name != "") {
-      if (config$cluster_env == "staging") {
-        config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
-      }
-      if (config$cluster_env == "production") {
-        config$api_url <- paste0("https://api.", domain_name)
-      }
+    config$api_url <- config$public_api_url
   }
 
   # running in linux needs the IP of the host to work. If it is set as an
