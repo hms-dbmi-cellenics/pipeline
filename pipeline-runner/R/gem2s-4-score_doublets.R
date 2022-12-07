@@ -32,9 +32,18 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 
     # also filter low UMI as per scDblFinder:::.checkSCE()
     ntot <- Matrix::colSums(sample_counts)
-    sample_counts <- sample_counts[, ntot > 200]
 
-    scores[[sample]] <- compute_sample_doublet_scores(sample_counts)
+    # retry increasing the minimum counts in case of low sparsity in the sample
+    r <- NULL
+    attempt <- 1
+    while (is.null(r) && attempt <= 5) {
+      sample_counts <- sample_counts[, ntot > (200 * attempt)]
+      try({
+        scores[[sample]] <- compute_sample_doublet_scores(sample_counts)
+        r <- "not null"
+      })
+      attempt <- attempt + 1
+    }
   }
 
   prev_out$doublet_scores <- scores
