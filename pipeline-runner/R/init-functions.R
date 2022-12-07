@@ -457,7 +457,7 @@ wrapper <- function(input, pipeline_config) {
   process_name <- input$processName
 
   if (process_name == "qc") {
-    message_id <- call_qc(task_name, input, pipeline_config)
+    message_id <- call_data_processing(task_name, input, pipeline_config)
   } else if (process_name == "gem2s") {
     message_id <- call_gem2s(task_name, input, pipeline_config)
   } else if (process_name == 'seurat') {
