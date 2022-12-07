@@ -200,10 +200,6 @@ send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, 
   sns <- paws::sns(config = pipeline_config$aws_config)
   job_id <- Sys.getenv("AWS_BATCH_JOB_ID", unset = "")
 
-  message("AWS_BATCH_JOB_ID: ", job_id)
-  s <- Sys.getenv()
-  message("ALL env: ")
-  message(s)
   # TODO -REMOVE DUPLICATE AUTHJWT IN RESPONSE
   msg <- c(
     data,
