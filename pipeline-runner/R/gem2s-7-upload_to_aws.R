@@ -78,7 +78,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 }
 
 # creates initial cell sets object
-get_cell_sets <- function(scdata_list, input) {
+get_cell_sets <- function(scdata, input) {
   scratchpad <- list(
     key = "scratchpad",
     name = "Custom cell sets",
@@ -88,7 +88,7 @@ get_cell_sets <- function(scdata_list, input) {
   )
 
   color_pool <- get_color_pool()
-  sample_cellsets <- build_sample_cellsets(input, scdata_list, color_pool)
+  sample_cellsets <- build_sample_cellsets(input, scdata, color_pool)
 
   # remove used colors from pool
   used <- seq_along(sample_cellsets$children)
@@ -98,14 +98,15 @@ get_cell_sets <- function(scdata_list, input) {
   cell_sets <- c(list(scratchpad), list(sample_cellsets))
 
   if ("metadata" %in% names(input)) {
-    cell_sets <- c(cell_sets, build_metadata_cellsets(input, scdata_list, color_pool))
+    cell_sets <- c(cell_sets, build_metadata_cellsets(input, scdata, color_pool))
   }
 
   cell_sets <- list(cellSets = cell_sets)
 }
 
 # cell_sets fn for seurat samples information
-build_sample_cellsets <- function(input, scdata_list, color_pool) {
+build_sample_cellsets <- function(input, scdata, color_pool) {
+
   cell_set <- list(
     key = "sample",
     name = "Samples",
@@ -117,12 +118,16 @@ build_sample_cellsets <- function(input, scdata_list, color_pool) {
   sample_ids <- unlist(input$sampleIds)
   sample_names <- unlist(input$sampleNames)
 
+
   for (i in seq_along(sample_ids)) {
     sample_id <- sample_ids[i]
-    scdata <- scdata_list[[sample_id]]
     sample_name <- sample_names[i]
 
-    cell_ids <- scdata$cells_id
+    if (is.list(scdata)) {
+      cell_ids <- scdata[[sample_id]]$cells_id
+    } else {
+      cell_ids <- scdata$cells_id[scdata$samples == sample_id]
+    }
 
     cell_set$children[[i]] <- list(
       key = sample_id,
@@ -144,13 +149,13 @@ build_sample_cellsets <- function(input, scdata_list, color_pool) {
 #' to each cellset.
 #'
 #' @param input list
-#' @param scdata_list list of Seurat objects
+#' @param scdata list of Seurat objects or a single Seurat object
 #' @param color_pool list of colors to use
 #'
 #' @return list of cellsets
 #' @export
 #'
-build_metadata_cellsets <- function(input, scdata_list, color_pool) {
+build_metadata_cellsets <- function(input, scdata, color_pool) {
   cell_set_list <- c()
   user_metadata <- lapply(input$metadata, unlist)
 
@@ -182,10 +187,11 @@ build_metadata_cellsets <- function(input, scdata_list, color_pool) {
     for (j in seq_along(values)) {
       value <- values[j]
 
-      cell_ids <- list()
-      for (scdata in scdata_list) {
+      if (is.list(scdata)) {
+        cell_ids <- get_metadata_cell_ids(scdata, valid_metadata_name, value)
+      } else {
         cells_in_value <- scdata[[valid_metadata_name]] == value
-        cell_ids <- append(cell_ids,  scdata$cells_id[cells_in_value])
+        cell_ids <- scdata$cells_id[cells_in_value]
       }
 
       cell_set$children[[j]] <- list(
@@ -200,4 +206,15 @@ build_metadata_cellsets <- function(input, scdata_list, color_pool) {
     cell_set_list <- c(cell_set_list, list(cell_set))
   }
   return(cell_set_list)
+}
+
+# get metadata cell ids from a list of Seurat object
+get_metadata_cell_ids <- function(scdata_list, valid_metadata_name, value) {
+  cell_ids <- list()
+  for (scdata in scdata_list) {
+    cells_in_value <- scdata[[valid_metadata_name]] == value
+    cell_ids <- append(cell_ids,  scdata$cells_id[cells_in_value])
+  }
+
+  return(cell_ids)
 }

@@ -68,7 +68,9 @@ reconstruct_seurat <- function(dataset_fpath) {
 
   # add dispersions
   tryCatch({
+    # TODO: handle SCT
     user_scdata <- add_dispersions(user_scdata)
+
     dispersions <- user_scdata@misc$gene_dispersion
     test_user_df(dispersions)
   },

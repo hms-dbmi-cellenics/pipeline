@@ -368,7 +368,7 @@ run_unisample <- function(scdata, config, npcs) {
   return(scdata)
 }
 
-add_dispersions <- function(scdata, method) {
+add_dispersions <- function(scdata, method = 'LogNormalize') {
   if (method == "SCT" && Seurat::DefaultAssay(scdata) == "integrated") {
     vars <- Seurat::HVFInfo(object = scdata, assay = "integrated", selection.method = "sctransform")
     # change colnames as they are when run with selection.method = "vst", otherwise will break the listGenes worker task

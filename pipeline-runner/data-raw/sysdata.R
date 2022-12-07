@@ -106,6 +106,7 @@ usethis::use_data(
   gem2s,
   GEM2S_TASK_LIST,
   QC_TASK_LIST,
+  SEURAT_TASK_LIST,
   INPUT_DIR,
   RANDOM_SEED,
   DEBUG_PATH,

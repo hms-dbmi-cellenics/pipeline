@@ -143,7 +143,7 @@ load_config <- function(development_aws_server) {
 }
 
 
-#' Run qc pipeline step
+#' Run data processing step
 #'
 #' Calls the corresponding task_name QC pipeline step function.
 #'
@@ -157,10 +157,9 @@ load_config <- function(development_aws_server) {
 #'
 #' @return list of task results
 #'
-run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, debug_config) {
-  if (!task_name %in% names(tasks)) {
-    stop("Invalid task: ", task_name)
-  }
+run_processing_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, debug_config) {
+  if (!task_name %in% names(tasks)) stop('Invalid task: ', task_name)
+
 
   handle_debug(scdata, config, task_name, sample_id, debug_config)
 
@@ -174,19 +173,16 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, d
   tstart <- Sys.time()
 
   out <- task(scdata, config, sample_id, cells_id, task_name)
-  ttask <- format(Sys.time() - tstart, digits = 2)
-  message(
-    "⏱️ Time to complete ", task_name,
-    " for sample ", sample_id, ": ", ttask, "\n"
-  )
+  ttask <- format(Sys.time()-tstart, digits = 2)
+  message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask, '\n')
 
   return(out)
 }
 
 
-#' Run GEM2S step
+#' Run GEM2S or Seurat pipeline step
 #'
-#' Calls the corresponding task_name GEM2S step function.
+#' Calls the corresponding task_name GEM2S or SEURAT step function.
 #'
 #' The input list only contains experiment level parameters, such as project ID,
 #' and sample names. It's only used for downloading user files.
@@ -198,22 +194,20 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, d
 #'  - projectId character
 #' @param pipeline_config list as defined by load_config
 #' @param prev_out list output from previous step
+#' @param tasks list of tasks in the pipeline
 #'
 #' @return list of task results
 #'
-run_gem2s_step <- function(prev_out, input, pipeline_config, tasks, task_name) {
-
-  if (!task_name %in% names(tasks)) {
-    stop("Invalid task name given: ", task_name)
-  }
+run_pipeline_step <- function(task_name, input, pipeline_config, prev_out, tasks) {
+  if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
   task <- tasks[[task_name]]
 
   tstart <- Sys.time()
-  out <- task(input, pipeline_config, prev_out)
-  ttask <- format(Sys.time() - tstart, digits = 2)
-  message("⏱️ Time to complete ", task_name, ": ", ttask, "\n")
+  res <- task(input, pipeline_config, prev_out)
+  ttask <- format(Sys.time()-tstart, digits = 2)
+  message("⏱️ Time to complete ", task_name, ": ", ttask, '\n')
 
-  return(out)
+  return(res)
 }
 
 
@@ -240,11 +234,27 @@ call_gem2s <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(GEM2S_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_gem2s_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-% run_pipeline_step(task_name, input, pipeline_config, prev_out, tasks)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
 
+  return(message_id)
+}
+
+
+call_seurat <- function(task_name, input, pipeline_config) {
+
+  experiment_id <- input$experimentId
+
+  # initial step
+  if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
+  tasks <- lapply(SEURAT_TASK_LIST, get)
+
+  c(data, task_out) %<-% run_pipeline_step(task_name, input, pipeline_config, prev_out, tasks)
+  assign("prev_out", task_out, pos = ".GlobalEnv")
+
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'SeuratResponse')
   return(message_id)
 }
 
@@ -263,7 +273,7 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 #'
 #' @return character message id
 #'
-call_qc <- function(task_name, input, pipeline_config) {
+call_data_processing <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
   config <- input$config
   upload_count_matrix <- input$uploadCountMatrix
@@ -314,7 +324,7 @@ call_qc <- function(task_name, input, pipeline_config) {
   # call function to run and update global variable
   c(
     data, new_ids, ...rest_of_results
-  ) %<-% run_qc_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
+  ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
 
 
   assign("cells_id", new_ids, pos = ".GlobalEnv")
@@ -355,20 +365,6 @@ call_qc <- function(task_name, input, pipeline_config) {
     ": ", ttask
   )
 
-  return(message_id)
-}
-
-call_seurat <- function(task_name, input, pipeline_config) {
-
-  experiment_id <- input$experimentId
-
-  # initial step
-  if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
-
-  c(data, task_out) %<-% run_pipeline_step(task_name, input, pipeline_config, prev_out, SEURAT_TASK_LIST)
-  assign("prev_out", task_out, pos = ".GlobalEnv")
-
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'SeuratResponse')
   return(message_id)
 }
 
@@ -480,42 +476,6 @@ get_user_error <- function(msg) {
   return("We had an issue while processing your data.")
 }
 
-#' Pipeline error handler
-#'
-#' Pretty prints errors, sends roport to the API, and uploads debug output to
-#' S3 if the pipeline is running in a pod.
-#'
-#' @param e error object
-#'
-pipeline_error_handler <- function(e) {
-  futile.logger::flog.error("🚩 ---------")
-  sample_text <- ifelse(is.null(input$sampleUuid),
-                        "",
-                        paste0(" for sample ", input$sampleUuid)
-  )
-
-  error_txt <- paste0(
-    "R error at filter step ",
-    input$taskName, sample_text, "! : ", e$message
-  )
-
-  message(error_txt)
-  states$send_task_failure(
-    taskToken = task_token,
-    error = get_user_error(e$message),
-    cause = error_txt
-  )
-
-  send_pipeline_fail_update(pipeline_config, input, error_txt)
-  message("Sent task failure to state machine task: ", task_token)
-
-  if (pipeline_config$cluster_env != "development") {
-    upload_debug_folder_to_s3(debug_prefix, pipeline_config)
-  }
-
-  message("recovered from error:", e$message)
-}
-
 
 #' run the pipeline
 #'
@@ -571,7 +531,34 @@ init <- function() {
           output = "{}"
         )
       },
-      error = pipeline_error_handler,
+      error = function(e) {
+        futile.logger::flog.error("🚩 ---------")
+        sample_text <- ifelse(is.null(input$sampleUuid),
+                              "",
+                              paste0(" for sample ", input$sampleUuid)
+        )
+
+        error_txt <- paste0(
+          "R error at filter step ",
+          input$taskName, sample_text, "! : ", e$message
+        )
+
+        message(error_txt)
+        states$send_task_failure(
+          taskToken = task_token,
+          error = get_user_error(e$message),
+          cause = error_txt
+        )
+
+        send_pipeline_fail_update(pipeline_config, input, error_txt)
+        message("Sent task failure to state machine task: ", task_token)
+
+        if (pipeline_config$cluster_env != "development") {
+          upload_debug_folder_to_s3(debug_prefix, pipeline_config)
+        }
+
+        message("recovered from error:", e$message)
+      },
       write.error.dump.file = TRUE,
       write.error.dump.folder = dump_folder
     )
