@@ -312,7 +312,7 @@ jobs:
             export IMAGE_POLICY_TYPE="numerical"
             export IMAGE_POLICY_KEY="order"
             export IMAGE_POLICY_VALUE="asc"
-            export MEMORY_REQUEST="29Gi"
+            export MEMORY_REQUEST="16Gi"
             export MANIFEST_PATH="./staging"
           fi
 
