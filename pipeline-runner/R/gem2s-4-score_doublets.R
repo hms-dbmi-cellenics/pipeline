@@ -37,9 +37,11 @@ score_doublets <- function(input, pipeline_config, prev_out) {
     r <- NULL
     attempt <- 1
     while (is.null(r) && attempt <= 5) {
-      sample_counts <- sample_counts[, ntot > (200 * attempt)]
+      message("\ntrying to score doublets, attempt: ", attempt)
+      # make the threshold stricter in every attempt
+      empty_cells_mask <- ntot > (200 * attempt)
       try({
-        scores[[sample]] <- compute_sample_doublet_scores(sample_counts)
+        scores[[sample]] <- compute_sample_doublet_scores(sample_counts[, empty_cells_mask])
         r <- "not null"
       })
       attempt <- attempt + 1
