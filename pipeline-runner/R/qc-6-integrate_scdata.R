@@ -274,7 +274,7 @@ run_seuratv4 <- function(scdata, config, npcs) {
   if (normalization == "SCT") {
     Seurat::DefaultAssay(scdata) <- "RNA"
     scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
-    if (!is.null(scdata@assays$integrated)) {
+    if ("integrated" %in% names(scdata@assays)) {
       Seurat::DefaultAssay(scdata) <- "integrated"
     }
   }
