@@ -230,6 +230,7 @@ run_seuratv4 <- function(scdata, config, npcs) {
   # Note that this is a heuristic and was found to still fail for small data-sets
 
   # Try to integrate data (catch error most likely caused by too few cells)
+  integrated <- FALSE
   k.filter <- min(ceiling(sapply(data.split, ncol) / 2), 200)
   tryCatch(
     {
@@ -250,6 +251,7 @@ run_seuratv4 <- function(scdata, config, npcs) {
       }
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
       Seurat::DefaultAssay(scdata) <- "integrated"
+      integrated <- TRUE
     },
     error = function(e) { # Specifying error message
       # ideally this should be passed to the UI as a error message:
@@ -274,7 +276,9 @@ run_seuratv4 <- function(scdata, config, npcs) {
   if (normalization == "SCT") {
     Seurat::DefaultAssay(scdata) <- "RNA"
     scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
-    Seurat::DefaultAssay(scdata) <- "integrated"
+    if (integrated != FALSE) {
+      Seurat::DefaultAssay(scdata) <- "integrated"
+    }
   }
   scdata@misc <- misc
   scdata <- add_dispersions(scdata, normalization)
