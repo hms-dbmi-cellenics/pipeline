@@ -104,8 +104,6 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
   newdata <- data.frame(log_molecules = seq(xrange[1], xrange[2], length.out = 10))
   line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = 1 - p_level))
 
-  line_preds <- suppressWarnings(predict(fit, newdata, interval = "prediction", level = 1 - p_level))
-
   pred_int_values <- sort(c(seq(0, 0.99, 0.01), 0.999, 0.9999, 0.99999, 0.999999))
   pred_int_values <- c(pred_int_values, pred_int_auto)
   line_preds_list <- list()

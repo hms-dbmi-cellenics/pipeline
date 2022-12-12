@@ -175,7 +175,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
       error = FALSE
     ),
     pipelineVersion = pipeline_version,
-    apiUrl = pipeline_config$api_url
+    apiUrl = pipeline_config$public_api_url
   )
 
   message("Publishing the message")
@@ -198,14 +198,17 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
 send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input) {
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
+  job_id <- Sys.getenv("AWS_BATCH_JOB_ID", unset = "")
+
   # TODO -REMOVE DUPLICATE AUTHJWT IN RESPONSE
   msg <- c(
     data,
     taskName = list(task_name),
     experimentId = list(experiment_id),
+    jobId = list(job_id),
     authJWT = list(input$auth_JWT),
     input = list(input),
-    apiUrl = pipeline_config$api_url
+    apiUrl = pipeline_config$public_api_url
   )
 
   result <- sns$publish(
@@ -234,7 +237,7 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
   error_msg$taskName <- input$taskName
   error_msg$response$error <- process_name
   error_msg$input <- input
-  error_msg$apiUrl <- pipeline_config$api_url
+  error_msg$apiUrl <- pipeline_config$public_api_url
   sns <- paws::sns(config = pipeline_config$aws_config)
 
   string_value <- ""
