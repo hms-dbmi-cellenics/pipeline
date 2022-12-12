@@ -403,9 +403,17 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
 }
 
 
-load_cellsets_file <- function(pipeline_config, experiment_id) {
+#' Load cellsets object from s3
+#'
+#' @param s3
+#' @param pipeline_config
+#' @param experiment_id
+#'
+#' @return
+#' @export
+#'
+load_cellsets <- function(s3, pipeline_config, experiment_id) {
   message("loading cellsets file")
-  s3 <- paws::s3(config = pipeline_config$aws_config)
 
   bucket <- pipeline_config$cell_sets_bucket
 
@@ -416,5 +424,25 @@ load_cellsets_file <- function(pipeline_config, experiment_id) {
 
   obj <- jsonlite::fromJSON(rawConnection(body), flatten = T)
   return(obj)
+
+}
+
+
+#' Parse cellsets object to data.table
+#'
+#' Gets the cellsets list and converts it to a tidy data.table
+#'
+#' @param cellsets list
+#'
+#' @return
+#' @export
+#'
+parse_cellsets <- function(cellsets) {
+
+  data.table::setDT(cellsets$cellSets)
+  # fill columns in case there are empty cellset classes
+  dt <- data.table::rbindlist(cellsets$cellSets$children, fill = TRUE)
+  # unnest, and change column name
+  dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name)]
 
 }

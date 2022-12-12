@@ -1,45 +1,3 @@
-#' Extract cellset type as data.frame
-#'
-#' Gets the cellsets list and converts it to tidy tibble, keeping only the
-#' the required cellset type
-#'
-#' @param cellsets
-#' @param cellset_type
-#'
-#' @return
-#' @export
-#'
-parse_cellsets <- function(cellsets, cellset_type) {
-
-  cellsets$cellSets |>
-    dplyr::filter(key == cellset_type) %>%
-    .$children |>
-    as.data.frame() |>
-    tibble::as_tibble() |>
-    dplyr::select(key, name, cellIds)
-}
-
-
-#' Filters cellsets, getting vector of cell_ids to keep
-#'
-#' @param cellsets_df data.frame
-#' @param cellset_keys character
-#'
-#' @return
-#' @export
-#'
-get_cell_ids <- function(cellsets_df, cellset_keys) {
-
-  cellsets_df |>
-    dplyr::filter(key %in% cellset_keys) |>
-    tidyr::unnest(cellIds) |>
-    dplyr::pull(cellIds) |>
-    unique()
-
-}
-
-
-
 create_subset_experiment <- function(input, pipeline_config) {
 
   parent_experiment_id <- input$parentExperimentId
@@ -49,9 +7,9 @@ create_subset_experiment <- function(input, pipeline_config) {
   # load parent processed scdata and cellsets
   s3 <- paws::s3(config = pipeline_config$aws_config)
   parent_scdata <- load_processed_scdata(s3, pipeline_config, parent_experiment_id)
-  parent_cellsets <- load_cellsets(s3, pipeline_config, parent_experiment_id)
+  parent_cellsets <- parse_cellsets(load_cellsets(s3, pipeline_config, parent_experiment_id))
 
-  cell_ids_to_keep <- get_cell_sets(parent_cellsets, cellset_keys)
+  cell_ids_to_keep <- parent_cellsets[key %in% cellset_keys, cell_id]
 
   sample_id_mapping <- input$sampleIdMapping
 
