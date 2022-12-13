@@ -34,7 +34,8 @@ reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
     Bucket = bucket,
     Key = paste(experiment_id, "r.rds", sep = "/")
   )
-  obj <- readRDS(gzcon(rawConnection(body)))
+  obj <- readRDS(conn <- gzcon(rawConnection(body)))
+  close(conn)
   return(obj)
 }
 
@@ -64,9 +65,11 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
       Bucket = bucket,
       Key = paste(key, sep = "/")
     )
-    obj <- readRDS(gzcon(rawConnection(body)))
+    obj <- readRDS(gzcon(conn <- rawConnection(body)))
     sample_id <- strsplit(key, "/")[[1]][[2]]
     scdata_list[[sample_id]] <- obj
+    # close connection explicitly or R will run out of available connections and fail
+    close(conn)
   }
 
   # order samples according to their size to make the merge independent of samples order in the UI
