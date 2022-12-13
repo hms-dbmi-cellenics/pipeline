@@ -4,12 +4,12 @@
 \alias{build_metadata_cellsets}
 \title{Create cellsets from user-supplied metadata}
 \usage{
-build_metadata_cellsets(input, scdata_list, color_pool)
+build_metadata_cellsets(input, scdata, color_pool)
 }
 \arguments{
 \item{input}{list}
 
-\item{scdata_list}{list of Seurat objects}
+\item{scdata}{list of Seurat objects or a single Seurat object}
 
 \item{color_pool}{list of colors to use}
 }
