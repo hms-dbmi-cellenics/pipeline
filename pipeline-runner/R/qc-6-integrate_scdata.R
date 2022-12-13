@@ -183,7 +183,6 @@ run_harmony <- function(scdata, config, npcs) {
 
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
-  npcs <- config$dimensionalityReduction$numPCs
 
   # grep in case misspelled
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
@@ -214,7 +213,6 @@ run_seuratv4 <- function(scdata, config, npcs) {
   # @misc slots not preserved so transfer
   misc <- scdata@misc
 
-  # Currently, we only support Seurat V4 pipeline for the multisample integration
   data.split <- Seurat::SplitObject(scdata, split.by = "samples")
   for (i in 1:length(data.split)) {
     data.split[[i]] <- normalize_data(data.split[[i]], normalization, "seuratv4", nfeatures)
@@ -222,7 +220,6 @@ run_seuratv4 <- function(scdata, config, npcs) {
     # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
     if (reduction == "rpca") {
       message("Running PCA")
-      data.split[[i]] <- Seurat::ScaleData(data.split[[i]], verbose = FALSE)
       data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE, npcs = npcs)
     } else {
       message("PCA is not running before integration as CCA method is selected")

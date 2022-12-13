@@ -122,7 +122,7 @@ test_qc <- function(experiment_id) {
         for (sample_id in names(prev_out$output$scdata_list)) {
           config <- setup$qc_config[[task_name]][[sample_id]]
 
-          global_vars <- run_qc_step(
+          global_vars <- run_processing_step(
             scdata = global_vars$data,
             config = config,
             tasks = tasks,
@@ -134,7 +134,7 @@ test_qc <- function(experiment_id) {
         }
       } else {
         config <- setup$qc_config[[task_name]]
-        global_vars <- run_qc_step(
+        global_vars <- run_processing_step(
           scdata = global_vars$data,
           config = config,
           tasks = tasks,
