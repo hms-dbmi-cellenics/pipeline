@@ -77,6 +77,7 @@ test_gem2s <- function(experiment_id) {
       res <- run_pipeline_step(task_name,
                                input,
                                pipeline_config,
+                               res$output,
                                tasks)
       expect_snapshot({
         task_name
