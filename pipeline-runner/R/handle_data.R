@@ -34,7 +34,8 @@ reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
     Bucket = bucket,
     Key = paste(experiment_id, "r.rds", sep = "/")
   )
-  obj <- readRDS(conn <- gzcon(rawConnection(body)))
+  conn <- gzcon(rawConnection(body))
+  obj <- readRDS(conn)
   close(conn)
   return(obj)
 }
@@ -65,7 +66,8 @@ reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
       Bucket = bucket,
       Key = paste(key, sep = "/")
     )
-    obj <- readRDS(gzcon(conn <- rawConnection(body)))
+    conn <- gzcon(rawConnection(body))
+    obj <- readRDS(conn)
     sample_id <- strsplit(key, "/")[[1]][[2]]
     scdata_list[[sample_id]] <- obj
     # close connection explicitly or R will run out of available connections and fail
