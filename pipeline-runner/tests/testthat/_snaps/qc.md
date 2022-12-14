@@ -619,7 +619,7 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "af7b2d35abd5a00b51907c07cbf87d27"
+      [1] "14aa0c10d29fb177b983c2b50bf7febb"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
@@ -2359,7 +2359,7 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "56772520d5c0c75ad75f00b75cef4cff"
+      [1] "54e6e5937573a7cb22e708fb3bc860c2"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
@@ -7126,7 +7126,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "5e1fb720e4a4ca7e78276b87ac675525"
+      [1] "bba18aa93f7fddf689a09c2e37b3ec13"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7211,21 +7211,21 @@
         .. .. .. ..@ misc                      :List of 1
         .. .. .. .. ..$ total.variance: num 781
         .. ..$ harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:608, 1:50] -4.79 -5.02 -5.03 6.79 -4.16 -4.86 -3.42 6.07 8.86 -2.93 10.28 -3.56 11.4 3.64 -4.97 8.24 -5 -5.86 4.92 -3.48 -3.| __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:608, 1:50] -4.77 -5.04 -5.15 6.68 -4.16 -4.9 -3.41 6.08 8.89 -2.85 10.24 -3.7 11.4 4.2 -4.98 8.16 -5.09 -5.88 4.33 -3.49 -3.| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:608] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. .. .. ..$ : chr [1:50] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:980, 1:50] -391.8 -309.8 -48.9 -220 -634.7 75.1 278.2 238 -36.6 247.2 29.2 1119.3 -20.8 101.3 781.1 -107.2 -55.7 860.6 11.6 | __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:980, 1:50] -391.5 -310.5 -48.1 -218.8 -635.5 67.1 275.7 236.5 -36.3 252.5 31 1125.9 -19.2 100 785.4 -107.4 -56.1 856 10.3 40| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:980] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
         .. .. .. .. .. ..$ : chr [1:50] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings.projected: num [1:980, 1:50] -391.8 -309.8 -48.9 -220 -634.7 75.1 278.2 238 -36.6 247.2 29.2 1119.3 -20.8 101.3 781.1 -107.2 -55.7 860.6 11.6 | __truncated__ ...
+        .. .. .. ..@ feature.loadings.projected: num [1:980, 1:50] -391.5 -310.5 -48.1 -218.8 -635.5 67.1 275.7 236.5 -36.3 252.5 31 1125.9 -19.2 100 785.4 -107.4 -56.1 856 10.3 40| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:980] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
         .. .. .. .. .. ..$ : chr [1:50] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:50] 5.4 2.74 2.55 2.4 2.2 2.13 1.91 2.04 2.05 2.01 2.02 1.95 1.98 1.97 1.95 1.94 1.92 1.9 1.92 1.91 1.91 1.9 1.91 1.88 1.88 ...
+        .. .. .. ..@ stdev                     : num [1:50] 5.41 2.74 2.56 2.4 2.21 2.15 1.9 2.05 2.05 2.01 2.02 1.95 1.98 1.97 1.96 1.95 1.92 1.91 1.92 1.9 1.91 1.9 1.91 1.89 1.88 ...
         .. .. .. ..@ key                       : chr "harmony_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
@@ -7234,8 +7234,8 @@
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      : list()
         .. ..$ umap   :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:608, 1:2] -1.953 0.429 -2.053 1.753 1.478 -2.788 -1.857 3.082 2.385 -2.87 2.101 -3.97 1.7 3.409 0.478 2.532 -1.749 0.181 1.| __truncated__ ...
-        .. .. .. .. ..- attr(*, "scaled:center")= num [1:2] -2.8 -5.35
+        .. .. .. ..@ cell.embeddings           : num [1:608, 1:2] -6.24 -3.69 -5.89 8.15 -3.09 -7.16 -5.02 7.06 9.85 -6.09 8.44 -8.32 9.07 9.46 -3.94 9.24 -5.76 -3.96 8.75 -7.11 -| __truncated__ ...
+        .. .. .. .. ..- attr(*, "scaled:center")= num [1:2] -1.64 -3.79
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:608] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. .. .. ..$ : chr [1:2] "UMAP_1" "UMAP_2"
@@ -7407,7 +7407,7 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "f2b51bce78baf350ead60b78bb548549"
+      [1] "3ad270cab49b2ccab299d8939445fccb"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
@@ -7524,7 +7524,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "5e1fb720e4a4ca7e78276b87ac675525"
+      [1] "bba18aa93f7fddf689a09c2e37b3ec13"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7609,21 +7609,21 @@
         .. .. .. ..@ misc                      :List of 1
         .. .. .. .. ..$ total.variance: num 781
         .. ..$ harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:608, 1:50] -4.79 -5.02 -5.03 6.79 -4.16 -4.86 -3.42 6.07 8.86 -2.93 10.28 -3.56 11.4 3.64 -4.97 8.24 -5 -5.86 4.92 -3.48 -3.| __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:608, 1:50] -4.77 -5.04 -5.15 6.68 -4.16 -4.9 -3.41 6.08 8.89 -2.85 10.24 -3.7 11.4 4.2 -4.98 8.16 -5.09 -5.88 4.33 -3.49 -3.| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:608] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. .. .. ..$ : chr [1:50] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:980, 1:50] -391.8 -309.8 -48.9 -220 -634.7 75.1 278.2 238 -36.6 247.2 29.2 1119.3 -20.8 101.3 781.1 -107.2 -55.7 860.6 11.6 | __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:980, 1:50] -391.5 -310.5 -48.1 -218.8 -635.5 67.1 275.7 236.5 -36.3 252.5 31 1125.9 -19.2 100 785.4 -107.4 -56.1 856 10.3 40| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:980] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
         .. .. .. .. .. ..$ : chr [1:50] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings.projected: num [1:980, 1:50] -391.8 -309.8 -48.9 -220 -634.7 75.1 278.2 238 -36.6 247.2 29.2 1119.3 -20.8 101.3 781.1 -107.2 -55.7 860.6 11.6 | __truncated__ ...
+        .. .. .. ..@ feature.loadings.projected: num [1:980, 1:50] -391.5 -310.5 -48.1 -218.8 -635.5 67.1 275.7 236.5 -36.3 252.5 31 1125.9 -19.2 100 785.4 -107.4 -56.1 856 10.3 40| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:980] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
         .. .. .. .. .. ..$ : chr [1:50] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:50] 5.4 2.74 2.55 2.4 2.2 2.13 1.91 2.04 2.05 2.01 2.02 1.95 1.98 1.97 1.95 1.94 1.92 1.9 1.92 1.91 1.91 1.9 1.91 1.88 1.88 ...
+        .. .. .. ..@ stdev                     : num [1:50] 5.41 2.74 2.56 2.4 2.21 2.15 1.9 2.05 2.05 2.01 2.02 1.95 1.98 1.97 1.96 1.95 1.92 1.91 1.92 1.9 1.91 1.9 1.91 1.89 1.88 ...
         .. .. .. ..@ key                       : chr "harmony_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
@@ -7632,8 +7632,8 @@
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      : list()
         .. ..$ umap   :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:608, 1:2] -1.953 0.429 -2.053 1.753 1.478 -2.788 -1.857 3.082 2.385 -2.87 2.101 -3.97 1.7 3.409 0.478 2.532 -1.749 0.181 1.| __truncated__ ...
-        .. .. .. .. ..- attr(*, "scaled:center")= num [1:2] -2.8 -5.35
+        .. .. .. ..@ cell.embeddings           : num [1:608, 1:2] -6.24 -3.69 -5.89 8.15 -3.09 -7.16 -5.02 7.06 9.85 -6.09 8.44 -8.32 9.07 9.46 -3.94 9.24 -5.76 -3.96 8.75 -7.11 -| __truncated__ ...
+        .. .. .. .. ..- attr(*, "scaled:center")= num [1:2] -1.64 -3.79
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:608] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. .. .. ..$ : chr [1:2] "UMAP_1" "UMAP_2"
