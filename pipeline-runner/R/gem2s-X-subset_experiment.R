@@ -1,38 +1,111 @@
+#' create a subset experiment
+#'
+#' This is the first step of a subset pipeline, which basically takes the parent
+#' experiment ID and cellset keys to keep as input, extracts the cell ids to keep
+#' and subsets and slims down the parent seurat object.
+#'
+#' @param input list containing:
+#'   - parentExperimentId character
+#'   - subsetExperimentId character
+#'   - cellSetKeys character vector of cellset keys to subset
+#'   - experimentName character
+#' @param pipeline_config list
+#'
+#' @return list containing scdata_list, annotations and sample_id_map
+#' @export
+#'
 create_subset_experiment <- function(input, pipeline_config) {
-
-  parent_experiment_id <- input$parentExperimentId
-  subset_experiment_id <- input$subsetExperimentId
-  cellset_keys <- input$cellSetKeys
 
   # load parent processed scdata and cellsets
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  parent_scdata <- load_processed_scdata(s3, pipeline_config, parent_experiment_id)
-  parent_cellsets <- parse_cellsets(load_cellsets(s3, pipeline_config, parent_experiment_id))
+  parent_scdata <- load_processed_scdata(s3, pipeline_config, input$parentExperimentId)
+  parent_cellsets <- parse_cellsets(load_cellsets(s3, pipeline_config, input$parentExperimentId))
 
-  cell_ids_to_keep <- parent_cellsets[key %in% cellset_keys, cell_id]
+  cell_ids_to_keep <- parent_cellsets[key %in% input$cellSetKeys, cell_id]
 
-  sample_id_mapping <- input$sampleIdMapping
+  # subset seurat object, remove unnecesary data
+  scdata <- subset_ids(parent_scdata, cell_ids_to_keep)
+  scdata <- diet_scdata(scdata)
+  scdata@misc$experimentId <- input$subsetExperimentId
 
-  # subset seurat object
-  scdata <- subset_ids(scdata, cell_ids_to_keep)
-
-  # add subset experiment name to the subset seurat object
-  scdata$project <- input$name
+  # delete parent_scdata to free memory
+  rm(parent_scdata)
 
   # add new sample_ids, keep originals in a new variable
   scdata$parent_samples <- scdata$samples
-  scdata$samples <- sample_id_mapping[match(parent_samples, sample_id_mapping)]
+  sample_id_map <- create_sample_id_map(unique(scdata$parent_samples))
+  scdata <- add_new_sample_ids(scdata, sample_id_map)
 
   # split by sample
   scdata_list <- Seurat::SplitObject(scdata, split.by = "samples")
 
-  prev_out$scdata_list <- scdata_list
-  prev_out$annot <- scdata@misc
+  # structure step output
   res <- list(
     data = list(),
-    output = prev_out
+    output = list(scdata_list = scdata_list,
+                  annot = scdata@misc$gene_annotations,
+                  sample_id_map = sample_id_map)
   )
 
   message("\nSubsetting of Seurat object step complete.")
   return(res)
+}
+
+
+#' generate a sample id mapping for remaining samples after subset
+#'
+#' New sample ids must be created, but the number of samples depends on which
+#' cells have been subset by the user. Sample Ids that belong to the parent
+#' experiment are also kept, which is useful for the addition of the new subclusters
+#' to the parent experiment.
+#'
+#' @param parent_sample_id character vector of unique parent sample ids
+#'
+#' @return data.table with sample id map
+#' @export
+#'
+create_sample_id_map <- function(parent_sample_id) {
+  subset_sample_id <-  uuid::UUIDgenerate(n = length(parent_sample_id))
+  sample_id_map <-data.table::data.table(parent_sample_id = parent_sample_id,
+                                         subset_sample_id = subset_sample_id)
+
+  return(sample_id_map)
+}
+
+
+#' Add new sample ids to the subset Seurat Object
+#'
+#' @param scdata Seurat Object
+#' @param sample_id_map data.table of parent/subset sample id map
+#'
+#' @return SeuratObject with new sample ids
+#' @export
+#'
+add_new_sample_ids <- function(scdata, sample_id_map) {
+  sample_map_idx <- match(scdata$parent_samples, sample_id_map$parent_sample_id)
+  scdata$samples <- sample_id_map$subset_sample_id[sample_map_idx]
+  return(scdata)
+}
+
+
+#' Remove all unnecessary data from the parent seurat object
+#'
+#' Seurat::DietSeurat is not able to remove certain slots from a seurat object.
+#' This function also removes elements from the misc slot which are not necessary
+#'
+#' @param scdata SeuratObject
+#'
+#' @return leaner SeuratObject
+#' @export
+#'
+diet_scdata <- function(scdata) {
+  lean_scdata <- Seurat::CreateSeuratObject(counts = scdata@assays$RNA@counts,
+                             meta.data = scdata@meta.data,
+                             min.cells = 0,
+                             min.features = 0)
+
+  lean_scdata@misc <- list(gene_annotations = scdata@misc$gene_annotations,
+                           parent_experimentId = scdata@misc$experimentId)
+
+  return(lean_scdata)
 }

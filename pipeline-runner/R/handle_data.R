@@ -405,11 +405,11 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
 
 #' Load cellsets object from s3
 #'
-#' @param s3
-#' @param pipeline_config
-#' @param experiment_id
+#' @param s3 paws::s3 object
+#' @param pipeline_config list
+#' @param experiment_id character
 #'
-#' @return
+#' @return cellsets list
 #' @export
 #'
 load_cellsets <- function(s3, pipeline_config, experiment_id) {
@@ -434,7 +434,7 @@ load_cellsets <- function(s3, pipeline_config, experiment_id) {
 #'
 #' @param cellsets list
 #'
-#' @return
+#' @return data.table of cellset keys, names and corresponding cell_ids
 #' @export
 #'
 parse_cellsets <- function(cellsets) {
