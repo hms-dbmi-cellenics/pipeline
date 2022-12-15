@@ -181,7 +181,6 @@ duplicate_config_per_sample <- function(step_config, samples) {
   config <- list()
   for (sample in unique(samples)) {
     config[[sample]] <- step_config
-    config[[sample]]$defaultFilterSettings <- step_config$filterSettings
   }
 
   return(config)
@@ -201,9 +200,6 @@ add_custom_config_per_sample <- function(generate_sample_config, default_config,
 
     # update sample config thresholds
     config[[sample]] <- sample_config
-
-    # add auto settings
-    config[[sample]]$defaultFilterSettings <- sample_config$filterSettings
   }
 
   return(config)
