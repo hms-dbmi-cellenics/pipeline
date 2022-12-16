@@ -264,7 +264,7 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 #'
 #' @return character message id
 #'
-call_subset_seurat <- function(task_name, input, pipeline_config) {
+call_subset <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
   # remove when it's added to the input
   input$subset_experiment <- TRUE
@@ -486,8 +486,8 @@ wrapper <- function(input, pipeline_config) {
     message_id <- call_qc(task_name, input, pipeline_config)
   } else if (process_name == "gem2s") {
     message_id <- call_gem2s(task_name, input, pipeline_config)
-  } else if (process_name == "subsetGem2s") {
-    message_id <- call_subset_gem2s(task_name, input, pipeline_config)
+  } else if (process_name == "subset") {
+    message_id <- call_subset(task_name, input, pipeline_config)
   } else {
     stop("Process name not recognized.")
   }
