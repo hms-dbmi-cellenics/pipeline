@@ -10,12 +10,12 @@
 #'   - cellSetKeys character vector of cellset keys to subset
 #'   - experimentName character
 #' @param pipeline_config list
+#' @param prev_out list, ignored because this is the first step in the subset pipeline
 #'
 #' @return list containing scdata_list, annotations and sample_id_map
 #' @export
 #'
-create_subset_experiment <- function(input, pipeline_config) {
-
+create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
   # load parent processed scdata and cellsets
   s3 <- paws::s3(config = pipeline_config$aws_config)
   parent_scdata <- load_processed_scdata(s3, pipeline_config, input$parentExperimentId)

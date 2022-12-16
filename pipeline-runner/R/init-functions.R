@@ -204,7 +204,7 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, d
 #'
 #' @return list of task results
 #'
-run_gem2s_step <- function(prev_out, input, pipeline_config, tasks, task_name) {
+run_pipeline_step <- function(prev_out, input, pipeline_config, tasks, task_name) {
   if (!task_name %in% names(tasks)) {
     stop("Invalid task name given: ", task_name)
   }
@@ -242,7 +242,7 @@ call_gem2s <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(GEM2S_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_gem2s_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
   message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
@@ -277,7 +277,7 @@ call_subset <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(SUBSET_SEURAT_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_gem2s_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
   message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
