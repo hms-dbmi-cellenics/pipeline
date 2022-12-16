@@ -28,7 +28,7 @@ update-sysdata:
 build: 
 	@(cd ./local-runner && npm run build)
 build-batch-staging: 
-	@(cd pipeline-runner && docker build --target batch --tag 242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:batch-staging --build-arg GITHUB_PAT=$GITHUB_API_TOKEN .)
+	@(cd pipeline-runner && docker build --target batch --tag 242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:batch-staging --build-arg GITHUB_PAT=${GITHUB_API_TOKEN} .)
 	@aws ecr get-login-password --region 'eu-west-1' | docker login --username AWS --password-stdin 242905224710.dkr.ecr.eu-west-1.amazonaws.com
 	@docker push 242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:batch-staging
 test:
