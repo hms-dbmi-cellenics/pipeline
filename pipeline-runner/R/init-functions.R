@@ -94,7 +94,7 @@ load_config <- function(development_aws_server) {
   }
 
   # batch does not have access to the internal EKS cluster api URL, use the public one
-  if(running_in_batch == "true" && domain_name != "") {
+  if (running_in_batch == "true" && domain_name != "") {
     config$api_url <- config$public_api_url
   }
 
@@ -205,7 +205,6 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, d
 #' @return list of task results
 #'
 run_gem2s_step <- function(prev_out, input, pipeline_config, tasks, task_name) {
-
   if (!task_name %in% names(tasks)) {
     stop("Invalid task name given: ", task_name)
   }
@@ -252,9 +251,9 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 }
 
 
-#' Call subset gem2s
+#' Call subset seurat
 #'
-#' Runs step `task_name` of the subset GEM2S pipeline, sends output message to the API
+#' Runs step `task_name` of the subset seurat pipeline, sends output message to the API
 #'
 #' @param task_name character name of the step
 #' @param input list containing
@@ -265,7 +264,7 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 #'
 #' @return character message id
 #'
-call_subset_gem2s <- function(task_name, input, pipeline_config) {
+call_subset_seurat <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
   # remove when it's added to the input
   input$subset_experiment <- TRUE
@@ -276,7 +275,7 @@ call_subset_gem2s <- function(task_name, input, pipeline_config) {
   }
 
   check_input(input)
-  tasks <- lapply(SUBSET_GEM2S_TASK_LIST, get)
+  tasks <- lapply(SUBSET_SEURAT_TASK_LIST, get)
 
   c(data, task_out) %<-% run_gem2s_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
@@ -449,14 +448,14 @@ pipeline_heartbeat <- function(task_token, aws_config) {
 start_heartbeat <- function(task_token, aws_config) {
   message("Starting heartbeat")
 
-    heartbeat_proc <- callr::r_bg(
+  heartbeat_proc <- callr::r_bg(
     func = pipeline_heartbeat, args = list(
       task_token, aws_config
     ),
     stdout = "/tmp/out",
     stderr = "/tmp/err"
   )
-    return(heartbeat_proc)
+  return(heartbeat_proc)
 }
 
 
