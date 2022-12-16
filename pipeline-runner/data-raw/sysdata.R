@@ -90,6 +90,7 @@ usethis::use_data(
   debug_timestamp,
   bucket_list,
   gem2s,
+  SUBSET_SEURAT_TASK_LIST,
   GEM2S_TASK_LIST,
   QC_TASK_LIST,
   INPUT_DIR,
