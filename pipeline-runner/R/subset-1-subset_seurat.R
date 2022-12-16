@@ -10,6 +10,7 @@
 #'   - cellSetKeys character vector of cellset keys to subset
 #'   - experimentName character
 #' @param pipeline_config list
+#' @param prev_out list, ignored because this is the first step in the subset pipeline
 #'
 #' @return list containing scdata_list, annotations and sample_id_map
 #' @export

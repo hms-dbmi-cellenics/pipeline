@@ -27,6 +27,7 @@ upload_cells_id <- function(pipeline_config, object_key, cells_id) {
 
 load_processed_scdata <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$processed_bucket
+  message("Loading processed scdata")
   message(bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
 
