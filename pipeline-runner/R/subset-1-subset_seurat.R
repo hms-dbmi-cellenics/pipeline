@@ -14,8 +14,7 @@
 #' @return list containing scdata_list, annotations and sample_id_map
 #' @export
 #'
-create_subset_experiment <- function(input, pipeline_config) {
-
+create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
   # load parent processed scdata and cellsets
   s3 <- paws::s3(config = pipeline_config$aws_config)
   parent_scdata <- load_processed_scdata(s3, pipeline_config, input$parentExperimentId)
@@ -26,7 +25,7 @@ create_subset_experiment <- function(input, pipeline_config) {
   # subset seurat object, remove unnecesary data
   scdata <- subset_ids(parent_scdata, cell_ids_to_keep)
   scdata <- diet_scdata(scdata)
-  scdata@misc$experimentId <- input$subsetExperimentId
+  scdata@misc$experimentId <- input$experimentId
 
   # delete parent_scdata to free memory
   rm(parent_scdata)
@@ -39,12 +38,24 @@ create_subset_experiment <- function(input, pipeline_config) {
   # split by sample
   scdata_list <- Seurat::SplitObject(scdata, split.by = "samples")
 
+  # TODO: remove from here and refactor all pipeline.
+  config <- list(
+    name = input$experimentName,
+    samples = input$sampleIds,
+    organism = input$organism,
+    input = list(type = input$input$type),
+    sampleOptions = input$sampleOptions
+  )
+
   # structure step output
   res <- list(
     data = list(),
-    output = list(scdata_list = scdata_list,
-                  annot = scdata@misc$gene_annotations,
-                  sample_id_map = sample_id_map)
+    output = list(
+      scdata_list = scdata_list,
+      annot = scdata@misc$gene_annotations,
+      sample_id_map = sample_id_map,
+      config = config
+    )
   )
 
   message("\nSubsetting of Seurat object step complete.")
@@ -65,9 +76,11 @@ create_subset_experiment <- function(input, pipeline_config) {
 #' @export
 #'
 create_sample_id_map <- function(parent_sample_id) {
-  subset_sample_id <-  uuid::UUIDgenerate(n = length(parent_sample_id))
-  sample_id_map <-data.table::data.table(parent_sample_id = parent_sample_id,
-                                         subset_sample_id = subset_sample_id)
+  subset_sample_id <- uuid::UUIDgenerate(n = length(parent_sample_id))
+  sample_id_map <- data.table::data.table(
+    parent_sample_id = parent_sample_id,
+    subset_sample_id = subset_sample_id
+  )
 
   return(sample_id_map)
 }
@@ -99,13 +112,17 @@ add_new_sample_ids <- function(scdata, sample_id_map) {
 #' @export
 #'
 diet_scdata <- function(scdata) {
-  lean_scdata <- Seurat::CreateSeuratObject(counts = scdata@assays$RNA@counts,
-                             meta.data = scdata@meta.data,
-                             min.cells = 0,
-                             min.features = 0)
+  lean_scdata <- Seurat::CreateSeuratObject(
+    counts = scdata@assays$RNA@counts,
+    meta.data = scdata@meta.data,
+    min.cells = 0,
+    min.features = 0
+  )
 
-  lean_scdata@misc <- list(gene_annotations = scdata@misc$gene_annotations,
-                           parent_experimentId = scdata@misc$experimentId)
+  lean_scdata@misc <- list(
+    gene_annotations = scdata@misc$gene_annotations,
+    parent_experimentId = scdata@misc$experimentId
+  )
 
   return(lean_scdata)
 }
