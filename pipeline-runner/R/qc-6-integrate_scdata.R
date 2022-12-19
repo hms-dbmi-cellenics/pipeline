@@ -274,7 +274,10 @@ run_seuratv4 <- function(scdata, config, npcs) {
   if (normalization == "SCT") {
     Seurat::DefaultAssay(scdata) <- "RNA"
     scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
-    Seurat::DefaultAssay(scdata) <- "integrated"
+    # check if integrated assay exists because it doesn't exist if the integration was skipped
+    if ("integrated" %in% names(scdata@assays)) {
+      Seurat::DefaultAssay(scdata) <- "integrated"
+    }
   }
   scdata@misc <- misc
   scdata <- add_dispersions(scdata, normalization)

@@ -39,9 +39,9 @@ load_config <- function(development_aws_server) {
     # if /etc/podinfo/labels exists we are running in a remote aws pod
     if (file.exists(label_path)) {
       labels <- read.csv(label_path,
-                         sep = "=",
-                         row.names = 1,
-                         header = FALSE
+        sep = "=",
+        row.names = 1,
+        header = FALSE
       )
       activity_id <- labels["activityId", ]
       activity_arn <- build_activity_arn(
@@ -85,14 +85,17 @@ load_config <- function(development_aws_server) {
     )
   )
 
+
+  if (config$cluster_env == "staging") {
+    config$public_api_url <- paste0("https://api-", sandbox, ".", domain_name)
+  }
+  if (config$cluster_env == "production") {
+    config$public_api_url <- paste0("https://api.", domain_name)
+  }
+
   # batch does not have access to the internal EKS cluster api URL, use the public one
   if(running_in_batch == "true" && domain_name != "") {
-    if (config$cluster_env == "staging") {
-      config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
-    }
-    if (config$cluster_env == "production") {
-      config$api_url <- paste0("https://api.", domain_name)
-    }
+    config$api_url <- config$public_api_url
   }
 
   # running in linux needs the IP of the host to work. If it is set as an
@@ -127,8 +130,8 @@ load_config <- function(development_aws_server) {
   }
 
   bucket_list <- lapply(bucket_list,
-                        paste, config$cluster_env, config$aws_account_id,
-                        sep = "-"
+    paste, config$cluster_env, config$aws_account_id,
+    sep = "-"
   )
 
   config <- append(config, bucket_list)
@@ -143,7 +146,7 @@ load_config <- function(development_aws_server) {
 }
 
 
-#' Run data processing step
+#' Run qc pipeline step
 #'
 #' Calls the corresponding task_name QC pipeline step function.
 #'
@@ -157,9 +160,10 @@ load_config <- function(development_aws_server) {
 #'
 #' @return list of task results
 #'
-run_processing_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, debug_config) {
-  if (!task_name %in% names(tasks)) stop('Invalid task: ', task_name)
-
+run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, debug_config) {
+  if (!task_name %in% names(tasks)) {
+    stop("Invalid task: ", task_name)
+  }
 
   handle_debug(scdata, config, task_name, sample_id, debug_config)
 
@@ -173,8 +177,11 @@ run_processing_step <- function(scdata, config, tasks, task_name, cells_id, samp
   tstart <- Sys.time()
 
   out <- task(scdata, config, sample_id, cells_id, task_name)
-  ttask <- format(Sys.time()-tstart, digits = 2)
-  message("⏱️ Time to complete ", task_name, " for sample ", sample_id, ": ", ttask, '\n')
+  ttask <- format(Sys.time() - tstart, digits = 2)
+  message(
+    "⏱️ Time to complete ", task_name,
+    " for sample ", sample_id, ": ", ttask, "\n"
+  )
 
   return(out)
 }
@@ -204,8 +211,8 @@ run_pipeline_step <- function(task_name, input, pipeline_config, prev_out, tasks
 
   tstart <- Sys.time()
   res <- task(input, pipeline_config, prev_out)
-  ttask <- format(Sys.time()-tstart, digits = 2)
-  message("⏱️ Time to complete ", task_name, ": ", ttask, '\n')
+  ttask <- format(Sys.time() - tstart, digits = 2)
+  message("⏱️ Time to complete ", task_name, ": ", ttask, "\n")
 
   return(res)
 }
@@ -273,7 +280,7 @@ call_seurat <- function(task_name, input, pipeline_config) {
 #'
 #' @return character message id
 #'
-call_data_processing <- function(task_name, input, pipeline_config) {
+call_qc <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
   config <- input$config
   upload_count_matrix <- input$uploadCountMatrix
@@ -297,8 +304,8 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     # assign it to the global environment so we can
     # persist it across runs of the wrapper
     assign("scdata",
-           reload_data_from_s3(pipeline_config, experiment_id, task_name, tasks),
-           pos = ".GlobalEnv"
+      reload_data_from_s3(pipeline_config, experiment_id, task_name, tasks),
+      pos = ".GlobalEnv"
     )
 
     message("Single-cell data loaded.")
@@ -311,8 +318,8 @@ call_data_processing <- function(task_name, input, pipeline_config) {
     } else if (task_name %in% names(tasks)) {
       samples <- names(scdata)
       assign("cells_id",
-             load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples),
-             pos = ".GlobalEnv"
+        load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples),
+        pos = ".GlobalEnv"
       )
     } else {
       stop("Invalid task name given: ", task_name)
@@ -324,7 +331,7 @@ call_data_processing <- function(task_name, input, pipeline_config) {
   # call function to run and update global variable
   c(
     data, new_ids, ...rest_of_results
-  ) %<-% run_processing_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
+  ) %<-% run_qc_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
 
 
   assign("cells_id", new_ids, pos = ".GlobalEnv")
@@ -422,14 +429,14 @@ pipeline_heartbeat <- function(task_token, aws_config) {
 start_heartbeat <- function(task_token, aws_config) {
   message("Starting heartbeat")
 
-  heartbeat_proc <- callr::r_bg(
+    heartbeat_proc <- callr::r_bg(
     func = pipeline_heartbeat, args = list(
       task_token, aws_config
     ),
     stdout = "/tmp/out",
     stderr = "/tmp/err"
   )
-  return(heartbeat_proc)
+    return(heartbeat_proc)
 }
 
 
@@ -457,10 +464,10 @@ wrapper <- function(input, pipeline_config) {
   process_name <- input$processName
 
   if (process_name == "qc") {
-    message_id <- call_data_processing(task_name, input, pipeline_config)
+    message_id <- call_qc(task_name, input, pipeline_config)
   } else if (process_name == "gem2s") {
     message_id <- call_gem2s(task_name, input, pipeline_config)
-  } else if (process_name == 'seurat') {
+  } else if (process_name == "seurat") {
     message_id <- call_seurat(task_name, input, pipeline_config)
   } else {
     stop("Process name not recognized.")

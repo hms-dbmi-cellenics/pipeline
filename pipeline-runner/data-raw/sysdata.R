@@ -24,7 +24,7 @@ GEM2S_TASK_LIST <- list(
   "uploadToAWS" = "upload_to_aws"
 )
 
-# vector of task functions named by task name
+# list of task functions named by task name
 QC_TASK_LIST <- list(
   "classifier" = "filter_emptydrops",
   "cellSizeDistribution" = "filter_low_cellsize",

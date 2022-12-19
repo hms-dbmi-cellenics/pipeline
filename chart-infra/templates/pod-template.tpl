@@ -19,6 +19,8 @@
             value: "{{ .Values.sandboxId }}"
           - name: AWS_ACCOUNT_ID
             value: "{{ .Values.myAccount.accountId }}"
+          - name: DOMAIN_NAME
+            value: "{{ .Values.myAccount.domainName }}"
         volumeMounts:
         - name: podinfo
           mountPath: /etc/podinfo
