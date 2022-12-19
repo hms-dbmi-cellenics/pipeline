@@ -22,8 +22,15 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   qc_config <- prev_out$qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
 
-  message("Constructing cell sets ...")
-  cell_sets <- get_cell_sets(scdata_list, input)
+  if (disable_qc_filters == FALSE){
+    message("Constructing cell sets ...")
+    cell_sets <- get_cell_sets(scdata_list, input)
+  }
+
+  if (disable_qc_filters == TRUE){
+    message("Constructing cell sets for subset experiment...")
+    cell_sets <- get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters)
+  }
 
   # cell sets file to s3
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
@@ -91,8 +98,7 @@ get_cell_sets <- function(scdata_list, input) {
   sample_cellsets <- build_sample_cellsets(input, scdata_list, color_pool)
 
   # remove used colors from pool
-  used <- seq_along(sample_cellsets$children)
-  color_pool <- color_pool[-used]
+  color_pool <- remove_used_colors(sample_cellsets, color_pool)
 
   # Design cell_set meta_data for DynamoDB
   cell_sets <- c(list(scratchpad), list(sample_cellsets))
@@ -105,7 +111,7 @@ get_cell_sets <- function(scdata_list, input) {
 }
 
 # cell_sets fn for seurat samples information
-build_sample_cellsets <- function(input, scdata_list, color_pool) {
+build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters, child_cellsets) {
   cell_set <- list(
     key = "sample",
     name = "Samples",
@@ -114,15 +120,26 @@ build_sample_cellsets <- function(input, scdata_list, color_pool) {
     type = "metadataCategorical"
   )
 
-  sample_ids <- unlist(input$sampleIds)
-  sample_names <- unlist(input$sampleNames)
+  if (disable_qc_filters == TRUE) {
+    sample_ids <- unique(child_cellsets[type == "sample", key:name])[, key]
+    sample_names <- unique(child_cellsets[type == "sample", key:name])[, name]
+  } else {
+    sample_ids <- unlist(input$sampleIds)
+    sample_names <- unlist(input$sampleNames)
+  }
+
 
   for (i in seq_along(sample_ids)) {
+
     sample_id <- sample_ids[i]
-    scdata <- scdata_list[[sample_id]]
     sample_name <- sample_names[i]
 
-    cell_ids <- scdata$cells_id
+    if (disable_qc_filters == TRUE) {
+      cell_ids <- child_cellsets[key==sample_id, cell_id]
+    } else {
+      scdata <- scdata_list[[sample_id]]
+      cell_ids <- scdata$cells_id
+    }
 
     cell_set$children[[i]] <- list(
       key = sample_id,
@@ -150,12 +167,23 @@ build_sample_cellsets <- function(input, scdata_list, color_pool) {
 #' @return list of cellsets
 #' @export
 #'
-build_metadata_cellsets <- function(input, scdata_list, color_pool) {
+build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters, chiild_cellsets) {
   cell_set_list <- c()
-  user_metadata <- lapply(input$metadata, unlist)
 
   # user-supplied metadata track names
-  metadata_names <- names(user_metadata)
+  if (disable_qc_filters == TRUE) {
+    metadata_track <- stringr::str_remove(child_cellsets[type == "metadata", key], paste0("-", child_cellsets[type == "metadata", name]))
+
+    metadata <- unique(child_cellsets[type == "metadata", key:name][, metadata_value := metadata_track][, metadata_value:name])
+    user_metadata <- list()
+    for (k in unique(metadata$metadata_value)) {
+      user_metadata[[k]] <- metadata[metadata_value == k, name]
+    }
+    metadata_names <- names(user_metadata)
+  } else {
+    user_metadata <- lapply(input$metadata, unlist)
+    metadata_names <- names(user_metadata)
+  }
 
   # user supplied metadata names must be made syntactically valid, as seurat does.
   # We use them to access the cell ids stored in the seurat object, to create the
@@ -183,9 +211,13 @@ build_metadata_cellsets <- function(input, scdata_list, color_pool) {
       value <- values[j]
 
       cell_ids <- list()
-      for (scdata in scdata_list) {
-        cells_in_value <- scdata[[valid_metadata_name]] == value
-        cell_ids <- append(cell_ids,  scdata$cells_id[cells_in_value])
+      if (disable_qc_filters == TRUE) {
+        cell_ids <- child_cellsets[name == value, cell_id]
+      } else {
+        for (scdata in scdata_list) {
+          cells_in_value <- scdata[[valid_metadata_name]] == value
+          cell_ids <- append(cell_ids, scdata$cells_id[cells_in_value])
+        }
       }
 
       cell_set$children[[j]] <- list(
@@ -200,4 +232,85 @@ build_metadata_cellsets <- function(input, scdata_list, color_pool) {
     cell_set_list <- c(cell_set_list, list(cell_set))
   }
   return(cell_set_list)
+}
+
+
+# remove used colors from pool
+remove_used_colors <- function(cellsets, color_pool) {
+  used <- seq_along(cellsets$children)
+  color_pool <- color_pool[-used]
+  return(color_pool)
+}
+
+
+get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filters){
+
+  # get original cellsets from step gem2s-subset-experiment
+  parent_cellsets <- prev_out$parent_cellsets
+  #  get cell ids in the subset experiment
+  cell_ids_to_keep <- unlist(lapply(scdata_list, function(x){x$cells_id}))
+
+  #  filter out all louvain
+  parent_cellsets_filt <- parent_cellsets[type != "cluster"]
+
+  # filter out cells from cell_sets_original scratchpad and metadata
+  child_cellsets <- parent_cellsets_filt[which(parent_cellsets_filt$cell_id %in% cell_ids_to_keep)]
+
+  # replace old sample ids with new sample ids in the new cellsets
+  new_samples_ids <- unlist(lapply(scdata_list, function(x){x$samples}))
+  cells_ids_new_samples <- data.table(cell_ids_to_keep, new_samples_ids)
+  # join by cell_id
+  cellsets_samples <- cells_ids_new_samples[child_cellsets[type=="sample",], on = .(cell_ids_to_keep = cell_id)]
+  # replace key with new_sample_ids
+  child_cellsets[type=="sample",key := cellsets_samples$new_samples_ids]
+
+  # convert back cellsets to list format
+  color_pool <- get_color_pool()
+  sample_cellsets <- build_sample_cellsets(input, scdata_list, color_pool, disable_qc_filters, child_cellsets)
+  color_pool <- remove_used_colors(sample_cellsets, color_pool)
+
+  if ("metadata" %in% unique(child_cellsets$type)) {
+    metadata_cellsets <- build_metadata_cellsets(input, scdata_list, color_pool, disable_qc_filters, child_cellsets)
+    color_pool <- remove_used_colors(metadata_cellsets, color_pool)
+  }
+
+  if ("scratchpad" %in% unique(child_cellsets$type)) {
+    scratchpad_cellsets <- build_scratchpad_cellsets(color_pool, child_cellsets)
+  }
+
+  cell_sets <- c(list(scratchpad_cellsets), list(sample_cellsets), list(metadata_cellsets))
+  cell_sets <- list(cellSets = cell_sets)
+
+  return(cell_sets)
+}
+
+
+build_scratchpad_cellsets <- function(color_pool, child_cellsets) {
+  scratchpad <- list(
+    key = "scratchpad",
+    name = "Custom cell sets",
+    rootNode = TRUE,
+    children = list(),
+    type = "cellSets"
+  )
+
+  scratchpad_ids <- unique(child_cellsets[type == "scratchpad", key:name])[, key]
+  scratchpad_names <- unique(child_cellsets[type == "scratchpad", key:name])[, name]
+
+  for (i in seq_along(scratchpad_ids)) {
+
+    scratchpad_id <- scratchpad_ids[i]
+    scratchpad_name <- scratchpad_names[i]
+
+    cell_ids <- child_cellsets[key==scratchpad_id, cell_id]
+
+    scratchpad$children[[i]] <- list(
+      key = scratchpad_id,
+      name = scratchpad_name,
+      color = color_pool[i],
+      cellIds = unname(cell_ids)
+    )
+  }
+
+  return(scratchpad)
 }
