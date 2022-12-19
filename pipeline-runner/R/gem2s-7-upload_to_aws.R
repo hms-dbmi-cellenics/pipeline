@@ -22,12 +22,12 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   qc_config <- prev_out$qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
 
-  if (disable_qc_filters == FALSE){
+  if (disable_qc_filters == FALSE) {
     message("Constructing cell sets ...")
     cell_sets <- get_cell_sets(scdata_list, input)
   }
 
-  if (disable_qc_filters == TRUE){
+  if (disable_qc_filters == TRUE) {
     message("Constructing cell sets for subset experiment...")
     cell_sets <- get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters)
   }
@@ -44,7 +44,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   # remove previous existing data
   remove_bucket_folder(pipeline_config, pipeline_config$source_bucket, experiment_id)
 
- for (sample in names(scdata_list)) {
+  for (sample in names(scdata_list)) {
     message("Uploading sample ", sample, " object to S3 ...")
     fpath <- file.path(tempdir(), "experiment.rds")
     saveRDS(scdata_list[[sample]], fpath)
@@ -111,7 +111,7 @@ get_cell_sets <- function(scdata_list, input) {
 }
 
 # cell_sets fn for seurat samples information
-build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters, child_cellsets) {
+build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters = FALSE, child_cellsets = NA) {
   cell_set <- list(
     key = "sample",
     name = "Samples",
@@ -130,12 +130,11 @@ build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_fil
 
 
   for (i in seq_along(sample_ids)) {
-
     sample_id <- sample_ids[i]
     sample_name <- sample_names[i]
 
     if (disable_qc_filters == TRUE) {
-      cell_ids <- child_cellsets[key==sample_id, cell_id]
+      cell_ids <- child_cellsets[key == sample_id, cell_id]
     } else {
       scdata <- scdata_list[[sample_id]]
       cell_ids <- scdata$cells_id
@@ -167,7 +166,7 @@ build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_fil
 #' @return list of cellsets
 #' @export
 #'
-build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters, chiild_cellsets) {
+build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters = FALSE, chiild_cellsets = NA) {
   cell_set_list <- c()
 
   # user-supplied metadata track names
@@ -243,12 +242,14 @@ remove_used_colors <- function(cellsets, color_pool) {
 }
 
 
-get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filters){
+get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filters) {
 
   # get original cellsets from step gem2s-subset-experiment
   parent_cellsets <- prev_out$parent_cellsets
   #  get cell ids in the subset experiment
-  cell_ids_to_keep <- unlist(lapply(scdata_list, function(x){x$cells_id}))
+  cell_ids_to_keep <- unlist(lapply(scdata_list, function(x) {
+    x$cells_id
+  }))
 
   #  filter out all louvain
   parent_cellsets_filt <- parent_cellsets[type != "cluster"]
@@ -257,12 +258,14 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
   child_cellsets <- parent_cellsets_filt[which(parent_cellsets_filt$cell_id %in% cell_ids_to_keep)]
 
   # replace old sample ids with new sample ids in the new cellsets
-  new_samples_ids <- unlist(lapply(scdata_list, function(x){x$samples}))
+  new_samples_ids <- unlist(lapply(scdata_list, function(x) {
+    x$samples
+  }))
   cells_ids_new_samples <- data.table(cell_ids_to_keep, new_samples_ids)
   # join by cell_id
-  cellsets_samples <- cells_ids_new_samples[child_cellsets[type=="sample",], on = .(cell_ids_to_keep = cell_id)]
+  cellsets_samples <- cells_ids_new_samples[child_cellsets[type == "sample", ], on = .(cell_ids_to_keep = cell_id)]
   # replace key with new_sample_ids
-  child_cellsets[type=="sample",key := cellsets_samples$new_samples_ids]
+  child_cellsets[type == "sample", key := cellsets_samples$new_samples_ids]
 
   # convert back cellsets to list format
   color_pool <- get_color_pool()
@@ -298,11 +301,10 @@ build_scratchpad_cellsets <- function(color_pool, child_cellsets) {
   scratchpad_names <- unique(child_cellsets[type == "scratchpad", key:name])[, name]
 
   for (i in seq_along(scratchpad_ids)) {
-
     scratchpad_id <- scratchpad_ids[i]
     scratchpad_name <- scratchpad_names[i]
 
-    cell_ids <- child_cellsets[key==scratchpad_id, cell_id]
+    cell_ids <- child_cellsets[key == scratchpad_id, cell_id]
 
     scratchpad$children[[i]] <- list(
       key = scratchpad_id,
