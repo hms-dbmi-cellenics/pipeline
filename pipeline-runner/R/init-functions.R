@@ -512,6 +512,7 @@ init <- function() {
 
   futile.logger::flog.layout(futile.logger::layout.simple)
   futile.logger::flog.threshold(futile.logger::ERROR)
+  reticulate::py_run_file("./datadog-batch/run.py", local = TRUE, convert = FALSE)
 
   message("Waiting for tasks")
 
