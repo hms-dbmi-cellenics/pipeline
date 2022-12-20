@@ -12,7 +12,7 @@ AWS.config.update({
   s3ForcePathStyle: true,
 });
 
-const isPipelineContainer = (name) => name.includes('qc') || name.includes('gem2s');
+const isPipelineContainer = (name) => name.includes('qc') || name.includes('gem2s') || name.includes('subset');
 
 const setVarsInTemplate = (template) => {
   const varNames = ['DEBUG_STEP', 'DEBUG_PATH', 'HOST_IP'];
@@ -141,6 +141,7 @@ const main = async () => {
 
   // Attach to existing running containers and new containers, respectively.
   attachToExistingContainers(docker, nameColorMap);
+
   attachToNewContainers(docker, emitter, nameColorMap);
 
   console.log('Waiting for Docker events...');
