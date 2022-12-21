@@ -280,6 +280,15 @@ call_subset <- function(task_name, input, pipeline_config) {
   c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
+  if (task_name == names(tasks)[1]) {
+    assign("cells_id", generate_first_step_ids(prev_out$scdata_list), pos = ".GlobalEnv")
+    next_task <- "dataIntegration"
+    for(sample_id in names(prev_out$scdata_list)) {
+      object_key <- paste0(experiment_id, "/", next_task, "/", sample_id, ".rds")
+      upload_cells_id(pipeline_config, object_key, cells_id)
+    }
+  }
+
   message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
 
   return(message_id)
@@ -474,7 +483,6 @@ wrapper <- function(input, pipeline_config) {
   message("\n------\nStarting task: ", task_name, "\n")
   message("Input:")
   str(input)
-  message("")
 
   # common to gem2s and data processing
   server <- input$server

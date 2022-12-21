@@ -42,10 +42,7 @@ create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
   # TODO: remove from here and refactor all pipeline.
   config <- list(
     name = input$experimentName,
-    samples = input$sampleIds,
-    organism = input$organism,
-    input = list(type = input$input$type),
-    sampleOptions = input$sampleOptions
+    samples = sample_id_map$subset_sample_id
   )
 
   # structure step output
@@ -54,8 +51,10 @@ create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
     output = list(
       scdata_list = scdata_list,
       annot = scdata@misc$gene_annotations,
+      edrops = NULL,
       sample_id_map = sample_id_map,
-      config = config
+      config = config,
+      disable_qc_filters = TRUE
     )
   )
 
