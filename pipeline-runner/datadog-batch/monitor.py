@@ -75,17 +75,15 @@ if __name__ == "__main__":
         "hostname"
     ])
 
-    print("*** instance meta", instance_meta)
-
     resources = [
         MetricResource(
-            name=f"{instance_meta.get('instance-id', 'batch-instance')}",
+            name=f"{instance_meta.get('instance-id', '')}",
             type="host",
         )
     ]
 
     tags = [
-        f"instanceId:{instance_meta.get('instance-id', 'batch-instance')}",
+        f"instanceId:{instance_meta.get('instance-id', '')}",
         f"instanceType:{instance_meta.get('instance-type', '')}",
         f"hostname:{instance_meta.get('hostname', '')}",
         f"service:batch",
