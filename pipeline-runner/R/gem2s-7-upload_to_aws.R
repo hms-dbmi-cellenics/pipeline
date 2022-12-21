@@ -21,6 +21,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   config <- prev_out$config
   qc_config <- prev_out$qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
+
   if("sample_id_map" %in% names(prev_out)) {
     input$sampleIds <- names(scdata_list)
     input$sampleNames <- names(scdata_list)

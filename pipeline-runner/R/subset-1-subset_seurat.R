@@ -47,7 +47,9 @@ create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
 
   # structure step output
   res <- list(
-    data = list(),
+    data = list(
+      sample_id_map = sample_id_map
+      ),
     output = list(
       scdata_list = scdata_list,
       annot = scdata@misc$gene_annotations,
