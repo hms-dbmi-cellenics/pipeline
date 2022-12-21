@@ -11,7 +11,7 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-mock_scdata_list = function (config) {
+mock_scdata_list <- function(config) {
   prev_out <- mock_prev_out(config)
   scdata_list <- prev_out$scdata_list
 
@@ -39,8 +39,56 @@ mock_config <- function(input) {
     metadata = input$metadata
   )
 
-  return (config)
+  return(config)
 }
+
+
+mock_parsed_cellsets <- function(scdata_list) {
+  samples <- unlist(lapply(scdata_list, function(x) {
+    x$samples
+  }))
+  cells_ids_by_sample <- unlist(lapply(scdata_list, function(x) {
+    x$cells_id
+  }))
+  sample_id <- list()
+  for (i in 1:length(table(samples))) {
+    sample_id[[i]] <- rep(paste(paste(rep(i, 8), collapse = ""),
+      paste(rep(i, 4), collapse = ""),
+      paste(rep(i, 4), collapse = ""),
+      paste(rep(i, 4), collapse = ""),
+      paste(rep(i, 12), collapse = ""),
+      sep = "-"
+    ), table(samples)[i])
+  }
+  key <- c(
+    rep("louvain-0", length(samples) / 2), rep("louvain-1", length(samples) / 2),
+    rep("074f2946-be51-445c-8222-be953f7da981", length(samples) / 3), rep("73e4d06e-b6b6-42a9-90ae-16586f41b7e9", 2 * length(samples) / 3),
+    unlist(sample_id),
+    rep("Metadata-1", length(samples))
+  )
+  name <- c(
+    rep("Cluster 0", length(samples) / 2), rep("Cluster 1", length(samples) / 2),
+    rep("Custom-A", length(samples) / 3), rep("Custom-B", 2 * length(samples) / 3),
+    samples,
+    rep("Metadata-A", 2 * length(samples) / 3), rep("Metadata-B", length(samples) / 3)
+  )
+  ordered_cell_ids <- sort(cells_ids_by_sample)
+  cell_id <- c(
+    ordered_cell_ids,
+    ordered_cell_ids[1:(length(ordered_cell_ids) / 3)], ordered_cell_ids[(length(ordered_cell_ids) / 3 + 1):(length(ordered_cell_ids))],
+    cells_ids_by_sample,
+    ordered_cell_ids[(length(ordered_cell_ids) / 3 + 1):(length(ordered_cell_ids))], ordered_cell_ids[1:(length(ordered_cell_ids) / 3)]
+  )
+  type <- c(
+    rep("cluster", length(cells_ids_by_sample)), rep("scratchpad", length(cells_ids_by_sample)),
+    rep("sample", length(cells_ids_by_sample)), rep("metadata", length(cells_ids_by_sample))
+  )
+
+  parsed_cellsets <- data.table(key, "name" = name, "cell_id" = cell_id, "type" = type)
+
+  return(parsed_cellsets)
+}
+
 
 mock_prev_out <- function(config, counts = NULL) {
   samples <- config$samples
@@ -75,6 +123,14 @@ mock_prev_out <- function(config, counts = NULL) {
   return(create_seurat(NULL, NULL, prev_out)$output)
 }
 
+mock_subset_data <- function(scdata_list, cell_ids) {
+  subset_scdata <- list()
+  for (i in 1:length(scdata_list)) {
+    subset_scdata[[i]] <- subset_ids(scdata_list[[i]], cell_ids)
+  }
+  return(subset_scdata)
+}
+
 check_metadata_cell_ids <- function(metadata_key, metadata_value, sample_keys, cell_sets) {
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
 
@@ -86,8 +142,8 @@ check_metadata_cell_ids <- function(metadata_key, metadata_value, sample_keys, c
 
   metadata_cell_ids <- unlist(metadata_set$children[[which(metadata_name == metadata_value)]]$cellId)
 
-  sample_cell_sets = purrr::keep(sample_set$children, \(x) x[["key"]] %in% sample_keys)
-  sample_cell_ids = unlist(lapply(sample_cell_sets, `[[`, "cellIds"))
+  sample_cell_sets <- purrr::keep(sample_set$children, \(x) x[["key"]] %in% sample_keys)
+  sample_cell_ids <- unlist(lapply(sample_cell_sets, `[[`, "cellIds"))
 
   expect_equal(metadata_cell_ids, sample_cell_ids)
 }
@@ -174,7 +230,7 @@ test_that("get_cell_sets adds two metadata columns", {
   check_metadata_cell_ids("Group1", "WT2", c("123def", "123ghi"), cell_sets)
 
   check_metadata_cell_ids("Group2", "WT", c("123abc", "123def"), cell_sets)
-  check_metadata_cell_ids("Group2", "WTA", c( "123ghi"), cell_sets)
+  check_metadata_cell_ids("Group2", "WTA", c("123ghi"), cell_sets)
 })
 
 
@@ -226,13 +282,15 @@ test_that("upload_to_aws tries to upload the correct files to aws", {
 
   pipeline_config <- mock_pipeline_config()
 
-  prev_out <- list(config = config,
-                   counts_list = list(),
-                   annot = list(),
-                   doublet_scores = list(),
-                   scdata_list = scdata_list,
-                   qc_config = list("mock_qc_config"),
-                   disable_qc_filters = FALSE)
+  prev_out <- list(
+    config = config,
+    counts_list = list(),
+    annot = list(),
+    doublet_scores = list(),
+    scdata_list = scdata_list,
+    qc_config = list("mock_qc_config"),
+    disable_qc_filters = FALSE
+  )
 
   res <- stubbed_upload_to_aws(input, pipeline_config, prev_out)
 
@@ -258,5 +316,129 @@ test_that("upload_to_aws tries to upload the correct files to aws", {
   withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
   withr::defer(unlink(pipeline_config$source_bucket, recursive = TRUE))
   withr::defer(unlink(file.path(paths$mock_data, "temp"), recursive = TRUE))
+})
 
+
+test_that("get_subset_cell_sets filters out louvain clusters from parent cellset", {
+  input <- mock_input()
+  config <- mock_config(input)
+  scdata_list <- mock_scdata_list(config)
+  disable_qc_filters <- TRUE
+
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
+  mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
+
+  prev_out <- mock_prev_out(config)
+  prev_out$parent_cellsets <- mock_parsed_cellset
+  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
+
+  sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
+  expect_equal(integer(0), which(sets_key == "louvain"))
+})
+
+
+test_that("get_subset_cell_sets produces a cellset with correct cell_ids", {
+  input <- mock_input()
+  config <- mock_config(input)
+  scdata_list <- mock_scdata_list(config)
+  disable_qc_filters <- TRUE
+
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
+  mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
+
+  prev_out <- mock_prev_out(config)
+  prev_out$parent_cellsets <- mock_parsed_cellset
+  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
+
+  sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
+  sample_sets <- cell_sets$cellSets[[which(sets_key == "sample")]]
+
+  subset_cell_ids <- as.integer(unlist(lapply(subset_scdata, function(x) {
+    x$cells_id
+  })))
+  cellset_cell_ids <- unlist(lapply(sample_sets$children, function(x) {
+    x$cellIds
+  }))
+
+  expect_equal(sort(subset_cell_ids), sort(cellset_cell_ids))
+})
+
+test_that("get_subset_cell_sets produces a cellset with correct new sample ids", {
+  input <- mock_input()
+  config <- mock_config(input)
+  scdata_list <- mock_scdata_list(config)
+  disable_qc_filters <- TRUE
+
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
+  mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
+
+  prev_out <- mock_prev_out(config)
+  prev_out$parent_cellsets <- mock_parsed_cellset
+  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
+
+  subset_sample_ids <- unique(as.character(unlist(lapply(subset_scdata, function(x) {
+    x$samples
+  }))))
+  cellset_sample_ids <- unlist(lapply(sample_sets$children, function(x) {
+    x$key
+  }))
+  expect_equal(subset_sample_ids, cellset_sample_ids)
+})
+
+
+test_that("get_subset_cell_sets produces a cellset with correct cell_ids for each metadata group present in the parent experiment", {
+  input <- mock_input()
+  config <- mock_config(input)
+  scdata_list <- mock_scdata_list(config)
+  disable_qc_filters <- TRUE
+
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
+  mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
+
+  prev_out <- mock_prev_out(config)
+  prev_out$parent_cellsets <- mock_parsed_cellset
+  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
+
+  metadata_sets <- cell_sets$cellSets[[3]]
+  metadata_key <- sapply(metadata_sets, `[[`, "key")
+
+  for (i in 1:length(metadata_key)) {
+    metadata_names <- sapply(metadata_sets[[i]]$children, `[[`, "name")
+    for (j in 1:length(metadata_names)) {
+      cellset_cell_ids <- metadata_sets[[i]]$children[[j]]$cellIds
+      parent_cellset_metadata <- mock_parsed_cellset[cell_id %in% cellset_cell_ids][type == "metadata"]
+      expect_equal(unique(parent_cellset_metadata$name), metadata_names[[j]])
+    }
+  }
+})
+
+
+
+test_that("get_subset_cell_sets produces a cellset with correct cell_ids for each scratchpad present in the parent experiment", {
+  input <- mock_input()
+  config <- mock_config(input)
+  scdata_list <- mock_scdata_list(config)
+  disable_qc_filters <- TRUE
+
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
+  mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
+
+  prev_out <- mock_prev_out(config)
+  prev_out$parent_cellsets <- mock_parsed_cellset
+  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
+
+  scratchpad_sets <- cell_sets$cellSets[[which(sets_key == "scratchpad")]]
+  scratchpad_key <- sapply(scratchpad_sets$children, `[[`, "key")
+
+  for (i in 1:length(scratchpad_key)) {
+    cellset_cell_ids <- scratchpad_sets$children[[i]]$cellIds
+    metadata_names <- sapply(metadata_sets[[i]]$children, `[[`, "name")
+    parent_cellset_scratchpad <- mock_parsed_cellset[cell_id %in% cellset_cell_ids][type == "scratchpad"]
+    expect_equal(unique(parent_cellset_scratchpad$key), scratchpad_key[[i]])
+  }
 })
