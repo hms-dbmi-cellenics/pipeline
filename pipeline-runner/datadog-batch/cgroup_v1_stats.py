@@ -53,7 +53,7 @@ class CGroupV1Stats:
 
         self._read_multi_stats(MEMORY_PATH, 'memory.stat', {
             DatadogMetrics.CONTAINER_MEMORY_LIMIT : "hierarchical_memory_limit",
-            DatadogMetrics.CONTAINER_MEMORY_RSS : "RSS",
+            DatadogMetrics.CONTAINER_MEMORY_RSS : "rss",
             DatadogMetrics.CONTAINER_MEMORY_CACHE : "total_cache",
             DatadogMetrics.CONTAINER_MEMORY_SWAP : "total_swap",
         })
