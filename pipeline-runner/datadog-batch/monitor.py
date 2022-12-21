@@ -3,7 +3,6 @@ import os
 from time import sleep
 from datadog_api_client import ApiClient, Configuration
 from datadog_api_client.v2.api.metrics_api import MetricsApi
-from datadog_api_client.v2.model.metric_intake_type import MetricIntakeType
 from datadog_api_client.v2.model.metric_payload import MetricPayload
 from datadog_api_client.v2.model.metric_point import MetricPoint
 from datadog_api_client.v2.model.metric_resource import MetricResource
@@ -63,6 +62,16 @@ def format_metrics(metrics, resources, tags):
 
 if __name__ == "__main__":
 
+    print("Datadog subprocess launched")
+
+    print('*** os.getenv("DD_API_KEY")', os.getenv("DD_API_KEY"))
+    print('*** os.getenv("DD_APP_KEY")', os.getenv("DD_APP_KEY"))
+    print('*** os.getenv("AWS_DEFAULT_REGION")', os.getenv("AWS_DEFAULT_REGION"))
+    print('*** os.getenv("ACTIVITY_ARN")', os.getenv("ACTIVITY_ARN"))
+    print('*** os.getenv("CLUSTER_ENV")', os.getenv("CLUSTER_ENV"))
+    print('*** os.getenv("AWS_ACCOUNT_ID")', os.getenv("AWS_ACCOUNT_ID"))
+    print('*** os.getenv("SANDBOX_ID")', os.getenv("SANDBOX_ID"))
+
     configuration = Configuration()
     configuration.api_key["apiKeyAuth"] = os.getenv("DD_API_KEY")
     configuration.api_key["appKeyAuth"] = os.getenv("DD_APP_KEY")
@@ -80,23 +89,24 @@ if __name__ == "__main__":
 
     resources = [
         MetricResource(
-            name=f"{instance_meta['instance-id']}",
+            name=f"{instance_meta.get('instance-id', 'batch-instance')}",
             type="host",
         )
     ]
 
     tags = [
-        f"instanceId:{instance_meta['instance-id']}",
-        f"instanceType:{instance_meta['instance-type']}",
-        f"hostname:{instance_meta['hostname']}",
+        f"instanceId:{instance_meta.get('instance-id', 'batch-instance')}",
+        f"instanceType:{instance_meta.get('instance-type', '')}",
+        f"hostname:{instance_meta.get('hostname', '')}",
         f"service:batch",
         f"region:{os.getenv('AWS_DEFAULT_REGION')}",
-        f"activityArn:{os.getenv('ACTIVITY_ARN')}",
+        f"activityId:{os.getenv('ACTIVITY_ARN')}",
         f"env:{os.getenv('CLUSTER_ENV')}",
         f"awsAccountId:{os.getenv('AWS_ACCOUNT_ID')}",
         f"sandboxId:{os.getenv('SANDBOX_ID')}",
     ]
 
+    print("*** is_cgroup_v2", is_cgroup_v2())
     print("*** tags", tags)
 
     print(f"Reporting metrics to Datadog every {METRICS_IN_SERIES}s")

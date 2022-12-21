@@ -5,7 +5,11 @@ import requests
 # List of available endpoints: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html
 
 def get_instance_metadata(metadata):
+
+    print("Getting instance metadata...")
+
     result = {}
+
     INSTANCE_METADATA_ENDPOINT = "http://169.254.169.254/latest/meta-data/"
 
     def _query(metadata):
