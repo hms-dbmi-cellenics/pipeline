@@ -48,7 +48,7 @@ create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
   # structure step output
   res <- list(
     data = list(
-      sample_id_map = sample_id_map
+      sampleIdMap = sample_id_map
       ),
     output = list(
       scdata_list = scdata_list,
@@ -79,10 +79,9 @@ create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
 #'
 create_sample_id_map <- function(parent_sample_id) {
   subset_sample_id <- uuid::UUIDgenerate(n = length(parent_sample_id))
-  sample_id_map <- data.table::data.table(
-    parent_sample_id = parent_sample_id,
-    subset_sample_id = subset_sample_id
-  )
+
+  sample_id_map <- as.list(subset_sample_id)
+  names(sample_id_map) <- parent_sample_id
 
   return(sample_id_map)
 }

@@ -266,8 +266,6 @@ call_gem2s <- function(task_name, input, pipeline_config) {
 #'
 call_subset <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
-  # remove when it's added to the input
-  input$subset_experiment <- TRUE
 
   if (!exists("prev_out")) {
     remove_cell_ids(pipeline_config, experiment_id)
