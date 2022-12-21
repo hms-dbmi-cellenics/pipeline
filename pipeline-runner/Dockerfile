@@ -128,7 +128,7 @@ RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux6
 ADD R ./R
 ADD tests ./tests
 ADD inst ./inst
-COPY DESCRIPTION NAMESPACE init.R launch-datadog.py ./
+COPY DESCRIPTION NAMESPACE init.R launch-datadog.py start-batch.sh ./
 
 
 # ---------------------------------------------------
