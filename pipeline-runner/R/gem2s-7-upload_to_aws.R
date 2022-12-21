@@ -166,7 +166,7 @@ build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_fil
 #' @return list of cellsets
 #' @export
 #'
-build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters = FALSE, chiild_cellsets = NA) {
+build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters = FALSE, child_cellsets = NA) {
   cell_set_list <- c()
 
   # user-supplied metadata track names
