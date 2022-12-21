@@ -4,7 +4,7 @@ import requests
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
 # List of available endpoints: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html
 
-def get_instance_metadata(metadata):
+def get_instance_metadata(endpoints):
 
     print("Getting instance metadata...")
 
@@ -17,7 +17,7 @@ def get_instance_metadata(metadata):
         response = requests.get(url)
         return response.text
 
-    for endpoint in metadata:
+    for endpoint in endpoints:
         result[endpoint] = _query(endpoint)
 
     return result
