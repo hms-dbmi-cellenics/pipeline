@@ -379,6 +379,9 @@ test_that("get_subset_cell_sets produces a cellset with correct new sample ids",
   prev_out$parent_cellsets <- mock_parsed_cellset
   cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
 
+  sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
+  sample_sets <- cell_sets$cellSets[[which(sets_key == "sample")]]
+
   subset_sample_ids <- unique(as.character(unlist(lapply(subset_scdata, function(x) {
     x$samples
   }))))
@@ -417,7 +420,6 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
 })
 
 
-
 test_that("get_subset_cell_sets produces a cellset with correct cell_ids for each scratchpad present in the parent experiment", {
   input <- mock_input()
   config <- mock_config(input)
@@ -432,12 +434,13 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
   prev_out$parent_cellsets <- mock_parsed_cellset
   cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
 
+  sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
   scratchpad_sets <- cell_sets$cellSets[[which(sets_key == "scratchpad")]]
   scratchpad_key <- sapply(scratchpad_sets$children, `[[`, "key")
 
   for (i in 1:length(scratchpad_key)) {
     cellset_cell_ids <- scratchpad_sets$children[[i]]$cellIds
-    metadata_names <- sapply(metadata_sets[[i]]$children, `[[`, "name")
+    scratchpad_names <- sapply(scratchpad_sets$children, `[[`, "name")
     parent_cellset_scratchpad <- mock_parsed_cellset[cell_id %in% cellset_cell_ids][type == "scratchpad"]
     expect_equal(unique(parent_cellset_scratchpad$key), scratchpad_key[[i]])
   }
