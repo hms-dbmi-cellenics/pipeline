@@ -99,6 +99,7 @@ ReportedDatadogMetrics = {
             "unit": None
         },
     },
+    MetricsGroup.IO: {
         DatadogMetrics.CONTAINER_IO_READ: {
             "metric": "container.io.read",
             "type": MetricIntakeType.RATE,
