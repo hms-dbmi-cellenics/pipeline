@@ -25,7 +25,7 @@ DatadogMetrics = Enum(
 )
 
 MetricsGroup = Enum(
-    'DatadogMetricsGroup',
+    'MetricsGroup',
     [
         "CPU",
         "MEMORY",

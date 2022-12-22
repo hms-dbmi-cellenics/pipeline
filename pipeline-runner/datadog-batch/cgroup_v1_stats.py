@@ -56,10 +56,11 @@ class CGroupV1Stats:
 
             for line in lines:
                 # Lines with less than 3 fields do not contain device-level information
-                if len(line) < 3:
+                splitted_line = line.split(" ")
+                if len(splitted_line) < 3:
                     continue
 
-                device_id, key, value = line.split(" ")
+                device_id, key, value = splitted_line
 
                 if not self.stats[group].get(device_id):
                     self.stats[group][device_id] = {}
