@@ -39,7 +39,7 @@ class CGroupV1Stats:
             value_mapping[key] = value
 
         for stats_key, value_key in mapping.items():
-            self.stats[stats_key] = float(value_mapping[value_key])
+            self.stats[group][stats_key] = float(value_mapping[value_key])
 
     def _parse_io_stats(self, folder, file, group, io_read_key, io_write_key):
         # Example of IO file
