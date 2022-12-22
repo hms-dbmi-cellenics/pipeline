@@ -16,70 +16,108 @@ DatadogMetrics = Enum(
         'CONTAINER_MEMORY_CACHE',
         'CONTAINER_MEMORY_RSS',
         'CONTAINER_MEMORY_KERNEL',
-        'CONTAINER_MEMORY_OOM_EVENTS'
+        'CONTAINER_MEMORY_OOM_EVENTS',
+        'CONTAINER_IO_READ',
+        'CONTAINER_IO_WRITE',
+        'CONTAINER_IO_READ_OPERATIONS',
+        'CONTAINER_IO_WRITE_OPERATIONS',
+    ]
+)
+
+MetricsGroup = Enum(
+    'DatadogMetricsGroup',
+    [
+        "CPU",
+        "MEMORY",
+        "IO"
     ]
 )
 
 # For metric name, type and unit, refer to https://datadoghq.eu/metric/summary
 ReportedDatadogMetrics = {
-    DatadogMetrics.CONTAINER_CPU_USAGE: {
-        "metric": "container.cpu.usage",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "nanosecond"
+    MetricsGroup.CPU: {
+        DatadogMetrics.CONTAINER_CPU_USAGE: {
+            "metric": "container.cpu.usage",
+            "type": MetricIntakeType.RATE,
+            "unit": "nanosecond"
+        },
+        DatadogMetrics.CONTAINER_CPU_USER: {
+            "metric": "container.cpu.user",
+            "type": MetricIntakeType.RATE,
+            "unit": "nanosecond"
+        },
+        DatadogMetrics.CONTAINER_CPU_SYSTEM: {
+            "metric": "container.cpu.system",
+            "type": MetricIntakeType.RATE,
+            "unit": "nanosecond"
+        },
+        DatadogMetrics.CONTAINER_CPU_THROTTLED: {
+            "metric": "container.cpu.throttled",
+            "type": MetricIntakeType.RATE,
+            "unit": "nanosecond"
+        },
+        DatadogMetrics.CONTAINER_CPU_THROTTLED_PERIODS: {
+            "metric": "container.cpu.throttled.periods",
+            "type": MetricIntakeType.RATE,
+            "unit": "nanosecond"
+        },
     },
-    DatadogMetrics.CONTAINER_CPU_USER: {
-        "metric": "container.cpu.user",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "nanosecond"
+    MetricsGroup.MEMORY: {
+        DatadogMetrics.CONTAINER_MEMORY_USAGE: {
+            "metric": "container.memory.usage",
+            "type": MetricIntakeType.GAUGE,
+            "unit": "byte"
+        },
+        DatadogMetrics.CONTAINER_MEMORY_LIMIT: {
+            "metric": "container.memory.limit",
+            "type": MetricIntakeType.GAUGE,
+            "unit": "byte"
+        },
+        DatadogMetrics.CONTAINER_MEMORY_SWAP: {
+            "metric": "container.memory.swap",
+            "type": MetricIntakeType.GAUGE,
+            "unit": "byte"
+        },
+        DatadogMetrics.CONTAINER_MEMORY_CACHE: {
+            "metric": "container.memory.cache",
+            "type": MetricIntakeType.GAUGE,
+            "unit": "byte"
+        },
+        DatadogMetrics.CONTAINER_MEMORY_RSS: {
+            "metric": "container.memory.rss",
+            "type": MetricIntakeType.GAUGE,
+            "unit": "byte"
+        },
+        DatadogMetrics.CONTAINER_MEMORY_KERNEL: {
+            "metric": "container.memory.kernel",
+            "type": MetricIntakeType.GAUGE,
+            "unit": "byte"
+        },
+        DatadogMetrics.CONTAINER_MEMORY_OOM_EVENTS: {
+            "metric": "container.memory.oom_events",
+            "type": MetricIntakeType.GAUGE,
+            "unit": None
+        },
     },
-    DatadogMetrics.CONTAINER_CPU_SYSTEM: {
-        "metric": "container.cpu.system",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "nanosecond"
-    },
-    DatadogMetrics.CONTAINER_CPU_THROTTLED: {
-        "metric": "container.cpu.throttled",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "nanosecond"
-    },
-    DatadogMetrics.CONTAINER_CPU_THROTTLED_PERIODS: {
-        "metric": "container.cpu.throttled.periods",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "nanosecond"
-    },
-    DatadogMetrics.CONTAINER_MEMORY_USAGE: {
-        "metric": "container.memory.usage",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "byte"
-    },
-    DatadogMetrics.CONTAINER_MEMORY_LIMIT: {
-        "metric": "container.memory.limit",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "byte"
-    },
-    DatadogMetrics.CONTAINER_MEMORY_SWAP: {
-        "metric": "container.memory.swap",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "byte"
-    },
-    DatadogMetrics.CONTAINER_MEMORY_CACHE: {
-        "metric": "container.memory.cache",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "byte"
-    },
-    DatadogMetrics.CONTAINER_MEMORY_RSS: {
-        "metric": "container.memory.rss",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "byte"
-    },
-    DatadogMetrics.CONTAINER_MEMORY_KERNEL: {
-        "metric": "container.memory.kernel",
-        "type": MetricIntakeType.GAUGE,
-        "unit": "byte"
-    },
-    DatadogMetrics.CONTAINER_MEMORY_OOM_EVENTS: {
-        "metric": "container.memory.oom_events",
-        "type": MetricIntakeType.GAUGE,
-        "unit": None
-    },
+        DatadogMetrics.CONTAINER_IO_READ: {
+            "metric": "container.io.read",
+            "type": MetricIntakeType.RATE,
+            "unit": "byte"
+        },
+        DatadogMetrics.CONTAINER_IO_WRITE: {
+            "metric": "container.io.write",
+            "type": MetricIntakeType.RATE,
+            "unit": "byte"
+        },
+        DatadogMetrics.CONTAINER_IO_READ_OPERATIONS: {
+            "metric": "container.io.read.operations",
+            "type": MetricIntakeType.RATE,
+            "unit": None
+        },
+        DatadogMetrics.CONTAINER_IO_WRITE_OPERATIONS: {
+            "metric": "container.io.write.operations",
+            "type": MetricIntakeType.RATE,
+            "unit": None
+        },
+    }
 }

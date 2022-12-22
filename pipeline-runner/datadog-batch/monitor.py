@@ -4,16 +4,13 @@ from math import floor
 from time import sleep
 from datadog_api_client import ApiClient, Configuration
 from datadog_api_client.v2.api.metrics_api import MetricsApi
-from datadog_api_client.v2.model.metric_payload import MetricPayload
-from datadog_api_client.v2.model.metric_point import MetricPoint
 from datadog_api_client.v2.model.metric_resource import MetricResource
-from datadog_api_client.v2.model.metric_series import MetricSeries
 
 from instance_metadata import get_instance_metadata
 from cgroup_v1_stats import CGroupV1Stats
 from cgroup_v2_stats import CGroupV2Stats
 
-from constants import ReportedDatadogMetrics
+from format_metrics import format_metrics
 
 
 REPORTING_INTERVAL = 15 #s
@@ -38,27 +35,6 @@ def collect_metrics(is_cgroup_v2):
         **stats
     }
 
-
-def format_metrics(metrics, resources, tags):
-    payload = MetricPayload(
-        series=[
-            MetricSeries(
-                metric=body['metric'],
-                type=body['type'],
-                unit=body['unit'],
-                points=[
-                    MetricPoint(
-                        timestamp=metric["timestamp"],
-                        value=metric[key],
-                    ) for metric in metrics
-                ],
-                resources=resources,
-                tags=tags
-            ) for key, body in ReportedDatadogMetrics.items()
-        ]
-    )
-
-    return payload
 
 if __name__ == "__main__":
     print("Datadog monitoring subprocess launched")
