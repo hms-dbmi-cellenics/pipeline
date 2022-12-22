@@ -434,6 +434,37 @@ load_cellsets <- function(s3, pipeline_config, experiment_id) {
 }
 
 
+#' Bind columns not failing if there's an empty data.table
+#'
+#' @param dt data.table
+#' @param ... columns to add
+#'
+#' @return data.table with new columns
+#' @export
+#'
+safe_cbind <- function(dt, ...) {
+  if (nrow(dt) > 0) {
+    dt <- cbind(dt, ...)
+  }
+  return(dt)
+}
+
+
+#' add cellset type column to cellsets data.table
+#'
+#' helper to correctly name the cellset_type column.
+#'
+#' @param dt data.table
+#' @param col string of corresponding cellset type
+#'
+#' @return
+#' @export
+#'
+cbind_cellset_type <- function(dt, col) {
+  dt <- safe_cbind(dt, cellset_type = col)
+}
+
+
 #' Parse cellsets object to data.table
 #'
 #' Gets the cellsets list and converts it to a tidy data.table
@@ -445,10 +476,18 @@ load_cellsets <- function(s3, pipeline_config, experiment_id) {
 #'
 parse_cellsets <- function(cellsets) {
 
-  data.table::setDT(cellsets$cellSets)
-  # fill columns in case there are empty cellset classes
-  dt <- data.table::rbindlist(cellsets$cellSets$children, fill = TRUE)
-  # unnest, and change column name
-  dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name)]
+  dt_list <- cellsets$cellSets$children
 
+  lapply(dt_list, data.table::setDT)
+  dt_list <- purrr::map2(dt_list, cellsets$cellSets$key, cbind_cellset_type)
+
+  # fill columns in case there are empty cellset classes
+  dt <- data.table::rbindlist(dt_list, fill = TRUE)
+
+  # rename cellset type to metadata in case of metadata cellsets
+  dt[!cellset_type%in% c("louvain", "scratchpad", "sample"), cellset_type := "metadata"]
+
+  # unnest, and change column name
+  dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
 }
+
