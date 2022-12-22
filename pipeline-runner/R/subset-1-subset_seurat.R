@@ -16,20 +16,15 @@
 #' @export
 #'
 create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
-  # load parent processed scdata and cellsets
-  s3 <- paws::s3(config = pipeline_config$aws_config)
-  parent_scdata <- load_processed_scdata(s3, pipeline_config, input$parentExperimentId)
-  parent_cellsets <- parse_cellsets(load_cellsets(s3, pipeline_config, input$parentExperimentId))
 
-  cell_ids_to_keep <- parent_cellsets[key %in% input$cellSetKeys, cell_id]
+  parent <- load_parental_data(input, pipeline_config)
+
+  cell_ids_to_keep <- parent$cellsets[key %in% input$cellSetKeys, cell_id]
 
   # subset seurat object, remove unnecesary data
-  scdata <- subset_ids(parent_scdata, cell_ids_to_keep)
+  scdata <- subset_ids(parent$scdata, cell_ids_to_keep)
   scdata <- diet_scdata(scdata)
   scdata@misc$experimentId <- input$experimentId
-
-  # delete parent_scdata to free memory
-  rm(parent_scdata)
 
   # add new sample_ids, keep originals in a new variable
   scdata$parent_samples <- scdata$samples
@@ -56,12 +51,36 @@ create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
       edrops = NULL,
       sample_id_map = sample_id_map,
       config = config,
-      disable_qc_filters = TRUE
+      disable_qc_filters = TRUE,
+      parent_cellsets = parent$cellsets
     )
   )
 
   message("\nSubsetting of Seurat object step complete.")
   return(res)
+}
+
+
+#' load parent experiment data
+#'
+#' Loads the processed rds and cellsets file from the parent experiment from s3.
+#'
+#' @param input list of input parameters
+#' @param pipelne_config list of pipeline parameters
+#'
+#' @return list with scdata and parsed cellsets
+#' @export
+#'
+load_parental_data <- function(input, pipelne_config) {
+  # load parent processed scdata and cellsets
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+  parent_scdata <-
+    load_processed_scdata(s3, pipeline_config, input$parentExperimentId)
+  parent_cellsets <-
+    parse_cellsets(load_cellsets(s3, pipeline_config, input$parentExperimentId))
+
+  return(list(scdata = parent_scdata, cellsets = parent_cellsets))
+
 }
 
 
@@ -96,8 +115,8 @@ create_sample_id_map <- function(parent_sample_id) {
 #' @export
 #'
 add_new_sample_ids <- function(scdata, sample_id_map) {
-  sample_map_idx <- match(scdata$parent_samples, sample_id_map$parent_sample_id)
-  scdata$samples <- sample_id_map$subset_sample_id[sample_map_idx]
+  sample_map_idx <- match(scdata$parent_samples, names(sample_id_map))
+  scdata$samples <- unname(unlist(sample_id_map[sample_map_idx]))
   return(scdata)
 }
 
