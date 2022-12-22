@@ -1,3 +1,3 @@
-#!/bin/bash
-python3 launch-datadog.py
+#!/bin/bash -e
+python3 ./datadog-batch/monitor.py &
 Rscript init.R

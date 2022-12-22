@@ -20,7 +20,8 @@ DatadogMetrics = Enum(
     ]
 )
 
-DatadogMetricTypes = {
+# For metric name, type and unit, refer to https://datadoghq.eu/metric/summary
+ReportedDatadogMetrics = {
     DatadogMetrics.CONTAINER_CPU_USAGE: {
         "metric": "container.cpu.usage",
         "type": MetricIntakeType.GAUGE,

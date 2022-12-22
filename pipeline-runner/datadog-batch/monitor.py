@@ -12,7 +12,7 @@ from instance_metadata import get_instance_metadata
 from cgroup_v1_stats import CGroupV1Stats
 from cgroup_v2_stats import CGroupV2Stats
 
-from constants import DatadogMetricTypes
+from constants import ReportedDatadogMetrics
 
 
 METRICS_IN_SERIES = 15
@@ -23,7 +23,6 @@ def is_cgroup_v2():
     return os.path.exists("/sys/fs/cgroup/cgroup.controllers")
 
 def collect_metrics(is_cgroup_v2):
-
     stats = {}
     if is_cgroup_v2:
         collector = CGroupV2Stats()
@@ -39,7 +38,6 @@ def collect_metrics(is_cgroup_v2):
 
 
 def format_metrics(metrics, resources, tags):
-
     payload = MetricPayload(
         series=[
             MetricSeries(
@@ -54,15 +52,14 @@ def format_metrics(metrics, resources, tags):
                 ],
                 resources=resources,
                 tags=tags
-            ) for key, body in DatadogMetricTypes.items()
+            ) for key, body in ReportedDatadogMetrics.items()
         ]
     )
 
     return payload
 
 if __name__ == "__main__":
-
-    print("Datadog subprocess launched")
+    print("Datadog monitoring subprocess launched")
 
     configuration = Configuration()
     configuration.api_key["apiKeyAuth"] = os.getenv("DD_API_KEY")
