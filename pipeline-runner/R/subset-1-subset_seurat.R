@@ -19,19 +19,10 @@ create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
 
   parent <- load_parental_data(input, pipeline_config)
 
-  cell_ids_to_keep <- parent$cellsets[key %in% input$cellSetKeys, cell_id]
+  scdata <- subset_experiment(input, parent)
+  sample_id_map <- create_sample_id_map(unique(scdata$samples))
+  scdata <- add_subset_metadata(input, scdata, sample_id_map)
 
-  # subset seurat object, remove unnecesary data
-  scdata <- subset_ids(parent$scdata, cell_ids_to_keep)
-  scdata <- diet_scdata(scdata)
-  scdata@misc$experimentId <- input$experimentId
-
-  # add new sample_ids, keep originals in a new variable
-  scdata$parent_samples <- scdata$samples
-  sample_id_map <- create_sample_id_map(unique(scdata$parent_samples))
-  scdata <- add_new_sample_ids(scdata, sample_id_map)
-
-  # split by sample
   scdata_list <- Seurat::SplitObject(scdata, split.by = "samples")
 
   # TODO: remove from here and refactor all pipeline.
@@ -80,7 +71,54 @@ load_parental_data <- function(input, pipelne_config) {
     parse_cellsets(load_cellsets(s3, pipeline_config, input$parentExperimentId))
 
   return(list(scdata = parent_scdata, cellsets = parent_cellsets))
+}
 
+
+#' Remove all unnecessary data from the parent seurat object
+#'
+#' Seurat::DietSeurat is not able to remove certain slots from a seurat object.
+#' This function also removes elements from the misc slot which are not necessary
+#'
+#' @param scdata SeuratObject
+#'
+#' @return leaner SeuratObject
+#' @export
+#'
+diet_scdata <- function(scdata) {
+  lean_scdata <- Seurat::CreateSeuratObject(
+    counts = scdata@assays$RNA@counts,
+    meta.data = scdata@meta.data,
+    min.cells = 0,
+    min.features = 0
+  )
+
+  lean_scdata@misc <- list(
+    gene_annotations = scdata@misc$gene_annotations,
+    parent_experimentId = scdata@misc$experimentId
+  )
+
+  return(lean_scdata)
+}
+
+
+#' Subset seurat object by the input cellset keys
+#'
+#' This function takes the cellset keys sent by the API, extracts the cell_ids
+#' that belong to them, subsets the seurat object and removes all unnecessary
+#' data from it.
+#'
+#' @param input list of input parameters, containing cellSetKeys to subset
+#' @param parent list containing parent scdata and parsed cellsets
+#'
+#' @return subset seurat object
+#' @export
+#'
+subset_experiment <- function(input, parent) {
+  # subset seurat object, remove unnecesary data
+  cell_ids_to_keep <- parent$cellsets[key %in% input$cellSetKeys, cell_id]
+  scdata <- subset_ids(parent$scdata, cell_ids_to_keep)
+  scdata <- diet_scdata(scdata)
+  return(scdata)
 }
 
 
@@ -115,34 +153,29 @@ create_sample_id_map <- function(parent_sample_id) {
 #' @export
 #'
 add_new_sample_ids <- function(scdata, sample_id_map) {
+
   sample_map_idx <- match(scdata$parent_samples, names(sample_id_map))
   scdata$samples <- unname(unlist(sample_id_map[sample_map_idx]))
   return(scdata)
 }
 
 
-#' Remove all unnecessary data from the parent seurat object
+#' add experiment level metadata to subset seurat object
 #'
-#' Seurat::DietSeurat is not able to remove certain slots from a seurat object.
-#' This function also removes elements from the misc slot which are not necessary
+#' @param input list of input params, containing the experimentId
+#' @param scdata seurat object
+#' @param sample_id_map list with mapping between sample_ids from
+#'  parent and subset experiments
 #'
-#' @param scdata SeuratObject
-#'
-#' @return leaner SeuratObject
+#' @return scdata with additional metadata
 #' @export
 #'
-diet_scdata <- function(scdata) {
-  lean_scdata <- Seurat::CreateSeuratObject(
-    counts = scdata@assays$RNA@counts,
-    meta.data = scdata@meta.data,
-    min.cells = 0,
-    min.features = 0
-  )
+add_subset_metadata <- function(input, scdata, sample_id_map) {
 
-  lean_scdata@misc <- list(
-    gene_annotations = scdata@misc$gene_annotations,
-    parent_experimentId = scdata@misc$experimentId
-  )
+  # add new sample_ids, keep originals in a new variable
+  scdata$parent_samples <- scdata$samples
+  scdata <- add_new_sample_ids(scdata, sample_id_map)
+  scdata@misc$experimentId <- input$experimentId
 
-  return(lean_scdata)
+  return(scdata)
 }
