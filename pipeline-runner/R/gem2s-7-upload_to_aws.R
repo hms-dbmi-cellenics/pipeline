@@ -84,7 +84,14 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
-# creates initial cell sets object
+#' Create initial cell sets object
+#'
+#' @param scdata_list list of Seurat objects
+#' @param input The input object from the request
+#'
+#' @return cell set object
+#' @export
+#'
 get_cell_sets <- function(scdata_list, input) {
   scratchpad <- list(
     key = "scratchpad",
@@ -110,7 +117,18 @@ get_cell_sets <- function(scdata_list, input) {
   cell_sets <- list(cellSets = cell_sets)
 }
 
-# cell_sets fn for seurat samples information
+#' Create cell set using Seurat samples information
+#'
+#' @param input The input object from the request
+#' @param scdata_list list of Seurat objects
+#' @param color_pool list of colors to use
+#' @param disable_qc_filters bool indicating if the data derives from the
+#' subsetting of another experiment
+#' @param child_cellsets cell set resulting from parent cell set filtering
+#'
+#' @return cell set filled with samples information
+#' @export
+#'
 build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters = FALSE, child_cellsets = NA) {
   cell_set <- list(
     key = "sample",
@@ -234,7 +252,14 @@ build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_f
 }
 
 
-# remove used colors from pool
+#' Remove used colors from pool
+#'
+#' @param cellsets cell set object
+#' @param color_pool list of colors
+#'
+#' @return color pool with used colors removed
+#' @export
+#'
 remove_used_colors <- function(cellsets, color_pool) {
   used <- seq_along(cellsets$children)
   color_pool <- color_pool[-used]
@@ -242,11 +267,20 @@ remove_used_colors <- function(cellsets, color_pool) {
 }
 
 
+#' Create cell set object for subset experiment
+#'
+#' @param scdata_list list of Seurat objects
+#' @param input The input object from the request
+#' @param prev_out list with results appended in each gem2s task
+#' @param disable_qc_filters bool indicating if the data derives from the
+#' subsetting of another experiment
+#'
+#' @return cell set object
+#' @export
+#'
 get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filters) {
 
-  # get original cellsets from step gem2s-subset-experiment
   parent_cellsets <- prev_out$parent_cellsets
-  #  get cell ids in the subset experiment
   cell_ids_to_keep <- unlist(lapply(scdata_list, function(x) {
     x$cells_id
   }))
@@ -262,9 +296,7 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
     x$samples
   }))
   cells_ids_new_samples <- data.table(cell_ids_to_keep, new_samples_ids)
-  # join by cell_id
   cellsets_samples <- cells_ids_new_samples[child_cellsets[type == "sample", ], on = .(cell_ids_to_keep = cell_id)]
-  # replace key with new_sample_ids
   child_cellsets[type == "sample", key := cellsets_samples$new_samples_ids]
 
   # convert back cellsets to list format
@@ -288,6 +320,19 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
 }
 
 
+#' Create cell set using scratchpad information from parent cell set
+#'
+#' This function create a cell set with scratchpad information including only
+#' the cell ids in the subset experiment. If all cell ids from a scratchpad cluster
+#' of the parent experiments are filtered out in the subset experiment,
+#' then that scratchpad cluster is not included in the subset cell set.
+#'
+#' @param color_pool list of colors to use
+#' @param child_cellsets cell set resulting from parent cell set filtering
+#'
+#' @return cell set filled with scratchpad information from the parent cell set
+#' @export
+#'
 build_scratchpad_cellsets <- function(color_pool, child_cellsets) {
   scratchpad <- list(
     key = "scratchpad",

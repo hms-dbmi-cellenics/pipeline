@@ -4,7 +4,13 @@
 \alias{build_metadata_cellsets}
 \title{Create cellsets from user-supplied metadata}
 \usage{
-build_metadata_cellsets(input, scdata_list, color_pool)
+build_metadata_cellsets(
+  input,
+  scdata_list,
+  color_pool,
+  disable_qc_filters = FALSE,
+  child_cellsets = NA
+)
 }
 \arguments{
 \item{input}{list}
