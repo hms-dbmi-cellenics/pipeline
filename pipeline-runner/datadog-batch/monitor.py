@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+from math import floor
 from time import sleep
 from datadog_api_client import ApiClient, Configuration
 from datadog_api_client.v2.api.metrics_api import MetricsApi
@@ -15,8 +16,9 @@ from cgroup_v2_stats import CGroupV2Stats
 from constants import ReportedDatadogMetrics
 
 
-METRICS_IN_SERIES = 15
+REPORTING_INTERVAL = 15 #s
 COLLECTION_INTERVAL = 1 #s
+NUM_METRICS_IN_SERIES = floor(REPORTING_INTERVAL / COLLECTION_INTERVAL)
 
 def is_cgroup_v2():
     # Check as suggested by: https://unix.stackexchange.com/a/668244/553416
@@ -92,7 +94,7 @@ if __name__ == "__main__":
         f"sandboxId:{os.getenv('SANDBOX_ID')}",
     ]
 
-    print(f"Reporting metrics to Datadog every {METRICS_IN_SERIES}s")
+    print(f"Collecting data every {COLLECTION_INTERVAL}s, reporting to Datadog every {REPORTING_INTERVAL}s")
 
     with ApiClient(configuration) as api_client:
         api_instance = MetricsApi(api_client)
@@ -101,7 +103,7 @@ if __name__ == "__main__":
             series = []
 
             i = 0
-            while i < METRICS_IN_SERIES:
+            while i < NUM_METRICS_IN_SERIES:
                 series.append(collect_metrics(is_cgroup_v2()))
                 i += 1
                 sleep(COLLECTION_INTERVAL)
