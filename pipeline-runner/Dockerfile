@@ -90,8 +90,7 @@ FROM common AS prod
 RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
     chmod +x ./jq && \
     cp jq /usr/bin && \
-    pip install PyYAML==3.10 && \
-    pip install awscli==1.25.0
+    pip install PyYAML==3.10 awscli==1.25.0
 
 COPY aws_config /root/.aws/config
 
@@ -120,9 +119,7 @@ COPY ./datadog-batch ./datadog-batch
 RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
     chmod +x ./jq && \
     cp jq /usr/bin && \
-    pip install PyYAML==3.10 && \
-    pip install awscli==1.25.0 && \
-    pip install -r ./datadog-batch/requirements.txt
+    pip install PyYAML==3.10 awscli==1.25.0 -r ./datadog-batch/requirements.txt
 
 # add R package files and runner
 ADD R ./R
