@@ -65,9 +65,9 @@ class CGroupV1Stats:
                     self.stats[group][device_id] = {}
 
                 if key == "Read":
-                    self.stats[group]["devices"][device_id][io_read_key] = float(value)
+                    self.stats[group][device_id][io_read_key] = float(value)
                 if key == "Write":
-                    self.stats[group]["devices"][device_id][io_write_key] = float(value)
+                    self.stats[group][device_id][io_write_key] = float(value)
 
     def _read_cpu_stats(self):
         self.stats[MetricsGroup.CPU][DatadogMetrics.CONTAINER_CPU_USAGE] = self._read_float(CPU_PATH, "cpuacct.usage")
