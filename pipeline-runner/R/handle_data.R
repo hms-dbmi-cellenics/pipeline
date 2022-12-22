@@ -457,7 +457,7 @@ safe_cbind <- function(dt, ...) {
 #' @param dt data.table
 #' @param col string of corresponding cellset type
 #'
-#' @return
+#' @return data.table with cellset_type
 #' @export
 #'
 cbind_cellset_type <- function(dt, col) {

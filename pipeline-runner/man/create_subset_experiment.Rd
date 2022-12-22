@@ -4,7 +4,7 @@
 \alias{create_subset_experiment}
 \title{create a subset experiment}
 \usage{
-create_subset_experiment(input, pipeline_config)
+create_subset_experiment(input, pipeline_config, prev_out = NULL)
 }
 \arguments{
 \item{input}{list containing:
@@ -16,6 +16,8 @@ create_subset_experiment(input, pipeline_config)
 }}
 
 \item{pipeline_config}{list}
+
+\item{prev_out}{list, ignored because this is the first step in the subset pipeline}
 }
 \value{
 list containing scdata_list, annotations and sample_id_map
