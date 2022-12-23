@@ -4,7 +4,7 @@
 \alias{load_parental_data}
 \title{load parent experiment data}
 \usage{
-load_parental_data(input, pipelne_config)
+load_parental_data(input, pipeline_config)
 }
 \arguments{
 \item{input}{list of input parameters}
