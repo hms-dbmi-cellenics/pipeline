@@ -34,6 +34,3 @@
 # parent <- list(scdata = parent_scdata, cellsets = parent_cellsets)
 #
 # input <- mock_input()
-
-
-

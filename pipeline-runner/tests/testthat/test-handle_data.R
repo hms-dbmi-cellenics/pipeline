@@ -8,7 +8,8 @@ mock_sns <- function(config) {
 
 mock_cellsets <- function(){
   # get a snapshot cellsets json
-  jsonlite::fromJSON("tests/testthat/_snaps/gem2s/gem2s-7-mock_experiment_id-cellsets.json", flatten = TRUE)
+  paths <- setup_test_paths()
+  jsonlite::fromJSON(file.path(paths$snaps, "gem2s", "gem2s-7-mock_experiment_id-cellsets.json"), flatten = TRUE)
 
 }
 
@@ -152,7 +153,7 @@ test_that("cbind_cellset_type names the bound column correctly", {
   dt <- data.table::data.table(col1 = 1:10, col2 = 11:20)
   values <- seq(1, 20, 2)
 
-  res <- cbind_cellset_type(dt, values_1)
+  res <- cbind_cellset_type(dt, values)
 
   expect_true("cellset_type" %in% names(res))
   expect_identical(res[,cellset_type], values)
