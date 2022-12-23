@@ -167,6 +167,6 @@ test_that("parse_cellsets parses a cellset object", {
   res <- parse_cellsets(cellsets)
 
   expect_s3_class(res, "data.table")
-  expect_identical(names(res), c("key", "name", "cellset_type", "cell_id"))
+  expect_identical(names(res), c("key", "name", "type", "cell_id"))
 
 })
