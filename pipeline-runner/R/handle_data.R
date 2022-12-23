@@ -452,12 +452,13 @@ safe_cbind <- function(dt, ...) {
 
 #' add cellset type column to cellsets data.table
 #'
-#' helper to correctly name the cellset_type column.
+#' helper to correctly name the cellset type column. some cellsets already
+#' contain a "type" slot, which complicates matters, so we chose `cellset_type`,
 #'
 #' @param dt data.table
 #' @param col string of corresponding cellset type
 #'
-#' @return data.table with cellset_type
+#' @return data.table with cellset_type column
 #' @export
 #'
 cbind_cellset_type <- function(dt, col) {
@@ -484,10 +485,13 @@ parse_cellsets <- function(cellsets) {
   # fill columns in case there are empty cellset classes
   dt <- data.table::rbindlist(dt_list, fill = TRUE)
 
-  # rename cellset type to metadata in case of metadata cellsets
-  dt[!cellset_type%in% c("louvain", "scratchpad", "sample"), cellset_type := "metadata"]
+  # change cellset type to more generic names
+  dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
+  dt[!cellset_type %in% c("cluster", "scratchpad", "sample"), cellset_type := "metadata"]
 
   # unnest, and change column name
-  dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
+  dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
+  data.table::setnames(dt, "cellset_type", "type")
+  return(dt)
 }
 
