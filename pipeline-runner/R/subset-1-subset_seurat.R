@@ -17,7 +17,7 @@
 #'
 create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
 
-  parent <- load_parental_data(input, pipeline_config)
+  parent <- load_parent_experiment_data(input, pipeline_config)
 
   scdata <- subset_experiment(input, parent)
   sample_id_map <- create_sample_id_map(unique(scdata$samples))
@@ -62,7 +62,7 @@ create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
 #' @return list with scdata and parsed cellsets
 #' @export
 #'
-load_parental_data <- function(input, pipeline_config) {
+load_parent_experiment_data <- function(input, pipeline_config) {
   # load parent processed scdata and cellsets
   s3 <- paws::s3(config = pipeline_config$aws_config)
   parent_scdata <-
