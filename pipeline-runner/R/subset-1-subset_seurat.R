@@ -115,7 +115,7 @@ diet_scdata <- function(scdata) {
 #'
 subset_experiment <- function(input, parent) {
   # subset seurat object, remove unnecesary data
-  cell_ids_to_keep <- parent$cellsets[key %in% input$cellSetKeys, cell_id]
+  cell_ids_to_keep <- unique(parent$cellsets[key %in% input$cellSetKeys, cell_id])
   scdata <- subset_ids(parent$scdata, cell_ids_to_keep)
   scdata <- diet_scdata(scdata)
   return(scdata)
