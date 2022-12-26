@@ -16,15 +16,16 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   experiment_id <- input$experimentId
   project_id <- input$projectId
 
-  # destructure what need from prev_out
+  # de-structure what need from prev_out
   scdata_list <- prev_out$scdata_list
   config <- prev_out$config
   qc_config <- prev_out$qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
+  parent_cellsets <- prev_out$parent_cellsets
 
   if("sample_id_map" %in% names(prev_out)) {
     input$sampleIds <- names(scdata_list)
-    input$sampleNames <- names(scdata_list)
+    input$sampleNames <- parent_cellsets[input$sampleIds, name, mult = "first"]
   }
 
   if (disable_qc_filters == FALSE) {
