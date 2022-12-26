@@ -10,7 +10,7 @@
 #'
 upload_to_aws <- function(input, pipeline_config, prev_out) {
   message("Uploading to AWS ...")
-  check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list", "qc_config", "disable_qc_filters")
+  check_names <- c("config", "scdata_list", "qc_config", "disable_qc_filters")
   check_prev_out(prev_out, check_names)
 
   experiment_id <- input$experimentId
@@ -21,6 +21,11 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   config <- prev_out$config
   qc_config <- prev_out$qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
+
+  if("sample_id_map" %in% names(prev_out)) {
+    input$sampleIds <- names(scdata_list)
+    input$sampleNames <- names(scdata_list)
+  }
 
   message("Constructing cell sets ...")
   cell_sets <- get_cell_sets(scdata_list, input)

@@ -482,7 +482,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "988133ae29394ba9af3dcf9c03e0dba7"
+      [1] "e449dea4dd4b69f18d8fc7fd7fb58063"
     Code
       str(res)
     Output
@@ -697,101 +697,65 @@
         ..$ disable_qc_filters: logi FALSE
         ..$ qc_config         :List of 7
         .. ..$ cellSizeDistribution:List of 2
-        .. .. ..$ mock_sample_2_id:List of 4
-        .. .. .. ..$ enabled              : logi FALSE
-        .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. ..$ filterSettings       :List of 2
+        .. .. ..$ mock_sample_2_id:List of 3
+        .. .. .. ..$ enabled       : logi FALSE
+        .. .. .. ..$ auto          : logi TRUE
+        .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. ..$ minCellSize: num 17
         .. .. .. .. ..$ binStep    : num 200
-        .. .. .. ..$ defaultFilterSettings:List of 2
-        .. .. .. .. ..$ minCellSize: num 17
-        .. .. .. .. ..$ binStep    : num 200
-        .. .. ..$ mock_sample_1_id:List of 4
-        .. .. .. ..$ enabled              : logi FALSE
-        .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. ..$ filterSettings       :List of 2
-        .. .. .. .. ..$ minCellSize: num 27
-        .. .. .. .. ..$ binStep    : num 200
-        .. .. .. ..$ defaultFilterSettings:List of 2
+        .. .. ..$ mock_sample_1_id:List of 3
+        .. .. .. ..$ enabled       : logi FALSE
+        .. .. .. ..$ auto          : logi TRUE
+        .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. ..$ minCellSize: num 27
         .. .. .. .. ..$ binStep    : num 200
         .. ..$ mitochondrialContent:List of 2
-        .. .. ..$ mock_sample_2_id:List of 4
-        .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. ..$ filterSettings       :List of 2
+        .. .. ..$ mock_sample_2_id:List of 3
+        .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. ..$ auto          : logi TRUE
+        .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. ..$ method        : chr "absoluteThreshold"
         .. .. .. .. ..$ methodSettings:List of 1
         .. .. .. .. .. ..$ absoluteThreshold:List of 2
         .. .. .. .. .. .. ..$ maxFraction: num 0.521
         .. .. .. .. .. .. ..$ binStep    : num 0.3
-        .. .. .. ..$ defaultFilterSettings:List of 2
-        .. .. .. .. ..$ method        : chr "absoluteThreshold"
-        .. .. .. .. ..$ methodSettings:List of 1
-        .. .. .. .. .. ..$ absoluteThreshold:List of 2
-        .. .. .. .. .. .. ..$ maxFraction: num 0.521
-        .. .. .. .. .. .. ..$ binStep    : num 0.3
-        .. .. ..$ mock_sample_1_id:List of 4
-        .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. ..$ filterSettings       :List of 2
-        .. .. .. .. ..$ method        : chr "absoluteThreshold"
-        .. .. .. .. ..$ methodSettings:List of 1
-        .. .. .. .. .. ..$ absoluteThreshold:List of 2
-        .. .. .. .. .. .. ..$ maxFraction: num 0.603
-        .. .. .. .. .. .. ..$ binStep    : num 0.3
-        .. .. .. ..$ defaultFilterSettings:List of 2
+        .. .. ..$ mock_sample_1_id:List of 3
+        .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. ..$ auto          : logi TRUE
+        .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. ..$ method        : chr "absoluteThreshold"
         .. .. .. .. ..$ methodSettings:List of 1
         .. .. .. .. .. ..$ absoluteThreshold:List of 2
         .. .. .. .. .. .. ..$ maxFraction: num 0.603
         .. .. .. .. .. .. ..$ binStep    : num 0.3
         .. ..$ classifier          :List of 2
-        .. .. ..$ mock_sample_2_id:List of 5
-        .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. ..$ prefiltered          : logi FALSE
-        .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. ..$ filterSettings       :List of 1
+        .. .. ..$ mock_sample_2_id:List of 4
+        .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. ..$ prefiltered   : logi FALSE
+        .. .. .. ..$ auto          : logi TRUE
+        .. .. .. ..$ filterSettings:List of 1
         .. .. .. .. ..$ FDR: num 0.01
-        .. .. .. ..$ defaultFilterSettings:List of 1
-        .. .. .. .. ..$ FDR: num 0.01
-        .. .. ..$ mock_sample_1_id:List of 5
-        .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. ..$ prefiltered          : logi FALSE
-        .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. ..$ filterSettings       :List of 1
-        .. .. .. .. ..$ FDR: num 0.01
-        .. .. .. ..$ defaultFilterSettings:List of 1
+        .. .. ..$ mock_sample_1_id:List of 4
+        .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. ..$ prefiltered   : logi FALSE
+        .. .. .. ..$ auto          : logi TRUE
+        .. .. .. ..$ filterSettings:List of 1
         .. .. .. .. ..$ FDR: num 0.01
         .. ..$ numGenesVsNumUmis   :List of 2
-        .. .. ..$ mock_sample_2_id:List of 4
-        .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. ..$ filterSettings       :List of 2
+        .. .. ..$ mock_sample_2_id:List of 3
+        .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. ..$ auto          : logi TRUE
+        .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. ..$ regressionType        : chr "linear"
         .. .. .. .. ..$ regressionTypeSettings:List of 2
         .. .. .. .. .. ..$ linear:List of 1
         .. .. .. .. .. .. ..$ p.level: num 0.001
         .. .. .. .. .. ..$ spline:List of 1
         .. .. .. .. .. .. ..$ p.level: num 0.001
-        .. .. .. ..$ defaultFilterSettings:List of 2
-        .. .. .. .. ..$ regressionType        : chr "linear"
-        .. .. .. .. ..$ regressionTypeSettings:List of 2
-        .. .. .. .. .. ..$ linear:List of 1
-        .. .. .. .. .. .. ..$ p.level: num 0.001
-        .. .. .. .. .. ..$ spline:List of 1
-        .. .. .. .. .. .. ..$ p.level: num 0.001
-        .. .. ..$ mock_sample_1_id:List of 4
-        .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. ..$ filterSettings       :List of 2
-        .. .. .. .. ..$ regressionType        : chr "linear"
-        .. .. .. .. ..$ regressionTypeSettings:List of 2
-        .. .. .. .. .. ..$ linear:List of 1
-        .. .. .. .. .. .. ..$ p.level: num 0.001
-        .. .. .. .. .. ..$ spline:List of 1
-        .. .. .. .. .. .. ..$ p.level: num 0.001
-        .. .. .. ..$ defaultFilterSettings:List of 2
+        .. .. ..$ mock_sample_1_id:List of 3
+        .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. ..$ auto          : logi TRUE
+        .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. ..$ regressionType        : chr "linear"
         .. .. .. .. ..$ regressionTypeSettings:List of 2
         .. .. .. .. .. ..$ linear:List of 1
@@ -799,22 +763,16 @@
         .. .. .. .. .. ..$ spline:List of 1
         .. .. .. .. .. .. ..$ p.level: num 0.001
         .. ..$ doubletScores       :List of 2
-        .. .. ..$ mock_sample_2_id:List of 4
-        .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. ..$ filterSettings       :List of 2
+        .. .. ..$ mock_sample_2_id:List of 3
+        .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. ..$ auto          : logi TRUE
+        .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. ..$ probabilityThreshold: num 0.979
         .. .. .. .. ..$ binStep             : num 0.02
-        .. .. .. ..$ defaultFilterSettings:List of 2
-        .. .. .. .. ..$ probabilityThreshold: num 0.979
-        .. .. .. .. ..$ binStep             : num 0.02
-        .. .. ..$ mock_sample_1_id:List of 4
-        .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. ..$ filterSettings       :List of 2
-        .. .. .. .. ..$ probabilityThreshold: num 0.84
-        .. .. .. .. ..$ binStep             : num 0.02
-        .. .. .. ..$ defaultFilterSettings:List of 2
+        .. .. ..$ mock_sample_1_id:List of 3
+        .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. ..$ auto          : logi TRUE
+        .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. ..$ probabilityThreshold: num 0.84
         .. .. .. .. ..$ binStep             : num 0.02
         .. ..$ dataIntegration     :List of 2
@@ -862,7 +820,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "b43eb24698e7e929755e256573b8b817"
+      [1] "4afaaf94e9fd057c28b870c5eca95131"
     Code
       str(res)
     Output
@@ -877,101 +835,65 @@
         .. .. ..$ type    : chr "10x"
         .. ..$ processingConfig:List of 7
         .. .. ..$ cellSizeDistribution:List of 2
-        .. .. .. ..$ mock_sample_2_id:List of 4
-        .. .. .. .. ..$ enabled              : logi FALSE
-        .. .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. .. ..$ filterSettings       :List of 2
+        .. .. .. ..$ mock_sample_2_id:List of 3
+        .. .. .. .. ..$ enabled       : logi FALSE
+        .. .. .. .. ..$ auto          : logi TRUE
+        .. .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. .. ..$ minCellSize: num 17
         .. .. .. .. .. ..$ binStep    : num 200
-        .. .. .. .. ..$ defaultFilterSettings:List of 2
-        .. .. .. .. .. ..$ minCellSize: num 17
-        .. .. .. .. .. ..$ binStep    : num 200
-        .. .. .. ..$ mock_sample_1_id:List of 4
-        .. .. .. .. ..$ enabled              : logi FALSE
-        .. .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. .. ..$ filterSettings       :List of 2
-        .. .. .. .. .. ..$ minCellSize: num 27
-        .. .. .. .. .. ..$ binStep    : num 200
-        .. .. .. .. ..$ defaultFilterSettings:List of 2
+        .. .. .. ..$ mock_sample_1_id:List of 3
+        .. .. .. .. ..$ enabled       : logi FALSE
+        .. .. .. .. ..$ auto          : logi TRUE
+        .. .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. .. ..$ minCellSize: num 27
         .. .. .. .. .. ..$ binStep    : num 200
         .. .. ..$ mitochondrialContent:List of 2
-        .. .. .. ..$ mock_sample_2_id:List of 4
-        .. .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. .. ..$ filterSettings       :List of 2
+        .. .. .. ..$ mock_sample_2_id:List of 3
+        .. .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. .. ..$ auto          : logi TRUE
+        .. .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. .. ..$ method        : chr "absoluteThreshold"
         .. .. .. .. .. ..$ methodSettings:List of 1
         .. .. .. .. .. .. ..$ absoluteThreshold:List of 2
         .. .. .. .. .. .. .. ..$ maxFraction: num 0.521
         .. .. .. .. .. .. .. ..$ binStep    : num 0.3
-        .. .. .. .. ..$ defaultFilterSettings:List of 2
-        .. .. .. .. .. ..$ method        : chr "absoluteThreshold"
-        .. .. .. .. .. ..$ methodSettings:List of 1
-        .. .. .. .. .. .. ..$ absoluteThreshold:List of 2
-        .. .. .. .. .. .. .. ..$ maxFraction: num 0.521
-        .. .. .. .. .. .. .. ..$ binStep    : num 0.3
-        .. .. .. ..$ mock_sample_1_id:List of 4
-        .. .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. .. ..$ filterSettings       :List of 2
-        .. .. .. .. .. ..$ method        : chr "absoluteThreshold"
-        .. .. .. .. .. ..$ methodSettings:List of 1
-        .. .. .. .. .. .. ..$ absoluteThreshold:List of 2
-        .. .. .. .. .. .. .. ..$ maxFraction: num 0.603
-        .. .. .. .. .. .. .. ..$ binStep    : num 0.3
-        .. .. .. .. ..$ defaultFilterSettings:List of 2
+        .. .. .. ..$ mock_sample_1_id:List of 3
+        .. .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. .. ..$ auto          : logi TRUE
+        .. .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. .. ..$ method        : chr "absoluteThreshold"
         .. .. .. .. .. ..$ methodSettings:List of 1
         .. .. .. .. .. .. ..$ absoluteThreshold:List of 2
         .. .. .. .. .. .. .. ..$ maxFraction: num 0.603
         .. .. .. .. .. .. .. ..$ binStep    : num 0.3
         .. .. ..$ classifier          :List of 2
-        .. .. .. ..$ mock_sample_2_id:List of 5
-        .. .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. .. ..$ prefiltered          : logi FALSE
-        .. .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. .. ..$ filterSettings       :List of 1
+        .. .. .. ..$ mock_sample_2_id:List of 4
+        .. .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. .. ..$ prefiltered   : logi FALSE
+        .. .. .. .. ..$ auto          : logi TRUE
+        .. .. .. .. ..$ filterSettings:List of 1
         .. .. .. .. .. ..$ FDR: num 0.01
-        .. .. .. .. ..$ defaultFilterSettings:List of 1
-        .. .. .. .. .. ..$ FDR: num 0.01
-        .. .. .. ..$ mock_sample_1_id:List of 5
-        .. .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. .. ..$ prefiltered          : logi FALSE
-        .. .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. .. ..$ filterSettings       :List of 1
-        .. .. .. .. .. ..$ FDR: num 0.01
-        .. .. .. .. ..$ defaultFilterSettings:List of 1
+        .. .. .. ..$ mock_sample_1_id:List of 4
+        .. .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. .. ..$ prefiltered   : logi FALSE
+        .. .. .. .. ..$ auto          : logi TRUE
+        .. .. .. .. ..$ filterSettings:List of 1
         .. .. .. .. .. ..$ FDR: num 0.01
         .. .. ..$ numGenesVsNumUmis   :List of 2
-        .. .. .. ..$ mock_sample_2_id:List of 4
-        .. .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. .. ..$ filterSettings       :List of 2
+        .. .. .. ..$ mock_sample_2_id:List of 3
+        .. .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. .. ..$ auto          : logi TRUE
+        .. .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. .. ..$ regressionType        : chr "linear"
         .. .. .. .. .. ..$ regressionTypeSettings:List of 2
         .. .. .. .. .. .. ..$ linear:List of 1
         .. .. .. .. .. .. .. ..$ p.level: num 0.001
         .. .. .. .. .. .. ..$ spline:List of 1
         .. .. .. .. .. .. .. ..$ p.level: num 0.001
-        .. .. .. .. ..$ defaultFilterSettings:List of 2
-        .. .. .. .. .. ..$ regressionType        : chr "linear"
-        .. .. .. .. .. ..$ regressionTypeSettings:List of 2
-        .. .. .. .. .. .. ..$ linear:List of 1
-        .. .. .. .. .. .. .. ..$ p.level: num 0.001
-        .. .. .. .. .. .. ..$ spline:List of 1
-        .. .. .. .. .. .. .. ..$ p.level: num 0.001
-        .. .. .. ..$ mock_sample_1_id:List of 4
-        .. .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. .. ..$ filterSettings       :List of 2
-        .. .. .. .. .. ..$ regressionType        : chr "linear"
-        .. .. .. .. .. ..$ regressionTypeSettings:List of 2
-        .. .. .. .. .. .. ..$ linear:List of 1
-        .. .. .. .. .. .. .. ..$ p.level: num 0.001
-        .. .. .. .. .. .. ..$ spline:List of 1
-        .. .. .. .. .. .. .. ..$ p.level: num 0.001
-        .. .. .. .. ..$ defaultFilterSettings:List of 2
+        .. .. .. ..$ mock_sample_1_id:List of 3
+        .. .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. .. ..$ auto          : logi TRUE
+        .. .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. .. ..$ regressionType        : chr "linear"
         .. .. .. .. .. ..$ regressionTypeSettings:List of 2
         .. .. .. .. .. .. ..$ linear:List of 1
@@ -979,22 +901,16 @@
         .. .. .. .. .. .. ..$ spline:List of 1
         .. .. .. .. .. .. .. ..$ p.level: num 0.001
         .. .. ..$ doubletScores       :List of 2
-        .. .. .. ..$ mock_sample_2_id:List of 4
-        .. .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. .. ..$ filterSettings       :List of 2
+        .. .. .. ..$ mock_sample_2_id:List of 3
+        .. .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. .. ..$ auto          : logi TRUE
+        .. .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. .. ..$ probabilityThreshold: num 0.979
         .. .. .. .. .. ..$ binStep             : num 0.02
-        .. .. .. .. ..$ defaultFilterSettings:List of 2
-        .. .. .. .. .. ..$ probabilityThreshold: num 0.979
-        .. .. .. .. .. ..$ binStep             : num 0.02
-        .. .. .. ..$ mock_sample_1_id:List of 4
-        .. .. .. .. ..$ enabled              : logi TRUE
-        .. .. .. .. ..$ auto                 : logi TRUE
-        .. .. .. .. ..$ filterSettings       :List of 2
-        .. .. .. .. .. ..$ probabilityThreshold: num 0.84
-        .. .. .. .. .. ..$ binStep             : num 0.02
-        .. .. .. .. ..$ defaultFilterSettings:List of 2
+        .. .. .. ..$ mock_sample_1_id:List of 3
+        .. .. .. .. ..$ enabled       : logi TRUE
+        .. .. .. .. ..$ auto          : logi TRUE
+        .. .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. .. ..$ probabilityThreshold: num 0.84
         .. .. .. .. .. ..$ binStep             : num 0.02
         .. .. ..$ dataIntegration     :List of 2

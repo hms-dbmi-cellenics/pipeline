@@ -13,7 +13,7 @@ call_qc(task_name, input, pipeline_config)
 \itemize{
 \item step parameters for all samples
 \item current sample UUID
-\item uploadCountMatrix (wether or not to upload matrix after step)
+\item uploadCountMatrix (whether or not to upload matrix after step)
 }}
 
 \item{pipeline_config}{list as defined by load_config}
