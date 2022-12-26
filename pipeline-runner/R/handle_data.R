@@ -87,6 +87,8 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
   integration_index <- match("dataIntegration", task_names)
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
+  # TODO: remove if block
+  # this never runs, because embed and cluster runs in the worker if modified.
   # If the task is after data integration, we need to get scdata from processed_matrix
   if (match(task_name, task_names) > integration_index) {
     return(load_processed_scdata(s3, pipeline_config, experiment_id))
