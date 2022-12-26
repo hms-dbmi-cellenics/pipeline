@@ -145,14 +145,8 @@ build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_fil
     type = "metadataCategorical"
   )
 
-  if (disable_qc_filters == TRUE) {
-    sample_ids <- unique(child_cellsets[type == "sample", key:name])[, key]
-    sample_names <- unique(child_cellsets[type == "sample", key:name])[, name]
-  } else {
     sample_ids <- unlist(input$sampleIds)
     sample_names <- unlist(input$sampleNames)
-  }
-
 
   for (i in seq_along(sample_ids)) {
     sample_id <- sample_ids[i]
@@ -175,7 +169,6 @@ build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_fil
 
   return(cell_set)
 }
-
 
 
 #' Create cellsets from user-supplied metadata
