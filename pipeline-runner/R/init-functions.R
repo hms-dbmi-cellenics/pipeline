@@ -187,12 +187,12 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, d
 }
 
 
-#' Run GEM2S step
+#' Run pipeline step
 #'
-#' Calls the corresponding task_name GEM2S step function.
+#' Calls the corresponding `task_name` pipeline  step function.
 #'
 #' The input list only contains experiment level parameters, such as project ID,
-#' and sample names. It's only used for downloading user files.
+#' and sample names and it's only used for downloading user files.
 #'
 #' @param task_name character
 #' @param input list

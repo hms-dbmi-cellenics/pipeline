@@ -2,7 +2,7 @@
 % Please edit documentation in R/init-functions.R
 \name{run_pipeline_step}
 \alias{run_pipeline_step}
-\title{Run GEM2S step}
+\title{Run pipeline step}
 \usage{
 run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
 }
@@ -24,9 +24,9 @@ run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
 list of task results
 }
 \description{
-Calls the corresponding task_name GEM2S step function.
+Calls the corresponding \code{task_name} pipeline  step function.
 }
 \details{
 The input list only contains experiment level parameters, such as project ID,
-and sample names. It's only used for downloading user files.
+and sample names and it's only used for downloading user files.
 }
