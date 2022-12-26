@@ -74,7 +74,7 @@ test_gem2s <- function(experiment_id) {
     res <- list()
 
     for (task_name in names(tasks)) {
-      res <- run_gem2s_step(res$output,
+      res <- run_pipeline_step(res$output,
                             input,
                             pipeline_config,
                             tasks,
