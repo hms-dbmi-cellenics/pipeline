@@ -436,7 +436,12 @@ load_cellsets <- function(s3, pipeline_config, experiment_id) {
 }
 
 
-#' Bind columns not failing if there's an empty data.table
+#' Bind columns not creating rows if there's an empty data.table
+#'
+#' `cbind` on `data.table` adds a row if binding an empty data.table to a non-empty
+#' one. We do not want that behavior when parsing cellsets, because it implies
+#' the "creation" of a cell that does not exists (i.e. when binding scratchpad
+#' cellsets slots of an experiment without custom cellsets)
 #'
 #' @param dt data.table
 #' @param ... columns to add

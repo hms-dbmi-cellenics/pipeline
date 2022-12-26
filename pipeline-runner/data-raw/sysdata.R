@@ -25,7 +25,7 @@ GEM2S_TASK_LIST <- list(
 )
 
 SUBSET_SEURAT_TASK_LIST <- list(
-  "subsetSeurat" = "create_subset_experiment",
+  "subsetSeurat" = "subset_seurat",
   "prepareExperiment" = "prepare_experiment",
   "uploadToAWS" = "upload_to_aws"
 )

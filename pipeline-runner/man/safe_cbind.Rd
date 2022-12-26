@@ -2,7 +2,7 @@
 % Please edit documentation in R/handle_data.R
 \name{safe_cbind}
 \alias{safe_cbind}
-\title{Bind columns not failing if there's an empty data.table}
+\title{Bind columns not creating rows if there's an empty data.table}
 \usage{
 safe_cbind(dt, ...)
 }
@@ -15,5 +15,8 @@ safe_cbind(dt, ...)
 data.table with new columns
 }
 \description{
-Bind columns not failing if there's an empty data.table
+\code{cbind} on \code{data.table} adds a row if binding an empty data.table to a non-empty
+one. We do not want that behavior when parsing cellsets, because it implies
+the "creation" of a cell that does not exists (i.e. when binding scratchpad
+cellsets slots of an experiment without custom cellsets)
 }

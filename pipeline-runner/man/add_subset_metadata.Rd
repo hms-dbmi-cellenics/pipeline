@@ -4,15 +4,15 @@
 \alias{add_subset_metadata}
 \title{add experiment level metadata to subset seurat object}
 \usage{
-add_subset_metadata(input, scdata, sample_id_map)
+add_subset_metadata(input, subset_scdata, sample_id_map)
 }
 \arguments{
 \item{input}{list of input params, containing the experimentId}
 
-\item{scdata}{seurat object}
-
 \item{sample_id_map}{list with mapping between sample_ids from
 parent and subset experiments}
+
+\item{scdata}{seurat object}
 }
 \value{
 scdata with additional metadata

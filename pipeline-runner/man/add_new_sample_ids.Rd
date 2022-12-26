@@ -4,12 +4,12 @@
 \alias{add_new_sample_ids}
 \title{Add new sample ids to the subset Seurat Object}
 \usage{
-add_new_sample_ids(scdata, sample_id_map)
+add_new_sample_ids(subset_scdata, sample_id_map)
 }
 \arguments{
-\item{scdata}{Seurat Object}
-
 \item{sample_id_map}{data.table of parent/subset sample id map}
+
+\item{scdata}{Seurat Object}
 }
 \value{
 SeuratObject with new sample ids

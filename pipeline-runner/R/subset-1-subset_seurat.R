@@ -15,15 +15,14 @@
 #' @return list containing scdata_list, annotations and sample_id_map
 #' @export
 #'
-create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
+subset_seurat <- function(input, pipeline_config, prev_out = NULL) {
+  parent_data <- load_parent_experiment_data(input, pipeline_config)
 
-  parent <- load_parent_experiment_data(input, pipeline_config)
+  subset_scdata <- subset_experiment(input, parent_data)
+  sample_id_map <- create_sample_id_map(unique(subset_scdata$samples))
+  subset_scdata <- add_subset_metadata(input, subset_scdata, sample_id_map)
 
-  scdata <- subset_experiment(input, parent)
-  sample_id_map <- create_sample_id_map(unique(scdata$samples))
-  scdata <- add_subset_metadata(input, scdata, sample_id_map)
-
-  scdata_list <- Seurat::SplitObject(scdata, split.by = "samples")
+  subset_scdata_list <- Seurat::SplitObject(subset_scdata, split.by = "samples")
 
   # TODO: remove from here and refactor all pipeline.
   config <- list(
@@ -37,13 +36,13 @@ create_subset_experiment <- function(input, pipeline_config, prev_out = NULL) {
       sampleIdMap = sample_id_map
       ),
     output = list(
-      scdata_list = scdata_list,
-      annot = scdata@misc$gene_annotations,
+      scdata_list = subset_scdata_list,
+      annot = subset_scdata@misc$gene_annotations,
       edrops = NULL,
       sample_id_map = sample_id_map,
       config = config,
       disable_qc_filters = TRUE,
-      parent_cellsets = parent$cellsets
+      parent_cellsets = parent_data$cellsets
     )
   )
 
@@ -113,10 +112,10 @@ diet_scdata <- function(scdata) {
 #' @return subset seurat object
 #' @export
 #'
-subset_experiment <- function(input, parent) {
+subset_experiment <- function(input, parent_data) {
   # subset seurat object, remove unnecesary data
-  cell_ids_to_keep <- unique(parent$cellsets[key %in% input$cellSetKeys, cell_id])
-  scdata <- subset_ids(parent$scdata, cell_ids_to_keep)
+  cell_ids_to_keep <- unique(parent_data$cellsets[key %in% input$cellSetKeys, cell_id])
+  scdata <- subset_ids(parent_data$scdata, cell_ids_to_keep)
   scdata <- diet_scdata(scdata)
   return(scdata)
 }
@@ -152,11 +151,10 @@ create_sample_id_map <- function(parent_sample_id) {
 #' @return SeuratObject with new sample ids
 #' @export
 #'
-add_new_sample_ids <- function(scdata, sample_id_map) {
-
-  sample_map_idx <- match(scdata$parent_samples, names(sample_id_map))
-  scdata$samples <- unname(unlist(sample_id_map[sample_map_idx]))
-  return(scdata)
+add_new_sample_ids <- function(subset_scdata, sample_id_map) {
+  sample_map_idx <- match(subset_scdata$parent_samples, names(sample_id_map))
+  subset_scdata$samples <- unname(unlist(sample_id_map[sample_map_idx]))
+  return(subset_scdata)
 }
 
 
@@ -170,12 +168,11 @@ add_new_sample_ids <- function(scdata, sample_id_map) {
 #' @return scdata with additional metadata
 #' @export
 #'
-add_subset_metadata <- function(input, scdata, sample_id_map) {
-
+add_subset_metadata <- function(input, subset_scdata, sample_id_map) {
   # add new sample_ids, keep originals in a new variable
-  scdata$parent_samples <- scdata$samples
-  scdata <- add_new_sample_ids(scdata, sample_id_map)
-  scdata@misc$experimentId <- input$experimentId
+  subset_scdata$parent_samples <- subset_scdata$samples
+  subset_scdata <- add_new_sample_ids(subset_scdata, sample_id_map)
+  subset_scdata@misc$experimentId <- input$experimentId
 
-  return(scdata)
+  return(subset_scdata)
 }

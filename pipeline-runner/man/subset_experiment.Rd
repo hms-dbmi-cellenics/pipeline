@@ -4,7 +4,7 @@
 \alias{subset_experiment}
 \title{Subset seurat object by the input cellset keys}
 \usage{
-subset_experiment(input, parent)
+subset_experiment(input, parent_data)
 }
 \arguments{
 \item{input}{list of input parameters, containing cellSetKeys to subset}
