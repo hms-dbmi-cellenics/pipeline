@@ -287,7 +287,7 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
 
   if("sample_id_map" %in% names(prev_out)) {
     input$sampleIds <- names(scdata_list)
-    input$sampleNames <- child_cellsets[key %in% input$sampleIds, name, mult = "first"]
+    input$sampleNames <- child_cellsets[input$sampleIds, name, on ="key", mult = "first"]
   }
 
   # convert back cellsets to list format
