@@ -111,7 +111,7 @@ get_cell_sets <- function(scdata_list, input) {
   # remove used colors from pool
   color_pool <- remove_used_colors(sample_cellsets, color_pool)
 
-  # Design cell_set meta_data for DynamoDB
+  # Design cell_set metadata
   cell_sets <- c(list(scratchpad), list(sample_cellsets))
 
   if ("metadata" %in% names(input)) {
