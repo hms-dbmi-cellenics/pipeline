@@ -22,6 +22,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   qc_config <- prev_out$qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
   parent_cellsets <- prev_out$parent_cellsets
+  sample_id_map <- prev_out$sample_id_map
 
   if("sample_id_map" %in% names(prev_out)) {
     input$sampleIds <- names(scdata_list)
@@ -33,7 +34,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     cell_sets <- get_cell_sets(scdata_list, input)
   } else {
     message("Constructing cell sets for subset experiment ...")
-    cell_sets <- get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters)
+    cell_sets <- get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters, sample_id_map)
   }
 
   # cell sets file to s3
@@ -275,7 +276,7 @@ remove_used_colors <- function(cellsets, color_pool) {
 #' @return cell set object
 #' @export
 #'
-get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filters) {
+get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filters, sample_id_map) {
 
   parent_cellsets <- prev_out$parent_cellsets
   cell_ids_to_keep <- unlist(lapply(scdata_list, function(x) {
@@ -289,12 +290,9 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
   child_cellsets <- parent_cellsets_filt[which(parent_cellsets_filt$cell_id %in% cell_ids_to_keep)]
 
   # replace old sample ids with new sample ids in the new cellsets
-  new_samples_ids <- unlist(lapply(scdata_list, function(x) {
-    x$samples
-  }))
-  cells_ids_new_samples <- data.table(cell_ids_to_keep, new_samples_ids)
-  cellsets_samples <- cells_ids_new_samples[child_cellsets[type == "sample", ], on = .(cell_ids_to_keep = cell_id)]
-  child_cellsets[type == "sample", key := cellsets_samples$new_samples_ids]
+  for (i in 1:length(sample_id_map)) {
+    child_cellsets[key %in% names(sample_id_map)[i], key := unname(sample_id_map[i])]
+  }
 
   # convert back cellsets to list format
   color_pool <- get_color_pool()
