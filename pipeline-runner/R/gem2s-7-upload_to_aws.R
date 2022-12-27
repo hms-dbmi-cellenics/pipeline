@@ -31,13 +31,10 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   if (disable_qc_filters == FALSE) {
     message("Constructing cell sets ...")
     cell_sets <- get_cell_sets(scdata_list, input)
-  }
-
-  if (disable_qc_filters == TRUE) {
-    message("Constructing cell sets for subset experiment...")
+  } else {
+    message("Constructing cell sets for subset experiment ...")
     cell_sets <- get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters)
   }
-
 
   # cell sets file to s3
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
