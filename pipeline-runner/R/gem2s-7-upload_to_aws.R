@@ -24,11 +24,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   parent_cellsets <- prev_out$parent_cellsets
   sample_id_map <- prev_out$sample_id_map
 
-  if("sample_id_map" %in% names(prev_out)) {
-    input$sampleIds <- names(scdata_list)
-    input$sampleNames <- parent_cellsets[input$sampleIds, name, mult = "first"]
-  }
-
   if (disable_qc_filters == FALSE) {
     message("Constructing cell sets ...")
     cell_sets <- get_cell_sets(scdata_list, input)
@@ -283,11 +278,16 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
     x$cells_id
   }))
 
-  child_cellsets <- filter_parent_cellset(parent_cellset, cell_ids_to_keep)
+  child_cellsets <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 
   # replace old sample ids with new sample ids in the new cellsets
   for (i in 1:length(sample_id_map)) {
     child_cellsets[key %in% names(sample_id_map)[i], key := unname(sample_id_map[i])]
+  }
+
+  if("sample_id_map" %in% names(prev_out)) {
+    input$sampleIds <- names(scdata_list)
+    input$sampleNames <- child_cellsets[key %in% input$sampleIds, name, mult = "first"]
   }
 
   # convert back cellsets to list format
@@ -311,20 +311,20 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
 }
 
 
-#' Filter parent cellset
+#' Filter parent cellsets
 #'
 #' This function filterz the parent cellset removing all the information about
 #' louvain/leiden clusters because they will be recalculated in the subset experiment.
 #' It removes also all the cell ids from the parent experiment that are not present
 #' in the subset experiment.
 #'
-#' @param parent_cellset cell set object from the parent experiment
+#' @param parent_cellsets cell set object from the parent experiment
 #' @param cell_ids_to_keep vector of cell ids to keep
 #'
 #' @return filtered cell set object
 #' @export
 #'
-filter_parent_cellset <- function(parent_cellset, cell_ids_to_keep) {
+filter_parent_cellsets <- function(parent_cellsets, cell_ids_to_keep) {
   #  filter out all louvain
   child_cellsets <- parent_cellsets[type != "cluster"]
 
