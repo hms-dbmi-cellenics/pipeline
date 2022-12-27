@@ -283,11 +283,7 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
     x$cells_id
   }))
 
-  #  filter out all louvain
-  parent_cellsets_filt <- parent_cellsets[type != "cluster"]
-
-  # filter out cells from cell_sets_original scratchpad and metadata
-  child_cellsets <- parent_cellsets_filt[which(parent_cellsets_filt$cell_id %in% cell_ids_to_keep)]
+  child_cellsets <- filter_parent_cellset(parent_cellset, cell_ids_to_keep)
 
   # replace old sample ids with new sample ids in the new cellsets
   for (i in 1:length(sample_id_map)) {
@@ -312,6 +308,30 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
   cell_sets <- list(cellSets = cell_sets)
 
   return(cell_sets)
+}
+
+
+#' Filter parent cellset
+#'
+#' This function filterz the parent cellset removing all the information about
+#' louvain/leiden clusters because they will be recalculated in the subset experiment.
+#' It removes also all the cell ids from the parent experiment that are not present
+#' in the subset experiment.
+#'
+#' @param parent_cellset cell set object from the parent experiment
+#' @param cell_ids_to_keep vector of cell ids to keep
+#'
+#' @return filtered cell set object
+#' @export
+#'
+filter_parent_cellset <- function(parent_cellset, cell_ids_to_keep) {
+  #  filter out all louvain
+  child_cellsets <- parent_cellsets[type != "cluster"]
+
+  # filter out cells from cell_sets_original scratchpad and metadata
+  child_cellsets <- child_cellsets[which(child_cellsets$cell_id %in% cell_ids_to_keep)]
+
+  return(child_cellsets)
 }
 
 
