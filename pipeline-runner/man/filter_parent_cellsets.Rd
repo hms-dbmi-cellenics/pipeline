@@ -7,16 +7,15 @@
 filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 }
 \arguments{
-\item{parent_cellsets}{cell set object from the parent experiment}
+\item{parent_cellsets}{data.tabble with cellsets from the parent experiment}
 
-\item{cell_ids_to_keep}{vector of cell ids to keep}
+\item{cell_ids_to_keep}{integer vector of cell ids to keep}
 }
 \value{
-filtered cell set object
+filtered cellssets data.table
 }
 \description{
-This function filterz the parent cellset removing all the information about
-louvain/leiden clusters because they will be recalculated in the subset experiment.
-It removes also all the cell ids from the parent experiment that are not present
-in the subset experiment.
+This function filters the parent cellsets removing clusters, which will be
+recalculated in the subset experiment. It also filters cell ids not present
+after the subset.
 }
