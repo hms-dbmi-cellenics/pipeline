@@ -418,7 +418,7 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
   prev_out <- mock_prev_out(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
-  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters, sample_id_map)
+  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
 
   metadata_sets <- cell_sets$cellSets[[3]]
   metadata_key <- sapply(metadata_sets, `[[`, "key")
