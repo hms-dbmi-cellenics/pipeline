@@ -318,10 +318,10 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
 #' recalculated in the subset experiment. It also filters cell ids not present
 #' after the subset.
 #'
-#' @param parent_cellsets data.tabble with cellsets from the parent experiment
+#' @param parent_cellsets data.table with cellsets from the parent experiment
 #' @param cell_ids_to_keep integer vector of cell ids to keep
 #'
-#' @return filtered cellssets data.table
+#' @return filtered cellsets data.table
 #' @export
 #'
 filter_parent_cellsets <- function(parent_cellsets, cell_ids_to_keep) {
