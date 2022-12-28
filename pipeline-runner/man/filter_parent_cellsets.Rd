@@ -7,12 +7,12 @@
 filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 }
 \arguments{
-\item{parent_cellsets}{data.tabble with cellsets from the parent experiment}
+\item{parent_cellsets}{data.table with cellsets from the parent experiment}
 
 \item{cell_ids_to_keep}{integer vector of cell ids to keep}
 }
 \value{
-filtered cellssets data.table
+filtered cellsets data.table
 }
 \description{
 This function filters the parent cellsets removing clusters, which will be

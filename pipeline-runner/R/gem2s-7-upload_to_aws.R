@@ -335,12 +335,12 @@ filter_parent_cellsets <- function(parent_cellsets, cell_ids_to_keep) {
 }
 
 
-#' Create cell set using scratchpad information from parent cell set
+#' Create cellsets using scratchpad information from parent cellsets
 #'
-#' This function create a cell set with scratchpad information including only
-#' the cell ids in the subset experiment. If all cell ids from a scratchpad cluster
+#' This function creates cellsets with scratchpad information including only
+#' the cell ids in the subset experiment. If all cell ids from a custom cellset
 #' of the parent experiments are filtered out in the subset experiment,
-#' then that scratchpad cluster is not included in the subset cell set.
+#' then that custom cellset is not included in the subset cell set.
 #'
 #' @param color_pool list of colors to use
 #' @param child_cellsets cell set resulting from parent cell set filtering

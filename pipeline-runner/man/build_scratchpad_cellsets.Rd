@@ -2,7 +2,7 @@
 % Please edit documentation in R/gem2s-7-upload_to_aws.R
 \name{build_scratchpad_cellsets}
 \alias{build_scratchpad_cellsets}
-\title{Create cell set using scratchpad information from parent cell set}
+\title{Create cellsets using scratchpad information from parent cellsets}
 \usage{
 build_scratchpad_cellsets(color_pool, child_cellsets)
 }
@@ -15,8 +15,8 @@ build_scratchpad_cellsets(color_pool, child_cellsets)
 cell set filled with scratchpad information from the parent cell set
 }
 \description{
-This function create a cell set with scratchpad information including only
-the cell ids in the subset experiment. If all cell ids from a scratchpad cluster
+This function creates cellsets with scratchpad information including only
+the cell ids in the subset experiment. If all cell ids from a custom cellset
 of the parent experiments are filtered out in the subset experiment,
-then that scratchpad cluster is not included in the subset cell set.
+then that custom cellset is not included in the subset cell set.
 }
