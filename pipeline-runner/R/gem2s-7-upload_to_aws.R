@@ -121,14 +121,11 @@ get_cell_sets <- function(scdata_list, input) {
 #' @param input The input object from the request
 #' @param scdata_list list of Seurat objects
 #' @param color_pool list of colors to use
-#' @param disable_qc_filters bool indicating if the data derives from the
-#' subsetting of another experiment
-#' @param subset_cellsets cell set resulting from parent cell set filtering
 #'
 #' @return cell set filled with samples information
 #' @export
 #'
-build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters = FALSE, subset_cellsets = NA) {
+build_sample_cellsets <- function(input, scdata_list, color_pool) {
   cell_set <- list(
     key = "sample",
     name = "Samples",

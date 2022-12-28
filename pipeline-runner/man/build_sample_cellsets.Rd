@@ -4,13 +4,7 @@
 \alias{build_sample_cellsets}
 \title{Create cell set using Seurat samples information}
 \usage{
-build_sample_cellsets(
-  input,
-  scdata_list,
-  color_pool,
-  disable_qc_filters = FALSE,
-  subset_cellsets = NA
-)
+build_sample_cellsets(input, scdata_list, color_pool)
 }
 \arguments{
 \item{input}{The input object from the request}
@@ -18,11 +12,6 @@ build_sample_cellsets(
 \item{scdata_list}{list of Seurat objects}
 
 \item{color_pool}{list of colors to use}
-
-\item{disable_qc_filters}{bool indicating if the data derives from the
-subsetting of another experiment}
-
-\item{subset_cellsets}{cell set resulting from parent cell set filtering}
 }
 \value{
 cell set filled with samples information

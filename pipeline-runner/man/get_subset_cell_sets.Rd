@@ -4,13 +4,7 @@
 \alias{get_subset_cell_sets}
 \title{Create cell set object for subset experiment}
 \usage{
-get_subset_cell_sets(
-  scdata_list,
-  input,
-  prev_out,
-  disable_qc_filters,
-  sample_id_map
-)
+get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters)
 }
 \arguments{
 \item{scdata_list}{list of Seurat objects}
