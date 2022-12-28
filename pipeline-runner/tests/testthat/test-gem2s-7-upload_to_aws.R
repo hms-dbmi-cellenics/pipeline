@@ -125,10 +125,17 @@ mock_prev_out <- function(config, counts = NULL) {
 
 mock_subset_data <- function(scdata_list, cell_ids) {
   subset_scdata <- list()
+  sample_ids <- c("new-123abc", "new-123def", "new-123ghi")
   for (i in 1:length(scdata_list)) {
-    subset_scdata[[i]] <- subset_ids(scdata_list[[i]], cell_ids)
+
+    sample_scdata <- subset_ids(scdata_list[[i]], cell_ids)
+    sample_scdata@meta.data$parent_samples <- sample_scdata@meta.data$samples
+    sample_scdata@meta.data$samples <- sample_ids[i]
+
+    subset_scdata[[i]] <- sample_scdata
   }
-  names(subset_scdata) <- c("new-123abc", "new-123def", "new-123ghi")
+
+  names(subset_scdata) <- sample_ids
   return(subset_scdata)
 }
 
@@ -340,7 +347,8 @@ test_that("get_subset_cell_sets filters out louvain clusters from parent cellset
   prev_out <- mock_prev_out(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
-  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters, sample_id_map)
+  prev_out$sample_id_map <- sample_id_map
+  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
 
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
   expect_equal(integer(0), which(sets_key == "louvain"))
@@ -361,7 +369,7 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids", {
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
   prev_out$sample_id_map <- sample_id_map
-  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters, sample_id_map)
+  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
 
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
   sample_sets <- cell_sets$cellSets[[which(sets_key == "sample")]]
@@ -390,7 +398,8 @@ test_that("get_subset_cell_sets produces a cellset with correct new sample ids",
   prev_out <- mock_prev_out(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
-  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters, sample_id_map)
+  prev_out$sample_id_map <- sample_id_map
+  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
 
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
   sample_sets <- cell_sets$cellSets[[which(sets_key == "sample")]]
@@ -418,6 +427,8 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
   prev_out <- mock_prev_out(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
+  prev_out$sample_id_map <- sample_id_map
+
   cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
 
   metadata_sets <- cell_sets$cellSets[[3]]
@@ -447,7 +458,9 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
   prev_out <- mock_prev_out(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
-  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters, sample_id_map)
+  prev_out$sample_id_map <- sample_id_map
+
+  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
 
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
   scratchpad_sets <- cell_sets$cellSets[[which(sets_key == "scratchpad")]]

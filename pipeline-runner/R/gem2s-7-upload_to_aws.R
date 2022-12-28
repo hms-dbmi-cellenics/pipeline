@@ -22,7 +22,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   qc_config <- prev_out$qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
 
-  # replace with subset_experiment flag when available
+  # TODO: replace with subset_experiment flag when available
   if (disable_qc_filters == FALSE) {
     message("Constructing cell sets ...")
     cell_sets <- get_cell_sets(scdata_list, input)
@@ -141,19 +141,12 @@ build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_fil
     sample_names <- unlist(input$sampleNames)
 
   for (i in seq_along(sample_ids)) {
-    sample_id <- sample_ids[i]
-    sample_name <- sample_names[i]
-
-    if (disable_qc_filters == TRUE) {
-      cell_ids <- subset_cellsets[key == sample_id, cell_id]
-    } else {
-      scdata <- scdata_list[[sample_id]]
-      cell_ids <- scdata$cells_id
-    }
+    scdata <- scdata_list[[sample_ids[i]]]
+    cell_ids <- scdata$cells_id
 
     cell_set$children[[i]] <- list(
-      key = sample_id,
-      name = sample_name,
+      key = sample_ids[i],
+      name = sample_names[i],
       color = color_pool[i],
       cellIds = unname(cell_ids)
     )
