@@ -373,7 +373,7 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids", {
     x$cellIds
   }))
 
-  expect_equal(sort(subset_cell_ids), sort(cellset_cell_ids))
+  expect_setequal(subset_cell_ids, cellset_cell_ids)
 })
 
 
@@ -475,7 +475,6 @@ test_that("filter_parent_cellsets only keeps cell_ids_to_keep", {
 
   expect_setequal(unique(res[,cell_id]), cell_ids_to_keep)
 })
-
 
 
 test_that("filter_parent_cellsets keeps all other variables equal to the parents' value", {
