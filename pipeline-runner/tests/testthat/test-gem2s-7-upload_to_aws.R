@@ -496,8 +496,54 @@ test_that("filter_parent_cellsets keeps all other variables equal to the parents
 })
 
 
-test_that("build_scratchpad_cellsets works", {
+test_that("build_scratchpad_cellsets builds single cellset when subsetting removes all but one", {
+
+  input <- mock_input()
+  config <- mock_config(input)
+  color_pool <- get_color_pool()
+  scdata_list <- mock_scdata_list(config)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
+  parent_cellsets <- mock_parsed_cellsets(scdata_list)
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+  subset_cellsets <- filter_parent_cellsets(parent_cellsets,cell_ids_to_keep)
+
+  # remove one cell only from scratchpad cellsets to mimic real situation
+  subset_cellsets <- subset_cellsets[!(type == "scratchpad" & cell_id == 16)]
 
 
+  res <- build_scratchpad_cellsets(color_pool, subset_cellsets)
 
+  expect_named(res, c("key", "name", "rootNode", "children", "type"))
+  expect_named(res$children[[1]], c("key", "name", "color", "cellIds"))
+
+  expect_equal(res$key, "scratchpad")
+  expect_equal(res$children[[1]]$key, unique(subset_cellsets[type == "scratchpad", key]))
+  expect_equal(res$children[[1]]$name, unique(subset_cellsets[type == "scratchpad", name]))
+  expect_setequal(res$children[[1]]$cellIds, subset_cellsets[type == "scratchpad", cell_id])
 })
+
+
+test_that("build_scratchpad_cellsets builds multiple cellsets", {
+
+  input <- mock_input()
+  config <- mock_config(input)
+  color_pool <- get_color_pool()
+  scdata_list <- mock_scdata_list(config)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
+  parent_cellsets <- mock_parsed_cellsets(scdata_list)
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42, 23019:23027)
+  subset_cellsets <- filter_parent_cellsets(parent_cellsets,cell_ids_to_keep)
+
+  # remove a couple cells from scratchpad cellsets to mimic real situation
+  subset_cellsets <- subset_cellsets[!(type == "scratchpad" & cell_id %in% c(16,23024))]
+
+
+  res <- build_scratchpad_cellsets(color_pool, subset_cellsets)
+
+  expect_equal(length(res$children), nrow(unique(subset_cellsets[type == "scratchpad"], by = "key")))
+
+  for(cs in res$children) {
+    expect_setequal(cs$cellIds, subset_cellsets[(type == "scratchpad" & key == cs$key & name == cs$name), cell_id])
+  }
+
+  })
