@@ -460,3 +460,44 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
     expect_equal(unique(parent_cellset_scratchpad$key), scratchpad_key[[i]])
   }
 })
+
+
+test_that("filter_parent_cellsets only keeps cell_ids_to_keep", {
+
+  input <- mock_input()
+  config <- mock_config(input)
+  scdata_list <- mock_scdata_list(config)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
+  parent_cellsets <- mock_parsed_cellsets(scdata_list)
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+
+  res <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
+
+  expect_setequal(unique(res[,cell_id]), cell_ids_to_keep)
+})
+
+
+
+test_that("filter_parent_cellsets keeps all other variables equal to the parents' value", {
+
+  input <- mock_input()
+  config <- mock_config(input)
+  scdata_list <- mock_scdata_list(config)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
+  parent_cellsets <- mock_parsed_cellsets(scdata_list)
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+
+  expected_parent_cellsets <- parent_cellsets[cell_id %in% cell_ids_to_keep & type != "cluster"]
+
+  res <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
+
+  expect_setequal(names(res), names(expected_parent_cellsets))
+  expect_equal(res, expected_parent_cellsets)
+})
+
+
+test_that("build_scratchpad_cellsets works", {
+
+
+
+})
