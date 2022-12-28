@@ -467,9 +467,10 @@ test_that("filter_parent_cellsets only keeps cell_ids_to_keep", {
   input <- mock_input()
   config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+
   subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
-  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
   res <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 
@@ -482,9 +483,10 @@ test_that("filter_parent_cellsets keeps all other variables equal to the parents
   input <- mock_input()
   config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+
   subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
-  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
   expected_parent_cellsets <- parent_cellsets[cell_id %in% cell_ids_to_keep & type != "cluster"]
 
@@ -501,9 +503,10 @@ test_that("build_scratchpad_cellsets builds single cellset when subsetting remov
   config <- mock_config(input)
   color_pool <- get_color_pool()
   scdata_list <- mock_scdata_list(config)
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
+
   subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
-  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
   subset_cellsets <- filter_parent_cellsets(parent_cellsets,cell_ids_to_keep)
 
   # remove one cell only from scratchpad cellsets to mimic real situation
@@ -528,9 +531,10 @@ test_that("build_scratchpad_cellsets builds multiple cellsets", {
   config <- mock_config(input)
   color_pool <- get_color_pool()
   scdata_list <- mock_scdata_list(config)
+  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42, 23019:23027)
+
   subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
-  cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42, 23019:23027)
   subset_cellsets <- filter_parent_cellsets(parent_cellsets,cell_ids_to_keep)
 
   # remove a couple cells from scratchpad cellsets to mimic real situation

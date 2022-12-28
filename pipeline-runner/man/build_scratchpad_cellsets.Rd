@@ -4,12 +4,12 @@
 \alias{build_scratchpad_cellsets}
 \title{Create cellsets using scratchpad information from parent cellsets}
 \usage{
-build_scratchpad_cellsets(color_pool, child_cellsets)
+build_scratchpad_cellsets(color_pool, subset_cellsets)
 }
 \arguments{
 \item{color_pool}{list of colors to use}
 
-\item{child_cellsets}{cell set resulting from parent cell set filtering}
+\item{subset_cellsets}{cell set resulting from parent cell set filtering}
 }
 \value{
 cell set filled with scratchpad information from the parent cell set

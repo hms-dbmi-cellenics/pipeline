@@ -357,7 +357,7 @@ build_scratchpad_cellsets <- function(color_pool, subset_cellsets) {
     type = "cellSets"
   )
 
-  scratchpad_cellsets <- unique(child_cellsets[type == "scratchpad", .(key, name)], by = "key")
+  scratchpad_cellsets <- unique(subset_cellsets[type == "scratchpad", .(key, name)], by = "key")
   scratchpad_ids <- scratchpad_cellsets[, key]
   scratchpad_names <- scratchpad_cellsets[, name]
 
@@ -367,7 +367,7 @@ build_scratchpad_cellsets <- function(color_pool, subset_cellsets) {
       key = scratchpad_ids[i],
       name = scratchpad_names[i],
       color = color_pool[i],
-      cellIds = child_cellsets[key == scratchpad_ids[i], cell_id]
+      cellIds = subset_cellsets[key == scratchpad_ids[i], cell_id]
     )
   }
 

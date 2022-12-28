@@ -9,7 +9,7 @@ build_sample_cellsets(
   scdata_list,
   color_pool,
   disable_qc_filters = FALSE,
-  child_cellsets = NA
+  subset_cellsets = NA
 )
 }
 \arguments{
@@ -22,7 +22,7 @@ build_sample_cellsets(
 \item{disable_qc_filters}{bool indicating if the data derives from the
 subsetting of another experiment}
 
-\item{child_cellsets}{cell set resulting from parent cell set filtering}
+\item{subset_cellsets}{cell set resulting from parent cell set filtering}
 }
 \value{
 cell set filled with samples information

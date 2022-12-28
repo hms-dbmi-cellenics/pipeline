@@ -9,7 +9,7 @@ build_metadata_cellsets(
   scdata_list,
   color_pool,
   disable_qc_filters = FALSE,
-  child_cellsets = NA
+  subset_cellsets = NA
 )
 }
 \arguments{
