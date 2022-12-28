@@ -125,12 +125,12 @@ get_cell_sets <- function(scdata_list, input) {
 #' @param color_pool list of colors to use
 #' @param disable_qc_filters bool indicating if the data derives from the
 #' subsetting of another experiment
-#' @param child_cellsets cell set resulting from parent cell set filtering
+#' @param subset_cellsets cell set resulting from parent cell set filtering
 #'
 #' @return cell set filled with samples information
 #' @export
 #'
-build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters = FALSE, child_cellsets = NA) {
+build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters = FALSE, subset_cellsets = NA) {
   cell_set <- list(
     key = "sample",
     name = "Samples",
@@ -147,7 +147,7 @@ build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_fil
     sample_name <- sample_names[i]
 
     if (disable_qc_filters == TRUE) {
-      cell_ids <- child_cellsets[key == sample_id, cell_id]
+      cell_ids <- subset_cellsets[key == sample_id, cell_id]
     } else {
       scdata <- scdata_list[[sample_id]]
       cell_ids <- scdata$cells_id
@@ -178,14 +178,14 @@ build_sample_cellsets <- function(input, scdata_list, color_pool, disable_qc_fil
 #' @return list of cellsets
 #' @export
 #'
-build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters = FALSE, child_cellsets = NA) {
+build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_filters = FALSE, subset_cellsets = NA) {
   cell_set_list <- c()
 
   # user-supplied metadata track names
   if (disable_qc_filters == TRUE) {
-    metadata_track <- stringr::str_remove(child_cellsets[type == "metadata", key], paste0("-", child_cellsets[type == "metadata", name]))
+    metadata_track <- stringr::str_remove(subset_cellsets[type == "metadata", key], paste0("-", subset_cellsets[type == "metadata", name]))
 
-    metadata <- unique(child_cellsets[type == "metadata", key:name][, metadata_value := metadata_track][, metadata_value:name])
+    metadata <- unique(subset_cellsets[type == "metadata", key:name][, metadata_value := metadata_track][, metadata_value:name])
     user_metadata <- list()
     for (k in unique(metadata$metadata_value)) {
       user_metadata[[k]] <- metadata[metadata_value == k, name]
@@ -223,7 +223,7 @@ build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_f
 
       cell_ids <- list()
       if (disable_qc_filters == TRUE) {
-        cell_ids <- child_cellsets[name == value, cell_id]
+        cell_ids <- subset_cellsets[name == value, cell_id]
       } else {
         for (scdata in scdata_list) {
           cells_in_value <- scdata[[valid_metadata_name]] == value
@@ -279,30 +279,30 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
     x$cells_id
   }))
 
-  child_cellsets <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
+  subset_cellsets <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 
   # replace old sample ids with new sample ids in the new cellsets
   for (i in 1:length(sample_id_map)) {
-    child_cellsets[key %in% names(sample_id_map)[i], key := unname(sample_id_map[i])]
+    subset_cellsets[key %in% names(sample_id_map)[i], key := unname(sample_id_map[i])]
   }
 
   if("sample_id_map" %in% names(prev_out)) {
     input$sampleIds <- names(scdata_list)
-    input$sampleNames <- child_cellsets[input$sampleIds, name, on = "key", mult = "first"]
+    input$sampleNames <- subset_cellsets[input$sampleIds, name, on = "key", mult = "first"]
   }
 
   # convert back cellsets to list format
   color_pool <- get_color_pool()
-  sample_cellsets <- build_sample_cellsets(input, scdata_list, color_pool, disable_qc_filters, child_cellsets)
+  sample_cellsets <- build_sample_cellsets(input, scdata_list, color_pool, disable_qc_filters, subset_cellsets)
   color_pool <- remove_used_colors(sample_cellsets, color_pool)
 
-  if ("metadata" %in% unique(child_cellsets$type)) {
-    metadata_cellsets <- build_metadata_cellsets(input, scdata_list, color_pool, disable_qc_filters, child_cellsets)
+  if ("metadata" %in% unique(subset_cellsets$type)) {
+    metadata_cellsets <- build_metadata_cellsets(input, scdata_list, color_pool, disable_qc_filters, subset_cellsets)
     color_pool <- remove_used_colors(metadata_cellsets, color_pool)
   }
 
-  if ("scratchpad" %in% unique(child_cellsets$type)) {
-    scratchpad_cellsets <- build_scratchpad_cellsets(color_pool, child_cellsets)
+  if ("scratchpad" %in% unique(subset_cellsets$type)) {
+    scratchpad_cellsets <- build_scratchpad_cellsets(color_pool, subset_cellsets)
   }
 
   cell_sets <- c(list(scratchpad_cellsets), list(sample_cellsets), list(metadata_cellsets))
@@ -326,12 +326,12 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
 #'
 filter_parent_cellsets <- function(parent_cellsets, cell_ids_to_keep) {
   # filter out all clustering cellsets
-  child_cellsets <- parent_cellsets[type != "cluster"]
+  subset_cellsets <- parent_cellsets[type != "cluster"]
 
   # filter out cells from cell_sets_original scratchpad and metadata
-  child_cellsets <- child_cellsets[which(child_cellsets$cell_id %in% cell_ids_to_keep)]
+  subset_cellsets <- subset_cellsets[which(subset_cellsets$cell_id %in% cell_ids_to_keep)]
 
-  return(child_cellsets)
+  return(subset_cellsets)
 }
 
 
@@ -343,12 +343,12 @@ filter_parent_cellsets <- function(parent_cellsets, cell_ids_to_keep) {
 #' then that scratchpad cluster is not included in the subset cell set.
 #'
 #' @param color_pool list of colors to use
-#' @param child_cellsets cell set resulting from parent cell set filtering
+#' @param subset_cellsets cell set resulting from parent cell set filtering
 #'
 #' @return cell set filled with scratchpad information from the parent cell set
 #' @export
 #'
-build_scratchpad_cellsets <- function(color_pool, child_cellsets) {
+build_scratchpad_cellsets <- function(color_pool, subset_cellsets) {
   scratchpad <- list(
     key = "scratchpad",
     name = "Custom cell sets",
@@ -357,14 +357,14 @@ build_scratchpad_cellsets <- function(color_pool, child_cellsets) {
     type = "cellSets"
   )
 
-  scratchpad_ids <- unique(child_cellsets[type == "scratchpad", key:name])[, key]
-  scratchpad_names <- unique(child_cellsets[type == "scratchpad", key:name])[, name]
+  scratchpad_ids <- unique(subset_cellsets[type == "scratchpad", key:name])[, key]
+  scratchpad_names <- unique(subset_cellsets[type == "scratchpad", key:name])[, name]
 
   for (i in seq_along(scratchpad_ids)) {
     scratchpad_id <- scratchpad_ids[i]
     scratchpad_name <- scratchpad_names[i]
 
-    cell_ids <- child_cellsets[key == scratchpad_id, cell_id]
+    cell_ids <- subset_cellsets[key == scratchpad_id, cell_id]
 
     scratchpad$children[[i]] <- list(
       key = scratchpad_id,
