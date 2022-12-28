@@ -204,13 +204,9 @@ build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_f
       value <- values[j]
 
       cell_ids <- list()
-      if (disable_qc_filters == TRUE) {
-        cell_ids <- subset_cellsets[name == value, cell_id]
-      } else {
-        for (scdata in scdata_list) {
-          cells_in_value <- scdata[[valid_metadata_name]] == value
-          cell_ids <- append(cell_ids, scdata$cells_id[cells_in_value])
-        }
+      for (scdata in scdata_list) {
+        cells_in_value <- scdata[[valid_metadata_name]] == value
+        cell_ids <- append(cell_ids, scdata$cells_id[cells_in_value])
       }
 
       cell_set$children[[j]] <- list(
