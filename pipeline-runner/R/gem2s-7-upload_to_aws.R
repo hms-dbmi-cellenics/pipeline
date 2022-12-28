@@ -171,18 +171,12 @@ build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_f
 
   # user-supplied metadata track names
   if (disable_qc_filters == TRUE) {
-    metadata_track <- stringr::str_remove(subset_cellsets[type == "metadata", key], paste0("-", subset_cellsets[type == "metadata", name]))
-
-    metadata <- unique(subset_cellsets[type == "metadata", key:name][, metadata_value := metadata_track][, metadata_value:name])
-    user_metadata <- list()
-    for (k in unique(metadata$metadata_value)) {
-      user_metadata[[k]] <- metadata[metadata_value == k, name]
-    }
-    metadata_names <- names(user_metadata)
-  } else {
+    user_metadata <- extract_subset_user_metadata(subset_cellsets)
+    } else {
     user_metadata <- lapply(input$metadata, unlist)
-    metadata_names <- names(user_metadata)
   }
+
+  metadata_names <- names(user_metadata)
 
   # user supplied metadata names must be made syntactically valid, as seurat does.
   # We use them to access the cell ids stored in the seurat object, to create the
@@ -234,6 +228,30 @@ build_metadata_cellsets <- function(input, scdata_list, color_pool, disable_qc_f
 }
 
 
+#' create list of user supplied metadata tracks and values
+#'
+#' @param subset_cellsets data.table of cellsets
+#'
+#' @return list of metadata tracks and values
+#' @export
+#'
+extract_subset_user_metadata <- function(subset_cellsets) {
+  # metadata keys are the <track_name>-<value>, and name are the values alone
+  metadata <- unique(subset_cellsets[type == "metadata"], by = "key")
+  metadata[, metadata_track := gsub(paste0("-", name, "$"), "", key), by = "key"]
+
+  metadata <- metadata[, c("metadata_track", "name")]
+  data.table::setnames(metadata, "name", "metadata_value")
+
+  user_metadata <- list()
+  for (track in unique(metadata$metadata_track)) {
+    user_metadata[[track]] <- metadata[metadata_track == track, metadata_value]
+  }
+
+  return(user_metadata)
+}
+
+
 #' Remove used colors from pool
 #'
 #' @param cellsets cell set object
@@ -281,7 +299,7 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
 
   # convert back cellsets to list format
   color_pool <- get_color_pool()
-  sample_cellsets <- build_sample_cellsets(input, scdata_list, color_pool, disable_qc_filters, subset_cellsets)
+  sample_cellsets <- build_sample_cellsets(input, scdata_list, color_pool)
   color_pool <- remove_used_colors(sample_cellsets, color_pool)
 
   if ("metadata" %in% unique(subset_cellsets$type)) {

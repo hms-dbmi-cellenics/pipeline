@@ -64,13 +64,13 @@ mock_parsed_cellsets <- function(scdata_list) {
     rep("louvain-0", length(samples) / 2), rep("louvain-1", length(samples) / 2),
     rep("074f2946-be51-445c-8222-be953f7da981", length(samples) / 3), rep("73e4d06e-b6b6-42a9-90ae-16586f41b7e9", 2 * length(samples) / 3),
     unlist(sample_id),
-    rep("Metadata-1", length(samples))
+    rep("metadata_var-1-value_A", 2 * length(samples) / 3), rep("metadata_var-1-value_B", length(samples) / 3)
   )
   name <- c(
     rep("Cluster 0", length(samples) / 2), rep("Cluster 1", length(samples) / 2),
     rep("Custom-A", length(samples) / 3), rep("Custom-B", 2 * length(samples) / 3),
     samples,
-    rep("Metadata-A", 2 * length(samples) / 3), rep("Metadata-B", length(samples) / 3)
+    rep("value_A", 2 * length(samples) / 3), rep("value_B", length(samples) / 3)
   )
   ordered_cell_ids <- sort(cells_ids_by_sample)
   cell_id <- c(
