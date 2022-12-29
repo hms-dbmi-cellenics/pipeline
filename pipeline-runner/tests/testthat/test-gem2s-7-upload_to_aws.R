@@ -442,13 +442,13 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
 
   cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
 
-  metadata_sets <- cell_sets$cellSets[[3]]
-  metadata_key <- sapply(metadata_sets, `[[`, "key")
+  metadata_sets <- cell_sets$cellSets[[2]]
+  metadata_key <- sapply(metadata_sets$children, `[[`, "key")
 
   for (i in 1:length(metadata_key)) {
-    metadata_names <- sapply(metadata_sets[[i]]$children, `[[`, "name")
+    metadata_names <- metadata_sets$children[[i]]$name
     for (j in 1:length(metadata_names)) {
-      cellset_cell_ids <- metadata_sets[[i]]$children[[j]]$cellIds
+      cellset_cell_ids <- unlist(metadata_sets$children[[j]]$cellIds)
       parent_cellset_metadata <- mock_parsed_cellset[cell_id %in% cellset_cell_ids][type == "metadata"]
       expect_equal(unique(parent_cellset_metadata$name), metadata_names[[j]])
     }
