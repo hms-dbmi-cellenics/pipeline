@@ -123,10 +123,19 @@ mock_prev_out <- function(config, counts = NULL) {
   return(create_seurat(NULL, NULL, prev_out)$output)
 }
 
-mock_subset_data <- function(scdata_list, cell_ids) {
+mock_subset_data <- function(scdata_list, cell_ids, mock_parsed_cellset) {
   subset_scdata <- list()
   sample_ids <- c("new-123abc", "new-123def", "new-123ghi")
   for (i in 1:length(scdata_list)) {
+    parent_cell_ids <- scdata_list[[i]]$cells_id
+    parent_metadata <- mock_parsed_cellset[cell_id %in% parent_cell_ids, ][type == "metadata", ]
+    parent_metadata <- parent_metadata[order(match(cell_id, parent_cell_ids))]
+    user_metadata <- extract_subset_user_metadata(mock_parsed_cellset)
+    # add metadata from parent cellset to the seurat object
+    for (j in length(names(user_metadata))) {
+      valid_metadata_name <- make.names(c("samples", names(user_metadata)[1]), unique = TRUE)[-1]
+      scdata_list[[i]]@meta.data[[valid_metadata_name]] <- parent_metadata[grepl(names(user_metadata)[1], key), name]
+    }
 
     sample_scdata <- subset_ids(scdata_list[[i]], cell_ids)
     sample_scdata@meta.data$parent_samples <- sample_scdata@meta.data$samples
@@ -140,9 +149,11 @@ mock_subset_data <- function(scdata_list, cell_ids) {
 }
 
 mock_sample_id_map <- function() {
-  sample_id_map <- list("11111111-1111-1111-1111-111111111111" = "new-123abc",
-                        "22222222-2222-2222-2222-222222222222" = "new-123def",
-                        "33333333-3333-3333-3333-333333333333" = "new-123ghi")
+  sample_id_map <- list(
+    "11111111-1111-1111-1111-111111111111" = "new-123abc",
+    "22222222-2222-2222-2222-222222222222" = "new-123def",
+    "33333333-3333-3333-3333-333333333333" = "new-123ghi"
+  )
   return(sample_id_map)
 }
 
@@ -341,8 +352,8 @@ test_that("get_subset_cell_sets filters out louvain clusters from parent cellset
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, mock_parsed_cellset)
 
   prev_out <- mock_prev_out(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
@@ -362,8 +373,8 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids", {
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, mock_parsed_cellset)
 
   prev_out <- mock_prev_out(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
@@ -392,8 +403,8 @@ test_that("get_subset_cell_sets produces a cellset with correct new sample ids",
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, mock_parsed_cellset)
 
   prev_out <- mock_prev_out(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
@@ -421,8 +432,8 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, mock_parsed_cellset)
 
   prev_out <- mock_prev_out(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
@@ -452,8 +463,8 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, mock_parsed_cellset)
 
   prev_out <- mock_prev_out(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
@@ -476,30 +487,28 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
 
 
 test_that("filter_parent_cellsets only keeps cell_ids_to_keep", {
-
   input <- mock_input()
   config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, parent_cellsets)
 
   res <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 
-  expect_setequal(unique(res[,cell_id]), cell_ids_to_keep)
+  expect_setequal(unique(res[, cell_id]), cell_ids_to_keep)
 })
 
 
 test_that("filter_parent_cellsets keeps all other variables equal to the parents' value", {
-
   input <- mock_input()
   config <- mock_config(input)
   scdata_list <- mock_scdata_list(config)
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, parent_cellsets)
 
   expected_parent_cellsets <- parent_cellsets[cell_id %in% cell_ids_to_keep & type != "cluster"]
 
@@ -511,16 +520,15 @@ test_that("filter_parent_cellsets keeps all other variables equal to the parents
 
 
 test_that("build_scratchpad_cellsets builds single cellset when subsetting removes all but one", {
-
   input <- mock_input()
   config <- mock_config(input)
   color_pool <- get_color_pool()
   scdata_list <- mock_scdata_list(config)
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
-  subset_cellsets <- filter_parent_cellsets(parent_cellsets,cell_ids_to_keep)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, parent_cellsets)
+  subset_cellsets <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 
   # remove one cell only from scratchpad cellsets to mimic real situation
   subset_cellsets <- subset_cellsets[!(type == "scratchpad" & cell_id == 16)]
@@ -539,27 +547,25 @@ test_that("build_scratchpad_cellsets builds single cellset when subsetting remov
 
 
 test_that("build_scratchpad_cellsets builds multiple cellsets", {
-
   input <- mock_input()
   config <- mock_config(input)
   color_pool <- get_color_pool()
   scdata_list <- mock_scdata_list(config)
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42, 23019:23027)
 
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep)
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
-  subset_cellsets <- filter_parent_cellsets(parent_cellsets,cell_ids_to_keep)
+  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, parent_cellsets)
+  subset_cellsets <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 
   # remove a couple cells from scratchpad cellsets to mimic real situation
-  subset_cellsets <- subset_cellsets[!(type == "scratchpad" & cell_id %in% c(16,23024))]
+  subset_cellsets <- subset_cellsets[!(type == "scratchpad" & cell_id %in% c(16, 23024))]
 
 
   res <- build_scratchpad_cellsets(color_pool, subset_cellsets)
 
   expect_equal(length(res$children), nrow(unique(subset_cellsets[type == "scratchpad"], by = "key")))
 
-  for(cs in res$children) {
+  for (cs in res$children) {
     expect_setequal(cs$cellIds, subset_cellsets[(type == "scratchpad" & key == cs$key & name == cs$name), cell_id])
   }
-
-  })
+})
