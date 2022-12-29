@@ -23,7 +23,10 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   message("Total cells:", sum(sapply(scdata_list, ncol)))
 
-  scdata_list <- add_metadata_to_samples(scdata_list, prev_out$annot, input$experimentId)
+  if (!disable_qc_filters) {
+    scdata_list <-
+      add_metadata_to_samples(scdata_list, prev_out$annot, input$experimentId)
+  }
   prev_out$scdata_list <- scdata_list
 
   # construct default QC config and update prev out
