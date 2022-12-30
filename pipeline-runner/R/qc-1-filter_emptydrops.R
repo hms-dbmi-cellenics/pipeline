@@ -1,6 +1,9 @@
 # STEP 1. Classifier filter
 
-#' @description Filters seurat object based on mitochondrialContent
+#' Filter empty droplets
+#'
+#' filters seurat objects based on edrops scores.
+#'
 #' @param config list containing the following information
 #'          - enable: true/false. Refering to apply or not the filter.
 #'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
