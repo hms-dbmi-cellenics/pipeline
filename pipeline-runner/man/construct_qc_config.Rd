@@ -4,18 +4,21 @@
 \alias{construct_qc_config}
 \title{Constructs default QC configuration}
 \usage{
-construct_qc_config(scdata_list, any_filtered)
+construct_qc_config(scdata_list, any_filtered, disable_qc_filters)
 }
 \arguments{
 \item{scdata_list}{list of seurat objects}
 
-\item{any_filtered}{boolean indicating if barcodes were filtered by the emptyDrops.}
+\item{any_filtered}{bool indicating if barcodes were filtered by emptyDrops}
+
+\item{disable_qc_filters}{bool indicating if the data derives from the
+subsetting of another experiment}
 }
 \value{
 list of QC configuration parameters
 }
 \description{
 This function returns the default parameters used during QC as a nested list.
-It is sent to the API, which in turn saves it as a jsonb object in the PostgreSQL
-database.
+It is sent to the API, which in turn saves it as a jsonb object in the
+PostgreSQL database.
 }

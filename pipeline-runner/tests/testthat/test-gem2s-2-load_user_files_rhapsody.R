@@ -1,4 +1,4 @@
-mock_rhapsody_matrix <- function(counts, sample_dir) {
+mock_rhapsody_matrix <- function(counts, sample_dir, with_abseq) {
   counts$Gene <- rownames(counts)
   counts <- tidyr::pivot_longer(counts, -Gene,
     names_to = "barcode",
@@ -8,7 +8,17 @@ mock_rhapsody_matrix <- function(counts, sample_dir) {
   counts$Cell_Index <- as.integer(factor(counts$barcode))
   counts$RSEC_Adjusted_Molecules <- counts$DBEC_Adjusted_Molecules + 5
 
-  matrix_path <- file.path(sample_dir, "expression_matrix.st")
+  if (with_abseq) {
+    counts <- counts |>
+      dplyr::rename(Bioproduct = Gene) |>
+      dplyr::mutate(Bioproduct = ifelse(
+        startsWith(Bioproduct, "M"),
+        paste0(Bioproduct, "_pAbO"),
+        Bioproduct
+      ))
+  }
+
+  matrix_path <- file.path(sample_dir, file_names[["rhapsody"]])
 
   # prepend some of that nice header
   header <- c(
@@ -39,7 +49,7 @@ mock_counts <- function() {
   )
 }
 
-local_rhapsody_experiment <- function(samples, env = parent.frame()) {
+local_rhapsody_experiment <- function(samples, with_abseq = FALSE, env = parent.frame()) {
   # calls creates_samples but makes them "local" (in withr speech), deleting
   # created stuff after the test finishes.
   bucket <- "./input"
@@ -49,19 +59,39 @@ local_rhapsody_experiment <- function(samples, env = parent.frame()) {
   for (sample in samples) {
     sample_path <- file.path(bucket, sample$name)
     dir.create(sample_path)
-    files <- c(files, mock_rhapsody_matrix(sample$counts, sample_path))
+    files <- c(files, mock_rhapsody_matrix(sample$counts, sample_path, with_abseq))
   }
 
   withr::defer(unlink(bucket, recursive = TRUE), envir = env)
   files
 }
 
+mock_prev_out <- function(samples, include_abseq) {
+
+  sample_options <- list()
+  for (sample in names(samples)) {
+    sample_options[[sample]] = list(includeAbSeq = include_abseq)
+  }
+
+  prev_out <- list(
+    config = list(
+      samples = names(samples),
+      input = list(type = "rhapsody"),
+      sampleOptions = sample_options
+    )
+  )
+
+  return(prev_out)
+}
+
+
 test_that("load_user_files reads rhapsody files", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
 
   files <- local_rhapsody_experiment(samples)
 
-  prev_out <- list(config = list(samples = names(samples), input = list(type = "rhapsody")))
+
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
   input_dir <- "./input"
 
   res <- load_user_files(NULL, NULL, prev_out, input_dir)
@@ -76,7 +106,8 @@ test_that("read_rhapsody_files reads a rhapsody matrix", {
 
   files <- local_rhapsody_experiment(samples)
 
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   res <- read_rhapsody_files(config, input_dir)
@@ -92,7 +123,8 @@ test_that("parse_rhapsody_matrix reads a rhapsody matrix", {
 
   files <- local_rhapsody_experiment(samples)
 
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   res <- parse_rhapsody_matrix(config, input_dir)
@@ -106,18 +138,21 @@ test_that("parse_rhapsody_matrix reads a rhapsody matrix", {
 test_that("parse_rhapsody_matrix keeps the counts where it counts (correct gene-cell-value)", {
   samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
   files <- local_rhapsody_experiment(samples)
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   # read original table and get vector of expected values (originals)
-  original <- data.table::fread(file.path(input_dir, names(samples), "expression_matrix.st"))
+  original_path <- file.path(input_dir, names(samples), file_names[["rhapsody"]])
+  original <- data.table::fread(original_path)
   expected_values <- original$DBEC_Adjusted_Molecules
 
   res <- parse_rhapsody_matrix(config, input_dir)
 
-  # create row and column indices, to cbind and use matrix indexing to get values
-  # as a vector. Given that Simple Triplet sparse matrices basically contain vectors
-  # of row and column indices, we just transform them to ints, keeping order.
+  # create row and column indices, to cbind and use matrix indexing to get
+  # values as a vector. Given that Simple Triplet sparse matrices basically
+  # contain vectors of row and column indices, we just transform them to ints,
+  # keeping order.
   row_idx <- as.integer(factor(original$Gene))
   col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
 
@@ -131,7 +166,8 @@ test_that("parse_rhapsody_matrix returns error if files are missing", {
 
   files <- local_rhapsody_experiment(samples)
 
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   # remove file
@@ -149,7 +185,8 @@ test_that("parse_rhapsody_matrix returns error if a column is invalid", {
 
   files <- local_rhapsody_experiment(samples)
 
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   # remove file
@@ -168,7 +205,8 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
 
   files <- local_rhapsody_experiment(samples)
 
-  config <- list(samples = names(samples))
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
   input_dir <- "./input"
 
   # remove DBEC column
@@ -187,4 +225,43 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
   values <- res$counts_list$sample_1[cbind(row_idx, col_idx)]
 
   expect_equal(values, expected_values)
+})
+
+
+test_that("parse_rhapsody_matrix filters out AbSeq genes if asked to", {
+  samples <- list(sample_1 = list(name = "sample_1", counts = mock_counts()))
+
+  files <- local_rhapsody_experiment(samples, with_abseq = TRUE)
+  input_dir <- "./input"
+
+  prev_out <- mock_prev_out(samples, include_abseq = TRUE)
+  config <- prev_out$config
+
+  with_abseq <- pipeline:::parse_rhapsody_matrix(config, input_dir)
+
+  prev_out <- mock_prev_out(samples, include_abseq = FALSE)
+  config <- prev_out$config
+
+  without_abseq <- pipeline:::parse_rhapsody_matrix(config, input_dir)
+  abseq_pattern <- "(p_?ab_?o)$"
+
+  for (sample in names(samples)) {
+    expect_true(any(grepl(abseq_pattern, rownames(with_abseq$counts_list[[sample]]), ignore.case = TRUE)))
+    expect_false(any(grepl(abseq_pattern, rownames(without_abseq$counts_list[[sample]]), ignore.case = TRUE)))
+
+    expect_gte(nrow(with_abseq$counts_list[[sample]]), nrow(without_abseq$counts_list[[sample]]))
+  }
+
+  # there are abseq genes in annot
+  expect_true(any(grepl(abseq_pattern, with_abseq$annot$input, ignore.case = TRUE)))
+  expect_true(any(grepl(abseq_pattern, with_abseq$annot$original_name, ignore.case = TRUE)))
+  expect_true(any(grepl(abseq_pattern, with_abseq$annot$name, ignore.case = TRUE)))
+
+  # no abseq genes in annot if filtered
+  expect_false(any(grepl(abseq_pattern, without_abseq$annot$input, ignore.case = TRUE)))
+  expect_false(any(grepl(abseq_pattern, without_abseq$annot$original_name, ignore.case = TRUE)))
+  expect_false(any(grepl(abseq_pattern, without_abseq$annot$name, ignore.case = TRUE)))
+
+
+
 })
