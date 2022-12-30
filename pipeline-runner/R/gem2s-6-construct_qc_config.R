@@ -6,22 +6,23 @@
 #'
 #' @param scdata_list list of seurat objects
 #' @param any_filtered bool indicating if barcodes were filtered by emptyDrops
+#' @param disable_qc_filters bool indicating if the data derives from the
+#' subsetting of another experiment
 #'
 #' @return list of QC configuration parameters
 #'
-construct_qc_config <- function(scdata_list, any_filtered) {
+construct_qc_config <- function(scdata_list, any_filtered, disable_qc_filters) {
   samples <- names(scdata_list)
 
   # classifier
-  classifier_config_to_duplicate <- list(
-    enabled = !any_filtered,
+  classifier_config_for_each_sample <- list(
+    enabled = !any_filtered && !disable_qc_filters,
     prefiltered = any_filtered,
     auto = TRUE,
     filterSettings = list(FDR = 0.01)
   )
 
-  config.classifier <- duplicate_config_per_sample(classifier_config_to_duplicate, samples)
-
+  config.classifier <- add_custom_config_per_sample(\(scdata_list, config) config, classifier_config_for_each_sample, scdata_list)
 
   # cell size
   default_cellSizeDistribution_config <- list(
@@ -34,7 +35,7 @@ construct_qc_config <- function(scdata_list, any_filtered) {
 
   # mito
   default_mitochondrialContent_config <- list(
-    enabled = TRUE,
+    enabled = !disable_qc_filters,
     auto = TRUE,
     filterSettings = list(
       method = "absoluteThreshold",
@@ -51,7 +52,7 @@ construct_qc_config <- function(scdata_list, any_filtered) {
 
   # ngenes vs umis
   default_numGenesVsNumUmis_config <- list(
-    enabled = TRUE,
+    enabled = !disable_qc_filters,
     auto = TRUE,
     filterSettings = list(
       regressionType = "linear",
@@ -67,7 +68,7 @@ construct_qc_config <- function(scdata_list, any_filtered) {
 
   # doublet scores
   default_doubletScores_config <- list(
-    enabled = TRUE,
+    enabled = !disable_qc_filters,
     auto = TRUE,
     filterSettings = list(
       probabilityThreshold = 0.5,
@@ -131,7 +132,6 @@ construct_qc_config <- function(scdata_list, any_filtered) {
   return(config)
 }
 
-
 get_cellsize_config <- function(scdata_list, config) {
   minCellSize <- generate_default_values_cellSizeDistribution(scdata_list, config)
   config$filterSettings$minCellSize <- minCellSize
@@ -140,7 +140,7 @@ get_cellsize_config <- function(scdata_list, config) {
 
 get_sample_mitochondrial_config <- function(scdata_list.sample, config) {
   config.sample <- list(
-    enabled = TRUE,
+    enabled = config$enabled,
     auto = TRUE,
     filterSettings = list(
       method = "absoluteThreshold",
@@ -174,18 +174,6 @@ get_gene_umi_config <- function(scdata_list, config) {
   return(config)
 }
 
-
-duplicate_config_per_sample <- function(step_config, samples) {
-  config <- list()
-  for (sample in unique(samples)) {
-    config[[sample]] <- step_config
-    config[[sample]]$defaultFilterSettings <- step_config$filterSettings
-  }
-
-  return(config)
-}
-
-
 add_custom_config_per_sample <- function(generate_sample_config, default_config, scdata_list) {
   # We update the config file, so to be able to access the raw config we create a copy
   raw_config <- default_config
@@ -199,9 +187,6 @@ add_custom_config_per_sample <- function(generate_sample_config, default_config,
 
     # update sample config thresholds
     config[[sample]] <- sample_config
-
-    # add auto settings
-    config[[sample]]$defaultFilterSettings <- sample_config$filterSettings
   }
 
   return(config)

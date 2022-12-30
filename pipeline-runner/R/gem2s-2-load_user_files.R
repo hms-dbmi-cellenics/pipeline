@@ -11,8 +11,9 @@
 #' @return list with 'output' slot containing \itemize{
 #'   \item{"counts_list"}{named list of dgCMatrix per sample}
 #'   \item{"annot"}{data.frame with gene ids and/or symbols}
+#'   }
 #' @export
-load_user_files <- function(input, pipeline_config, prev_out, input_dir = "/input") {
+load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_DIR) {
   message("Loading user files...")
   check_prev_out(prev_out, "config")
 
@@ -110,6 +111,7 @@ read_10x_files <- function(config, input_dir) {
 #' @return list containing \itemize{
 #'   \item{"counts_list"}{named list of dgCMatrix per sample}
 #'   \item{"annot"}{data.frame with gene symbols}
+#'   }
 #'
 read_rhapsody_files <- function(config, input_dir) {
 
@@ -128,17 +130,21 @@ read_rhapsody_files <- function(config, input_dir) {
 #' @return list containing \itemize{
 #'   \item{"counts_list"}{named list of dgCMatrix per sample}
 #'   \item{"annot"}{data.frame with gene symbols}
+#'   }
 #'
 parse_rhapsody_matrix <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
 
   samples <- config$samples
+  sample_options <- config$sampleOptions
+
 
 
   for (sample in samples) {
     sample_dir <- file.path(input_dir, sample)
     sample_fpaths <- file.path(sample_dir, file_names[["rhapsody"]])
+    include_abseq <- sample_options[[sample]]$includeAbSeq
 
     message("\nSample --> ", sample)
     message(
@@ -172,6 +178,11 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 
     # clean AbSeq names, removing symbols
     counts[, Gene := gsub("[\\|:]", "_", Gene)]
+
+    if (!include_abseq) {
+      message("Remove abseq genes from sample ", sample)
+      counts <- counts[!grepl("(p_?ab_?o)$", Gene, ignore.case = TRUE), ]
+    }
 
     # we need the genes as ints to create the sparse matrix
     counts[, Gene := factor(Gene)]
