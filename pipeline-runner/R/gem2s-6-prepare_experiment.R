@@ -1,8 +1,7 @@
 #' Prepare experiment for upload to AWS
 #'
-#'  1) Merges the samples for the current experiment
-#'  2) Adds metadata: cellsId, color_pool, and gene annotation
-#'  3) Preparing QC configuration
+#'  1) Adds metadata: cellsId, color_pool, and gene annotation
+#'  2) Prepares QC configuration
 #'
 #' @inheritParams download_user_files
 #' @param prev_out  'output' slot from call to \code{create_seurat}
@@ -15,10 +14,11 @@
 prepare_experiment <- function(input, pipeline_config, prev_out) {
   message("Preparing experiment ...")
 
-  check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list")
+  check_names <- c("config", "edrops", "annot", "scdata_list", "disable_qc_filters")
   check_prev_out(prev_out, check_names)
 
   scdata_list <- prev_out$scdata_list
+  disable_qc_filters <- prev_out$disable_qc_filters
   samples <- names(scdata_list)
 
   message("Total cells:", sum(sapply(scdata_list, ncol)))
@@ -29,7 +29,7 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   # construct default QC config and update prev out
   message("Constructing default QC configuration...")
   any_filtered <- !(length(prev_out$edrops) == length(samples))
-  prev_out$qc_config <- construct_qc_config(scdata_list, any_filtered)
+  prev_out$qc_config <- construct_qc_config(scdata_list, any_filtered, disable_qc_filters)
 
   res <- list(
     data = list(),
@@ -46,8 +46,12 @@ add_metadata_to_samples <- function(scdata_list, annot, experiment_id) {
   # result in a shuffled cell_ids
   set.seed(RANDOM_SEED)
   total_cells <- sum(sapply(scdata_list, ncol))
-  cell_ids <- 0:total_cells-1
+  cell_ids <- 0:(total_cells-1)
 
+  # we need to iterate always in the same order because we are assigning the cell ids
+  # at random and we want the relation cell <-> ID to be always the same to avoid
+  # any changes in downstream analysis (like in the clustering)
+  scdata_list <- order_by_size(scdata_list)
   for (sample in names(scdata_list)) {
     sample_size <- ncol(scdata_list[[sample]])
 

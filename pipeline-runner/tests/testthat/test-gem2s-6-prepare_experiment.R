@@ -5,6 +5,7 @@ mock_counts <- function() {
   )
 }
 
+
 mock_doublet_scores <- function(counts) {
   doublet_scores <- runif(ncol(counts))
   doublet_class <- ifelse(doublet_scores < 0.8, "singlet", "doublet")
@@ -16,6 +17,7 @@ mock_doublet_scores <- function(counts) {
     doublet_scores = doublet_scores
   )
 }
+
 
 mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   if (is.null(counts)) {
@@ -71,18 +73,21 @@ test_that("prepare_experiment ensures gene_annotations are indexed correctly for
 
 })
 
-test_that("prepare_experiment adds 0 indexed cell_ids to each sample in scdata_list", {
-  # TODO make this test test add_metadata_to_samples instead of prepare experiment
+
+test_that("add_metadata_to_samples adds 0 indexed cell_ids to each sample in scdata_list", {
   samples <- c("a", "b", "c")
   prev_out <- mock_prev_out(samples = samples)
-  input <- list(experimentId = "1234")
+  experiment_id <- "1234"
 
-  scdata_list <- prepare_experiment(input, NULL, prev_out)$output$scdata
+  scdata_list <- prev_out$scdata_list
+  annot <- prev_out$annot
+  scdata_list <- add_metadata_to_samples(scdata_list, annot, experiment_id)
+
 
   added_to_misc <- c("gene_annotations", "experimentId")
 
   for (sample in samples) {
-  expect_true(all(added_to_misc %in% names(scdata_list[[sample]]@misc)))
+    expect_true(all(added_to_misc %in% names(scdata_list[[sample]]@misc)))
   }
 
   # list of added cell_ids per sample in scdata_list
@@ -90,7 +95,7 @@ test_that("prepare_experiment adds 0 indexed cell_ids to each sample in scdata_l
 
   set.seed(RANDOM_SEED)
   total_cells <- sum(sapply(scdata_list, ncol))
-  cell_ids <- 0:total_cells-1
+  cell_ids <- 0:(total_cells-1)
   start <- 0
   expected_ids <- list()
   for (sample in samples) {
@@ -102,6 +107,33 @@ test_that("prepare_experiment adds 0 indexed cell_ids to each sample in scdata_l
   }
   expect_equal(added_ids, expected_ids)
 })
+
+
+test_that("add_metadata_to_samples generated cell ids do not depend on sample order", {
+  experiment_id <- "1234"
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples = samples)
+
+  scdata_list <- prev_out$scdata_list
+  # the ordering function relies on @counts@i parameter as a proxy for total number of cells
+  # we set it manually here to get a meaningful order in the test because otherwise
+  # all fake samples have the same length
+  scdata_list[[1]]@assays[["RNA"]]@counts@i <- 0:100
+  scdata_list[[2]]@assays[["RNA"]]@counts@i <- 0:50
+  scdata_list[[3]]@assays[["RNA"]]@counts@i <- 0:10
+  annot <- prev_out$annot
+  scdata_list <- add_metadata_to_samples(scdata_list, annot, experiment_id)
+
+  scdata_list_rev <- rev(scdata_list)
+  scdata_list_rev <- add_metadata_to_samples(scdata_list_rev, annot, experiment_id)
+
+  added_to_misc <- c("gene_annotations", "experimentId")
+
+  for (sample in samples) {
+    expect_equal(scdata_list[[sample]]$cells_id, scdata_list_rev[[sample]]$cells_id)
+  }
+})
+
 
 test_that("prepare_experiment generates qc_config that matches snapshot", {
   prev_out <- mock_prev_out()
@@ -187,7 +219,6 @@ test_that("prepare_experiment properly populates the metadata slot", {
   }
 
 })
-
 
 
 test_that("Mitochondrial percentage is correct", {

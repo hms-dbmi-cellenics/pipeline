@@ -1,8 +1,15 @@
-# STEP 7. Compute embedding
-
-# Compute embedding step where we run dimensional reduction technniques such as t-SNE and  UMAP. Moreover, the cluster analysis is
-# done also in this step.
-
+#' run clustering
+#'
+#'
+#' @param scdata seurat object
+#' @param config list with clustering parameters
+#' @param sample_id character
+#' @param cells_id list of cell ids that passed all filters so far
+#' @param task_name character
+#'
+#' @return list
+#' @export
+#'
 embed_and_cluster <-
   function(scdata,
            config,

@@ -1,11 +1,10 @@
-mock_scdata <- function() {
+mock_scdata_list <- function() {
   pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
 
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
-
   # add samples
   scdata$samples <- rep("123abc", 80)
   scdata <- Seurat::RenameCells(scdata, paste(scdata$samples, colnames(scdata), sep = ""))
@@ -16,25 +15,62 @@ mock_scdata <- function() {
 
   # add mitochondrial percent
   scdata$percent.mt <- rnorm(ncol(scdata), mean = 6)
-  return(scdata)
+
+  # create an scdata_list with duplicated samples
+  scdata_list <- list()
+  for (sample_id in scdata$samples) {
+      scdata_list[[sample_id]] <- scdata
+  }
+  return(scdata_list)
 }
 
+test_that("cellsize filter is disabled by default and classifier is pre-filtered", {
+  scdata_list <- mock_scdata_list()
+  qc_config <- construct_qc_config(scdata_list, any_filtered = TRUE, disable_qc_filters = FALSE)
 
-test_that("cellsize filter is disabled by default and classifier if pre-filtered", {
-  scdata <- mock_scdata()
-
-  qc_config <- construct_qc_config(list(scdata), any_filtered = TRUE)
-
-  expect_false(qc_config$classifier$enabled)
-  expect_true(qc_config$classifier$prefiltered)
-  expect_false(qc_config$cellSizeDistribution$enabled)
+  for (sample in names(scdata_list)) {
+    expect_false(qc_config$classifier[[sample]]$enabled)
+    expect_true(qc_config$classifier[[sample]]$prefiltered)
+    expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
+  }
 })
 
 
-test_that("cellsize filter is disabled by default and classifier if not pre-filtered", {
-  scdata <- mock_scdata()
+test_that("cellsize filter is disabled by default and classifier is not pre-filtered", {
+  scdata_list <- mock_scdata_list()
+  qc_config <- construct_qc_config(scdata_list, any_filtered = FALSE, disable_qc_filters = FALSE)
 
-  qc_config <- construct_qc_config(list(scdata), any_filtered = FALSE)
-  expect_false(qc_config$cellSizeDistribution$enabled)
-  expect_true(qc_config$classifier$enabled)
+  for (sample in names(scdata_list)) {
+    expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
+    expect_true(qc_config$classifier[[sample]]$enabled)
+    expect_false(qc_config$classifier[[sample]]$prefiltered)
+  }
+})
+
+
+test_that("all filters are disabled when disable_qc_filters = TRUE and classifier is pre-filtered", {
+  scdata_list <- mock_scdata_list()
+  qc_config <- construct_qc_config(scdata_list, any_filtered = TRUE, disable_qc_filters = TRUE)
+
+  for (sample in names(scdata_list)) {
+    expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
+    expect_false(qc_config$mitochondrialContent[[sample]]$enabled)
+    expect_false(qc_config$classifier[[sample]]$enabled)
+    expect_false(qc_config$numGenesVsNumUmis[[sample]]$enabled)
+    expect_false(qc_config$doubletScores[[sample]]$enabled)
+  }
+})
+
+
+test_that("all filters are disabled when disable_qc_filters = TRUE and classifier is not pre-filtered", {
+  scdata_list <- mock_scdata_list()
+  qc_config <- construct_qc_config(scdata_list, any_filtered = FALSE, disable_qc_filters = TRUE)
+
+  for (sample in names(scdata_list)) {
+    expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
+    expect_false(qc_config$mitochondrialContent[[sample]]$enabled)
+    expect_false(qc_config$classifier[[sample]]$enabled)
+    expect_false(qc_config$numGenesVsNumUmis[[sample]]$enabled)
+    expect_false(qc_config$doubletScores[[sample]]$enabled)
+  }
 })
