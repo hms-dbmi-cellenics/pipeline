@@ -138,6 +138,7 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
   # get method and settings
   method <- config$dataIntegration$method
   npcs <- config$dimensionalityReduction$numPCs
+
   exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
 
 
@@ -160,9 +161,9 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
   integration_function <- get(paste0("run_", method))
 
   if (is.na(scdata_sketch)) {
-    scdata <- integration_function(scdata, config)
+    scdata <- integration_function(scdata, config, npcs)
   } else {
-    scdata <- integrate_from_sketch(scdata, scdata_sketch, integration_function, config)
+    scdata <- integrate_from_sketch(scdata, scdata_sketch, integration_function, config, npcs)
   }
 
   if (is.null(npcs)) {
@@ -177,12 +178,11 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
 }
 
 
-run_harmony <- function(scdata, config) {
+run_harmony <- function(scdata, config, npcs) {
   settings <- config$dataIntegration$methodSettings[["harmony"]]
 
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
-  npcs <- config$dimensionalityReduction$numPCs
 
   # grep in case misspelled
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
@@ -191,20 +191,18 @@ run_harmony <- function(scdata, config) {
 
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
   scdata <- harmony::RunHarmony(scdata, group.by.vars = "samples")
-  scdata <- add_dispersions(scdata)
+  scdata <- add_dispersions(scdata, normalization)
   scdata@misc[["active.reduction"]] <- "harmony"
 
   return(scdata)
 }
 
-run_seuratv4 <- function(scdata, config) {
+run_seuratv4 <- function(scdata, config, npcs) {
   settings <- config$dataIntegration$methodSettings[["seuratv4"]]
 
   nfeatures <- settings$numGenes
-  normalization <- settings$normalisation
 
-  # for data integration
-  npcs <- config$dimensionalityReduction$numPCs
+  normalization <- settings$normalisation
 
   # get reduction method to find integration anchors
   reduction <- config$dimensionalityReduction$method
@@ -237,13 +235,19 @@ run_seuratv4 <- function(scdata, config) {
     {
       if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
       if (reduction == "cca") message("Finding integration anchors using CCA reduction")
-      data.anchors <- Seurat::FindIntegrationAnchors(
-        object.list = data.split,
-        dims = 1:npcs,
-        k.filter = k.filter,
-        verbose = TRUE,
-        reduction = reduction
-      )
+      if (normalization == "SCT") {
+        data.anchors <- prepare_sct_integration(data.split, reduction, normalization, k.filter, npcs)
+      }
+      if (normalization == "LogNormalize") {
+        data.anchors <- Seurat::FindIntegrationAnchors(
+          object.list = data.split,
+          dims = 1:npcs,
+          k.filter = k.filter,
+          normalization.method = normalization,
+          verbose = TRUE,
+          reduction = reduction
+        )
+      }
       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
       Seurat::DefaultAssay(scdata) <- "integrated"
     },
@@ -263,9 +267,20 @@ run_seuratv4 <- function(scdata, config) {
 
   # seurat v4 requires to call the normalize_data function before (on single objects)
   # and after integration (on the integrated object)
-  scdata <- normalize_data(scdata, normalization, "seuratv4", nfeatures)
+  if (normalization == "LogNormalize") {
+    scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
+  }
+  # running LogNormalization on SCTransformed data for downstream analyses
+  if (normalization == "SCT") {
+    Seurat::DefaultAssay(scdata) <- "RNA"
+    scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
+    # check if integrated assay exists because it doesn't exist if the integration was skipped
+    if ("integrated" %in% names(scdata@assays)) {
+      Seurat::DefaultAssay(scdata) <- "integrated"
+    }
+  }
   scdata@misc <- misc
-  scdata <- add_dispersions(scdata)
+  scdata <- add_dispersions(scdata, normalization)
   scdata@misc[["active.reduction"]] <- "pca"
 
   # run PCA
@@ -274,19 +289,55 @@ run_seuratv4 <- function(scdata, config) {
   return(scdata)
 }
 
-run_fastmnn <- function(scdata, config) {
+
+#' Prepare for integration after SCTransform
+#'
+#' This function runs the steps required to prepare the list of Seurat object normalized with
+#' SCTransform for integration, and finds the integration anchors.
+#' For further details see the documentation for
+#' \code{\link[Seurat:SelectIntegrationFeatures]{Seurat::SelectIntegrationFeatures()}},
+#' \code{\link[Seurat:PrepSCTIntegration]{Seurat::PrepSCTIntegration()}},
+#' and [sctransform_v2 vignette](https://satijalab.org/seurat/articles/sctransform_v2_vignette.html#perform-integration-using-pearson-residuals-1).
+#'
+#' @param data.split list of Seurat objects
+#' @param reduction reduction method
+#' @param normalization normalization method
+#' @param k.filter number of neighbors (k) to use when filtering anchors
+#' @param npcs number of PCs
+#'
+#' @return data.anchors to use for integration
+#' @export
+#'
+prepare_sct_integration <- function(data.split, reduction, normalization, k.filter, npcs) {
+  features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
+  data.split <- Seurat::PrepSCTIntegration(
+    object.list = data.split, assay = "SCT",
+    anchor.features = features
+  )
+  data.anchors <- Seurat::FindIntegrationAnchors(
+    object.list = data.split,
+    dims = 1:npcs,
+    k.filter = k.filter,
+    verbose = TRUE,
+    reduction = reduction,
+    normalization.method = normalization,
+    anchor.features = features
+  )
+  return(data.anchors)
+}
+
+run_fastmnn <- function(scdata, config, npcs) {
   settings <- config$dataIntegration$methodSettings[["fastmnn"]]
 
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
-  npcs <- config$dimensionalityReduction$numPCs
 
   # grep in case misspelled
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
 
   scdata <- normalize_data(scdata, normalization, "fastmnn", nfeatures)
-  scdata <- add_dispersions(scdata)
+  scdata <- add_dispersions(scdata, normalization)
 
   # @misc slots not preserved so transfer
   misc <- scdata@misc
@@ -297,19 +348,18 @@ run_fastmnn <- function(scdata, config) {
   return(scdata)
 }
 
-run_unisample <- function(scdata, config) {
+run_unisample <- function(scdata, config, npcs) {
   settings <- config$dataIntegration$methodSettings[["unisample"]]
 
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
-  npcs <- config$dimensionalityReduction$numPCs
 
   # grep in case misspelled
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
   # in unisample we only need to normalize
   scdata <- normalize_data(scdata, normalization, "unisample", nfeatures)
-  scdata <- add_dispersions(scdata)
+  scdata <- add_dispersions(scdata, normalization)
   scdata@misc[["active.reduction"]] <- "pca"
 
   # run PCA
@@ -318,8 +368,14 @@ run_unisample <- function(scdata, config) {
   return(scdata)
 }
 
-add_dispersions <- function(scdata) {
-  vars <- Seurat::HVFInfo(object = scdata, assay = "RNA", selection.method = "vst")
+add_dispersions <- function(scdata, method) {
+  if (method == "SCT" && Seurat::DefaultAssay(scdata) == "integrated") {
+    vars <- Seurat::HVFInfo(object = scdata, assay = "integrated", selection.method = "sctransform")
+    # change colnames as they are when run with selection.method = "vst", otherwise will break the listGenes worker task
+    colnames(vars) <- c("mean", "variance", "variance.standardized")
+  } else {
+    vars <- Seurat::HVFInfo(object = scdata, assay = "RNA", selection.method = "vst")
+  }
   annotations <- scdata@misc[["gene_annotations"]]
   vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
   vars$ENSEMBL <- rownames(vars)
@@ -541,12 +597,19 @@ normalize_data <- function(scdata, normalization_method, integration_method, nfe
   if (normalization_method == "LogNormalize") {
     scdata <- log_normalize(scdata, normalization_method, integration_method, nfeatures)
   }
+
+  if (normalization_method == "SCT") {
+    message("Started normalization using SCTransform")
+    # conserve.memory parameter reduces the memory footprint but can significantly increase runtime
+    scdata <- Seurat::SCTransform(scdata, vst.flavor = "v2", conserve.memory = FALSE)
+    message("Finished normalization using SCTransform")
+  }
   return(scdata)
 }
 
 #' Perform log normalization
 #'
-#' #' If the integration method is fastMNN, it will skip ScaleData() because
+#' If the integration method is fastMNN, it will skip ScaleData() because
 #' fastMNN already performs its own scaling.
 #' If the integration method is SeuratV4, the default assay will be set to "integrated",
 #' in this case NormalizeData() will not work (see the [integration vignette](https://satijalab.org/seurat/articles/integration_introduction.html)),
@@ -694,6 +757,7 @@ run_pca <- function(scdata) {
   scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
+  scdata@misc[["active.reduction"]] <- "pca"
   return(scdata)
 }
 
@@ -712,16 +776,11 @@ run_pca <- function(scdata) {
 #' @return Integrated Seurat object
 #' @export
 #'
-integrate_from_sketch <- function(scdata, scdata_sketch, integration_function, config) {
+integrate_from_sketch <- function(scdata, scdata_sketch, integration_function, config, npcs) {
   scdata@misc[["active.reduction"]] <- "pca"
   method <- config$dataIntegration$method
-  npcs <- config$dimensionalityReduction$numPCs
 
-  if (is.null(npcs)) {
-    npcs <- get_npcs(scdata)
-    message("Number of PCs: ", npcs)
-  }
-  scdata_sketch_integrated <- integration_function(scdata_sketch, config)
+  scdata_sketch_integrated <- integration_function(scdata_sketch, config, npcs)
   message("Learning from sketches")
   scdata <- learn_from_sketches(
     scdata,

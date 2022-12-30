@@ -495,3 +495,25 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
    integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", use_geosketch = TRUE, perc_num_cells = 50))$data
    expect_equal(integrated_scdata@misc[["active.reduction"]], "harmony")
 })
+
+
+test_that("SCTransform integration works", {
+  # mock a bigger dataset to run Seurat v4 integration without skipping it
+  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+
+  merged_scdata <- suppressWarnings(scdata_preprocessing(merged_scdata))
+  npcs <- get_npcs(merged_scdata)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = npcs, method = "rpca"),
+    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "SCT")))
+  )
+
+  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
+  expect_s4_class(integrated_scdata, "Seurat")
+  expect_s4_class(integrated_scdata[["SCT"]], "SCTAssay")
+  expect_equal(Seurat::DefaultAssay(integrated_scdata), "integrated")
+})
+

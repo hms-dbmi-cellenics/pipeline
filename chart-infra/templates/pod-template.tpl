@@ -11,7 +11,7 @@
       serviceAccountName: 'deployment-runner'
       containers:
       - name: "{{ .Release.Name }}"
-        image: "{{ .Values.pipelineRunner.image }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         env:
           - name: CLUSTER_ENV
             value: "{{ .Values.clusterEnv }}"
@@ -19,6 +19,8 @@
             value: "{{ .Values.sandboxId }}"
           - name: AWS_ACCOUNT_ID
             value: "{{ .Values.myAccount.accountId }}"
+          - name: DOMAIN_NAME
+            value: "{{ .Values.myAccount.domainName }}"
         volumeMounts:
         - name: podinfo
           mountPath: /etc/podinfo
