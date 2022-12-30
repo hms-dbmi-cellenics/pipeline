@@ -1,26 +1,21 @@
-remove_cell_ids <- function(pipeline_config, experiment_id) {
-  tasks <- list(
-      'cellSizeDistribution',
-      'mitochondrialContent',
-      'numGenesVsNumUmis',
-      'doubletScores',
-      'dataIntegration',
-      'configureEmbedding'
-    )
+remove_bucket_folder <- function(pipeline_config, bucket, folder) {
   keys_to_remove <- list()
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  for (task_name in tasks) {
-    object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
-    for (object in object_list$Contents) {
-      keys_to_remove <- append(keys_to_remove, object$Key)
-      s3$delete_object(
-        Bucket = pipeline_config$cells_id_bucket,
-        Key = object$Key
-      )
-    }
+  object_list <- s3$list_objects(bucket, Prefix = paste0(folder, "/"))
+  for (object in object_list$Contents) {
+    keys_to_remove <- append(keys_to_remove, object$Key)
+    s3$delete_object(
+      Bucket = bucket,
+      Key = object$Key
+    )
   }
-  message("Cell ids keys deleted: ", keys_to_remove)
+
+  message("Removed files from ", bucket, ": ", paste0(keys_to_remove, sep=' '))
+}
+
+remove_cell_ids <- function(pipeline_config, experiment_id) {
+  remove_bucket_folder(pipeline_config, pipeline_config$cells_id_bucket, experiment_id)
 }
 
 upload_cells_id <- function(pipeline_config, object_key, cells_id) {
@@ -30,17 +25,9 @@ upload_cells_id <- function(pipeline_config, object_key, cells_id) {
   return(object_key)
 }
 
-
-reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
-  # If the task is after data integration, we need to get scdata from processed_matrix
-  task_names <- names(tasks)
-  integration_index <- match("dataIntegration", task_names)
-  if (match(task_name, task_names) > integration_index) {
-    bucket <- pipeline_config$processed_bucket
-  } else {
-    bucket <- pipeline_config$source_bucket
-  }
-  s3 <- paws::s3(config = pipeline_config$aws_config)
+load_processed_scdata <- function (s3, pipeline_config, experiment_id) {
+  bucket <- pipeline_config$processed_bucket
+  message("Loading processed scdata")
   message(bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
 
@@ -48,13 +35,76 @@ reload_scdata_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
     Bucket = bucket,
     Key = paste(experiment_id, "r.rds", sep = "/")
   )
-  obj <- readRDS(rawConnection(body))
+  conn <- gzcon(rawConnection(body))
+  obj <- readRDS(conn)
+  close(conn)
   return(obj)
+}
+
+# get_nnzero will return how many non-zero counts the count matrix has
+# it is used to order samples according to their size
+get_nnzero <- function (x) {
+  return(length(x@assays[["RNA"]]@counts@i))
+}
+
+order_by_size <- function(scdata_list) {
+    return(scdata_list[order(sapply(scdata_list, get_nnzero))])
+}
+
+load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
+  bucket <- pipeline_config$source_bucket
+  objects <- s3$list_objects(
+    Bucket = bucket,
+    Prefix = experiment_id
+  )
+  samples <- objects$Contents
+
+  scdata_list <- list()
+  for (sample in samples) {
+    key <- sample$Key
+
+    c(body, ...rest) %<-% s3$get_object(
+      Bucket = bucket,
+      Key = paste(key, sep = "/")
+    )
+    conn <- gzcon(rawConnection(body))
+    obj <- readRDS(conn)
+    sample_id <- strsplit(key, "/")[[1]][[2]]
+    scdata_list[[sample_id]] <- obj
+    # close connection explicitly or R will run out of available connections and fail
+    close(conn)
+  }
+
+  # order samples according to their size to make the merge independent of samples order in the UI
+  return(order_by_size(scdata_list))
+}
+
+# reload_data_from_s3 will reload:
+# * scdata_list for all steps before integration (included)
+# * scdata file for all steps after data integration
+reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks) {
+  task_names <- names(tasks)
+  integration_index <- match("dataIntegration", task_names)
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+
+  # TODO: remove if block
+  # this never runs, because embed and cluster runs in the worker if modified.
+  # If the task is after data integration, we need to get scdata from processed_matrix
+  if (match(task_name, task_names) > integration_index) {
+    return(load_processed_scdata(s3, pipeline_config, experiment_id))
+  }
+
+  # Otherwise, return scdata_list
+  return(load_source_scdata_list(s3, pipeline_config, experiment_id))
+
 }
 
 load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, samples) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
+  object_list <- s3$list_objects(
+                    Bucket = pipeline_config$cells_id_bucket,
+                    Prefix = paste0(experiment_id, "/", task_name, "/")
+                  )
   message(pipeline_config$cells_id_bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
   cells_id <- list()
@@ -62,6 +112,8 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
 
+  # after data integration the cell ids are no longer used because there is no filtering
+  # so they are not loaded
   if (match(task_name, task_names) <= integration_index) {
     for (object in object_list$Contents) {
       key <- object$Key
@@ -118,6 +170,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
 
+  message("Building the message")
   msg <- list(
     experimentId = input$experimentId,
     taskName = input$taskName,
@@ -128,9 +181,12 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     ),
     response = list(
       error = FALSE
-    )
+    ),
+    pipelineVersion = pipeline_version,
+    apiUrl = pipeline_config$public_api_url
   )
 
+  message("Publishing the message")
   result <- sns$publish(
     Message = RJSONIO::toJSON(msg),
     TopicArn = pipeline_config$sns_topic,
@@ -142,6 +198,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
       )
     )
   )
+  message("Done publishing")
 
   return(result$MessageId)
 }
@@ -149,8 +206,18 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
 send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input) {
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
+  job_id <- Sys.getenv("AWS_BATCH_JOB_ID", unset = "")
+
   # TODO -REMOVE DUPLICATE AUTHJWT IN RESPONSE
-  msg <- c(data, taskName = list(task_name), experimentId = list(experiment_id), authJWT = list(input$auth_JWT), input = list(input))
+  msg <- c(
+    data,
+    taskName = list(task_name),
+    experimentId = list(experiment_id),
+    jobId = list(job_id),
+    authJWT = list(input$auth_JWT),
+    input = list(input),
+    apiUrl = pipeline_config$public_api_url
+  )
 
   result <- sns$publish(
     Message = RJSONIO::toJSON(msg),
@@ -172,12 +239,13 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
 
   error_msg <- list()
 
-  # TODO - REMOVE THE DUPLICATE EXPERIMETN ID FROM INPUT RESPONSE
+  # TODO - REMOVE THE DUPLICATE EXPERIMENT ID FROM INPUT RESPONSE
 
   error_msg$experimentId <- input$experimentId
   error_msg$taskName <- input$taskName
   error_msg$response$error <- process_name
   error_msg$input <- input
+  error_msg$apiUrl <- pipeline_config$public_api_url
   sns <- paws::sns(config = pipeline_config$aws_config)
 
   string_value <- ""
@@ -287,7 +355,6 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
   message(sprintf("Putting %s in %s from object %s", key, bucket, object))
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
-
   multipart <- s3$create_multipart_upload(
     Bucket = bucket,
     Key = key
@@ -302,6 +369,7 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
       )
     }
   })
+  message("Uploading multiparts")
   resp <- try({
     parts <- upload_multipart_parts(s3, bucket, object, key, multipart$UploadId)
     s3$complete_multipart_upload(
@@ -341,3 +409,96 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
 
   return(parts)
 }
+
+
+#' Load cellsets object from s3
+#'
+#' @param s3 paws::s3 object
+#' @param pipeline_config list
+#' @param experiment_id character
+#'
+#' @return cellsets list
+#' @export
+#'
+load_cellsets <- function(s3, pipeline_config, experiment_id) {
+  message("loading cellsets file")
+
+  bucket <- pipeline_config$cell_sets_bucket
+
+  c(body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = experiment_id
+  )
+
+  obj <- jsonlite::fromJSON(rawConnection(body), flatten = T)
+  return(obj)
+
+}
+
+
+#' Bind columns not creating rows if there's an empty data.table
+#'
+#' `cbind` on `data.table` adds a row if binding an empty data.table to a non-empty
+#' one. We do not want that behavior when parsing cellsets, because it implies
+#' the "creation" of a cell that does not exists (i.e. when binding scratchpad
+#' cellsets slots of an experiment without custom cellsets)
+#'
+#' @param dt data.table
+#' @param ... columns to add
+#'
+#' @return data.table with new columns
+#' @export
+#'
+safe_cbind <- function(dt, ...) {
+  if (nrow(dt) > 0) {
+    dt <- cbind(dt, ...)
+  }
+  return(dt)
+}
+
+
+#' add cellset type column to cellsets data.table
+#'
+#' helper to correctly name the cellset type column. some cellsets already
+#' contain a "type" slot, which complicates matters, so we chose `cellset_type`,
+#'
+#' @param dt data.table
+#' @param col string of corresponding cellset type
+#'
+#' @return data.table with cellset_type column
+#' @export
+#'
+cbind_cellset_type <- function(dt, col) {
+  dt <- safe_cbind(dt, cellset_type = col)
+}
+
+
+#' Parse cellsets object to data.table
+#'
+#' Gets the cellsets list and converts it to a tidy data.table
+#'
+#' @param cellsets list
+#'
+#' @return data.table of cellset keys, names and corresponding cell_ids
+#' @export
+#'
+parse_cellsets <- function(cellsets) {
+
+  dt_list <- cellsets$cellSets$children
+
+  lapply(dt_list, data.table::setDT)
+  dt_list <- purrr::map2(dt_list, cellsets$cellSets$key, cbind_cellset_type)
+
+  # fill columns in case there are empty cellset classes
+  dt <- data.table::rbindlist(dt_list, fill = TRUE)
+
+  # change cellset type to more generic names
+  dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
+  dt[!cellset_type %in% c("cluster", "scratchpad", "sample"), cellset_type := "metadata"]
+
+  # unnest, and change column name
+  dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
+  data.table::setnames(dt, "cellset_type", "type")
+  return(dt)
+}
+

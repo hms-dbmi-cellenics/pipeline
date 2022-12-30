@@ -33,7 +33,13 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
 }
 
 
+#' Calculate empty drops scores for sample
+#'
 #' @param sample_counts dgCMatrix with counts for one sample.
+#'
+#' @return data.frame with edrops scores
+#' @export
+#'
 compute_sample_edrops <- function(sample_counts) {
   # check if filtered
   num_empty_drops <- sum(Matrix::colSums(sample_counts) < gem2s$max.empty.counts)
@@ -42,6 +48,7 @@ compute_sample_edrops <- function(sample_counts) {
     message("Detected sample as filtered --> Skipping emptyDrops.")
     sample_edrops <- NULL
   } else {
+    set.seed(RANDOM_SEED)
     sample_edrops <- DropletUtils::emptyDrops(sample_counts)
   }
 

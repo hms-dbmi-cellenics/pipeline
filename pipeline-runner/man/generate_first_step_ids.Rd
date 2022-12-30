@@ -2,13 +2,16 @@
 % Please edit documentation in R/qc-helpers.R
 \name{generate_first_step_ids}
 \alias{generate_first_step_ids}
-\title{Title}
+\title{Generate the list of cell ids present in the experiment}
 \usage{
-generate_first_step_ids(scdata)
+generate_first_step_ids(scdata_list)
 }
 \arguments{
-\item{scdata}{}
+\item{scdata_list}{list of Seurat Objects}
+}
+\value{
+list of cell ids present in the Seurat object
 }
 \description{
-Title
+Generate the list of cell ids present in the experiment
 }

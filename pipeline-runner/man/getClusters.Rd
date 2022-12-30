@@ -7,7 +7,14 @@
 getClusters(clustering_method, resolution, data)
 }
 \arguments{
-\item{data}{}
+\item{clustering_method}{character}
+
+\item{resolution}{numeric}
+
+\item{data}{Seurat Object}
+}
+\value{
+Seurat object with clustering assignment
 }
 \description{
 Get Clusters
