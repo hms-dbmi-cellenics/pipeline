@@ -31,8 +31,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     cell_sets <- get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters)
   }
 
-  message("\n*** cellset_structure")
-  message(str(cell_sets))
 
   # cell sets file to s3
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
@@ -137,8 +135,8 @@ build_sample_cellsets <- function(input, scdata_list, color_pool) {
     type = "metadataCategorical"
   )
 
-    sample_ids <- unlist(input$sampleIds)
-    sample_names <- unlist(input$sampleNames)
+  sample_ids <- unlist(input$sampleIds)
+  sample_names <- unlist(input$sampleNames)
 
   for (i in seq_along(sample_ids)) {
     scdata <- scdata_list[[sample_ids[i]]]
@@ -306,8 +304,6 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
   if ("metadata" %in% unique(subset_cellsets$type)) {
     message("adding metadata cellsets to subset experiment")
     metadata_cellsets <- build_metadata_cellsets(input, scdata_list, color_pool, disable_qc_filters, subset_cellsets)
-    str(metadata_cellsets)
-    str(color_pool)
     color_pool <- remove_used_colors(metadata_cellsets[[1]], color_pool)
     cell_sets <- c(cell_sets, metadata_cellsets)
   }
@@ -315,8 +311,6 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
   if ("scratchpad" %in% unique(subset_cellsets$type)) {
     message("adding custom cellsets to subset experiment")
     scratchpad_cellsets <- build_scratchpad_cellsets(color_pool, subset_cellsets)
-    str(scratchpad_cellsets)
-    str(color_pool)
     cell_sets <- c(cell_sets, list(scratchpad_cellsets))
   }
 
