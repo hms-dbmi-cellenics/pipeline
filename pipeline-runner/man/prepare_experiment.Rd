@@ -19,8 +19,7 @@ prev_out \code{prev_out} with added slots 'scdata' containing merged
 }
 \description{
 \enumerate{
-\item Merges the samples for the current experiment
 \item Adds metadata: cellsId, color_pool, and gene annotation
-\item Preparing QC configuration
+\item Prepares QC configuration
 }
 }
