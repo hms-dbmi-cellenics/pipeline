@@ -23,6 +23,7 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   message("Total cells:", sum(sapply(scdata_list, ncol)))
 
+# metadata is added to subset experiment at the subset step 1
   if (!disable_qc_filters) {
     scdata_list <-
       add_metadata_to_samples(scdata_list, prev_out$annot, input$experimentId)
