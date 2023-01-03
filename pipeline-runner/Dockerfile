@@ -87,8 +87,7 @@ FROM common AS prod
 RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
     chmod +x ./jq && \
     cp jq /usr/bin && \
-    pip install PyYAML==3.10 && \
-    pip install awscli==1.25.0
+    pip install PyYAML==3.10 awscli==1.25.0
 
 COPY aws_config /root/.aws/config
 
@@ -113,17 +112,17 @@ FROM common AS batch
 #
 # see at https://github.com/paws-r/paws/blob/main/docs/credentials.md for how PAWS
 # handles this
+COPY ./datadog-batch ./datadog-batch
 RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
     chmod +x ./jq && \
     cp jq /usr/bin && \
-    pip install PyYAML==3.10 && \
-    pip install awscli==1.25.0
+    pip install PyYAML==3.10 awscli==1.25.0 -r ./datadog-batch/requirements.txt
 
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
 ADD inst ./inst
-COPY DESCRIPTION NAMESPACE init.R ./
+COPY DESCRIPTION NAMESPACE init.R start-batch.sh ./
 
 
 # ---------------------------------------------------
