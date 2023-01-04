@@ -74,11 +74,11 @@ test_gem2s <- function(experiment_id) {
     res <- list()
 
     for (task_name in names(tasks)) {
-      res <- run_pipeline_step(task_name,
-                               input,
-                               pipeline_config,
-                               res$output,
-                               tasks)
+      res <- run_pipeline_step(res$output,
+                            input,
+                            pipeline_config,
+                            tasks,
+                            task_name)
       expect_snapshot({
         task_name
         rlang::hash(res)

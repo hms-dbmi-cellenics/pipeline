@@ -1,8 +1,7 @@
 #' Prepare experiment for upload to AWS
 #'
-#'  1) Merges the samples for the current experiment
-#'  2) Adds metadata: cellsId, color_pool, and gene annotation
-#'  3) Preparing QC configuration
+#'  1) Adds metadata: cellsId, color_pool, and gene annotation
+#'  2) Prepares QC configuration
 #'
 #' @inheritParams download_user_files
 #' @param prev_out  'output' slot from call to \code{create_seurat}
@@ -15,7 +14,7 @@
 prepare_experiment <- function(input, pipeline_config, prev_out) {
   message("Preparing experiment ...")
 
-  check_names <- c("config", "counts_list", "annot", "doublet_scores", "scdata_list", "disable_qc_filters")
+  check_names <- c("config", "edrops", "annot", "scdata_list", "disable_qc_filters")
   check_prev_out(prev_out, check_names)
 
   scdata_list <- prev_out$scdata_list
@@ -24,7 +23,11 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   message("Total cells:", sum(sapply(scdata_list, ncol)))
 
-  scdata_list <- add_metadata_to_samples(scdata_list, prev_out$annot, input$experimentId)
+# metadata is added to subset experiment at the subset step 1
+  if (!disable_qc_filters) {
+    scdata_list <-
+      add_metadata_to_samples(scdata_list, prev_out$annot, input$experimentId)
+  }
   prev_out$scdata_list <- scdata_list
 
   # construct default QC config and update prev out

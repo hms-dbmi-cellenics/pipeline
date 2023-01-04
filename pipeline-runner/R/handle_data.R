@@ -25,8 +25,9 @@ upload_cells_id <- function(pipeline_config, object_key, cells_id) {
   return(object_key)
 }
 
-reload_scdata_from_s3 <- function (s3, pipeline_config, experiment_id) {
+load_processed_scdata <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$processed_bucket
+  message("Loading processed scdata")
   message(bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
 
@@ -47,10 +48,10 @@ get_nnzero <- function (x) {
 }
 
 order_by_size <- function(scdata_list) {
-    return(scdata_list <- scdata_list[ order( sapply(scdata_list, get_nnzero)) ])
+    return(scdata_list[order(sapply(scdata_list, get_nnzero))])
 }
 
-reload_scdata_list_from_s3 <- function (s3, pipeline_config, experiment_id) {
+load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$source_bucket
   objects <- s3$list_objects(
     Bucket = bucket,
@@ -86,13 +87,15 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
   integration_index <- match("dataIntegration", task_names)
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
+  # TODO: remove if block
+  # this never runs, because embed and cluster runs in the worker if modified.
   # If the task is after data integration, we need to get scdata from processed_matrix
   if (match(task_name, task_names) > integration_index) {
-    return(reload_scdata_from_s3(s3, pipeline_config, experiment_id))
+    return(load_processed_scdata(s3, pipeline_config, experiment_id))
   }
 
   # Otherwise, return scdata_list
-  return(reload_scdata_list_from_s3(s3, pipeline_config, experiment_id))
+  return(load_source_scdata_list(s3, pipeline_config, experiment_id))
 
 }
 
@@ -408,3 +411,96 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
 
   return(parts)
 }
+
+
+#' Load cellsets object from s3
+#'
+#' @param s3 paws::s3 object
+#' @param pipeline_config list
+#' @param experiment_id character
+#'
+#' @return cellsets list
+#' @export
+#'
+load_cellsets <- function(s3, pipeline_config, experiment_id) {
+  message("loading cellsets file")
+
+  bucket <- pipeline_config$cell_sets_bucket
+
+  c(body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = experiment_id
+  )
+
+  obj <- jsonlite::fromJSON(rawConnection(body), flatten = T)
+  return(obj)
+
+}
+
+
+#' Bind columns not creating rows if there's an empty data.table
+#'
+#' `cbind` on `data.table` adds a row if binding an empty data.table to a non-empty
+#' one. We do not want that behavior when parsing cellsets, because it implies
+#' the "creation" of a cell that does not exists (i.e. when binding scratchpad
+#' cellsets slots of an experiment without custom cellsets)
+#'
+#' @param dt data.table
+#' @param ... columns to add
+#'
+#' @return data.table with new columns
+#' @export
+#'
+safe_cbind <- function(dt, ...) {
+  if (nrow(dt) > 0) {
+    dt <- cbind(dt, ...)
+  }
+  return(dt)
+}
+
+
+#' add cellset type column to cellsets data.table
+#'
+#' helper to correctly name the cellset type column. some cellsets already
+#' contain a "type" slot, which complicates matters, so we chose `cellset_type`,
+#'
+#' @param dt data.table
+#' @param col string of corresponding cellset type
+#'
+#' @return data.table with cellset_type column
+#' @export
+#'
+cbind_cellset_type <- function(dt, col) {
+  dt <- safe_cbind(dt, cellset_type = col)
+}
+
+
+#' Parse cellsets object to data.table
+#'
+#' Gets the cellsets list and converts it to a tidy data.table
+#'
+#' @param cellsets list
+#'
+#' @return data.table of cellset keys, names and corresponding cell_ids
+#' @export
+#'
+parse_cellsets <- function(cellsets) {
+
+  dt_list <- cellsets$cellSets$children
+
+  lapply(dt_list, data.table::setDT)
+  dt_list <- purrr::map2(dt_list, cellsets$cellSets$key, cbind_cellset_type)
+
+  # fill columns in case there are empty cellset classes
+  dt <- data.table::rbindlist(dt_list, fill = TRUE)
+
+  # change cellset type to more generic names
+  dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
+  dt[!cellset_type %in% c("cluster", "scratchpad", "sample"), cellset_type := "metadata"]
+
+  # unnest, and change column name
+  dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
+  data.table::setnames(dt, "cellset_type", "type")
+  return(dt)
+}
+

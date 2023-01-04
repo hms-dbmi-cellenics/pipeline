@@ -94,7 +94,7 @@ load_config <- function(development_aws_server) {
   }
 
   # batch does not have access to the internal EKS cluster api URL, use the public one
-  if(running_in_batch == "true" && domain_name != "") {
+  if (running_in_batch == "true" && domain_name != "") {
     config$api_url <- config$public_api_url
   }
 
@@ -187,12 +187,12 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, d
 }
 
 
-#' Run GEM2S or Seurat pipeline step
+#' Run pipeline step
 #'
-#' Calls the corresponding task_name GEM2S or SEURAT step function.
+#' Calls the corresponding `task_name` pipeline  step function.
 #'
 #' The input list only contains experiment level parameters, such as project ID,
-#' and sample names. It's only used for downloading user files.
+#' and sample names and it's only used for downloading user files.
 #'
 #' @param task_name character
 #' @param input list
@@ -201,20 +201,21 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, d
 #'  - projectId character
 #' @param pipeline_config list as defined by load_config
 #' @param prev_out list output from previous step
-#' @param tasks list of tasks in the pipeline
 #'
 #' @return list of task results
 #'
-run_pipeline_step <- function(task_name, input, pipeline_config, prev_out, tasks) {
-  if (!task_name %in% names(tasks)) stop("Invalid task name given: ", task_name)
+run_pipeline_step <- function(prev_out, input, pipeline_config, tasks, task_name) {
+  if (!task_name %in% names(tasks)) {
+    stop("Invalid task name given: ", task_name)
+  }
   task <- tasks[[task_name]]
 
   tstart <- Sys.time()
-  res <- task(input, pipeline_config, prev_out)
+  out <- task(input, pipeline_config, prev_out)
   ttask <- format(Sys.time() - tstart, digits = 2)
   message("⏱️ Time to complete ", task_name, ": ", ttask, "\n")
 
-  return(res)
+  return(out)
 }
 
 
@@ -241,10 +242,43 @@ call_gem2s <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(GEM2S_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_pipeline_step(task_name, input, pipeline_config, prev_out, tasks)
+  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
   message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
+
+  return(message_id)
+}
+
+
+#' Call subset seurat
+#'
+#' Runs step `task_name` of the subset seurat pipeline, sends output message to the API
+#'
+#' @param task_name character name of the step
+#' @param input list containing
+#'   - parentExperimentId
+#'   - childExperimentId
+#'   - sample IDs, and names
+#' @param pipeline_config list as defined by load_config
+#'
+#' @return character message id
+#'
+call_subset <- function(task_name, input, pipeline_config) {
+  experiment_id <- input$experimentId
+
+  if (!exists("prev_out")) {
+    remove_cell_ids(pipeline_config, experiment_id)
+    assign("prev_out", NULL, pos = ".GlobalEnv")
+  }
+
+  check_input(input)
+  tasks <- lapply(SUBSET_SEURAT_TASK_LIST, get)
+
+  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
+  assign("prev_out", task_out, pos = ".GlobalEnv")
+
+  message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
 
   return(message_id)
 }
@@ -275,7 +309,7 @@ call_seurat <- function(task_name, input, pipeline_config) {
 #' @param input list containing:
 #'   - step parameters for all samples
 #'   - current sample UUID
-#'   - uploadCountMatrix (wether or not to upload matrix after step)
+#'   - uploadCountMatrix (whether or not to upload matrix after step)
 #' @param pipeline_config list as defined by load_config
 #'
 #' @return character message id
@@ -417,6 +451,7 @@ pipeline_heartbeat <- function(task_token, aws_config) {
   }
 }
 
+
 #' Start heartbeat as a background process
 #'
 #' messages inside the background process will ONLY be printed into
@@ -429,14 +464,14 @@ pipeline_heartbeat <- function(task_token, aws_config) {
 start_heartbeat <- function(task_token, aws_config) {
   message("Starting heartbeat")
 
-    heartbeat_proc <- callr::r_bg(
+  heartbeat_proc <- callr::r_bg(
     func = pipeline_heartbeat, args = list(
       task_token, aws_config
     ),
     stdout = "/tmp/out",
     stderr = "/tmp/err"
   )
-    return(heartbeat_proc)
+  return(heartbeat_proc)
 }
 
 
@@ -455,7 +490,6 @@ wrapper <- function(input, pipeline_config) {
   message("\n------\nStarting task: ", task_name, "\n")
   message("Input:")
   str(input)
-  message("")
 
   # common to gem2s and data processing
   server <- input$server
@@ -469,6 +503,8 @@ wrapper <- function(input, pipeline_config) {
     message_id <- call_gem2s(task_name, input, pipeline_config)
   } else if (process_name == "seurat") {
     message_id <- call_seurat(task_name, input, pipeline_config)
+  } else if (process_name == "subset") {
+    message_id <- call_subset(task_name, input, pipeline_config)
   } else {
     stop("Process name not recognized.")
   }

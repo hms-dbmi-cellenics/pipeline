@@ -24,6 +24,12 @@ GEM2S_TASK_LIST <- list(
   "uploadToAWS" = "upload_to_aws"
 )
 
+SUBSET_SEURAT_TASK_LIST <- list(
+  "subsetSeurat" = "subset_seurat",
+  "prepareExperiment" = "prepare_experiment",
+  "uploadToAWS" = "upload_to_aws"
+)
+
 # list of task functions named by task name
 QC_TASK_LIST <- list(
   "classifier" = "filter_emptydrops",
@@ -43,7 +49,6 @@ SEURAT_TASK_LIST <- list(
 
 # directory where download_user_files downloads user files
 INPUT_DIR <- "/input"
-
 
 # constants used in GEM2S
 gem2s <- list(
@@ -104,6 +109,7 @@ usethis::use_data(
   debug_timestamp,
   bucket_list,
   gem2s,
+  SUBSET_SEURAT_TASK_LIST,
   GEM2S_TASK_LIST,
   QC_TASK_LIST,
   SEURAT_TASK_LIST,

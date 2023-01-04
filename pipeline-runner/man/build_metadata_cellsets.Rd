@@ -4,7 +4,17 @@
 \alias{build_metadata_cellsets}
 \title{Create cellsets from user-supplied metadata}
 \usage{
+<<<<<<< HEAD
 build_metadata_cellsets(input, scdata, color_pool)
+=======
+build_metadata_cellsets(
+  input,
+  scdata_list,
+  color_pool,
+  disable_qc_filters = FALSE,
+  subset_cellsets = NA
+)
+>>>>>>> biomage/master
 }
 \arguments{
 \item{input}{list}
