@@ -2,18 +2,12 @@
 % Please edit documentation in R/init-functions.R
 \name{run_pipeline_step}
 \alias{run_pipeline_step}
-<<<<<<< HEAD
-\title{Run GEM2S or Seurat pipeline step}
-\usage{
-run_pipeline_step(task_name, input, pipeline_config, prev_out, tasks)
-=======
 \title{Run pipeline step}
 \usage{
 run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
->>>>>>> biomage/master
 }
 \arguments{
-\item{task_name}{character}
+\item{prev_out}{list output from previous step}
 
 \item{input}{list
 \itemize{
@@ -24,19 +18,13 @@ run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
 
 \item{pipeline_config}{list as defined by load_config}
 
-\item{prev_out}{list output from previous step}
-
-\item{tasks}{list of tasks in the pipeline}
+\item{task_name}{character}
 }
 \value{
 list of task results
 }
 \description{
-<<<<<<< HEAD
-Calls the corresponding task_name GEM2S or SEURAT step function.
-=======
 Calls the corresponding \code{task_name} pipeline  step function.
->>>>>>> biomage/master
 }
 \details{
 The input list only contains experiment level parameters, such as project ID,
