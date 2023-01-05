@@ -1,3 +1,4 @@
+library(Seurat)
 human_cc_genes <- cc_genes[["human"]]
 
 mock_prev_out <- function(samples = "sample_a", counts = NULL) {
