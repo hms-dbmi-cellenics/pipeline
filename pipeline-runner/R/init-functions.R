@@ -292,7 +292,7 @@ call_seurat <- function(task_name, input, pipeline_config) {
   if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
   tasks <- lapply(SEURAT_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_pipeline_step(task_name, input, pipeline_config, prev_out, tasks)
+  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
   message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'SeuratResponse')
