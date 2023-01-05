@@ -183,7 +183,7 @@ test_that("Unisample integration works", {
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
-test_that("FastMNN is not working", {
+test_that("FastMNN works", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
@@ -192,7 +192,8 @@ test_that("FastMNN is not working", {
     dataIntegration = list(method = "fastmnn", methodSettings = list(fastmnn = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_error(suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config)))
+  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
+  expect_s4_class(integrated_scdata, "Seurat")
 })
 
 test_that("numPCs estimation works", {
