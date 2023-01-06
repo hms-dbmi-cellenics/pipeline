@@ -1,7 +1,3 @@
-# time stamp used for directory to store log/dump files in event of error
-debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
-
-
 bucket_list <- list(
   originals_bucket = "biomage-originals",
   source_bucket = "biomage-source",
