@@ -1,6 +1,6 @@
 # Create builder step
 # pull official base image and use it as builder
-FROM rocker/r-ver:4.2.0 AS builder
+FROM rocker/r-ver:4.2.2 AS builder
 WORKDIR /src/pipeline-runner
 
 # install required debian packages to install R packages
@@ -21,7 +21,7 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 
 # install renv to install required R packages
 RUN R -q -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -q -e "remotes::install_github('rstudio/renv@0.15.5')" && \
+    R -q -e "remotes::install_github('rstudio/renv@0.16.0')" && \
     R -q -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
 # an initial lockfile is used to avoid frequent re-installs
@@ -36,12 +36,6 @@ RUN R -q -e "renv::restore(lockfile='renv.lock.init', library = '$RENV_LIB')" &&
 
 RUN R -q -e "renv::deactivate()"
 
-# use renv::snapshot() while R dependency updates are quick to build
-COPY ./renv.lock .
-RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRUE)" && \
-    R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
-    strip --strip-debug $RENV_LIB/*/libs/*.so
-
 # install miniconda and geosketch
 # clean conda
 ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
@@ -50,6 +44,12 @@ RUN R -q -e "reticulate::install_miniconda()" && \
     CONDA_PATH=$(R -q -s -e "cat(reticulate::conda_binary())") && \
     $CONDA_PATH clean --force-pkgs-dirs -y
 
+# use renv::snapshot() while R dependency updates are quick to build
+COPY ./renv.lock .
+RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRUE)" && \
+    R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
+    strip --strip-debug $RENV_LIB/*/libs/*.so
+
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
 RUN Rscript get_sysdeps_run.R
@@ -57,7 +57,7 @@ RUN Rscript get_sysdeps_run.R
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
 # ---------------------------------------------------
-FROM rocker/r-ver:4.2.0 AS common
+FROM rocker/r-ver:4.2.2 AS common
 WORKDIR /src/pipeline-runner
 ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 
