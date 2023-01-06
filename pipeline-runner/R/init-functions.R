@@ -529,7 +529,6 @@ init <- function() {
 
 
     # save logs to file
-    debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
     debug_prefix <- file.path(input$experimentId, debug_timestamp)
     dump_folder <- file.path(DEBUG_PATH, debug_prefix)
     futile.logger::flog.appender(
