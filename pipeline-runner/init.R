@@ -8,10 +8,14 @@ library(magrittr)
 options(future.globals.maxSize = 32 * 1024 * 1024^2)
 
 # show line numbers for tryCatchLog
-options(keep.source.pkgs = TRUE)
+options(keep.source.pkgs = TRUE,
+        keep.source = TRUE)
+
+# time stamp used for directory to store log/dump files in event of error
+debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
 
 for (f in list.files("R", ".R$", full.names = TRUE)) {
-  source(f, keep.source = TRUE)
+  source(f)
 }
 load("R/sysdata.rda") # constants
 
