@@ -37,9 +37,11 @@ mock_parent_experiment_data <- function(input, pipeline_config = NULL) {
               cellsets = parent_cluster_cellsets))
 }
 
+
 stub_UUID_generate <- function(n) {
   paste0("this-is-not-a-uuid-", 1:n)
 }
+
 
 stubbed_subset_seurat <-
   function(input, pipeline_config, prev_out = NULL) {
@@ -133,12 +135,10 @@ test_that("add_subset_metadata adds required metadata to a subset seurat object"
 test_that("subset_seurat matches snapshot", {
   parent_experiment_id <- "mock_experiment_id"
   cellset_keys <-  c("louvain-0", "louvain-1")
-
   input <- mock_input(parent_experiment_id, cellset_keys)
   pipeline_config <- list()
 
   res <- stubbed_subset_seurat(input, pipeline_config)
 
   expect_snapshot(res)
-
 })
