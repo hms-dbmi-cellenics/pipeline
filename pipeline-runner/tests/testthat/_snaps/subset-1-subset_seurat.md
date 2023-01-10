@@ -1,29 +1,26 @@
 # subset_seurat matches snapshot
 
     Code
-      stubbed_subset_seurat(input, pipeline_config)
-    Message <simpleMessage>
-      
-      Subsetting of Seurat object step complete.
+      res
     Output
       $data
       $data$sampleIdMap
       $data$sampleIdMap$mock_sample_2_id
-      [1] "6345ef1c-3c61-49a3-aca5-e29cdb009c85"
+      [1] "this-is-not-a-uuid-1"
       
       $data$sampleIdMap$mock_sample_1_id
-      [1] "db232b2b-26db-433e-88e7-cdc7dc296acb"
+      [1] "this-is-not-a-uuid-2"
       
       
       
       $output
       $output$scdata_list
-      $output$scdata_list$`6345ef1c-3c61-49a3-aca5-e29cdb009c85`
+      $output$scdata_list$`this-is-not-a-uuid-1`
       An object of class Seurat 
       2000 features across 182 samples within 1 assay 
       Active assay: RNA (2000 features, 0 variable features)
       
-      $output$scdata_list$`db232b2b-26db-433e-88e7-cdc7dc296acb`
+      $output$scdata_list$`this-is-not-a-uuid-2`
       An object of class Seurat 
       2000 features across 121 samples within 1 assay 
       Active assay: RNA (2000 features, 0 variable features)
@@ -2037,10 +2034,10 @@
       
       $output$sample_id_map
       $output$sample_id_map$mock_sample_2_id
-      [1] "6345ef1c-3c61-49a3-aca5-e29cdb009c85"
+      [1] "this-is-not-a-uuid-1"
       
       $output$sample_id_map$mock_sample_1_id
-      [1] "db232b2b-26db-433e-88e7-cdc7dc296acb"
+      [1] "this-is-not-a-uuid-2"
       
       
       $output$config

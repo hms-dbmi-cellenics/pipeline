@@ -1,14 +1,22 @@
+# required to correctly source SeuratObject dumped R files
 library(Seurat)
 
-mock_parent_experiment_data <- function(parent_experiment_id) {
+mock_input <- function(parent_experiment_id, cellset_keys) {
+  list(
+    parentExperimentId = parent_experiment_id,
+    experimentId = "mock_subset_experiment_id",
+    cellSetKeys = cellset_keys
+  )
+}
+
+
+mock_parent_experiment_data <- function(input, pipeline_config = NULL) {
+  parent_experiment_id <- input$parentExperimentId
   paths <- setup_test_paths()
   qc_snaps_path <- file.path(paths$snaps, "qc")
 
-  parent_scdata_name <-
-    paste0(paste(parent_experiment_id, "integrated_scdata", sep = "-"),
-           ".R")
-  parent_cluster_cellsets_path <-
-    file.path(qc_snaps_path, "cluster_cell_sets.json")
+  parent_scdata_name <- paste0(parent_experiment_id, sep = "-", "integrated_scdata", ".R")
+  parent_cluster_cellsets_path <- file.path(qc_snaps_path, "cluster_cell_sets.json")
 
   # load the final test-qc output. it was named `snap_list`
   source(file.path(qc_snaps_path, parent_scdata_name))
@@ -29,26 +37,21 @@ mock_parent_experiment_data <- function(parent_experiment_id) {
               cellsets = parent_cluster_cellsets))
 }
 
-
-mock_input <- function(parent_experiment_id, cellset_keys) {
-  list(
-    parentExperimentId = parent_experiment_id,
-    experimentId = "mock_subset_experiment_id",
-    cellSetKeys = cellset_keys
-  )
+stub_UUID_generate <- function(n) {
+  paste0("this-is-not-a-uuid-", 1:n)
 }
-
-
-stub_load_parent_experiment_data <- function(input, pipeline_config) {
-  mock_parent_experiment_data(input$parentExperimentId)
-}
-
 
 stubbed_subset_seurat <-
   function(input, pipeline_config, prev_out = NULL) {
+
+    mockery::stub(subset_seurat,
+                  "UUIDgenerate",
+                  stub_UUID_generate,
+                  depth = 2)
+
     mockery::stub(subset_seurat,
                   "load_parent_experiment_data",
-                  stub_load_parent_experiment_data)
+                  mock_parent_experiment_data)
 
     res <- subset_seurat(input, pipeline_config, prev_out)
 
@@ -58,9 +61,9 @@ stubbed_subset_seurat <-
 
 test_that("subset_experiment correctly subsets cellsets", {
   parent_experiment_id <- "mock_experiment_id"
-  parent_data <- mock_parent_experiment_data(parent_experiment_id)
   cellset_keys = c("louvain-0", "louvain-1")
   input <- mock_input(parent_experiment_id, cellset_keys)
+  parent_data <- mock_parent_experiment_data(input)
 
   res <- subset_experiment(input, parent_data)
 
@@ -72,9 +75,9 @@ test_that("subset_experiment correctly subsets cellsets", {
 
 test_that("create_sample_id_map generates a list of the correct size and format", {
   parent_experiment_id <- "mock_experiment_id"
-  parent_data <- mock_parent_experiment_data(parent_experiment_id)
   cellset_keys = c("louvain-0", "louvain-1")
   input <- mock_input(parent_experiment_id, cellset_keys)
+  parent_data <- mock_parent_experiment_data(input)
 
   subset_scdata <- subset_experiment(input, parent_data)
 
@@ -88,9 +91,9 @@ test_that("create_sample_id_map generates a list of the correct size and format"
 
 test_that("add_new_sample_ids correctly assigns new sample_ids to each cell in a subset experiment", {
   parent_experiment_id <- "mock_experiment_id"
-  parent_data <- mock_parent_experiment_data(parent_experiment_id)
   cellset_keys = c("louvain-0", "louvain-1")
   input <- mock_input(parent_experiment_id, cellset_keys)
+  parent_data <- mock_parent_experiment_data(input)
 
   subset_scdata <- subset_experiment(input, parent_data)
   sample_id_map <- create_sample_id_map(unique(subset_scdata$samples))
@@ -111,9 +114,9 @@ test_that("add_new_sample_ids correctly assigns new sample_ids to each cell in a
 
 test_that("add_subset_metadata adds required metadata to a subset seurat object", {
   parent_experiment_id <- "mock_experiment_id"
-  parent_data <- mock_parent_experiment_data(parent_experiment_id)
   cellset_keys <-  c("louvain-0", "louvain-1")
   input <- mock_input(parent_experiment_id, cellset_keys)
+  parent_data <- mock_parent_experiment_data(input)
 
   subset_scdata <- subset_experiment(input, parent_data)
   sample_id_map <- create_sample_id_map(unique(subset_scdata$samples))
@@ -133,6 +136,9 @@ test_that("subset_seurat matches snapshot", {
 
   input <- mock_input(parent_experiment_id, cellset_keys)
   pipeline_config <- list()
-  expect_snapshot(stubbed_subset_seurat(input, pipeline_config))
+
+  res <- stubbed_subset_seurat(input, pipeline_config)
+
+  expect_snapshot(res)
 
 })
