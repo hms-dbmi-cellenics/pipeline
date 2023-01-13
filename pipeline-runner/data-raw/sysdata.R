@@ -1,10 +1,63 @@
+# time stamp used for directory to store log/dump files in event of error
+debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
+
+
+bucket_list <- list(
+  originals_bucket = "biomage-originals",
+  source_bucket = "biomage-source",
+  processed_bucket = "processed-matrix",
+  results_bucket = "worker-results",
+  cells_id_bucket = "biomage-filtered-cells",
+  plot_data_bucket = "plots-tables",
+  cell_sets_bucket = "cell-sets",
+  debug_bucket = "biomage-pipeline-debug"
+)
+
+# list of task functions named by task name
+GEM2S_TASK_LIST <- list(
+  "downloadGem" = "download_user_files",
+  "preproc" = "load_user_files",
+  "emptyDrops" = "run_emptydrops",
+  "doubletScores" = "score_doublets",
+  "createSeurat" = "create_seurat",
+  "prepareExperiment" = "prepare_experiment",
+  "uploadToAWS" = "upload_to_aws"
+)
+
+SUBSET_SEURAT_TASK_LIST <- list(
+  "subsetSeurat" = "subset_seurat",
+  "prepareExperiment" = "prepare_experiment",
+  "uploadToAWS" = "upload_to_aws"
+)
+
+# list of task functions named by task name
+QC_TASK_LIST <- list(
+  "classifier" = "filter_emptydrops",
+  "cellSizeDistribution" = "filter_low_cellsize",
+  "mitochondrialContent" = "filter_high_mito",
+  "numGenesVsNumUmis" = "filter_gene_umi_outlier",
+  "doubletScores" = "filter_doublets",
+  "dataIntegration" = "integrate_scdata",
+  "configureEmbedding" = "embed_and_cluster"
+)
+
+SEURAT_TASK_LIST <- list(
+  "downloadSeurat" = "download_user_files",
+  "processSeurat" = "load_seurat",
+  "uploadSeuratToAWS" = "upload_seurat_to_aws"
+)
+
+# directory where download_user_files downloads user files
+INPUT_DIR <- "/input"
+
 # constants used in GEM2S
 gem2s <- list(
   max.edrops.fdr = 0.001,
   max.empty.counts = 100,
-  max.empty.drops = 50,
-  random.seed = 42
+  max.empty.drops = 50
 )
+
+RANDOM_SEED <- 42
 
 # path where dump/log files are saved
 # mounted as a volume outside container to local-runner/debug
@@ -14,26 +67,32 @@ DEBUG_PATH <- "/debug"
 # (they are originally defined in 20220304184711_schema.js in the api)
 file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x"),
-  "seurat" = list("seurat")
+  "seurat" = list("seurat"),
+  "rhapsody" = list("rhapsody")
 )
 
 file_names <- list(
   barcodes10x = "barcodes.tsv.gz",
   features10x = "features.tsv.gz",
   matrix10x = "matrix.mtx.gz",
-  seurat = "r.rds"
+  seurat = "r.rds",
+  rhapsody = "expression_data.st.gz"
 )
 
 source("data-raw/cell_cycle_genes.R")
 
-cc_genes <- list("human" = human_cc_genes,
-                 "mouse" = mouse_cc_genes)
+cc_genes <- list(
+  "human" = human_cc_genes,
+  "mouse" = mouse_cc_genes
+)
 
 # annotation type constants
 SYM_IDS <- "sym_ids"
 SYM_SYM <- "sym_sym"
 IDS_SYM <- "ids_sym"
 IDS_IDS <- "ids_ids"
+
+pipeline_version <- 2
 
 # pipeline error constants
 errors <- list(
@@ -46,9 +105,16 @@ errors <- list(
   ERROR_SEURAT_LOGCOUNTS = 'ERROR_SEURAT_LOGCOUNTS'
 )
 
-
 usethis::use_data(
+  debug_timestamp,
+  bucket_list,
   gem2s,
+  SUBSET_SEURAT_TASK_LIST,
+  GEM2S_TASK_LIST,
+  QC_TASK_LIST,
+  SEURAT_TASK_LIST,
+  INPUT_DIR,
+  RANDOM_SEED,
   DEBUG_PATH,
   file_names,
   file_types_by_technology,
@@ -57,6 +123,7 @@ usethis::use_data(
   IDS_SYM,
   IDS_IDS,
   cc_genes,
+  pipeline_version,
   errors,
   internal = TRUE,
   overwrite = TRUE

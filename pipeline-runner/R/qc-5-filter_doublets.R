@@ -17,47 +17,47 @@
 #' @export
 #' @return a list with the filtered seurat object by doublet score, the config and the plot values
 #'
-filter_doublets <- function(scdata, config, sample_id, cells_id, task_name = "doubletScores", num_cells_to_downsample = 6000) {
-  cells_id.sample <- cells_id[[sample_id]]
+filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name = "doubletScores", num_cells_to_downsample = 6000) {
+  sample_cell_ids <- cells_id[[sample_id]]
 
-  if (length(cells_id.sample) == 0) {
-    return(list(data = scdata, new_ids = cells_id, config = config, plotData = list()))
+  if (length(sample_cell_ids) == 0) {
+    return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
   }
 
-  scdata.sample <- subset_ids(scdata, cells_id.sample)
+  sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
 
   # Check if the experiment has doubletScores
-  if (!"doublet_scores" %in% colnames(scdata@meta.data)) {
+  if (!"doublet_scores" %in% colnames(scdata_list[[sample_id]]@meta.data)) {
     message("Warning! No doubletScores scores has been computed for this experiment!")
     guidata <- list()
-    return(list(data = scdata, config = config, plotData = guidata))
+    return(list(data = scdata_list[[sample_id]], config = config, plotData = guidata))
   }
 
-  probabilityThreshold <- config$filterSettings[["probabilityThreshold"]]
+  probability_threshold <- config$filterSettings[["probabilityThreshold"]]
 
   # Check if it is required to compute sensible values. From the function 'generate_default_values_doubletScores', it is expected
-  # to get a value --> probabilityThreshold.
+  # to get a probability threshold value
   if (exists("auto", where = config)) {
     if (as.logical(toupper(config$auto))) {
-      probabilityThreshold <- generate_default_values_doubletScores(scdata.sample)
+      probability_threshold <- generate_default_values_doubletScores(sample_data)
     }
   }
 
-  plot1_data <- generate_doublets_plot_data(scdata.sample, num_cells_to_downsample)
+  plot1_data <- generate_doublets_plot_data(sample_data, num_cells_to_downsample)
 
   # Check whether the filter is set to true or false
   if (as.logical(toupper(config$enabled))) {
     # all barcodes that match threshold in the subset data
     # treat NA doublet scores as defacto singlets
-    doublet_scores <- scdata.sample$doublet_scores
+    doublet_scores <- sample_data$doublet_scores
     doublet_scores[is.na(doublet_scores)] <- 0
-    remaining_ids <- scdata.sample@meta.data$cells_id[doublet_scores <= probabilityThreshold]
+    remaining_ids <- sample_data@meta.data$cells_id[doublet_scores <= probability_threshold]
   } else {
-    remaining_ids <- cells_id.sample
+    remaining_ids <- sample_cell_ids
   }
 
   # update config
-  config$filterSettings$probabilityThreshold <- probabilityThreshold
+  config$filterSettings$probabilityThreshold <- probability_threshold
 
   guidata <- list()
 
@@ -66,8 +66,8 @@ filter_doublets <- function(scdata, config, sample_id, cells_id, task_name = "do
 
   # populate with filter statistics
   filter_stats <- list(
-    before = calc_filter_stats(scdata.sample),
-    after = calc_filter_stats(subset_ids(scdata.sample, remaining_ids))
+    before = calc_filter_stats(sample_data),
+    after = calc_filter_stats(subset_ids(sample_data, remaining_ids))
   )
 
   guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- filter_stats
@@ -75,7 +75,7 @@ filter_doublets <- function(scdata, config, sample_id, cells_id, task_name = "do
   cells_id[[sample_id]] <- remaining_ids
 
   result <- list(
-    data = scdata,
+    data = scdata_list,
     new_ids = cells_id,
     config = config,
     plotData = guidata
@@ -85,8 +85,8 @@ filter_doublets <- function(scdata, config, sample_id, cells_id, task_name = "do
 
 generate_default_values_doubletScores <- function(scdata) {
   # default doublet score based of scDblFinder classification
-  is.singlet <- scdata$doublet_class == "singlet"
-  threshold <- max(scdata$doublet_scores[is.singlet], na.rm = TRUE)
+  is_singlet <- scdata$doublet_class == "singlet"
+  threshold <- max(scdata$doublet_scores[is_singlet], na.rm = TRUE)
 
   return(threshold)
 }

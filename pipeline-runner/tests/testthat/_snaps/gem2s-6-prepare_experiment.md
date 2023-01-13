@@ -4,97 +4,46 @@
       str(task_out$qc_config)
     Output
       List of 7
-       $ cellSizeDistribution:List of 4
-        ..$ enabled       : logi FALSE
-        ..$ auto          : logi TRUE
-        ..$ filterSettings:List of 2
-        .. ..$ minCellSize: num 1080
-        .. ..$ binStep    : num 200
-        ..$ sample_a      :List of 4
-        .. ..$ enabled              : logi FALSE
-        .. ..$ auto                 : logi TRUE
-        .. ..$ filterSettings       :List of 2
+       $ cellSizeDistribution:List of 1
+        ..$ sample_a:List of 3
+        .. ..$ enabled       : logi FALSE
+        .. ..$ auto          : logi TRUE
+        .. ..$ filterSettings:List of 2
         .. .. ..$ minCellSize: num 10
         .. .. ..$ binStep    : num 200
-        .. ..$ defaultFilterSettings:List of 2
-        .. .. ..$ minCellSize: num 10
-        .. .. ..$ binStep    : num 200
-       $ mitochondrialContent:List of 4
-        ..$ enabled       : logi TRUE
-        ..$ auto          : logi TRUE
-        ..$ filterSettings:List of 2
-        .. ..$ method        : chr "absoluteThreshold"
-        .. ..$ methodSettings:List of 1
-        .. .. ..$ absoluteThreshold:List of 2
-        .. .. .. ..$ maxFraction: num 0.1
-        .. .. .. ..$ binStep    : num 0.3
-        ..$ sample_a      :List of 3
-        .. ..$ auto                 : logi TRUE
-        .. ..$ filterSettings       :List of 2
+       $ mitochondrialContent:List of 1
+        ..$ sample_a:List of 3
+        .. ..$ enabled       : logi TRUE
+        .. ..$ auto          : logi TRUE
+        .. ..$ filterSettings:List of 2
         .. .. ..$ method        : chr "absoluteThreshold"
         .. .. ..$ methodSettings:List of 1
         .. .. .. ..$ absoluteThreshold:List of 2
         .. .. .. .. ..$ maxFraction: num 0
         .. .. .. .. ..$ binStep    : num 0.3
-        .. ..$ defaultFilterSettings:List of 2
-        .. .. ..$ method        : chr "absoluteThreshold"
-        .. .. ..$ methodSettings:List of 1
-        .. .. .. ..$ absoluteThreshold:List of 2
-        .. .. .. .. ..$ maxFraction: num 0
-        .. .. .. .. ..$ binStep    : num 0.3
-       $ classifier          :List of 5
-        ..$ enabled       : logi TRUE
-        ..$ prefiltered   : logi FALSE
-        ..$ auto          : logi TRUE
-        ..$ filterSettings:List of 1
-        .. ..$ FDR: num 0.01
-        ..$ sample_a      :List of 4
-        .. ..$ enabled              : logi TRUE
-        .. ..$ auto                 : logi TRUE
-        .. ..$ filterSettings       :List of 1
+       $ classifier          :List of 1
+        ..$ sample_a:List of 4
+        .. ..$ enabled       : logi TRUE
+        .. ..$ prefiltered   : logi FALSE
+        .. ..$ auto          : logi TRUE
+        .. ..$ filterSettings:List of 1
         .. .. ..$ FDR: num 0.01
-        .. ..$ defaultFilterSettings:List of 1
-        .. .. ..$ FDR: num 0.01
-       $ numGenesVsNumUmis   :List of 4
-        ..$ enabled       : logi TRUE
-        ..$ auto          : logi TRUE
-        ..$ filterSettings:List of 2
-        .. ..$ regressionType        : chr "linear"
-        .. ..$ regressionTypeSettings:List of 2
-        .. .. ..$ linear:List of 1
-        .. .. .. ..$ p.level: num 0.001
-        .. .. ..$ spline:List of 1
-        .. .. .. ..$ p.level: num 0.001
-        ..$ sample_a      :List of 4
-        .. ..$ enabled              : logi TRUE
-        .. ..$ auto                 : logi TRUE
-        .. ..$ filterSettings       :List of 2
+       $ numGenesVsNumUmis   :List of 1
+        ..$ sample_a:List of 3
+        .. ..$ enabled       : logi TRUE
+        .. ..$ auto          : logi TRUE
+        .. ..$ filterSettings:List of 2
         .. .. ..$ regressionType        : chr "linear"
         .. .. ..$ regressionTypeSettings:List of 2
         .. .. .. ..$ linear:List of 1
-        .. .. .. .. ..$ p.level: num 0.00013
+        .. .. .. .. ..$ p.level: num 0.000132
         .. .. .. ..$ spline:List of 1
         .. .. .. .. ..$ p.level: num 0.001
-        .. ..$ defaultFilterSettings:List of 2
-        .. .. ..$ regressionType        : chr "linear"
-        .. .. ..$ regressionTypeSettings:List of 2
-        .. .. .. ..$ linear:List of 1
-        .. .. .. .. ..$ p.level: num 0.00013
-        .. .. .. ..$ spline:List of 1
-        .. .. .. .. ..$ p.level: num 0.001
-       $ doubletScores       :List of 4
-        ..$ enabled       : logi TRUE
-        ..$ auto          : logi TRUE
-        ..$ filterSettings:List of 2
-        .. ..$ probabilityThreshold: num 0.5
-        .. ..$ binStep             : num 0.02
-        ..$ sample_a      :List of 4
-        .. ..$ enabled              : logi TRUE
-        .. ..$ auto                 : logi TRUE
-        .. ..$ filterSettings       :List of 2
-        .. .. ..$ probabilityThreshold: num 0.8
-        .. .. ..$ binStep             : num 0.02
-        .. ..$ defaultFilterSettings:List of 2
+       $ doubletScores       :List of 1
+        ..$ sample_a:List of 3
+        .. ..$ enabled       : logi TRUE
+        .. ..$ auto          : logi TRUE
+        .. ..$ filterSettings:List of 2
         .. .. ..$ probabilityThreshold: num 0.8
         .. .. ..$ binStep             : num 0.02
        $ dataIntegration     :List of 2
@@ -126,7 +75,7 @@
         .. .. .. ..$ distanceMetric : chr "cosine"
         .. .. ..$ tsne:List of 2
         .. .. .. ..$ perplexity  : num 30
-        .. .. .. ..$ learningRate: num 640
+        .. .. .. ..$ learningRate: num 200
         ..$ clusteringSettings:List of 2
         .. ..$ method        : chr "louvain"
         .. ..$ methodSettings:List of 1

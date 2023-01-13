@@ -14,4 +14,3 @@ test_that("downsample_plotdata keeps all cells if less than max_number_of_cells"
 
     expect_equal(nkeep, ncol_sample)
 })
-

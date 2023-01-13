@@ -1,4 +1,4 @@
-{{- if and (eq .Values.clusterEnv "staging") (ne .Values.sandboxId "default") }}
+{{- if (eq .Values.clusterEnv "staging") }}
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:

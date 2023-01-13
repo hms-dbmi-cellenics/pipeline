@@ -14,15 +14,18 @@ Depends:
 Imports:
     batchelor (== 1.12.1),
     covr,
+    magrittr,
     data.table
 Suggests: 
+    diffviewer,
     devtools,
     httptest,
     languageserver,
     roxygen2,
     styler,
     testthat (>= 3.0.0),
-    usethis
+    usethis,
+    glmGamPoi
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true

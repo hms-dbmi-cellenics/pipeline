@@ -16,10 +16,10 @@ endif
 #--------------------------------------------------
 # Targets
 #--------------------------------------------------
-install: 
+install:
 	@echo "Installing local runner"
 	@(cd ./local-runner && npm install)
-	@echo "Installing R env packages"
+	@echo "Installing renv packages"
 	@(cd ./pipeline-runner && R -e "renv::restore()")
 update-sysdata: 
     # regenerate sysdata.rda env file
@@ -27,6 +27,10 @@ update-sysdata:
 	@(cd ./pipeline-runner && Rscript data-raw/sysdata.R)	
 build: 
 	@(cd ./local-runner && npm run build)
+build-batch-staging: 
+	@(cd pipeline-runner && docker build --target batch --tag 242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:batch-staging --build-arg GITHUB_PAT=${GITHUB_API_TOKEN} .)
+	@aws ecr get-login-password --region 'eu-west-1' | docker login --username AWS --password-stdin 242905224710.dkr.ecr.eu-west-1.amazonaws.com
+	@docker push 242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:batch-staging
 test:
 	@(cd ./pipeline-runner && R -e "devtools::test()")
 run: build run-only

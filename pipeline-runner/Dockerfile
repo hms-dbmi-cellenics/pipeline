@@ -11,7 +11,7 @@ RUN cat sysdeps_build_debian.txt | xargs ./install_debian_packages.sh
 # add GitHub PAT if required for GitHub installations.
 ARG GITHUB_PAT
 ENV GITHUB_PAT $GITHUB_PAT
-RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
+RUN R -q -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
 # renv library
 ENV RENV_LIB=/src/lib
@@ -20,9 +20,9 @@ ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
 
 # install renv to install required R packages
-RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -e "remotes::install_github('rstudio/renv@0.15.5')" && \
-    R -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
+RUN R -q -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
+    R -q -e "remotes::install_github('rstudio/renv@0.15.5')" && \
+    R -q -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
 # an initial lockfile is used to avoid frequent re-installs
 # use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
@@ -30,17 +30,25 @@ RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.
 # strip debug from shared libraries
 # see http://dirk.eddelbuettel.com/blog/2017/08/20/#010_stripping_shared_libraries
 COPY ./renv.lock.init .
-RUN R -e "renv::restore(lockfile='renv.lock.init', library = '$RENV_LIB')" && \
-    R -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
+RUN R -q -e "renv::restore(lockfile='renv.lock.init', library = '$RENV_LIB')" && \
+    R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
     strip --strip-debug $RENV_LIB/*/libs/*.so
 
-RUN R -e "renv::deactivate()"
+RUN R -q -e "renv::deactivate()"
 
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
-RUN R -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRUE)" && \
-    R -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
+RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRUE)" && \
+    R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
     strip --strip-debug $RENV_LIB/*/libs/*.so
+
+# install miniconda and geosketch
+# clean conda
+ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
+RUN R -q -e "reticulate::install_miniconda()" && \
+    R -q -e "reticulate::conda_install('r-reticulate', c('geosketch', 'scanorama'), pip = TRUE)" && \
+    CONDA_PATH=$(R -q -s -e "cat(reticulate::conda_binary())") && \
+    $CONDA_PATH clean --force-pkgs-dirs -y
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
@@ -59,21 +67,18 @@ RUN Rscript check_package_licenses.R
 # ---------------------------------------------------
 FROM rocker/r-ver:4.2.0 AS common
 WORKDIR /src/pipeline-runner
+ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 
 # get source code and R packages
 COPY --from=builder /src /src
 
 # add renv library to .libPaths
 ENV RENV_LIB=/src/lib
-RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
-
-# install runtime system deps
-# cleanup setup files
-RUN echo "python3-pip" >> sysdeps_run.txt && \
+RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site && \
+    echo "python3-pip" >> sysdeps_run.txt && \
     echo "wget" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
-
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -90,18 +95,42 @@ FROM common AS prod
 RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
     chmod +x ./jq && \
     cp jq /usr/bin && \
-    pip install PyYAML==3.10 && \
-    pip install awscli==1.25.0
+    pip install PyYAML==3.10 awscli==1.25.0
 
 COPY aws_config /root/.aws/config
 
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
+ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
 ENTRYPOINT ["Rscript", "init.R"]
+
+# ---------------------------------------------------
+# AWS BATCH BUILD
+# ---------------------------------------------------
+FROM common AS batch
+
+# add jq and aws cli so we can get identities using AWS IRSA roles
+#
+# see at https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html
+# for what IRSA roles are
+#
+# see at https://github.com/paws-r/paws/blob/main/docs/credentials.md for how PAWS
+# handles this
+COPY ./datadog-batch ./datadog-batch
+RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
+    chmod +x ./jq && \
+    cp jq /usr/bin && \
+    pip install PyYAML==3.10 awscli==1.25.0 -r ./datadog-batch/requirements.txt
+
+# add R package files and runner
+ADD R ./R
+ADD tests ./tests
+ADD inst ./inst
+COPY DESCRIPTION NAMESPACE init.R start-batch.sh ./
 
 
 # ---------------------------------------------------
@@ -109,15 +138,19 @@ ENTRYPOINT ["Rscript", "init.R"]
 # ---------------------------------------------------
 FROM common AS dev
 
-# install Radian for interactive R shell
-# also install watchdog to automatically restart
+# install watchdog to automatically restart
 # when source files change
-RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+RUN pip install -U jedi PyYAML watchdog[watchmedo] memory_profiler && \
+    apt update && \
+    apt -y install git && \
+    rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
 
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
+ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
-ENTRYPOINT ["Rscript", "init.R"]
+COPY start.sh start.sh
+ENTRYPOINT ["./start.sh"]

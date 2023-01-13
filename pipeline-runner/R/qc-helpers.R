@@ -1,42 +1,16 @@
-#' Title
+#' Generate the list of cell ids present in the experiment
 #'
-#' @param scdata
+#' @param scdata_list list of Seurat Objects
 #'
-#' @return
+#' @return list of cell ids present in the Seurat object
 #' @export
 #'
-#' @examples
-generate_first_step_ids <- function(scdata) {
+generate_first_step_ids <- function(scdata_list) {
   cells_id <- list()
-  for (sample_id in unique(scdata$samples)) {
-    cells_id[[sample_id]] <- scdata$cells_id[scdata$samples == sample_id]
+  for (sample_id in names(scdata_list)) {
+    cells_id[[sample_id]] <- scdata_list[[sample_id]]$cells_id
   }
   return(cells_id)
-}
-
-remove_cell_ids <- function(pipeline_config, experiment_id) {
-  tasks <- list(
-      'cellSizeDistribution',
-      'mitochondrialContent',
-      'numGenesVsNumUmis',
-      'doubletScores',
-      'dataIntegration',
-      'configureEmbedding'
-    )
-  keys_to_remove <- list()
-
-  s3 <- paws::s3(config = pipeline_config$aws_config)
-  for (task_name in tasks) {
-    object_list <- s3$list_objects(pipeline_config$cells_id_bucket, Prefix = paste0(experiment_id, "/", task_name, "/"))
-    for (object in object_list$Contents) {
-      keys_to_remove <- append(keys_to_remove, object$Key)
-      s3$delete_object(
-        Bucket = pipeline_config$cells_id_bucket,
-        Key = object$Key
-      )
-    }
-  }
-  message("Cell ids keys deleted: ", keys_to_remove)
 }
 
 #
@@ -45,7 +19,7 @@ remove_cell_ids <- function(pipeline_config, experiment_id) {
 get_positions_to_keep <- function(scdata, num_cells_to_downsample) {
   # Downsample plotData
   num_cells_to_downsample <- downsample_plotdata(ncol(scdata), num_cells_to_downsample)
-  set.seed(gem2s$random.seed)
+  set.seed(RANDOM_SEED)
   cells_position_to_keep <- sample(1:ncol(scdata), num_cells_to_downsample, replace = FALSE)
   cells_position_to_keep <- sort(cells_position_to_keep)
 
@@ -172,16 +146,15 @@ calc_filter_stats <- function(scdata) {
   )
 }
 
-#' Title
+#' Ruun clustering function
 #'
-#' @param clustering_method
-#' @param resolution
-#' @param data
+#' @param clustering_method character
+#' @param resolution numeric
+#' @param data Seurat Object
 #'
-#' @return
+#' @return data.frame
 #' @export
 #'
-#' @examples
 runClusters <- function(clustering_method, resolution, data) {
   data <- getClusters(clustering_method, resolution, data)
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
@@ -196,14 +169,11 @@ runClusters <- function(clustering_method, resolution, data) {
 
 #' Get Clusters
 #'
-#' @param clustering_method
-#' @param resolution
-#' @param data
+#' @inheritParams runClusters
 #'
-#' @return
+#' @return Seurat object with clustering assignment
 #' @export
 #'
-#' @examples
 getClusters <- function(clustering_method, resolution, data) {
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]
@@ -227,7 +197,7 @@ getClusters <- function(clustering_method, resolution, data) {
     if (!graph_name %in% names(data)) {
       data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
     }
-    data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm)
+    data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm, random.seed = RANDOM_SEED)
   }
   return(data)
 }
