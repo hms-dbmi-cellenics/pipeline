@@ -21,7 +21,260 @@
 #' @return a list with the integrated seurat object, the cell ids, the config and the plot values.
 #' @export
 #'
+temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+
+  # get method and settings
+  method <- "seuratv4"
+  # method <- config$dataIntegration$method
+
+  # check if downsampling params are in the config
+  use_geosketch <-
+    "downsampling" %in% names(config) &&
+    config$downsampling$method == "geosketch"
+
+  exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
+
+  nsamples <- length(scdata_list)
+  if (nsamples == 1) {
+    method <- "unisample"
+    message("Only one sample detected or method is non integrate.")
+  }
+
+  integration_function <- get(paste0("run_", method))
+
+  scdata_integrated <- integration_function(scdata_list, config, exclude_groups, use_geosketch)
+
+  # Compute embedding with default setting to get an overview of the performance of the batch correction
+  if(ncol(scdata_integrated) < 30){
+    n.neighbors <- 5L
+  } else {
+    n.neighbors <- 30L
+    }
+  scdata_integrated <- Seurat::RunUMAP(scdata_integrated, reduction = scdata_integrated@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE, n.neighbors = n.neighbors)
+
+  # get  npcs from the UMAP call in integration functions
+  npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
+  message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
+  config$dimensionalityReduction$numPCs <- npcs
+
+  var_explained <- get_explained_variance(scdata_integrated)
+
+  # This same numPCs will be used throughout the platform.
+  scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+
+  scdata_integrated <- colorObject(scdata_integrated)
+
+  plots <- generate_elbow_plot_data(scdata_integrated, config, task_name, var_explained)
+
+  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
+  result <- list(
+    data = scdata_integrated,
+    new_ids = cells_id,
+    config = config,
+    plotData = plots
+  )
+
+  return(result)
+}
+
+run_seuratv4 <- function(scdata_list, config, exclude_groups, use_geosketch) {
+  settings <- config$dataIntegration$methodSettings[["seuratv4"]]
+  nfeatures <- settings$numGenes
+  normalization <- settings$normalisation
+
+  npcs <- config$dimensionalityReduction$numPCs
+  if (is.null(npcs)) {
+    npcs <- 30
+  }
+
+  # get reduction method to find integration anchors
+  reduction <- config$dimensionalityReduction$method
+  # grep in case misspelled
+  if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
+
+  # @misc slots not preserved so transfer. Mics slots are the same for each sample
+  misc <- scdata_list[[1]]@misc
+
+  scdata_list <- order_by_size(scdata_list)
+
+  # normalize single samples
+  for (i in 1:length(scdata_list)) {
+
+    # remove cell cycle genes if needed
+    if (length(exclude_groups) > 0) {
+      message("\n------\n")
+      scdata_list[[i]] <- remove_genes(scdata_list[[i]], exclude_groups)
+      message("\n------\n")
+    }
+
+    # TODO: disassemble the function
+    scdata_list[[i]] <- normalize_data(scdata_list[[i]], normalization, "seuratv4", nfeatures)
+
+    # PCA needs to be run also here
+    # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
+    if (reduction == "rpca") {
+      message("N CELLS: ", ncol(scdata_list[[i]]))
+      message("NPCS: ", npcs)
+      message("Running PCA")
+      scdata_list[[i]] <- Seurat::RunPCA(scdata_list[[i]], verbose = FALSE, npcs = npcs)
+    } else {
+      message("PCA is not running before integration as CCA method is selected")
+    }
+  }
+
+
+  if (!use_geosketch) {
+    # if not using geosketch, just integrate
+    scdata <- seuratv4_find_and_integrate_anchors(scdata_list, reduction, normalization, npcs, misc, nfeatures)
+  } else {
+    # TODO: reduce nPCs or increase % cells if n cells < 30
+    perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
+    message("Percentage of cells to keep: ", perc_num_cells)
+    # merge
+    scdata <- create_scdata(scdata_list, cells_id)
+    # geosketch needs PCA to be run
+    scdata <- run_pca(scdata)
+    reduction <- "pca"
+    # geoesketch
+    set.seed(RANDOM_SEED)
+    scdata_sketch <- NA
+    c(scdata, scdata_sketch) %<-% run_geosketch(
+      scdata,
+      dims = 50,
+      perc_num_cells = perc_num_cells
+    )
+    # split and integrate sketches
+    scdata_sketch_split <- Seurat::SplitObject(scdata_sketch, split.by = "samples")
+    scdata_sketch_integrated <- seuratv4_find_and_integrate_anchors(scdata_sketch_split,
+                                                                    reduction, normalization,
+                                                                    npcs, misc, nfeatures, scdata, use_geosketch)
+    # learn from sketches
+    message("Learning from sketches")
+    scdata <- learn_from_sketches(
+      scdata,
+      scdata_sketch,
+      scdata_sketch_integrated,
+      method,
+      npcs
+    )
+    message("Finished learning from sketches")
+  }
+
+  return(scdata)
+
+}
+
+
+
+seuratv4_find_and_integrate_anchors <-
+  function(data_split,
+           reduction,
+           normalization,
+           npcs,
+           misc,
+           nfeatures,
+           scdata = NA,
+           use_geosketch = FALSE) {
+    k.filter <- min(ceiling(sapply(data_split, ncol) / 2), 200)
+    tryCatch({
+      if (reduction == "rpca")
+        message("Finding integration anchors using RPCA reduction")
+      if (reduction == "cca")
+        message("Finding integration anchors using CCA reduction")
+      if (normalization == "SCT") {
+        data_anchors <-
+          prepare_sct_integration(data_split, reduction, normalization, k.filter, npcs)
+      }
+      if (normalization == "LogNormalize") {
+        data_anchors <- Seurat::FindIntegrationAnchors(
+          object.list = data_split,
+          dims = 1:npcs,
+          k.filter = k.filter,
+          normalization.method = normalization,
+          verbose = TRUE,
+          reduction = reduction
+        )
+      }
+      scdata <-
+        Seurat::IntegrateData(
+          anchorset = data_anchors,
+          dims = 1:npcs,
+          normalization.method = normalization
+        )
+      # TODO: check if this can be removed to avoid duplication
+      if ("integrated" %in% names(scdata@assays)) {
+        Seurat::DefaultAssay(scdata) <- "integrated"
+      }
+    },
+    error = function(e) {
+      # Specifying error message
+      # ideally this should be passed to the UI as a error message:
+      print(e)
+      print(paste("current k.filter:", k.filter))
+      # Should we still continue if data is not integrated? No, right now..
+      print("Current number of cells per sample: ")
+      print(sapply(data_split, ncol))
+      warning(
+        "Error thrown in IntegrateData: Probably one/many of the samples contain too few cells.\nRule of thumb is that this can happen at around < 100 cells."
+      )
+      # An ideal solution would be to launch an error to the UI, however, for now, we will skip the integration method.
+      print("Skipping integration step")
+    })
+
+    if (use_geosketch == FALSE && class(scdata) != "Seurat") {
+      message(
+        "Merging data because integration was skipped due tue one/many samples
+          containing too few cells"
+      )
+      scdata <- create_scdata(data_split, cells_id)
+    }
+
+    # seurat v4 requires to call the normalize_data function before (on single objects)
+    # and after integration (on the integrated object)
+
+    # TODO: disassemble the function
+    # TODO: check if normalization is required also on the integrated object, if not remove it
+    if (normalization == "LogNormalize") {
+      scdata <-
+        normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
+    }
+    # running LogNormalization on SCTransformed data for downstream analyses
+    # TODO: disassemble the function
+    # TODO: pass RNA as argument to normalization function
+    if (normalization == "SCT") {
+      Seurat::DefaultAssay(scdata) <- "RNA"
+      scdata <-
+        normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
+      # check if integrated assay exists because it doesn't exist if the integration was skipped
+      if ("integrated" %in% names(scdata@assays)) {
+        Seurat::DefaultAssay(scdata) <- "integrated"
+      }
+    }
+    scdata@misc <- misc
+    scdata <- add_dispersions(scdata, normalization)
+
+    # run PCA
+    scdata <-
+      Seurat::RunPCA(
+        scdata,
+        features = Seurat::VariableFeatures(object = scdata),
+        verbose = FALSE
+      )
+
+    scdata@misc[["active.reduction"]] <- "pca"
+
+    return(scdata)
+  }
+
+
+
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", use_geosketch = FALSE, perc_num_cells = 5) {
+  # get the method and redirect to the new temporary function until we refactor all the methods
+  method <- "seuratv4"
+  # method <- config$dataIntegration$method
+  if(method == "seuratv4") {
+    temp_integrate_scdata(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration")
+  } else {
   # the following operations give different results depending on sample order
   # make sure they are ordered according to their matrices size
   scdata_list <- order_by_size(scdata_list)
@@ -67,6 +320,8 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   )
 
   return(result)
+
+  }
 }
 
 
@@ -82,9 +337,11 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 #' @export
 #'
 create_scdata <- function(scdata_list, cells_id) {
+  message("Started create_scdata")
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
+  message("Finished create_scdata")
 
   return(merged_scdatas)
 }
@@ -122,7 +379,7 @@ merge_scdata_list <- function(scdata_list) {
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
-    scdata <- merge(scdata_list[[1]], y = scdata_list[-1], merge.data = FALSE)
+    scdata <- merge(scdata_list[[1]], y = scdata_list[-1], merge.data = TRUE)
   }
 
   return(scdata)
@@ -197,97 +454,97 @@ run_harmony <- function(scdata, config, npcs) {
   return(scdata)
 }
 
-run_seuratv4 <- function(scdata, config, npcs) {
-  settings <- config$dataIntegration$methodSettings[["seuratv4"]]
-
-  nfeatures <- settings$numGenes
-
-  normalization <- settings$normalisation
-
-  # get reduction method to find integration anchors
-  reduction <- config$dimensionalityReduction$method
-
-  # grep in case misspelled
-  if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
-
-  # @misc slots not preserved so transfer
-  misc <- scdata@misc
-
-  data.split <- Seurat::SplitObject(scdata, split.by = "samples")
-  for (i in 1:length(data.split)) {
-    data.split[[i]] <- normalize_data(data.split[[i]], normalization, "seuratv4", nfeatures)
-    # PCA needs to be run also here
-    # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
-    if (reduction == "rpca") {
-      message("Running PCA")
-      data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE, npcs = npcs)
-    } else {
-      message("PCA is not running before integration as CCA method is selected")
-    }
-  }
-
-  # If Number of anchor cells is less than k.filter/2, there is likely to be an error:
-  # Note that this is a heuristic and was found to still fail for small data-sets
-
-  # Try to integrate data (catch error most likely caused by too few cells)
-  k.filter <- min(ceiling(sapply(data.split, ncol) / 2), 200)
-  tryCatch(
-    {
-      if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
-      if (reduction == "cca") message("Finding integration anchors using CCA reduction")
-      if (normalization == "SCT") {
-        data.anchors <- prepare_sct_integration(data.split, reduction, normalization, k.filter, npcs)
-      }
-      if (normalization == "LogNormalize") {
-        data.anchors <- Seurat::FindIntegrationAnchors(
-          object.list = data.split,
-          dims = 1:npcs,
-          k.filter = k.filter,
-          normalization.method = normalization,
-          verbose = TRUE,
-          reduction = reduction
-        )
-      }
-      scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
-      Seurat::DefaultAssay(scdata) <- "integrated"
-    },
-    error = function(e) { # Specifying error message
-      # ideally this should be passed to the UI as a error message:
-      print(table(scdata$samples))
-      print(e)
-      print(paste("current k.filter:", k.filter))
-      # Should we still continue if data is not integrated? No, right now..
-      print("Current number of cells per sample: ")
-      print(table(scdata$samples))
-      warning("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
-      # An ideal solution would be to launch an error to the UI, however, for now, we will skip the integration method.
-      print("Skipping integration step")
-    }
-  )
-
-  # seurat v4 requires to call the normalize_data function before (on single objects)
-  # and after integration (on the integrated object)
-  if (normalization == "LogNormalize") {
-    scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
-  }
-  # running LogNormalization on SCTransformed data for downstream analyses
-  if (normalization == "SCT") {
-    Seurat::DefaultAssay(scdata) <- "RNA"
-    scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
-    # check if integrated assay exists because it doesn't exist if the integration was skipped
-    if ("integrated" %in% names(scdata@assays)) {
-      Seurat::DefaultAssay(scdata) <- "integrated"
-    }
-  }
-  scdata@misc <- misc
-  scdata <- add_dispersions(scdata, normalization)
-  scdata@misc[["active.reduction"]] <- "pca"
-
-  # run PCA
-  scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
-
-  return(scdata)
-}
+# run_seuratv4 <- function(scdata, config, npcs) {
+#   settings <- config$dataIntegration$methodSettings[["seuratv4"]]
+#
+#   nfeatures <- settings$numGenes
+#
+#   normalization <- settings$normalisation
+#
+#   # get reduction method to find integration anchors
+#   reduction <- config$dimensionalityReduction$method
+#
+#   # grep in case misspelled
+#   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
+#
+#   # @misc slots not preserved so transfer
+#   misc <- scdata@misc
+#
+#   data.split <- Seurat::SplitObject(scdata, split.by = "samples")
+#   for (i in 1:length(data.split)) {
+#     data.split[[i]] <- normalize_data(data.split[[i]], normalization, "seuratv4", nfeatures)
+#     # PCA needs to be run also here
+#     # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
+#     if (reduction == "rpca") {
+#       message("Running PCA")
+#       data.split[[i]] <- Seurat::RunPCA(data.split[[i]], verbose = FALSE, npcs = npcs)
+#     } else {
+#       message("PCA is not running before integration as CCA method is selected")
+#     }
+#   }
+#
+#   # If Number of anchor cells is less than k.filter/2, there is likely to be an error:
+#   # Note that this is a heuristic and was found to still fail for small data-sets
+#
+#   # Try to integrate data (catch error most likely caused by too few cells)
+#   k.filter <- min(ceiling(sapply(data.split, ncol) / 2), 200)
+#   tryCatch(
+#     {
+#       if (reduction == "rpca") message("Finding integration anchors using RPCA reduction")
+#       if (reduction == "cca") message("Finding integration anchors using CCA reduction")
+#       if (normalization == "SCT") {
+#         data.anchors <- prepare_sct_integration(data.split, reduction, normalization, k.filter, npcs)
+#       }
+#       if (normalization == "LogNormalize") {
+#         data.anchors <- Seurat::FindIntegrationAnchors(
+#           object.list = data.split,
+#           dims = 1:npcs,
+#           k.filter = k.filter,
+#           normalization.method = normalization,
+#           verbose = TRUE,
+#           reduction = reduction
+#         )
+#       }
+#       scdata <- Seurat::IntegrateData(anchorset = data.anchors, dims = 1:npcs, normalization.method = normalization)
+#       Seurat::DefaultAssay(scdata) <- "integrated"
+#     },
+#     error = function(e) { # Specifying error message
+#       # ideally this should be passed to the UI as a error message:
+#       print(table(scdata$samples))
+#       print(e)
+#       print(paste("current k.filter:", k.filter))
+#       # Should we still continue if data is not integrated? No, right now..
+#       print("Current number of cells per sample: ")
+#       print(table(scdata$samples))
+#       warning("Error thrown in IntegrateData: Probably one/many of the samples contain to few cells.\nRule of thumb is that this can happen at around < 100 cells.")
+#       # An ideal solution would be to launch an error to the UI, however, for now, we will skip the integration method.
+#       print("Skipping integration step")
+#     }
+#   )
+#
+#   # seurat v4 requires to call the normalize_data function before (on single objects)
+#   # and after integration (on the integrated object)
+#   if (normalization == "LogNormalize") {
+#     scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
+#   }
+#   # running LogNormalization on SCTransformed data for downstream analyses
+#   if (normalization == "SCT") {
+#     Seurat::DefaultAssay(scdata) <- "RNA"
+#     scdata <- normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
+#     # check if integrated assay exists because it doesn't exist if the integration was skipped
+#     if ("integrated" %in% names(scdata@assays)) {
+#       Seurat::DefaultAssay(scdata) <- "integrated"
+#     }
+#   }
+#   scdata@misc <- misc
+#   scdata <- add_dispersions(scdata, normalization)
+#   scdata@misc[["active.reduction"]] <- "pca"
+#
+#   # run PCA
+#   scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
+#
+#   return(scdata)
+# }
 
 
 #' Prepare for integration after SCTransform
@@ -679,9 +936,6 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 #'
 run_geosketch <- function(scdata, dims, perc_num_cells) {
 
-  # geosketch needs PCA to be run
-  scdata <- run_pca(scdata)
-  reduction <- "pca"
   num_cells <- round(ncol(scdata) * perc_num_cells / 100)
 
   message("Geosketching to ", num_cells, " cells")
