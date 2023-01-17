@@ -3,6 +3,7 @@ library(Seurat)
 library(zeallot)
 library(tryCatchLog)
 library(magrittr)
+library(uuid)
 
 # increase maxSize from the default of 500MB to 32GB
 options(future.globals.maxSize = 32 * 1024 * 1024^2)
