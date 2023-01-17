@@ -86,6 +86,11 @@ run_seuratv4 <- function(scdata_list, config, exclude_groups, use_geosketch) {
   if (is.null(npcs)) {
     npcs <- 30
   }
+  # Reduce nPCs if n cells < 30
+  min_n_cells <- min(sapply(scdata_list, ncol))
+  if(min_n_cells < 30) {
+    npcs <- min_n_cells - 1
+  }
 
   # get reduction method to find integration anchors
   reduction <- config$dimensionalityReduction$method
@@ -99,6 +104,8 @@ run_seuratv4 <- function(scdata_list, config, exclude_groups, use_geosketch) {
 
   # normalize single samples
   for (i in 1:length(scdata_list)) {
+    # we need RNA assay to compute the integrated matrix
+    Seurat::DefaultAssay(scdata_list[[i]]) <- "RNA"
 
     # remove cell cycle genes if needed
     if (length(exclude_groups) > 0) {
@@ -107,14 +114,22 @@ run_seuratv4 <- function(scdata_list, config, exclude_groups, use_geosketch) {
       message("\n------\n")
     }
 
-    # TODO: disassemble the function
-    scdata_list[[i]] <- normalize_data(scdata_list[[i]], normalization, "seuratv4", nfeatures)
+    if (normalization == "LogNormalize") {
+      scdata_list[[i]] <- Seurat::NormalizeData(scdata_list[[i]], assay = "RNA", normalization.method = normalization, verbose = FALSE)
+      scdata_list[[i]] <- Seurat::FindVariableFeatures(scdata_list[[i]], assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+      scdata_list[[i]] <- Seurat::ScaleData(scdata_list[[i]], verbose = FALSE)
+    }
+
+    if (normalization == "SCT") {
+      message("Started normalization using SCTransform")
+      # conserve.memory parameter reduces the memory footprint but can significantly increase runtime
+      scdata_list[[i]] <- Seurat::SCTransform(scdata_list[[i]], vst.flavor = "v2", conserve.memory = FALSE)
+      message("Finished normalization using SCTransform")
+    }
 
     # PCA needs to be run also here
     # otherwise when running FindIntegrationAnchors() with reduction="rpca" it will fail because no "pca" is present
     if (reduction == "rpca") {
-      message("N CELLS: ", ncol(scdata_list[[i]]))
-      message("NPCS: ", npcs)
       message("Running PCA")
       scdata_list[[i]] <- Seurat::RunPCA(scdata_list[[i]], verbose = FALSE, npcs = npcs)
     } else {
@@ -122,12 +137,10 @@ run_seuratv4 <- function(scdata_list, config, exclude_groups, use_geosketch) {
     }
   }
 
-
   if (!use_geosketch) {
     # if not using geosketch, just integrate
     scdata <- seuratv4_find_and_integrate_anchors(scdata_list, reduction, normalization, npcs, misc, nfeatures)
   } else {
-    # TODO: reduce nPCs or increase % cells if n cells < 30
     perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
     message("Percentage of cells to keep: ", perc_num_cells)
     # merge
@@ -201,10 +214,6 @@ seuratv4_find_and_integrate_anchors <-
           dims = 1:npcs,
           normalization.method = normalization
         )
-      # TODO: check if this can be removed to avoid duplication
-      if ("integrated" %in% names(scdata@assays)) {
-        Seurat::DefaultAssay(scdata) <- "integrated"
-      }
     },
     error = function(e) {
       # Specifying error message
@@ -229,29 +238,20 @@ seuratv4_find_and_integrate_anchors <-
       scdata <- create_scdata(data_split, cells_id)
     }
 
-    # seurat v4 requires to call the normalize_data function before (on single objects)
-    # and after integration (on the integrated object)
-
-    # TODO: disassemble the function
-    # TODO: check if normalization is required also on the integrated object, if not remove it
-    if (normalization == "LogNormalize") {
-      scdata <-
-        normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
-    }
     # running LogNormalization on SCTransformed data for downstream analyses
-    # TODO: disassemble the function
-    # TODO: pass RNA as argument to normalization function
     if (normalization == "SCT") {
       Seurat::DefaultAssay(scdata) <- "RNA"
-      scdata <-
-        normalize_data(scdata, "LogNormalize", "seuratv4", nfeatures)
-      # check if integrated assay exists because it doesn't exist if the integration was skipped
-      if ("integrated" %in% names(scdata@assays)) {
-        Seurat::DefaultAssay(scdata) <- "integrated"
-      }
+      scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
     }
-    scdata@misc <- misc
-    scdata <- add_dispersions(scdata, normalization)
+
+    if ("integrated" %in% names(scdata@assays)) {
+      Seurat::DefaultAssay(scdata) <- "integrated"
+    }
+
+      scdata@misc <- misc
+      scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+      scdata <- add_dispersions(scdata, normalization)
+      scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
 
     # run PCA
     scdata <-
