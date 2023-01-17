@@ -30,7 +30,7 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
   # check if downsampling params are in the config
   use_geosketch <-
     "downsampling" %in% names(config) &&
-    config$downsampling$method == "geosketch"
+      config$downsampling$method == "geosketch"
 
   exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
 
@@ -45,11 +45,11 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
   scdata_integrated <- integration_function(scdata_list, config, exclude_groups, use_geosketch)
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
-  if(ncol(scdata_integrated) < 30){
+  if (ncol(scdata_integrated) < 30) {
     n.neighbors <- 5L
   } else {
     n.neighbors <- 30L
-    }
+  }
   scdata_integrated <- Seurat::RunUMAP(scdata_integrated, reduction = scdata_integrated@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE, n.neighbors = n.neighbors)
 
   # get  npcs from the UMAP call in integration functions
@@ -88,7 +88,7 @@ run_seuratv4 <- function(scdata_list, config, exclude_groups, use_geosketch) {
   }
   # Reduce nPCs if n cells < 30
   min_n_cells <- min(sapply(scdata_list, ncol))
-  if(min_n_cells < 30) {
+  if (min_n_cells < 30) {
     npcs <- min_n_cells - 1
   }
 
@@ -158,9 +158,11 @@ run_seuratv4 <- function(scdata_list, config, exclude_groups, use_geosketch) {
     )
     # split and integrate sketches
     scdata_sketch_split <- Seurat::SplitObject(scdata_sketch, split.by = "samples")
-    scdata_sketch_integrated <- seuratv4_find_and_integrate_anchors(scdata_sketch_split,
-                                                                    reduction, normalization,
-                                                                    npcs, misc, nfeatures, scdata, use_geosketch)
+    scdata_sketch_integrated <- seuratv4_find_and_integrate_anchors(
+      scdata_sketch_split,
+      reduction, normalization,
+      npcs, misc, nfeatures, scdata, use_geosketch
+    )
     # learn from sketches
     message("Learning from sketches")
     scdata <- learn_from_sketches(
@@ -174,7 +176,6 @@ run_seuratv4 <- function(scdata_list, config, exclude_groups, use_geosketch) {
   }
 
   return(scdata)
-
 }
 
 
@@ -189,51 +190,54 @@ seuratv4_find_and_integrate_anchors <-
            scdata = NA,
            use_geosketch = FALSE) {
     k.filter <- min(ceiling(sapply(data_split, ncol) / 2), 200)
-    tryCatch({
-      if (reduction == "rpca")
-        message("Finding integration anchors using RPCA reduction")
-      if (reduction == "cca")
-        message("Finding integration anchors using CCA reduction")
-      if (normalization == "SCT") {
-        data_anchors <-
-          prepare_sct_integration(data_split, reduction, normalization, k.filter, npcs)
-      }
-      if (normalization == "LogNormalize") {
-        data_anchors <- Seurat::FindIntegrationAnchors(
-          object.list = data_split,
-          dims = 1:npcs,
-          k.filter = k.filter,
-          normalization.method = normalization,
-          verbose = TRUE,
-          reduction = reduction
+    tryCatch(
+      {
+        if (reduction == "rpca") {
+          message("Finding integration anchors using RPCA reduction")
+        }
+        if (reduction == "cca") {
+          message("Finding integration anchors using CCA reduction")
+        }
+        if (normalization == "SCT") {
+          data_anchors <-
+            prepare_sct_integration(data_split, reduction, normalization, k.filter, npcs)
+        }
+        if (normalization == "LogNormalize") {
+          data_anchors <- Seurat::FindIntegrationAnchors(
+            object.list = data_split,
+            dims = 1:npcs,
+            k.filter = k.filter,
+            normalization.method = normalization,
+            verbose = TRUE,
+            reduction = reduction
+          )
+        }
+        scdata <-
+          Seurat::IntegrateData(
+            anchorset = data_anchors,
+            dims = 1:npcs,
+            normalization.method = normalization
+          )
+      },
+      error = function(e) {
+        # Specifying error message
+        # ideally this should be passed to the UI as a error message:
+        print(e)
+        print(paste("current k.filter:", k.filter))
+        # Should we still continue if data is not integrated? No, right now..
+        print("Current number of cells per sample: ")
+        print(sapply(data_split, ncol))
+        warning(
+          "Error thrown in IntegrateData: Probably one/many of the samples contain too few cells.\nRule of thumb is that this can happen at around < 100 cells."
         )
+        # An ideal solution would be to launch an error to the UI, however, for now, we will skip the integration method.
+        print("Skipping integration step")
       }
-      scdata <-
-        Seurat::IntegrateData(
-          anchorset = data_anchors,
-          dims = 1:npcs,
-          normalization.method = normalization
-        )
-    },
-    error = function(e) {
-      # Specifying error message
-      # ideally this should be passed to the UI as a error message:
-      print(e)
-      print(paste("current k.filter:", k.filter))
-      # Should we still continue if data is not integrated? No, right now..
-      print("Current number of cells per sample: ")
-      print(sapply(data_split, ncol))
-      warning(
-        "Error thrown in IntegrateData: Probably one/many of the samples contain too few cells.\nRule of thumb is that this can happen at around < 100 cells."
-      )
-      # An ideal solution would be to launch an error to the UI, however, for now, we will skip the integration method.
-      print("Skipping integration step")
-    })
+    )
 
     if (use_geosketch == FALSE && class(scdata) != "Seurat") {
       message(
-        "Merging data because integration was skipped due tue one/many samples
-          containing too few cells"
+        "Merging data because integration was skipped due tue one/many samples containing too few cells"
       )
       scdata <- create_scdata(data_split, cells_id)
     }
@@ -248,10 +252,10 @@ seuratv4_find_and_integrate_anchors <-
       Seurat::DefaultAssay(scdata) <- "integrated"
     }
 
-      scdata@misc <- misc
-      scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
-      scdata <- add_dispersions(scdata, normalization)
-      scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+    scdata@misc <- misc
+    scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+    scdata <- add_dispersions(scdata, normalization)
+    scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
 
     # run PCA
     scdata <-
@@ -272,55 +276,54 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # get the method and redirect to the new temporary function until we refactor all the methods
   method <- "seuratv4"
   # method <- config$dataIntegration$method
-  if(method == "seuratv4") {
+  if (method == "seuratv4") {
     temp_integrate_scdata(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration")
   } else {
-  # the following operations give different results depending on sample order
-  # make sure they are ordered according to their matrices size
-  scdata_list <- order_by_size(scdata_list)
-  message("Started create_scdata")
-  scdata <- create_scdata(scdata_list, cells_id)
-  message("Finished create_scdata")
+    # the following operations give different results depending on sample order
+    # make sure they are ordered according to their matrices size
+    scdata_list <- order_by_size(scdata_list)
+    message("Started create_scdata")
+    scdata <- create_scdata(scdata_list, cells_id)
+    message("Finished create_scdata")
 
-  # main function
-  set.seed(RANDOM_SEED)
-  scdata_sketch <- NA
-  if (use_geosketch) {
-    c(scdata, scdata_sketch) %<-% run_geosketch(
-      scdata,
-      dims = 50,
-      perc_num_cells = perc_num_cells
+    # main function
+    set.seed(RANDOM_SEED)
+    scdata_sketch <- NA
+    if (use_geosketch) {
+      c(scdata, scdata_sketch) %<-% run_geosketch(
+        scdata,
+        dims = 50,
+        perc_num_cells = perc_num_cells
+      )
+    }
+
+    message("Started data integration")
+    scdata_integrated <- run_dataIntegration(scdata, scdata_sketch, config)
+    message("Finished data integration")
+
+    # get  npcs from the UMAP call in integration functions
+    npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
+    message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
+    config$dimensionalityReduction$numPCs <- npcs
+
+    var_explained <- get_explained_variance(scdata_integrated)
+
+    # This same numPCs will be used throughout the platform.
+    scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+
+    scdata_integrated <- colorObject(scdata_integrated)
+
+    plots <- generate_elbow_plot_data(scdata_integrated, config, task_name, var_explained)
+
+    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
+    result <- list(
+      data = scdata_integrated,
+      new_ids = cells_id,
+      config = config,
+      plotData = plots
     )
-  }
 
-  message("Started data integration")
-  scdata_integrated <- run_dataIntegration(scdata, scdata_sketch, config)
-  message("Finished data integration")
-
-  # get  npcs from the UMAP call in integration functions
-  npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
-  message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
-  config$dimensionalityReduction$numPCs <- npcs
-
-  var_explained <- get_explained_variance(scdata_integrated)
-
-  # This same numPCs will be used throughout the platform.
-  scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
-
-  scdata_integrated <- colorObject(scdata_integrated)
-
-  plots <- generate_elbow_plot_data(scdata_integrated, config, task_name, var_explained)
-
-  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
-  result <- list(
-    data = scdata_integrated,
-    new_ids = cells_id,
-    config = config,
-    plotData = plots
-  )
-
-  return(result)
-
+    return(result)
   }
 }
 
@@ -843,7 +846,6 @@ generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_e
 #' @export
 #'
 run_geosketch <- function(scdata, dims, perc_num_cells) {
-
   num_cells <- round(ncol(scdata) * perc_num_cells / 100)
 
   message("Geosketching to ", num_cells, " cells")
