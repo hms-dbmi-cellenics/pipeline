@@ -66,6 +66,8 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
   )
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
+  # if the number of cells is < 30, lower the number of neighboring points, otherwise it will fail
+  # the recommended range for n.neighbors in Seurat::RunUMAP is 5 to 50 (default is 30)
   if (ncol(scdata_integrated) < 30) {
     n.neighbors <- 5L
   } else {
