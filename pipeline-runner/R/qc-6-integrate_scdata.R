@@ -275,7 +275,7 @@ run_harmony <- function(scdata, config, npcs) {
   # grep in case misspelled
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
-  scdata <- normalize_data(scdata, normalization, "harmony", nfeatures)
+  scdata <- log_normalize(scdata, normalization, "harmony", nfeatures)
 
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
   scdata <- harmony::RunHarmony(scdata, group.by.vars = "samples")
@@ -332,7 +332,7 @@ run_fastmnn <- function(scdata, config, npcs) {
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
 
-  scdata <- normalize_data(scdata, normalization, "fastmnn", nfeatures)
+  scdata <- log_normalize(scdata, normalization, "fastmnn", nfeatures)
   scdata <- add_dispersions(scdata, normalization)
 
   # @misc slots not preserved so transfer
@@ -354,7 +354,7 @@ run_unisample <- function(scdata, config, npcs) {
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
   # in unisample we only need to normalize
-  scdata <- normalize_data(scdata, normalization, "unisample", nfeatures)
+  scdata <- log_normalize(scdata, normalization, "unisample", nfeatures)
   scdata <- add_dispersions(scdata, normalization)
   scdata@misc[["active.reduction"]] <- "pca"
 
@@ -573,33 +573,6 @@ add_metadata <- function(scdata, scdata_list) {
   scdata@misc[["experimentId"]] <- experiment_id
   scdata@misc[["ingestionDate"]] <- Sys.time()
 
-  return(scdata)
-}
-
-
-#' Normalize data according to the specific normalization method
-#'
-#' This function normalize the data taking into account the integration method.
-#'
-#' @param scdata SeuratObject
-#' @param normalization_method normalization method
-#' @param integration_method integration method
-#' @param nfeatures number of features to pass to Seurat::FindVariableFeatures()
-#'
-#' @return normalized and scaled SeuratObject
-#' @export
-#'
-normalize_data <- function(scdata, normalization_method, integration_method, nfeatures) {
-  if (normalization_method == "LogNormalize") {
-    scdata <- log_normalize(scdata, normalization_method, integration_method, nfeatures)
-  }
-
-  if (normalization_method == "SCT") {
-    message("Started normalization using SCTransform")
-    # conserve.memory parameter reduces the memory footprint but can significantly increase runtime
-    scdata <- Seurat::SCTransform(scdata, vst.flavor = "v2", conserve.memory = FALSE)
-    message("Finished normalization using SCTransform")
-  }
   return(scdata)
 }
 
