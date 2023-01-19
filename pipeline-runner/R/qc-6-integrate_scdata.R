@@ -105,54 +105,54 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   method <- "seuratv4"
   # method <- config$dataIntegration$method
   if (method == "seuratv4") {
-    temp_integrate_scdata(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration")
-  } else {
-    # the following operations give different results depending on sample order
-    # make sure they are ordered according to their matrices size
-    scdata_list <- order_by_size(scdata_list)
-    message("Started create_scdata")
-    scdata <- create_scdata(scdata_list, cells_id)
-    message("Finished create_scdata")
-
-    # main function
-    set.seed(RANDOM_SEED)
-    scdata_sketch <- NA
-    if (use_geosketch) {
-      c(scdata, scdata_sketch) %<-% run_geosketch(
-        scdata,
-        dims = 50,
-        perc_num_cells = perc_num_cells
-      )
-    }
-
-    message("Started data integration")
-    scdata_integrated <- run_dataIntegration(scdata, scdata_sketch, config)
-    message("Finished data integration")
-
-    # get  npcs from the UMAP call in integration functions
-    npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
-    message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
-    config$dimensionalityReduction$numPCs <- npcs
-
-    var_explained <- get_explained_variance(scdata_integrated)
-
-    # This same numPCs will be used throughout the platform.
-    scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
-
-    scdata_integrated <- colorObject(scdata_integrated)
-
-    plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
-
-    # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
-    result <- list(
-      data = scdata_integrated,
-      new_ids = cells_id,
-      config = config,
-      plotData = plots
-    )
-
+    result <- temp_integrate_scdata(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration")
     return(result)
   }
+  # the following operations give different results depending on sample order
+  # make sure they are ordered according to their matrices size
+  scdata_list <- order_by_size(scdata_list)
+  message("Started create_scdata")
+  scdata <- create_scdata(scdata_list, cells_id)
+  message("Finished create_scdata")
+
+  # main function
+  set.seed(RANDOM_SEED)
+  scdata_sketch <- NA
+  if (use_geosketch) {
+    c(scdata, scdata_sketch) %<-% run_geosketch(
+      scdata,
+      dims = 50,
+      perc_num_cells = perc_num_cells
+    )
+  }
+
+  message("Started data integration")
+  scdata_integrated <- run_dataIntegration(scdata, scdata_sketch, config)
+  message("Finished data integration")
+
+  # get  npcs from the UMAP call in integration functions
+  npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
+  message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
+  config$dimensionalityReduction$numPCs <- npcs
+
+  var_explained <- get_explained_variance(scdata_integrated)
+
+  # This same numPCs will be used throughout the platform.
+  scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+
+  scdata_integrated <- colorObject(scdata_integrated)
+
+  plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
+
+  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
+  result <- list(
+    data = scdata_integrated,
+    new_ids = cells_id,
+    config = config,
+    plotData = plots
+  )
+
+  return(result)
 }
 
 
