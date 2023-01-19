@@ -26,20 +26,13 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
   # get method and settings
   method <- "seuratv4"
   # method <- config$dataIntegration$method
-
-  # check if downsampling params are in the config
-  use_geosketch <-
-    "downsampling" %in% names(config) &&
-      config$downsampling$method == "geosketch"
-
+  settings <- config$dataIntegration$methodSettings[[method]]
+  nfeatures <- settings$numGenes
+  normalization <- settings$normalisation
+  # grep in case misspelled
+  if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
+  reduction <- config$dimensionalityReduction$method
   exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
-
-  nsamples <- length(scdata_list)
-  if (nsamples == 1) {
-    method <- "unisample"
-    message("Only one sample detected or method is non integrate.")
-  }
-
   npcs <- config$dimensionalityReduction$numPCs
   if (is.null(npcs)) {
     npcs <- 30
@@ -50,9 +43,27 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
     npcs <- min_n_cells - 1
   }
 
+  # check if downsampling params are in the config
+  use_geosketch <-
+    "downsampling" %in% names(config) &&
+      config$downsampling$method == "geosketch"
+  perc_num_cells <- NA
+  if (use_geosketch) {
+    perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
+  }
+
+  nsamples <- length(scdata_list)
+  if (nsamples == 1) {
+    method <- "unisample"
+    message("Only one sample detected or method is non integrate.")
+  }
+
   integration_function <- get(paste0("run_", method))
 
-  scdata_integrated <- integration_function(scdata_list, config, exclude_groups, use_geosketch, npcs)
+  scdata_integrated <- integration_function(
+    scdata_list, exclude_groups, use_geosketch,
+    npcs, nfeatures, normalization, reduction, perc_num_cells
+  )
 
   # Compute embedding with default setting to get an overview of the performance of the batch correction
   if (ncol(scdata_integrated) < 30) {
@@ -74,7 +85,7 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
 
   scdata_integrated <- colorObject(scdata_integrated)
 
-  plots <- generate_elbow_plot_data(scdata_integrated, config, task_name, var_explained)
+  plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
 
   # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
   result <- list(
@@ -130,7 +141,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 
     scdata_integrated <- colorObject(scdata_integrated)
 
-    plots <- generate_elbow_plot_data(scdata_integrated, config, task_name, var_explained)
+    plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
 
     # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
     result <- list(
@@ -625,14 +636,13 @@ log_normalize <- function(scdata, normalization_method, integration_method, nfea
 #' Reshapes table to an UI compatible format for elbow/scree plot.
 #'
 #' @param scdata_integrated integrated seurat object
-#' @param config list
 #' @param task_name character
 #' @param var_explained numeric
 #'
 #' @return list of plot data
 #' @export
 #'
-generate_elbow_plot_data <- function(scdata_integrated, config, task_name, var_explained) {
+generate_elbow_plot_data <- function(scdata_integrated, task_name, var_explained) {
   cells_order <- rownames(scdata_integrated@meta.data)
 
   # plot1_data is an empty list because it is not used anymore by the UI

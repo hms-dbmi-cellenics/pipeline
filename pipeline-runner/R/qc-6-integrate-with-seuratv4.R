@@ -1,13 +1,5 @@
-run_seuratv4 <- function(scdata_list, config, exclude_groups, use_geosketch, npcs) {
-  settings <- config$dataIntegration$methodSettings[["seuratv4"]]
-  nfeatures <- settings$numGenes
-  normalization <- settings$normalisation
-
-  # get reduction method to find integration anchors
-  reduction <- config$dimensionalityReduction$method
-  # grep in case misspelled
-  if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
-
+run_seuratv4 <- function(scdata_list, exclude_groups, use_geosketch, npcs,
+                         nfeatures, normalization, reduction, perc_num_cells) {
   # @misc slots not preserved so transfer. Mics slots are the same for each sample
   misc <- scdata_list[[1]]@misc
 
@@ -52,7 +44,6 @@ run_seuratv4 <- function(scdata_list, config, exclude_groups, use_geosketch, npc
     # if not using geosketch, just integrate
     scdata <- seuratv4_find_and_integrate_anchors(scdata_list, reduction, normalization, npcs, misc, nfeatures)
   } else {
-    perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
     message("Percentage of cells to keep: ", perc_num_cells)
     # merge
     scdata <- create_scdata(scdata_list, cells_id)
@@ -181,4 +172,3 @@ seuratv4_find_and_integrate_anchors <-
 
     return(scdata)
   }
-
