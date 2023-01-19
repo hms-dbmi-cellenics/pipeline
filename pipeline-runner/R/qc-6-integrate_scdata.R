@@ -241,9 +241,7 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
 
   # remove cell cycle genes if needed
   if (length(exclude_groups) > 0) {
-    message("\n------\n")
     scdata <- remove_genes(scdata, exclude_groups)
-    message("\n------\n")
   }
 
   integration_function <- get(paste0("run_", method))

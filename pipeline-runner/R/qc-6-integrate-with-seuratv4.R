@@ -12,9 +12,7 @@ run_seuratv4 <- function(scdata_list, exclude_groups, use_geosketch, npcs,
 
     # remove cell cycle genes if needed
     if (length(exclude_groups) > 0) {
-      message("\n------\n")
       scdata_list[[i]] <- remove_genes(scdata_list[[i]], exclude_groups)
-      message("\n------\n")
     }
 
     if (normalization == "LogNormalize") {
