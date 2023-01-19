@@ -153,7 +153,6 @@ integrate_using_geosketch <-
     scdata <- run_pca(scdata)
     # geoesketch
     set.seed(RANDOM_SEED)
-    scdata_sketch <- NA
     c(scdata, scdata_sketch) %<-% run_geosketch(
       scdata = scdata,
       dims = 50,
