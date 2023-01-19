@@ -672,8 +672,7 @@ generate_elbow_plot_data <- function(scdata_integrated, task_name, var_explained
 #' @return Seurat object downsampled to desired number of cells
 #' @export
 #'
-run_geosketch <- function(scdata, dims, perc_num_cells) {
-  reduction <- "pca"
+run_geosketch <- function(scdata, dims, perc_num_cells, geosketch_reduction = "pca") {
   num_cells <- round(ncol(scdata) * perc_num_cells / 100)
 
   message("Geosketching to ", num_cells, " cells")
@@ -682,15 +681,15 @@ run_geosketch <- function(scdata, dims, perc_num_cells) {
     geosketch <- reticulate::import("geosketch")
   }
   stopifnot(
-    "The requested reduction is not present in the Seurat object." = reduction %in% names(scdata@reductions),
-    "The number of cells is lower that the number of dimensions." = ncol(scdata@reductions[[reduction]]) >= dims
+    "The requested reduction is not present in the Seurat object." = geosketch_reduction %in% names(scdata@reductions),
+    "The number of cells is lower that the number of dimensions." = ncol(scdata@reductions[[geosketch_reduction]]) >= dims
   )
 
-  embeddings <- scdata@reductions[[reduction]]@cell.embeddings[, 1:dims]
+  embeddings <- scdata@reductions[[geosketch_reduction]]@cell.embeddings[, 1:dims]
   index <- unlist(geosketch$gs(embeddings, as.integer(num_cells), one_indexed = TRUE))
   sketch <- scdata[, index]
   Seurat::DefaultAssay(sketch) <- "RNA"
-  sketch@misc[["active.reduction"]] <- reduction
+  sketch@misc[["active.reduction"]] <- geosketch_reduction
 
   return(list(scdata, sketch))
 }
@@ -710,7 +709,7 @@ run_geosketch <- function(scdata, dims, perc_num_cells) {
 #' @return Integrated Seurat object with original number of cells
 #' @export
 #'
-learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated, method, npcs) {
+learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated, npcs) {
   # get embeddings from splitted Seurat object
   active_reduction <- scdata_sketch_integrated@misc[["active.reduction"]]
   embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:npcs])
@@ -778,7 +777,6 @@ integrate_from_sketch <- function(scdata, scdata_sketch, integration_function, c
     scdata,
     scdata_sketch,
     scdata_sketch_integrated,
-    method,
     npcs
   )
   message("Finished learning from sketches")

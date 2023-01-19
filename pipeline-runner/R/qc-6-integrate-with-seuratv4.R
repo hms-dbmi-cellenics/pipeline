@@ -44,37 +44,7 @@ run_seuratv4 <- function(scdata_list, exclude_groups, use_geosketch, npcs,
     # if not using geosketch, just integrate
     scdata <- seuratv4_find_and_integrate_anchors(scdata_list, reduction, normalization, npcs, misc, nfeatures)
   } else {
-    message("Percentage of cells to keep: ", perc_num_cells)
-    # merge
-    scdata <- create_scdata(scdata_list, cells_id)
-    # geosketch needs PCA to be run
-    scdata <- run_pca(scdata)
-    reduction <- "pca"
-    # geoesketch
-    set.seed(RANDOM_SEED)
-    scdata_sketch <- NA
-    c(scdata, scdata_sketch) %<-% run_geosketch(
-      scdata,
-      dims = 50,
-      perc_num_cells = perc_num_cells
-    )
-    # split and integrate sketches
-    scdata_sketch_split <- Seurat::SplitObject(scdata_sketch, split.by = "samples")
-    scdata_sketch_integrated <- seuratv4_find_and_integrate_anchors(
-      scdata_sketch_split,
-      reduction, normalization,
-      npcs, misc, nfeatures, scdata, use_geosketch
-    )
-    # learn from sketches
-    message("Learning from sketches")
-    scdata <- learn_from_sketches(
-      scdata,
-      scdata_sketch,
-      scdata_sketch_integrated,
-      method,
-      npcs
-    )
-    message("Finished learning from sketches")
+    scdata <- integrate_using_geosketch(scdata_list, reduction, perc_num_cells, cells_id, normalization, npcs, misc, nfeatures, use_geosketch)
   }
 
   return(scdata)
@@ -94,12 +64,6 @@ seuratv4_find_and_integrate_anchors <-
     k.filter <- min(ceiling(sapply(data_split, ncol) / 2), 200)
     tryCatch(
       {
-        if (reduction == "rpca") {
-          message("Finding integration anchors using RPCA reduction")
-        }
-        if (reduction == "cca") {
-          message("Finding integration anchors using CCA reduction")
-        }
         if (normalization == "SCT") {
           data_anchors <-
             prepare_sct_integration(data_split, reduction, normalization, k.filter, npcs)
@@ -169,6 +133,50 @@ seuratv4_find_and_integrate_anchors <-
       )
 
     scdata@misc[["active.reduction"]] <- "pca"
+
+    return(scdata)
+  }
+
+
+integrate_using_geosketch <-
+  function(scdata_list,
+           reduction,
+           perc_num_cells,
+           cells_id,
+           normalization,
+           npcs,
+           misc,
+           nfeatures,
+           use_geosketch) {
+    message("Percentage of cells to keep: ", perc_num_cells)
+    # merge
+    scdata <- create_scdata(scdata_list, cells_id)
+    # geosketch needs PCA to be run
+    scdata <- run_pca(scdata)
+    # geoesketch
+    set.seed(RANDOM_SEED)
+    scdata_sketch <- NA
+    c(scdata, scdata_sketch) %<-% run_geosketch(
+      scdata = scdata,
+      dims = 50,
+      perc_num_cells = perc_num_cells
+    )
+    # split and integrate sketches
+    scdata_sketch_split <- Seurat::SplitObject(scdata_sketch, split.by = "samples")
+    scdata_sketch_integrated <- seuratv4_find_and_integrate_anchors(
+      scdata_sketch_split,
+      reduction, normalization,
+      npcs, misc, nfeatures, scdata, use_geosketch
+    )
+    # learn from sketches
+    message("Learning from sketches")
+    scdata <- learn_from_sketches(
+      scdata,
+      scdata_sketch,
+      scdata_sketch_integrated,
+      npcs
+    )
+    message("Finished learning from sketches")
 
     return(scdata)
   }
