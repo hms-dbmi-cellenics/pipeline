@@ -18,6 +18,12 @@
 #' 			- method: String. Method to be used. "rpca" by default.
 #' 			- numPCs: Numeric. Number of principal components.
 #' 			- excludeGeneCategories: List. Categories of genes to be excluded.
+#' 		- downsampling
+#' 		  - method: String. Method to be used to downsample. "geosketch" by default
+#' 		  - methodSettings: List with required parameters for each downsampling method
+#' 		    - geosketch
+#' 		      - percentageToKeep: percentage of cells to keep
+#'
 #' @return a list with the integrated seurat object, the cell ids, the config and the plot values.
 #' @export
 #'
@@ -101,6 +107,29 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
 
 
 
+#' STEP 6. Data Integration
+#'
+#' Data integration step where batch effect is corrected through data
+#' integration methods. The default method is Harmony.
+#' The data integration step include ordering the samples according to their
+#' matrices size, merging of Seurat objects, normalization and PCA analysis.
+#' Optional: performs geometric sketching of merged Seurat object, integrates
+#' the sketched data, and learn and apply back the integration transformation
+#' to the full data.
+#'
+#' @param config list containing the following information
+#' 		- dataIntegration
+#' 			- method: String. Method to be used. "harmony by default.
+#' 			- methodSettings: List with the method as key and:
+#' 				- numGenes: Numeric. Number of gene to be used.
+#' 				- normalisation: String. Normalisation method to be used.
+#' 		- dimensionalityReduction
+#' 			- method: String. Method to be used. "rpca" by default.
+#' 			- numPCs: Numeric. Number of principal components.
+#' 			- excludeGeneCategories: List. Categories of genes to be excluded.
+#' @return a list with the integrated seurat object, the cell ids, the config and the plot values.
+#' @export
+#'
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", use_geosketch = FALSE, perc_num_cells = 5) {
   # get the method and redirect to the new temporary function until we refactor all the methods
   method <- config$dataIntegration$method

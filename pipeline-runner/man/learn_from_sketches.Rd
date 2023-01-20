@@ -4,13 +4,7 @@
 \alias{learn_from_sketches}
 \title{Learn integration transformation from sketches}
 \usage{
-learn_from_sketches(
-  scdata,
-  scdata_sketch,
-  scdata_sketch_integrated,
-  method,
-  npcs
-)
+learn_from_sketches(scdata, scdata_sketch, scdata_sketch_integrated, npcs)
 }
 \arguments{
 \item{scdata}{Seurat object}
@@ -19,9 +13,9 @@ learn_from_sketches(
 
 \item{scdata_sketch_integrated}{Sketched integrated Seurat object}
 
-\item{method}{Reduction method}
-
 \item{npcs}{Number of PCs}
+
+\item{method}{Reduction method}
 }
 \value{
 Integrated Seurat object with original number of cells
