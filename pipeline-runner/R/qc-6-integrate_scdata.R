@@ -24,8 +24,7 @@
 temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
 
   # get method and settings
-  method <- "seuratv4"
-  # method <- config$dataIntegration$method
+  method <- config$dataIntegration$method
   settings <- config$dataIntegration$methodSettings[[method]]
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
@@ -104,8 +103,7 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
 
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", use_geosketch = FALSE, perc_num_cells = 5) {
   # get the method and redirect to the new temporary function until we refactor all the methods
-  method <- "seuratv4"
-  # method <- config$dataIntegration$method
+  method <- config$dataIntegration$method
   if (method == "seuratv4") {
     result <- temp_integrate_scdata(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration")
     return(result)
