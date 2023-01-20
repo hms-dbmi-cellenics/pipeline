@@ -109,7 +109,7 @@ seuratv4_find_and_integrate_anchors <-
     # running LogNormalization on SCTransformed data for downstream analyses
     if (normalization == "SCT") {
       Seurat::DefaultAssay(scdata) <- "RNA"
-      scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
+      scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
     }
 
     if ("integrated" %in% names(scdata@assays)) {
