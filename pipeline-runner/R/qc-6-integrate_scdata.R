@@ -196,10 +196,10 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 #' @return SeuratObject
 #' @export
 #'
-create_scdata <- function(scdata_list, cells_id) {
+create_scdata <- function(scdata_list, cells_id, merge_data = FALSE) {
   message("Started create_scdata")
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
-  merged_scdatas <- merge_scdata_list(scdata_list)
+  merged_scdatas <- merge_scdata_list(scdata_list, merge_data)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
   message("Finished create_scdata")
 
@@ -235,11 +235,11 @@ remove_filtered_cells <- function(scdata_list, cells_id) {
 #' @return SeuratObject
 #' @export
 #'
-merge_scdata_list <- function(scdata_list) {
+merge_scdata_list <- function(scdata_list, merge_data = FALSE) {
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
-    scdata <- merge(scdata_list[[1]], y = scdata_list[-1], merge.data = TRUE)
+    scdata <- merge(scdata_list[[1]], y = scdata_list[-1], merge.data = merge_data)
   }
 
   return(scdata)

@@ -142,7 +142,7 @@ seuratv4_find_and_integrate_anchors <-
       message(
         "Merging data because integration was skipped due to one/many samples containing too few cells"
       )
-      scdata <- create_scdata(scdata_list, cells_id)
+      scdata <- create_scdata(scdata_list, cells_id, merge_data = TRUE)
     }
 
     # running LogNormalization on SCTransformed data for downstream analyses
@@ -206,7 +206,7 @@ integrate_using_geosketch <-
            use_geosketch) {
     message("Percentage of cells to keep: ", perc_num_cells)
     # merge
-    scdata <- create_scdata(scdata_list, cells_id)
+    scdata <- create_scdata(scdata_list, cells_id, merge_data = TRUE)
     # geosketch needs PCA to be run
     scdata <- run_pca(scdata)
     # geoesketch
