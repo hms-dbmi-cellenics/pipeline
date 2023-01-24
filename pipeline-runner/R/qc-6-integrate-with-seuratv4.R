@@ -1,4 +1,4 @@
-run_seuratv4 <- function(scdata_list, exclude_groups, use_geosketch, npcs,
+run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, npcs,
                          nfeatures, normalization, reduction, perc_num_cells) {
   # @misc slots not preserved so transfer. Mics slots are the same for each sample
   misc <- scdata_list[[1]]@misc
@@ -40,9 +40,9 @@ run_seuratv4 <- function(scdata_list, exclude_groups, use_geosketch, npcs,
 
   if (!use_geosketch) {
     # if not using geosketch, just integrate
-    scdata <- seuratv4_find_and_integrate_anchors(scdata_list, reduction, normalization, npcs, misc, nfeatures)
+    scdata <- seuratv4_find_and_integrate_anchors(scdata_list, cells_id, reduction, normalization, npcs, misc, nfeatures)
   } else {
-    scdata <- integrate_using_geosketch(scdata_list, reduction, perc_num_cells, cells_id, normalization, npcs, misc, nfeatures, use_geosketch)
+    scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, misc, nfeatures, use_geosketch)
   }
 
   return(scdata)
@@ -51,7 +51,7 @@ run_seuratv4 <- function(scdata_list, exclude_groups, use_geosketch, npcs,
 
 
 seuratv4_find_and_integrate_anchors <-
-  function(data_split,
+  function(data_split, cells_id,
            reduction,
            normalization,
            npcs,
@@ -138,9 +138,9 @@ seuratv4_find_and_integrate_anchors <-
 
 integrate_using_geosketch <-
   function(scdata_list,
+           cells_id,
            reduction,
            perc_num_cells,
-           cells_id,
            normalization,
            npcs,
            misc,
@@ -161,7 +161,7 @@ integrate_using_geosketch <-
     # split and integrate sketches
     scdata_sketch_split <- Seurat::SplitObject(scdata_sketch, split.by = "samples")
     scdata_sketch_integrated <- seuratv4_find_and_integrate_anchors(
-      scdata_sketch_split,
+      scdata_sketch_split, cells_id,
       reduction, normalization,
       npcs, misc, nfeatures, scdata, use_geosketch
     )

@@ -66,7 +66,7 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
   integration_function <- get(paste0("run_", method))
 
   scdata_integrated <- integration_function(
-    scdata_list, exclude_groups, use_geosketch,
+    scdata_list, cells_id, exclude_groups, use_geosketch,
     npcs, nfeatures, normalization, reduction, perc_num_cells
   )
 
