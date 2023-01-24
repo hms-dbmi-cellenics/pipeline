@@ -128,7 +128,7 @@ test_that("SeuratV4 integration works", {
   )
 
   integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
-  expect_s4_class(merged_scdata, "Seurat")
+  expect_s4_class(integrated_scdata, "Seurat")
 })
 
 
