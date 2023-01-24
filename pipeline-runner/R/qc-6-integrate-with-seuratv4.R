@@ -1,3 +1,25 @@
+#' Run Seurat v4 integration
+#'
+#' Integrates two or more samples using the Seurat v4 workflow.
+#' It takes into account two different normaization methods: LogNormalize and SCTransform.
+#' This function can also be used in combination with Geosketch. In this case,
+#' the samples are first merged, then the whole dataset is downsampled using geometric sketching,
+#' and the sketches are integrated. The integrated sketches are then used to learn
+#'the integration transformation and apply it to the whole dataset.
+#'
+#' @param scdata_list list of SeuratObjects
+#' @param cells_id list of cells ids to keep
+#' @param exclude_groups list of groups to exclude
+#' @param use_geosketch boolean indicating if geosketch has to be run
+#' @param npcs number of principal components
+#' @param nfeatures number of features
+#' @param normalization normalization method
+#' @param reduction reduction method
+#' @param perc_num_cells percentage of cells to keep when using geosketch
+#'
+#' @return normalized and integrated Seurat object
+#' @export
+#'
 run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, npcs,
                          nfeatures, normalization, reduction, perc_num_cells) {
   # @misc slots not preserved so transfer. Mics slots are the same for each sample
@@ -50,8 +72,25 @@ run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, n
 
 
 
+#' Find and integrate anchors
+#'
+#' This function find and integrate anchors according to the Seurat v4 workflow.
+#'
+#' @param cells_id list of cells ids to keep
+#' @param reduction reduction method
+#' @param normalization normalization method
+#' @param npcs numer of principal components
+#' @param misc misc slot from the Seurat object
+#' @param nfeatures number of features
+#' @param scdata merged Seurat object
+#' @param use_geosketch boolean indicating if geosketch has to be run
+#' @param scdata_list list of Seurat objects
+#'
+#' @return integrated Seurat object
+#' @export
+#'
 seuratv4_find_and_integrate_anchors <-
-  function(data_split, cells_id,
+  function(scdata_list, cells_id,
            reduction,
            normalization,
            npcs,
@@ -59,16 +98,16 @@ seuratv4_find_and_integrate_anchors <-
            nfeatures,
            scdata = NA,
            use_geosketch = FALSE) {
-    k.filter <- min(ceiling(sapply(data_split, ncol) / 2), 200)
+    k.filter <- min(ceiling(sapply(scdata_list, ncol) / 2), 200)
     tryCatch(
       {
         if (normalization == "SCT") {
           data_anchors <-
-            prepare_sct_integration(data_split, reduction, normalization, k.filter, npcs)
+            prepare_sct_integration(scdata_list, reduction, normalization, k.filter, npcs)
         }
         if (normalization == "LogNormalize") {
           data_anchors <- Seurat::FindIntegrationAnchors(
-            object.list = data_split,
+            object.list = scdata_list,
             dims = 1:npcs,
             k.filter = k.filter,
             normalization.method = normalization,
@@ -90,7 +129,7 @@ seuratv4_find_and_integrate_anchors <-
         print(paste("current k.filter:", k.filter))
         # Should we still continue if data is not integrated? No, right now..
         print("Current number of cells per sample: ")
-        print(sapply(data_split, ncol))
+        print(sapply(scdata_list, ncol))
         warning(
           "Error thrown in IntegrateData: Probably one/many of the samples contain too few cells.\nRule of thumb is that this can happen at around < 100 cells."
         )
@@ -103,7 +142,7 @@ seuratv4_find_and_integrate_anchors <-
       message(
         "Merging data because integration was skipped due to one/many samples containing too few cells"
       )
-      scdata <- create_scdata(data_split, cells_id)
+      scdata <- create_scdata(scdata_list, cells_id)
     }
 
     # running LogNormalization on SCTransformed data for downstream analyses
@@ -136,6 +175,25 @@ seuratv4_find_and_integrate_anchors <-
   }
 
 
+#' Downsample and integrate sketches
+#'
+#' This function uses Geosketch to downsample the dataset, integrates the resulting
+#' sketches using the Seurat v4 workflow, then learns
+#' the integration transformation and applies it to the whole dataset.
+#'
+#' @param scdata_list list of Seurat objects
+#' @param cells_id list of cells ids to keep
+#' @param reduction reduction method
+#' @param perc_num_cells percentage of cells to keep when using geosketch
+#' @param normalization normalization method
+#' @param npcs number of princpal components
+#' @param misc misc slot from the Seurat object
+#' @param nfeatures number of features
+#' @param use_geosketch boolean indicating if geosketch has to be run
+#'
+#' @return integrated Seurat object
+#' @export
+#'
 integrate_using_geosketch <-
   function(scdata_list,
            cells_id,
