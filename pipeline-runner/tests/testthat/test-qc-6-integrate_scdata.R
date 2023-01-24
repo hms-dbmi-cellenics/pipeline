@@ -359,7 +359,6 @@ test_that("integrate_scdata run geosketch if use_geosketch is TRUE", {
     downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 5)))
   )
 
-  # integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", use_geosketch = TRUE, perc_num_cells = 50))$data
   integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_true(integrated_scdata@misc$geosketch)
 })
