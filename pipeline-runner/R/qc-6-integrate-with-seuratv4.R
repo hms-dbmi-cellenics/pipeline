@@ -101,7 +101,7 @@ seuratv4_find_and_integrate_anchors <-
 
     if (use_geosketch == FALSE && class(scdata) != "Seurat") {
       message(
-        "Merging data because integration was skipped due tue one/many samples containing too few cells"
+        "Merging data because integration was skipped due to one/many samples containing too few cells"
       )
       scdata <- create_scdata(data_split, cells_id)
     }
