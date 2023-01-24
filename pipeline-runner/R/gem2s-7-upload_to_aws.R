@@ -146,7 +146,7 @@ build_sample_cellsets <- function(input, scdata_list, color_pool) {
       key = sample_ids[i],
       name = sample_names[i],
       color = color_pool[i],
-      cellIds = unname(cell_ids)
+      cellIds = ensure_is_list_in_json(unname(cell_ids))
     )
   }
 
@@ -375,7 +375,7 @@ build_scratchpad_cellsets <- function(color_pool, subset_cellsets) {
       key = scratchpad_ids[i],
       name = scratchpad_names[i],
       color = color_pool[i],
-      cellIds = subset_cellsets[key == scratchpad_ids[i], cell_id]
+      cellIds =  ensure_is_list_in_json(subset_cellsets[key == scratchpad_ids[i], cell_id])
     )
   }
 

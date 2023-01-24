@@ -49,6 +49,26 @@ embed_and_cluster <-
     return(result)
   }
 
+#' Ensure is list in json
+#'
+#' When sending responses as json, Vectors of length 0 or 1 are converted to
+#' null and scalar (respectively) Using as.list fixes this, however, long R
+#' lists take a VERY long time to be converted to JSON.
+#' This function deals with the problematic cases, leaving vector as a vector
+#' when it isnt a problem.
+#'
+#' @param vector
+#'
+#' @export
+#'
+ensure_is_list_in_json <- function(vector) {
+  if (length(vector) <= 1) {
+    return(as.list(vector))
+  } else {
+    return(vector)
+  }
+}
+
 format_cell_sets_object <-
   function(cell_sets, clustering_method, color_pool) {
     name <- paste0(clustering_method, " clusters")
@@ -70,7 +90,7 @@ format_cell_sets_object <-
         rootNode = FALSE,
         type = "cellSets",
         color = color_pool[1],
-        cellIds = unname(cells)
+        cellIds = ensure_is_list_in_json(unname(cells))
       )
       color_pool <- color_pool[-1]
       cell_sets_object$children <-
