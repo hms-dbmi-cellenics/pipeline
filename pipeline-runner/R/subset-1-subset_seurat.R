@@ -1,3 +1,5 @@
+library(uuid)
+
 #' create a subset experiment
 #'
 #' This is the first step of a subset pipeline, which basically takes the parent
