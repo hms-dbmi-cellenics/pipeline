@@ -47,7 +47,6 @@ run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, n
       message("Started normalization using SCTransform")
       # conserve.memory parameter reduces the memory footprint but can significantly increase runtime
       scdata_list[[i]] <- Seurat::SCTransform(scdata_list[[i]], vst.flavor = "v2", conserve.memory = FALSE)
-      message("Finished normalization using SCTransform")
     }
 
     # PCA needs to be run also here
@@ -231,7 +230,6 @@ integrate_using_geosketch <-
       scdata_sketch_integrated,
       npcs
     )
-    message("Finished learning from sketches")
 
     return(scdata)
   }

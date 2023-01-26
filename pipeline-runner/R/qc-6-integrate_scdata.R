@@ -142,7 +142,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   scdata_list <- order_by_size(scdata_list)
   message("Started create_scdata")
   scdata <- create_scdata(scdata_list, cells_id)
-  message("Finished create_scdata")
 
   # main function
   set.seed(RANDOM_SEED)
@@ -157,7 +156,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 
   message("Started data integration")
   scdata_integrated <- run_dataIntegration(scdata, scdata_sketch, config)
-  message("Finished data integration")
 
   # get  npcs from the UMAP call in integration functions
   npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
@@ -201,7 +199,6 @@ create_scdata <- function(scdata_list, cells_id, merge_data = FALSE) {
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list, merge_data)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
-  message("Finished create_scdata")
 
   return(merged_scdatas)
 }
@@ -779,7 +776,6 @@ integrate_from_sketch <- function(scdata, scdata_sketch, integration_function, c
     scdata_sketch_integrated,
     npcs
   )
-  message("Finished learning from sketches")
 
   return(scdata)
 }
