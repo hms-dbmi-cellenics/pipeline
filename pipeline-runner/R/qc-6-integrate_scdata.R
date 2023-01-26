@@ -731,24 +731,6 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
 }
 
 
-#' Run PCA
-#'
-#' Performs FindVariableFeatures and ScaleData, which are two required steps
-#' before RunPCA
-#'
-#' @param scdata Seurat object
-#'
-#' @return Seurat object with PCA slot
-#' @export
-#'
-run_pca <- function(scdata) {
-  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
-  scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
-  scdata@misc[["active.reduction"]] <- "pca"
-  return(scdata)
-}
-
 #' Integrate using sketch data
 #'
 #' This function takes the sketched data, integrates it and then transfers the

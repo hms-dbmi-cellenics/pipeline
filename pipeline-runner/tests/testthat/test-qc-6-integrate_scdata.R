@@ -373,7 +373,11 @@ test_that("run_geosketch generates the correct number of sketches", {
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
 
-  merged_scdata <- run_pca(merged_scdata)
+  merged_scdata <- merged_scdata |>
+    Seurat::FindVariableFeatures(assay = "RNA", nfeatures = 2000, verbose = FALSE) |>
+    Seurat::ScaleData(verbose = FALSE) |>
+    Seurat::RunPCA(verbose = FALSE)
+  merged_scdata@misc[["active.reduction"]] <- "pca"
 
   perc_num_cells <- 5
   num_cells <- round(ncol(merged_scdata) * perc_num_cells / 100)
@@ -405,7 +409,11 @@ test_that("integrate_from_sketch correctly integrates sketches", {
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
 
-  merged_scdata <- run_pca(merged_scdata)
+  merged_scdata <- merged_scdata |>
+    Seurat::FindVariableFeatures(assay = "RNA", nfeatures = 2000, verbose = FALSE) |>
+    Seurat::ScaleData(verbose = FALSE) |>
+    Seurat::RunPCA(verbose = FALSE)
+  merged_scdata@misc[["active.reduction"]] <- "pca"
 
   perc_num_cells <- 90
   num_cells <- round(ncol(merged_scdata) * perc_num_cells / 100)
