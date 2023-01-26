@@ -5,7 +5,7 @@
 #' This function can also be used in combination with Geosketch. In this case,
 #' the samples are first merged, then the whole dataset is downsampled using geometric sketching,
 #' and the sketches are integrated. The integrated sketches are then used to learn
-#'the integration transformation and apply it to the whole dataset.
+#' the integration transformation and apply it to the whole dataset.
 #'
 #' @param scdata_list list of SeuratObjects
 #' @param cells_id list of cells ids to keep
@@ -42,12 +42,12 @@ run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, n
         Seurat::NormalizeData(assay = "RNA", normalization.method = normalization, verbose = FALSE) |>
         Seurat::FindVariableFeatures(assay = "RNA", nfeatures = nfeatures, verbose = FALSE) |>
         Seurat::ScaleData(verbose = FALSE)
-    }
-
-    if (normalization == "SCT") {
+    } else if (normalization == "SCT") {
       message("Started normalization using SCTransform")
       # conserve.memory parameter reduces the memory footprint but can significantly increase runtime
       scdata_list[[i]] <- Seurat::SCTransform(scdata_list[[i]], vst.flavor = "v2", conserve.memory = FALSE)
+    } else {
+      stop("No normalization method provided")
     }
 
     # PCA needs to be run also here
@@ -55,15 +55,17 @@ run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, n
     if (reduction == "rpca") {
       message("Running PCA")
       scdata_list[[i]] <- Seurat::RunPCA(scdata_list[[i]], verbose = FALSE, npcs = npcs)
-    } else {
+    } else if (reduction == "cca") {
       message("PCA is not running before integration as CCA method is selected")
+    } else {
+      stop("No reduction method provided")
     }
   }
 
   if (!use_geosketch) {
     # if not using geosketch, just integrate
     scdata <- seuratv4_find_and_integrate_anchors(scdata_list, cells_id, reduction, normalization, npcs, misc, nfeatures)
-  } else {
+  } else if (use_geosketch) {
     scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, misc, nfeatures, use_geosketch)
   }
 
@@ -104,8 +106,7 @@ seuratv4_find_and_integrate_anchors <-
         if (normalization == "SCT") {
           data_anchors <-
             prepare_sct_integration(scdata_list, reduction, normalization, k.filter, npcs)
-        }
-        if (normalization == "LogNormalize") {
+        } else if (normalization == "LogNormalize") {
           data_anchors <- Seurat::FindIntegrationAnchors(
             object.list = scdata_list,
             dims = 1:npcs,
