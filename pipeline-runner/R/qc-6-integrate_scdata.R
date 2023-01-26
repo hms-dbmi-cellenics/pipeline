@@ -59,7 +59,7 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
 
   nsamples <- length(scdata_list)
   if (nsamples == 1) {
-    method <- "unisample"
+    method <- UNISAMPLE
     message("Only one sample detected or method is non integrate.")
   }
 
@@ -258,7 +258,7 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
 
   nsamples <- length(unique(scdata$samples))
   if (nsamples == 1) {
-    method <- "unisample"
+    method <- UNISAMPLE
     message("Only one sample detected or method is non integrate.")
   }
 
@@ -369,7 +369,7 @@ run_fastmnn <- function(scdata, config, npcs) {
 }
 
 run_unisample <- function(scdata, config, npcs) {
-  settings <- config$dataIntegration$methodSettings[["unisample"]]
+  settings <- config$dataIntegration$methodSettings[[UNISAMPLE]]
 
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
@@ -378,7 +378,7 @@ run_unisample <- function(scdata, config, npcs) {
   if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
 
   # in unisample we only need to normalize
-  scdata <- log_normalize(scdata, normalization, "unisample", nfeatures)
+  scdata <- log_normalize(scdata, normalization, UNISAMPLE, nfeatures)
   scdata <- add_dispersions(scdata, normalization)
   scdata@misc[["active.reduction"]] <- "pca"
 

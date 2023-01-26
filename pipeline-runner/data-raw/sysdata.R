@@ -82,6 +82,8 @@ IDS_IDS <- "ids_ids"
 
 pipeline_version <- 2
 
+UNISAMPLE <- "unisample"
+
 usethis::use_data(
   debug_timestamp,
   bucket_list,
