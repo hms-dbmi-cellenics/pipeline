@@ -38,9 +38,10 @@ run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, n
     }
 
     if (normalization == "LogNormalize") {
-      scdata_list[[i]] <- Seurat::NormalizeData(scdata_list[[i]], assay = "RNA", normalization.method = normalization, verbose = FALSE)
-      scdata_list[[i]] <- Seurat::FindVariableFeatures(scdata_list[[i]], assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
-      scdata_list[[i]] <- Seurat::ScaleData(scdata_list[[i]], verbose = FALSE)
+      scdata_list[[i]] <- scdata_list[[i]] |>
+        Seurat::NormalizeData(assay = "RNA", normalization.method = normalization, verbose = FALSE) |>
+        Seurat::FindVariableFeatures(assay = "RNA", nfeatures = nfeatures, verbose = FALSE) |>
+        Seurat::ScaleData(verbose = FALSE)
     }
 
     if (normalization == "SCT") {
