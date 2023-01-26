@@ -4,7 +4,7 @@
 \alias{merge_scdata_list}
 \title{Merge the list of sample Seurat objects}
 \usage{
-merge_scdata_list(scdata_list)
+merge_scdata_list(scdata_list, merge_data = FALSE)
 }
 \arguments{
 \item{scdata_list}{list of SeuratObjects}
