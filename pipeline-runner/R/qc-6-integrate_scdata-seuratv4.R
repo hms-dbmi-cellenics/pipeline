@@ -126,16 +126,16 @@ seuratv4_find_and_integrate_anchors <-
       error = function(e) {
         # Specifying error message
         # ideally this should be passed to the UI as a error message:
-        message(e)
-        message("current k.filter:", k.filter)
+        print(e)
+        print(paste("current k.filter:", k.filter))
         # Should we still continue if data is not integrated? No, right now..
-        message("Current number of cells per sample: ")
-        message(sapply(scdata_list, ncol))
+        print("Current number of cells per sample: ")
+        print(sapply(scdata_list, ncol))
         warning(
           "Error thrown in IntegrateData: Probably one/many of the samples contain too few cells.\nRule of thumb is that this can happen at around < 100 cells."
         )
         # An ideal solution would be to launch an error to the UI, however, for now, we will skip the integration method.
-        message("Skipping integration step")
+        print("Skipping integration step")
       }
     )
 
