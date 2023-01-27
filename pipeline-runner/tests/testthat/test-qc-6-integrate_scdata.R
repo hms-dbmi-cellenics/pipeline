@@ -165,7 +165,7 @@ test_that("Unisample integration works", {
   merged_scdata <- create_scdata(scdata_list, cells_id)
   config <- list(
     dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = "unisample", methodSettings = list(unisample = list(numGenes = 1000, normalisation = "logNormalize")))
+    dataIntegration = list(method = UNISAMPLE, methodSettings = list(unisample = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
   integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
