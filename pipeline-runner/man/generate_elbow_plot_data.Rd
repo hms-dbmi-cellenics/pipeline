@@ -4,12 +4,10 @@
 \alias{generate_elbow_plot_data}
 \title{generate elbow plot data}
 \usage{
-generate_elbow_plot_data(scdata_integrated, config, task_name, var_explained)
+generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
 }
 \arguments{
 \item{scdata_integrated}{integrated seurat object}
-
-\item{config}{list}
 
 \item{task_name}{character}
 
