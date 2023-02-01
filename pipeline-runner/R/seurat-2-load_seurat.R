@@ -106,9 +106,14 @@ reconstruct_seurat <- function(dataset_fpath) {
 
 
   # add default dimensionality reduction
+  # TODO: consider storing resolution, clustering metric, and distance metric
+  # for trajectory analysis
   tryCatch({
+    names(user_scdata@reductions) <- tolower(names(user_scdata@reductions))
     red_name <- SeuratObject::DefaultDimReduc(user_scdata)
     check_type_is_safe(red_name)
+    stopifnot(red_name %in% c('umap', 'tsne'))
+
     embedding <- user_scdata@reductions[[red_name]]@cell.embeddings
     test_user_df(embedding)
     red <- SeuratObject::CreateDimReducObject(
@@ -122,7 +127,7 @@ reconstruct_seurat <- function(dataset_fpath) {
     stop(errors$ERROR_SEURAT_REDUCTION, call. = FALSE)
   })
 
-  # add pca dimensionality reduction
+  # add pca dimensionality reduction (need for trajectory analysis)
   tryCatch({
     pca <- user_scdata@reductions[['pca']]@cell.embeddings
     test_user_df(pca)
