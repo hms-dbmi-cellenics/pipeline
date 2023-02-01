@@ -87,7 +87,7 @@ generate_default_values_doubletScores <- function(scdata) {
   # default doublet score based of scDblFinder classification
   is_singlet <- scdata$doublet_class == "singlet"
   if (all(is_singlet == FALSE)) {
-    threshold <- 1.0
+    threshold <- 0
   } else {
     threshold <- max(scdata$doublet_scores[is_singlet], na.rm = TRUE)
   }
