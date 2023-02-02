@@ -83,13 +83,16 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
   return(result)
 }
 
+# default doublet score based of scDblFinder classification
 generate_default_values_doubletScores <- function(scdata) {
-  # default doublet score based of scDblFinder classification
   is_singlet <- scdata$doublet_class == "singlet"
-  threshold <- max(scdata$doublet_scores[is_singlet], na.rm = TRUE)
-  print("thresholdDebug")
-  print(threshold)
-  if(grepl("- Infinity", threshold, ignore.case = TRUE)) threshold <- 0
+
+  # If no singlets, set theshold to 0
+  if (all(is_singlet == FALSE)) {
+    threshold <- 0.0
+  } else {
+    threshold <- max(scdata$doublet_scores[is_singlet], na.rm = TRUE)
+  }
 
   return(threshold)
 }
