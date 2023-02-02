@@ -87,6 +87,8 @@ generate_default_values_doubletScores <- function(scdata) {
   # default doublet score based of scDblFinder classification
   is_singlet <- scdata$doublet_class == "singlet"
   threshold <- max(scdata$doublet_scores[is_singlet], na.rm = TRUE)
+  print("thresholdDebug")
+  print(threshold)
   if(grepl("- Infinity", threshold, ignore.case = TRUE)) threshold <- 0
 
   return(threshold)
