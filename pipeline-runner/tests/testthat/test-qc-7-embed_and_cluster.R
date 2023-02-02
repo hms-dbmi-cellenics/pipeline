@@ -129,7 +129,7 @@ with_fake_http(
  test_that("update_sets_through_api diables SSL certificate checking if disabled", {
 
     # Setting sys env to disable SSL peer verification
-    Sys.setenv('IGNORE_SSL_CERTIFICATE', 'true')
+    Sys.setenv(IGNORE_SSL_CERTIFICATE="true")
 
     expect_PATCH(
       update_sets_through_api(list(), "api_url", "experiment_id", "cell_set_key", "auth")
@@ -139,7 +139,7 @@ with_fake_http(
     old_config <- httr::set_config(httr::config(ssl_verifyhost = 0L))
     expect_equal(old_config$options$ssl_verifypeer, 0)
 
-    Sys.setenv('IGNORE_SSL_CERTIFICATE', 'false')
+    Sys.setenv(IGNORE_SSL_CERTIFICATE="false")
 
   })
 )
