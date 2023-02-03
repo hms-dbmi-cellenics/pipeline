@@ -158,12 +158,13 @@ get_sample_mitochondrial_config <- function(scdata_list.sample, config) {
 
 
 # threshold for doublet score is the max score given to a singlet (above score => doublets)
-get_dblscore_config <- function(scdata_list, config) {  
+get_dblscore_config <- function(scdata_list, config) {
   # If no singlets, set theshold to 0
+  is_singlet <- scdata_list$doublet_class == "singlet"
   if (all(is_singlet == FALSE)) {
     probabilityThreshold <- 0.0
   } else {
-    probabilityThreshold <- max(scdata_list$doublet_scores[scdata_list$doublet_class == "singlet"], na.rm = TRUE)
+    probabilityThreshold <- max(scdata_list$doublet_scores[is_singlet], na.rm = TRUE)
   }
 
   config$filterSettings$probabilityThreshold <- probabilityThreshold
