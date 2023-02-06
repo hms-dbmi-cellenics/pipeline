@@ -162,11 +162,7 @@ get_dblscore_config <- function(scdata_list, config) {
   # if no singlets, set threshold to 0
   # this is required to prevent the threshold to be "-Inf" when there are no singlets left causing subset experiment to fail
   is_singlet <- scdata_list$doublet_class == "singlet"
-  if (all(is_singlet == FALSE)) {
-    probabilityThreshold <- 0.0
-  } else {
-    probabilityThreshold <- max(scdata_list$doublet_scores[is_singlet], na.rm = TRUE)
-  }
+  probabilityThreshold <- max(scdata_list$doublet_scores[is_singlet], 0.0, na.rm = TRUE)
 
   config$filterSettings$probabilityThreshold <- probabilityThreshold
 
