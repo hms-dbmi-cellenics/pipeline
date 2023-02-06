@@ -87,7 +87,8 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
 generate_default_values_doubletScores <- function(scdata) {
   is_singlet <- scdata$doublet_class == "singlet"
 
-  # If no singlets, set theshold to 0
+  # If no singlets, set threshold to 0
+  # This is required to prevent the threshold to be "-Inf" when there are no singlets left causing subset experiment to fail
   if (all(is_singlet == FALSE)) {
     threshold <- 0.0
   } else {
