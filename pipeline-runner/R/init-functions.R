@@ -108,6 +108,7 @@ load_config <- function(development_aws_server) {
 
   if (config$cluster_env == "development") {
     config$api_url <- sprintf("http://%s:3000", development_aws_server)
+    config$public_api_url <- config$api_url
     # DOCKER_GATEWAY_HOST
     config$aws_config[["endpoint"]] <- sprintf(
       "http://%s:4566",
