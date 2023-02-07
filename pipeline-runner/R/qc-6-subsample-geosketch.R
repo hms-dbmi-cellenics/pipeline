@@ -34,7 +34,6 @@ run_geosketch <- function(scdata, dims, perc_num_cells) {
 }
 
 
-#'
 #' Learn integration transformation from sketches
 #'
 #' Uses the integrated sketches to learn the integration transformation and

@@ -8,21 +8,12 @@
 #' the integration transformation and apply it to the whole dataset.
 #'
 #' @param scdata_list list of SeuratObjects
-#' @param cells_id list of cells ids to keep
-#' @param exclude_groups list of groups to exclude
-#' @param use_geosketch boolean indicating if geosketch has to be run
-#' @param npcs number of principal components
-#' @param nfeatures number of features
-#' @param normalization normalization method
-#' @param reduction reduction method
-#' @param perc_num_cells percentage of cells to keep when using geosketch
+#' @param config list of configuration parameters
 #'
 #' @return normalized and integrated Seurat object
 #' @export
 #'
 run_seuratv4 <- function(scdata_list, config) {
-  # misc slot not preserved so transfer. Mics slots are the same for each sample
-  misc <- scdata_list[[1]]@misc
 
   settings <- config$dataIntegration$methodSettings[["seuratv4"]]
   nfeatures <- settings$numGenes
@@ -36,10 +27,13 @@ run_seuratv4 <- function(scdata_list, config) {
 
   use_geosketch <- "downsampling" %in% names(config) && config$downsampling$method == "geosketch"
 
-  # calculate as many PCs for the PCA as possible, ideally 50, unless few cells
-  npcs_for_pca <- min(vapply(scdata_list, ncol, integer(1)) - 1, 50)
-  # use the min of what the user wants and what can be calculated
-  npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
+  npcs <- config$dimensionalityReduction$numPCs
+  if (is.null(npcs)) {
+    npcs <- 30
+  }
+
+  # reduce nPCs if low cell numbers
+  npcs <- min(vapply(scdata_list, ncol, integer(1)) - 1, npcs)
 
   scdata_list <- order_by_size(scdata_list)
 
@@ -86,8 +80,7 @@ run_seuratv4 <- function(scdata_list, config) {
     scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, misc, nfeatures, use_geosketch)
   }
 
-  }
-  scdata@misc <- misc
+  scdata <- add_metadata(scdata, scdata_list)
   scdata@misc[["numPCs"]] <- npcs
   return(scdata)
 }
@@ -190,7 +183,6 @@ seuratv4_find_and_integrate_anchors <-
         features = Seurat::VariableFeatures(object = scdata),
         verbose = FALSE
       )
-
     scdata@misc[["active.reduction"]] <- "pca"
 
     return(scdata)
@@ -237,23 +229,23 @@ integrate_using_geosketch <-
     scdata@misc[["active.reduction"]] <- "pca"
     # geoesketch
     set.seed(RANDOM_SEED)
-    c(scdata, scdata_sketch) %<-% run_geosketch(
+    geosketch_list <- run_geosketch(
       scdata = scdata,
       dims = 50,
       perc_num_cells = perc_num_cells
     )
     # split and integrate sketches
-    scdata_sketch_split <- Seurat::SplitObject(scdata_sketch, split.by = "samples")
+    scdata_sketch_split <- Seurat::SplitObject(geosketch_list$scdata_sketch, split.by = "samples")
     scdata_sketch_integrated <- seuratv4_find_and_integrate_anchors(
       scdata_sketch_split, cells_id,
       reduction, normalization,
-      npcs, misc, nfeatures, scdata, use_geosketch
+      npcs, misc, nfeatures, geosketch_list$scdata, use_geosketch
     )
     # learn from sketches
     message("Learning from sketches")
     scdata <- learn_from_sketches(
-      scdata,
-      scdata_sketch,
+      geosketch_list$scdata,
+      geosketch_list$scdata_sketch,
       scdata_sketch_integrated,
       npcs
     )
