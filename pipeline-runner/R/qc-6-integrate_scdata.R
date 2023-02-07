@@ -91,6 +91,7 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
   scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
 
   scdata_integrated <- colorObject(scdata_integrated)
+  scdata_integrated <- add_metadata(scdata_integrated, scdata_list)
 
   plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
 
