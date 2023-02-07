@@ -67,9 +67,6 @@ run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, n
     scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, nfeatures, use_geosketch)
   }
 
-  scdata <- add_metadata(scdata, scdata_list)
-  scdata@misc[["active.reduction"]] <- "pca"
-
   return(scdata)
 }
 
@@ -167,6 +164,8 @@ seuratv4_find_and_integrate_anchors <-
         features = Seurat::VariableFeatures(object = scdata),
         verbose = FALSE
       )
+    scdata <- add_metadata(scdata, scdata_list)
+    scdata@misc[["active.reduction"]] <- "pca"
 
     return(scdata)
   }
