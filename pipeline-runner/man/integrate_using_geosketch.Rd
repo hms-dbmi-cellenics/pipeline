@@ -11,7 +11,6 @@ integrate_using_geosketch(
   perc_num_cells,
   normalization,
   npcs,
-  misc,
   nfeatures,
   use_geosketch
 )
@@ -28,8 +27,6 @@ integrate_using_geosketch(
 \item{normalization}{normalization method}
 
 \item{npcs}{number of princpal components}
-
-\item{misc}{misc slot from the Seurat object}
 
 \item{nfeatures}{number of features}
 

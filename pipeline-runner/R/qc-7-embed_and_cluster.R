@@ -25,6 +25,7 @@ embed_and_cluster <-
     cellSets <-
       runClusters(clustering_method, methodSettings$resolution, scdata)
     message("formatting cellsets")
+
     formated_cell_sets <-
       format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
     message("updating through api")
@@ -84,6 +85,7 @@ format_cell_sets_object <-
       )
     for (i in sort(unique(cell_sets$cluster))) {
       cells <- cell_sets[cell_sets$cluster == i, "cell_ids"]
+
       new_set <- list(
         key = paste0(clustering_method, "-", i),
         name = paste0("Cluster ", i),

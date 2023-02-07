@@ -78,7 +78,7 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
   } else {
     n.neighbors <- 30L
   }
-  scdata_integrated <- Seurat::RunUMAP(scdata_integrated, reduction = scdata_integrated@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE, n.neighbors = n.neighbors)
+  scdata_integrated <- Seurat::RunUMAP(scdata_integrated, dims = 1:npcs, verbose = FALSE, n.neighbors = n.neighbors)
 
   # get  npcs from the UMAP call in integration functions
   npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
