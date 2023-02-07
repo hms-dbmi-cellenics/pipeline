@@ -19,7 +19,7 @@ mock_scdata_list <- function() {
   # create an scdata_list with duplicated samples
   scdata_list <- list()
   for (sample_id in scdata$samples) {
-      scdata_list[[sample_id]] <- scdata
+    scdata_list[[sample_id]] <- scdata
   }
   return(scdata_list)
 }
@@ -72,5 +72,17 @@ test_that("all filters are disabled when disable_qc_filters = TRUE and classifie
     expect_false(qc_config$classifier[[sample]]$enabled)
     expect_false(qc_config$numGenesVsNumUmis[[sample]]$enabled)
     expect_false(qc_config$doubletScores[[sample]]$enabled)
+  }
+})
+
+
+test_that("get_dblscore_config sets threshold to 0 when there are no singlets", {
+  scdata_list <- mock_scdata_list()
+  qc_config <- construct_qc_config(scdata_list, any_filtered = TRUE, disable_qc_filters = TRUE)
+
+  for (sample in names(scdata_list)) {
+    scdata_list[[sample]]$doublet_class <- "doublet"
+    config <- get_dblscore_config(scdata_list[[sample]], qc_config)
+    expect_equal(config$filterSettings$probabilityThreshold, 0)
   }
 })

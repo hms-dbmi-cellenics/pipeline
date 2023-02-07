@@ -4,7 +4,7 @@
 \alias{create_scdata}
 \title{Create the merged Seurat object}
 \usage{
-create_scdata(scdata_list, cells_id)
+create_scdata(scdata_list, cells_id, merge_data = FALSE)
 }
 \arguments{
 \item{scdata_list}{list of SeuratObjects}

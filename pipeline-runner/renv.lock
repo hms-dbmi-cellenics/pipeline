@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.2.1",
+    "Version": "4.2.2",
     "Repositories": [
       {
         "Name": "BioCsoft",
@@ -27,9 +27,6 @@
         "URL": "https://cran.rstudio.com"
       }
     ]
-  },
-  "Bioconductor": {
-    "Version": "3.15"
   },
   "Packages": {
     "BH": {
@@ -359,10 +356,10 @@
     },
     "Matrix": {
       "Package": "Matrix",
-      "Version": "1.4-1",
+      "Version": "1.5-3",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "699c47c606293bdfbc9fd78a93c9c8fe",
+      "Hash": "4006dffe49958d2dd591c17e61e60591",
       "Requirements": [
         "lattice"
       ]
@@ -983,10 +980,10 @@
     },
     "cluster": {
       "Package": "cluster",
-      "Version": "2.1.3",
+      "Version": "2.1.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "c5f8447373ec2a0f593c694024e5b7ee",
+      "Hash": "5edbbabab6ce0bf7900a74fd4358628e",
       "Requirements": []
     },
     "codetools": {
@@ -1750,10 +1747,10 @@
     },
     "mgcv": {
       "Package": "mgcv",
-      "Version": "1.8-40",
+      "Version": "1.8-41",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "c6b2fdb18cf68ab613bd564363e1ba0d",
+      "Hash": "6b3904f13346742caa3e82dd0303d4ad",
       "Requirements": [
         "Matrix",
         "nlme"
@@ -1800,10 +1797,10 @@
     },
     "nlme": {
       "Package": "nlme",
-      "Version": "3.1-157",
+      "Version": "3.1-162",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "dbca60742be0c9eddc5205e5c7ca1f44",
+      "Hash": "0984ce8da8da9ead8643c5cbbb60f83e",
       "Requirements": [
         "lattice"
       ]
@@ -2178,10 +2175,10 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "0.15.5",
+      "Version": "0.16.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "6a38294e7d12f5d8e656b08c5bd8ae34",
+      "Hash": "c9e8442ab69bc21c9697ecf856c1e6c7",
       "Requirements": []
     },
     "reshape2": {
@@ -2363,15 +2360,15 @@
     },
     "scDblFinder": {
       "Package": "scDblFinder",
-      "Version": "1.11.3",
+      "Version": "1.13.5",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteRepo": "scDblFinder",
       "RemoteUsername": "plger",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "367b77d27d614c4a81fcb02cf13f9b9e8487e6a5",
-      "Hash": "aa0d0f66a5b31ec0709112c6217dbcfc",
+      "RemoteRepo": "scDblFinder",
+      "RemoteRef": "master",
+      "RemoteSha": "30bf4ada2471bd77637ad312d8e9aff1db3e55dd",
+      "Hash": "ea01d53534b63423e57ec7a5b1f2a5df",
       "Requirements": [
         "BiocGenerics",
         "BiocNeighbors",
@@ -2513,13 +2510,13 @@
     },
     "scuttle": {
       "Package": "scuttle",
-      "Version": "1.6.2",
+      "Version": "1.6.3",
       "Source": "Bioconductor",
       "git_url": "https://git.bioconductor.org/packages/scuttle",
       "git_branch": "RELEASE_3_15",
-      "git_last_commit": "afdfc55",
-      "git_last_commit_date": "2022-05-13",
-      "Hash": "47027fcc659e73ae827d4cebf54467e9",
+      "git_last_commit": "df23680",
+      "git_last_commit_date": "2022-08-23",
+      "Hash": "30e9a1169ef27c0bc373117773b15bec",
       "Requirements": [
         "BiocGenerics",
         "BiocParallel",

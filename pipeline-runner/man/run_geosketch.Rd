@@ -4,7 +4,7 @@
 \alias{run_geosketch}
 \title{Perform geometric sketching}
 \usage{
-run_geosketch(scdata, dims, perc_num_cells)
+run_geosketch(scdata, dims, perc_num_cells, geosketch_reduction = "pca")
 }
 \arguments{
 \item{dims}{Number of dimensions to use}
