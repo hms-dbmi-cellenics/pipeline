@@ -207,6 +207,8 @@ integrate_using_geosketch <-
       Seurat::FindVariableFeatures(assay = "RNA", nfeatures = 2000, verbose = FALSE) |>
       Seurat::ScaleData(verbose = FALSE) |>
       Seurat::RunPCA(verbose = FALSE)
+
+    scdata@misc[["active.reduction"]] <- "pca"
     # geoesketch
     set.seed(RANDOM_SEED)
     c(scdata, scdata_sketch) %<-% run_geosketch(
