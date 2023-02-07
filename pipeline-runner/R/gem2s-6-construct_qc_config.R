@@ -159,7 +159,8 @@ get_sample_mitochondrial_config <- function(scdata_list.sample, config) {
 
 # threshold for doublet score is the max score given to a singlet (above score => doublets)
 get_dblscore_config <- function(scdata_list, config) {
-  probabilityThreshold <- max(scdata_list$doublet_scores[scdata_list$doublet_class == "singlet"], na.rm = TRUE)
+  probabilityThreshold <- generate_default_values_doubletScores(scdata_list)
+
   config$filterSettings$probabilityThreshold <- probabilityThreshold
 
   return(config)
