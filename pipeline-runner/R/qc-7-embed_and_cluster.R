@@ -84,6 +84,15 @@ format_cell_sets_object <-
       )
     for (i in sort(unique(cell_sets$cluster))) {
       cells <- cell_sets[cell_sets$cluster == i, "cell_ids"]
+
+      print("cellsDebug")
+      str(cells)
+      print("endcellsDebug")
+
+      print("color_poolDebug")
+      str(color_pool)
+      print("endcolor_poolDebug")
+
       new_set <- list(
         key = paste0(clustering_method, "-", i),
         name = paste0("Cluster ", i),
