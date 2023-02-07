@@ -20,10 +20,26 @@
 #' @return normalized and integrated Seurat object
 #' @export
 #'
-run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, npcs,
-                         nfeatures, normalization, reduction, perc_num_cells) {
-  # @misc slots not preserved so transfer. Mics slots are the same for each sample
+run_seuratv4 <- function(scdata_list, config) {
+  # misc slot not preserved so transfer. Mics slots are the same for each sample
   misc <- scdata_list[[1]]@misc
+
+  settings <- config$dataIntegration$methodSettings[["seuratv4"]]
+  nfeatures <- settings$numGenes
+  normalization <- settings$normalisation
+  if (grepl("lognorm", normalization, ignore.case = TRUE)) {
+    normalization <- "LogNormalize"
+  }
+
+  reduction <- config$dimensionalityReduction$method
+  exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
+
+  use_geosketch <- "downsampling" %in% names(config) && config$downsampling$method == "geosketch"
+
+  # calculate as many PCs for the PCA as possible, ideally 50, unless few cells
+  npcs_for_pca <- min(vapply(scdata_list, ncol, integer(1)) - 1, 50)
+  # use the min of what the user wants and what can be calculated
+  npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
 
   scdata_list <- order_by_size(scdata_list)
 
@@ -66,9 +82,13 @@ run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, n
     # if not using geosketch, just integrate
     scdata <- seuratv4_find_and_integrate_anchors(scdata_list, cells_id, reduction, normalization, npcs, misc, nfeatures)
   } else if (use_geosketch) {
+    perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
     scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, misc, nfeatures, use_geosketch)
   }
 
+  }
+  scdata@misc <- misc
+  scdata@misc[["numPCs"]] <- npcs
   return(scdata)
 }
 
@@ -116,6 +136,7 @@ seuratv4_find_and_integrate_anchors <-
             reduction = reduction
           )
         }
+        # integrate
         scdata <-
           Seurat::IntegrateData(
             anchorset = data_anchors,
@@ -239,3 +260,39 @@ integrate_using_geosketch <-
 
     return(scdata)
   }
+
+
+#' Prepare for integration after SCTransform
+#'
+#' This function runs the steps required to prepare the list of Seurat object normalized with
+#' SCTransform for integration, and finds the integration anchors.
+#' For further details see the documentation for
+#' \code{\link[Seurat:SelectIntegrationFeatures]{Seurat::SelectIntegrationFeatures()}},
+#' \code{\link[Seurat:PrepSCTIntegration]{Seurat::PrepSCTIntegration()}},
+#' and [sctransform_v2 vignette](https://satijalab.org/seurat/articles/sctransform_v2_vignette.html#perform-integration-using-pearson-residuals-1).
+#'
+#' @param data.split list of Seurat objects
+#' @param reduction reduction method
+#' @param normalization normalization method
+#' @param k.filter number of neighbors (k) to use when filtering anchors
+#' @param npcs number of PCs
+#'
+#' @return data.anchors to use for integration
+#' @export
+#'
+prepare_sct_integration <- function(data.split, reduction, normalization, k.filter, npcs) {
+  features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
+  data.split <- Seurat::PrepSCTIntegration(object.list = data.split,
+                                           assay = "SCT",
+                                           anchor.features = features)
+  data.anchors <- Seurat::FindIntegrationAnchors(
+    object.list = data.split,
+    dims = 1:npcs,
+    k.filter = k.filter,
+    verbose = TRUE,
+    reduction = reduction,
+    normalization.method = normalization,
+    anchor.features = features
+  )
+  return(data.anchors)
+}
