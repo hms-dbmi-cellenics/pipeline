@@ -278,7 +278,7 @@ call_subset <- function(task_name, input, pipeline_config) {
   c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
 
   return(message_id)
 }
