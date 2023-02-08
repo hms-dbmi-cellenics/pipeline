@@ -23,6 +23,7 @@
 run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, npcs,
                          nfeatures, normalization, reduction, perc_num_cells) {
 
+  misc <- scdata_list[[1]]@misc
   scdata_list <- order_by_size(scdata_list)
 
   # normalize single samples
@@ -66,6 +67,12 @@ run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, n
   } else if (use_geosketch) {
     scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, nfeatures, use_geosketch)
   }
+
+  message("*** scdata_list misc")
+  str(scdata_list[[1]]@misc)
+
+  message("*** new misc")
+  str(scdata@misc)
 
   return(scdata)
 }
@@ -153,7 +160,6 @@ seuratv4_find_and_integrate_anchors <-
     }
 
     scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
-    scdata <- add_dispersions(scdata, normalization)
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
 
     # run PCA
@@ -165,6 +171,7 @@ seuratv4_find_and_integrate_anchors <-
         verbose = FALSE
       )
     scdata <- add_metadata(scdata, scdata_list)
+    scdata <- add_dispersions(scdata, normalization)
     scdata@misc[["active.reduction"]] <- "pca"
 
     return(scdata)
