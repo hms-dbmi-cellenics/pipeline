@@ -10,7 +10,6 @@ seuratv4_find_and_integrate_anchors(
   reduction,
   normalization,
   npcs,
-  misc,
   nfeatures,
   scdata = NA,
   use_geosketch = FALSE
@@ -26,8 +25,6 @@ seuratv4_find_and_integrate_anchors(
 \item{normalization}{normalization method}
 
 \item{npcs}{numer of principal components}
-
-\item{misc}{misc slot from the Seurat object}
 
 \item{nfeatures}{number of features}
 
