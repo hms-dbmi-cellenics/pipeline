@@ -67,7 +67,7 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
   )
 
   scdata@misc[["active.reduction"]] <- active_reduction
-  scdata@misc$geosketch <- TRUE
+  scdata@misc[["geosketch"]] <- TRUE
 
   return(scdata)
 }
