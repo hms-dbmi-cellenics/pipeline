@@ -68,12 +68,6 @@ run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, n
     scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, nfeatures, use_geosketch)
   }
 
-  message("*** scdata_list misc")
-  str(scdata_list[[1]]@misc)
-
-  message("*** new misc")
-  str(scdata@misc)
-
   return(scdata)
 }
 
