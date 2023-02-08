@@ -264,3 +264,26 @@ test_that("misc slot is complete after Seurat V4 integration", {
   expect_snapshot(integrated_scdata@misc)
 
 })
+
+
+test_that("misc slot is complete after Seurat V4 integration with geosketch", {
+
+  # mock a bigger dataset to run Seurat v4 integration without skipping it
+  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2, method = "rpca"),
+    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "logNormalize"))),
+    downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 5))))
+
+
+  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  expect_s4_class(integrated_scdata, "Seurat")
+  integrated_scdata@misc$ingestionDate <- "fixed_date"
+
+  expected_misc_names <- c("gene_annotations", "color_pool", "ingestionDate", "active.reduction", "numPCs", "geosketch")
+
+  expect_setequal(integrated_scdata@misc, expected_misc_names)
+
+})
