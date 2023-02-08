@@ -23,7 +23,6 @@
 run_seuratv4 <- function(scdata_list, cells_id, exclude_groups, use_geosketch, npcs,
                          nfeatures, normalization, reduction, perc_num_cells) {
 
-  misc <- scdata_list[[1]]@misc
   scdata_list <- order_by_size(scdata_list)
 
   # normalize single samples
