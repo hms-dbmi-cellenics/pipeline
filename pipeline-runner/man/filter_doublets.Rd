@@ -20,7 +20,7 @@ filter_doublets(
 to call generate_default_values_doubletScores)
 - filterSettings: slot with thresholds
 - probabilityThreshold: Float. cut-off for the maximun probability scores that could have a cell. The doubletScores scores have been computed
-through "scrublet" \link{1}
+through scDblFinder
 - binStep: Float. Bin size for the histogram}
 }
 \value{

@@ -74,10 +74,10 @@ run_seuratv4 <- function(scdata_list, config) {
 
   if (!use_geosketch) {
     # if not using geosketch, just integrate
-    scdata <- seuratv4_find_and_integrate_anchors(scdata_list, cells_id, reduction, normalization, npcs, misc, nfeatures)
+    scdata <- seuratv4_find_and_integrate_anchors(scdata_list, cells_id, reduction, normalization, npcs, nfeatures)
   } else if (use_geosketch) {
     perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
-    scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, misc, nfeatures, use_geosketch)
+    scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, nfeatures, use_geosketch)
   }
 
   scdata <- add_metadata(scdata, scdata_list)
@@ -95,7 +95,6 @@ run_seuratv4 <- function(scdata_list, config) {
 #' @param reduction reduction method
 #' @param normalization normalization method
 #' @param npcs numer of principal components
-#' @param misc misc slot from the Seurat object
 #' @param nfeatures number of features
 #' @param scdata merged Seurat object
 #' @param use_geosketch boolean indicating if geosketch has to be run
@@ -109,7 +108,6 @@ seuratv4_find_and_integrate_anchors <-
            reduction,
            normalization,
            npcs,
-           misc,
            nfeatures,
            scdata = NA,
            use_geosketch = FALSE) {
@@ -170,7 +168,6 @@ seuratv4_find_and_integrate_anchors <-
       Seurat::DefaultAssay(scdata) <- "integrated"
     }
 
-    scdata@misc <- misc
     scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
     scdata <- add_dispersions(scdata, normalization)
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
@@ -183,6 +180,7 @@ seuratv4_find_and_integrate_anchors <-
         features = Seurat::VariableFeatures(object = scdata),
         verbose = FALSE
       )
+    scdata <- add_metadata(scdata, scdata_list)
     scdata@misc[["active.reduction"]] <- "pca"
 
     return(scdata)
@@ -201,7 +199,6 @@ seuratv4_find_and_integrate_anchors <-
 #' @param perc_num_cells percentage of cells to keep when using geosketch
 #' @param normalization normalization method
 #' @param npcs number of princpal components
-#' @param misc misc slot from the Seurat object
 #' @param nfeatures number of features
 #' @param use_geosketch boolean indicating if geosketch has to be run
 #'
@@ -215,7 +212,6 @@ integrate_using_geosketch <-
            perc_num_cells,
            normalization,
            npcs,
-           misc,
            nfeatures,
            use_geosketch) {
     message("Percentage of cells to keep: ", perc_num_cells)
@@ -226,6 +222,7 @@ integrate_using_geosketch <-
       Seurat::FindVariableFeatures(assay = "RNA", nfeatures = 2000, verbose = FALSE) |>
       Seurat::ScaleData(verbose = FALSE) |>
       Seurat::RunPCA(verbose = FALSE)
+
     scdata@misc[["active.reduction"]] <- "pca"
     # geoesketch
     set.seed(RANDOM_SEED)
@@ -239,7 +236,7 @@ integrate_using_geosketch <-
     scdata_sketch_integrated <- seuratv4_find_and_integrate_anchors(
       scdata_sketch_split, cells_id,
       reduction, normalization,
-      npcs, misc, nfeatures, geosketch_list$scdata, use_geosketch
+      npcs, nfeatures, scdata, use_geosketch
     )
     # learn from sketches
     message("Learning from sketches")
