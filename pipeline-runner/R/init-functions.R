@@ -353,8 +353,11 @@ call_qc <- function(task_name, input, pipeline_config) {
       samples <- names(scdata)
       assign("cells_id",
         load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples),
-        pos = ".GlobalEnv"
-      )
+        pos = ".GlobalEnv")
+
+      # won't be cells_id in S3 for uploaded Seurat object that is being subsetted
+      if (!length(cells_id)) cells_id <- generate_first_step_ids(scdata)
+
     } else {
       stop("Invalid task name given: ", task_name)
     }
