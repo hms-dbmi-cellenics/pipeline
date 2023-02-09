@@ -72,35 +72,3 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
   return(scdata)
 }
 
-
-#'
-#' #' Integrate using sketch data
-#' #'
-#' #' This function takes the sketched data, integrates it and then transfers the
-#' #' integration to the complete data set.
-#' #'
-#' #'
-#' #' @param scdata Seurat object - complete data set
-#' #' @param scdata_sketch Seurat object - sketch
-#' #' @param integration_function function
-#' #' @param config list - integration parameters
-#' #' @param method character - integration methods
-#' #'
-#' #' @return Integrated Seurat object
-#' #' @export
-#' #'
-#' integrate_from_sketch <- function(scdata, scdata_sketch, integration_function, config, npcs) {
-#'   scdata@misc[["active.reduction"]] <- "pca"
-#'   method <- config$dataIntegration$method
-#'
-#'   scdata_sketch_integrated <- integration_function(scdata_sketch, config, npcs)
-#'   message("Learning from sketches")
-#'   scdata <- learn_from_sketches(
-#'     scdata,
-#'     scdata_sketch,
-#'     scdata_sketch_integrated,
-#'     npcs
-#'   )
-#'
-#'   return(scdata)
-#' }

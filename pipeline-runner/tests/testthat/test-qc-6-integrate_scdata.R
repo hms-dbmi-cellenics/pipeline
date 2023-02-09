@@ -399,27 +399,3 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
   expect_equal(integrated_scdata@misc[["active.reduction"]], "pca")
 })
 
-test_that("integrate_from_sketch correctly integrates sketches", {
-  # mock a bigger dataset so that runPCA won't fail
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
-  merged_scdata <- create_scdata(scdata_list, cells_id)
-  config <- list(
-    dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
-  )
-
-  merged_scdata <- merged_scdata |>
-    Seurat::FindVariableFeatures(assay = "RNA", nfeatures = 2000, verbose = FALSE) |>
-    Seurat::ScaleData(verbose = FALSE) |>
-    Seurat::RunPCA(verbose = FALSE)
-  merged_scdata@misc[["active.reduction"]] <- "pca"
-
-  perc_num_cells <- 90
-  num_cells <- round(ncol(merged_scdata) * perc_num_cells / 100)
-  c(scdata, scdata_sketch) %<-% run_geosketch(merged_scdata, dims = 50, perc_num_cells)
-
-  integrated_scdata <- integrate_from_sketch(scdata, scdata_sketch, run_harmony, config, npcs = 2)
-  expect_s4_class(integrated_scdata, "Seurat")
-  expect_equal(integrated_scdata@misc[["active.reduction"]], "harmony")
-})
