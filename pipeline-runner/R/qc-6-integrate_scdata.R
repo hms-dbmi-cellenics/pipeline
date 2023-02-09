@@ -1,4 +1,3 @@
-
 #' STEP 6. Data Integration
 #'
 #' Data integration step where batch effect is corrected through data
@@ -34,13 +33,13 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
   method <- config$dataIntegration$method
 
   if (length(scdata_list) == 1) {
-    method <- "unisample"
+    method <- UNISAMPLE
     message("Only one sample detected or method is non integrate.")
   }
 
   # integrate
   integration_function <- get(paste0("run_", method))
-  scdata_integrated <- integration_function(scdata_list, config)
+  scdata_integrated <- integration_function(scdata_list, config, cells_id)
 
   message("Finished data integration")
 
@@ -48,9 +47,6 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
   config$dimensionalityReduction$numPCs <- scdata_integrated@misc$numPCs
 
   var_explained <- get_explained_variance(scdata_integrated)
-
-  # test removing colorObject function (sample colors are added to cellset object)
-  #scdata_integrated <- colorObject(scdata_integrated)
 
   plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
 
@@ -291,6 +287,7 @@ build_cc_gene_list <- function(all_genes) {
   return(cc_gene_indices)
 }
 
+
 #' Add the metadata present in scdata_list into the merged SeuratObject
 #'
 #' This function adds metadata, some of which is present in the sample SeuratObjects
@@ -416,7 +413,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
     message("Only one sample detected or method is non integrate.")
   }
 
-  if (method %in% c("seuratv4", "harmony")) {
+  if (method %in% c("seuratv4", "harmony", "unisample")) {
     result <- temp_integrate_scdata(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration")
     return(result)
   }
@@ -449,8 +446,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 
   # This same numPCs will be used throughout the platform.
   scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
-
-  #scdata_integrated <- colorObject(scdata_integrated)
 
   plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
 
@@ -512,21 +507,3 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
   return(scdata)
 }
 
-# colorObject <- function(data) {
-#   if ("color_pool" %in% names(data@misc)) {
-#     color_pool <- data@misc[["color_pool"]]
-#   } else { # THIS SHOULD BE REMOVE ONCE THE EXPERIMENT HAS BEEN UPDATED WITH THE NEW VERSION OF THE DATA-INGEST
-#     color_pool <- get_color_pool()
-#   }
-#   data$color_active_ident <- color_pool[as.numeric(data@active.ident)]
-#
-#   ##########################
-#   # Coloring samples
-#   ###########################
-#   if ("samples" %in% colnames(data@meta.data)) { # In that case we are in multisample experiment
-#     data@meta.data[, "color_samples"] <- color_pool[as.numeric(as.factor(data$samples))]
-#   } else {
-#     data@meta.data[, "color_samples"] <- color_pool[1]
-#   }
-#   return(data)
-# }

@@ -13,7 +13,7 @@
 #' @return normalized and integrated Seurat object
 #' @export
 #'
-run_seuratv4 <- function(scdata_list, config) {
+run_seuratv4 <- function(scdata_list, config, cells_id) {
 
   settings <- config$dataIntegration$methodSettings[["seuratv4"]]
   nfeatures <- settings$numGenes
@@ -103,7 +103,8 @@ run_seuratv4 <- function(scdata_list, config) {
 #' @export
 #'
 seuratv4_find_and_integrate_anchors <-
-  function(scdata_list, cells_id,
+  function(scdata_list,
+           cells_id,
            reduction,
            normalization,
            npcs,

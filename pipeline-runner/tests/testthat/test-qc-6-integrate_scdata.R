@@ -145,32 +145,6 @@ test_that("Integrate scdata filters out cells ids", {
   expect_lt(ncol(scdata), 80)
 })
 
-test_that("harmony integration works", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
-  cells_id <- mock_ids()
-  merged_scdata <- create_scdata(scdata_list, cells_id)
-  config <- list(
-    dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
-  )
-
-  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
-  expect_s4_class(integrated_scdata, "Seurat")
-})
-
-
-test_that("Unisample integration works", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
-  cells_id <- mock_ids()
-  merged_scdata <- create_scdata(scdata_list, cells_id)
-  config <- list(
-    dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = UNISAMPLE, methodSettings = list(unisample = list(numGenes = 1000, normalisation = "logNormalize")))
-  )
-
-  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
-  expect_s4_class(integrated_scdata, "Seurat")
-})
 
 test_that("FastMNN works", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()

@@ -1,4 +1,4 @@
-run_harmony <- function(scdata_list, config) {
+run_harmony <- function(scdata_list, config, cells_id) {
 
   settings <- config$dataIntegration$methodSettings[["harmony"]]
   nfeatures <- settings$numGenes
