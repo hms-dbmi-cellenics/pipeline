@@ -80,7 +80,6 @@ run_seuratv4 <- function(scdata_list, config) {
     scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, nfeatures, use_geosketch)
   }
 
-  scdata <- add_metadata(scdata, scdata_list)
   scdata@misc[["numPCs"]] <- npcs
   return(scdata)
 }
