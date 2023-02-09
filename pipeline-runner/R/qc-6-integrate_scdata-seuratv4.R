@@ -111,7 +111,7 @@ seuratv4_find_and_integrate_anchors <-
            nfeatures,
            scdata = NA,
            use_geosketch = FALSE) {
-    k.filter <- min(ceiling(sapply(scdata_list, ncol) / 2), 200)
+    k.filter <- min(ceiling(sapply(scdata_list, ncol) / 2) - 1, 200)
     tryCatch(
       {
         if (normalization == "SCT") {
@@ -127,12 +127,17 @@ seuratv4_find_and_integrate_anchors <-
             reduction = reduction
           )
         }
-        # integrate
+        # correct k.weight for extremely small samples
+        # https://github.com/satijalab/seurat/issues/4427#issuecomment-834685413
+        nsamples <- length(scdata_list)
+        k.weight <- min(floor(nrow(data_anchors@anchors) / (3 * nsamples)), 100)
+
         scdata <-
           Seurat::IntegrateData(
             anchorset = data_anchors,
             dims = 1:npcs,
-            normalization.method = normalization
+            normalization.method = normalization,
+            k.weight = k.weight
           )
       },
       error = function(e) {
@@ -140,6 +145,7 @@ seuratv4_find_and_integrate_anchors <-
         # ideally this should be passed to the UI as a error message:
         print(e)
         print(paste("current k.filter:", k.filter))
+        print(paste("current k.weight:", k.weight))
         # Should we still continue if data is not integrated? No, right now..
         print("Current number of cells per sample: ")
         print(sapply(scdata_list, ncol))
