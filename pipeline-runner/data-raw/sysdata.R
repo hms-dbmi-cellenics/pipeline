@@ -102,6 +102,7 @@ usethis::use_data(
   IDS_IDS,
   cc_genes,
   pipeline_version,
+  UNISAMPLE,
   internal = TRUE,
   overwrite = TRUE
 )
