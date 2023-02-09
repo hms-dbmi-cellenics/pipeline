@@ -153,7 +153,6 @@ seuratv4_find_and_integrate_anchors <-
     }
 
     scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
-    scdata <- add_dispersions(scdata, normalization)
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
 
     # run PCA
@@ -165,6 +164,7 @@ seuratv4_find_and_integrate_anchors <-
         verbose = FALSE
       )
     scdata <- add_metadata(scdata, scdata_list)
+    scdata <- add_dispersions(scdata, normalization)
     scdata@misc[["active.reduction"]] <- "pca"
 
     return(scdata)
