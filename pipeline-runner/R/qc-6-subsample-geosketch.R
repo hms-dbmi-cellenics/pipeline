@@ -30,7 +30,7 @@ run_geosketch <- function(scdata, dims, perc_num_cells) {
   Seurat::DefaultAssay(sketch) <- "RNA"
   sketch@misc[["active.reduction"]] <- reduction
 
-  return(list(scdata, sketch))
+  return(list(scdata = scdata, sketch = sketch))
 }
 
 

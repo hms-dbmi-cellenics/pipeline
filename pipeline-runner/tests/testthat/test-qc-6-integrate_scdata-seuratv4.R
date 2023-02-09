@@ -311,5 +311,4 @@ test_that("misc slot is complete after Seurat V4 integration with geosketch", {
   expected_misc_names <- c("gene_annotations", "color_pool", "ingestionDate", "active.reduction", "numPCs", "geosketch")
 
   expect_setequal(integrated_scdata@misc, expected_misc_names)
-
 })

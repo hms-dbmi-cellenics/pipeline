@@ -232,7 +232,7 @@ integrate_using_geosketch <-
       perc_num_cells = perc_num_cells
     )
     # split and integrate sketches
-    scdata_sketch_split <- Seurat::SplitObject(geosketch_list$scdata_sketch, split.by = "samples")
+    scdata_sketch_split <- Seurat::SplitObject(geosketch_list$sketch, split.by = "samples")
     scdata_sketch_integrated <- seuratv4_find_and_integrate_anchors(
       scdata_sketch_split, cells_id,
       reduction, normalization,
@@ -242,7 +242,7 @@ integrate_using_geosketch <-
     message("Learning from sketches")
     scdata <- learn_from_sketches(
       geosketch_list$scdata,
-      geosketch_list$scdata_sketch,
+      geosketch_list$sketch,
       scdata_sketch_integrated,
       npcs
     )

@@ -274,12 +274,11 @@ test_that("merge_scdata_list returns first element of list if only one sample", 
   expect_equal(prev_out$scdata_list[[1]], scdata)
 })
 
-test_that("run_dataIntegration calls remove_genes if there are groups to exclude", {
+test_that("temp_integrate_scdata calls remove_genes if there are groups to exclude", {
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(rename_genes = some_cc_genes)
   cells_id <- mock_ids()
-  merged_scdata <- create_scdata(scdata_list, cells_id)
 
   config <- list(
     dimensionalityReduction = list(numPCs = 2, excludeGeneCategories = "cellCycle"),
@@ -289,7 +288,7 @@ test_that("run_dataIntegration calls remove_genes if there are groups to exclude
   )
 
   expect_message(
-    suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config)),
+    suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")),
     paste0("*Number of Cell Cycle genes to exclude: ", n_rename, "*")
   )
 })
@@ -347,10 +346,10 @@ test_that("run_geosketch generates the correct number of sketches", {
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
 
-  merged_scdata <- merged_scdata |>
+  merged_scdata <- suppressWarnings({merged_scdata |>
     Seurat::FindVariableFeatures(assay = "RNA", nfeatures = 2000, verbose = FALSE) |>
     Seurat::ScaleData(verbose = FALSE) |>
-    Seurat::RunPCA(verbose = FALSE)
+    Seurat::RunPCA(verbose = FALSE)})
   merged_scdata@misc[["active.reduction"]] <- "pca"
 
   perc_num_cells <- 5
