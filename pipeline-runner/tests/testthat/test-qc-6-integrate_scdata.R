@@ -310,7 +310,7 @@ test_that("normalize_data doesn't scale data if integration method is FastMNN", 
 
 
 
-test_that("integrate_scdata doesn't run geosketch if use_geosketch is FALSE", {
+test_that("integrate_scdata doesn't run geosketch if config does not contain geosketch parameters", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
   config <- list(
@@ -318,12 +318,12 @@ test_that("integrate_scdata doesn't run geosketch if use_geosketch is FALSE", {
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration", use_geosketch = FALSE))$data
+  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_true(is.null(integrated_scdata@misc$geosketch))
 })
 
 
-test_that("integrate_scdata run geosketch if use_geosketch is TRUE", {
+test_that("integrate_scdata run geosketch if config contains geosketch parameters.", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
@@ -355,8 +355,8 @@ test_that("run_geosketch generates the correct number of sketches", {
 
   perc_num_cells <- 5
   num_cells <- round(ncol(merged_scdata) * perc_num_cells / 100)
-  c(scdata, scdata_sketch) %<-% run_geosketch(merged_scdata, dims = 50, perc_num_cells)
-  expect_equal(ncol(scdata_sketch), num_cells)
+  geosketch_list <- run_geosketch(merged_scdata, dims = 50, perc_num_cells)
+  expect_equal(ncol(geosketch_list$sketch), num_cells)
 })
 
 
