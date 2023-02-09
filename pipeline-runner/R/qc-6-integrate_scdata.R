@@ -325,7 +325,7 @@ get_explained_variance <- function(scdata) {
 }
 
 
-get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
+get_npcs <- function(scdata, var_threshold = 0.90, max_npcs = 30) {
   # estimates the number of PCs to use in data integration and embeddings,
   # using accumulated explained variance
   var_explained <- get_explained_variance(scdata)

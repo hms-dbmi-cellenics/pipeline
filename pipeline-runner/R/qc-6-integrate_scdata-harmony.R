@@ -46,7 +46,7 @@ run_harmony <- function(scdata_list, config) {
       npcs = npcs,
       verbose = FALSE,
       reduction.name = "pca_for_harmony",
-      reduction.key = "PC_h_"
+      reduction.key = "PCh_"
     )
 
   # downsample
