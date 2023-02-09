@@ -146,26 +146,6 @@ add_dispersions <- function(scdata, method) {
 }
 
 
-# colorObject <- function(data) {
-#   if ("color_pool" %in% names(data@misc)) {
-#     color_pool <- data@misc[["color_pool"]]
-#   } else { # THIS SHOULD BE REMOVE ONCE THE EXPERIMENT HAS BEEN UPDATED WITH THE NEW VERSION OF THE DATA-INGEST
-#     color_pool <- get_color_pool()
-#   }
-#   data$color_active_ident <- color_pool[as.numeric(data@active.ident)]
-#
-#   ##########################
-#   # Coloring samples
-#   ###########################
-#   if ("samples" %in% colnames(data@meta.data)) { # In that case we are in multisample experiment
-#     data@meta.data[, "color_samples"] <- color_pool[as.numeric(as.factor(data$samples))]
-#   } else {
-#     data@meta.data[, "color_samples"] <- color_pool[1]
-#   }
-#   return(data)
-# }
-
-
 get_explained_variance <- function(scdata) {
   # Compute explained variance for plotting and numPCs estimation.
   # It can be computed from pca or other reductions such as mnn
@@ -429,6 +409,13 @@ generate_elbow_plot_data <- function(scdata_integrated, task_name, var_explained
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", use_geosketch = FALSE, perc_num_cells = 5) {
   # get the method and redirect to the new temporary function until we refactor all the methods
   method <- config$dataIntegration$method
+
+  # temporary, this should be addressed when creating the config
+  if (length(scdata_list) == 1) {
+    method <- UNISAMPLE
+    message("Only one sample detected or method is non integrate.")
+  }
+
   if (method %in% c("seuratv4", "harmony")) {
     result <- temp_integrate_scdata(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration")
     return(result)
@@ -463,7 +450,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # This same numPCs will be used throughout the platform.
   scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
 
-  scdata_integrated <- colorObject(scdata_integrated)
+  #scdata_integrated <- colorObject(scdata_integrated)
 
   plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
 
@@ -525,3 +512,21 @@ run_dataIntegration <- function(scdata, scdata_sketch, config) {
   return(scdata)
 }
 
+# colorObject <- function(data) {
+#   if ("color_pool" %in% names(data@misc)) {
+#     color_pool <- data@misc[["color_pool"]]
+#   } else { # THIS SHOULD BE REMOVE ONCE THE EXPERIMENT HAS BEEN UPDATED WITH THE NEW VERSION OF THE DATA-INGEST
+#     color_pool <- get_color_pool()
+#   }
+#   data$color_active_ident <- color_pool[as.numeric(data@active.ident)]
+#
+#   ##########################
+#   # Coloring samples
+#   ###########################
+#   if ("samples" %in% colnames(data@meta.data)) { # In that case we are in multisample experiment
+#     data@meta.data[, "color_samples"] <- color_pool[as.numeric(as.factor(data$samples))]
+#   } else {
+#     data@meta.data[, "color_samples"] <- color_pool[1]
+#   }
+#   return(data)
+# }
