@@ -112,6 +112,8 @@ seuratv4_find_and_integrate_anchors <-
            scdata = NA,
            use_geosketch = FALSE) {
     k.filter <- min(ceiling(sapply(scdata_list, ncol) / 2) - 1, 200)
+    message("k.filter: ", k.filter)
+    k.weight <- NA
     tryCatch(
       {
         if (normalization == "SCT") {
@@ -130,7 +132,8 @@ seuratv4_find_and_integrate_anchors <-
         # correct k.weight for extremely small samples
         # https://github.com/satijalab/seurat/issues/4427#issuecomment-834685413
         nsamples <- length(scdata_list)
-        k.weight <- min(floor(nrow(data_anchors@anchors) / (3 * nsamples)), 100)
+        k.weight <- min(floor(nrow(data_anchors@anchors) / (3 * nsamples)), k.filter, 100)
+        message("k.weight: ", k.weight)
 
         scdata <-
           Seurat::IntegrateData(
