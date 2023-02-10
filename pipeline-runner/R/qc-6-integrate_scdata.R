@@ -125,7 +125,6 @@ merge_scdata_list <- function(scdata_list, merge_data = FALSE) {
 }
 
 
-
 add_dispersions <- function(scdata, method) {
   if (method == "SCT" && Seurat::DefaultAssay(scdata) == "integrated") {
     vars <- Seurat::HVFInfo(object = scdata, assay = "integrated", selection.method = "sctransform")
@@ -322,33 +321,6 @@ add_metadata <- function(scdata, scdata_list) {
   return(scdata)
 }
 
-#' Perform log normalization
-#'
-#' If the integration method is fastMNN, it will skip ScaleData() because
-#' fastMNN already performs its own scaling.
-#' If the integration method is SeuratV4, the default assay will be set to "integrated",
-#' in this case NormalizeData() will not work (see the [integration vignette](https://satijalab.org/seurat/articles/integration_introduction.html)),
-#' so here it's skipped.
-#'
-#' @param scdata SeuratObject
-#' @param normalization_method normalization method
-#' @param integration_method integration method
-#' @param nfeatures number of features to pass to Seurat::FindVariableFeatures()
-#'
-#' @return normalized and scaled SeuratObject
-#' @export
-#'
-log_normalize <- function(scdata, normalization_method, integration_method, nfeatures) {
-  if (Seurat::DefaultAssay(scdata) == "RNA") {
-    scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
-  }
-  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
-  if (integration_method != "fastmnn") {
-    scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
-  }
-  return(scdata)
-}
-
 
 #' generate elbow plot data
 #'
@@ -378,6 +350,35 @@ generate_elbow_plot_data <- function(scdata_integrated, task_name, var_explained
   return(plots)
 }
 
+################################################################################
+# REMOVE EVERYTHING BELOW AFTER REFACTORING ALL INTEGRATION METHODS
+
+#' Perform log normalization
+#'
+#' If the integration method is fastMNN, it will skip ScaleData() because
+#' fastMNN already performs its own scaling.
+#' If the integration method is SeuratV4, the default assay will be set to "integrated",
+#' in this case NormalizeData() will not work (see the [integration vignette](https://satijalab.org/seurat/articles/integration_introduction.html)),
+#' so here it's skipped.
+#'
+#' @param scdata SeuratObject
+#' @param normalization_method normalization method
+#' @param integration_method integration method
+#' @param nfeatures number of features to pass to Seurat::FindVariableFeatures()
+#'
+#' @return normalized and scaled SeuratObject
+#' @export
+#'
+log_normalize <- function(scdata, normalization_method, integration_method, nfeatures) {
+  if (Seurat::DefaultAssay(scdata) == "RNA") {
+    scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
+  }
+  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+  if (integration_method != "fastmnn") {
+    scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  }
+  return(scdata)
+}
 
 
 #' STEP 6. Data Integration
