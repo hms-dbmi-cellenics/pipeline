@@ -44,7 +44,7 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
   Seurat::DefaultAssay(scdata) <- "RNA"
 
   scdata <- scdata |>
-    Seurat::NormalizeData(assay = "RNA", normalization.method = normalization_method, verbose = FALSE) |>
+    Seurat::NormalizeData(assay = "RNA", normalization.method = normalization, verbose = FALSE) |>
     Seurat::FindVariableFeatures(assay = "RNA", nfeatures = nfeatures, verbose = FALSE) |>
     Seurat::ScaleData(verbose = FALSE) |>
     Seurat::RunPCA(npcs = npcs_for_pca, verbose = FALSE)
@@ -57,11 +57,12 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
   }
 
   scdata_split <- Seurat::SplitObject(scdata, split.by = "samples")
+  scdata <- add_dispersions(scdata, normalization)
+  misc <- scdata@misc
 
   scdata <- SeuratWrappers::RunFastMNN(scdata_split, features = nfeatures, d = npcs, get.variance = TRUE)
 
-  scdata <- add_metadata(scdata, scdata_list)
-  scdata <- add_dispersions(scdata, normalization)
+  scdata@misc <- misc
   scdata@misc[["numPCs"]] <- npcs
   scdata@misc[["active.reduction"]] <- "mnn"
 

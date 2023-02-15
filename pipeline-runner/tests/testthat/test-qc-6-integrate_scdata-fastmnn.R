@@ -1,43 +1,4 @@
 library(Seurat)
-human_cc_genes <- cc_genes[["human"]]
-
-mock_prev_out <- function(samples = "sample_a", counts = NULL) {
-  if (is.null(counts)) {
-    counts <- DropletUtils:::simCounts()
-    colnames(counts) <- paste0("cell", seq_len(ncol(counts)))
-  }
-
-  eout <- DropletUtils::emptyDrops(counts)
-
-  counts_list <- list()
-  edrops <- list()
-  doublet_scores <- list()
-
-  for (sample in samples) {
-    counts_list[[sample]] <- counts
-    edrops[[sample]] <- eout
-    doublet_scores[[sample]] <- mock_doublet_scores(counts)
-  }
-
-  annot <- data.frame(name = row.names(counts), input = row.names(counts))
-
-  # as passed to create_seurat
-  prev_out <- list(
-    counts_list = counts_list,
-    edrops = edrops,
-    doublet_scores = doublet_scores,
-    annot = annot,
-    config = list(name = "project name")
-  )
-
-  # call create_seurat to get prev_out to pass to prepare_experiment
-  prev_out <- create_seurat(NULL, NULL, prev_out)$output
-
-
-  prev_out$scdata_list <- add_metadata_to_samples(prev_out$scdata_list, annot = annot, experiment_id = "expid")
-
-  return(prev_out)
-}
 
 mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   pbmc_raw <- read.table(
@@ -79,54 +40,41 @@ mock_ids <- function() {
 }
 
 
-scdata_preprocessing <- function(scdata) {
+#' Fix time stamps in seurat object
+#'
+#' Seurat adds logs to certain command runs, with time stamps that make snapshot
+#' tests fail. This function replaces them with a fixed datetime object.
+#'
+#' @param scdata seurat object
+#'
+#' @return seurat object with fixed time stamps
+#'
+clean_timestamp <- function(scdata) {
+  fixed_datetime <- as.POSIXct("1991-12-19 05:23:00", tz = "UTC")
 
-  # scale and PCA
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
-  scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
-  scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
-  scdata@misc[["active.reduction"]] <- "pca"
+  for (slot in names(scdata@commands)) {
+    scdata@commands[[slot]]@time.stamp <- fixed_datetime
+  }
+
+  if ("ingestionDate" %in% names(scdata@misc)) {
+    scdata@misc$ingestionDate <- fixed_datetime
+  }
 
   return(scdata)
-}
-
-mock_doublet_scores <- function(counts) {
-  doublet_scores <- runif(ncol(counts))
-  doublet_class <- ifelse(doublet_scores < 0.8, "singlet", "doublet")
-
-  data.frame(
-    row.names = colnames(counts),
-    barcodes = colnames(counts),
-    doublet_class = doublet_class,
-    doublet_scores = doublet_scores
-  )
 }
 
 
 test_that("FastMNN works", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
-  merged_scdata <- create_scdata(scdata_list, cells_id)
-  config <- list(
-    dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = "fastmnn", methodSettings = list(fastmnn = list(numGenes = 1000, normalisation = "logNormalize")))
-  )
 
-  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
-  expect_s4_class(integrated_scdata, "Seurat")
-})
-
-
-test_that("normalize_data doesn't scale data if integration method is FastMNN", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
-  cells_id <- mock_ids()
-  merged_scdata <- create_scdata(scdata_list, cells_id)
   config <- list(
     dimensionalityReduction = list(numPCs = 5),
     dataIntegration = list(method = "fastmnn", methodSettings = list(fastmnn = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  merged_scdata <- log_normalize(merged_scdata, "LogNormalize", config$dataIntegration$method, config$dataIntegration$methodSettings$fastmnn$numGenes)
-  expect_equal(dim(merged_scdata@assays$RNA@scale.data), c(0, 0))
+  integrated_scdata <- suppressWarnings(run_fastmnn(scdata_list, config = config, cells_id))
+  integrated_scdata <- clean_timestamp(integrated_scdata)
+  expect_s4_class(integrated_scdata, "Seurat")
+  expect_snapshot(str(integrated_scdata))
 })
