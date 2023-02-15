@@ -21,7 +21,7 @@
 # }
 
 
-run_fastmnn(scdata_list, config, cells_id) {
+run_fastmnn <- function(scdata_list, config, cells_id) {
   settings <- config$dataIntegration$methodSettings[["fastmnn"]]
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
