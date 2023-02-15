@@ -103,6 +103,30 @@ mock_doublet_scores <- function(counts) {
 }
 
 
+#' Fix time stamps in seurat object
+#'
+#' Seurat adds logs to certain command runs, with time stamps that make snapshot
+#' tests fail. This function replaces them with a fixed datetime object.
+#'
+#' @param scdata seurat object
+#'
+#' @return seurat object with fixed time stamps
+#'
+clean_timestamp <- function(scdata) {
+  fixed_datetime <- as.POSIXct("1991-12-19 05:23:00", tz = "UTC")
+
+  for (slot in names(scdata@commands)) {
+    scdata@commands[[slot]]@time.stamp <- fixed_datetime
+  }
+
+  if ("ingestionDate" %in% names(scdata@misc)) {
+    scdata@misc$ingestionDate <- fixed_datetime
+  }
+
+  return(scdata)
+}
+
+
 test_that("SeuratV4 integration doesnt error out with small dataset", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
@@ -259,8 +283,32 @@ test_that("misc slot is complete after Seurat V4 integration", {
   )
 
   integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- clean_timestamp(integrated_scdata)
+
+  expect_s4_class(integrated_scdata, "Seurat")
+  expect_snapshot(str(integrated_scdata))
+  expect_snapshot(str(integrated_scdata@misc))
+
+})
+
+
+test_that("misc slot is complete after Seurat V4 integration with geosketch", {
+
+  # mock a bigger dataset to run Seurat v4 integration without skipping it
+  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = 10, method = "rpca"),
+    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "logNormalize"))),
+    downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
+
+
+  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")$data)
   expect_s4_class(integrated_scdata, "Seurat")
   integrated_scdata@misc$ingestionDate <- "fixed_date"
-  expect_snapshot(integrated_scdata@misc)
 
+  expected_misc_names <- c("gene_annotations", "color_pool", "ingestionDate", "active.reduction", "numPCs", "geosketch")
+
+  expect_setequal(names(integrated_scdata@misc), expected_misc_names)
 })

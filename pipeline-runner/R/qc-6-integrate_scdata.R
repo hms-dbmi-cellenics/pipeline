@@ -29,68 +29,24 @@
 #'
 temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
 
-  # get method and settings
+  message("Started data integration")
   method <- config$dataIntegration$method
-  settings <- config$dataIntegration$methodSettings[[method]]
-  nfeatures <- settings$numGenes
-  normalization <- settings$normalisation
-  # grep in case misspelled
-  if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
-  reduction <- config$dimensionalityReduction$method
-  exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
-  npcs <- config$dimensionalityReduction$numPCs
-  if (is.null(npcs)) {
-    npcs <- 30
-  }
-  # Reduce nPCs if n cells < 30
-  min_n_cells <- min(sapply(scdata_list, ncol))
-  if (min_n_cells < 30) {
-    npcs <- min_n_cells - 1
-  }
 
-  # check if downsampling params are in the config
-  use_geosketch <-
-    "downsampling" %in% names(config) &&
-      config$downsampling$method == "geosketch"
-  perc_num_cells <- NA
-  if (use_geosketch) {
-    perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
-  }
-
-  nsamples <- length(scdata_list)
-  if (nsamples == 1) {
+  if (length(scdata_list) == 1) {
     method <- UNISAMPLE
     message("Only one sample detected or method is non integrate.")
   }
 
+  # integrate
   integration_function <- get(paste0("run_", method))
+  scdata_integrated <- integration_function(scdata_list, config, cells_id)
 
-  scdata_integrated <- integration_function(
-    scdata_list, cells_id, exclude_groups, use_geosketch,
-    npcs, nfeatures, normalization, reduction, perc_num_cells
-  )
+  message("Finished data integration")
 
-  # Compute embedding with default setting to get an overview of the performance of the batch correction
-  # if the number of cells is < 30, lower the number of neighboring points, otherwise it will fail
-  # the recommended range for n.neighbors in Seurat::RunUMAP is 5 to 50 (default is 30)
-  if (ncol(scdata_integrated) < 30) {
-    n.neighbors <- 5L
-  } else {
-    n.neighbors <- 30L
-  }
-  scdata_integrated <- Seurat::RunUMAP(scdata_integrated, dims = 1:npcs, verbose = FALSE, n.neighbors = n.neighbors)
-
-  # get  npcs from the UMAP call in integration functions
-  npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
-  message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
-  config$dimensionalityReduction$numPCs <- npcs
+  # Update config numPCs with estimated or user provided nPCs
+  config$dimensionalityReduction$numPCs <- scdata_integrated@misc$numPCs
 
   var_explained <- get_explained_variance(scdata_integrated)
-
-  # This same numPCs will be used throughout the platform.
-  scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
-
-  scdata_integrated <- colorObject(scdata_integrated)
 
   plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
 
@@ -103,83 +59,7 @@ temp_integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task
   )
 
   return(result)
-}
 
-
-
-#' STEP 6. Data Integration
-#'
-#' Data integration step where batch effect is corrected through data
-#' integration methods. The default method is Harmony.
-#' The data integration step include ordering the samples according to their
-#' matrices size, merging of Seurat objects, normalization and PCA analysis.
-#' Optional: performs geometric sketching of merged Seurat object, integrates
-#' the sketched data, and learn and apply back the integration transformation
-#' to the full data.
-#'
-#' @param config list containing the following information
-#' 		- dataIntegration
-#' 			- method: String. Method to be used. "harmony by default.
-#' 			- methodSettings: List with the method as key and:
-#' 				- numGenes: Numeric. Number of gene to be used.
-#' 				- normalisation: String. Normalisation method to be used.
-#' 		- dimensionalityReduction
-#' 			- method: String. Method to be used. "rpca" by default.
-#' 			- numPCs: Numeric. Number of principal components.
-#' 			- excludeGeneCategories: List. Categories of genes to be excluded.
-#' @return a list with the integrated seurat object, the cell ids, the config and the plot values.
-#' @export
-#'
-integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", use_geosketch = FALSE, perc_num_cells = 5) {
-  # get the method and redirect to the new temporary function until we refactor all the methods
-  method <- config$dataIntegration$method
-  if (method == "seuratv4") {
-    result <- temp_integrate_scdata(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration")
-    return(result)
-  }
-  # the following operations give different results depending on sample order
-  # make sure they are ordered according to their matrices size
-  scdata_list <- order_by_size(scdata_list)
-  message("Started create_scdata")
-  scdata <- create_scdata(scdata_list, cells_id)
-
-  # main function
-  set.seed(RANDOM_SEED)
-  scdata_sketch <- NA
-  if (use_geosketch) {
-    c(scdata, scdata_sketch) %<-% run_geosketch(
-      scdata,
-      dims = 50,
-      perc_num_cells = perc_num_cells
-    )
-  }
-
-  message("Started data integration")
-  scdata_integrated <- run_dataIntegration(scdata, scdata_sketch, config)
-
-  # get  npcs from the UMAP call in integration functions
-  npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
-  message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
-  config$dimensionalityReduction$numPCs <- npcs
-
-  var_explained <- get_explained_variance(scdata_integrated)
-
-  # This same numPCs will be used throughout the platform.
-  scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
-
-  scdata_integrated <- colorObject(scdata_integrated)
-
-  plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
-
-  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
-  result <- list(
-    data = scdata_integrated,
-    new_ids = cells_id,
-    config = config,
-    plotData = plots
-  )
-
-  return(result)
 }
 
 
@@ -195,13 +75,13 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 #' @export
 #'
 create_scdata <- function(scdata_list, cells_id, merge_data = FALSE) {
-  message("Started create_scdata")
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list, merge_data)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
   return(merged_scdatas)
 }
+
 
 #' For each sample, remove filtered cells from the Seurat object
 #'
@@ -212,6 +92,7 @@ create_scdata <- function(scdata_list, cells_id, merge_data = FALSE) {
 #' @export
 #'
 remove_filtered_cells <- function(scdata_list, cells_id) {
+  message("Filtering cells.")
   for (sample in names(scdata_list)) {
     flat_cell_ids <- unname(unlist(cells_id[[sample]]))
     scdata_list[[sample]] <- subset_ids(scdata_list[[sample]], flat_cell_ids)
@@ -233,6 +114,7 @@ remove_filtered_cells <- function(scdata_list, cells_id) {
 #' @export
 #'
 merge_scdata_list <- function(scdata_list, merge_data = FALSE) {
+  message("Merging Seurat objects.")
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
@@ -242,151 +124,6 @@ merge_scdata_list <- function(scdata_list, merge_data = FALSE) {
   return(scdata)
 }
 
-
-# This function covers
-#   - Integrate the data using the variable "type" (in case of data integration method is selected) and normalize using LogNormalize method.
-#   - Compute PCA analysis
-#   - To visualize the results of the batch effect, an UMAP with default setting has been made.
-run_dataIntegration <- function(scdata, scdata_sketch, config) {
-
-  # get method and settings
-  method <- config$dataIntegration$method
-  npcs <- config$dimensionalityReduction$numPCs
-
-  exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
-
-
-  nsamples <- length(unique(scdata$samples))
-  if (nsamples == 1) {
-    method <- UNISAMPLE
-    message("Only one sample detected or method is non integrate.")
-  }
-
-  # we need RNA assay to compute the integrated matrix
-  Seurat::DefaultAssay(scdata) <- "RNA"
-
-  # remove cell cycle genes if needed
-  if (length(exclude_groups) > 0) {
-    scdata <- remove_genes(scdata, exclude_groups)
-  }
-
-  integration_function <- get(paste0("run_", method))
-
-  if (is.na(scdata_sketch)) {
-    scdata <- integration_function(scdata, config, npcs)
-  } else {
-    scdata <- integrate_from_sketch(scdata, scdata_sketch, integration_function, config, npcs)
-  }
-
-  if (is.null(npcs)) {
-    npcs <- get_npcs(scdata)
-    message("Number of PCs: ", npcs)
-  }
-
-  # Compute embedding with default setting to get an overview of the performance of the batch correction
-  scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
-
-  return(scdata)
-}
-
-
-run_harmony <- function(scdata, config, npcs) {
-  settings <- config$dataIntegration$methodSettings[["harmony"]]
-
-  nfeatures <- settings$numGenes
-  normalization <- settings$normalisation
-
-  # grep in case misspelled
-  if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
-
-  scdata <- log_normalize(scdata, normalization, "harmony", nfeatures)
-
-  scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
-  scdata <- harmony::RunHarmony(scdata, group.by.vars = "samples")
-  scdata <- add_dispersions(scdata, normalization)
-  scdata@misc[["active.reduction"]] <- "harmony"
-
-  return(scdata)
-}
-
-
-#' Prepare for integration after SCTransform
-#'
-#' This function runs the steps required to prepare the list of Seurat object normalized with
-#' SCTransform for integration, and finds the integration anchors.
-#' For further details see the documentation for
-#' \code{\link[Seurat:SelectIntegrationFeatures]{Seurat::SelectIntegrationFeatures()}},
-#' \code{\link[Seurat:PrepSCTIntegration]{Seurat::PrepSCTIntegration()}},
-#' and [sctransform_v2 vignette](https://satijalab.org/seurat/articles/sctransform_v2_vignette.html#perform-integration-using-pearson-residuals-1).
-#'
-#' @param data.split list of Seurat objects
-#' @param reduction reduction method
-#' @param normalization normalization method
-#' @param k.filter number of neighbors (k) to use when filtering anchors
-#' @param npcs number of PCs
-#'
-#' @return data.anchors to use for integration
-#' @export
-#'
-prepare_sct_integration <- function(data.split, reduction, normalization, k.filter, npcs) {
-  features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
-  data.split <- Seurat::PrepSCTIntegration(
-    object.list = data.split, assay = "SCT",
-    anchor.features = features
-  )
-  data.anchors <- Seurat::FindIntegrationAnchors(
-    object.list = data.split,
-    dims = 1:npcs,
-    k.filter = k.filter,
-    verbose = TRUE,
-    reduction = reduction,
-    normalization.method = normalization,
-    anchor.features = features
-  )
-  return(data.anchors)
-}
-
-run_fastmnn <- function(scdata, config, npcs) {
-  settings <- config$dataIntegration$methodSettings[["fastmnn"]]
-
-  nfeatures <- settings$numGenes
-  normalization <- settings$normalisation
-
-  # grep in case misspelled
-  if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
-
-
-  scdata <- log_normalize(scdata, normalization, "fastmnn", nfeatures)
-  scdata <- add_dispersions(scdata, normalization)
-
-  # @misc slots not preserved so transfer
-  misc <- scdata@misc
-  scdata <- SeuratWrappers::RunFastMNN(object.list = Seurat::SplitObject(scdata, split.by = "samples"), d = 50, get.variance = TRUE)
-  scdata@misc <- misc
-  scdata@misc[["active.reduction"]] <- "mnn"
-
-  return(scdata)
-}
-
-run_unisample <- function(scdata, config, npcs) {
-  settings <- config$dataIntegration$methodSettings[[UNISAMPLE]]
-
-  nfeatures <- settings$numGenes
-  normalization <- settings$normalisation
-
-  # grep in case misspelled
-  if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
-
-  # in unisample we only need to normalize
-  scdata <- log_normalize(scdata, normalization, UNISAMPLE, nfeatures)
-  scdata <- add_dispersions(scdata, normalization)
-  scdata@misc[["active.reduction"]] <- "pca"
-
-  # run PCA
-  scdata <- Seurat::RunPCA(scdata, npcs = 50, features = Seurat::VariableFeatures(object = scdata), verbose = FALSE)
-
-  return(scdata)
-}
 
 add_dispersions <- function(scdata, method) {
   if (method == "SCT" && Seurat::DefaultAssay(scdata) == "integrated") {
@@ -404,25 +141,6 @@ add_dispersions <- function(scdata, method) {
 }
 
 
-colorObject <- function(data) {
-  if ("color_pool" %in% names(data@misc)) {
-    color_pool <- data@misc[["color_pool"]]
-  } else { # THIS SHOULD BE REMOVE ONCE THE EXPERIMENT HAS BEEN UPDATED WITH THE NEW VERSION OF THE DATA-INGEST
-    color_pool <- get_color_pool()
-  }
-  data$color_active_ident <- color_pool[as.numeric(data@active.ident)]
-
-  ##########################
-  # Coloring samples
-  ###########################
-  if ("samples" %in% colnames(data@meta.data)) { # In that case we are in multisample experiment
-    data@meta.data[, "color_samples"] <- color_pool[as.numeric(as.factor(data$samples))]
-  } else {
-    data@meta.data[, "color_samples"] <- color_pool[1]
-  }
-  return(data)
-}
-
 get_explained_variance <- function(scdata) {
   # Compute explained variance for plotting and numPCs estimation.
   # It can be computed from pca or other reductions such as mnn
@@ -435,7 +153,8 @@ get_explained_variance <- function(scdata) {
   return(var_explained)
 }
 
-get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
+
+get_npcs <- function(scdata, var_threshold = 0.90, max_npcs = 30) {
   # estimates the number of PCs to use in data integration and embeddings,
   # using accumulated explained variance
   var_explained <- get_explained_variance(scdata)
@@ -567,6 +286,7 @@ build_cc_gene_list <- function(all_genes) {
   return(cc_gene_indices)
 }
 
+
 #' Add the metadata present in scdata_list into the merged SeuratObject
 #'
 #' This function adds metadata, some of which is present in the sample SeuratObjects
@@ -580,6 +300,7 @@ build_cc_gene_list <- function(all_genes) {
 #' @export
 #'
 add_metadata <- function(scdata, scdata_list) {
+  message("Adding metadata.")
   # misc data is duplicated in each of the samples and it does not
   # need to be merge so pick the data in the first one and add it to the merged dataset
   scdata@misc <- scdata_list[[1]]@misc
@@ -597,33 +318,6 @@ add_metadata <- function(scdata, scdata_list) {
   scdata@misc[["experimentId"]] <- experiment_id
   scdata@misc[["ingestionDate"]] <- Sys.time()
 
-  return(scdata)
-}
-
-#' Perform log normalization
-#'
-#' If the integration method is fastMNN, it will skip ScaleData() because
-#' fastMNN already performs its own scaling.
-#' If the integration method is SeuratV4, the default assay will be set to "integrated",
-#' in this case NormalizeData() will not work (see the [integration vignette](https://satijalab.org/seurat/articles/integration_introduction.html)),
-#' so here it's skipped.
-#'
-#' @param scdata SeuratObject
-#' @param normalization_method normalization method
-#' @param integration_method integration method
-#' @param nfeatures number of features to pass to Seurat::FindVariableFeatures()
-#'
-#' @return normalized and scaled SeuratObject
-#' @export
-#'
-log_normalize <- function(scdata, normalization_method, integration_method, nfeatures) {
-  if (Seurat::DefaultAssay(scdata) == "RNA") {
-    scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
-  }
-  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
-  if (integration_method != "fastmnn") {
-    scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
-  }
   return(scdata)
 }
 
@@ -656,108 +350,161 @@ generate_elbow_plot_data <- function(scdata_integrated, task_name, var_explained
   return(plots)
 }
 
+################################################################################
+# REMOVE EVERYTHING BELOW AFTER REFACTORING ALL INTEGRATION METHODS
 
-#' Perform geometric sketching
+#' Perform log normalization
 #'
-#' See https://github.com/brianhie/geosketch
+#' If the integration method is fastMNN, it will skip ScaleData() because
+#' fastMNN already performs its own scaling.
+#' If the integration method is SeuratV4, the default assay will be set to "integrated",
+#' in this case NormalizeData() will not work (see the [integration vignette](https://satijalab.org/seurat/articles/integration_introduction.html)),
+#' so here it's skipped.
 #'
-#' @param object Seurat object
-#' @param reduction Reduced dimensions to use for sketching
-#' @param dims Number of dimensions to use
-#' @param num_cells Number of desired cells
+#' @param scdata SeuratObject
+#' @param normalization_method normalization method
+#' @param integration_method integration method
+#' @param nfeatures number of features to pass to Seurat::FindVariableFeatures()
 #'
-#' @return Seurat object downsampled to desired number of cells
+#' @return normalized and scaled SeuratObject
 #' @export
 #'
-run_geosketch <- function(scdata, dims, perc_num_cells, geosketch_reduction = "pca") {
-  num_cells <- round(ncol(scdata) * perc_num_cells / 100)
-
-  message("Geosketching to ", num_cells, " cells")
-
-  if (!exists("geosketch")) {
-    geosketch <- reticulate::import("geosketch")
+log_normalize <- function(scdata, normalization_method, integration_method, nfeatures) {
+  if (Seurat::DefaultAssay(scdata) == "RNA") {
+    scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization_method, verbose = FALSE)
   }
-  stopifnot(
-    "The requested reduction is not present in the Seurat object." = geosketch_reduction %in% names(scdata@reductions),
-    "The number of cells is lower that the number of dimensions." = ncol(scdata@reductions[[geosketch_reduction]]) >= dims
-  )
-
-  embeddings <- scdata@reductions[[geosketch_reduction]]@cell.embeddings[, 1:dims]
-  index <- unlist(geosketch$gs(embeddings, as.integer(num_cells), one_indexed = TRUE))
-  sketch <- scdata[, index]
-  Seurat::DefaultAssay(sketch) <- "RNA"
-  sketch@misc[["active.reduction"]] <- geosketch_reduction
-
-  return(list(scdata, sketch))
-}
-
-
-#' Learn integration transformation from sketches
-#'
-#' Uses the integrated sketches to learn the integration transformation and
-#' apply it to the whole dataset
-#'
-#' @param scdata Seurat object
-#' @param scdata_sketch Sketched Seurat object
-#' @param scdata_sketch_integrated Sketched integrated Seurat object
-#' @param method Reduction method
-#' @param npcs Number of PCs
-#'
-#' @return Integrated Seurat object with original number of cells
-#' @export
-#'
-learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated, npcs) {
-  # get embeddings from splitted Seurat object
-  active_reduction <- scdata_sketch_integrated@misc[["active.reduction"]]
-  embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:npcs])
-  embeddings_sketch <- list(scdata_sketch@reductions[["pca"]]@cell.embeddings[, 1:npcs])
-  embeddings_sketch_int <- list(scdata_sketch_integrated@reductions[[active_reduction]]@cell.embeddings[, 1:npcs])
-
-  # use python script to learn integration from sketches and apply to whole dataset
-  reticulate::source_python("/src/pipeline-runner/inst/python/learn-apply-transformation.py")
-  learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
-  rownames(learned_int[[1]]) <- colnames(scdata)
-
-  scdata[[active_reduction]] <- Seurat::CreateDimReducObject(
-    embeddings = learned_int[[1]],
-    key = paste0(active_reduction, "_"),
-    assay = Seurat::DefaultAssay(scdata)
-  )
-
-  scdata@misc[["active.reduction"]] <- active_reduction
-  scdata@misc$geosketch <- TRUE
-
+  scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
+  if (integration_method != "fastmnn") {
+    scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+  }
   return(scdata)
 }
 
 
-#' Integrate using sketch data
+#' STEP 6. Data Integration
 #'
-#' This function takes the sketched data, integrates it and then transfers the
-#' integration to the complete data set.
+#' Data integration step where batch effect is corrected through data
+#' integration methods. The default method is Harmony.
+#' The data integration step include ordering the samples according to their
+#' matrices size, merging of Seurat objects, normalization and PCA analysis.
+#' Optional: performs geometric sketching of merged Seurat object, integrates
+#' the sketched data, and learn and apply back the integration transformation
+#' to the full data.
 #'
-#'
-#' @param scdata Seurat object - complete data set
-#' @param scdata_sketch Seurat object - sketch
-#' @param integration_function function
-#' @param config list - integration parameters
-#' @param method character - integration methods
-#'
-#' @return Integrated Seurat object
+#' @param config list containing the following information
+#' 		- dataIntegration
+#' 			- method: String. Method to be used. "harmony by default.
+#' 			- methodSettings: List with the method as key and:
+#' 				- numGenes: Numeric. Number of gene to be used.
+#' 				- normalisation: String. Normalisation method to be used.
+#' 		- dimensionalityReduction
+#' 			- method: String. Method to be used. "rpca" by default.
+#' 			- numPCs: Numeric. Number of principal components.
+#' 			- excludeGeneCategories: List. Categories of genes to be excluded.
+#' @return a list with the integrated seurat object, the cell ids, the config and the plot values.
 #' @export
 #'
-integrate_from_sketch <- function(scdata, scdata_sketch, integration_function, config, npcs) {
-  scdata@misc[["active.reduction"]] <- "pca"
+integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", use_geosketch = FALSE, perc_num_cells = 5) {
+  # get the method and redirect to the new temporary function until we refactor all the methods
   method <- config$dataIntegration$method
 
-  scdata_sketch_integrated <- integration_function(scdata_sketch, config, npcs)
-  message("Learning from sketches")
-  scdata <- learn_from_sketches(
-    scdata,
-    scdata_sketch,
-    scdata_sketch_integrated,
-    npcs
+  # temporary, this should be addressed when creating the config
+  if (length(scdata_list) == 1) {
+    method <- UNISAMPLE
+    message("Only one sample detected or method is non integrate.")
+  }
+
+  if (method %in% c("seuratv4", "harmony", "unisample")) {
+    result <- temp_integrate_scdata(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration")
+    return(result)
+  }
+  # the following operations give different results depending on sample order
+  # make sure they are ordered according to their matrices size
+  scdata_list <- order_by_size(scdata_list)
+  message("Started create_scdata")
+  scdata <- create_scdata(scdata_list, cells_id)
+
+  # main function
+  set.seed(RANDOM_SEED)
+  scdata_sketch <- NA
+  if (use_geosketch) {
+    c(scdata, scdata_sketch) %<-% run_geosketch(
+      scdata,
+      dims = 50,
+      perc_num_cells = perc_num_cells
+    )
+  }
+
+  message("Started data integration")
+  scdata_integrated <- run_dataIntegration(scdata, scdata_sketch, config)
+
+  # get  npcs from the UMAP call in integration functions
+  npcs <- length(scdata_integrated@commands$RunUMAP@params$dims)
+  message("\nSet config numPCs to npcs used in last UMAP call: ", npcs, "\n")
+  config$dimensionalityReduction$numPCs <- npcs
+
+  var_explained <- get_explained_variance(scdata_integrated)
+
+  # This same numPCs will be used throughout the platform.
+  scdata_integrated@misc[["numPCs"]] <- config$dimensionalityReduction$numPCs
+
+  plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
+
+  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
+  result <- list(
+    data = scdata_integrated,
+    new_ids = cells_id,
+    config = config,
+    plotData = plots
   )
+
+  return(result)
+}
+
+
+# This function covers
+#   - Integrate the data using the variable "type" (in case of data integration method is selected) and normalize using LogNormalize method.
+#   - Compute PCA analysis
+#   - To visualize the results of the batch effect, an UMAP with default setting has been made.
+run_dataIntegration <- function(scdata, scdata_sketch, config) {
+
+  # get method and settings
+  method <- config$dataIntegration$method
+  npcs <- config$dimensionalityReduction$numPCs
+
+  exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
+
+
+  nsamples <- length(unique(scdata$samples))
+  if (nsamples == 1) {
+    method <- UNISAMPLE
+    message("Only one sample detected or method is non integrate.")
+  }
+
+  # we need RNA assay to compute the integrated matrix
+  Seurat::DefaultAssay(scdata) <- "RNA"
+
+  # remove cell cycle genes if needed
+  if (length(exclude_groups) > 0) {
+    scdata <- remove_genes(scdata, exclude_groups)
+  }
+
+  integration_function <- get(paste0("run_", method))
+
+  if (is.na(scdata_sketch)) {
+    scdata <- integration_function(scdata, config, npcs)
+  } else {
+    scdata <- integrate_from_sketch(scdata, scdata_sketch, integration_function, config, npcs)
+  }
+
+  if (is.null(npcs)) {
+    npcs <- get_npcs(scdata)
+    message("Number of PCs: ", npcs)
+  }
+
+  # Compute embedding with default setting to get an overview of the performance of the batch correction
+  scdata <- Seurat::RunUMAP(scdata, reduction = scdata@misc[["active.reduction"]], dims = 1:npcs, verbose = FALSE)
 
   return(scdata)
 }
+

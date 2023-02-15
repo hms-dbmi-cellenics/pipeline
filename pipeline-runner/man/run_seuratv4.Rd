@@ -4,36 +4,12 @@
 \alias{run_seuratv4}
 \title{Run Seurat v4 integration}
 \usage{
-run_seuratv4(
-  scdata_list,
-  cells_id,
-  exclude_groups,
-  use_geosketch,
-  npcs,
-  nfeatures,
-  normalization,
-  reduction,
-  perc_num_cells
-)
+run_seuratv4(scdata_list, config)
 }
 \arguments{
 \item{scdata_list}{list of SeuratObjects}
 
-\item{cells_id}{list of cells ids to keep}
-
-\item{exclude_groups}{list of groups to exclude}
-
-\item{use_geosketch}{boolean indicating if geosketch has to be run}
-
-\item{npcs}{number of principal components}
-
-\item{nfeatures}{number of features}
-
-\item{normalization}{normalization method}
-
-\item{reduction}{reduction method}
-
-\item{perc_num_cells}{percentage of cells to keep when using geosketch}
+\item{config}{list of configuration parameters}
 }
 \value{
 normalized and integrated Seurat object
