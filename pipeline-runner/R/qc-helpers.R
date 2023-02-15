@@ -195,7 +195,16 @@ getClusters <- function(clustering_method, resolution, data) {
   } else {
     graph_name <- paste0(Seurat::DefaultAssay(data), "_snn")
     if (!graph_name %in% names(data)) {
-      data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
+      # number of dimensions used must be lte to available dimensions
+      dims <- 1:min(10, length(data@reductions[[active.reduction]]))
+      data <-
+        Seurat::FindNeighbors(
+          data,
+          annoy.metric = "cosine",
+          reduction = active.reduction,
+          dims = dims,
+          verbose = FALSE,
+        )
     }
     data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm, random.seed = RANDOM_SEED)
   }
@@ -216,7 +225,12 @@ getSNNiGraph <- function(data, active.reduction) {
 
   # if doesn't exist, run SNN
   if (!snn_name %in% names(data)) {
-    data <- Seurat::FindNeighbors(data, reduction = active.reduction)
+    dims <- 1:min(10, length(data@reductions[[active.reduction]]))
+    data <-
+      Seurat::FindNeighbors(data,
+                            reduction = active.reduction,
+                            dims = dims,
+                            verbose = FALSE)
   }
 
   # convert Seurat Graph object to igraph
