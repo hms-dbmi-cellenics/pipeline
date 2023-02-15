@@ -82,7 +82,7 @@ prepare_scdata_for_fastmnn <- function(scdata_list, config, cells_id) {
 }
 
 
-RunGeosketchFastMNN <- RunGeosketchFastMNN(scdata, split.by, features, dims, config) {
+RunGeosketchFastMNN <- function(scdata, split.by, features, dims, config) {
   set.seed(RANDOM_SEED)
   perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
   geosketch_list <- run_geosketch(
