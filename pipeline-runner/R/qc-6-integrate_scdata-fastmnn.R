@@ -15,6 +15,8 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
     npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
   }
 
+  use_geosketch <- "downsampling" %in% names(config) && config$downsampling$method == "geosketch"
+
   scdata <- prepare_scdata_for_fastmnn(scdata_list, config, cells_id)
 
   # we need RNA assay to compute the integrated matrix
@@ -33,11 +35,29 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
     message("Estimated number of PCs: ", npcs)
   }
 
-  scdata_split <- Seurat::SplitObject(scdata, split.by = "samples")
   scdata <- add_dispersions(scdata, normalization)
   misc <- scdata@misc
 
-  scdata <- SeuratWrappers::RunFastMNN(scdata_split, features = nfeatures, d = npcs, get.variance = TRUE)
+  if (use_geosketch) {
+    scdata <-
+      RunGeosketchFastMNN(
+        scdata,
+        split.by = "samples",
+        features = nfeatures,
+        dims = npcs,
+        config = config
+      )
+    misc[["geosketch"]] <- TRUE
+  } else {
+    scdata_split <- Seurat::SplitObject(scdata, split.by = "samples")
+    scdata <-
+      SeuratWrappers::RunFastMNN(
+        scdata_split,
+        features = nfeatures,
+        d = npcs,
+        get.variance = TRUE
+      )
+  }
 
   scdata@misc <- misc
   scdata@misc[["numPCs"]] <- npcs
@@ -59,4 +79,34 @@ prepare_scdata_for_fastmnn <- function(scdata_list, config, cells_id) {
   }
 
   return(scdata)
+}
+
+
+RunGeosketchFastMNN <- RunGeosketchFastMNN(scdata, split.by, features, dims, config) {
+  set.seed(RANDOM_SEED)
+  perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
+  geosketch_list <- run_geosketch(
+    scdata,
+    dims = dims,
+    perc_num_cells = perc_num_cells
+    )
+
+  scdata_split <- Seurat::SplitObject(geosketch_list$sketch, split.by = split.by)
+  scdata_sketch_integrated <-
+    SeuratWrappers::RunFastMNN(
+      scdata_split,
+      features = nfeatures,
+      d = dims,
+      get.variance = TRUE
+    )
+
+  scdata <- learn_from_sketches(
+    geosketch_list$scdata,
+    geosketch_list$sketch,
+    scdata_sketch_integrated,
+    dims = dims
+  )
+
+  return(scdata)
+
 }
