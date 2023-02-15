@@ -299,7 +299,7 @@ test_that("normalize_data doesn't scale data if integration method is FastMNN", 
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
   config <- list(
-    dimensionalityReduction = list(numPCs = 2),
+    dimensionalityReduction = list(numPCs = 5),
     dataIntegration = list(method = "fastmnn", methodSettings = list(fastmnn = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
@@ -313,7 +313,7 @@ test_that("integrate_scdata doesn't run geosketch if config does not contain geo
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
   config <- list(
-    dimensionalityReduction = list(numPCs = 2),
+    dimensionalityReduction = list(numPCs = 5),
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
 
@@ -327,7 +327,7 @@ test_that("integrate_scdata run geosketch if config contains geosketch parameter
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
   config <- list(
-    dimensionalityReduction = list(numPCs = 2, method = "rpca"),
+    dimensionalityReduction = list(numPCs = 5, method = "rpca"),
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "logNormalize"))),
     downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 5)))
   )
@@ -342,7 +342,7 @@ test_that("run_geosketch generates the correct number of sketches", {
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
   config <- list(
-    dimensionalityReduction = list(numPCs = 2),
+    dimensionalityReduction = list(numPCs = 5),
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
 
@@ -363,7 +363,7 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
   config <- list(
-    dimensionalityReduction = list(numPCs = 2, method = "rpca"),
+    dimensionalityReduction = list(numPCs = 5, method = "rpca"),
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "logNormalize"))),
     downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 5)))
   )
