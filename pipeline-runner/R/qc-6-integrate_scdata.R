@@ -414,7 +414,7 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
     message("Only one sample detected or method is non integrate.")
   }
 
-  if (method %in% c("seuratv4", "harmony", "unisample")) {
+  if (method %in% c("seuratv4", "harmony", "unisample", "fastmnn")) {
     result <- temp_integrate_scdata(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration")
     return(result)
   }
