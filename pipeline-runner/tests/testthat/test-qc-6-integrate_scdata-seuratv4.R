@@ -299,7 +299,7 @@ test_that("misc slot is complete after Seurat V4 integration with geosketch", {
   cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
 
   config <- list(
-    dimensionalityReduction = list(numPCs = 2, method = "rpca"),
+    dimensionalityReduction = list(numPCs = 10, method = "rpca"),
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "logNormalize"))),
     downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
 
