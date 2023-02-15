@@ -104,7 +104,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, conf
 
   scdata_sketch_integrated <-
     harmony::RunHarmony(
-      geosketch_list$scdata,
+      geosketch_list$sketch,
       group.by.vars = "samples",
       reduction = "pca_for_harmony" ,
       dims.use = dims.use
@@ -112,7 +112,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, conf
 
   scdata <- learn_from_sketches(
     geosketch_list$scdata,
-    geosketch_list$scdata_sketch,
+    geosketch_list$sketch,
     scdata_sketch_integrated,
     dims = dims.use
   )
