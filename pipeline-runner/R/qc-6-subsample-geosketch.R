@@ -14,6 +14,9 @@ run_geosketch <- function(scdata, dims, perc_num_cells) {
   reduction <- "pca"
   num_cells <- round(ncol(scdata) * perc_num_cells / 100)
 
+  # use the min of what the user wants and what is available
+  dims <- min(ncol(scdata@reductions[[reduction]]) - 1, dims)
+
   message("Geosketching to ", num_cells, " cells")
 
   if (!exists("geosketch")) {
