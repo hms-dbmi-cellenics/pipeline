@@ -11,18 +11,18 @@
 #'
 #' @return list of QC configuration parameters
 #'
-construct_qc_config <- function(scdata_list, any_filtered, disable_qc_filters) {
+construct_qc_config <- function(scdata_list, filtered_samples, disable_qc_filters) {
   samples <- names(scdata_list)
 
   # classifier
   classifier_config_for_each_sample <- list(
-    enabled = !any_filtered && !disable_qc_filters,
-    prefiltered = any_filtered,
+    enabled = NA,
+    prefiltered = NA,
     auto = TRUE,
     filterSettings = list(FDR = 0.01)
   )
 
-  config.classifier <- add_custom_config_per_sample(\(scdata_list, config) config, classifier_config_for_each_sample, scdata_list)
+  config.classifier <- add_custom_classifier_config_per_sample(\(scdata_list, config) config, classifier_config_for_each_sample, scdata_list, filtered_samples, disable_qc_filters)
 
   # cell size
   default_cellSizeDistribution_config <- list(
@@ -171,6 +171,26 @@ get_gene_umi_config <- function(scdata_list, config) {
   # Sensible values are based on the function "gene.vs.molecule.cell.filter" from the pagoda2 package
   p.level <- min(0.001, 1 / ncol(scdata_list))
   config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level <- p.level
+
+  return(config)
+}
+
+add_custom_classifier_config_per_sample <- function(generate_sample_config, default_config, scdata_list, filtered_samples, disable_qc_filters) {
+  # We update the config file, so to be able to access the raw config we create a copy
+  raw_config <- default_config
+  config <- list()
+  for (sample in names(scdata_list)) {
+    # subset the Seurat object list to a single sample
+    sample_data <- scdata_list[[sample]]
+
+    # run the function to generate config for a sample
+    sample_config <- generate_sample_config(sample_data, raw_config)
+    sample_config$enabled <- !(sample %in% filtered_samples) && !disable_qc_filters
+    sample_config$prefiltered <- sample %in% filtered_samples
+
+    # update sample config thresholds
+    config[[sample]] <- sample_config
+  }
 
   return(config)
 }
