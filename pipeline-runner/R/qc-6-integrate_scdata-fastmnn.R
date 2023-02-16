@@ -23,8 +23,8 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
   Seurat::DefaultAssay(scdata) <- "RNA"
 
   scdata <- scdata |>
-    Seurat::NormalizeData(assay = "RNA", normalization.method = normalization, verbose = FALSE) |>
-    Seurat::FindVariableFeatures(assay = "RNA", nfeatures = nfeatures, verbose = FALSE) |>
+    Seurat::NormalizeData(normalization.method = normalization, verbose = FALSE) |>
+    Seurat::FindVariableFeatures(nfeatures = nfeatures, verbose = FALSE) |>
     Seurat::ScaleData(verbose = FALSE) |>
     Seurat::RunPCA(npcs = npcs_for_pca, verbose = FALSE)
 
