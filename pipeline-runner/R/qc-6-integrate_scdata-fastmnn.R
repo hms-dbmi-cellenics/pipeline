@@ -37,6 +37,9 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
 
   scdata <- add_dispersions(scdata, normalization)
   misc <- scdata@misc
+  # remove scale.data slot to avoid errors
+  # https://github.com/satijalab/seurat-wrappers/issues/126
+  scdata@assays$RNA@scale.data <- as.matrix(0)
 
   if (use_geosketch) {
     scdata <-
