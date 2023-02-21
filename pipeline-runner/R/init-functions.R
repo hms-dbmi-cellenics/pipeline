@@ -77,7 +77,7 @@ load_config <- function(development_aws_server) {
     aws_config = list(region = aws_region),
     pod_name = Sys.getenv("K8S_POD_NAME", "local"),
     activity_arn = activity_arn,
-    api_url = paste0("http://api-", sandbox, ".api-", sandbox, ".svc.cluster.local:3000"),
+    api_url = sprintf("http://%s:3000", development_aws_server),
     api_version = "v2",
     debug_config = list(
       step = Sys.getenv("DEBUG_STEP", ""),
@@ -87,15 +87,10 @@ load_config <- function(development_aws_server) {
 
 
   if (config$cluster_env == "staging") {
-    config$public_api_url <- paste0("https://api-", sandbox, ".", domain_name)
+    config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
   }
   if (config$cluster_env == "production") {
-    config$public_api_url <- paste0("https://api.", domain_name)
-  }
-
-  # batch does not have access to the internal EKS cluster api URL, use the public one
-  if (running_in_batch == "true" && domain_name != "") {
-    config$api_url <- config$public_api_url
+    config$api_url <- paste0("https://api.", domain_name)
   }
 
   # running in linux needs the IP of the host to work. If it is set as an
@@ -107,7 +102,6 @@ load_config <- function(development_aws_server) {
   }
 
   if (config$cluster_env == "development") {
-    config$api_url <- sprintf("http://%s:3000", development_aws_server)
     # DOCKER_GATEWAY_HOST
     config$aws_config[["endpoint"]] <- sprintf(
       "http://%s:4566",

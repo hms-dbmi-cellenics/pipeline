@@ -25,6 +25,7 @@ embed_and_cluster <-
     cellSets <-
       runClusters(clustering_method, methodSettings$resolution, scdata)
     message("formatting cellsets")
+
     formated_cell_sets <-
       format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
     message("updating through api")

@@ -22,7 +22,11 @@
       
       $output$scdata_list$`this-is-not-a-uuid-2`
       An object of class Seurat 
+<<<<<<< HEAD
       2000 features across 116 samples within 1 assay 
+=======
+      2000 features across 125 samples within 1 assay 
+>>>>>>> biomage/master
       Active assay: RNA (2000 features, 0 variable features)
       
       
@@ -2053,17 +2057,25 @@
       
       $output$parent_cellsets
                  key      name    type cell_id
-        1: louvain-0 Cluster 0 cluster       1
-        2: louvain-0 Cluster 0 cluster      11
-        3: louvain-0 Cluster 0 cluster      19
-        4: louvain-0 Cluster 0 cluster      26
-        5: louvain-0 Cluster 0 cluster      34
+        1: louvain-0 Cluster 0 cluster      13
+        2: louvain-0 Cluster 0 cluster      25
+        3: louvain-0 Cluster 0 cluster      36
+        4: louvain-0 Cluster 0 cluster      39
+        5: louvain-0 Cluster 0 cluster      41
        ---                                    
+<<<<<<< HEAD
       580: louvain-5 Cluster 5 cluster     794
       581: louvain-5 Cluster 5 cluster     806
       582: louvain-5 Cluster 5 cluster     814
       583: louvain-5 Cluster 5 cluster     841
       584: louvain-5 Cluster 5 cluster     851
+=======
+      580: louvain-4 Cluster 4 cluster     782
+      581: louvain-4 Cluster 4 cluster     793
+      582: louvain-4 Cluster 4 cluster     837
+      583: louvain-4 Cluster 4 cluster     854
+      584: louvain-4 Cluster 4 cluster     857
+>>>>>>> biomage/master
       
       
 
