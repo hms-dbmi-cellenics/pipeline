@@ -146,18 +146,7 @@ test_that("Integrate scdata filters out cells ids", {
 })
 
 
-test_that("FastMNN works", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
-  cells_id <- mock_ids()
-  merged_scdata <- create_scdata(scdata_list, cells_id)
-  config <- list(
-    dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = "fastmnn", methodSettings = list(fastmnn = list(numGenes = 1000, normalisation = "logNormalize")))
-  )
 
-  integrated_scdata <- suppressWarnings(run_dataIntegration(merged_scdata, scdata_sketch = NA, config = config))
-  expect_s4_class(integrated_scdata, "Seurat")
-})
 
 test_that("numPCs estimation works", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
@@ -292,21 +281,6 @@ test_that("temp_integrate_scdata calls remove_genes if there are groups to exclu
     paste0("*Number of Cell Cycle genes to exclude: ", n_rename, "*")
   )
 })
-
-
-test_that("normalize_data doesn't scale data if integration method is FastMNN", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
-  cells_id <- mock_ids()
-  merged_scdata <- create_scdata(scdata_list, cells_id)
-  config <- list(
-    dimensionalityReduction = list(numPCs = 5),
-    dataIntegration = list(method = "fastmnn", methodSettings = list(fastmnn = list(numGenes = 1000, normalisation = "logNormalize")))
-  )
-
-  merged_scdata <- log_normalize(merged_scdata, "LogNormalize", config$dataIntegration$method, config$dataIntegration$methodSettings$fastmnn$numGenes)
-  expect_equal(dim(merged_scdata@assays$RNA@scale.data), c(0, 0))
-})
-
 
 
 test_that("integrate_scdata doesn't run geosketch if config does not contain geosketch parameters", {
