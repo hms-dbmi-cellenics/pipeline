@@ -27,6 +27,15 @@ build_activity_arn <- function(aws_region, aws_account_id, activity_id) {
 #'
 #' @return list with config parameters
 load_config <- function(development_aws_server) {
+
+  # running in linux needs the IP of the host to work. If it is set as an
+  # environment variable (by makefile) honor it instead of the provided
+  # parameter
+  overriden_server <- Sys.getenv("HOST_IP", "")
+  if (overriden_server != "") {
+    development_aws_server <- overriden_server
+  }
+
   label_path <- "/etc/podinfo/labels"
   aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset = "242905224710")
   aws_region <- Sys.getenv("AWS_DEFAULT_REGION", unset = "eu-west-1")
@@ -91,14 +100,6 @@ load_config <- function(development_aws_server) {
   }
   if (config$cluster_env == "production") {
     config$api_url <- paste0("https://api.", domain_name)
-  }
-
-  # running in linux needs the IP of the host to work. If it is set as an
-  # environment variable (by makefile) honor it instead of the provided
-  # parameter
-  overriden_server <- Sys.getenv("HOST_IP", "")
-  if (overriden_server != "") {
-    development_aws_server <- overriden_server
   }
 
   if (config$cluster_env == "development") {
