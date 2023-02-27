@@ -32,8 +32,9 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   # construct default QC config and update prev out
   message("Constructing default QC configuration...")
-  filtered_samples <- names(prev_out$edrops[!is.null(prev_out$edrops)])
-  prev_out$qc_config <- construct_qc_config(scdata_list, filtered_samples, disable_qc_filters)
+  unfiltered_samples <- names(prev_out$edrops[!is.null(prev_out$edrops)])
+  message("Unfiltered samples: ", unfiltered_samples)
+  prev_out$qc_config <- construct_qc_config(scdata_list, unfiltered_samples, disable_qc_filters)
 
   res <- list(
     data = list(),

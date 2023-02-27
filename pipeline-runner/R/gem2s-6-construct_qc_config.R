@@ -11,7 +11,7 @@
 #'
 #' @return list of QC configuration parameters
 #'
-construct_qc_config <- function(scdata_list, filtered_samples, disable_qc_filters) {
+construct_qc_config <- function(scdata_list, unfiltered_samples, disable_qc_filters) {
   samples <- names(scdata_list)
 
   # classifier
@@ -22,7 +22,7 @@ construct_qc_config <- function(scdata_list, filtered_samples, disable_qc_filter
     filterSettings = list(FDR = 0.01)
   )
 
-  config.classifier <- add_custom_classifier_config_per_sample(\(scdata_list, config) config, classifier_config_for_each_sample, scdata_list, filtered_samples, disable_qc_filters)
+  config.classifier <- add_custom_classifier_config_per_sample(\(scdata_list, config) config, classifier_config_for_each_sample, scdata_list, unfiltered_samples, disable_qc_filters)
 
   # cell size
   default_cellSizeDistribution_config <- list(
@@ -175,7 +175,7 @@ get_gene_umi_config <- function(scdata_list, config) {
   return(config)
 }
 
-add_custom_classifier_config_per_sample <- function(generate_sample_config, default_config, scdata_list, filtered_samples, disable_qc_filters) {
+add_custom_classifier_config_per_sample <- function(generate_sample_config, default_config, scdata_list, unfiltered_samples, disable_qc_filters) {
   # We update the config file, so to be able to access the raw config we create a copy
   raw_config <- default_config
   config <- list()
@@ -185,8 +185,8 @@ add_custom_classifier_config_per_sample <- function(generate_sample_config, defa
 
     # run the function to generate config for a sample
     sample_config <- generate_sample_config(sample_data, raw_config)
-    sample_config$enabled <- sample %in% filtered_samples && !disable_qc_filters
-    sample_config$prefiltered <- !(sample %in% filtered_samples)
+    sample_config$enabled <- sample %in% unfiltered_samples && !disable_qc_filters
+    sample_config$prefiltered <- !(sample %in% unfiltered_samples)
 
     # update sample config thresholds
     config[[sample]] <- sample_config
