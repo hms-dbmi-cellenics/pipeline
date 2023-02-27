@@ -185,8 +185,8 @@ add_custom_classifier_config_per_sample <- function(generate_sample_config, defa
 
     # run the function to generate config for a sample
     sample_config <- generate_sample_config(sample_data, raw_config)
-    sample_config$enabled <- !(sample %in% filtered_samples) && !disable_qc_filters
-    sample_config$prefiltered <- sample %in% filtered_samples
+    sample_config$enabled <- !(!(sample %in% filtered_samples) && !disable_qc_filters)
+    sample_config$prefiltered <- !(sample %in% filtered_samples)
 
     # update sample config thresholds
     config[[sample]] <- sample_config
