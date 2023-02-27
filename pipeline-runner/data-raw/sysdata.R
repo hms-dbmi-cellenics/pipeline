@@ -1,7 +1,3 @@
-# time stamp used for directory to store log/dump files in event of error
-debug_timestamp <- format(Sys.time(), format = "%Y-%m-%d_at_%H-%M-%OS3")
-
-
 bucket_list <- list(
   originals_bucket = "biomage-originals",
   source_bucket = "biomage-source",
@@ -94,6 +90,8 @@ IDS_IDS <- "ids_ids"
 
 pipeline_version <- 2
 
+UNISAMPLE <- "unisample"
+
 # pipeline error constants
 errors <- list(
   ERROR_SEURAT_RDS = 'ERROR_SEURAT_RDS',
@@ -124,6 +122,7 @@ usethis::use_data(
   IDS_IDS,
   cc_genes,
   pipeline_version,
+  UNISAMPLE,
   errors,
   internal = TRUE,
   overwrite = TRUE

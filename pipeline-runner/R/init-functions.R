@@ -27,6 +27,15 @@ build_activity_arn <- function(aws_region, aws_account_id, activity_id) {
 #'
 #' @return list with config parameters
 load_config <- function(development_aws_server) {
+
+  # running in linux needs the IP of the host to work. If it is set as an
+  # environment variable (by makefile) honor it instead of the provided
+  # parameter
+  overriden_server <- Sys.getenv("HOST_IP", "")
+  if (overriden_server != "") {
+    development_aws_server <- overriden_server
+  }
+
   label_path <- "/etc/podinfo/labels"
   aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset = "242905224710")
   aws_region <- Sys.getenv("AWS_DEFAULT_REGION", unset = "eu-west-1")
@@ -77,7 +86,7 @@ load_config <- function(development_aws_server) {
     aws_config = list(region = aws_region),
     pod_name = Sys.getenv("K8S_POD_NAME", "local"),
     activity_arn = activity_arn,
-    api_url = paste0("http://api-", sandbox, ".api-", sandbox, ".svc.cluster.local:3000"),
+    api_url = sprintf("http://%s:3000", development_aws_server),
     api_version = "v2",
     debug_config = list(
       step = Sys.getenv("DEBUG_STEP", ""),
@@ -87,27 +96,13 @@ load_config <- function(development_aws_server) {
 
 
   if (config$cluster_env == "staging") {
-    config$public_api_url <- paste0("https://api-", sandbox, ".", domain_name)
+    config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
   }
   if (config$cluster_env == "production") {
-    config$public_api_url <- paste0("https://api.", domain_name)
-  }
-
-  # batch does not have access to the internal EKS cluster api URL, use the public one
-  if (running_in_batch == "true" && domain_name != "") {
-    config$api_url <- config$public_api_url
-  }
-
-  # running in linux needs the IP of the host to work. If it is set as an
-  # environment variable (by makefile) honor it instead of the provided
-  # parameter
-  overriden_server <- Sys.getenv("HOST_IP", "")
-  if (overriden_server != "") {
-    development_aws_server <- overriden_server
+    config$api_url <- paste0("https://api.", domain_name)
   }
 
   if (config$cluster_env == "development") {
-    config$api_url <- sprintf("http://%s:3000", development_aws_server)
     # DOCKER_GATEWAY_HOST
     config$aws_config[["endpoint"]] <- sprintf(
       "http://%s:4566",
@@ -278,7 +273,7 @@ call_subset <- function(task_name, input, pipeline_config) {
   c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
 
   return(message_id)
 }
@@ -353,8 +348,11 @@ call_qc <- function(task_name, input, pipeline_config) {
       samples <- names(scdata)
       assign("cells_id",
         load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples),
-        pos = ".GlobalEnv"
-      )
+        pos = ".GlobalEnv")
+
+      # won't be cells_id in S3 for uploaded Seurat object that is being subsetted
+      if (!length(cells_id)) cells_id <- generate_first_step_ids(scdata)
+
     } else {
       stop("Invalid task name given: ", task_name)
     }

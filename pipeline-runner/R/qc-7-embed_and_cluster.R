@@ -25,6 +25,7 @@ embed_and_cluster <-
     cellSets <-
       runClusters(clustering_method, methodSettings$resolution, scdata)
     message("formatting cellsets")
+
     formated_cell_sets <-
       format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
     message("updating through api")
@@ -48,6 +49,26 @@ embed_and_cluster <-
 
     return(result)
   }
+
+#' Ensure is list in json
+#'
+#' When sending responses as json, Vectors of length 0 or 1 are converted to
+#' null and scalar (respectively) Using as.list fixes this, however, long R
+#' lists take a VERY long time to be converted to JSON.
+#' This function deals with the problematic cases, leaving vector as a vector
+#' when it isnt a problem.
+#'
+#' @param vector
+#'
+#' @export
+#'
+ensure_is_list_in_json <- function(vector) {
+  if (length(vector) <= 1) {
+    return(as.list(vector))
+  } else {
+    return(vector)
+  }
+}
 
 format_cell_sets_object <-
   function(cell_sets, clustering_method, color_pool) {
@@ -73,7 +94,7 @@ format_cell_sets_object <-
         rootNode = FALSE,
         type = "cellSets",
         color = color_pool[1],
-        cellIds = unname(cells)
+        cellIds = ensure_is_list_in_json(unname(cells))
       )
       color_pool <- color_pool[-1]
       cell_sets_object$children <-
@@ -90,6 +111,10 @@ update_sets_through_api <-
            auth_JWT) {
 
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
+
+    if (Sys.getenv("IGNORE_SSL_CERTIFICATE") == "true") {
+        httr::set_config(httr::config(ssl_verifypeer = 0L))
+    }
 
     httr::PATCH(
       paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),

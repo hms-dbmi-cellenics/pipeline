@@ -12,7 +12,7 @@
 #'          to call generate_default_values_doubletScores)
 #'          - filterSettings: slot with thresholds
 #'                  - probabilityThreshold: Float. cut-off for the maximun probability scores that could have a cell. The doubletScores scores have been computed
-#'                  through "scrublet" [1]
+#'                  through scDblFinder
 #'                  - binStep: Float. Bin size for the histogram
 #' @export
 #' @return a list with the filtered seurat object by doublet score, the config and the plot values
@@ -83,10 +83,12 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
   return(result)
 }
 
+# default doublet score based of scDblFinder classification
 generate_default_values_doubletScores <- function(scdata) {
-  # default doublet score based of scDblFinder classification
   is_singlet <- scdata$doublet_class == "singlet"
-  threshold <- max(scdata$doublet_scores[is_singlet], na.rm = TRUE)
+
+  # if no singlets set threshold to 0, preventing some experiments to fail
+  threshold <- max(scdata$doublet_scores[is_singlet], 0.0, na.rm = TRUE)
 
   return(threshold)
 }
