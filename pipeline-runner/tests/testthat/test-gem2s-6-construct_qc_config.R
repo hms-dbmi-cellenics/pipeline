@@ -102,3 +102,20 @@ test_that("get_dblscore_config sets threshold to 0 when there are no singlets", 
     expect_equal(config$filterSettings$probabilityThreshold, 0)
   }
 })
+
+
+test_that("classifier filter config is enabled for unfiltered samples and disabled for pre-filtered samples", {
+  scdata_list <- mock_scdata_list()
+  unfiltered_samples <- c("123abc")
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, disable_qc_filters = FALSE)
+
+  for (sample in names(scdata_list)) {
+    if (sample %in% unfiltered_samples) {
+      expect_true(qc_config$classifier[[sample]]$enabled)
+      expect_false(qc_config$classifier[[sample]]$prefiltered)
+    } else {
+      expect_false(qc_config$classifier[[sample]]$enabled)
+      expect_true(qc_config$classifier[[sample]]$prefiltered)
+    }
+  }
+})
