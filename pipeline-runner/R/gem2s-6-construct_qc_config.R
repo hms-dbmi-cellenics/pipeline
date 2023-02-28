@@ -5,7 +5,7 @@
 #' PostgreSQL database.
 #'
 #' @param scdata_list list of seurat objects
-#' @param any_filtered bool indicating if barcodes were filtered by emptyDrops
+#' @param unfiltered_samples character of unfiltered sample ids
 #' @param disable_qc_filters bool indicating if the data derives from the
 #' subsetting of another experiment
 #'
@@ -14,121 +14,59 @@
 construct_qc_config <- function(scdata_list, unfiltered_samples, disable_qc_filters) {
   samples <- names(scdata_list)
 
-  # classifier
-  classifier_config_for_each_sample <- list(
-    enabled = NA,
-    prefiltered = NA,
-    auto = TRUE,
-    filterSettings = list(FDR = 0.01)
-  )
+  config_classifier <-
+    add_custom_config_per_sample(get_classifier_config,
+                                 processing_config_template[["classifier"]],
+                                 scdata_list,
+                                 disable_qc_filters,
+                                 unfiltered_samples)
 
-  config.classifier <- add_custom_classifier_config_per_sample(\(scdata_list, config) config, classifier_config_for_each_sample, scdata_list, unfiltered_samples, disable_qc_filters)
+  config_cell_size <-
+    add_custom_config_per_sample(get_cellsize_config,
+                                 processing_config_template[["cell_size"]],
+                                 scdata_list,
+                                 disable_qc_filters)
 
-  # cell size
-  default_cellSizeDistribution_config <- list(
-    enabled = FALSE,
-    auto = TRUE,
-    filterSettings = list(minCellSize = 1080, binStep = 200)
-  )
+  config_mitochondrial <-
+    add_custom_config_per_sample(get_sample_mitochondrial_config,
+                                 processing_config_template[["mitochondrial"]],
+                                 scdata_list,
+                                 disable_qc_filters)
 
-  config.cellSizeDistribution <- add_custom_config_per_sample(get_cellsize_config, default_cellSizeDistribution_config, scdata_list)
-
-  # mito
-  default_mitochondrialContent_config <- list(
-    enabled = !disable_qc_filters,
-    auto = TRUE,
-    filterSettings = list(
-      method = "absoluteThreshold",
-      methodSettings = list(
-        absoluteThreshold = list(
-          maxFraction = 0.1,
-          binStep = 0.3
-        )
-      )
-    )
-  )
-
-  config.mitochondrialContent <- add_custom_config_per_sample(get_sample_mitochondrial_config, default_mitochondrialContent_config, scdata_list)
-
-  # ngenes vs umis
-  default_numGenesVsNumUmis_config <- list(
-    enabled = !disable_qc_filters,
-    auto = TRUE,
-    filterSettings = list(
-      regressionType = "linear",
-      regressionTypeSettings = list(
-        "linear" = list(p.level = 0.001),
-        "spline" = list(p.level = 0.001)
-      )
-    )
-  )
-
-  config.numGenesVsNumUmis <- add_custom_config_per_sample(get_gene_umi_config, default_numGenesVsNumUmis_config, scdata_list)
+  config_genes_vs_umis <-
+    add_custom_config_per_sample(get_gene_umi_config,
+                                 processing_config_template[["genes_vs_umis"]],
+                                 scdata_list,
+                                 disable_qc_filters)
 
 
-  # doublet scores
-  default_doubletScores_config <- list(
-    enabled = !disable_qc_filters,
-    auto = TRUE,
-    filterSettings = list(
-      probabilityThreshold = 0.5,
-      binStep = 0.02
-    )
-  )
+  config_doublet <-
+    add_custom_config_per_sample(get_dblscore_config,
+                                 processing_config_template[["doublet"]],
+                                 scdata_list,
+                                 disable_qc_filters)
 
-  config.doubletScores <- add_custom_config_per_sample(get_dblscore_config, default_doubletScores_config, scdata_list)
+  config_data_integration <- processing_config_template[["data_integration"]]
 
-  # data integration
-  config.dataIntegration <- list(
-    dataIntegration = list(
-      method = "harmony",
-      methodSettings = list(
-        seuratv4 = list(numGenes = 2000, normalisation = "logNormalize"),
-        unisample = list(numGenes = 2000, normalisation = "logNormalize"),
-        harmony = list(numGenes = 2000, normalisation = "logNormalize"),
-        fastmnn = list(numGenes = 2000, normalisation = "logNormalize")
-      )
-    ),
-    dimensionalityReduction = list(
-      method = "rpca",
-      numPCs = NULL,
-      excludeGeneCategories = list()
-    )
-  )
-
-
-  # embedding
-  config.configureEmbedding <- list(
-    embeddingSettings = list(
-      method = "umap",
-      methodSettings = list(
-        umap = list(
-          minimumDistance = 0.3,
-          distanceMetric = "cosine"
-        ),
-        tsne = list(
-          perplexity = min(30, ncol(scdata_list) / 100),
-          learningRate = max(200, ncol(scdata_list) / 12)
-        )
-      )
-    ),
-    clusteringSettings = list(
-      method = "louvain",
-      methodSettings = list(louvain = list(resolution = 0.8))
-    )
-  )
+  config_embedding_clustering <-
+    get_embedding_config(scdata_list, processing_config_template[["embedding_clustering"]])
 
   # combine config for all steps
   config <- list(
-    cellSizeDistribution = config.cellSizeDistribution,
-    mitochondrialContent = config.mitochondrialContent,
-    classifier = config.classifier,
-    numGenesVsNumUmis = config.numGenesVsNumUmis,
-    doubletScores = config.doubletScores,
-    dataIntegration = config.dataIntegration,
-    configureEmbedding = config.configureEmbedding
+    cellSizeDistribution = config_cell_size,
+    mitochondrialContent = config_mitochondrial,
+    classifier = config_classifier,
+    numGenesVsNumUmis = config_genes_vs_umis,
+    doubletScores = config_doublet,
+    dataIntegration = config_data_integration,
+    configureEmbedding = config_embedding_clustering
   )
 
+  return(config)
+}
+
+
+get_classifier_config <- function(scdata_list, config) {
   return(config)
 }
 
@@ -175,27 +113,22 @@ get_gene_umi_config <- function(scdata_list, config) {
   return(config)
 }
 
-add_custom_classifier_config_per_sample <- function(generate_sample_config, default_config, scdata_list, unfiltered_samples, disable_qc_filters) {
-  # We update the config file, so to be able to access the raw config we create a copy
-  raw_config <- default_config
-  config <- list()
-  for (sample in names(scdata_list)) {
-    # subset the Seurat object list to a single sample
-    sample_data <- scdata_list[[sample]]
+get_embedding_config <- function(scdata_list, config) {
 
-    # run the function to generate config for a sample
-    sample_config <- generate_sample_config(sample_data, raw_config)
-    sample_config$enabled <- sample %in% unfiltered_samples && !disable_qc_filters
-    sample_config$prefiltered <- !(sample %in% unfiltered_samples)
+  # tsne parameters depend on number of cells in sample
+  default_perplexity <- config$methodSettings$tsne$perplexity
+  default_learning_rate <- config$methodSettings$tsne$learningRate
 
-    # update sample config thresholds
-    config[[sample]] <- sample_config
-  }
+  config$methodSettings$tsne <- list(
+    perplexity = min(default_perplexity, min(vapply(scdata_list, ncol, integer(1))) / 100),
+    learningRate = max(default_learning_rate, min(vapply(scdata_list, ncol, integer(1))) / 12)
+  )
 
   return(config)
 }
 
-add_custom_config_per_sample <- function(generate_sample_config, default_config, scdata_list) {
+
+add_custom_config_per_sample <- function(generate_sample_config, default_config, scdata_list, disable_qc_filters = FALSE, unfiltered_samples = NA) {
   # We update the config file, so to be able to access the raw config we create a copy
   raw_config <- default_config
   config <- list()
@@ -205,6 +138,16 @@ add_custom_config_per_sample <- function(generate_sample_config, default_config,
 
     # run the function to generate config for a sample
     sample_config <- generate_sample_config(sample_data, raw_config)
+
+    if (rlang::has_name(sample_config, "prefiltered")) {
+      # only change these values for the classifier config
+      sample_config$enabled <- sample %in% unfiltered_samples && !disable_qc_filters
+      sample_config$prefiltered <- !(sample %in% unfiltered_samples)
+    }
+
+    if (rlang::has_name(sample_config, "enabled")) {
+      sample_config$enabled <- sample_config$enabled && !disable_qc_filters
+    }
 
     # update sample config thresholds
     config[[sample]] <- sample_config
