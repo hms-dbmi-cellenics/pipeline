@@ -66,38 +66,27 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, disable_qc_filt
 }
 
 
-get_classifier_config <- function(scdata_list, config) {
+get_classifier_config <- function(scdata, config) {
   return(config)
 }
 
-get_cellsize_config <- function(scdata_list, config) {
-  minCellSize <- generate_default_values_cellSizeDistribution(scdata_list, config)
+get_cellsize_config <- function(scdata, config) {
+  minCellSize <- generate_default_values_cellSizeDistribution(scdata, config)
   config$filterSettings$minCellSize <- minCellSize
   return(config)
 }
 
-get_sample_mitochondrial_config <- function(scdata_list.sample, config) {
-  config.sample <- list(
-    enabled = config$enabled,
-    auto = TRUE,
-    filterSettings = list(
-      method = "absoluteThreshold",
-      methodSettings = list()
-    )
-  )
+get_sample_mitochondrial_config <- function(scdata, config) {
+  default_max_fraction <- generate_default_values_mitochondrialContent(scdata, config)
+  config$filterSettings$methodSettings$absoluteThreshold$maxFraction <- default_max_fraction
 
-  config.sample$filterSettings$methodSettings$absoluteThreshold <- list(
-    maxFraction = generate_default_values_mitochondrialContent(scdata_list.sample, config.sample),
-    binStep = 0.3
-  )
-
-  return(config.sample)
+  return(config)
 }
 
 
 # threshold for doublet score is the max score given to a singlet (above score => doublets)
-get_dblscore_config <- function(scdata_list, config) {
-  probabilityThreshold <- generate_default_values_doubletScores(scdata_list)
+get_dblscore_config <- function(scdata, config) {
+  probabilityThreshold <- generate_default_values_doubletScores(scdata)
 
   config$filterSettings$probabilityThreshold <- probabilityThreshold
 
@@ -105,16 +94,15 @@ get_dblscore_config <- function(scdata_list, config) {
 }
 
 
-get_gene_umi_config <- function(scdata_list, config) {
+get_gene_umi_config <- function(scdata, config) {
   # Sensible values are based on the function "gene.vs.molecule.cell.filter" from the pagoda2 package
-  p.level <- min(0.001, 1 / ncol(scdata_list))
+  p.level <- min(0.001, 1 / ncol(scdata))
   config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level <- p.level
 
   return(config)
 }
 
 get_embedding_config <- function(scdata_list, config) {
-
   # tsne parameters depend on number of cells in sample
   default_perplexity <- config$methodSettings$tsne$perplexity
   default_learning_rate <- config$methodSettings$tsne$learningRate
