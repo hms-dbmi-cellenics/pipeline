@@ -104,10 +104,10 @@ get_gene_umi_config <- function(scdata, config) {
 
 get_embedding_config <- function(scdata_list, config) {
   # tsne parameters depend on number of cells in sample
-  default_perplexity <- config$methodSettings$tsne$perplexity
-  default_learning_rate <- config$methodSettings$tsne$learningRate
+  default_perplexity <- config$embeddingSettings$methodSettings$tsne$perplexity
+  default_learning_rate <- config$embeddingSettings$methodSettings$tsne$learningRate
 
-  config$methodSettings$tsne <- list(
+  config$embeddingSettings$methodSettings$tsne <- list(
     perplexity = min(default_perplexity, min(vapply(scdata_list, ncol, integer(1))) / 100),
     learningRate = max(default_learning_rate, min(vapply(scdata_list, ncol, integer(1))) / 12)
   )

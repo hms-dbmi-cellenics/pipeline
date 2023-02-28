@@ -75,7 +75,7 @@
         .. .. .. ..$ distanceMetric : chr "cosine"
         .. .. ..$ tsne:List of 2
         .. .. .. ..$ perplexity  : num 30
-        .. .. .. ..$ learningRate: num 200
+        .. .. .. ..$ learningRate: num 631
         ..$ clusteringSettings:List of 2
         .. ..$ method        : chr "louvain"
         .. ..$ methodSettings:List of 1
