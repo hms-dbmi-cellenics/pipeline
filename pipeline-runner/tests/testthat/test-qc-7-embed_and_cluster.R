@@ -120,7 +120,14 @@ test_that("runClusters uses active.reduction in misc slot", {
 with_fake_http(
   test_that("update_sets_through_api sends patch request", {
     expect_PATCH(
-      update_sets_through_api(list(), "api_url", "experiment_id", "cell_set_key", "auth")
+      update_sets_through_api(
+        list(),
+        "api_url",
+        "experiment_id",
+        "cell_set_key",
+        "auth",
+        FALSE
+    )
     )
   })
 )
@@ -129,7 +136,14 @@ with_fake_http(
  test_that("update_sets_through_api diables SSL certificate checking if disabled", {
 
     expect_PATCH(
-      update_sets_through_api(list(), "api_url", "experiment_id", "cell_set_key", "auth", TRUE)
+      update_sets_through_api(
+        list(),
+        "api_url",
+        "experiment_id",
+        "cell_set_key",
+        "auth",
+        TRUE
+    )
     )
 
     # set random config to get the previously used config
@@ -253,9 +267,18 @@ test_that("embed_and_cluster works", {
   sample_id <- "mock_sample_id"
   cells_id <- "83abbeea-b664-499a-8e6e-d2dbae4c60a9"
   task_name <- "configureEmbedding"
+  ignore_ssl_cert <- FALSE
 
   cell_sets_bucket <- "./mock_data/cell_sets_bucket"
-  stubbed_embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
+  stubbed_embed_and_cluster(
+    scdata,
+    config,
+    sample_id,
+    cells_id,
+    task_name,
+    ignore_ssl_cert
+)
+
   expect_snapshot_file(file.path(cell_sets_bucket, "cluster_cellsets.json"),
                        name = "cluster_cell_sets.json")
   withr::defer(unlink(cell_sets_bucket, recursive = TRUE))
