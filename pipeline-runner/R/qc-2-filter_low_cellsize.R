@@ -18,7 +18,7 @@
 #' @export
 #' @return a list with the filtered seurat object by cell size ditribution, the config and the plot values
 #'
-filter_low_cellsize <- function(scdata_list, config, sample_id, cells_id, task_name = "cellSizeDistribution", ignore_ssl_cert = FALSE, num_cells_to_downsample = 6000) {
+filter_low_cellsize <- function(scdata_list, config, sample_id, cells_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
   sample_cell_ids <- cells_id[[sample_id]]
 
   if (length(sample_cell_ids) == 0) {

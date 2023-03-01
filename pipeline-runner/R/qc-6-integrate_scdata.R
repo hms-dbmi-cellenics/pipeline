@@ -404,7 +404,7 @@ log_normalize <- function(scdata, normalization_method, integration_method, nfea
 #' @return a list with the integrated seurat object, the cell ids, the config and the plot values.
 #' @export
 #'
-integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", ignore_ssl_cert = FALSE, use_geosketch = FALSE, perc_num_cells = 5) {
+integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration", use_geosketch = FALSE, perc_num_cells = 5) {
   # get the method and redirect to the new temporary function until we refactor all the methods
   method <- config$dataIntegration$method
 

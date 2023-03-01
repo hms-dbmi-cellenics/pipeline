@@ -170,7 +170,13 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, i
   # run task and time it
   tstart <- Sys.time()
 
-  out <- task(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert)
+  # Configure embedding needs additional params so it's separated
+  if(task_name == "configureEmbedding") {
+    out <- task(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert)
+  } else {
+    out <- task(scdata, config, sample_id, cells_id, task_name)
+  }
+
   ttask <- format(Sys.time() - tstart, digits = 2)
   message(
     "⏱️ Time to complete ", task_name,

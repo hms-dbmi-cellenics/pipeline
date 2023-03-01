@@ -31,8 +31,6 @@ embed_and_cluster <-
       format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
     message("updating through api")
 
-    message(ignore_ssl_cert)
-
     update_sets_through_api(
       formated_cell_sets,
       config$api_url,
