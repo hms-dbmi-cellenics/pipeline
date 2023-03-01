@@ -14,7 +14,6 @@
 #' @export
 #'
 run_seuratv4 <- function(scdata_list, config, cells_id) {
-
   settings <- config$dataIntegration$methodSettings[["seuratv4"]]
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
@@ -27,9 +26,13 @@ run_seuratv4 <- function(scdata_list, config, cells_id) {
 
   use_geosketch <- "downsampling" %in% names(config) && config$downsampling$method == "geosketch"
 
+  # calculate as many PCs for the PCA as possible, ideally 50, unless few cells
+  npcs_for_pca <- min(vapply(scdata_list, ncol, integer(1)) - 1, 50)
   npcs <- config$dimensionalityReduction$numPCs
+
+  # use the min of what the user wants and what can be calculated
   if (is.null(npcs)) {
-    npcs <- 30
+    npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
   }
 
   # reduce nPCs if low cell numbers
@@ -74,10 +77,10 @@ run_seuratv4 <- function(scdata_list, config, cells_id) {
 
   if (!use_geosketch) {
     # if not using geosketch, just integrate
-    scdata <- seuratv4_find_and_integrate_anchors(scdata_list, cells_id, reduction, normalization, npcs, nfeatures)
+    scdata <- seuratv4_find_and_integrate_anchors(scdata_list, cells_id, reduction, normalization, npcs, npcs_for_pca, nfeatures)
   } else if (use_geosketch) {
     perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
-    scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, nfeatures, use_geosketch)
+    scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, npcs_for_pca, nfeatures, use_geosketch)
   }
 
   scdata@misc[["numPCs"]] <- npcs
@@ -108,6 +111,7 @@ seuratv4_find_and_integrate_anchors <-
            reduction,
            normalization,
            npcs,
+           npcs_for_pca,
            nfeatures,
            scdata = NA,
            use_geosketch = FALSE) {
@@ -180,7 +184,17 @@ seuratv4_find_and_integrate_anchors <-
     scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
 
-    # run PCA
+    # run PCA with 50 PCs (or less if there are less cells) for the elbow plot and the % of variance explained
+    scdata <-
+      Seurat::RunPCA(
+        scdata,
+        npcs = npcs_for_pca,
+        reduction.name = "pca_for_plot",
+        reduction.key = "PCp_",
+        verbose = FALSE
+      )
+
+    # run PCA with npcs selected by the user
     scdata <-
       Seurat::RunPCA(
         scdata,
@@ -221,6 +235,7 @@ integrate_using_geosketch <-
            perc_num_cells,
            normalization,
            npcs,
+           npcs_for_pca,
            nfeatures,
            use_geosketch) {
     message("Percentage of cells to keep: ", perc_num_cells)
@@ -245,7 +260,7 @@ integrate_using_geosketch <-
     scdata_sketch_integrated <- seuratv4_find_and_integrate_anchors(
       scdata_sketch_split, cells_id,
       reduction, normalization,
-      npcs, nfeatures, scdata, use_geosketch
+      npcs, npcs_for_pca, nfeatures, scdata, use_geosketch
     )
     # learn from sketches
     message("Learning from sketches")
@@ -254,6 +269,16 @@ integrate_using_geosketch <-
       geosketch_list$sketch,
       scdata_sketch_integrated,
       npcs
+    )
+
+    # add back the pca_for_plot slot which is lost after learn_from_sketches (required for the elbow plot)
+    scdata@reductions[["pca_for_plot"]] <- Seurat::CreateDimReducObject(
+      embeddings = scdata_sketch_integrated@reductions$pca_for_plot@cell.embeddings,
+      loadings = scdata_sketch_integrated@reductions$pca_for_plot@feature.loadings,
+      projected = scdata_sketch_integrated@reductions$pca_for_plot@feature.loadings.projected,
+      stdev = scdata_sketch_integrated@reductions$pca_for_plot@stdev,
+      key = "PCp_",
+      misc = scdata_sketch_integrated@reductions$pca_for_plot@misc
     )
 
     return(scdata)
@@ -280,9 +305,11 @@ integrate_using_geosketch <-
 #'
 prepare_sct_integration <- function(data.split, reduction, normalization, k.filter, npcs) {
   features <- Seurat::SelectIntegrationFeatures(object.list = data.split, nfeatures = 3000)
-  data.split <- Seurat::PrepSCTIntegration(object.list = data.split,
-                                           assay = "SCT",
-                                           anchor.features = features)
+  data.split <- Seurat::PrepSCTIntegration(
+    object.list = data.split,
+    assay = "SCT",
+    anchor.features = features
+  )
   data.anchors <- Seurat::FindIntegrationAnchors(
     object.list = data.split,
     dims = 1:npcs,
