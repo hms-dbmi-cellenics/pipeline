@@ -27,7 +27,7 @@ mock_scdata_list <- function() {
 test_that("cellsize filter is disabled by default and classifier is pre-filtered", {
   scdata_list <- mock_scdata_list()
   unfiltered_samples <- c("123abc")
-  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, disable_qc_filters = FALSE)
+  qc_config <- construct_qc_config(scdata_list, disable_qc_filters = FALSE, unfiltered_samples = unfiltered_samples)
 
   for (sample in names(scdata_list)) {
     if (sample %in% unfiltered_samples) {

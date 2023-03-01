@@ -11,7 +11,7 @@
 #'
 #' @return list of QC configuration parameters
 #'
-construct_qc_config <- function(scdata_list, unfiltered_samples, disable_qc_filters) {
+construct_qc_config <- function(scdata_list, disable_qc_filters, unfiltered_samples) {
   samples <- names(scdata_list)
 
   config_classifier <-
@@ -66,17 +66,20 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, disable_qc_filt
 }
 
 
-get_classifier_config <- function(scdata, config) {
+get_classifier_config <- function(scdata, config, sample_name, disable_qc_filters, unfiltered_samples) {
+  config$enabled <- sample_name %in% unfiltered_samples && !disable_qc_filters
+  config$prefiltered <- !(sample_name %in% unfiltered_samples)
+
   return(config)
 }
 
-get_cellsize_config <- function(scdata, config) {
+get_cellsize_config <- function(scdata, config, sample_name, disable_qc_filters, unfiltered_samples) {
   minCellSize <- generate_default_values_cellSizeDistribution(scdata, config)
   config$filterSettings$minCellSize <- minCellSize
   return(config)
 }
 
-get_sample_mitochondrial_config <- function(scdata, config) {
+get_sample_mitochondrial_config <- function(scdata, config, sample_name, disable_qc_filters, unfiltered_samples) {
   default_max_fraction <- generate_default_values_mitochondrialContent(scdata, config)
   config$filterSettings$methodSettings$absoluteThreshold$maxFraction <- default_max_fraction
 
@@ -85,22 +88,23 @@ get_sample_mitochondrial_config <- function(scdata, config) {
 
 
 # threshold for doublet score is the max score given to a singlet (above score => doublets)
-get_dblscore_config <- function(scdata, config) {
+get_dblscore_config <- function(scdata, config, sample_name, disable_qc_filters, unfiltered_samples) {
   probabilityThreshold <- generate_default_values_doubletScores(scdata)
-
   config$filterSettings$probabilityThreshold <- probabilityThreshold
 
   return(config)
 }
 
 
-get_gene_umi_config <- function(scdata, config) {
+get_gene_umi_config <- function(scdata, config, sample_name, disable_qc_filters, unfiltered_samples) {
   # Sensible values are based on the function "gene.vs.molecule.cell.filter" from the pagoda2 package
   p.level <- min(0.001, 1 / ncol(scdata))
-  config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level <- p.level
+  regression_type <- config$filterSettings$regressionType
+  config$filterSettings$regressionTypeSettings[[regression_type]]$p.level <- p.level
 
   return(config)
 }
+
 
 get_embedding_config <- function(scdata_list, config) {
   # tsne parameters depend on number of cells in sample
@@ -116,29 +120,24 @@ get_embedding_config <- function(scdata_list, config) {
 }
 
 
-add_custom_config_per_sample <- function(generate_sample_config, default_config, scdata_list, disable_qc_filters = FALSE, unfiltered_samples = NA) {
-  # We update the config file, so to be able to access the raw config we create a copy
-  raw_config <- default_config
+add_custom_config_per_sample <- function(generate_sample_config, config_template, scdata_list, disable_qc_filters = FALSE, unfiltered_samples = NA) {
   config <- list()
-  for (sample in names(scdata_list)) {
+  for (sample_name in names(scdata_list)) {
     # subset the Seurat object list to a single sample
-    sample_data <- scdata_list[[sample]]
+    sample_scdata <- scdata_list[[sample_name]]
 
     # run the function to generate config for a sample
-    sample_config <- generate_sample_config(sample_data, raw_config)
+    sample_config <-
+      generate_sample_config(sample_scdata,
+                             config_template,
+                             sample_name,
+                             disable_qc_filters,
+                             unfiltered_samples)
 
-    if (rlang::has_name(sample_config, "prefiltered")) {
-      # only change these values for the classifier config
-      sample_config$enabled <- sample %in% unfiltered_samples && !disable_qc_filters
-      sample_config$prefiltered <- !(sample %in% unfiltered_samples)
-    }
-
-    if (rlang::has_name(sample_config, "enabled")) {
-      sample_config$enabled <- sample_config$enabled && !disable_qc_filters
-    }
+    sample_config$enabled <- sample_config$enabled && !disable_qc_filters
 
     # update sample config thresholds
-    config[[sample]] <- sample_config
+    config[[sample_name]] <- sample_config
   }
 
   return(config)
