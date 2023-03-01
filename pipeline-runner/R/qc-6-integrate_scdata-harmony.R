@@ -1,5 +1,4 @@
 run_harmony <- function(scdata_list, config, cells_id) {
-
   settings <- config$dataIntegration$methodSettings[["harmony"]]
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
@@ -28,7 +27,13 @@ run_harmony <- function(scdata_list, config, cells_id) {
     Seurat::NormalizeData(normalization.method = normalization, verbose = FALSE) |>
     Seurat::FindVariableFeatures(nfeatures = nfeatures, verbose = FALSE) |>
     Seurat::ScaleData(verbose = FALSE) |>
-    Seurat::RunPCA(npcs = npcs_for_pca, verbose = FALSE)
+    # run PCA with npcs_for_pca for the elbow plot and the % of variance explained
+    Seurat::RunPCA(
+      npcs = npcs_for_pca,
+      reduction.name = "pca_for_plot",
+      reduction.key = "PCp_",
+      verbose = FALSE
+    )
 
   # estimate number of PCs to be used downstream, for integration and clustering
   if (is.null(npcs)) {
@@ -96,25 +101,41 @@ prepare_scdata_for_harmony <- function(scdata_list, config, cells_id) {
 RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, config) {
   set.seed(RANDOM_SEED)
   perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
+  dims <- dims.use[length(dims.use)]
   geosketch_list <- run_geosketch(
     scdata,
-    dims = dims.use,
-    perc_num_cells = perc_num_cells
+    dims = dims,
+    perc_num_cells = perc_num_cells,
+    reduction = "pca_for_harmony"
   )
 
-  scdata_sketch_integrated <-
-    harmony::RunHarmony(
-      geosketch_list$sketch,
-      group.by.vars = "samples",
-      reduction = "pca_for_harmony" ,
-      dims.use = dims.use
-    )
+  if (ncol(geosketch_list$sketch) < 15) {
+    scdata_sketch_integrated <-
+      harmony::RunHarmony(
+        geosketch_list$sketch,
+        group.by.vars = "samples",
+        reduction = "pca_for_harmony",
+        dims.use = dims.use,
+        nclust = ncol(geosketch_list$sketch) - 1
+      )
+  } else {
+    scdata_sketch_integrated <-
+      harmony::RunHarmony(
+        geosketch_list$sketch,
+        group.by.vars = "samples",
+        reduction = "pca_for_harmony",
+        dims.use = dims.use,
+      )
+  }
+
+  scdata_sketch_integrated@misc[["active.reduction"]] <- "harmony"
 
   scdata <- learn_from_sketches(
     geosketch_list$scdata,
     geosketch_list$sketch,
     scdata_sketch_integrated,
-    dims = dims.use
+    dims = dims,
+    reduction = "pca_for_harmony"
   )
 
   return(scdata)
