@@ -9,9 +9,7 @@
 #' @return Seurat object downsampled to desired number of cells
 #' @export
 #'
-run_geosketch <- function(scdata, dims, perc_num_cells) {
-
-  reduction <- "pca"
+run_geosketch <- function(scdata, dims, perc_num_cells, reduction = "pca") {
   num_cells <- round(ncol(scdata) * perc_num_cells / 100)
 
   # use the min of what the user wants and what is available
@@ -51,11 +49,11 @@ run_geosketch <- function(scdata, dims, perc_num_cells) {
 #' @return Integrated Seurat object with original number of cells
 #' @export
 #'
-learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated, dims) {
+learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated, dims, reduction = "pca") {
   # get embeddings from splitted Seurat object
   active_reduction <- scdata_sketch_integrated@misc[["active.reduction"]]
-  embeddings_orig <- list(scdata@reductions[["pca"]]@cell.embeddings[, 1:dims])
-  embeddings_sketch <- list(scdata_sketch@reductions[["pca"]]@cell.embeddings[, 1:dims])
+  embeddings_orig <- list(scdata@reductions[[reduction]]@cell.embeddings[, 1:dims])
+  embeddings_sketch <- list(scdata_sketch@reductions[[reduction]]@cell.embeddings[, 1:dims])
   embeddings_sketch_int <- list(scdata_sketch_integrated@reductions[[active_reduction]]@cell.embeddings[, 1:dims])
 
   # use python script to learn integration from sketches and apply to whole dataset
@@ -74,4 +72,3 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
 
   return(scdata)
 }
-
