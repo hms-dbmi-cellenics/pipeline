@@ -19,7 +19,7 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
-filter_emptydrops <- function(scdata_list, config, sample_id, cells_id, task_name = "classifier", ignore_ssl_cert = "false", num_cells_to_downsample = 6000) {
+filter_emptydrops <- function(scdata_list, config, sample_id, cells_id, task_name = "classifier", ignore_ssl_cert = FALSE, num_cells_to_downsample = 6000) {
   sample_cell_ids <- cells_id[[sample_id]]
   message("Number of cells IDs: ", length(sample_cell_ids))
   message("Number of cells: ", ncol(scdata_list[[sample_id]]))

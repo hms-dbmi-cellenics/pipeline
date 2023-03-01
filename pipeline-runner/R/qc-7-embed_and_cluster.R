@@ -16,7 +16,7 @@ embed_and_cluster <-
            sample_id,
            cells_id,
            task_name = "configureEmbedding",
-           ignore_ssl_cert = "false") {
+           ignore_ssl_cert = FALSE) {
 
     message("starting clusters")
     clustering_method <- config$clusteringSettings$method
@@ -30,6 +30,8 @@ embed_and_cluster <-
     formated_cell_sets <-
       format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
     message("updating through api")
+
+    message(ignore_ssl_cert)
 
     update_sets_through_api(
       formated_cell_sets,
@@ -114,7 +116,7 @@ update_sets_through_api <-
 
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
-    if (ignore_ssl_cert == "true" || Sys.getenv("IGNORE_SSL_CERTIFICATE") == "true") {
+    if (ignore_ssl_cert) {
         httr::set_config(httr::config(ssl_verifypeer = 0L))
     }
 

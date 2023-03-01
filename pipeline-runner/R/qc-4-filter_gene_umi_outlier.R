@@ -39,7 +39,7 @@
 #' @return a list with the filtered seurat object by numGenesVsNumUmis, the config and the plot values
 #'
 #'
-filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, task_name = "numGenesVsNumUmis", ignore_ssl_cert = "false", num_cells_to_downsample = 6000) {
+filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, task_name = "numGenesVsNumUmis", ignore_ssl_cert = FALSE, num_cells_to_downsample = 6000) {
   sample_cell_ids <- cells_id[[sample_id]]
 
   if (length(sample_cell_ids) == 0) {
