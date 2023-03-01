@@ -1,3 +1,5 @@
+source("data-raw/processing_config_template.R")
+
 bucket_list <- list(
   originals_bucket = "biomage-originals",
   source_bucket = "biomage-source",
@@ -86,6 +88,7 @@ UNISAMPLE <- "unisample"
 
 usethis::use_data(
   debug_timestamp,
+  processing_config_template,
   bucket_list,
   gem2s,
   SUBSET_SEURAT_TASK_LIST,
