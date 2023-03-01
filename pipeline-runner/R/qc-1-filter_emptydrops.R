@@ -111,6 +111,8 @@ filter_emptydrops <- function(scdata_list, config, sample_id, cells_id, task_nam
 
 
 
+#' Generate default values for classifier filter
+#'
 #' @description Filters seurat object based on classifier filter using emptyDrops
 #               https://rdrr.io/github/MarioniLab/DropletUtils/man/emptyDrops.html
 #' @param config list containing the following information
