@@ -91,14 +91,14 @@ test_that("all filters are disabled when disable_qc_filters = TRUE and classifie
 })
 
 
-test_that("get_dblscore_config sets threshold to 0 when there are no singlets", {
+test_that("customize_doublet_config sets threshold to 0 when there are no singlets", {
   scdata_list <- mock_scdata_list()
   unfiltered_samples <- c("123abc")
   qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, disable_qc_filters = TRUE)
 
   for (sample in names(scdata_list)) {
     scdata_list[[sample]]$doublet_class <- "doublet"
-    config <- get_dblscore_config(scdata_list[[sample]], qc_config)
+    config <- customize_doublet_config(scdata_list[[sample]], qc_config)
     expect_equal(config$filterSettings$probabilityThreshold, 0)
   }
 })
