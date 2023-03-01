@@ -111,9 +111,6 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
   dt <- data.table::data.table(rank = ranks, fdr = fdrs, u = numis)
   dt <- dt[, .(ndrops = .N, u = u[1]), by = c("rank", "fdr")]
 
-  # example of what knee regions should look like
-  # plot_knee_regions(dt)
-
   # remove fdr specific columns for cell size filter
   if (is.cellsize) dt[, c("fdr", "ndrops") := NULL]
   knee_data <- dt %>%
@@ -134,36 +131,6 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
 
   return(plot_data)
 }
-
-plot_knee_regions <- function(dt, thresh = 0.01) {
-
-  # fill regions
-  dt$quality <- "unknown"
-  lt.thresh <- dt$fdr < thresh
-
-  amb.first <- which(!lt.thresh)[1]
-  amb.last <- tail(which(lt.thresh), 1)
-
-  dt$quality[1:amb.first] <- "good"
-  dt$quality[amb.last:nrow(dt)] <- "low"
-
-  cols <- c("green", "red", "gray")
-  res$quality <- factor(res$quality)
-
-  # plot
-  ggplot2::ggplot(dt, aes(x = rank, y = u, fill = quality)) +
-    ggplot2::geom_ribbon(mapping = ggplot2::aes(x = rank, ymax = u, ymin = 0, fill = quality), alpha = 0.3, inherit.aes = FALSE) +
-    ggplot2::scale_fill_manual(values = cols) +
-    ggplot2::geom_line(size = 1) +
-    ggplot2::scale_x_continuous(trans = "log10") +
-    ggplot2::scale_y_continuous(trans = "log10") +
-    ggplot2::theme_minimal() +
-    ggplot2::theme(legend.position = "none") +
-    ggplot2::theme(panel.border = ggplot2::element_rect(color = "black", size = 0.1, fill = "transparent")) +
-    ggplot2::xlab("cell rank") +
-    ggplot2::ylab("log UMIs in cell")
-}
-
 
 
 # cell_size_distribution_filter function
