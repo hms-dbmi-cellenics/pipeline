@@ -35,7 +35,7 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
         scdata,
         split.by = "samples",
         features = nfeatures,
-        npcs_for_pca,
+        npcs = npcs_for_pca,
         dims = npcs,
         config = config
       )
@@ -74,7 +74,7 @@ prepare_scdata_for_fastmnn <- function(scdata_list, config, cells_id) {
 }
 
 
-RunGeosketchFastMNN <- function(scdata, split.by, features, npcs_for_pca, dims, config) {
+RunGeosketchFastMNN <- function(scdata, split.by, features, npcs, dims, config) {
   set.seed(RANDOM_SEED)
   perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
   scdata <- scdata |>
