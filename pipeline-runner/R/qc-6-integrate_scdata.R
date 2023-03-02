@@ -147,7 +147,7 @@ get_explained_variance <- function(scdata) {
   if (scdata@misc[["active.reduction"]] == "mnn") {
     var_explained <- scdata@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
   } else {
-    eig_values <- (scdata@reductions$pca_for_plot@stdev)^2
+    eig_values <- (scdata@reductions$pca@stdev)^2
     var_explained <- eig_values / sum(eig_values)
   }
   return(var_explained)

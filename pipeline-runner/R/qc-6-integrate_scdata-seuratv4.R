@@ -177,21 +177,11 @@ seuratv4_find_and_integrate_anchors <-
     scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = nfeatures, verbose = FALSE)
     scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
 
-    # run PCA with 50 PCs (or less if there are less cells) for the elbow plot and the % of variance explained
+    # run PCA with 50 PCs (or less if there are less cells)
     scdata <-
       Seurat::RunPCA(
         scdata,
         npcs = npcs_for_pca,
-        reduction.name = "pca_for_plot",
-        reduction.key = "PCp_",
-        verbose = FALSE
-      )
-
-    # run PCA with npcs selected by the user
-    scdata <-
-      Seurat::RunPCA(
-        scdata,
-        npcs = npcs,
         features = Seurat::VariableFeatures(object = scdata),
         verbose = FALSE
       )
@@ -264,14 +254,14 @@ integrate_using_geosketch <-
       npcs
     )
 
-    # add back the pca_for_plot slot which is lost after learn_from_sketches (required for the elbow plot)
-    scdata@reductions[["pca_for_plot"]] <- Seurat::CreateDimReducObject(
-      embeddings = scdata_sketch_integrated@reductions$pca_for_plot@cell.embeddings,
-      loadings = scdata_sketch_integrated@reductions$pca_for_plot@feature.loadings,
-      projected = scdata_sketch_integrated@reductions$pca_for_plot@feature.loadings.projected,
-      stdev = scdata_sketch_integrated@reductions$pca_for_plot@stdev,
+    # add back the pca slot which is lost after learn_from_sketches (required for the elbow plot)
+    scdata@reductions[["pca"]] <- Seurat::CreateDimReducObject(
+      embeddings = scdata_sketch_integrated@reductions$pca@cell.embeddings,
+      loadings = scdata_sketch_integrated@reductions$pca@feature.loadings,
+      projected = scdata_sketch_integrated@reductions$pca@feature.loadings.projected,
+      stdev = scdata_sketch_integrated@reductions$pca@stdev,
       key = "PCp_",
-      misc = scdata_sketch_integrated@reductions$pca_for_plot@misc
+      misc = scdata_sketch_integrated@reductions$pca@misc
     )
 
     return(scdata)

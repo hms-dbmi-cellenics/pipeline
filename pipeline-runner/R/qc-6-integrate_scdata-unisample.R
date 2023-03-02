@@ -24,22 +24,12 @@ run_unisample <- function(scdata_list, config, cells_id) {
 
   scdata <- add_dispersions(scdata, normalization)
 
-  # run PCA
-  scdata <-
-    Seurat::RunPCA(
-      scdata,
-      npcs = npcs,
-      features = Seurat::VariableFeatures(object = scdata),
-      verbose = FALSE
-    )
-
-  # run PCA with 50 PCs (or less if there are less cells) for the elbow plot and the % of variance explained
+  # run PCA with 50 PCs (or less if there are less cells)
   scdata <-
     Seurat::RunPCA(
       scdata,
       npcs = npcs_for_pca,
-      reduction.name = "pca_for_plot",
-      reduction.key = "PCp_",
+      features = Seurat::VariableFeatures(object = scdata),
       verbose = FALSE
     )
 
