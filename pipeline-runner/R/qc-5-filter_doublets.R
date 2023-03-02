@@ -83,8 +83,10 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
   return(result)
 }
 
-# default doublet score based of scDblFinder classification
 generate_default_values_doubletScores <- function(scdata) {
+  # default doublet score based of scDblFinder classification
+  # threshold for is the max score given to a singlet (above score => doublets)
+
   is_singlet <- scdata$doublet_class == "singlet"
 
   # if no singlets set threshold to 0, preventing some experiments to fail
