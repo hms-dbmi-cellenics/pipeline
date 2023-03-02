@@ -150,7 +150,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   config <- config[!names(config) %in% c("auth_JWT", "api_url")]
 
   # upload output
-  s3 <- paws::s3(config = pipeline_config$aws_config)
+  s3 <- paws::s3(config = pipeline_config$aws_config, maxRetries=3)
   id <- ids::uuid()
   output <- RJSONIO::toJSON(
     list(
@@ -161,11 +161,12 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   )
 
   message("Uploading results to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
-  s3$put_object(
-    Bucket = pipeline_config$results_bucket,
-    Key = id,
-    Body = charToRaw(output)
-  )
+  # s3$put_object(
+  #   Bucket = pipeline_config$results_bucket,
+  #   Key = id,
+  #   Body = charToRaw(output)
+  # )
+  put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id) 
 
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
@@ -294,13 +295,13 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
     message("Uploading plotData to S3 bucket", pipeline_config$plot_data_bucket, " at key ", id, "...")
 
     tags <- paste0("experimentId=", experiment_id , "&plotUuid=" , plot_data_name)
-
-    s3$put_object(
-      Bucket = pipeline_config$plot_data_bucket,
-      Key = id,
-      Body = charToRaw(output),
-      Tagging = tags
-    )
+    put_object_in_s3(pipeline_config, pipeline_config$plot_data_bucket, charToRaw(output), id, tags)
+    # s3$put_object(
+    #   Bucket = pipeline_config$plot_data_bucket,
+    #   Key = id,
+    #   Body = charToRaw(output),
+    #   Tagging = tags
+    # )
   }
 
   return(plot_data_keys)
@@ -334,15 +335,30 @@ upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
   return(NULL)
 }
 
-put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
+put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging=NULL,current_retry = 0) {
   message(sprintf("Putting %s in %s", key, bucket))
-
+  max_retries <- 3
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  s3$put_object(
+  
+  response <- s3$put_object(
     Bucket = bucket,
     Key = key,
-    Body = object
+    Body = object,
+    Tagging = tagging
   )
+  message(sprintf("RESPONSE LOOK!! (%d)...", response))
+  if (response$status_code == 500) {
+    if (current_retry < max_retries) {
+      message(sprintf("Received a 500 response. Retrying (%d/%d)...", current_retry, max_retries))
+      Sys.sleep(2^current_retry) # exponential backoff, preventing sending a new request too fast
+      put_object_in_s3(pipeline_config, bucket, object, key, current_retry + 1)
+    } else {
+      stop("Failed to upload object to S3 after maximum number of retries.")
+    }
+  } else {
+    message("Object successfully uploaded to S3.")
+    return()
+  }
 }
 
 #' Upload a file to S3 using multipart upload
