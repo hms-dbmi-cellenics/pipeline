@@ -26,11 +26,18 @@ mock_scdata_list <- function() {
 
 test_that("cellsize filter is disabled by default and classifier is pre-filtered", {
   scdata_list <- mock_scdata_list()
-  qc_config <- construct_qc_config(scdata_list, any_filtered = TRUE, disable_qc_filters = FALSE)
+  unfiltered_samples <- c("123abc")
+  qc_config <- construct_qc_config(scdata_list, disable_qc_filters = FALSE, unfiltered_samples = unfiltered_samples)
 
   for (sample in names(scdata_list)) {
-    expect_false(qc_config$classifier[[sample]]$enabled)
-    expect_true(qc_config$classifier[[sample]]$prefiltered)
+    if (sample %in% unfiltered_samples) {
+      expect_true(qc_config$classifier[[sample]]$enabled)
+      expect_false(qc_config$classifier[[sample]]$prefiltered)
+    } else {
+      expect_false(qc_config$classifier[[sample]]$enabled)
+      expect_true(qc_config$classifier[[sample]]$prefiltered)
+    }
+
     expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
   }
 })
@@ -38,19 +45,26 @@ test_that("cellsize filter is disabled by default and classifier is pre-filtered
 
 test_that("cellsize filter is disabled by default and classifier is not pre-filtered", {
   scdata_list <- mock_scdata_list()
-  qc_config <- construct_qc_config(scdata_list, any_filtered = FALSE, disable_qc_filters = FALSE)
+  unfiltered_samples <- c()
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, disable_qc_filters = FALSE)
 
   for (sample in names(scdata_list)) {
     expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
-    expect_true(qc_config$classifier[[sample]]$enabled)
-    expect_false(qc_config$classifier[[sample]]$prefiltered)
+    if (sample %in% unfiltered_samples) {
+      expect_true(qc_config$classifier[[sample]]$enabled)
+      expect_false(qc_config$classifier[[sample]]$prefiltered)
+    } else {
+      expect_false(qc_config$classifier[[sample]]$enabled)
+      expect_true(qc_config$classifier[[sample]]$prefiltered)
+    }
   }
 })
 
 
 test_that("all filters are disabled when disable_qc_filters = TRUE and classifier is pre-filtered", {
   scdata_list <- mock_scdata_list()
-  qc_config <- construct_qc_config(scdata_list, any_filtered = TRUE, disable_qc_filters = TRUE)
+  unfiltered_samples <- c("123abc")
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, disable_qc_filters = TRUE)
 
   for (sample in names(scdata_list)) {
     expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
@@ -64,7 +78,8 @@ test_that("all filters are disabled when disable_qc_filters = TRUE and classifie
 
 test_that("all filters are disabled when disable_qc_filters = TRUE and classifier is not pre-filtered", {
   scdata_list <- mock_scdata_list()
-  qc_config <- construct_qc_config(scdata_list, any_filtered = FALSE, disable_qc_filters = TRUE)
+  unfiltered_samples <- c()
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, disable_qc_filters = TRUE)
 
   for (sample in names(scdata_list)) {
     expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
@@ -76,13 +91,31 @@ test_that("all filters are disabled when disable_qc_filters = TRUE and classifie
 })
 
 
-test_that("get_dblscore_config sets threshold to 0 when there are no singlets", {
+test_that("customize_doublet_config sets threshold to 0 when there are no singlets", {
   scdata_list <- mock_scdata_list()
-  qc_config <- construct_qc_config(scdata_list, any_filtered = TRUE, disable_qc_filters = TRUE)
+  unfiltered_samples <- c("123abc")
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, disable_qc_filters = TRUE)
 
   for (sample in names(scdata_list)) {
     scdata_list[[sample]]$doublet_class <- "doublet"
-    config <- get_dblscore_config(scdata_list[[sample]], qc_config)
+    config <- customize_doublet_config(scdata_list[[sample]], qc_config)
     expect_equal(config$filterSettings$probabilityThreshold, 0)
+  }
+})
+
+
+test_that("classifier filter config is enabled for unfiltered samples and disabled for pre-filtered samples", {
+  scdata_list <- mock_scdata_list()
+  unfiltered_samples <- c("123abc")
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, disable_qc_filters = FALSE)
+
+  for (sample in names(scdata_list)) {
+    if (sample %in% unfiltered_samples) {
+      expect_true(qc_config$classifier[[sample]]$enabled)
+      expect_false(qc_config$classifier[[sample]]$prefiltered)
+    } else {
+      expect_false(qc_config$classifier[[sample]]$enabled)
+      expect_true(qc_config$classifier[[sample]]$prefiltered)
+    }
   }
 })

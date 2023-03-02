@@ -4,7 +4,7 @@
 \alias{run_seuratv4}
 \title{Run Seurat v4 integration}
 \usage{
-run_seuratv4(scdata_list, config)
+run_seuratv4(scdata_list, config, cells_id)
 }
 \arguments{
 \item{scdata_list}{list of SeuratObjects}

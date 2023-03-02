@@ -4,15 +4,14 @@
 \alias{construct_qc_config}
 \title{Constructs default QC configuration}
 \usage{
-construct_qc_config(scdata_list, any_filtered, disable_qc_filters)
+construct_qc_config(scdata_list, disable_qc_filters, unfiltered_samples)
 }
 \arguments{
-\item{scdata_list}{list of seurat objects}
+\item{scdata_list}{list of Seurat objects}
 
-\item{any_filtered}{bool indicating if barcodes were filtered by emptyDrops}
+\item{disable_qc_filters}{bool indicating if filters should be disabled.}
 
-\item{disable_qc_filters}{bool indicating if the data derives from the
-subsetting of another experiment}
+\item{unfiltered_samples}{character vector of unfiltered sample ids}
 }
 \value{
 list of QC configuration parameters
@@ -21,4 +20,8 @@ list of QC configuration parameters
 This function returns the default parameters used during QC as a nested list.
 It is sent to the API, which in turn saves it as a jsonb object in the
 PostgreSQL database.
+}
+\details{
+For each pipeline step, it customizes and adds the QC parameters for all samples
+in the running experiment.
 }

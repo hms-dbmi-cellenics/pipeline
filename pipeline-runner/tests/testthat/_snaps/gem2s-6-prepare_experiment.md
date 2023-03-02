@@ -36,7 +36,7 @@
         .. .. ..$ regressionType        : chr "linear"
         .. .. ..$ regressionTypeSettings:List of 2
         .. .. .. ..$ linear:List of 1
-        .. .. .. .. ..$ p.level: num 0.000132
+        .. .. .. .. ..$ p.level: num 0.00013
         .. .. .. ..$ spline:List of 1
         .. .. .. .. ..$ p.level: num 0.001
        $ doubletScores       :List of 1
@@ -75,7 +75,7 @@
         .. .. .. ..$ distanceMetric : chr "cosine"
         .. .. ..$ tsne:List of 2
         .. .. .. ..$ perplexity  : num 30
-        .. .. .. ..$ learningRate: num 200
+        .. .. .. ..$ learningRate: num 640
         ..$ clusteringSettings:List of 2
         .. ..$ method        : chr "louvain"
         .. ..$ methodSettings:List of 1
