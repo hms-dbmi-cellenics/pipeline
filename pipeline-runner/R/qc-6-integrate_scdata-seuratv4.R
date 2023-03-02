@@ -73,7 +73,7 @@ run_seuratv4 <- function(scdata_list, config, cells_id) {
     scdata <- seuratv4_find_and_integrate_anchors(scdata_list, cells_id, reduction, normalization, npcs, npcs_for_pca, nfeatures)
   } else if (use_geosketch) {
     perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
-    scdata <- integrate_using_geosketch(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, npcs_for_pca, nfeatures, use_geosketch)
+    scdata <- seuratv4_geosketch_find_and_integrate_anchors(scdata_list, cells_id, reduction, perc_num_cells, normalization, npcs, npcs_for_pca, nfeatures, use_geosketch)
   }
 
   scdata@misc[["numPCs"]] <- npcs
@@ -204,14 +204,15 @@ seuratv4_find_and_integrate_anchors <-
 #' @param reduction reduction method
 #' @param perc_num_cells percentage of cells to keep when using geosketch
 #' @param normalization normalization method
-#' @param npcs number of princpal components
+#' @param npcs number of principal components
 #' @param nfeatures number of features
 #' @param use_geosketch boolean indicating if geosketch has to be run
+#' @param npcs_for_pca max number of PCs
 #'
 #' @return integrated Seurat object
 #' @export
 #'
-integrate_using_geosketch <-
+seuratv4_geosketch_find_and_integrate_anchors <-
   function(scdata_list,
            cells_id,
            reduction,
