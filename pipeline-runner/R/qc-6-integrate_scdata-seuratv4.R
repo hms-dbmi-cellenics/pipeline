@@ -28,15 +28,8 @@ run_seuratv4 <- function(scdata_list, config, cells_id) {
 
   # calculate as many PCs for the PCA as possible, ideally 50, unless few cells
   npcs_for_pca <- min(vapply(scdata_list, ncol, integer(1)) - 1, 50)
-  npcs <- config$dimensionalityReduction$numPCs
-
   # use the min of what the user wants and what can be calculated
-  if (is.null(npcs)) {
-    npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
-  }
-
-  # reduce nPCs if low cell numbers
-  npcs <- min(vapply(scdata_list, ncol, integer(1)) - 1, npcs)
+  npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
 
   scdata_list <- order_by_size(scdata_list)
 
