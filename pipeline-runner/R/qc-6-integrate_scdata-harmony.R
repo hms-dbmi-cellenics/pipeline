@@ -30,8 +30,6 @@ run_harmony <- function(scdata_list, config, cells_id) {
     # run PCA with npcs_for_pca for the elbow plot and the % of variance explained
     Seurat::RunPCA(
       npcs = npcs_for_pca,
-      reduction.name = "pca_for_plot",
-      reduction.key = "PCp_",
       verbose = FALSE
     )
 
@@ -50,7 +48,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
       scdata,
       npcs = npcs,
       verbose = FALSE,
-      reduction.name = "pca_for_harmony",
+      reduction.name = "pca",
       reduction.key = "PCh_"
     )
 
@@ -61,7 +59,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
       RunGeosketchHarmony(
         scdata,
         group.by.vars = "samples",
-        reduction = "pca_for_harmony",
+        reduction = "pca",
         dims.use = 1:npcs,
         config
       )
@@ -70,7 +68,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
       harmony::RunHarmony(
         scdata,
         group.by.vars = "samples",
-        reduction = "pca_for_harmony",
+        reduction = "pca",
         dims.use = 1:npcs
       )
   }
@@ -106,7 +104,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, conf
     scdata,
     dims = dims,
     perc_num_cells = perc_num_cells,
-    reduction = "pca_for_harmony"
+    reduction = "pca"
   )
 
   if (ncol(geosketch_list$sketch) < 15) {
@@ -114,7 +112,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, conf
       harmony::RunHarmony(
         geosketch_list$sketch,
         group.by.vars = "samples",
-        reduction = "pca_for_harmony",
+        reduction = "pca",
         dims.use = dims.use,
         nclust = ncol(geosketch_list$sketch) - 1
       )
@@ -123,7 +121,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, conf
       harmony::RunHarmony(
         geosketch_list$sketch,
         group.by.vars = "samples",
-        reduction = "pca_for_harmony",
+        reduction = "pca",
         dims.use = dims.use,
       )
   }
@@ -135,7 +133,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, conf
     geosketch_list$sketch,
     scdata_sketch_integrated,
     dims = dims,
-    reduction = "pca_for_harmony"
+    reduction = "pca"
   )
 
   return(scdata)
