@@ -10,7 +10,6 @@
 #' @export
 #'
 run_geosketch <- function(scdata, dims, perc_num_cells) {
-
   reduction <- "pca"
   num_cells <- round(ncol(scdata) * perc_num_cells / 100)
 
@@ -18,6 +17,16 @@ run_geosketch <- function(scdata, dims, perc_num_cells) {
   dims <- min(ncol(scdata@reductions[[reduction]]) - 1, dims)
 
   message("Geosketching to ", num_cells, " cells")
+
+  if(!is.null(Sys.getenv("GEOSKETCH_TEST")) && Sys.getenv("GEOSKETCH_TEST") == "true") {
+    paths <- setup_test_paths()
+
+    if(!reticulate::virtualenv_exists(paths$python_venv)) {
+      message(" == please setup virtualenv and install dependencies in requirements.txt. Refer to README for more info ==")
+      stop()
+    }
+    reticulate::use_virtualenv(virtualenv = paths$python_venv, required = TRUE)
+  }
 
   if (!exists("geosketch")) {
     geosketch <- reticulate::import("geosketch")
@@ -59,7 +68,15 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
   embeddings_sketch_int <- list(scdata_sketch_integrated@reductions[[active_reduction]]@cell.embeddings[, 1:dims])
 
   # use python script to learn integration from sketches and apply to whole dataset
-  reticulate::source_python("/src/pipeline-runner/inst/python/learn-apply-transformation.py")
+  geosketch_script <- "/src/pipeline-runner/inst/python/learn-apply-transformation.py"
+
+  # Use local path in tests
+  if(!is.null(Sys.getenv("GEOSKETCH_TEST")) && Sys.getenv("GEOSKETCH_TEST") == "true") {
+    test_paths <- setup_test_paths()
+    geosketch_script <- test_paths$geosketch_script
+  }
+
+  reticulate::source_python(geosketch_script)
   learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
   rownames(learned_int[[1]]) <- colnames(scdata)
 

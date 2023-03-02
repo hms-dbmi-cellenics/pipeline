@@ -25,3 +25,17 @@ AWS environment that.
 Task execution is done through Step Function activities, which are created by
 other parts of the platform. You can use the project under `local-runner`
 to inspect this process.
+
+Testing
+-----------
+
+Some pipeline functionality (e.g. geosketch) uses Python modules. Install the required
+modeules with the following steps:
+
+1. cd to `pipeline-runner`
+2. Create a new python virtualenv : `python3 -m venv venv`
+3. Activate the environment: `source ./venv/bin/activate`
+4. Install all requirements into the environment: `pip install -r requirements.txt`
+
+Once the modules are installed, open the `pipeline-runner` project in `RStudio` and
+run `cmd + shift + T`.

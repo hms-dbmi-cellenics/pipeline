@@ -119,15 +119,20 @@ setup_test_paths <- function() {
                       "./tests/testthat",
                       ".")
 
-  mock_data_path <- file.path(base_path,
-                              "mock_data")
+  mock_data_path <- file.path(base_path, "mock_data")
+
+  python_venv_path <- file.path(base_path, "../../venv")
+
+  geosketch_script_path <- file.path(base_path, "../../inst/python/learn-apply-transformation.py")
 
   snaps_path <- file.path(base_path, "_snaps")
 
   return(list(
     base = base_path,
     mock_data = mock_data_path,
-    snaps = snaps_path
+    snaps = snaps_path,
+    python_venv = python_venv_path,
+    geosketch_script = geosketch_script_path
   ))
 }
 
