@@ -18,16 +18,6 @@ run_geosketch <- function(scdata, dims, perc_num_cells) {
 
   message("Geosketching to ", num_cells, " cells")
 
-  if(!is.null(Sys.getenv("GEOSKETCH_TEST")) && Sys.getenv("GEOSKETCH_TEST") == "true") {
-    paths <- setup_test_paths()
-
-    if(!reticulate::virtualenv_exists(paths$python_venv)) {
-      message(" == please setup virtualenv and install dependencies in requirements.txt. Refer to README for more info ==")
-      stop()
-    }
-    reticulate::use_virtualenv(virtualenv = paths$python_venv, required = TRUE)
-  }
-
   if (!exists("geosketch")) {
     geosketch <- reticulate::import("geosketch")
   }
@@ -71,7 +61,7 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
   geosketch_script <- "/src/pipeline-runner/inst/python/learn-apply-transformation.py"
 
   # Use local path in tests
-  if(!is.null(Sys.getenv("GEOSKETCH_TEST")) && Sys.getenv("GEOSKETCH_TEST") == "true") {
+  if(!is.null(Sys.getenv("TEST_GEOSKETCH")) && Sys.getenv("TEST_GEOSKETCH") == "true") {
     test_paths <- setup_test_paths()
     geosketch_script <- test_paths$geosketch_script
   }
