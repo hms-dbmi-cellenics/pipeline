@@ -170,7 +170,9 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, i
   # run task and time it
   tstart <- Sys.time()
 
-  # Configure embedding needs additional params so it's separated
+  # The httr package used in Configure embedding requires ssl configuration
+  # to know whether to verify/not ssl configuration. Other qc functions
+  # do not use this param, so it'd be useless to pass this param into the other functions
   if(task_name == "configureEmbedding") {
     out <- task(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert)
   } else {
