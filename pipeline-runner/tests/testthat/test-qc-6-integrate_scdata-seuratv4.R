@@ -294,7 +294,8 @@ test_that("misc slot is complete after Seurat V4 integration", {
 
 test_that("misc slot is complete after Seurat V4 integration with geosketch", {
 
-  Sys.setenv("GEOSKETCH_TEST" = "true")
+#   Uncommment to test in local
+#   Sys.setenv("GEOSKETCH_TEST" = "true")
 
   # mock a bigger dataset to run Seurat v4 integration without skipping it
   c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
@@ -314,5 +315,5 @@ test_that("misc slot is complete after Seurat V4 integration with geosketch", {
 
   expect_setequal(names(integrated_scdata@misc), expected_misc_names)
 
-  Sys.unsetenv("GEOSKETCH_TEST")
+#   Sys.unsetenv("GEOSKETCH_TEST")
 })
