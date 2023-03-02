@@ -58,7 +58,7 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
   embeddings_sketch_int <- list(scdata_sketch_integrated@reductions[[active_reduction]]@cell.embeddings[, 1:dims])
 
   # use python script to learn integration from sketches and apply to whole dataset
-  geosketch_script_path <- file.path(getwd(), "../inst/python/learn-apply-transformation.py")
+  geosketch_script_path <- file.path(getwd(), "inst/python/learn-apply-transformation.py")
 
   # Handle case when run in tests
   if(basename(getwd()) == "testthat") {
