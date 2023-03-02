@@ -285,8 +285,6 @@ test_that("temp_integrate_scdata calls remove_genes if there are groups to exclu
 
 test_that("integrate_scdata doesn't run geosketch if config does not contain geosketch parameters", {
 
-  Sys.setenv("TEST_GEOSKETCH" = "true")
-
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
   config <- list(
@@ -297,13 +295,10 @@ test_that("integrate_scdata doesn't run geosketch if config does not contain geo
   integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_true(is.null(integrated_scdata@misc$geosketch))
 
-  Sys.unsetenv("TEST_GEOSKETCH")
 })
 
 
 test_that("integrate_scdata run geosketch if config contains geosketch parameters.", {
-
-  Sys.setenv("TEST_GEOSKETCH" = "true")
 
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
@@ -317,13 +312,10 @@ test_that("integrate_scdata run geosketch if config contains geosketch parameter
   integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_true(integrated_scdata@misc$geosketch)
 
-  Sys.unsetenv("TEST_GEOSKETCH")
 })
 
 
 test_that("run_geosketch generates the correct number of sketches", {
-
-  Sys.setenv("TEST_GEOSKETCH" = "true")
 
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
@@ -344,14 +336,10 @@ test_that("run_geosketch generates the correct number of sketches", {
   geosketch_list <- run_geosketch(merged_scdata, dims = 50, perc_num_cells)
   expect_equal(ncol(geosketch_list$sketch), num_cells)
 
-  Sys.unsetenv("TEST_GEOSKETCH")
-
 })
 
 
 test_that("integrate_scdata with geosketch adds the correct integration method to the Seurat object", {
-
-  Sys.setenv("TEST_GEOSKETCH" = "true")
 
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
@@ -363,8 +351,6 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
 
   integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_equal(integrated_scdata@misc[["active.reduction"]], "pca")
-
-  Sys.unsetenv("TEST_GEOSKETCH")
 
 })
 

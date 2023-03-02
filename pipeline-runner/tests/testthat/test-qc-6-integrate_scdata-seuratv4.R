@@ -293,9 +293,6 @@ test_that("misc slot is complete after Seurat V4 integration", {
 
 
 test_that("misc slot is complete after Seurat V4 integration with geosketch", {
-
-  Sys.setenv("TEST_GEOSKETCH" = "true")
-
   # mock a bigger dataset to run Seurat v4 integration without skipping it
   c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
   cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
@@ -313,6 +310,4 @@ test_that("misc slot is complete after Seurat V4 integration with geosketch", {
   expected_misc_names <- c("gene_annotations", "color_pool", "ingestionDate", "active.reduction", "numPCs", "geosketch")
 
   expect_setequal(names(integrated_scdata@misc), expected_misc_names)
-
-  Sys.unsetenv("TEST_GEOSKETCH")
 })

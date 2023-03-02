@@ -123,8 +123,6 @@ setup_test_paths <- function() {
 
   python_venv_path <- file.path(base_path, "../../venv")
 
-  geosketch_script_path <- file.path(base_path, "../../inst/python/learn-apply-transformation.py")
-
   snaps_path <- file.path(base_path, "_snaps")
 
   return(list(

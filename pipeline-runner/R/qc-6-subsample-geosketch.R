@@ -58,15 +58,7 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
   embeddings_sketch_int <- list(scdata_sketch_integrated@reductions[[active_reduction]]@cell.embeddings[, 1:dims])
 
   # use python script to learn integration from sketches and apply to whole dataset
-  geosketch_script <- "/src/pipeline-runner/inst/python/learn-apply-transformation.py"
-
-  # Use local path in tests
-  if(!is.null(Sys.getenv("TEST_GEOSKETCH")) && Sys.getenv("TEST_GEOSKETCH") == "true") {
-    test_paths <- setup_test_paths()
-    geosketch_script <- test_paths$geosketch_script
-  }
-
-  reticulate::source_python(geosketch_script)
+  reticulate::source_python(file.path(getwd(), "inst/python/learn-apply-transformation.py"))
   learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
   rownames(learned_int[[1]]) <- colnames(scdata)
 
