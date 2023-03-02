@@ -60,7 +60,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
         scdata,
         group.by.vars = "samples",
         reduction = "pca",
-        dims.use = 1:npcs,
+        npcs = npcs,
         config
       )
   } else {
@@ -96,13 +96,12 @@ prepare_scdata_for_harmony <- function(scdata_list, config, cells_id) {
 }
 
 
-RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, config) {
+RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, npcs, config) {
   set.seed(RANDOM_SEED)
   perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
-  dims <- dims.use[length(dims.use)]
   geosketch_list <- run_geosketch(
     scdata,
-    dims = dims,
+    dims = npcs,
     perc_num_cells = perc_num_cells,
     reduction = "pca"
   )
@@ -113,7 +112,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, conf
         geosketch_list$sketch,
         group.by.vars = "samples",
         reduction = "pca",
-        dims.use = dims.use,
+        dims.use = 1:npcs,
         nclust = ncol(geosketch_list$sketch) - 1
       )
   } else {
@@ -122,7 +121,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, conf
         geosketch_list$sketch,
         group.by.vars = "samples",
         reduction = "pca",
-        dims.use = dims.use,
+        dims.use = 1:npcs,
       )
   }
 
@@ -132,7 +131,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, dims.use, conf
     geosketch_list$scdata,
     geosketch_list$sketch,
     scdata_sketch_integrated,
-    dims = dims,
+    dims = npcs,
     reduction = "pca"
   )
 
