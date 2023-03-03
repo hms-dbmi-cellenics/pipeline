@@ -68,7 +68,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
       harmony::RunHarmony(
         scdata,
         group.by.vars = "samples",
-        reduction = "pca",
+        reduction = "pca_for_harmony",
         dims.use = 1:npcs
       )
   }
