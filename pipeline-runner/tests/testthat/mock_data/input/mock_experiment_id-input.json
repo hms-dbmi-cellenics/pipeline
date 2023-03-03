@@ -12,6 +12,7 @@
     "gem2s"
   ],
   "config": {},
+  "ignoreSslCert": false,
   "server": [
     "mock_server"
   ],
