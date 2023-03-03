@@ -48,7 +48,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
       scdata,
       npcs = npcs,
       verbose = FALSE,
-      reduction.name = "pca",
+      reduction.name = "pca_for_harmony",
       reduction.key = "PCh_"
     )
 
