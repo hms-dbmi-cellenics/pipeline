@@ -139,7 +139,7 @@ test_that("add_metadata_to_samples generated cell ids do not depend on sample or
 
 test_that("prepare_experiment generates qc_config that matches snapshot", {
   prev_out <- mock_prev_out()
-  input <- list(experimentId = "1234", ignore_ssl_cert = FALSE)
+  input <- list(experimentId = "1234")
   task_out <- prepare_experiment(input, NULL, prev_out)$output
 
   expect_snapshot(str(task_out$qc_config))

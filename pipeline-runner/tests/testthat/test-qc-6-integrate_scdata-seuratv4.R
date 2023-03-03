@@ -293,6 +293,7 @@ test_that("misc slot is complete after Seurat V4 integration", {
 
 
 test_that("misc slot is complete after Seurat V4 integration with geosketch", {
+
   # mock a bigger dataset to run Seurat v4 integration without skipping it
   c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
   cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
