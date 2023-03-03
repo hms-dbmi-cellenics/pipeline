@@ -59,7 +59,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
       RunGeosketchHarmony(
         scdata,
         group.by.vars = "samples",
-        reduction = "pca",
+        reduction = "pca_for_harmony",
         npcs = npcs,
         config
       )
@@ -103,7 +103,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, npcs, config) 
     scdata,
     dims = npcs,
     perc_num_cells = perc_num_cells,
-    reduction = "pca"
+    reduction = reduction
   )
 
   if (ncol(geosketch_list$sketch) < 15) {
@@ -111,7 +111,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, npcs, config) 
       harmony::RunHarmony(
         geosketch_list$sketch,
         group.by.vars = "samples",
-        reduction = "pca",
+        reduction = reduction,
         dims.use = 1:npcs,
         nclust = ncol(geosketch_list$sketch) - 1
       )
@@ -120,7 +120,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, npcs, config) 
       harmony::RunHarmony(
         geosketch_list$sketch,
         group.by.vars = "samples",
-        reduction = "pca",
+        reduction = reduction,
         dims.use = 1:npcs,
       )
   }
@@ -132,7 +132,7 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, npcs, config) 
     geosketch_list$sketch,
     scdata_sketch_integrated,
     dims = npcs,
-    reduction = "pca"
+    reduction = reduction
   )
 
   return(scdata)
