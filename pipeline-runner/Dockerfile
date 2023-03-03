@@ -132,7 +132,7 @@ FROM common AS dev
 
 # install watchdog to automatically restart
 # when source files change
-RUN pip install -U jedi PyYAML watchdog[watchmedo] memory_profiler && \
+RUN pip install -U jedi PyYAML watchdog[watchmedo] && \
     apt update && \
     apt -y install git && \
     rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
@@ -144,5 +144,4 @@ ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
-COPY start.sh start.sh
-ENTRYPOINT ["./start.sh"]
+ENTRYPOINT Rscript init.R
