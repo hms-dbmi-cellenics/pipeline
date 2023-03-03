@@ -255,15 +255,13 @@ seuratv4_geosketch_find_and_integrate_anchors <-
       npcs
     )
 
-    # add back the pca slot which is lost after learn_from_sketches (required for the elbow plot)
-    scdata@reductions[["pca"]] <- Seurat::CreateDimReducObject(
-      embeddings = scdata_sketch_integrated@reductions$pca@cell.embeddings,
-      loadings = scdata_sketch_integrated@reductions$pca@feature.loadings,
-      projected = scdata_sketch_integrated@reductions$pca@feature.loadings.projected,
-      stdev = scdata_sketch_integrated@reductions$pca@stdev,
-      key = "PCp_",
-      misc = scdata_sketch_integrated@reductions$pca@misc
-    )
+    scdata <-
+      Seurat::RunPCA(
+        scdata,
+        npcs = npcs_for_pca,
+        features = Seurat::VariableFeatures(object = scdata),
+        verbose = FALSE
+      )
 
     return(scdata)
   }
