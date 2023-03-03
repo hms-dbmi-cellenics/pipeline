@@ -79,7 +79,7 @@ RunGeosketchFastMNN <- function(scdata, split.by, features, npcs, dims, config) 
   perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
   scdata <- scdata |>
     Seurat::ScaleData(verbose = FALSE) |>
-    Seurat::RunPCA(npcs = npcs_for_pca, verbose = FALSE)
+    Seurat::RunPCA(npcs = npcs, verbose = FALSE)
   # remove scale.data slot to avoid errors
   # https://github.com/satijalab/seurat-wrappers/issues/126
   scdata@assays$RNA@scale.data <- as.matrix(0)
