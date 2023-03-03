@@ -255,6 +255,7 @@ seuratv4_geosketch_find_and_integrate_anchors <-
       npcs
     )
 
+    # runPCA with 50 PCs for the elbow plot
     scdata <-
       Seurat::RunPCA(
         scdata,

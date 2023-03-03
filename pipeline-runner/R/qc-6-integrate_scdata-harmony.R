@@ -96,9 +96,14 @@ prepare_scdata_for_harmony <- function(scdata_list, config, cells_id) {
 }
 
 
-RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, npcs, config) {
+RunGeosketchHarmony <- function(scdata,
+                                group.by.vars,
+                                reduction,
+                                npcs,
+                                config) {
   set.seed(RANDOM_SEED)
-  perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
+  perc_num_cells <-
+    config$downsampling$methodSettings$geosketch$percentageToKeep
   geosketch_list <- run_geosketch(
     scdata,
     dims = npcs,
@@ -106,25 +111,13 @@ RunGeosketchHarmony <- function(scdata, group.by.vars, reduction, npcs, config) 
     reduction = reduction
   )
 
-  if (ncol(geosketch_list$sketch) < 15) {
-    scdata_sketch_integrated <-
-      harmony::RunHarmony(
-        geosketch_list$sketch,
-        group.by.vars = "samples",
-        reduction = reduction,
-        dims.use = 1:npcs,
-        nclust = ncol(geosketch_list$sketch) - 1
-      )
-  } else {
-    scdata_sketch_integrated <-
-      harmony::RunHarmony(
-        geosketch_list$sketch,
-        group.by.vars = "samples",
-        reduction = reduction,
-        dims.use = 1:npcs,
-      )
-  }
-
+  scdata_sketch_integrated <-
+    harmony::RunHarmony(
+      geosketch_list$sketch,
+      group.by.vars = "samples",
+      reduction = reduction,
+      dims.use = 1:npcs,
+    )
   scdata_sketch_integrated@misc[["active.reduction"]] <- "harmony"
 
   scdata <- learn_from_sketches(
