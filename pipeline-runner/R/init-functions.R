@@ -154,7 +154,7 @@ load_config <- function(development_aws_server) {
 #'
 #' @return list of task results
 #'
-run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, debug_config) {
+run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, ignore_ssl_cert, debug_config) {
   if (!task_name %in% names(tasks)) {
     stop("Invalid task: ", task_name)
   }
@@ -170,7 +170,15 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, d
   # run task and time it
   tstart <- Sys.time()
 
-  out <- task(scdata, config, sample_id, cells_id, task_name)
+  # The httr package used in Configure embedding requires ssl configuration
+  # to know whether to verify/not ssl configuration. Other qc functions
+  # do not use this param, so it'd be useless to pass this param into the other functions
+  if(task_name == "configureEmbedding") {
+    out <- task(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert)
+  } else {
+    out <- task(scdata, config, sample_id, cells_id, task_name)
+  }
+
   ttask <- format(Sys.time() - tstart, digits = 2)
   message(
     "⏱️ Time to complete ", task_name,
@@ -296,6 +304,7 @@ call_qc <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
   config <- input$config
   upload_count_matrix <- input$uploadCountMatrix
+  ignore_ssl_cert <- input$ignoreSslCert
   sample_id <- input$sampleUuid
   debug_config <- pipeline_config$debug_config
 
@@ -343,7 +352,7 @@ call_qc <- function(task_name, input, pipeline_config) {
   # call function to run and update global variable
   c(
     data, new_ids, ...rest_of_results
-  ) %<-% run_qc_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
+  ) %<-% run_qc_step(scdata, config, tasks, task_name, cells_id, sample_id, ignore_ssl_cert, debug_config)
 
 
   assign("cells_id", new_ids, pos = ".GlobalEnv")
