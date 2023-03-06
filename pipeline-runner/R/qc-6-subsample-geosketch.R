@@ -10,7 +10,6 @@
 #' @export
 #'
 run_geosketch <- function(scdata, dims, perc_num_cells) {
-
   reduction <- "pca"
   num_cells <- round(ncol(scdata) * perc_num_cells / 100)
 
@@ -59,7 +58,9 @@ learn_from_sketches <- function(scdata, scdata_sketch, scdata_sketch_integrated,
   embeddings_sketch_int <- list(scdata_sketch_integrated@reductions[[active_reduction]]@cell.embeddings[, 1:dims])
 
   # use python script to learn integration from sketches and apply to whole dataset
-  reticulate::source_python("/src/pipeline-runner/inst/python/learn-apply-transformation.py")
+  geosketch_script_path <- system.file("python/learn-apply-transformation.py", package = "pipeline")
+
+  reticulate::source_python(geosketch_script_path)
   learned_int <- apply_transf(embeddings_orig, embeddings_sketch, embeddings_sketch_int)
   rownames(learned_int[[1]]) <- colnames(scdata)
 
