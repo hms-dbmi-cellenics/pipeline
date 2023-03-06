@@ -23,13 +23,17 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   message("Total cells:", sum(sapply(scdata_list, ncol)))
 
-  scdata_list <- add_metadata_to_samples(scdata_list, prev_out$annot, input$experimentId)
+# metadata is added to subset experiment at the subset step 1
+  if (!disable_qc_filters) {
+    scdata_list <-
+      add_metadata_to_samples(scdata_list, prev_out$annot, input$experimentId)
+  }
   prev_out$scdata_list <- scdata_list
 
   # construct default QC config and update prev out
   message("Constructing default QC configuration...")
-  any_filtered <- !(length(prev_out$edrops) == length(samples))
-  prev_out$qc_config <- construct_qc_config(scdata_list, any_filtered, disable_qc_filters)
+  unfiltered_samples <- names(prev_out$edrops[!is.null(prev_out$edrops)])
+  prev_out$qc_config <- construct_qc_config(scdata_list, disable_qc_filters, unfiltered_samples)
 
   res <- list(
     data = list(),

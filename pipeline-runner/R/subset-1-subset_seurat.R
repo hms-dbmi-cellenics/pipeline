@@ -1,3 +1,5 @@
+library(uuid)
+
 #' create a subset experiment
 #'
 #' This is the first step of a subset pipeline, which basically takes the parent
@@ -131,10 +133,11 @@ subset_experiment <- function(input, parent_data) {
 #' @param parent_sample_id character vector of unique parent sample ids
 #'
 #' @return data.table with sample id map
+#' @importFrom uuid UUIDgenerate
 #' @export
 #'
 create_sample_id_map <- function(parent_sample_id) {
-  subset_sample_id <- uuid::UUIDgenerate(n = length(parent_sample_id))
+  subset_sample_id <- UUIDgenerate(n = length(parent_sample_id))
 
   sample_id_map <- as.list(subset_sample_id)
   names(sample_id_map) <- parent_sample_id
