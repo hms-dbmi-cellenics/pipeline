@@ -11,6 +11,7 @@ run_qc_step(
   task_name,
   cells_id,
   sample_id,
+  ignore_ssl_cert,
   debug_config
 )
 }
