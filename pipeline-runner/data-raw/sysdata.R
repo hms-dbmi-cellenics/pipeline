@@ -51,7 +51,7 @@ gem2s <- list(
 
 
 # minimum number of cells required in a sample to have the pipeline not break.
-MIN_CELLS_IN_SAMPLE <- 20
+MIN_CELLS_IN_SAMPLE <- 15
 
 
 RANDOM_SEED <- 42
