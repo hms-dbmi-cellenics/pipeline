@@ -24,22 +24,10 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
 
   scdata <- scdata |>
     Seurat::NormalizeData(normalization.method = normalization, verbose = FALSE) |>
-    Seurat::FindVariableFeatures(nfeatures = nfeatures, verbose = FALSE) |>
-    Seurat::ScaleData(verbose = FALSE) |>
-    Seurat::RunPCA(npcs = npcs_for_pca, verbose = FALSE)
-
-  # estimate number of PCs to be used downstream, for integration and clustering
-  if (is.null(npcs)) {
-    scdata@misc[["active.reduction"]] <- "pca"
-    npcs <- get_npcs(scdata)
-    message("Estimated number of PCs: ", npcs)
-  }
+    Seurat::FindVariableFeatures(nfeatures = nfeatures, verbose = FALSE)
 
   scdata <- add_dispersions(scdata, normalization)
   misc <- scdata@misc
-  # remove scale.data slot to avoid errors
-  # https://github.com/satijalab/seurat-wrappers/issues/126
-  scdata@assays$RNA@scale.data <- as.matrix(0)
 
   if (use_geosketch) {
     scdata <-
@@ -47,6 +35,7 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
         scdata,
         split.by = "samples",
         features = nfeatures,
+        npcs = npcs_for_pca,
         dims = npcs,
         config = config
       )
@@ -85,23 +74,31 @@ prepare_scdata_for_fastmnn <- function(scdata_list, config, cells_id) {
 }
 
 
-RunGeosketchFastMNN <- function(scdata, split.by, features, dims, config) {
+RunGeosketchFastMNN <- function(scdata, split.by, features, npcs, dims, config) {
   set.seed(RANDOM_SEED)
   perc_num_cells <- config$downsampling$methodSettings$geosketch$percentageToKeep
+  scdata <- scdata |>
+    Seurat::ScaleData(verbose = FALSE) |>
+    Seurat::RunPCA(npcs = npcs, verbose = FALSE)
+  # remove scale.data slot to avoid errors
+  # https://github.com/satijalab/seurat-wrappers/issues/126
+  scdata@assays$RNA@scale.data <- as.matrix(0)
+
   geosketch_list <- run_geosketch(
     scdata,
     dims = dims,
     perc_num_cells = perc_num_cells
-    )
+  )
 
   scdata_split <- Seurat::SplitObject(geosketch_list$sketch, split.by = split.by)
   scdata_sketch_integrated <-
     SeuratWrappers::RunFastMNN(
       scdata_split,
-      features = nfeatures,
+      features = features,
       d = dims,
       get.variance = TRUE
     )
+  scdata_sketch_integrated@misc[["active.reduction"]] <- "mnn"
 
   scdata <- learn_from_sketches(
     geosketch_list$scdata,
@@ -110,6 +107,9 @@ RunGeosketchFastMNN <- function(scdata, split.by, features, dims, config) {
     dims = dims
   )
 
-  return(scdata)
+  # add back the variance explained which is lost after learn_from_sketches
+  scdata@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained <-
+    scdata_sketch_integrated@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
 
+  return(scdata)
 }
