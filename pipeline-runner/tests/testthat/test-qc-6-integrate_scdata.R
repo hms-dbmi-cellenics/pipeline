@@ -263,7 +263,7 @@ test_that("merge_scdata_list returns first element of list if only one sample", 
   expect_equal(prev_out$scdata_list[[1]], scdata)
 })
 
-test_that("temp_integrate_scdata calls remove_genes if there are groups to exclude", {
+test_that("integrate_scdata calls remove_genes if there are groups to exclude", {
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(rename_genes = some_cc_genes)
@@ -277,7 +277,7 @@ test_that("temp_integrate_scdata calls remove_genes if there are groups to exclu
   )
 
   expect_message(
-    suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")),
+    suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")),
     paste0("*Number of Cell Cycle genes to exclude: ", n_rename, "*")
   )
 })
@@ -291,7 +291,7 @@ test_that("integrate_scdata doesn't run geosketch if config does not contain geo
     dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_true(is.null(integrated_scdata@misc$geosketch))
 })
 
@@ -306,7 +306,7 @@ test_that("integrate_scdata run geosketch if config contains geosketch parameter
     downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 5)))
   )
 
-  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_true(integrated_scdata@misc$geosketch)
 })
 
@@ -342,7 +342,7 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
     downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 5)))
   )
 
-  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_equal(integrated_scdata@misc[["active.reduction"]], "pca")
 })
 

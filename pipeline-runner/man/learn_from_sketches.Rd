@@ -4,7 +4,13 @@
 \alias{learn_from_sketches}
 \title{Learn integration transformation from sketches}
 \usage{
-learn_from_sketches(scdata, scdata_sketch, scdata_sketch_integrated, dims)
+learn_from_sketches(
+  scdata,
+  scdata_sketch,
+  scdata_sketch_integrated,
+  dims,
+  reduction = "pca"
+)
 }
 \arguments{
 \item{scdata}{Seurat object}

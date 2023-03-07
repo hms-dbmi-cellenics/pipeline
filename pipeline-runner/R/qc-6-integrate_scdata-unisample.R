@@ -24,7 +24,7 @@ run_unisample <- function(scdata_list, config, cells_id) {
 
   scdata <- add_dispersions(scdata, normalization)
 
-  # run PCA
+  # run PCA with 50 PCs (or less if there are less cells)
   scdata <-
     Seurat::RunPCA(
       scdata,
