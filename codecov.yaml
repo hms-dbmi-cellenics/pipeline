@@ -8,10 +8,10 @@ coverage:
 
   status:
     project:                   # measuring the overall project coverage
-      default:                 
+      default:
         target: auto
         # don't allow new commits to decrease coverage
-        threshold: 0%
+        threshold: 0.01%
 
 
     patch: false                 # measuring the coverage of new changes

@@ -1,3 +1,5 @@
+source("data-raw/processing_config_template.R")
+
 bucket_list <- list(
   originals_bucket = "biomage-originals",
   source_bucket = "biomage-source",
@@ -82,8 +84,11 @@ IDS_IDS <- "ids_ids"
 
 pipeline_version <- 2
 
+UNISAMPLE <- "unisample"
+
 usethis::use_data(
   debug_timestamp,
+  processing_config_template,
   bucket_list,
   gem2s,
   SUBSET_SEURAT_TASK_LIST,
@@ -100,6 +105,7 @@ usethis::use_data(
   IDS_IDS,
   cc_genes,
   pipeline_version,
+  UNISAMPLE,
   internal = TRUE,
   overwrite = TRUE
 )

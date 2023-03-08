@@ -9,9 +9,7 @@ integrate_scdata(
   config,
   sample_id,
   cells_id,
-  task_name = "dataIntegration",
-  use_geosketch = FALSE,
-  perc_num_cells = 5
+  task_name = "dataIntegration"
 )
 }
 \arguments{
@@ -24,7 +22,12 @@ integrate_scdata(
 - dimensionalityReduction
 - method: String. Method to be used. "rpca" by default.
 - numPCs: Numeric. Number of principal components.
-- excludeGeneCategories: List. Categories of genes to be excluded.}
+- excludeGeneCategories: List. Categories of genes to be excluded.
+- downsampling
+- method: String. Method to be used to downsample. "geosketch" by default
+- methodSettings: List with required parameters for each downsampling method
+- geosketch
+- percentageToKeep: percentage of cells to keep}
 }
 \value{
 a list with the integrated seurat object, the cell ids, the config and the plot values.

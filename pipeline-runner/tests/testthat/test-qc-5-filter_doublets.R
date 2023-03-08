@@ -96,3 +96,11 @@ test_that("filter_doublets can be disabled", {
   expect_equal(out$new_ids[[sample_1_id]], 10:39)
   expect_equal(out$new_ids[[sample_2_id]], 40:79)
 })
+
+
+test_that("generate_default_values_doubletScores sets threshold to 0 when there are no singlets", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  scdata_list[[1]]$doublet_class <- "doublet"
+
+  expect_equal(generate_default_values_doubletScores(scdata_list[[1]]), 0)
+})

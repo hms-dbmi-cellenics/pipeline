@@ -120,11 +120,38 @@ test_that("runClusters uses active.reduction in misc slot", {
 with_fake_http(
   test_that("update_sets_through_api sends patch request", {
     expect_PATCH(
-      update_sets_through_api(list(), "api_url", "experiment_id", "cell_set_key", "auth")
+      update_sets_through_api(
+        list(),
+        "api_url",
+        "experiment_id",
+        "cell_set_key",
+        "auth",
+        FALSE
+    )
     )
   })
 )
 
+with_fake_http(
+ test_that("update_sets_through_api diables SSL certificate checking if disabled", {
+
+    expect_PATCH(
+      update_sets_through_api(
+        list(),
+        "api_url",
+        "experiment_id",
+        "cell_set_key",
+        "auth",
+        TRUE
+    )
+    )
+
+    # set random config to get the previously used config
+    old_config <- httr::set_config(httr::config(ssl_verifyhost = 0L))
+    expect_equal(old_config$options$ssl_verifypeer, 0)
+
+  })
+)
 
 test_that("format_cell_sets_object returns correct items", {
   n_clusters <- 5
@@ -240,11 +267,59 @@ test_that("embed_and_cluster works", {
   sample_id <- "mock_sample_id"
   cells_id <- "83abbeea-b664-499a-8e6e-d2dbae4c60a9"
   task_name <- "configureEmbedding"
+  ignore_ssl_cert <- FALSE
 
   cell_sets_bucket <- "./mock_data/cell_sets_bucket"
-  stubbed_embed_and_cluster(scdata, config, sample_id, cells_id, task_name)
+  stubbed_embed_and_cluster(
+    scdata,
+    config,
+    sample_id,
+    cells_id,
+    task_name,
+    ignore_ssl_cert
+)
+
   expect_snapshot_file(file.path(cell_sets_bucket, "cluster_cellsets.json"),
                        name = "cluster_cell_sets.json")
   withr::defer(unlink(cell_sets_bucket, recursive = TRUE))
 
 })
+
+
+test_that("runClusters does not crash with less than 10 dimensions available", {
+  algos <- c("louvain", "leiden")
+  scdata <- mock_scdata()
+  expected_keys <- c("cluster", "cell_ids")
+  resolution <- 0.8
+
+  # remove all pre-existing reductions and calculate low-PC PCA
+  scdata <- Seurat::DietSeurat(scdata, scale.data = T)
+  scdata <- suppressWarnings(Seurat::RunPCA(scdata, assay = "RNA", npcs = 2, verbose = F))
+
+  for (algo in algos) {
+    res <- runClusters(algo, resolution, scdata)
+    expect_equal(names(res), expected_keys)
+  }
+})
+
+
+test_that("getClusters uses the default value of 10 if there are enough PCs available",{
+  algos <- c("louvain", "leiden")
+  scdata <- mock_scdata()
+  resolution <- 0.8
+
+  # remove all pre-existing reductions and calculate low-PC PCA
+  scdata <- Seurat::DietSeurat(scdata, scale.data = T)
+  scdata@commands <- list()
+  scdata <- suppressWarnings(Seurat::RunPCA(scdata, assay = "RNA", npcs = 20, verbose = F))
+
+  for (algo in algos) {
+    clustered_scdata <- getClusters(algo, resolution, scdata)
+    if (algo == "louvain") expect_equal(clustered_scdata@commands$FindNeighbors.RNA.pca$dims, 1:10)
+    # difficult to test in leiden, so test internal state as proxy
+    if (algo == "leiden") expect_true("seurat_clusters" %in% names(clustered_scdata@meta.data))
+  }
+})
+
+
+
