@@ -118,7 +118,30 @@ subset_experiment <- function(input, parent_data) {
   # subset seurat object, remove unnecesary data
   cell_ids_to_keep <- unique(parent_data$cellsets[key %in% input$cellSetKeys, cell_id])
   scdata <- subset_ids(parent_data$scdata, cell_ids_to_keep)
+  scdata <- filter_low_cell_samples(scdata)
   scdata <- diet_scdata(scdata)
+  return(scdata)
+}
+
+
+#' Remove samples with low cell numbers
+#'
+#' When subsetting, there's an increased likelihood of having samples with low
+#' cell numbers. This breaks the pipeline in different places, especially during
+#' integration. This function removes samples with cell numbers below an empirically
+#' determined threshold
+#'
+#' @param scdata Seurat Object
+#' @param min_cells integer of minimum number of cells for a sample to be kept
+#'
+#' @return Seurat object with samples containing at least min_cells
+#' @export
+#'
+filter_low_cell_samples <- function(scdata, min_cells = MIN_CELLS_IN_SAMPLE) {
+  cells_per_sample <- table(scdata$samples)
+  samples_to_keep <- names(cells_per_sample)[cells_per_sample > min_cells]
+  scdata <- subset(scdata, samples %in% samples_to_keep)
+
   return(scdata)
 }
 
