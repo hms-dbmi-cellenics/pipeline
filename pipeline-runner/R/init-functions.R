@@ -77,7 +77,7 @@ load_config <- function(development_aws_server) {
     aws_config = list(region = aws_region),
     pod_name = Sys.getenv("K8S_POD_NAME", "local"),
     activity_arn = activity_arn,
-    api_url = paste0("http://api-", sandbox, ".api-", sandbox, ".svc.cluster.local:3000"),
+    api_url = sprintf("http://%s:3000", development_aws_server),
     api_version = "v2",
     debug_config = list(
       step = Sys.getenv("DEBUG_STEP", ""),
@@ -87,15 +87,10 @@ load_config <- function(development_aws_server) {
 
 
   if (config$cluster_env == "staging") {
-    config$public_api_url <- paste0("https://api-", sandbox, ".", domain_name)
+    config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
   }
   if (config$cluster_env == "production") {
-    config$public_api_url <- paste0("https://api.", domain_name)
-  }
-
-  # batch does not have access to the internal EKS cluster api URL, use the public one
-  if (running_in_batch == "true" && domain_name != "") {
-    config$api_url <- config$public_api_url
+    config$api_url <- paste0("https://api.", domain_name)
   }
 
   # running in linux needs the IP of the host to work. If it is set as an
@@ -107,7 +102,6 @@ load_config <- function(development_aws_server) {
   }
 
   if (config$cluster_env == "development") {
-    config$api_url <- sprintf("http://%s:3000", development_aws_server)
     # DOCKER_GATEWAY_HOST
     config$aws_config[["endpoint"]] <- sprintf(
       "http://%s:4566",
@@ -160,7 +154,7 @@ load_config <- function(development_aws_server) {
 #'
 #' @return list of task results
 #'
-run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, debug_config) {
+run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, ignore_ssl_cert, debug_config) {
   if (!task_name %in% names(tasks)) {
     stop("Invalid task: ", task_name)
   }
@@ -176,7 +170,15 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, d
   # run task and time it
   tstart <- Sys.time()
 
-  out <- task(scdata, config, sample_id, cells_id, task_name)
+  # The httr package used in Configure embedding requires ssl configuration
+  # to know whether to verify/not ssl configuration. Other qc functions
+  # do not use this param, so it'd be useless to pass this param into the other functions
+  if(task_name == "configureEmbedding") {
+    out <- task(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert)
+  } else {
+    out <- task(scdata, config, sample_id, cells_id, task_name)
+  }
+
   ttask <- format(Sys.time() - tstart, digits = 2)
   message(
     "⏱️ Time to complete ", task_name,
@@ -302,6 +304,7 @@ call_qc <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
   config <- input$config
   upload_count_matrix <- input$uploadCountMatrix
+  ignore_ssl_cert <- input$ignoreSslCert
   sample_id <- input$sampleUuid
   debug_config <- pipeline_config$debug_config
 
@@ -349,7 +352,7 @@ call_qc <- function(task_name, input, pipeline_config) {
   # call function to run and update global variable
   c(
     data, new_ids, ...rest_of_results
-  ) %<-% run_qc_step(scdata, config, tasks, task_name, cells_id, sample_id, debug_config)
+  ) %<-% run_qc_step(scdata, config, tasks, task_name, cells_id, sample_id, ignore_ssl_cert, debug_config)
 
 
   assign("cells_id", new_ids, pos = ".GlobalEnv")
@@ -506,7 +509,7 @@ init <- function() {
   states <- paws::sfn(config = pipeline_config$aws_config)
   message("Loaded step function")
 
-  sessionInfo()
+ print(sessionInfo())
 
   futile.logger::flog.layout(futile.logger::layout.simple)
   futile.logger::flog.threshold(futile.logger::ERROR)

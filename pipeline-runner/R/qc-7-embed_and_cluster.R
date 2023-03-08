@@ -15,7 +15,8 @@ embed_and_cluster <-
            config,
            sample_id,
            cells_id,
-           task_name = "configureEmbedding") {
+           task_name = "configureEmbedding",
+           ignore_ssl_cert = FALSE) {
 
     message("starting clusters")
     clustering_method <- config$clusteringSettings$method
@@ -25,6 +26,7 @@ embed_and_cluster <-
     cellSets <-
       runClusters(clustering_method, methodSettings$resolution, scdata)
     message("formatting cellsets")
+
     formated_cell_sets <-
       format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
     message("updating through api")
@@ -34,7 +36,8 @@ embed_and_cluster <-
       config$api_url,
       scdata@misc$experimentId,
       clustering_method,
-      config$auth_JWT
+      config$auth_JWT,
+      ignore_ssl_cert
     )
 
     # the result object will have to conform to this format:
@@ -84,6 +87,7 @@ format_cell_sets_object <-
       )
     for (i in sort(unique(cell_sets$cluster))) {
       cells <- cell_sets[cell_sets$cluster == i, "cell_ids"]
+
       new_set <- list(
         key = paste0(clustering_method, "-", i),
         name = paste0("Cluster ", i),
@@ -104,9 +108,15 @@ update_sets_through_api <-
            api_url,
            experiment_id,
            cell_set_key,
-           auth_JWT) {
+           auth_JWT,
+           ignore_ssl_cert
+    ) {
 
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
+
+    if (ignore_ssl_cert) {
+        httr::set_config(httr::config(ssl_verifypeer = 0L))
+    }
 
     httr::PATCH(
       paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
