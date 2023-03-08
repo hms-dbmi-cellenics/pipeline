@@ -161,11 +161,6 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   )
 
   message("Uploading results to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
-  # s3$put_object(
-  #   Bucket = pipeline_config$results_bucket,
-  #   Key = id,
-  #   Body = charToRaw(output)
-  # )
   put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id) 
 
   message("Sending to SNS topic ", pipeline_config$sns_topic)
@@ -296,12 +291,6 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
 
     tags <- paste0("experimentId=", experiment_id , "&plotUuid=" , plot_data_name)
     put_object_in_s3(pipeline_config, pipeline_config$plot_data_bucket, charToRaw(output), id, tags)
-    # s3$put_object(
-    #   Bucket = pipeline_config$plot_data_bucket,
-    #   Key = id,
-    #   Body = charToRaw(output),
-    #   Tagging = tags
-    # )
   }
 
   return(plot_data_keys)
@@ -337,7 +326,6 @@ upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
 
 put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging=NULL) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  message('CONFIG ', pipeline_config$aws_config)
 
   retry_count <- 0
   max_retries <- 2
