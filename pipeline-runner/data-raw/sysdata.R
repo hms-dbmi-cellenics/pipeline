@@ -49,6 +49,11 @@ gem2s <- list(
   max.empty.drops = 50
 )
 
+
+# minimum number of cells required in a sample to have the pipeline not break.
+MIN_CELLS_IN_SAMPLE <- 15
+
+
 RANDOM_SEED <- 42
 
 # path where dump/log files are saved
@@ -96,6 +101,7 @@ usethis::use_data(
   QC_TASK_LIST,
   INPUT_DIR,
   RANDOM_SEED,
+  MIN_CELLS_IN_SAMPLE,
   DEBUG_PATH,
   file_names,
   file_types_by_technology,

@@ -9,7 +9,8 @@ embed_and_cluster(
   config,
   sample_id,
   cells_id,
-  task_name = "configureEmbedding"
+  task_name = "configureEmbedding",
+  ignore_ssl_cert = FALSE
 )
 }
 \arguments{
