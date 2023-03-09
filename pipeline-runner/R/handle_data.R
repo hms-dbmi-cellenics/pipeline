@@ -350,7 +350,7 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging=NULL)
       message("Object successfully uploaded to S3.")
       return(response)
     }, error = function(e) {
-      retry_count <- retry_count + 1
+      retry_count <<- retry_count + 1
       message(sprintf("Upload failed. Retrying (%d/%d)...", retry_count, max_retries))
       Sys.sleep(2^retry_count) # exponential backoff, preventing sending a new request too fast
     })
