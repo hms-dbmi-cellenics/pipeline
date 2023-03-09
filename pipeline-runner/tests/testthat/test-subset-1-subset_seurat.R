@@ -142,3 +142,17 @@ test_that("subset_seurat matches snapshot", {
 
   expect_snapshot(res)
 })
+
+
+test_that("filter_low_cell_samples removes samples with cells below the threshold", {
+  parent_experiment_id <- "mock_experiment_id"
+  cellset_keys = c("louvain-0", "louvain-1")
+  input <- mock_input(parent_experiment_id, cellset_keys)
+  parent_data <- mock_parent_experiment_data(input)
+
+  min_cells <- 300
+
+  res <- filter_low_cell_samples(parent_data$scdata, min_cells = min_cells)
+  expect_false(all(table(parent_data$scdata$samples) > min_cells))
+  expect_true(all(table(res$samples) > min_cells))
+})
