@@ -325,6 +325,7 @@ upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
 }
 
 put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging=NULL) {
+  message(sprintf("Putting %s in %s", key, bucket))
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
   retry_count <- 0
