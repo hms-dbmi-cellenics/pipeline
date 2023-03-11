@@ -88,7 +88,7 @@ test_that("upload_matrix_to_s3 completes successfully", {
 test_that("send_output_to_api completes successfully", {
     c(pipeline_config, input, plot_data_keys, output) %<-% send_output_to_api_mock_data
 
-    mockery::stub(send_output_to_api, 's3$put_object', stub_put_object_in_s3)
+    mockery::stub(send_output_to_api, 's3$put_object', NULL)
     mockery::stub(send_output_to_api, 'paws::sns', mock_sns)
 
     response <- send_output_to_api(pipeline_config, input, plot_data_keys, output)

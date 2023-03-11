@@ -356,7 +356,7 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging=NULL)
       Sys.sleep(2^retry_count) # exponential backoff, preventing sending a new request too fast
     })
   }
-  message("Failed to upload object to S3 after maximum number of retries.")
+  stop("Failed to upload object to S3 after maximum number of retries.")
 }
 #' Upload a file to S3 using multipart upload
 #'
