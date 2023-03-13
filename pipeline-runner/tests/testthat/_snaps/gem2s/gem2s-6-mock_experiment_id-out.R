@@ -49784,7 +49784,7 @@ list(data = list(), output = list(config = list(name = "mock_experiment",
                 excludeGeneCategories = list())), configureEmbedding = list(
             embeddingSettings = list(method = "umap", methodSettings = list(
                 umap = list(minimumDistance = 0.29999999999999999, 
-                  distanceMetric = "cosine"), tsne = list(perplexity = 30, 
+                  distanceMetric = "cosine"), tsne = list(perplexity = 4.3600000000000003, 
                   learningRate = 200))), clusteringSettings = list(
                 method = "louvain", methodSettings = list(louvain = list(
                   resolution = 0.80000000000000004)))))))

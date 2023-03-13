@@ -2,19 +2,16 @@
 
 #' Filter empty droplets
 #'
-#' filters seurat objects based on edrops scores.
+#' Filters seurat object based on scores estimated by the classifier implemented
+#'  in `DropletUtils::emptyDrops`
 #'
 #' @param config list containing the following information
 #'          - enable: true/false. Refering to apply or not the filter.
 #'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
 #'          to call generate_default_values_mitochondrialContent)
 #'          - filterSettings: slot with thresholds
-#'                  - method: String. Method to be used {absoluteThreshold}
 #'                  - methodSettings: List with the method as key and contain all the filterSettings for this specific method.
-#'                          * absoluteThreshold: based on a cut-off threshold
-#'                                  - maxFraction: Float. maximun pct MT-content that we considere for a alive cell
-#'                                  - binStep: Float. Bin size for the histogram
-#'                          * we are supposed to add more methods ....
+#'                      - FDR: False Discovery Rate. Cells with FDR above this threshold will be filtered out.
 #' @import data.table
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
@@ -34,7 +31,7 @@ filter_emptydrops <- function(scdata_list, config, sample_id, cells_id, task_nam
 
   FDR <- config$filterSettings$FDR
   if (isTRUE(config$auto)) {
-    FDR <- generate_default_values_classifier(sample_data, config)
+    FDR <- processing_config_template[["classifier"]]$filterSettings$FDR
   }
 
   # for plots and filter stats to be populated
@@ -109,24 +106,3 @@ filter_emptydrops <- function(scdata_list, config, sample_id, cells_id, task_nam
   return(result)
 }
 
-
-
-#' @description Filters seurat object based on classifier filter using emptyDrops
-#               https://rdrr.io/github/MarioniLab/DropletUtils/man/emptyDrops.html
-#' @param config list containing the following information
-#'          - enable: true/false. Refering to apply or not the filter.
-#'          - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
-#'          to call generate_default_values_classifier)
-#'          - filterSettings: slot with thresholds
-#'                  - minProbabiliy:
-#'                  - filterThreshold:
-#' @export
-#' @return a list with the filtered seurat object by probabilities classifier, the config and the plot values
-#'
-generate_default_values_classifier <- function(scdata, config) {
-
-  # HARDCODE
-  threshold <- 0.01
-
-  return(threshold)
-}
