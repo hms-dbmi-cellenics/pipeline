@@ -28,7 +28,7 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
 
   if(config$recomputeDoubletScore) {
     # update doublet scores
-    #sample_counts <- scdata_list[[sample_id]]@assays$RNA@counts
+    # sample_counts <- scdata_list[[sample_id]]@assays$RNA@counts
     sample_counts <- sample_data@assays$RNA@counts
     scores <- attempt_doublet_scores(sample_counts)
     message("updating doublet scores")
