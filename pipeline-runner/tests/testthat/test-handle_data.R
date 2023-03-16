@@ -36,7 +36,7 @@ stub_put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key
 }
 
 stub_put_object_in_s3 <- function(Bucket, Key, Body) {
-  return('ok')
+  return(NULL)
 }
 
 test_that("upload_debug_folder_to_s3 completes successfully", {
@@ -88,11 +88,11 @@ test_that("upload_matrix_to_s3 completes successfully", {
 test_that("send_output_to_api completes successfully", {
     c(pipeline_config, input, plot_data_keys, output) %<-% send_output_to_api_mock_data
 
-    mockery::stub(send_output_to_api, 'put_object_in_s3', stub_put_object_in_s3)
+    mockery::stub(send_output_to_api, 'put_object_in_s3', NULL)
     mockery::stub(send_output_to_api, 'paws::sns', mock_sns)
 
     response <- send_output_to_api(pipeline_config, input, plot_data_keys, output)
-
+    
     expect_true(response == 'ok')
 })
 
