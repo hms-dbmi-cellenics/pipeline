@@ -36,7 +36,7 @@ stub_put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key
 }
 
 stub_put_object_in_s3 <- function(Bucket, Key, Body) {
-  return(NULL)
+  return('ok')
 }
 
 test_that("upload_debug_folder_to_s3 completes successfully", {
