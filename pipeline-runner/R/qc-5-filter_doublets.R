@@ -26,13 +26,15 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
 
   sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
 
-  if(config$recomputeDoubletScore) {
+  if (rlang::has_name(config, "recomputeDoubletScore")) {
+    if (config$recomputeDoubletScore) {
     # update doublet scores
     # sample_counts <- scdata_list[[sample_id]]@assays$RNA@counts
     sample_counts <- sample_data@assays$RNA@counts
     scores <- attempt_doublet_scores(sample_counts)
     message("updating doublet scores")
     sample_data <- add_dblscore(sample_data, scores)
+    }
   }
 
   # Check if the experiment has doubletScores
