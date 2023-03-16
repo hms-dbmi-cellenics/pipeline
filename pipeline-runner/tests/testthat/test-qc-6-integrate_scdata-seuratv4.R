@@ -136,7 +136,7 @@ test_that("SeuratV4 integration doesnt error out with small dataset", {
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
@@ -151,7 +151,7 @@ test_that("SeuratV4 integration works", {
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
@@ -166,7 +166,7 @@ test_that("PCA is computed when RPCA method is selected within SeuratV4 integrat
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"), "Running PCA")
+  expect_message(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"), "Running PCA")
 })
 
 test_that("PCA is not computed when CCA method is selected within SeuratV4 integration", {
@@ -179,7 +179,7 @@ test_that("PCA is not computed when CCA method is selected within SeuratV4 integ
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"), "PCA is not running .*")
+  expect_message(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"), "PCA is not running .*")
 })
 
 
@@ -193,7 +193,7 @@ test_that("SeuratV4 integration finds integration anchors using RPCA method, if 
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_equal(integrated_scdata@commands$FindIntegrationAnchors$reduction, "pca")
 })
 
@@ -208,7 +208,7 @@ test_that("SeuratV4 integration finds integration anchors using CCA method, if m
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_equal(integrated_scdata@commands$FindIntegrationAnchors$reduction, "cca")
 })
 
@@ -222,7 +222,7 @@ test_that("SCTransform integration works", {
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "SCT")))
   )
 
-  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   expect_s4_class(integrated_scdata, "Seurat")
   expect_s4_class(integrated_scdata[["SCT"]], "SCTAssay")
   expect_equal(Seurat::DefaultAssay(integrated_scdata), "integrated")
@@ -282,7 +282,7 @@ test_that("misc slot is complete after Seurat V4 integration", {
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   integrated_scdata <- clean_timestamp(integrated_scdata)
 
   expect_s4_class(integrated_scdata, "Seurat")
@@ -304,7 +304,7 @@ test_that("misc slot is complete after Seurat V4 integration with geosketch", {
     downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
 
 
-  integrated_scdata <- suppressWarnings(temp_integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")$data)
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")$data)
   expect_s4_class(integrated_scdata, "Seurat")
   integrated_scdata@misc$ingestionDate <- "fixed_date"
 

@@ -15,7 +15,8 @@ embed_and_cluster <-
            config,
            sample_id,
            cells_id,
-           task_name = "configureEmbedding") {
+           task_name = "configureEmbedding",
+           ignore_ssl_cert = FALSE) {
 
     message("starting clusters")
     clustering_method <- config$clusteringSettings$method
@@ -35,7 +36,8 @@ embed_and_cluster <-
       config$api_url,
       scdata@misc$experimentId,
       clustering_method,
-      config$auth_JWT
+      config$auth_JWT,
+      ignore_ssl_cert
     )
 
     # the result object will have to conform to this format:
@@ -106,11 +108,13 @@ update_sets_through_api <-
            api_url,
            experiment_id,
            cell_set_key,
-           auth_JWT) {
+           auth_JWT,
+           ignore_ssl_cert
+    ) {
 
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
-    if (Sys.getenv("IGNORE_SSL_CERTIFICATE") == "true") {
+    if (ignore_ssl_cert) {
         httr::set_config(httr::config(ssl_verifypeer = 0L))
     }
 
