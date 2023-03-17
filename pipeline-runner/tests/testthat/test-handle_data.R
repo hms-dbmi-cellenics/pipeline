@@ -92,7 +92,7 @@ test_that("send_output_to_api completes successfully", {
     mockery::stub(send_output_to_api, 'paws::sns', mock_sns)
 
     response <- send_output_to_api(pipeline_config, input, plot_data_keys, output)
-    
+
     expect_true(response == 'ok')
 })
 
@@ -169,5 +169,27 @@ test_that("parse_cellsets parses a cellset object", {
 
   expect_s3_class(res, "data.table")
   expect_identical(names(res), c("key", "name", "type", "cell_id"))
+
+})
+
+stub_s3_put_object <- function(Bucket, Key, Body, Tagging) {
+  response <- list(Expiration = character(),
+                   ETag = "this_is_not_an_etag",
+                   ServerSideEncryption = character(),
+                   VersionId = character(),
+                   SSECustomerAlgorithm = character(),
+                   SSECustomerKeyMD5 = character(),
+                   SSEKMSKeyId = character(),
+                   SSEKMSEncryptionContext = character(),
+                   BucketKeyEnabled = logical(),
+                   RequestCharged = character())
+
+  return(response)
+}
+
+
+
+test_that("put_object_in_s3 works", {
+
 
 })
