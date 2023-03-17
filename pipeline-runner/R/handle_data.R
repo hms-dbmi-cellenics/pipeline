@@ -487,13 +487,17 @@ parse_cellsets <- function(cellsets) {
   dt_list <- cellsets$cellSets$children
 
   lapply(dt_list, data.table::setDT)
-  dt_list <- purrr::map2(dt_list, cellsets$cellSets$key, cbind_cellset_type)
+  dt_list <- purrr::map2(dt_list, cellsets$cellSets$name, cbind_cellset_type)
 
   # fill columns in case there are empty cellset classes
   dt <- data.table::rbindlist(dt_list, fill = TRUE)
 
   # change cellset type to more generic names
-  dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
+  dt[endsWith(cellset_type, c("clusters")), cellset_type := "cluster"]
+  dt[cellset_type == "Custom cell sets", cellset_type := "scratchpad"]
+  dt[cellset_type == "Samples", cellset_type := "sample"]
+  dt <- dt[!startsWith(cellset_type, "ScType-"), ]
+
   dt[!cellset_type %in% c("cluster", "scratchpad", "sample"), cellset_type := "metadata"]
 
   # unnest, and change column name
