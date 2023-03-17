@@ -324,7 +324,7 @@ upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
   return(NULL)
 }
 
-put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging=NULL) {
+put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging = NULL) {
   message(sprintf("Putting %s in %s", key, bucket))
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
@@ -333,27 +333,24 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging=NULL)
 
   while (retry_count < max_retries) {
     tryCatch({
-      if (!is.null(tagging)) {
-        response <- s3$put_object(
-          Bucket = bucket,
-          Key = key,
-          Body = object,
-          Tagging = tagging
-        )
-      } else {
-        response <- s3$put_object(
-          Bucket = bucket,
-          Key = key,
-          Body = object
-        )
-      }
-      
+      # if (!is.null(tagging)) {
+      response <- s3$put_object(
+        Bucket = bucket,
+        Key = key,
+        Body = object,
+        Tagging = switch(!is.null(tagging), tagging)
+      )
+
+      message("*** s3 response")
+      message(str(response))
+
       message("Object successfully uploaded to S3.")
       return(response)
     }, error = function(e) {
       retry_count <<- retry_count + 1
       message(sprintf("Upload failed. Retrying (%d/%d)...", retry_count, max_retries))
-      Sys.sleep(2^retry_count) # exponential backoff, preventing sending a new request too fast
+      # exponential backoff, preventing sending a new request too fast
+      Sys.sleep(2 ^ retry_count)
     })
   }
   stop("Failed to upload object to S3 after maximum number of retries.")
