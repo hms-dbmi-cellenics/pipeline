@@ -487,6 +487,7 @@ parse_cellsets <- function(cellsets) {
   dt_list <- cellsets$cellSets$children
 
   lapply(dt_list, data.table::setDT)
+  # map by name to get cellset class for every cellset type we currently have
   dt_list <- purrr::map2(dt_list, cellsets$cellSets$name, cbind_cellset_type)
 
   # fill columns in case there are empty cellset classes
@@ -496,6 +497,8 @@ parse_cellsets <- function(cellsets) {
   dt[endsWith(cellset_type, c("clusters")), cellset_type := "cluster"]
   dt[cellset_type == "Custom cell sets", cellset_type := "scratchpad"]
   dt[cellset_type == "Samples", cellset_type := "sample"]
+
+  # remove sctype cellsets
   dt <- dt[!startsWith(cellset_type, "ScType-"), ]
 
   dt[!cellset_type %in% c("cluster", "scratchpad", "sample"), cellset_type := "metadata"]
