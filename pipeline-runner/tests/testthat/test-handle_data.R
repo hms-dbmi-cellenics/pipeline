@@ -190,6 +190,30 @@ stub_s3_put_object <- function(Bucket, Key, Body, Tagging) {
 
 
 test_that("put_object_in_s3 works", {
+  mockery::stub(put_object_in_s3, "s3$put_object", stub_s3_put_object)
+
+  pipeline_config <- mock_pipeline_config()
+  bucket <- "mock_bucket"
+  key <- "mock_key"
+  object <- "something"
+  key <- "a_key"
+
+  expect_message(put_object_in_s3(pipeline_config, bucket, object, key),
+                 regexp = "Putting a_key in mock_bucket")
+})
 
 
+test_that("put_object_in_s3 retries if s3$put_object throws an error", {
+  mockery::stub(put_object_in_s3,
+                "s3$put_object",
+                mockery::mock(stop("an error"), stub_s3_put_object))
+
+  pipeline_config <- mock_pipeline_config()
+  bucket <- "mock_bucket"
+  key <- "mock_key"
+  object <- "something"
+  key <- "a_key"
+
+  expect_message(put_object_in_s3(pipeline_config, bucket, object, key),
+                 regexp = ".*Retrying \\(1/2\\).*")
 })
