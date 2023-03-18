@@ -507,7 +507,6 @@ parse_cellsets <- function(cellsets) {
 
   lapply(dt_list, data.table::setDT)
 
-  # map by name to get cellset class for every cellset type we currently have
   dt_list <- purrr::map2(dt_list, cellset_types, cbind_cellset_type)
 
   # fill columns in case there are empty cellset classes
