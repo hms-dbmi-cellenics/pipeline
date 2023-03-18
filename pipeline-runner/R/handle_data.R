@@ -473,6 +473,24 @@ cbind_cellset_type <- function(dt, col) {
 }
 
 
+is_uuid <- function(x) {
+  uuid_regex <- "^\\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\b$"
+  return(grepl(uuid_regex, x))
+}
+
+
+get_cellset_type <- function(key, type) {
+  cellset_type <- switch(key,
+                         louvain = "cluster",
+                         scratchpad = "scratchpad",
+                         sample = "sample",
+                         ifelse(is_uuid(key), "sctype", "metadata")
+  )
+
+  return(cellset_type)
+}
+
+
 #' Parse cellsets object to data.table
 #'
 #' Gets the cellsets list and converts it to a tidy data.table
@@ -485,20 +503,17 @@ cbind_cellset_type <- function(dt, col) {
 parse_cellsets <- function(cellsets) {
 
   dt_list <- cellsets$cellSets$children
+  cellset_types <- purrr::map2_chr(cellsets$cellSets$key, cellsets$cellSets$type, get_cellset_type)
 
   lapply(dt_list, data.table::setDT)
-  dt_list <- purrr::map2(dt_list, cellsets$cellSets$key, cbind_cellset_type)
+
+  dt_list <- purrr::map2(dt_list, cellset_types, cbind_cellset_type)
 
   # fill columns in case there are empty cellset classes
   dt <- data.table::rbindlist(dt_list, fill = TRUE)
-
-  # change cellset type to more generic names
-  dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
-  dt[!cellset_type %in% c("cluster", "scratchpad", "sample"), cellset_type := "metadata"]
 
   # unnest, and change column name
   dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
   data.table::setnames(dt, "cellset_type", "type")
   return(dt)
 }
-
