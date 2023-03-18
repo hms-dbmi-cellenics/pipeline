@@ -164,8 +164,6 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, i
   # print info
   task <- tasks[[task_name]]
   message("Running: ", task_name)
-  message("Config:")
-  str(config)
 
   # run task and time it
   tstart <- Sys.time()
