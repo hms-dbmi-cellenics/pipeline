@@ -512,9 +512,6 @@ parse_cellsets <- function(cellsets) {
   # fill columns in case there are empty cellset classes
   dt <- data.table::rbindlist(dt_list, fill = TRUE)
 
-  # remove sctype cellsets
-  dt <- dt[!startsWith(cellset_type, "ScType-"), ]
-
   # unnest, and change column name
   dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
   data.table::setnames(dt, "cellset_type", "type")
