@@ -517,6 +517,3 @@ parse_cellsets <- function(cellsets) {
   data.table::setnames(dt, "cellset_type", "type")
   return(dt)
 }
-
-
-
