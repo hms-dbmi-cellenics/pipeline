@@ -182,6 +182,47 @@ test_that("parse_cellsets parses a cellset object", {
 
 })
 
+
+test_that("is_uuid detects uuids correctly", {
+
+  expect_true(is_uuid(uuid::UUIDgenerate()))
+  expect_false(is_uuid("not-a-uuid"))
+
+})
+
+
+test_that("get_cellset_types correctly gets cellset types", {
+  key <-
+    c(
+      "louvain",
+      "scratchpad",
+      "sample",
+      "metadata_1",
+      "metadata_2",
+      "faa74528-c4d7-11ed-9fda-0242ac120003"
+    )
+
+  type <-
+    c(
+      "cellSets",
+      "cellSets",
+      "metadataCategorical",
+      "metadataCategorical",
+      "metadataCategorical",
+      "cellSets"
+    )
+
+  expected_cellset_types <- c("cluster",
+                              "scratchpad",
+                              "sample",
+                              "metadata",
+                              "metadata",
+                              "sctype")
+
+  expect_identical(purrr::map2_chr(key, type, get_cellset_type),
+                   expected_cellset_types)
+})
+
 test_that("send_pipeline_fail_update has the correct StringValue", {
   pipeline_config <- list(sns_topic = 'ExampleTopic')
   input <- list(taskName = 'some_task', experimentId = '1234')
