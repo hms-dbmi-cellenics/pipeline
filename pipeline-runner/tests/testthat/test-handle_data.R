@@ -172,7 +172,6 @@ test_that("parse_cellsets parses a cellset object", {
 
 })
 
-<<<<<<< HEAD
 stub_s3_put_object <- function(Bucket, Key, Body, Tagging) {
   response <- list(Expiration = character(),
                    ETag = "this_is_not_an_etag",
@@ -187,8 +186,6 @@ stub_s3_put_object <- function(Bucket, Key, Body, Tagging) {
 
   return(response)
 }
-
-
 
 test_that("put_object_in_s3 works", {
   mockery::stub(put_object_in_s3, "s3$put_object", stub_s3_put_object)
