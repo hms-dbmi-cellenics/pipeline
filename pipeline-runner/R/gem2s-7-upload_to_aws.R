@@ -311,8 +311,16 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
   if ("scratchpad" %in% unique(subset_cellsets$type)) {
     message("adding custom cellsets to subset experiment")
     scratchpad_cellsets <- build_scratchpad_cellsets(color_pool, subset_cellsets)
-    cell_sets <- c(cell_sets, list(scratchpad_cellsets))
+  } else {
+    scratchpad_cellsets <- list(
+      key = "scratchpad",
+      name = "Custom cell sets",
+      rootNode = TRUE,
+      children = list(),
+      type = "cellSets"
+    )
   }
+  cell_sets <- c(cell_sets, list(scratchpad_cellsets))
 
   cell_sets <- list(cellSets = cell_sets)
 
