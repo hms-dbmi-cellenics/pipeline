@@ -482,11 +482,7 @@
     Code
       rlang::hash(res)
     Output
-<<<<<<< HEAD
       [1] "0a3f0a3da10e5a0e5cf721144cfbc062"
-=======
-      [1] "353abbf1d84075c47e8d4e07ba03af1e"
->>>>>>> biomage/master
     Code
       str(res)
     Output
