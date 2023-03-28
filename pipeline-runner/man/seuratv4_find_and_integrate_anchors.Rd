@@ -10,6 +10,7 @@ seuratv4_find_and_integrate_anchors(
   reduction,
   normalization,
   npcs,
+  npcs_for_pca,
   nfeatures,
   scdata = NA,
   use_geosketch = FALSE

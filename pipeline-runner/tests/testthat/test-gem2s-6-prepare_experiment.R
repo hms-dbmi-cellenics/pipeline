@@ -7,6 +7,7 @@ mock_counts <- function() {
 
 
 mock_doublet_scores <- function(counts) {
+  set.seed(1)
   doublet_scores <- runif(ncol(counts))
   doublet_class <- ifelse(doublet_scores < 0.8, "singlet", "doublet")
 
@@ -21,6 +22,7 @@ mock_doublet_scores <- function(counts) {
 
 mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   if (is.null(counts)) {
+    set.seed(1)
     counts <- DropletUtils:::simCounts()
     colnames(counts) <- paste0("cell", seq_len(ncol(counts)))
   }
@@ -140,7 +142,6 @@ test_that("prepare_experiment generates qc_config that matches snapshot", {
   input <- list(experimentId = "1234")
   task_out <- prepare_experiment(input, NULL, prev_out)$output
 
-  # TODO fix snapshot test
   expect_snapshot(str(task_out$qc_config))
 })
 

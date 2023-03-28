@@ -19,16 +19,13 @@ filter_emptydrops(
 - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
 to call generate_default_values_mitochondrialContent)
 - filterSettings: slot with thresholds
-- method: String. Method to be used {absoluteThreshold}
 - methodSettings: List with the method as key and contain all the filterSettings for this specific method.
-* absoluteThreshold: based on a cut-off threshold
-- maxFraction: Float. maximun pct MT-content that we considere for a alive cell
-- binStep: Float. Bin size for the histogram
-* we are supposed to add more methods ....}
+- FDR: False Discovery Rate. Cells with FDR above this threshold will be filtered out.}
 }
 \value{
 a list with the filtered seurat object by mitochondrial content, the config and the plot values
 }
 \description{
-filters seurat objects based on edrops scores.
+Filters seurat object based on scores estimated by the classifier implemented
+in \code{DropletUtils::emptyDrops}
 }

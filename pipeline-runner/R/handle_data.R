@@ -161,11 +161,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   )
 
   message("Uploading results to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
-  s3$put_object(
-    Bucket = pipeline_config$results_bucket,
-    Key = id,
-    Body = charToRaw(output)
-  )
+  put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id) 
 
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
@@ -296,13 +292,7 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
     message("Uploading plotData to S3 bucket", pipeline_config$plot_data_bucket, " at key ", id, "...")
 
     tags <- paste0("experimentId=", experiment_id , "&plotUuid=" , plot_data_name)
-
-    s3$put_object(
-      Bucket = pipeline_config$plot_data_bucket,
-      Key = id,
-      Body = charToRaw(output),
-      Tagging = tags
-    )
+    put_object_in_s3(pipeline_config, pipeline_config$plot_data_bucket, charToRaw(output), id, tags)
   }
 
   return(plot_data_keys)
@@ -336,17 +326,32 @@ upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
   return(NULL)
 }
 
-put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
+put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging = NULL) {
   message(sprintf("Putting %s in %s", key, bucket))
-
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  s3$put_object(
-    Bucket = bucket,
-    Key = key,
-    Body = object
-  )
-}
 
+  retry_count <- 0
+  max_retries <- 2
+
+  while (retry_count < max_retries) {
+    tryCatch({
+      response <- s3$put_object(
+        Bucket = bucket,
+        Key = key,
+        Body = object,
+        Tagging = switch(!is.null(tagging), tagging)
+      )
+      message("Object successfully uploaded to S3.")
+      return(response)
+    }, error = function(e) {
+      retry_count <<- retry_count + 1
+      message(sprintf("Upload failed. Retrying (%d/%d)...", retry_count, max_retries))
+      # exponential back off, preventing sending a new request too fast
+      Sys.sleep(2 ^ retry_count)
+    })
+  }
+  stop("Failed to upload object to S3 after maximum number of retries.")
+}
 #' Upload a file to S3 using multipart upload
 #'
 #' @param pipeline_config A Paws S3 config object, e.g. from `paws::s3()`.
@@ -475,6 +480,24 @@ cbind_cellset_type <- function(dt, col) {
 }
 
 
+is_uuid <- function(x) {
+  uuid_regex <- "^\\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\b$"
+  return(grepl(uuid_regex, x))
+}
+
+
+get_cellset_type <- function(key, type) {
+  cellset_type <- switch(key,
+                         louvain = "cluster",
+                         scratchpad = "scratchpad",
+                         sample = "sample",
+                         ifelse(is_uuid(key), "sctype", "metadata")
+  )
+
+  return(cellset_type)
+}
+
+
 #' Parse cellsets object to data.table
 #'
 #' Gets the cellsets list and converts it to a tidy data.table
@@ -487,20 +510,17 @@ cbind_cellset_type <- function(dt, col) {
 parse_cellsets <- function(cellsets) {
 
   dt_list <- cellsets$cellSets$children
+  cellset_types <- purrr::map2_chr(cellsets$cellSets$key, cellsets$cellSets$type, get_cellset_type)
 
   lapply(dt_list, data.table::setDT)
-  dt_list <- purrr::map2(dt_list, cellsets$cellSets$key, cbind_cellset_type)
+
+  dt_list <- purrr::map2(dt_list, cellset_types, cbind_cellset_type)
 
   # fill columns in case there are empty cellset classes
   dt <- data.table::rbindlist(dt_list, fill = TRUE)
-
-  # change cellset type to more generic names
-  dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
-  dt[!cellset_type %in% c("cluster", "scratchpad", "sample"), cellset_type := "metadata"]
 
   # unnest, and change column name
   dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
   data.table::setnames(dt, "cellset_type", "type")
   return(dt)
 }
-

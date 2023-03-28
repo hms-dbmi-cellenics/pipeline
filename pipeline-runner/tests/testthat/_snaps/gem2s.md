@@ -803,7 +803,7 @@
         .. .. .. .. .. ..$ minimumDistance: num 0.3
         .. .. .. .. .. ..$ distanceMetric : chr "cosine"
         .. .. .. .. ..$ tsne:List of 2
-        .. .. .. .. .. ..$ perplexity  : num 30
+        .. .. .. .. .. ..$ perplexity  : num 4.36
         .. .. .. .. .. ..$ learningRate: num 200
         .. .. ..$ clusteringSettings:List of 2
         .. .. .. ..$ method        : chr "louvain"
@@ -820,7 +820,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "0379510c6ca5436e14b53fad6d4ad7de"
+      [1] "3dfd9fa57f341346ce2ef3c101cb1a05"
     Code
       str(res)
     Output
@@ -941,7 +941,7 @@
         .. .. .. .. .. .. ..$ minimumDistance: num 0.3
         .. .. .. .. .. .. ..$ distanceMetric : chr "cosine"
         .. .. .. .. .. ..$ tsne:List of 2
-        .. .. .. .. .. .. ..$ perplexity  : num 30
+        .. .. .. .. .. .. ..$ perplexity  : num 4.36
         .. .. .. .. .. .. ..$ learningRate: num 200
         .. .. .. ..$ clusteringSettings:List of 2
         .. .. .. .. ..$ method        : chr "louvain"

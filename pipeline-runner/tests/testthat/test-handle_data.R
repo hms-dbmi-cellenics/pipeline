@@ -98,7 +98,7 @@ test_that("upload_matrix_to_s3 completes successfully", {
 test_that("send_output_to_api completes successfully", {
     c(pipeline_config, input, plot_data_keys, output) %<-% send_output_to_api_mock_data
 
-    mockery::stub(send_output_to_api, 's3$put_object', stub_put_object_in_s3)
+    mockery::stub(send_output_to_api, 'put_object_in_s3', NULL)
     mockery::stub(send_output_to_api, 'paws::sns', mock_sns)
 
     response <- send_output_to_api(pipeline_config, input, plot_data_keys, output)
@@ -180,6 +180,90 @@ test_that("parse_cellsets parses a cellset object", {
   expect_s3_class(res, "data.table")
   expect_identical(names(res), c("key", "name", "type", "cell_id"))
 
+})
+
+stub_s3_put_object <- function(Bucket, Key, Body, Tagging) {
+  response <- list(Expiration = character(),
+                   ETag = "this_is_not_an_etag",
+                   ServerSideEncryption = character(),
+                   VersionId = character(),
+                   SSECustomerAlgorithm = character(),
+                   SSECustomerKeyMD5 = character(),
+                   SSEKMSKeyId = character(),
+                   SSEKMSEncryptionContext = character(),
+                   BucketKeyEnabled = logical(),
+                   RequestCharged = character())
+
+  return(response)
+}
+
+test_that("put_object_in_s3 works", {
+  mockery::stub(put_object_in_s3, "s3$put_object", stub_s3_put_object)
+
+  pipeline_config <- mock_pipeline_config()
+  bucket <- "mock_bucket"
+  key <- "mock_key"
+  object <- "something"
+  key <- "a_key"
+
+  expect_message(put_object_in_s3(pipeline_config, bucket, object, key),
+                 regexp = "Putting a_key in mock_bucket")
+})
+
+
+test_that("put_object_in_s3 retries if s3$put_object throws an error", {
+  mockery::stub(put_object_in_s3,
+                "s3$put_object",
+                mockery::mock(stop("an error"), stub_s3_put_object))
+
+  pipeline_config <- mock_pipeline_config()
+  bucket <- "mock_bucket"
+  key <- "mock_key"
+  object <- "something"
+  key <- "a_key"
+
+  expect_message(put_object_in_s3(pipeline_config, bucket, object, key),
+                 regexp = ".*Retrying \\(1/2\\).*")
+})
+
+test_that("is_uuid detects uuids correctly", {
+
+  expect_true(is_uuid(uuid::UUIDgenerate()))
+  expect_false(is_uuid("not-a-uuid"))
+
+})
+
+
+test_that("get_cellset_types correctly gets cellset types", {
+  key <-
+    c(
+      "louvain",
+      "scratchpad",
+      "sample",
+      "metadata_1",
+      "metadata_2",
+      "faa74528-c4d7-11ed-9fda-0242ac120003"
+    )
+
+  type <-
+    c(
+      "cellSets",
+      "cellSets",
+      "metadataCategorical",
+      "metadataCategorical",
+      "metadataCategorical",
+      "cellSets"
+    )
+
+  expected_cellset_types <- c("cluster",
+                              "scratchpad",
+                              "sample",
+                              "metadata",
+                              "metadata",
+                              "sctype")
+
+  expect_identical(purrr::map2_chr(key, type, get_cellset_type),
+                   expected_cellset_types)
 })
 
 test_that("send_pipeline_fail_update has the correct StringValue", {

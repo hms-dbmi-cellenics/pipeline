@@ -4,191 +4,215 @@
 #' It is sent to the API, which in turn saves it as a jsonb object in the
 #' PostgreSQL database.
 #'
-#' @param scdata_list list of seurat objects
-#' @param any_filtered bool indicating if barcodes were filtered by emptyDrops
-#' @param disable_qc_filters bool indicating if the data derives from the
-#' subsetting of another experiment
+#' For each pipeline step, it customizes and adds the QC parameters for all samples
+#' in the running experiment.
+#'
+#' @param scdata_list list of Seurat objects
+#' @param unfiltered_samples character vector of unfiltered sample ids
+#' @param disable_qc_filters bool indicating if filters should be disabled.
 #'
 #' @return list of QC configuration parameters
 #'
-construct_qc_config <- function(scdata_list, any_filtered, disable_qc_filters) {
-  samples <- names(scdata_list)
+construct_qc_config <-
+  function(scdata_list,
+           disable_qc_filters,
+           unfiltered_samples) {
+    samples <- names(scdata_list)
 
-  # classifier
-  classifier_config_for_each_sample <- list(
-    enabled = !any_filtered && !disable_qc_filters,
-    prefiltered = any_filtered,
-    auto = TRUE,
-    filterSettings = list(FDR = 0.01)
-  )
-
-  config.classifier <- add_custom_config_per_sample(\(scdata_list, config) config, classifier_config_for_each_sample, scdata_list)
-
-  # cell size
-  default_cellSizeDistribution_config <- list(
-    enabled = FALSE,
-    auto = TRUE,
-    filterSettings = list(minCellSize = 1080, binStep = 200)
-  )
-
-  config.cellSizeDistribution <- add_custom_config_per_sample(get_cellsize_config, default_cellSizeDistribution_config, scdata_list)
-
-  # mito
-  default_mitochondrialContent_config <- list(
-    enabled = !disable_qc_filters,
-    auto = TRUE,
-    filterSettings = list(
-      method = "absoluteThreshold",
-      methodSettings = list(
-        absoluteThreshold = list(
-          maxFraction = 0.1,
-          binStep = 0.3
-        )
+    config_classifier <-
+      add_custom_config_per_sample(
+        customize_classifier_config,
+        processing_config_template[["classifier"]],
+        scdata_list,
+        disable_qc_filters,
+        unfiltered_samples
       )
-    )
-  )
 
-  config.mitochondrialContent <- add_custom_config_per_sample(get_sample_mitochondrial_config, default_mitochondrialContent_config, scdata_list)
-
-  # ngenes vs umis
-  default_numGenesVsNumUmis_config <- list(
-    enabled = !disable_qc_filters,
-    auto = TRUE,
-    filterSettings = list(
-      regressionType = "linear",
-      regressionTypeSettings = list(
-        "linear" = list(p.level = 0.001),
-        "spline" = list(p.level = 0.001)
+    config_cell_size <-
+      add_custom_config_per_sample(
+        customize_cellsize_config,
+        processing_config_template[["cell_size"]],
+        scdata_list,
+        disable_qc_filters
       )
-    )
-  )
 
-  config.numGenesVsNumUmis <- add_custom_config_per_sample(get_gene_umi_config, default_numGenesVsNumUmis_config, scdata_list)
-
-
-  # doublet scores
-  default_doubletScores_config <- list(
-    enabled = !disable_qc_filters,
-    auto = TRUE,
-    filterSettings = list(
-      probabilityThreshold = 0.5,
-      binStep = 0.02
-    )
-  )
-
-  config.doubletScores <- add_custom_config_per_sample(get_dblscore_config, default_doubletScores_config, scdata_list)
-
-  # data integration
-  config.dataIntegration <- list(
-    dataIntegration = list(
-      method = "harmony",
-      methodSettings = list(
-        seuratv4 = list(numGenes = 2000, normalisation = "logNormalize"),
-        unisample = list(numGenes = 2000, normalisation = "logNormalize"),
-        harmony = list(numGenes = 2000, normalisation = "logNormalize"),
-        fastmnn = list(numGenes = 2000, normalisation = "logNormalize")
+    config_mitochondrial <-
+      add_custom_config_per_sample(
+        customize_mitochondrial_config,
+        processing_config_template[["mitochondrial"]],
+        scdata_list,
+        disable_qc_filters
       )
-    ),
-    dimensionalityReduction = list(
-      method = "rpca",
-      numPCs = NULL,
-      excludeGeneCategories = list()
-    )
-  )
 
-
-  # embedding
-  config.configureEmbedding <- list(
-    embeddingSettings = list(
-      method = "umap",
-      methodSettings = list(
-        umap = list(
-          minimumDistance = 0.3,
-          distanceMetric = "cosine"
-        ),
-        tsne = list(
-          perplexity = min(30, ncol(scdata_list) / 100),
-          learningRate = max(200, ncol(scdata_list) / 12)
-        )
+    config_genes_vs_umis <-
+      add_custom_config_per_sample(
+        customize_genes_vs_umis_config,
+        processing_config_template[["genes_vs_umis"]],
+        scdata_list,
+        disable_qc_filters
       )
-    ),
-    clusteringSettings = list(
-      method = "louvain",
-      methodSettings = list(louvain = list(resolution = 0.8))
+
+
+    config_doublet <-
+      add_custom_config_per_sample(
+        customize_doublet_config,
+        processing_config_template[["doublet"]],
+        scdata_list,
+        disable_qc_filters
+      )
+
+    config_data_integration <-
+      processing_config_template[["data_integration"]]
+
+    config_embedding_clustering <-
+      get_embedding_config(scdata_list, processing_config_template[["embedding_clustering"]])
+
+    # combine config for all steps
+    config <- list(
+      cellSizeDistribution = config_cell_size,
+      mitochondrialContent = config_mitochondrial,
+      classifier = config_classifier,
+      numGenesVsNumUmis = config_genes_vs_umis,
+      doubletScores = config_doublet,
+      dataIntegration = config_data_integration,
+      configureEmbedding = config_embedding_clustering
     )
-  )
 
-  # combine config for all steps
-  config <- list(
-    cellSizeDistribution = config.cellSizeDistribution,
-    mitochondrialContent = config.mitochondrialContent,
-    classifier = config.classifier,
-    numGenesVsNumUmis = config.numGenesVsNumUmis,
-    doubletScores = config.doubletScores,
-    dataIntegration = config.dataIntegration,
-    configureEmbedding = config.configureEmbedding
-  )
-
-  return(config)
-}
-
-get_cellsize_config <- function(scdata_list, config) {
-  minCellSize <- generate_default_values_cellSizeDistribution(scdata_list, config)
-  config$filterSettings$minCellSize <- minCellSize
-  return(config)
-}
-
-get_sample_mitochondrial_config <- function(scdata_list.sample, config) {
-  config.sample <- list(
-    enabled = config$enabled,
-    auto = TRUE,
-    filterSettings = list(
-      method = "absoluteThreshold",
-      methodSettings = list()
-    )
-  )
-
-  config.sample$filterSettings$methodSettings$absoluteThreshold <- list(
-    maxFraction = generate_default_values_mitochondrialContent(scdata_list.sample, config.sample),
-    binStep = 0.3
-  )
-
-  return(config.sample)
-}
-
-
-# threshold for doublet score is the max score given to a singlet (above score => doublets)
-get_dblscore_config <- function(scdata_list, config) {
-  probabilityThreshold <- generate_default_values_doubletScores(scdata_list)
-
-  config$filterSettings$probabilityThreshold <- probabilityThreshold
-
-  return(config)
-}
-
-
-get_gene_umi_config <- function(scdata_list, config) {
-  # Sensible values are based on the function "gene.vs.molecule.cell.filter" from the pagoda2 package
-  p.level <- min(0.001, 1 / ncol(scdata_list))
-  config$filterSettings$regressionTypeSettings[[config$filterSettings$regressionType]]$p.level <- p.level
-
-  return(config)
-}
-
-add_custom_config_per_sample <- function(generate_sample_config, default_config, scdata_list) {
-  # We update the config file, so to be able to access the raw config we create a copy
-  raw_config <- default_config
-  config <- list()
-  for (sample in names(scdata_list)) {
-    # subset the Seurat object list to a single sample
-    sample_data <- scdata_list[[sample]]
-
-    # run the function to generate config for a sample
-    sample_config <- generate_sample_config(sample_data, raw_config)
-
-    # update sample config thresholds
-    config[[sample]] <- sample_config
+    return(config)
   }
 
+
+customize_classifier_config <-
+  function(scdata,
+           config,
+           sample_name,
+           disable_qc_filters,
+           unfiltered_samples) {
+    config$enabled <- sample_name %in% unfiltered_samples && !disable_qc_filters
+    config$prefiltered <- !(sample_name %in% unfiltered_samples)
+
+    return(config)
+  }
+
+
+customize_cellsize_config <-
+  function(scdata,
+           config,
+           sample_name,
+           disable_qc_filters,
+           unfiltered_samples) {
+    minCellSize <- generate_default_values_cellSizeDistribution(scdata, config)
+    config$filterSettings$minCellSize <- minCellSize
+    return(config)
+  }
+
+
+customize_mitochondrial_config <-
+  function(scdata,
+           config,
+           sample_name,
+           disable_qc_filters,
+           unfiltered_samples) {
+    default_max_fraction <- generate_default_values_mitochondrialContent(scdata, config)
+    config$filterSettings$methodSettings$absoluteThreshold$maxFraction <-
+      default_max_fraction
+
+    return(config)
+  }
+
+
+customize_doublet_config <-
+  function(scdata,
+           config,
+           sample_name,
+           disable_qc_filters,
+           unfiltered_samples) {
+    probabilityThreshold <- generate_default_values_doubletScores(scdata)
+    config$filterSettings$probabilityThreshold <- probabilityThreshold
+
+    return(config)
+  }
+
+
+customize_genes_vs_umis_config <-
+  function(scdata,
+           config,
+           sample_name,
+           disable_qc_filters,
+           unfiltered_samples) {
+    # Sensible values are based on the function "gene.vs.molecule.cell.filter"
+    # from the pagoda2 package
+    p.level <- min(0.001, 1 / ncol(scdata))
+    regression_type <- config$filterSettings$regressionType
+    config$filterSettings$regressionTypeSettings[[regression_type]]$p.level <- p.level
+
+    return(config)
+  }
+
+
+get_embedding_config <- function(scdata_list, config) {
+  # tsne parameters depend on number of cells in sample
+  default_perplexity <- config$embeddingSettings$methodSettings$tsne$perplexity
+  default_learning_rate <- config$embeddingSettings$methodSettings$tsne$learningRate
+
+  config$embeddingSettings$methodSettings$tsne <- list(
+    perplexity = min(
+      default_perplexity,
+      min(vapply(scdata_list, ncol, integer(1))) / 100),
+    learningRate = max(
+      default_learning_rate,
+      min(vapply(scdata_list, ncol, integer(1))) / 12)
+  )
+
   return(config)
 }
+
+
+#' Customize configuration for each sample in an experiment
+#'
+#' Takes the step config template and the required data and calls the corresponding
+#' step customization function, which takes care of changing the QC parameters to
+#' sensible values for each sample in the running experiment.
+#'
+#' Values that apply to all experiments are defined in the `data-raw/processing_config_template.R`
+#' file.
+#'
+#' @param customize_template_config function - step customization function
+#' @param config_template list - template of step configuration parameters
+#' @param scdata_list list - with Seurat objects
+#' @param disable_qc_filters logical
+#' @param unfiltered_samples character vector
+#'
+#' @return list of customized QC parameters for each sample
+#' @export
+#'
+add_custom_config_per_sample <-
+  function(customize_template_config,
+           config_template,
+           scdata_list,
+           disable_qc_filters = FALSE,
+           unfiltered_samples = NA) {
+    config <- list()
+    for (sample_name in names(scdata_list)) {
+      # subset the Seurat object list to a single sample
+      sample_scdata <- scdata_list[[sample_name]]
+
+      # run the function to generate config for a sample
+      sample_config <-
+        customize_template_config(
+          sample_scdata,
+          config_template,
+          sample_name,
+          disable_qc_filters,
+          unfiltered_samples
+        )
+
+      sample_config$enabled <-
+        sample_config$enabled && !disable_qc_filters
+
+      # update sample config thresholds
+      config[[sample_name]] <- sample_config
+    }
+
+    return(config)
+  }

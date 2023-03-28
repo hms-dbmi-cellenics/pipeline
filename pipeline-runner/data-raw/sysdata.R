@@ -1,3 +1,5 @@
+source("data-raw/processing_config_template.R")
+
 bucket_list <- list(
   originals_bucket = "biomage-originals",
   source_bucket = "biomage-source",
@@ -53,6 +55,11 @@ gem2s <- list(
   max.empty.drops = 50
 )
 
+
+# minimum number of cells required in a sample to have the pipeline not break.
+MIN_CELLS_IN_SAMPLE <- 15
+
+
 RANDOM_SEED <- 42
 
 # path where dump/log files are saved
@@ -105,6 +112,7 @@ errors <- list(
 
 usethis::use_data(
   debug_timestamp,
+  processing_config_template,
   bucket_list,
   gem2s,
   SUBSET_SEURAT_TASK_LIST,
@@ -113,6 +121,7 @@ usethis::use_data(
   SEURAT_TASK_LIST,
   INPUT_DIR,
   RANDOM_SEED,
+  MIN_CELLS_IN_SAMPLE,
   DEBUG_PATH,
   file_names,
   file_types_by_technology,
