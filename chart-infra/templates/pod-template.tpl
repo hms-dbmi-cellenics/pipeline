@@ -27,6 +27,7 @@
         resources:
           requests:
             memory: "{{ .Values.memoryRequest }}"
+{{- if eq .Values.myAccount.datadogEnabled "true" }}
       - name: datadog-agent
         image: datadog/agent
         env:
@@ -55,6 +56,7 @@
             fieldRef:
               apiVersion: v1
               fieldPath: spec.nodeName
+{{- end }}
       volumes:
       - name: podinfo
         downwardAPI:
