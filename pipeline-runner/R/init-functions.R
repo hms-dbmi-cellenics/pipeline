@@ -474,7 +474,7 @@ wrapper <- function(input, pipeline_config) {
   task_name <- input$taskName
   message("\n------\nStarting task: ", task_name, "\n")
   message("Input:")
-  str(input)
+  str(input[names(input) != "config"])
 
   # common to gem2s and data processing
   server <- input$server
