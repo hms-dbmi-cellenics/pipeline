@@ -44,6 +44,8 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
+
+  rownames(pbmc_raw)[grep("^RP[LS]", rownames(pbmc_raw))] <- "SOX1"
   # replicate matrix columns n times to create a bigger mock dataset
   pbmc_raw <- do.call("cbind", replicate(n_rep, pbmc_raw, simplify = FALSE))
 
@@ -190,6 +192,36 @@ test_that("build_cc_gene_list returns empty int vector when there aren't matches
 })
 
 
+test_that("build_ribosomal_gene_list correctly makes the list of ribosomal genes when there are matches", {
+  some_ribo_genes <- c("RPL23A", "RPL17", "RPS27A", "RPS14", "RPL13")
+  scdata_list <- mock_scdata(rename_genes = some_ribo_genes)
+
+  cells_id <- mock_ids()
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+  all_genes <- merged_scdata@misc$gene_annotations$input
+
+  expected_res <- match(some_ribo_genes, all_genes)
+  res <- build_ribosomal_gene_list(all_genes)
+
+  expect_setequal(res, expected_res)
+})
+
+
+test_that("build_ribosomal_gene_list returns empty int vector when there aren't matches", {
+  scdata_list <- mock_scdata()
+  cells_id <- mock_ids()
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+  all_genes <- merged_scdata@misc$gene_annotations$input
+  # remove ribo genes in mocked data
+  all_genes <- grep("^RP[LS]", all_genes, value = T, invert = T)
+
+  # empty integer vector
+  expected_res <- integer()
+  res <- build_ribosomal_gene_list(all_genes)
+
+  expect_equal(res, expected_res)
+})
+
 test_that("list_exclude_genes adds custom genes to exclusion", {
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
@@ -211,16 +243,19 @@ test_that("list_exclude_genes adds custom genes to exclusion", {
 test_that("remove_genes removes the correct genes when there are genes to remove", {
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
-  scdata_list <- mock_scdata(rename_genes = some_cc_genes)
+  some_ribo_genes <- c("RPL23A", "RPL17", "RPS27A", "RPS14", "RPL13")
+  scdata_list <- mock_scdata(rename_genes = c(some_cc_genes, some_ribo_genes))
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations$input
 
-  res <- remove_genes(merged_scdata, exclude_groups = list("cellCycle"))
+  res <- remove_genes(merged_scdata, exclude_groups = list("cellCycle", "ribosomal"))
 
   # only cc genes
-  expect_equal(nrow(res), nrow(merged_scdata) - 10)
+  expect_equal(nrow(res), nrow(merged_scdata) - (n_rename + length(some_ribo_genes)))
   expect_false(any(some_cc_genes %in% rownames(res)))
+  expect_false(any(some_ribo_genes %in% rownames(res)))
+
 
   exclude_custom <- sample(setdiff(all_genes, some_cc_genes), 7)
 
