@@ -1,7 +1,10 @@
 mock_counts <- function(...) {
   set.seed(RANDOM_SEED)
   sce <- scDblFinder::mockDoubletSCE(...)
-  sce@assays@data$counts
+  counts <- sce@assays@data$counts
+  colnames(counts) <- paste0("barcode-", 1:ncol(counts))
+  rownames(counts) <- paste0("gene-", 1:nrow(counts))
+  return(Matrix::Matrix(counts, sparse = T))
 }
 
 

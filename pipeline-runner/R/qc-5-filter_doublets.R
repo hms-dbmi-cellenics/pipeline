@@ -26,7 +26,7 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
 
   sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
 
-  if (rlang::has_name(config, "recomputeDoubletScore")) {
+  if ("recomputeDoubletScore" %in% names(config)) {
     if (config$recomputeDoubletScore) {
     scores <- get_doublet_scores(sample_data@assays$RNA@counts)
     sample_data <- add_dblscore(sample_data, scores)
