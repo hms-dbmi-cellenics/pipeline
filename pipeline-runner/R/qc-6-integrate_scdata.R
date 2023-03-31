@@ -286,10 +286,20 @@ build_cc_gene_list <- function(all_genes) {
   return(cc_gene_indices)
 }
 
+
+#' Make list of ribosomal genes
+#'
+#' Matches ribosomal gene symbols using a regular expression that covers most
+#' cases across several commonly used species.
+#'
+#' @inheritParams build_cc_gene_list
+#'
+#' @return integer vector of ribosomal gene indices
+#' @export
+#'
 build_ribosomal_gene_list <- function(all_genes) {
   # Define regular expression to match ribosomal genes
-  ribo_regex <- "^RPL\\d+|^RPS\\d+"
-
+  ribo_regex <- "^RP[LS]\\d+"
   ribo_gene_indices <- grep(ribo_regex, all_genes, ignore.case = TRUE)
 
   return(ribo_gene_indices)
