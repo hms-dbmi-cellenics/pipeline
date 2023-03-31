@@ -219,7 +219,7 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
 list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
   gene_lists <- list(
     "cellCycle" = build_cc_gene_list,
-    "ribosomal" = NULL,
+    "ribosomal" = build_ribosomal_gene_list,
     "mitochondrial" = NULL
   )
 
@@ -284,6 +284,15 @@ build_cc_gene_list <- function(all_genes) {
   )
 
   return(cc_gene_indices)
+}
+
+build_ribosomal_gene_list <- function(all_genes) {
+  # Define regular expression to match ribosomal genes
+  ribo_regex <- "^RPL\\d+|^RPS\\d+"
+
+  ribo_gene_indices <- grep(ribo_regex, all_genes, ignore.case = TRUE)
+
+  return(ribo_gene_indices)
 }
 
 
