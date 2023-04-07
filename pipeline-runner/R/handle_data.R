@@ -257,7 +257,7 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
       )
     )
 
-    message("Uploading results to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
+    message("Uploading config to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
     put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id) 
 
     response <- build_qc_response(id, input, process_name, pipeline_config)
