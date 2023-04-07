@@ -530,7 +530,6 @@ init <- function() {
     # parse data from state machine input
     input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
 
-
     # save logs to file
     debug_prefix <- file.path(input$experimentId, debug_timestamp)
     dump_folder <- file.path(DEBUG_PATH, debug_prefix)

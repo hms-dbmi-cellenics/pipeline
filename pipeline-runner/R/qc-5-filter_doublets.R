@@ -59,6 +59,9 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
   # update config
   config$filterSettings$probabilityThreshold <- probability_threshold
 
+  # Assign updated config to global env so that it can be accessed if there is an error
+  assign("config", config, envir = globalenv())
+
   guidata <- list()
 
   # plot 1: histogram of doublet scores

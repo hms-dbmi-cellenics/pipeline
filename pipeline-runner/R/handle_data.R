@@ -144,13 +144,33 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
   return(cells_id)
 }
 
+build_qc_response <- function(id, input, error, pipeline_config) {
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+  
+  msg <- list(
+      experimentId = input$experimentId,
+      taskName = input$taskName,
+      input = input,
+      output = list(
+        bucket = pipeline_config$results_bucket,
+        key = id
+      ),
+      response = list(
+        error = error
+      ),
+      pipelineVersion = pipeline_version,
+      apiUrl = pipeline_config$api_url
+    )
+
+  return(msg)
+}
+
 send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   c(config, plot_data = plotData) %<-% output
 
   config <- config[!names(config) %in% c("auth_JWT", "api_url")]
 
   # upload output
-  s3 <- paws::s3(config = pipeline_config$aws_config)
   id <- ids::uuid()
   output <- RJSONIO::toJSON(
     list(
@@ -167,20 +187,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   sns <- paws::sns(config = pipeline_config$aws_config)
 
   message("Building the message")
-  msg <- list(
-    experimentId = input$experimentId,
-    taskName = input$taskName,
-    input = input,
-    output = list(
-      bucket = pipeline_config$results_bucket,
-      key = id
-    ),
-    response = list(
-      error = FALSE
-    ),
-    pipelineVersion = pipeline_version,
-    apiUrl = pipeline_config$api_url
-  )
+  msg <- build_qc_response(id, input, FALSE, pipeline_config)
 
   message("Publishing the message")
   result <- sns$publish(
@@ -231,31 +238,50 @@ send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, 
 }
 
 send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
-  process_name <- input$processName
-
-  error_msg <- list()
-
-  # TODO - REMOVE THE DUPLICATE EXPERIMENT ID FROM INPUT RESPONSE
-
-  error_msg$experimentId <- input$experimentId
-  error_msg$taskName <- input$taskName
-  error_msg$response$error <- process_name
-  error_msg$input <- input
-  error_msg$apiUrl <- pipeline_config$api_url
   sns <- paws::sns(config = pipeline_config$aws_config)
 
   string_value <- ""
+  response <- ""
+
+  process_name <- input$processName
   if (process_name == "qc") {
     string_value <- "PipelineResponse"
+
+    global_env_config <- get("config", envir = globalenv())
+
+    # upload output
+    id <- ids::uuid()
+    output <- RJSONIO::toJSON(
+      list(
+        config = global_env_config
+      )
+    )
+
+    message("Uploading results to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
+    put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id) 
+
+    response <- build_qc_response(id, input, process_name, pipeline_config)
+
   } else if (process_name == "gem2s") {
     string_value <- "GEM2SResponse"
+
+    # TODO - REMOVE THE DUPLICATE EXPERIMENT ID FROM INPUT RESPONSE
+    response <- list(
+      experimentId <- input$experimentId,
+      taskName <- input$taskName,
+      input <- input,
+      apiUrl <- pipeline_config$api_url,
+      response <- list(
+        error <- process_name
+      )
+    )
   } else {
     message(paste("Invalid process_name given: ", process_name))
     return()
   }
 
   result <- sns$publish(
-    Message = RJSONIO::toJSON(error_msg),
+    Message = RJSONIO::toJSON(response),
     TopicArn = pipeline_config$sns_topic,
     MessageAttributes = list(
       type = list(
