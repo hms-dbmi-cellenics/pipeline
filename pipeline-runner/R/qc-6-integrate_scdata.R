@@ -181,7 +181,7 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
   message("Excluding genes...")
   message("Number of genes before excluding: ", nrow(scdata))
 
-  all_genes <- scdata@misc$gene_annotations$input
+  all_genes <- scdata@misc$gene_annotations[,c("input", "name")]
 
   # build list of genes to exclude
   exclude_genes <- list_exclude_genes(all_genes, exclude_groups, exclude_custom)
@@ -256,7 +256,7 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 #'
 build_cc_gene_list <- function(all_genes) {
   message("Excluding Cell Cycle genes...")
-
+  all_genes <- all_genes[["input"]]
   # TODO: change when adding species input
   human_cc_genes <- cc_genes[["human"]]
   mouse_cc_genes <- cc_genes[["mouse"]]
@@ -290,7 +290,8 @@ build_cc_gene_list <- function(all_genes) {
 #' Make list of ribosomal genes
 #'
 #' Matches ribosomal gene symbols using a regular expression that covers most
-#' cases across several commonly used species.
+#' cases across several commonly used species. It also matches 3 extra ribosomal
+#' genes for human and mouse, which are not covered by the regex.
 #'
 #' @inheritParams build_cc_gene_list
 #'
@@ -299,8 +300,15 @@ build_cc_gene_list <- function(all_genes) {
 #'
 build_ribosomal_gene_list <- function(all_genes) {
   # Define regular expression to match ribosomal genes
-  ribo_regex <- "^RP[LS]\\d+"
+  ribo_regex <- "^M?RP[LS]|FAU|UBA52|DAP3"
+  all_genes <- all_genes[["name"]]
+
   ribo_gene_indices <- grep(ribo_regex, all_genes, ignore.case = TRUE)
+
+  message(
+    "Number of ribosomal genes to exclude: ",
+    length(ribo_gene_indices)
+  )
 
   return(ribo_gene_indices)
 }
