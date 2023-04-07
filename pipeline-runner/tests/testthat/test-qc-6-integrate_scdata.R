@@ -63,7 +63,7 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   # add samples
   scdata$samples <- rep(c(sample_1_id, sample_2_id), each = ncol(scdata) / 2)
   scdata$cells_id <- 0:(ncol(scdata) - 1)
-  scdata@misc$gene_annotations <- data.frame(input = rownames(scdata), name = paste("SYMBOL -", rownames(scdata)))
+  scdata@misc$gene_annotations <- data.frame(input = rownames(scdata), name = rownames(scdata))
   rownames(scdata@misc$gene_annotations) <- rownames(scdata)
 
   scdata_sample1 <- subset(scdata, samples == sample_1_id)
@@ -169,9 +169,9 @@ test_that("build_cc_gene_list correctly makes the list of cc genes when there ar
 
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
-  all_genes <- merged_scdata@misc$gene_annotations$input
+  all_genes <- merged_scdata@misc$gene_annotations
 
-  expected_res <- match(some_cc_genes, all_genes)
+  expected_res <- match(some_cc_genes, all_genes$input)
   res <- build_cc_gene_list(all_genes)
 
   expect_setequal(res, expected_res)
@@ -182,7 +182,7 @@ test_that("build_cc_gene_list returns empty int vector when there aren't matches
   scdata_list <- mock_scdata()
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
-  all_genes <- merged_scdata@misc$gene_annotations$input
+  all_genes <- merged_scdata@misc$gene_annotations
 
   # empty integer vector
   expected_res <- integer()
@@ -198,9 +198,9 @@ test_that("build_ribosomal_gene_list correctly makes the list of ribosomal genes
 
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
-  all_genes <- merged_scdata@misc$gene_annotations$input
+  all_genes <- merged_scdata@misc$gene_annotations
 
-  expected_res <- match(some_ribo_genes, all_genes)
+  expected_res <- match(some_ribo_genes, all_genes$name)
   res <- build_ribosomal_gene_list(all_genes)
 
   expect_setequal(res, expected_res)
@@ -211,9 +211,9 @@ test_that("build_ribosomal_gene_list returns empty int vector when there aren't 
   scdata_list <- mock_scdata()
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
-  all_genes <- merged_scdata@misc$gene_annotations$input
+  all_genes <- merged_scdata@misc$gene_annotations
   # remove ribo genes in mocked data
-  all_genes <- grep("^RP[LS]", all_genes, value = T, invert = T)
+  all_genes <- all_genes[!grepl("^RP[LS]", all_genes$name),]
 
   # empty integer vector
   expected_res <- integer()
@@ -228,10 +228,10 @@ test_that("list_exclude_genes adds custom genes to exclusion", {
   scdata_list <- mock_scdata(rename_genes = some_cc_genes)
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
-  all_genes <- merged_scdata@misc$gene_annotations$input
+  all_genes <- merged_scdata@misc$gene_annotations
 
-  exclude_custom <- sample(setdiff(all_genes, some_cc_genes), 7)
-  exclude_custom_indices <- match(exclude_custom, all_genes)
+  exclude_custom <- sample(setdiff(all_genes$name, some_cc_genes), 7)
+  exclude_custom_indices <- match(exclude_custom, all_genes$name)
 
   expected_res <- c(build_cc_gene_list(all_genes), exclude_custom_indices)
 

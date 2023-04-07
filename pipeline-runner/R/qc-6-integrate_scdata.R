@@ -232,7 +232,7 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 
   # in case there's a custom list of genes to exclude
   if (length(exclude_custom > 0)) {
-    exclude_custom_indices <- na.omit(match(unlist(exclude_custom), all_genes))
+    exclude_custom_indices <- na.omit(match(unlist(exclude_custom), all_genes$name))
     exclude_gene_indices <- c(exclude_gene_indices, exclude_custom_indices)
   }
 
