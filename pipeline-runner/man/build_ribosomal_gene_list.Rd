@@ -14,5 +14,6 @@ integer vector of ribosomal gene indices
 }
 \description{
 Matches ribosomal gene symbols using a regular expression that covers most
-cases across several commonly used species.
+cases across several commonly used species. It also matches 3 extra ribosomal
+genes for human and mouse, which are not covered by the regex.
 }
