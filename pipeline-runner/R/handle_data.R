@@ -250,10 +250,7 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
 
     global_env_config <- get0("config", envir = globalenv(), ifnotfound = NULL)
 
-    str("global_env_configDebug")
-    str(global_env_config)
-
-    # If there step didn't backup any config, don't upload anything
+    # If the step didn't backup any config, don't upload anything
     if (is.null(global_env_config)) {
       response <- build_qc_response(NULL, input, process_name, pipeline_config)
     } else {
