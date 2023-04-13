@@ -43,6 +43,9 @@ filter_high_mito <- function(scdata_list, config, sample_id, cells_id, task_name
     if (as.logical(toupper(config$auto))) {
       max_fraction <- generate_default_values_mitochondrialContent(sample_data, config)
     }
+
+    config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- max_fraction
+    assign("config", config, envir = globalenv())
   }
 
   if (as.logical(toupper(config$enabled))) {
@@ -51,6 +54,7 @@ filter_high_mito <- function(scdata_list, config, sample_id, cells_id, task_name
     remaining_ids <- sample_cell_ids
   }
 
+  # QUESTION for Code review: do we need to assign this value here? it only changes if auto=true, right?
   config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- max_fraction
 
   # Downsample plotData
