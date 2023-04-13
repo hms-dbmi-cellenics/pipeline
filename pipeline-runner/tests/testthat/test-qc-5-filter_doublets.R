@@ -1,10 +1,17 @@
-mock_config <- function(thr = 0.1, auto = FALSE, enabled = TRUE) {
+mock_ids <- function() {
+  # TODO: parametrize sample ids
+  return(list("sample_1" = 0:39, "sample_2" = 40:79))
+}
+
+
+mock_config <- function(thr = 0.1, auto = FALSE, enabled = TRUE, recomputeDoubletScore = FALSE) {
   config <- list(
     auto = auto,
     enabled = enabled,
     filterSettings = list(
       probabilityThreshold = thr
-    )
+    ),
+    recomputeDoubletScore = recomputeDoubletScore
   )
   return(config)
 }
@@ -15,8 +22,8 @@ mock_scdata <- function() {
     as.is = TRUE
   )
 
-  sample_1_id <- "123abc"
-  sample_2_id <- "123def"
+  sample_1_id <- "sample_1"
+  sample_2_id <- "sample_2"
 
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
   scdata$cells_id <- 0:(ncol(scdata) - 1)
@@ -38,11 +45,13 @@ mock_scdata <- function() {
   scdata_list <- list(scdata_sample1, scdata_sample2)
   names(scdata_list) <- c(sample_1_id, sample_2_id)
 
-  return(list(scdata_list, sample_1_id, sample_2_id))
+  return(scdata_list)
 }
 
 test_that("filter_doublets filters based on threshold", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  scdata_list <- mock_scdata()
+  sample_1_id <- names(scdata_list)[1]
+  sample_2_id <- names(scdata_list)[2]
   cells_id <- mock_ids()
   # should filter first 10 cells
   config <- mock_config(0.5)
@@ -54,7 +63,9 @@ test_that("filter_doublets filters based on threshold", {
 })
 
 test_that("filter_doublets is sample aware", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  scdata_list <- mock_scdata()
+  sample_1_id <- names(scdata_list)[1]
+  sample_2_id <- names(scdata_list)[2]
   cells_id <- mock_ids()
   scdata_list[[sample_2_id]]@meta.data$doublet_scores[31:40] <- 0.9
   config <- mock_config(0.5)
@@ -71,7 +82,9 @@ test_that("filter_doublets is sample aware", {
 })
 
 test_that("filter_doublets filters works with auto", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  scdata_list <- mock_scdata()
+  sample_1_id <- names(scdata_list)[1]
+  sample_2_id <- names(scdata_list)[2]
   cells_id <- mock_ids()
   # should filter first 10 cells
   config <- mock_config(0.001, auto = TRUE)
@@ -84,7 +97,9 @@ test_that("filter_doublets filters works with auto", {
 })
 
 test_that("filter_doublets can be disabled", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  scdata_list <- mock_scdata()
+  sample_1_id <- names(scdata_list)[1]
+  sample_2_id <- names(scdata_list)[2]
   cells_id <- mock_ids()
   config <- mock_config(0.5, enabled = FALSE)
   out <- filter_doublets(scdata_list, config, sample_1_id, cells_id)
@@ -99,8 +114,28 @@ test_that("filter_doublets can be disabled", {
 
 
 test_that("generate_default_values_doubletScores sets threshold to 0 when there are no singlets", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  scdata_list <- mock_scdata()
+  sample_1_id <- names(scdata_list)[1]
+  sample_2_id <- names(scdata_list)[2]
   scdata_list[[1]]$doublet_class <- "doublet"
 
   expect_equal(generate_default_values_doubletScores(scdata_list[[1]]), 0)
+})
+
+
+test_that("doublet scores are re-computed if the API says so", {
+
+  scdata_list <- mock_scdata()
+  sample_1_id <- names(scdata_list)[1]
+  cells_id <- mock_ids()
+  config <- mock_config(recomputeDoubletScore = TRUE)
+
+  out <- suppressWarnings(filter_doublets(scdata_list, config, sample_1_id, cells_id))
+
+  expect_false(
+    identical(
+      out$data$sample_1$doublet_scores,
+      scdata_list$sample_1$doublet_scores
+    )
+  )
 })

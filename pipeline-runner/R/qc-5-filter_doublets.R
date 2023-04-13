@@ -26,6 +26,15 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
 
   sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
 
+  if ("recomputeDoubletScore" %in% names(config)) {
+    if (config$recomputeDoubletScore) {
+    scores <- get_doublet_scores(sample_data@assays$RNA@counts)
+    sample_data <- add_dblscore(sample_data, scores)
+    # update doublet scores in original scdata
+    scdata_list[[sample_id]] <- add_dblscore(scdata_list[[sample_id]], scores)
+    }
+  }
+
   # Check if the experiment has doubletScores
   if (!"doublet_scores" %in% colnames(scdata_list[[sample_id]]@meta.data)) {
     message("Warning! No doubletScores scores has been computed for this experiment!")

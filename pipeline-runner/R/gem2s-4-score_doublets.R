@@ -30,22 +30,8 @@ score_doublets <- function(input, pipeline_config, prev_out) {
       sample_counts <- sample_counts[, keep]
     }
 
-    # also filter low UMI as per scDblFinder:::.checkSCE()
-    ntot <- Matrix::colSums(sample_counts)
+    scores[[sample]] <- get_doublet_scores(sample_counts)
 
-    # retry increasing the minimum counts in case of low sparsity in the sample
-    r <- NULL
-    attempt <- 1
-    while (is.null(r) && attempt <= 5) {
-      message("\ntrying to score doublets, attempt: ", attempt)
-      # make the threshold stricter in every attempt
-      empty_cells_mask <- ntot > (200 * attempt)
-      try({
-        scores[[sample]] <- compute_sample_doublet_scores(sample_counts[, empty_cells_mask])
-        r <- "not null"
-      })
-      attempt <- attempt + 1
-    }
   }
 
   prev_out$doublet_scores <- scores
@@ -76,4 +62,26 @@ compute_sample_doublet_scores <- function(sample_counts) {
   )
 
   return(doublet_res)
+}
+
+
+get_doublet_scores <- function(sample_counts, max_attempts = 5) {
+  # also filter low UMI as per scDblFinder:::.checkSCE()
+  ntot <- Matrix::colSums(sample_counts)
+
+  # retry increasing the minimum counts in case of low sparsity in the sample
+  retry <- NULL
+  attempt <- 1
+  while (is.null(retry) && attempt <= max_attempts) {
+    message("\nTrying to score doublets, attempt: ", attempt)
+    # make the threshold stricter in every attempt
+    empty_cells_mask <- ntot > (200 * attempt)
+    try({
+      scores <- compute_sample_doublet_scores(sample_counts[, empty_cells_mask])
+      retry <- "not null"
+    })
+    attempt <- attempt + 1
+  }
+
+  return(scores)
 }
