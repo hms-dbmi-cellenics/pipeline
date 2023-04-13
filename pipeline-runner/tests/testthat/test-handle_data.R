@@ -309,3 +309,64 @@ test_that("send_pipeline_fail_update handles a gem2s call successefully", {
   expect_snapshot(str(mockery::mock_args(mock_publish)))
 })
 
+test_that("send_pipeline_fail_update handles a qc call successfully with no global_env config", {
+  before_each()
+  mockery::stub(send_pipeline_fail_update, 'paws::sns', mock_sns)
+  mockery::stub(send_pipeline_fail_update, 'ids::uuid', "mock-uuid")
+
+  pipeline_config <- list(
+    aws_config = list(),
+    results_bucket = "test_bucket",
+    api_url = "test_url",
+    sns_topic = "test_topic"
+  )
+  input <- list(
+    processName = "qc"
+  )
+  error_message <- "test_error"
+
+  result <- send_pipeline_fail_update(pipeline_config, input, error_message)
+
+  # completes successfully
+  expect_equal(result, list(MessageId = "ok"))
+
+  # Check that sns$publish was called with the correct parameters
+  expect_snapshot(mockery::mock_args(mock_publish))
+})
+
+test_that("send_pipeline_fail_update handles a qc call successfully with global_env config", {
+  before_each()
+  mock_put_object_in_s3 <- mockery::mock(NULL, cycle = TRUE)
+
+  mockery::stub(send_pipeline_fail_update, 'paws::sns', mock_sns)
+  mockery::stub(send_pipeline_fail_update, 'ids::uuid', "mock-uuid")
+  mockery::stub(send_pipeline_fail_update, 'put_object_in_s3', mock_put_object_in_s3)
+
+  c(pipeline_config, input, plot_data_keys, output) %<-% send_output_to_api_mock_data
+  c(config, plot_data = plotData) %<-% output
+
+  # Set up a global env config
+  assign("config", config, envir = globalenv())
+
+  pipeline_config <- list(
+    aws_config = list(),
+    results_bucket = "test_bucket",
+    api_url = "test_url",
+    sns_topic = "test_topic"
+  )
+  input <- list(
+    processName = "qc"
+  )
+  error_message <- "test_error"
+
+  result <- send_pipeline_fail_update(pipeline_config, input, error_message)
+
+  # completes successfully
+  expect_equal(result, list(MessageId = "ok"))
+
+  # Check that sns$publish was called with the correct parameters
+  expect_snapshot(mockery::mock_args(mock_publish))
+
+  # Check that put_object_in_s3 was called with the correct parameters
+  expect_snapshot(mockery::mock_args(mock_put_object_in_s3))
+})
