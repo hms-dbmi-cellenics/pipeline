@@ -145,7 +145,6 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
 }
 
 build_qc_response <- function(id, input, error, pipeline_config) {
-  s3 <- paws::s3(config = pipeline_config$aws_config)
   msg <- list(
       experimentId = input$experimentId,
       taskName = input$taskName,
