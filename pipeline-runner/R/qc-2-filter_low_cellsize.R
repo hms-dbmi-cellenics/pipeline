@@ -51,14 +51,17 @@ filter_low_cellsize <- function(scdata_list, config, sample_id, cells_id, task_n
     }
   }
 
+  # update config
+  config$filterSettings$minCellSize <- minCellSize
+
+  assign("config", config, envir = globalenv())
+
   if (as.logical(toupper(config$enabled))) {
     remaining_ids <- sample_data@meta.data$cells_id[sample_data$nCount_RNA >= minCellSize]
   } else {
     remaining_ids <- sample_cell_ids
   }
 
-  # update config
-  config$filterSettings$minCellSize <- minCellSize
   # Populate data for UI
   guidata <- list()
   guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- plot_data[["knee"]]
