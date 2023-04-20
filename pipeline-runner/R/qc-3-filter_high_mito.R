@@ -46,6 +46,8 @@ filter_high_mito <- function(scdata_list, config, sample_id, cells_id, task_name
   }
 
   config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- max_fraction
+  
+  # Assign updated config to global env so that it can be accessed if there is an error
   assign("config", config, envir = globalenv())
 
   if (as.logical(toupper(config$enabled))) {
