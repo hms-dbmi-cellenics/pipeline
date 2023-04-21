@@ -31,7 +31,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     cell_sets <- get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters)
   }
 
-
   # cell sets file to s3
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
 

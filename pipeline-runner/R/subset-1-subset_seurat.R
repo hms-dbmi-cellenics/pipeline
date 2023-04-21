@@ -1,5 +1,36 @@
 library(uuid)
 
+translate_processing_config <- function(parent_processing_config, sample_id_map) {
+  steps <- names(parent_processing_config)
+  # dataIntegration and configureEmbedding don't have sample-based config
+  # so we don't need to run over it
+  steps_to_filter <- steps[!steps %in% c("dataIntegration", "configureEmbedding")]
+
+  processing_config <- parent_processing_config
+
+  for (step_key in steps_to_filter) {
+    current_config <- processing_config[[step_key]]
+    # Keep only the config of samples that survived the subset
+    current_config <- current_config[names(current_config) %in% names(sample_id_map)]
+
+    # Translate each of the sample ids to their subset counterpart
+    for (sample_id in names(current_config)) {
+      subset_sample_id <- sample_id_map[[sample_id]]
+
+      # Set config on new sample id
+      processing_config[[step_key]][[subset_sample_id]] <- current_config[[sample_id]]
+
+      # All filters on subset exps are disabled by default
+      processing_config[[step_key]][[subset_sample_id]]$enabled <- FALSE
+
+      # Clean up old sample config
+      processing_config[[step_key]][[sample_id]] <- NULL
+    }
+  }
+
+  return(processing_config)
+}
+
 #' create a subset experiment
 #'
 #' This is the first step of a subset pipeline, which basically takes the parent
@@ -44,7 +75,8 @@ subset_seurat <- function(input, pipeline_config, prev_out = NULL) {
       sample_id_map = sample_id_map,
       config = config,
       disable_qc_filters = TRUE,
-      parent_cellsets = parent_data$cellsets
+      parent_cellsets = parent_data$cellsets,
+      qc_config = translate_processing_config(input$parentProcessingConfig, sample_id_map)
     )
   )
 
