@@ -42,6 +42,7 @@ translate_processing_config <- function(parent_processing_config, sample_id_map)
 #'   - subsetExperimentId character
 #'   - cellSetKeys character vector of cellset keys to subset
 #'   - experimentName character
+#'   - parentProcessingConfig The processingConfig of the parent experiment
 #' @param pipeline_config list
 #' @param prev_out list, ignored because this is the first step in the subset pipeline
 #'

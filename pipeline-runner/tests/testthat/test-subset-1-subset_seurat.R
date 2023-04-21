@@ -1,11 +1,41 @@
 # required to correctly source SeuratObject dumped R files
 library(Seurat)
 
+mock_scdata_list <- function() {
+  pbmc_raw <- read.table(
+    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
+    as.is = TRUE
+  )
+
+  scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
+  # add samples
+  scdata$samples <- rep("123abc", 80)
+  scdata <- Seurat::RenameCells(scdata, paste(scdata$samples, colnames(scdata), sep = ""))
+
+  # add doublet scores
+  scdata$doublet_scores <- rep(c(0.01, 0.9), each = 40)
+  scdata$doublet_class <- rep(c("singlet", "doublet"), each = 40)
+
+  # add mitochondrial percent
+  scdata$percent.mt <- rnorm(ncol(scdata), mean = 6)
+
+  # create an scdata_list with duplicated samples
+  scdata_list <- list()
+  for (sample_id in scdata$samples) {
+    scdata_list[[sample_id]] <- scdata
+  }
+  return(scdata_list)
+}
+
 mock_input <- function(parent_experiment_id, cellset_keys) {
+  sample_ids <- c("mock_sample_1_id", "mock_sample_2_id")
+  parentProcessingConfig <- construct_qc_config(mock_scdata_list(), unfiltered_samples = sample_ids)
+
   list(
     parentExperimentId = parent_experiment_id,
     experimentId = "mock_subset_experiment_id",
-    cellSetKeys = cellset_keys
+    cellSetKeys = cellset_keys,
+    parentProcessingConfig = parentProcessingConfig
   )
 }
 

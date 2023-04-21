@@ -2065,5 +2065,202 @@
       583: louvain-4 Cluster 4 cluster     854
       584: louvain-4 Cluster 4 cluster     857
       
+      $output$qc_config
+      $output$qc_config$cellSizeDistribution
+      $output$qc_config$cellSizeDistribution$`123abc`
+      $output$qc_config$cellSizeDistribution$`123abc`$enabled
+      [1] FALSE
+      
+      $output$qc_config$cellSizeDistribution$`123abc`$auto
+      [1] TRUE
+      
+      $output$qc_config$cellSizeDistribution$`123abc`$filterSettings
+      $output$qc_config$cellSizeDistribution$`123abc`$filterSettings$minCellSize
+      [1] 52
+      
+      $output$qc_config$cellSizeDistribution$`123abc`$filterSettings$binStep
+      [1] 200
+      
+      
+      
+      
+      $output$qc_config$mitochondrialContent
+      $output$qc_config$mitochondrialContent$`123abc`
+      $output$qc_config$mitochondrialContent$`123abc`$enabled
+      [1] TRUE
+      
+      $output$qc_config$mitochondrialContent$`123abc`$auto
+      [1] TRUE
+      
+      $output$qc_config$mitochondrialContent$`123abc`$filterSettings
+      $output$qc_config$mitochondrialContent$`123abc`$filterSettings$method
+      [1] "absoluteThreshold"
+      
+      $output$qc_config$mitochondrialContent$`123abc`$filterSettings$methodSettings
+      $output$qc_config$mitochondrialContent$`123abc`$filterSettings$methodSettings$absoluteThreshold
+      $output$qc_config$mitochondrialContent$`123abc`$filterSettings$methodSettings$absoluteThreshold$maxFraction
+      [1] 0.08401618
+      
+      $output$qc_config$mitochondrialContent$`123abc`$filterSettings$methodSettings$absoluteThreshold$binStep
+      [1] 0.3
+      
+      
+      
+      
+      
+      
+      $output$qc_config$classifier
+      $output$qc_config$classifier$`123abc`
+      $output$qc_config$classifier$`123abc`$enabled
+      [1] FALSE
+      
+      $output$qc_config$classifier$`123abc`$prefiltered
+      [1] TRUE
+      
+      $output$qc_config$classifier$`123abc`$auto
+      [1] TRUE
+      
+      $output$qc_config$classifier$`123abc`$filterSettings
+      $output$qc_config$classifier$`123abc`$filterSettings$FDR
+      [1] 0.01
+      
+      
+      
+      
+      $output$qc_config$numGenesVsNumUmis
+      $output$qc_config$numGenesVsNumUmis$`123abc`
+      $output$qc_config$numGenesVsNumUmis$`123abc`$enabled
+      [1] TRUE
+      
+      $output$qc_config$numGenesVsNumUmis$`123abc`$auto
+      [1] TRUE
+      
+      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings
+      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionType
+      [1] "linear"
+      
+      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionTypeSettings
+      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionTypeSettings$linear
+      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionTypeSettings$linear$p.level
+      [1] 0.001
+      
+      
+      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionTypeSettings$spline
+      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionTypeSettings$spline$p.level
+      [1] 0.001
+      
+      
+      
+      
+      
+      
+      $output$qc_config$doubletScores
+      $output$qc_config$doubletScores$`123abc`
+      $output$qc_config$doubletScores$`123abc`$enabled
+      [1] TRUE
+      
+      $output$qc_config$doubletScores$`123abc`$auto
+      [1] TRUE
+      
+      $output$qc_config$doubletScores$`123abc`$filterSettings
+      $output$qc_config$doubletScores$`123abc`$filterSettings$probabilityThreshold
+      [1] 0.01
+      
+      $output$qc_config$doubletScores$`123abc`$filterSettings$binStep
+      [1] 0.02
+      
+      
+      
+      
+      $output$qc_config$dataIntegration
+      $output$qc_config$dataIntegration$dataIntegration
+      $output$qc_config$dataIntegration$dataIntegration$method
+      [1] "harmony"
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$seuratv4
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$seuratv4$numGenes
+      [1] 2000
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$seuratv4$normalisation
+      [1] "logNormalize"
+      
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$unisample
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$unisample$numGenes
+      [1] 2000
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$unisample$normalisation
+      [1] "logNormalize"
+      
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$harmony
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$harmony$numGenes
+      [1] 2000
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$harmony$normalisation
+      [1] "logNormalize"
+      
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$fastmnn
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$fastmnn$numGenes
+      [1] 2000
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$fastmnn$normalisation
+      [1] "logNormalize"
+      
+      
+      
+      
+      $output$qc_config$dataIntegration$dimensionalityReduction
+      $output$qc_config$dataIntegration$dimensionalityReduction$method
+      [1] "rpca"
+      
+      $output$qc_config$dataIntegration$dimensionalityReduction$numPCs
+      NULL
+      
+      $output$qc_config$dataIntegration$dimensionalityReduction$excludeGeneCategories
+      list()
+      
+      
+      
+      $output$qc_config$configureEmbedding
+      $output$qc_config$configureEmbedding$embeddingSettings
+      $output$qc_config$configureEmbedding$embeddingSettings$method
+      [1] "umap"
+      
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$umap
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$umap$minimumDistance
+      [1] 0.3
+      
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$umap$distanceMetric
+      [1] "cosine"
+      
+      
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$tsne
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$tsne$perplexity
+      [1] 0.8
+      
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$tsne$learningRate
+      [1] 200
+      
+      
+      
+      
+      $output$qc_config$configureEmbedding$clusteringSettings
+      $output$qc_config$configureEmbedding$clusteringSettings$method
+      [1] "louvain"
+      
+      $output$qc_config$configureEmbedding$clusteringSettings$methodSettings
+      $output$qc_config$configureEmbedding$clusteringSettings$methodSettings$louvain
+      $output$qc_config$configureEmbedding$clusteringSettings$methodSettings$louvain$resolution
+      [1] 0.8
+      
+      
+      
+      
+      
+      
       
 
