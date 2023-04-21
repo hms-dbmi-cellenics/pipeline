@@ -38,9 +38,6 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
     prev_out$qc_config <- construct_qc_config(scdata_list, disable_qc_filters, unfiltered_samples)
   } else {
     message("QC config already exists, skipping creation")
-
-    unfiltered_samples <- names(prev_out$edrops[!is.null(prev_out$edrops)])
-    prev_out$qc_config_default <- construct_qc_config(scdata_list, disable_qc_filters, unfiltered_samples)
   }
 
   res <- list(
