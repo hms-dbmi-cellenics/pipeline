@@ -1,7 +1,7 @@
 # required to correctly source SeuratObject dumped R files
 library(Seurat)
 
-mock_scdata_list <- function() {
+mock_scdata_list <- function(samples = rep("123abc", 80)) {
   pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
@@ -9,7 +9,7 @@ mock_scdata_list <- function() {
 
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
   # add samples
-  scdata$samples <- rep("123abc", 80)
+  scdata$samples <- samples
   scdata <- Seurat::RenameCells(scdata, paste(scdata$samples, colnames(scdata), sep = ""))
 
   # add doublet scores
@@ -185,4 +185,28 @@ test_that("filter_low_cell_samples removes samples with cells below the threshol
   res <- filter_low_cell_samples(parent_data$scdata, min_cells = min_cells)
   expect_false(all(table(parent_data$scdata$samples) > min_cells))
   expect_true(all(table(res$samples) > min_cells))
+})
+
+test_that("translate_processing_config works correctly", {
+  parent_sample_ids <- c("sample-id-1", "sample-id-2", "sample-id-3", "sample-id-4")
+  scdata_list <- mock_scdata_list(samples = rep(parent_sample_ids, 20))
+
+  parent_processing_config <- construct_qc_config(scdata_list, unfiltered_samples = parent_sample_ids)
+
+  # Make some of the configs unique to each sample
+  # so we can check that the translation preserves the configs
+  # correctly assigned to each sample
+  parent_processing_config$cellSizeDistribution$`sample-id-2`$filterSettings$binStep <- 300
+  parent_processing_config$cellSizeDistribution$`sample-id-3`$filterSettings$binStep <- 400
+  parent_processing_config$mitochondrialContent$`sample-id-1`$filterSettings$absoluteThreshold$maxFraction <- 0.2
+  parent_processing_config$mitochondrialContent$`sample-id-3`$filterSettings$absoluteThreshold$maxFraction <- 0.5
+
+  subset_sample_ids <- c("sample-subset-id-1", "sample-subset-id-2", "sample-subset-id-3", "sample-subset-id-4")
+
+  sample_ids_map <- as.list(subset_sample_ids)
+  names(sample_ids_map) <- parent_sample_ids
+
+  translated_processing_config <- translate_processing_config(parent_processing_config, sample_ids_map)
+
+  expect_snapshot(translated_processing_config)
 })
