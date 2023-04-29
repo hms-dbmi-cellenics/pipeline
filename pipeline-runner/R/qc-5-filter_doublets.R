@@ -56,8 +56,10 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
 
   # update config
   config$filterSettings$probabilityThreshold <- probability_threshold
+
   # Assign updated config to global env so that it can be accessed if there is an error
-  assign("config", config, envir = globalenv())
+  config_key <- paste0("config-", task_name, "-", sample_id)
+  assign(config_key, config, envir = globalenv())
 
   # Check whether the filter is set to true or false
   if (as.logical(toupper(config$enabled))) {

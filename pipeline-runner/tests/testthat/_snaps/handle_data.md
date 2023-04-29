@@ -47,7 +47,7 @@
     Output
       [[1]]
       [[1]]$Message
-      [1] "{\n \"experimentId\": null,\n\"taskName\": null,\n\"input\": {\n \"processName\": \"qc\" \n},\n\"response\": {\n \"error\": \"qc\" \n},\n\"pipelineVersion\":        2,\n\"apiUrl\": \"test_url\",\n\"output\": {\n \"bucket\": \"test_bucket\",\n\"key\": \"mock-uuid\" \n} \n}"
+      [1] "{\n \"experimentId\": null,\n\"taskName\": \"mitochondrialContent\",\n\"input\": {\n \"processName\": \"qc\",\n\"sampleUuid\": \"00000000-0000-0000-000000000111\",\n\"taskName\": \"mitochondrialContent\" \n},\n\"response\": {\n \"error\": \"qc\" \n},\n\"pipelineVersion\":        2,\n\"apiUrl\": \"test_url\",\n\"output\": {\n \"bucket\": \"test_bucket\",\n\"key\": \"mock-uuid\" \n} \n}"
       
       [[1]]$TopicArn
       [1] "test_topic"
