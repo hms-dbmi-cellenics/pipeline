@@ -64,6 +64,10 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
 
   config$filterSettings$regressionTypeSettings[[type]]$p.level <- p_level
 
+  # Assign updated config to global env so that it can be accessed if there is an error
+  config_key <- paste0("config-", task_name, "-", sample_id)
+  assign(config_key, config, envir = globalenv())
+
   # regress log10 molecules vs genes
   fit.data <- data.frame(
     log_molecules = log10(sample_data$nCount_RNA),

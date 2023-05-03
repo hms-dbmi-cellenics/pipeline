@@ -1,9 +1,15 @@
-mock_sns <- function(config) {
-    return(
-        list(publish = function (Message, TopicArn, MessageAttributes) {
-            return (list(MessageId = 'ok'))
-        }
-    ))
+mock_publish <- NULL
+mock_sns <- NULL
+
+before_each <- function() {
+  mock_publish <<- mockery::mock(
+    list(MessageId = 'ok'),
+    cycle = TRUE
+  )
+
+  mock_sns <<- function(config) {
+    return(list(publish = mock_publish))
+  }
 }
 
 mock_cellsets <- function(){
@@ -14,6 +20,8 @@ mock_cellsets <- function(){
 }
 
 test_that("send_gem2s_update_to_api completes successfully", {
+    before_each()
+
     pipeline_config <- list(
         sns_topic = 'ExampleTopic',
         aws_config = NULL
@@ -40,6 +48,7 @@ stub_put_object_in_s3 <- function(Bucket, Key, Body) {
 }
 
 test_that("upload_debug_folder_to_s3 completes successfully", {
+    before_each()
 
     # create fake logs and dump file
     debug_path <- tempdir()
@@ -73,6 +82,8 @@ test_that("upload_debug_folder_to_s3 completes successfully", {
 
 
 test_that("upload_matrix_to_s3 completes successfully", {
+    before_each()
+
     # mock things
     data <- matrix()
     pipeline_config <- list(processed_bucket = 'processed-bucket')
@@ -86,6 +97,8 @@ test_that("upload_matrix_to_s3 completes successfully", {
 })
 
 test_that("send_output_to_api completes successfully", {
+    before_each()
+
     c(pipeline_config, input, plot_data_keys, output) %<-% send_output_to_api_mock_data
 
     mockery::stub(send_output_to_api, 'put_object_in_s3', NULL)
@@ -98,6 +111,7 @@ test_that("send_output_to_api completes successfully", {
 
 
 test_that("safe_cbind returns empty data.table when binding an empty data.table with a vector", {
+  before_each()
 
   dt_empty <- data.table::data.table()
   col <- c(a_col = "a_value")
@@ -110,6 +124,8 @@ test_that("safe_cbind returns empty data.table when binding an empty data.table 
 
 
 test_that("safe_cbind adds a column to a non-empty data.table", {
+  before_each()
+
   dt <- data.table::data.table(col1 = 1:10, col2 = 11:20)
   values <- seq(1, 20, 2)
   res <- safe_cbind(dt, bound_col = values)
@@ -120,6 +136,8 @@ test_that("safe_cbind adds a column to a non-empty data.table", {
 
 
 test_that("safe_cbind names bound column as expected", {
+  before_each()
+
   dt <- data.table::data.table(col1 = 1:10, col2 = 11:20)
   values <- seq(1, 20, 2)
   res <- safe_cbind(dt, my_expected_column_name = values)
@@ -132,6 +150,7 @@ test_that("safe_cbind names bound column as expected", {
 
 
 test_that("safe_cbind binds more than one column and names accordingly", {
+  before_each()
 
   dt <- data.table::data.table(col1 = 1:10, col2 = 11:20)
   values_1 <- seq(1, 20, 2)
@@ -149,6 +168,7 @@ test_that("safe_cbind binds more than one column and names accordingly", {
 
 
 test_that("cbind_cellset_type names the bound column correctly", {
+  before_each()
 
   dt <- data.table::data.table(col1 = 1:10, col2 = 11:20)
   values <- seq(1, 20, 2)
@@ -162,6 +182,7 @@ test_that("cbind_cellset_type names the bound column correctly", {
 
 
 test_that("parse_cellsets parses a cellset object", {
+  before_each()
 
   cellsets <- mock_cellsets()
 
@@ -188,6 +209,8 @@ stub_s3_put_object <- function(Bucket, Key, Body, Tagging) {
 }
 
 test_that("put_object_in_s3 works", {
+  before_each()
+
   mockery::stub(put_object_in_s3, "s3$put_object", stub_s3_put_object)
 
   pipeline_config <- mock_pipeline_config()
@@ -202,6 +225,7 @@ test_that("put_object_in_s3 works", {
 
 
 test_that("put_object_in_s3 retries if s3$put_object throws an error", {
+  before_each()
   mockery::stub(put_object_in_s3,
                 "s3$put_object",
                 mockery::mock(stop("an error"), stub_s3_put_object))
@@ -217,6 +241,7 @@ test_that("put_object_in_s3 retries if s3$put_object throws an error", {
 })
 
 test_that("is_uuid detects uuids correctly", {
+  before_each()
 
   expect_true(is_uuid(uuid::UUIDgenerate()))
   expect_false(is_uuid("not-a-uuid"))
@@ -225,6 +250,8 @@ test_that("is_uuid detects uuids correctly", {
 
 
 test_that("get_cellset_types correctly gets cellset types", {
+  before_each()
+
   key <-
     c(
       "louvain",
@@ -254,4 +281,95 @@ test_that("get_cellset_types correctly gets cellset types", {
 
   expect_identical(purrr::map2_chr(key, type, get_cellset_type),
                    expected_cellset_types)
+})
+
+test_that("send_pipeline_fail_update handles a gem2s call successefully", {
+  before_each()
+  mockery::stub(send_pipeline_fail_update, 'paws::sns', mock_sns)
+
+  pipeline_config <- list(
+    aws_config = list(),
+    results_bucket = "test_bucket",
+    api_url = "test_url",
+    sns_topic = "test_topic"
+  )
+  input <- list(
+    processName = "gem2s",
+    experimentId = "test_experiment",
+    taskName = "test_task"
+  )
+  error_message <- "test_error"
+
+  result <- send_pipeline_fail_update(pipeline_config, input, error_message)
+
+  # completes successfully
+  expect_equal(result, list(MessageId = "ok"))
+
+  # Check that sns$publish was called with the correct parameters
+  expect_snapshot(str(mockery::mock_args(mock_publish)))
+})
+
+test_that("send_pipeline_fail_update handles a qc call successfully with no global_env config", {
+  before_each()
+  mockery::stub(send_pipeline_fail_update, 'paws::sns', mock_sns)
+  mockery::stub(send_pipeline_fail_update, 'ids::uuid', "mock-uuid")
+
+  pipeline_config <- list(
+    aws_config = list(),
+    results_bucket = "test_bucket",
+    api_url = "test_url",
+    sns_topic = "test_topic"
+  )
+  input <- list(
+    processName = "qc"
+  )
+  error_message <- "test_error"
+
+  result <- send_pipeline_fail_update(pipeline_config, input, error_message)
+
+  # completes successfully
+  expect_equal(result, list(MessageId = "ok"))
+
+  # Check that sns$publish was called with the correct parameters
+  expect_snapshot(mockery::mock_args(mock_publish))
+})
+
+test_that("send_pipeline_fail_update handles a qc call successfully with global_env config", {
+  before_each()
+  mock_put_object_in_s3 <- mockery::mock(NULL, cycle = TRUE)
+
+  mockery::stub(send_pipeline_fail_update, 'paws::sns', mock_sns)
+  mockery::stub(send_pipeline_fail_update, 'ids::uuid', "mock-uuid")
+  mockery::stub(send_pipeline_fail_update, 'put_object_in_s3', mock_put_object_in_s3)
+
+  c(pipeline_config, input, plot_data_keys, output) %<-% send_output_to_api_mock_data
+  c(config, plot_data = plotData) %<-% output
+
+  pipeline_config <- list(
+    aws_config = list(),
+    results_bucket = "test_bucket",
+    api_url = "test_url",
+    sns_topic = "test_topic"
+  )
+  input <- list(
+    processName = "qc",
+    sampleUuid = "00000000-0000-0000-000000000111",
+    taskName = "mitochondrialContent"
+  )
+  error_message <- "test_error"
+
+  # Set up a global env config
+  config_key <- paste0("config-", input$taskName, "-", input$sampleUuid)
+  assign(config_key, config, envir = globalenv())
+
+  result <- send_pipeline_fail_update(pipeline_config, input, error_message)
+
+  # completes successfully
+  expect_equal(result, list(MessageId = "ok"))
+
+  # Check that sns$publish was called with the correct parameters
+  expect_snapshot(mockery::mock_args(mock_publish))
+
+  # Check that put_object_in_s3 was called with the correct parameters
+  expect_snapshot(mockery::mock_args(mock_put_object_in_s3))
 })
