@@ -1,6 +1,16 @@
 library(uuid)
 
-translate_processing_config <- function(parent_processing_config, sample_id_map) {
+#' Translate processing config
+#'
+#' Auxiliary function for subset_seurat
+#'
+#' @param parentProcessingConfig The processingConfig of the parent experiment
+#' @param sample_id_map Maps parent sample ids to the subset sample ids
+#'  (only the parent samples that have cells after the subset are included)
+#'
+#' @return Processing config for the subset experiment
+#'
+generate_subset_config <- function(parent_processing_config, sample_id_map) {
   steps <- names(parent_processing_config)
   # dataIntegration and configureEmbedding don't have sample-based config
   # so we don't need to run over it
@@ -77,7 +87,7 @@ subset_seurat <- function(input, pipeline_config, prev_out = NULL) {
       config = config,
       disable_qc_filters = TRUE,
       parent_cellsets = parent_data$cellsets,
-      qc_config = translate_processing_config(input$parentProcessingConfig, sample_id_map)
+      qc_config = generate_subset_config(input$parentProcessingConfig, sample_id_map)
     )
   )
 

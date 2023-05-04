@@ -187,7 +187,7 @@ test_that("filter_low_cell_samples removes samples with cells below the threshol
   expect_true(all(table(res$samples) > min_cells))
 })
 
-test_that("translate_processing_config works correctly", {
+test_that("generate_subset_config works correctly", {
   parent_sample_ids <- c("sample-id-1", "sample-id-2", "sample-id-3", "sample-id-4")
   scdata_list <- mock_scdata_list(samples = rep(parent_sample_ids, 20))
 
@@ -206,7 +206,7 @@ test_that("translate_processing_config works correctly", {
   sample_ids_map <- as.list(subset_sample_ids)
   names(sample_ids_map) <- parent_sample_ids
 
-  translated_processing_config <- translate_processing_config(parent_processing_config, sample_ids_map)
+  subset_processing_config <- generate_subset_config(parent_processing_config, sample_ids_map)
 
-  expect_snapshot(translated_processing_config)
+  expect_snapshot(subset_processing_config)
 })

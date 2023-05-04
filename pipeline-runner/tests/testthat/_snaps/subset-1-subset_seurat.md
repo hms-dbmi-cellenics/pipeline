@@ -2264,7 +2264,7 @@
       
       
 
-# translate_processing_config works correctly
+# generate_subset_config works correctly
 
     Code
       translated_processing_config
