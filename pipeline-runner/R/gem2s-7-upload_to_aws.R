@@ -20,6 +20,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   scdata_list <- prev_out$scdata_list
   config <- prev_out$config
   qc_config <- prev_out$qc_config
+  default_qc_config <- prev_out$default_qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
 
   # TODO: replace with subset_experiment flag when available
@@ -68,7 +69,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       organism = config$organism,
       type = config$input$type
     ),
-    processingConfig = qc_config
+    processingConfig = qc_config,
+    defaultProcessingConfig = default_qc_config
   )
 
   res <- list(
