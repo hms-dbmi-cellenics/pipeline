@@ -345,9 +345,6 @@ test_that("send_pipeline_fail_update handles a qc call successfully with global_
   c(pipeline_config, input, plot_data_keys, output) %<-% send_output_to_api_mock_data
   c(config, plot_data = plotData) %<-% output
 
-  # Set up a global env config
-  assign("config", config, envir = globalenv())
-
   pipeline_config <- list(
     aws_config = list(),
     results_bucket = "test_bucket",
@@ -355,9 +352,15 @@ test_that("send_pipeline_fail_update handles a qc call successfully with global_
     sns_topic = "test_topic"
   )
   input <- list(
-    processName = "qc"
+    processName = "qc",
+    sampleUuid = "00000000-0000-0000-000000000111",
+    taskName = "mitochondrialContent"
   )
   error_message <- "test_error"
+
+  # Set up a global env config
+  config_key <- paste0("config-", input$taskName, "-", input$sampleUuid)
+  assign(config_key, config, envir = globalenv())
 
   result <- send_pipeline_fail_update(pipeline_config, input, error_message)
 

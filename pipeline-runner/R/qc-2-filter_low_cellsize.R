@@ -55,7 +55,8 @@ filter_low_cellsize <- function(scdata_list, config, sample_id, cells_id, task_n
   config$filterSettings$minCellSize <- minCellSize
 
   # Assign updated config to global env so that it can be accessed if there is an error
-  assign("config", config, envir = globalenv())
+  config_key <- paste0("config-", task_name, "-", sample_id)
+  assign(config_key, config, envir = globalenv())
 
   if (as.logical(toupper(config$enabled))) {
     remaining_ids <- sample_data@meta.data$cells_id[sample_data$nCount_RNA >= minCellSize]

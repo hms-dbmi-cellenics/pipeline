@@ -248,7 +248,12 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
   if (process_name == "qc") {
     string_value <- "PipelineResponse"
 
-    global_env_config <- get0("config", envir = globalenv(), ifnotfound = NULL)
+    global_env_config <- NULL
+    # We don't have dynamic config set for non-sample steps so we can ignore it in that cases
+    if (!is.null(input$sampleUuid)) {
+      config_key <- paste0("config-", input$taskName, "-", input$sampleUuid)
+      global_env_config <- get0(config_key, envir = globalenv(), ifnotfound = NULL)
+    }
 
     # If the step didn't backup any config, don't upload anything
     if (is.null(global_env_config)) {
