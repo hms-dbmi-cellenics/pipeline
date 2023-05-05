@@ -2267,7 +2267,7 @@
 # generate_subset_config works correctly
 
     Code
-      translated_processing_config
+      subset_processing_config
     Output
       $cellSizeDistribution
       $cellSizeDistribution$`sample-subset-id-1`
