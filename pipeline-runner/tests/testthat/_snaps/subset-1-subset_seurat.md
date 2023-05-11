@@ -2067,41 +2067,41 @@
       
       $output$qc_config
       $output$qc_config$cellSizeDistribution
-      $output$qc_config$cellSizeDistribution$`123abc`
-      $output$qc_config$cellSizeDistribution$`123abc`$enabled
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`$enabled
       [1] FALSE
       
-      $output$qc_config$cellSizeDistribution$`123abc`$auto
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`$auto
       [1] TRUE
       
-      $output$qc_config$cellSizeDistribution$`123abc`$filterSettings
-      $output$qc_config$cellSizeDistribution$`123abc`$filterSettings$minCellSize
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`$filterSettings
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`$filterSettings$minCellSize
       [1] 52
       
-      $output$qc_config$cellSizeDistribution$`123abc`$filterSettings$binStep
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`$filterSettings$binStep
       [1] 200
       
       
       
       
       $output$qc_config$mitochondrialContent
-      $output$qc_config$mitochondrialContent$`123abc`
-      $output$qc_config$mitochondrialContent$`123abc`$enabled
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$enabled
+      [1] FALSE
+      
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$auto
       [1] TRUE
       
-      $output$qc_config$mitochondrialContent$`123abc`$auto
-      [1] TRUE
-      
-      $output$qc_config$mitochondrialContent$`123abc`$filterSettings
-      $output$qc_config$mitochondrialContent$`123abc`$filterSettings$method
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings$method
       [1] "absoluteThreshold"
       
-      $output$qc_config$mitochondrialContent$`123abc`$filterSettings$methodSettings
-      $output$qc_config$mitochondrialContent$`123abc`$filterSettings$methodSettings$absoluteThreshold
-      $output$qc_config$mitochondrialContent$`123abc`$filterSettings$methodSettings$absoluteThreshold$maxFraction
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings$methodSettings
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings$methodSettings$absoluteThreshold
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings$methodSettings$absoluteThreshold$maxFraction
       [1] 0.08401618
       
-      $output$qc_config$mitochondrialContent$`123abc`$filterSettings$methodSettings$absoluteThreshold$binStep
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings$methodSettings$absoluteThreshold$binStep
       [1] 0.3
       
       
@@ -2110,43 +2110,43 @@
       
       
       $output$qc_config$classifier
-      $output$qc_config$classifier$`123abc`
-      $output$qc_config$classifier$`123abc`$enabled
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`$enabled
       [1] FALSE
       
-      $output$qc_config$classifier$`123abc`$prefiltered
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`$prefiltered
+      [1] FALSE
+      
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`$auto
       [1] TRUE
       
-      $output$qc_config$classifier$`123abc`$auto
-      [1] TRUE
-      
-      $output$qc_config$classifier$`123abc`$filterSettings
-      $output$qc_config$classifier$`123abc`$filterSettings$FDR
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`$filterSettings
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`$filterSettings$FDR
       [1] 0.01
       
       
       
       
       $output$qc_config$numGenesVsNumUmis
-      $output$qc_config$numGenesVsNumUmis$`123abc`
-      $output$qc_config$numGenesVsNumUmis$`123abc`$enabled
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$enabled
+      [1] FALSE
+      
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$auto
       [1] TRUE
       
-      $output$qc_config$numGenesVsNumUmis$`123abc`$auto
-      [1] TRUE
-      
-      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings
-      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionType
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionType
       [1] "linear"
       
-      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionTypeSettings
-      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionTypeSettings$linear
-      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionTypeSettings$linear$p.level
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionTypeSettings
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionTypeSettings$linear
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionTypeSettings$linear$p.level
       [1] 0.001
       
       
-      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionTypeSettings$spline
-      $output$qc_config$numGenesVsNumUmis$`123abc`$filterSettings$regressionTypeSettings$spline$p.level
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionTypeSettings$spline
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionTypeSettings$spline$p.level
       [1] 0.001
       
       
@@ -2155,18 +2155,18 @@
       
       
       $output$qc_config$doubletScores
-      $output$qc_config$doubletScores$`123abc`
-      $output$qc_config$doubletScores$`123abc`$enabled
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`$enabled
+      [1] FALSE
+      
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`$auto
       [1] TRUE
       
-      $output$qc_config$doubletScores$`123abc`$auto
-      [1] TRUE
-      
-      $output$qc_config$doubletScores$`123abc`$filterSettings
-      $output$qc_config$doubletScores$`123abc`$filterSettings$probabilityThreshold
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`$filterSettings
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`$filterSettings$probabilityThreshold
       [1] 0.01
       
-      $output$qc_config$doubletScores$`123abc`$filterSettings$binStep
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`$filterSettings$binStep
       [1] 0.02
       
       

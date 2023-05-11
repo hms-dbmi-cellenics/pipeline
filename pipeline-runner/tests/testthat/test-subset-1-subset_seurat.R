@@ -1,7 +1,7 @@
 # required to correctly source SeuratObject dumped R files
 library(Seurat)
 
-mock_scdata_list <- function(samples = rep("123abc", 80)) {
+mock_scdata_list <- function(samples = rep("mock_sample_1_id", 80)) {
   pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
@@ -27,9 +27,8 @@ mock_scdata_list <- function(samples = rep("123abc", 80)) {
   return(scdata_list)
 }
 
-mock_input <- function(parent_experiment_id, cellset_keys) {
-  sample_ids <- c("mock_sample_1_id", "mock_sample_2_id")
-  parentProcessingConfig <- construct_qc_config(mock_scdata_list(), unfiltered_samples = sample_ids)
+mock_input <- function(parent_experiment_id, cellset_keys, samples = rep("mock_sample_1_id", 80), sample_ids = c("mock_sample_1_id")) {
+  parentProcessingConfig <- construct_qc_config(mock_scdata_list(samples), unfiltered_samples = sample_ids)
 
   list(
     parentExperimentId = parent_experiment_id,
