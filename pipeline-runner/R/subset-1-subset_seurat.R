@@ -19,23 +19,27 @@ generate_subset_config <- function(parent_processing_config, sample_id_map) {
   processing_config <- parent_processing_config
 
   for (step_key in steps_to_filter) {
-    step_config <- processing_config[[step_key]]
+    new_step_config <- processing_config[[step_key]]
+
     # Keep only the config of samples that survived the subset
-    step_config <- step_config[names(step_config) %in% names(sample_id_map)]
+    new_step_config <- new_step_config[names(new_step_config) %in% names(sample_id_map)]
 
     # Translate each of the sample ids to their subset counterpart
-    for (sample_id in names(step_config)) {
+    for (sample_id in names(new_step_config)) {
       subset_sample_id <- sample_id_map[[sample_id]]
 
       # Set config on new sample id
-      processing_config[[step_key]][[subset_sample_id]] <- step_config[[sample_id]]
+      new_step_config[[subset_sample_id]] <- new_step_config[[sample_id]]
 
       # All filters on subset exps are disabled by default
-      processing_config[[step_key]][[subset_sample_id]]$enabled <- FALSE
+      new_step_config[[subset_sample_id]]$enabled <- FALSE
 
       # Clean up old sample config
-      processing_config[[step_key]][[sample_id]] <- NULL
+      new_step_config[[sample_id]] <- NULL
     }
+
+    # Replace old step config with the new step config we created
+    processing_config[[step_key]] <- new_step_config
   }
 
   return(processing_config)
