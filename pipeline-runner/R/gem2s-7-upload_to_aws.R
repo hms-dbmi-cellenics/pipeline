@@ -20,6 +20,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   scdata_list <- prev_out$scdata_list
   config <- prev_out$config
   qc_config <- prev_out$qc_config
+  default_qc_config <- prev_out$default_qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
 
   # TODO: replace with subset_experiment flag when available
@@ -30,7 +31,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     message("Constructing cell sets for subset experiment ...")
     cell_sets <- get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters)
   }
-
 
   # cell sets file to s3
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
@@ -69,7 +69,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       organism = config$organism,
       type = config$input$type
     ),
-    processingConfig = qc_config
+    processingConfig = qc_config,
+    defaultProcessingConfig = default_qc_config
   )
 
   res <- list(

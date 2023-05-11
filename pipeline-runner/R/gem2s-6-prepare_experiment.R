@@ -7,7 +7,8 @@
 #' @param prev_out  'output' slot from call to \code{create_seurat}
 #'
 #' @return prev_out \code{prev_out} with added slots 'scdata' containing merged
-#'   \code{SeuratObject} and 'qc_config' containing default config for QC steps.
+#'  \code{SeuratObject} and 'qc_config' containing default config for QC steps
+#'  if it doesn't already exist.
 #'
 #' @export
 #'
@@ -23,7 +24,7 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
 
   message("Total cells:", sum(sapply(scdata_list, ncol)))
 
-# metadata is added to subset experiment at the subset step 1
+  # metadata is added to subset experiment at the subset step 1
   if (!disable_qc_filters) {
     scdata_list <-
       add_metadata_to_samples(scdata_list, prev_out$annot, input$experimentId)
@@ -33,7 +34,17 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   # construct default QC config and update prev out
   message("Constructing default QC configuration...")
   unfiltered_samples <- names(prev_out$edrops[!is.null(prev_out$edrops)])
-  prev_out$qc_config <- construct_qc_config(scdata_list, disable_qc_filters, unfiltered_samples)
+  prev_out$default_qc_config <- construct_qc_config(scdata_list, unfiltered_samples)
+
+  # If we received a qc_config (subset pipeline case) then
+  # we want to set that one as the custom config
+  if ("qc_config" %in% names(prev_out)) {
+    message("Custom QC config received in prev_out, setting it as custom")
+    prev_out$qc_config <- prev_out$qc_config
+  } else {
+    message("No custom QC config, setting default instead")
+    prev_out$qc_config <- prev_out$default_qc_config
+  }
 
   res <- list(
     data = list(),

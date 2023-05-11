@@ -1,11 +1,40 @@
 # required to correctly source SeuratObject dumped R files
 library(Seurat)
 
-mock_input <- function(parent_experiment_id, cellset_keys) {
+mock_scdata_list <- function(samples = rep("mock_sample_1_id", 80)) {
+  pbmc_raw <- read.table(
+    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
+    as.is = TRUE
+  )
+
+  scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
+  # add samples
+  scdata$samples <- samples
+  scdata <- Seurat::RenameCells(scdata, paste(scdata$samples, colnames(scdata), sep = ""))
+
+  # add doublet scores
+  scdata$doublet_scores <- rep(c(0.01, 0.9), each = 40)
+  scdata$doublet_class <- rep(c("singlet", "doublet"), each = 40)
+
+  # add mitochondrial percent
+  scdata$percent.mt <- rnorm(ncol(scdata), mean = 6)
+
+  # create an scdata_list with duplicated samples
+  scdata_list <- list()
+  for (sample_id in scdata$samples) {
+    scdata_list[[sample_id]] <- scdata
+  }
+  return(scdata_list)
+}
+
+mock_input <- function(parent_experiment_id, cellset_keys, samples = rep("mock_sample_1_id", 80), sample_ids = c("mock_sample_1_id")) {
+  parentProcessingConfig <- construct_qc_config(mock_scdata_list(samples), unfiltered_samples = sample_ids)
+
   list(
     parentExperimentId = parent_experiment_id,
     experimentId = "mock_subset_experiment_id",
-    cellSetKeys = cellset_keys
+    cellSetKeys = cellset_keys,
+    parentProcessingConfig = parentProcessingConfig
   )
 }
 
@@ -155,4 +184,28 @@ test_that("filter_low_cell_samples removes samples with cells below the threshol
   res <- filter_low_cell_samples(parent_data$scdata, min_cells = min_cells)
   expect_false(all(table(parent_data$scdata$samples) > min_cells))
   expect_true(all(table(res$samples) > min_cells))
+})
+
+test_that("generate_subset_config works correctly", {
+  parent_sample_ids <- c("sample-id-1", "sample-id-2", "sample-id-3", "sample-id-4")
+  scdata_list <- mock_scdata_list(samples = rep(parent_sample_ids, 20))
+
+  parent_processing_config <- construct_qc_config(scdata_list, unfiltered_samples = parent_sample_ids)
+
+  # Make some of the configs unique to each sample
+  # so we can check that the translation preserves the configs
+  # correctly assigned to each sample
+  parent_processing_config$cellSizeDistribution$`sample-id-2`$filterSettings$binStep <- 300
+  parent_processing_config$cellSizeDistribution$`sample-id-3`$filterSettings$binStep <- 400
+  parent_processing_config$mitochondrialContent$`sample-id-1`$filterSettings$absoluteThreshold$maxFraction <- 0.2
+  parent_processing_config$mitochondrialContent$`sample-id-3`$filterSettings$absoluteThreshold$maxFraction <- 0.5
+
+  subset_sample_ids <- c("sample-subset-id-1", "sample-subset-id-2", "sample-subset-id-3", "sample-subset-id-4")
+
+  sample_ids_map <- as.list(subset_sample_ids)
+  names(sample_ids_map) <- parent_sample_ids
+
+  subset_processing_config <- generate_subset_config(parent_processing_config, sample_ids_map)
+
+  expect_snapshot(subset_processing_config)
 })
