@@ -2065,5 +2065,701 @@
       583: louvain-4 Cluster 4 cluster     854
       584: louvain-4 Cluster 4 cluster     857
       
+      $output$qc_config
+      $output$qc_config$cellSizeDistribution
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`$enabled
+      [1] FALSE
+      
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`$auto
+      [1] TRUE
+      
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`$filterSettings
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`$filterSettings$minCellSize
+      [1] 52
+      
+      $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`$filterSettings$binStep
+      [1] 200
+      
+      
+      
+      
+      $output$qc_config$mitochondrialContent
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$enabled
+      [1] FALSE
+      
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$auto
+      [1] TRUE
+      
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings$method
+      [1] "absoluteThreshold"
+      
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings$methodSettings
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings$methodSettings$absoluteThreshold
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings$methodSettings$absoluteThreshold$maxFraction
+      [1] 0.08401618
+      
+      $output$qc_config$mitochondrialContent$`this-is-not-a-uuid-2`$filterSettings$methodSettings$absoluteThreshold$binStep
+      [1] 0.3
+      
+      
+      
+      
+      
+      
+      $output$qc_config$classifier
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`$enabled
+      [1] FALSE
+      
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`$prefiltered
+      [1] FALSE
+      
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`$auto
+      [1] TRUE
+      
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`$filterSettings
+      $output$qc_config$classifier$`this-is-not-a-uuid-2`$filterSettings$FDR
+      [1] 0.01
+      
+      
+      
+      
+      $output$qc_config$numGenesVsNumUmis
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$enabled
+      [1] FALSE
+      
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$auto
+      [1] TRUE
+      
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionType
+      [1] "linear"
+      
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionTypeSettings
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionTypeSettings$linear
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionTypeSettings$linear$p.level
+      [1] 0.001
+      
+      
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionTypeSettings$spline
+      $output$qc_config$numGenesVsNumUmis$`this-is-not-a-uuid-2`$filterSettings$regressionTypeSettings$spline$p.level
+      [1] 0.001
+      
+      
+      
+      
+      
+      
+      $output$qc_config$doubletScores
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`$enabled
+      [1] FALSE
+      
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`$auto
+      [1] TRUE
+      
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`$filterSettings
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`$filterSettings$probabilityThreshold
+      [1] 0.01
+      
+      $output$qc_config$doubletScores$`this-is-not-a-uuid-2`$filterSettings$binStep
+      [1] 0.02
+      
+      
+      
+      
+      $output$qc_config$dataIntegration
+      $output$qc_config$dataIntegration$dataIntegration
+      $output$qc_config$dataIntegration$dataIntegration$method
+      [1] "harmony"
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$seuratv4
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$seuratv4$numGenes
+      [1] 2000
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$seuratv4$normalisation
+      [1] "logNormalize"
+      
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$unisample
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$unisample$numGenes
+      [1] 2000
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$unisample$normalisation
+      [1] "logNormalize"
+      
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$harmony
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$harmony$numGenes
+      [1] 2000
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$harmony$normalisation
+      [1] "logNormalize"
+      
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$fastmnn
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$fastmnn$numGenes
+      [1] 2000
+      
+      $output$qc_config$dataIntegration$dataIntegration$methodSettings$fastmnn$normalisation
+      [1] "logNormalize"
+      
+      
+      
+      
+      $output$qc_config$dataIntegration$dimensionalityReduction
+      $output$qc_config$dataIntegration$dimensionalityReduction$method
+      [1] "rpca"
+      
+      $output$qc_config$dataIntegration$dimensionalityReduction$numPCs
+      NULL
+      
+      $output$qc_config$dataIntegration$dimensionalityReduction$excludeGeneCategories
+      list()
+      
+      
+      
+      $output$qc_config$configureEmbedding
+      $output$qc_config$configureEmbedding$embeddingSettings
+      $output$qc_config$configureEmbedding$embeddingSettings$method
+      [1] "umap"
+      
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$umap
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$umap$minimumDistance
+      [1] 0.3
+      
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$umap$distanceMetric
+      [1] "cosine"
+      
+      
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$tsne
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$tsne$perplexity
+      [1] 0.8
+      
+      $output$qc_config$configureEmbedding$embeddingSettings$methodSettings$tsne$learningRate
+      [1] 200
+      
+      
+      
+      
+      $output$qc_config$configureEmbedding$clusteringSettings
+      $output$qc_config$configureEmbedding$clusteringSettings$method
+      [1] "louvain"
+      
+      $output$qc_config$configureEmbedding$clusteringSettings$methodSettings
+      $output$qc_config$configureEmbedding$clusteringSettings$methodSettings$louvain
+      $output$qc_config$configureEmbedding$clusteringSettings$methodSettings$louvain$resolution
+      [1] 0.8
+      
+      
+      
+      
+      
+      
+      
+
+# generate_subset_config works correctly
+
+    Code
+      subset_processing_config
+    Output
+      $cellSizeDistribution
+      $cellSizeDistribution$`sample-subset-id-1`
+      $cellSizeDistribution$`sample-subset-id-1`$enabled
+      [1] FALSE
+      
+      $cellSizeDistribution$`sample-subset-id-1`$auto
+      [1] TRUE
+      
+      $cellSizeDistribution$`sample-subset-id-1`$filterSettings
+      $cellSizeDistribution$`sample-subset-id-1`$filterSettings$minCellSize
+      [1] 298 324 371 231
+      
+      $cellSizeDistribution$`sample-subset-id-1`$filterSettings$binStep
+      [1] 200
+      
+      
+      
+      $cellSizeDistribution$`sample-subset-id-2`
+      $cellSizeDistribution$`sample-subset-id-2`$enabled
+      [1] FALSE
+      
+      $cellSizeDistribution$`sample-subset-id-2`$auto
+      [1] TRUE
+      
+      $cellSizeDistribution$`sample-subset-id-2`$filterSettings
+      $cellSizeDistribution$`sample-subset-id-2`$filterSettings$minCellSize
+      [1] 298 324 371 231
+      
+      $cellSizeDistribution$`sample-subset-id-2`$filterSettings$binStep
+      [1] 300
+      
+      
+      
+      $cellSizeDistribution$`sample-subset-id-3`
+      $cellSizeDistribution$`sample-subset-id-3`$enabled
+      [1] FALSE
+      
+      $cellSizeDistribution$`sample-subset-id-3`$auto
+      [1] TRUE
+      
+      $cellSizeDistribution$`sample-subset-id-3`$filterSettings
+      $cellSizeDistribution$`sample-subset-id-3`$filterSettings$minCellSize
+      [1] 298 324 371 231
+      
+      $cellSizeDistribution$`sample-subset-id-3`$filterSettings$binStep
+      [1] 400
+      
+      
+      
+      $cellSizeDistribution$`sample-subset-id-4`
+      $cellSizeDistribution$`sample-subset-id-4`$enabled
+      [1] FALSE
+      
+      $cellSizeDistribution$`sample-subset-id-4`$auto
+      [1] TRUE
+      
+      $cellSizeDistribution$`sample-subset-id-4`$filterSettings
+      $cellSizeDistribution$`sample-subset-id-4`$filterSettings$minCellSize
+      [1] 298 324 371 231
+      
+      $cellSizeDistribution$`sample-subset-id-4`$filterSettings$binStep
+      [1] 200
+      
+      
+      
+      
+      $mitochondrialContent
+      $mitochondrialContent$`sample-subset-id-1`
+      $mitochondrialContent$`sample-subset-id-1`$enabled
+      [1] FALSE
+      
+      $mitochondrialContent$`sample-subset-id-1`$auto
+      [1] TRUE
+      
+      $mitochondrialContent$`sample-subset-id-1`$filterSettings
+      $mitochondrialContent$`sample-subset-id-1`$filterSettings$method
+      [1] "absoluteThreshold"
+      
+      $mitochondrialContent$`sample-subset-id-1`$filterSettings$methodSettings
+      $mitochondrialContent$`sample-subset-id-1`$filterSettings$methodSettings$absoluteThreshold
+      $mitochondrialContent$`sample-subset-id-1`$filterSettings$methodSettings$absoluteThreshold$maxFraction
+      [1] 0.08401618
+      
+      $mitochondrialContent$`sample-subset-id-1`$filterSettings$methodSettings$absoluteThreshold$binStep
+      [1] 0.3
+      
+      
+      
+      $mitochondrialContent$`sample-subset-id-1`$filterSettings$absoluteThreshold
+      $mitochondrialContent$`sample-subset-id-1`$filterSettings$absoluteThreshold$maxFraction
+      [1] 0.2
+      
+      
+      
+      
+      $mitochondrialContent$`sample-subset-id-2`
+      $mitochondrialContent$`sample-subset-id-2`$enabled
+      [1] FALSE
+      
+      $mitochondrialContent$`sample-subset-id-2`$auto
+      [1] TRUE
+      
+      $mitochondrialContent$`sample-subset-id-2`$filterSettings
+      $mitochondrialContent$`sample-subset-id-2`$filterSettings$method
+      [1] "absoluteThreshold"
+      
+      $mitochondrialContent$`sample-subset-id-2`$filterSettings$methodSettings
+      $mitochondrialContent$`sample-subset-id-2`$filterSettings$methodSettings$absoluteThreshold
+      $mitochondrialContent$`sample-subset-id-2`$filterSettings$methodSettings$absoluteThreshold$maxFraction
+      [1] 0.08401618
+      
+      $mitochondrialContent$`sample-subset-id-2`$filterSettings$methodSettings$absoluteThreshold$binStep
+      [1] 0.3
+      
+      
+      
+      
+      
+      $mitochondrialContent$`sample-subset-id-3`
+      $mitochondrialContent$`sample-subset-id-3`$enabled
+      [1] FALSE
+      
+      $mitochondrialContent$`sample-subset-id-3`$auto
+      [1] TRUE
+      
+      $mitochondrialContent$`sample-subset-id-3`$filterSettings
+      $mitochondrialContent$`sample-subset-id-3`$filterSettings$method
+      [1] "absoluteThreshold"
+      
+      $mitochondrialContent$`sample-subset-id-3`$filterSettings$methodSettings
+      $mitochondrialContent$`sample-subset-id-3`$filterSettings$methodSettings$absoluteThreshold
+      $mitochondrialContent$`sample-subset-id-3`$filterSettings$methodSettings$absoluteThreshold$maxFraction
+      [1] 0.08401618
+      
+      $mitochondrialContent$`sample-subset-id-3`$filterSettings$methodSettings$absoluteThreshold$binStep
+      [1] 0.3
+      
+      
+      
+      $mitochondrialContent$`sample-subset-id-3`$filterSettings$absoluteThreshold
+      $mitochondrialContent$`sample-subset-id-3`$filterSettings$absoluteThreshold$maxFraction
+      [1] 0.5
+      
+      
+      
+      
+      $mitochondrialContent$`sample-subset-id-4`
+      $mitochondrialContent$`sample-subset-id-4`$enabled
+      [1] FALSE
+      
+      $mitochondrialContent$`sample-subset-id-4`$auto
+      [1] TRUE
+      
+      $mitochondrialContent$`sample-subset-id-4`$filterSettings
+      $mitochondrialContent$`sample-subset-id-4`$filterSettings$method
+      [1] "absoluteThreshold"
+      
+      $mitochondrialContent$`sample-subset-id-4`$filterSettings$methodSettings
+      $mitochondrialContent$`sample-subset-id-4`$filterSettings$methodSettings$absoluteThreshold
+      $mitochondrialContent$`sample-subset-id-4`$filterSettings$methodSettings$absoluteThreshold$maxFraction
+      [1] 0.08401618
+      
+      $mitochondrialContent$`sample-subset-id-4`$filterSettings$methodSettings$absoluteThreshold$binStep
+      [1] 0.3
+      
+      
+      
+      
+      
+      
+      $classifier
+      $classifier$`sample-subset-id-1`
+      $classifier$`sample-subset-id-1`$enabled
+      [1] FALSE
+      
+      $classifier$`sample-subset-id-1`$prefiltered
+      [1] FALSE
+      
+      $classifier$`sample-subset-id-1`$auto
+      [1] TRUE
+      
+      $classifier$`sample-subset-id-1`$filterSettings
+      $classifier$`sample-subset-id-1`$filterSettings$FDR
+      [1] 0.01
+      
+      
+      
+      $classifier$`sample-subset-id-2`
+      $classifier$`sample-subset-id-2`$enabled
+      [1] FALSE
+      
+      $classifier$`sample-subset-id-2`$prefiltered
+      [1] FALSE
+      
+      $classifier$`sample-subset-id-2`$auto
+      [1] TRUE
+      
+      $classifier$`sample-subset-id-2`$filterSettings
+      $classifier$`sample-subset-id-2`$filterSettings$FDR
+      [1] 0.01
+      
+      
+      
+      $classifier$`sample-subset-id-3`
+      $classifier$`sample-subset-id-3`$enabled
+      [1] FALSE
+      
+      $classifier$`sample-subset-id-3`$prefiltered
+      [1] FALSE
+      
+      $classifier$`sample-subset-id-3`$auto
+      [1] TRUE
+      
+      $classifier$`sample-subset-id-3`$filterSettings
+      $classifier$`sample-subset-id-3`$filterSettings$FDR
+      [1] 0.01
+      
+      
+      
+      $classifier$`sample-subset-id-4`
+      $classifier$`sample-subset-id-4`$enabled
+      [1] FALSE
+      
+      $classifier$`sample-subset-id-4`$prefiltered
+      [1] FALSE
+      
+      $classifier$`sample-subset-id-4`$auto
+      [1] TRUE
+      
+      $classifier$`sample-subset-id-4`$filterSettings
+      $classifier$`sample-subset-id-4`$filterSettings$FDR
+      [1] 0.01
+      
+      
+      
+      
+      $numGenesVsNumUmis
+      $numGenesVsNumUmis$`sample-subset-id-1`
+      $numGenesVsNumUmis$`sample-subset-id-1`$enabled
+      [1] FALSE
+      
+      $numGenesVsNumUmis$`sample-subset-id-1`$auto
+      [1] TRUE
+      
+      $numGenesVsNumUmis$`sample-subset-id-1`$filterSettings
+      $numGenesVsNumUmis$`sample-subset-id-1`$filterSettings$regressionType
+      [1] "linear"
+      
+      $numGenesVsNumUmis$`sample-subset-id-1`$filterSettings$regressionTypeSettings
+      $numGenesVsNumUmis$`sample-subset-id-1`$filterSettings$regressionTypeSettings$linear
+      $numGenesVsNumUmis$`sample-subset-id-1`$filterSettings$regressionTypeSettings$linear$p.level
+      [1] 0.001
+      
+      
+      $numGenesVsNumUmis$`sample-subset-id-1`$filterSettings$regressionTypeSettings$spline
+      $numGenesVsNumUmis$`sample-subset-id-1`$filterSettings$regressionTypeSettings$spline$p.level
+      [1] 0.001
+      
+      
+      
+      
+      
+      $numGenesVsNumUmis$`sample-subset-id-2`
+      $numGenesVsNumUmis$`sample-subset-id-2`$enabled
+      [1] FALSE
+      
+      $numGenesVsNumUmis$`sample-subset-id-2`$auto
+      [1] TRUE
+      
+      $numGenesVsNumUmis$`sample-subset-id-2`$filterSettings
+      $numGenesVsNumUmis$`sample-subset-id-2`$filterSettings$regressionType
+      [1] "linear"
+      
+      $numGenesVsNumUmis$`sample-subset-id-2`$filterSettings$regressionTypeSettings
+      $numGenesVsNumUmis$`sample-subset-id-2`$filterSettings$regressionTypeSettings$linear
+      $numGenesVsNumUmis$`sample-subset-id-2`$filterSettings$regressionTypeSettings$linear$p.level
+      [1] 0.001
+      
+      
+      $numGenesVsNumUmis$`sample-subset-id-2`$filterSettings$regressionTypeSettings$spline
+      $numGenesVsNumUmis$`sample-subset-id-2`$filterSettings$regressionTypeSettings$spline$p.level
+      [1] 0.001
+      
+      
+      
+      
+      
+      $numGenesVsNumUmis$`sample-subset-id-3`
+      $numGenesVsNumUmis$`sample-subset-id-3`$enabled
+      [1] FALSE
+      
+      $numGenesVsNumUmis$`sample-subset-id-3`$auto
+      [1] TRUE
+      
+      $numGenesVsNumUmis$`sample-subset-id-3`$filterSettings
+      $numGenesVsNumUmis$`sample-subset-id-3`$filterSettings$regressionType
+      [1] "linear"
+      
+      $numGenesVsNumUmis$`sample-subset-id-3`$filterSettings$regressionTypeSettings
+      $numGenesVsNumUmis$`sample-subset-id-3`$filterSettings$regressionTypeSettings$linear
+      $numGenesVsNumUmis$`sample-subset-id-3`$filterSettings$regressionTypeSettings$linear$p.level
+      [1] 0.001
+      
+      
+      $numGenesVsNumUmis$`sample-subset-id-3`$filterSettings$regressionTypeSettings$spline
+      $numGenesVsNumUmis$`sample-subset-id-3`$filterSettings$regressionTypeSettings$spline$p.level
+      [1] 0.001
+      
+      
+      
+      
+      
+      $numGenesVsNumUmis$`sample-subset-id-4`
+      $numGenesVsNumUmis$`sample-subset-id-4`$enabled
+      [1] FALSE
+      
+      $numGenesVsNumUmis$`sample-subset-id-4`$auto
+      [1] TRUE
+      
+      $numGenesVsNumUmis$`sample-subset-id-4`$filterSettings
+      $numGenesVsNumUmis$`sample-subset-id-4`$filterSettings$regressionType
+      [1] "linear"
+      
+      $numGenesVsNumUmis$`sample-subset-id-4`$filterSettings$regressionTypeSettings
+      $numGenesVsNumUmis$`sample-subset-id-4`$filterSettings$regressionTypeSettings$linear
+      $numGenesVsNumUmis$`sample-subset-id-4`$filterSettings$regressionTypeSettings$linear$p.level
+      [1] 0.001
+      
+      
+      $numGenesVsNumUmis$`sample-subset-id-4`$filterSettings$regressionTypeSettings$spline
+      $numGenesVsNumUmis$`sample-subset-id-4`$filterSettings$regressionTypeSettings$spline$p.level
+      [1] 0.001
+      
+      
+      
+      
+      
+      
+      $doubletScores
+      $doubletScores$`sample-subset-id-1`
+      $doubletScores$`sample-subset-id-1`$enabled
+      [1] FALSE
+      
+      $doubletScores$`sample-subset-id-1`$auto
+      [1] TRUE
+      
+      $doubletScores$`sample-subset-id-1`$filterSettings
+      $doubletScores$`sample-subset-id-1`$filterSettings$probabilityThreshold
+      [1] 0.01
+      
+      $doubletScores$`sample-subset-id-1`$filterSettings$binStep
+      [1] 0.02
+      
+      
+      
+      $doubletScores$`sample-subset-id-2`
+      $doubletScores$`sample-subset-id-2`$enabled
+      [1] FALSE
+      
+      $doubletScores$`sample-subset-id-2`$auto
+      [1] TRUE
+      
+      $doubletScores$`sample-subset-id-2`$filterSettings
+      $doubletScores$`sample-subset-id-2`$filterSettings$probabilityThreshold
+      [1] 0.01
+      
+      $doubletScores$`sample-subset-id-2`$filterSettings$binStep
+      [1] 0.02
+      
+      
+      
+      $doubletScores$`sample-subset-id-3`
+      $doubletScores$`sample-subset-id-3`$enabled
+      [1] FALSE
+      
+      $doubletScores$`sample-subset-id-3`$auto
+      [1] TRUE
+      
+      $doubletScores$`sample-subset-id-3`$filterSettings
+      $doubletScores$`sample-subset-id-3`$filterSettings$probabilityThreshold
+      [1] 0.01
+      
+      $doubletScores$`sample-subset-id-3`$filterSettings$binStep
+      [1] 0.02
+      
+      
+      
+      $doubletScores$`sample-subset-id-4`
+      $doubletScores$`sample-subset-id-4`$enabled
+      [1] FALSE
+      
+      $doubletScores$`sample-subset-id-4`$auto
+      [1] TRUE
+      
+      $doubletScores$`sample-subset-id-4`$filterSettings
+      $doubletScores$`sample-subset-id-4`$filterSettings$probabilityThreshold
+      [1] 0.01
+      
+      $doubletScores$`sample-subset-id-4`$filterSettings$binStep
+      [1] 0.02
+      
+      
+      
+      
+      $dataIntegration
+      $dataIntegration$dataIntegration
+      $dataIntegration$dataIntegration$method
+      [1] "harmony"
+      
+      $dataIntegration$dataIntegration$methodSettings
+      $dataIntegration$dataIntegration$methodSettings$seuratv4
+      $dataIntegration$dataIntegration$methodSettings$seuratv4$numGenes
+      [1] 2000
+      
+      $dataIntegration$dataIntegration$methodSettings$seuratv4$normalisation
+      [1] "logNormalize"
+      
+      
+      $dataIntegration$dataIntegration$methodSettings$unisample
+      $dataIntegration$dataIntegration$methodSettings$unisample$numGenes
+      [1] 2000
+      
+      $dataIntegration$dataIntegration$methodSettings$unisample$normalisation
+      [1] "logNormalize"
+      
+      
+      $dataIntegration$dataIntegration$methodSettings$harmony
+      $dataIntegration$dataIntegration$methodSettings$harmony$numGenes
+      [1] 2000
+      
+      $dataIntegration$dataIntegration$methodSettings$harmony$normalisation
+      [1] "logNormalize"
+      
+      
+      $dataIntegration$dataIntegration$methodSettings$fastmnn
+      $dataIntegration$dataIntegration$methodSettings$fastmnn$numGenes
+      [1] 2000
+      
+      $dataIntegration$dataIntegration$methodSettings$fastmnn$normalisation
+      [1] "logNormalize"
+      
+      
+      
+      
+      $dataIntegration$dimensionalityReduction
+      $dataIntegration$dimensionalityReduction$method
+      [1] "rpca"
+      
+      $dataIntegration$dimensionalityReduction$numPCs
+      NULL
+      
+      $dataIntegration$dimensionalityReduction$excludeGeneCategories
+      list()
+      
+      
+      
+      $configureEmbedding
+      $configureEmbedding$embeddingSettings
+      $configureEmbedding$embeddingSettings$method
+      [1] "umap"
+      
+      $configureEmbedding$embeddingSettings$methodSettings
+      $configureEmbedding$embeddingSettings$methodSettings$umap
+      $configureEmbedding$embeddingSettings$methodSettings$umap$minimumDistance
+      [1] 0.3
+      
+      $configureEmbedding$embeddingSettings$methodSettings$umap$distanceMetric
+      [1] "cosine"
+      
+      
+      $configureEmbedding$embeddingSettings$methodSettings$tsne
+      $configureEmbedding$embeddingSettings$methodSettings$tsne$perplexity
+      [1] 0.8
+      
+      $configureEmbedding$embeddingSettings$methodSettings$tsne$learningRate
+      [1] 200
+      
+      
+      
+      
+      $configureEmbedding$clusteringSettings
+      $configureEmbedding$clusteringSettings$method
+      [1] "louvain"
+      
+      $configureEmbedding$clusteringSettings$methodSettings
+      $configureEmbedding$clusteringSettings$methodSettings$louvain
+      $configureEmbedding$clusteringSettings$methodSettings$louvain$resolution
+      [1] 0.8
+      
+      
+      
+      
       
 

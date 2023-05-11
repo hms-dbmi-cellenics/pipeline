@@ -1,5 +1,50 @@
 library(uuid)
 
+#' Translate processing config
+#'
+#' Auxiliary function for subset_seurat
+#'
+#' @param parentProcessingConfig The processingConfig of the parent experiment
+#' @param sample_id_map Maps parent sample ids to the subset sample ids
+#'  (only the parent samples that have cells after the subset are included)
+#'
+#' @return Processing config for the subset experiment
+#'
+generate_subset_config <- function(parent_processing_config, sample_id_map) {
+  steps <- names(parent_processing_config)
+  # dataIntegration and configureEmbedding don't have sample-based config
+  # so we don't need to run over it
+  steps_to_filter <- steps[!steps %in% c("dataIntegration", "configureEmbedding")]
+
+  processing_config <- parent_processing_config
+
+  for (step_key in steps_to_filter) {
+    new_step_config <- processing_config[[step_key]]
+
+    # Keep only the config of samples that survived the subset
+    new_step_config <- new_step_config[names(new_step_config) %in% names(sample_id_map)]
+
+    # Translate each of the sample ids to their subset counterpart
+    for (sample_id in names(new_step_config)) {
+      subset_sample_id <- sample_id_map[[sample_id]]
+
+      # Set config on new sample id
+      new_step_config[[subset_sample_id]] <- new_step_config[[sample_id]]
+
+      # All filters on subset exps are disabled by default
+      new_step_config[[subset_sample_id]]$enabled <- FALSE
+
+      # Clean up old sample config
+      new_step_config[[sample_id]] <- NULL
+    }
+
+    # Replace old step config with the new step config we created
+    processing_config[[step_key]] <- new_step_config
+  }
+
+  return(processing_config)
+}
+
 #' create a subset experiment
 #'
 #' This is the first step of a subset pipeline, which basically takes the parent
@@ -11,6 +56,7 @@ library(uuid)
 #'   - subsetExperimentId character
 #'   - cellSetKeys character vector of cellset keys to subset
 #'   - experimentName character
+#'   - parentProcessingConfig The processingConfig of the parent experiment
 #' @param pipeline_config list
 #' @param prev_out list, ignored because this is the first step in the subset pipeline
 #'
@@ -44,7 +90,8 @@ subset_seurat <- function(input, pipeline_config, prev_out = NULL) {
       sample_id_map = sample_id_map,
       config = config,
       disable_qc_filters = TRUE,
-      parent_cellsets = parent_data$cellsets
+      parent_cellsets = parent_data$cellsets,
+      qc_config = generate_subset_config(input$parentProcessingConfig, sample_id_map)
     )
   )
 

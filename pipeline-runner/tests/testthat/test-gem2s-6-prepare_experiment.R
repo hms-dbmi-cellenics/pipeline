@@ -19,8 +19,7 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-
-mock_prev_out <- function(samples = "sample_a", counts = NULL) {
+mock_prev_out <- function(samples = "sample_a", counts = NULL, prev_out_config = NULL) {
   if (is.null(counts)) {
     set.seed(1)
     counts <- DropletUtils:::simCounts()
@@ -47,6 +46,10 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
     annot = data.frame(name = row.names(counts), input = row.names(counts)),
     config = list(name = "project name")
   )
+
+  if (!is.null(prev_out_config)) {
+    prev_out$qc_config <- prev_out_config
+  }
 
   # call create_seurat to get prev_out to pass to prepare_experiment
   create_seurat(NULL, NULL, prev_out)$output
@@ -242,4 +245,18 @@ test_that("Mitochondrial percentage is correct", {
     expect_true(max(metadata$percent.mt) > 1 || all(metadata$percent.mt == 0))
 
   }
+})
+
+test_that("Skips qc config creation if it is already created in prev_out", {
+  # If the config is already created in a previous step (we are running subset)
+  # we will pass that config in prev_out
+
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples = samples, prev_out_config = c('mocked'))
+
+  # re-create seurat object
+  prev_out <- create_seurat(NULL, NULL, prev_out)$output
+  scdata_list <- prepare_experiment(NULL, NULL, prev_out)
+
+  expect_true(prev_out$qc_config == c('mocked'))
 })
