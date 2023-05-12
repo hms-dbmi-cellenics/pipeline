@@ -45,13 +45,19 @@ filter_high_mito <- function(scdata_list, config, sample_id, cells_id, task_name
     }
   }
 
+
+  config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- max_fraction
+  
+  # Assign updated config to global env so that it can be accessed if there is an error
+  config_key <- paste0("config-", task_name, "-", sample_id)
+  assign(config_key, config, envir = globalenv())
+
   if (as.logical(toupper(config$enabled))) {
     remaining_ids <- sample_data@meta.data$cells_id[sample_data$percent.mt <= max_fraction * 100]
   } else {
     remaining_ids <- sample_cell_ids
   }
 
-  config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- max_fraction
 
   # Downsample plotData
   num_cells_to_downsample <- downsample_plotdata(ncol(sample_data), num_cells_to_downsample)

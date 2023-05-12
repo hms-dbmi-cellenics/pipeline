@@ -59,6 +59,13 @@ filter_emptydrops <- function(scdata_list, config, sample_id, cells_id, task_nam
       sum(ed_fdr > FDR, na.rm = TRUE), "/", length(ed_fdr)
     )
 
+    # update config
+    config$filterSettings$FDR <- FDR
+
+    # Assign updated config to global env so that it can be accessed if there is an error
+    config_key <- paste0("config-", task_name, "-", sample_id)
+    assign(config_key, config, envir = globalenv())
+
     numis <- log10(sample_data@meta.data$nCount_RNA)
 
     fdr_data <- unname(purrr::map2(ed_fdr, numis, function(x, y) {
@@ -67,9 +74,6 @@ filter_emptydrops <- function(scdata_list, config, sample_id, cells_id, task_nam
     fdr_data <- fdr_data[get_positions_to_keep(sample_data, num_cells_to_downsample)]
 
     remaining_ids <- sample_data@meta.data$cells_id[ed_fdr <= FDR]
-
-    # update config
-    config$filterSettings$FDR <- FDR
 
     # Downsample plotData
     knee_data <- get_bcranks_plot_data(sample_data, is.cellsize = FALSE)[["knee"]]
