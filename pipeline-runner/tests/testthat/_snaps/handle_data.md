@@ -5,7 +5,7 @@
     Output
       List of 1
        $ :List of 3
-        ..$ Message          : chr "[\n \"test_experiment\",\n\"test_task\",\n{\n \"processName\": \"gem2s\",\n\"experimentId\": \"test_experiment\"| __truncated__
+        ..$ Message          : chr "{\n \"experimentId\": \"test_experiment\",\n\"taskName\": \"test_task\",\n\"input\": {\n \"processName\": \"gem"| __truncated__
         ..$ TopicArn         : chr "test_topic"
         ..$ MessageAttributes:List of 1
         .. ..$ type:List of 3

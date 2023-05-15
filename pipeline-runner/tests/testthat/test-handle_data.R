@@ -33,7 +33,8 @@ test_that("send_pipeline_update_to_api completes successfully", {
                             experiment_id = 'dfgdfg',
                             task_name = 'dsfdsdf',
                             data = 1:5,
-                            input = list(auth_JWT='ayylmao'))
+                            input = list(auth_JWT='ayylmao'),
+                            string_value = 'GEM2SResponse')
 
 
     expect_true(response == 'ok')
