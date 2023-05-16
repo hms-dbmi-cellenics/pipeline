@@ -255,7 +255,6 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 #' @export
 #'
 build_cc_gene_list <- function(all_genes) {
-  message("Excluding Cell Cycle genes...")
   all_genes <- all_genes[["input"]]
   # TODO: change when adding species input
   human_cc_genes <- cc_genes[["human"]]
