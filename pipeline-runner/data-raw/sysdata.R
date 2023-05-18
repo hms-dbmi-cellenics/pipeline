@@ -74,6 +74,9 @@ file_names <- list(
   rhapsody = "expression_data.st.gz"
 )
 
+MITOCHONDRIAL_REGEX <- "^mt[-:]"
+RIBOSOMAL_REGEX <- "^M?RP[LS]|FAU|UBA52|DAP3"
+
 source("data-raw/cell_cycle_genes.R")
 
 cc_genes <- list(
@@ -110,6 +113,8 @@ usethis::use_data(
   IDS_SYM,
   IDS_IDS,
   cc_genes,
+  MITOCHONDRIAL_REGEX,
+  RIBOSOMAL_REGEX,
   pipeline_version,
   UNISAMPLE,
   internal = TRUE,
