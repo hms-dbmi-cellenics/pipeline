@@ -225,7 +225,7 @@ test_that("build_ribosomal_gene_list returns empty int vector when there aren't 
 
 test_that("build_mitochondrial_gene_list correctly makes the list of mitochondrial genes when there are matches", {
   some_mito_genes <- c("mt-ND1", "mt-ND2", "mt-CO1", "mt-CO2", "mt-ATP6")
-  scdata_list <- mock_scdata(rename_genes = some_mt_genes)
+  scdata_list <- mock_scdata(rename_genes = some_mito_genes)
 
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
