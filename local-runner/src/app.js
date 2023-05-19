@@ -12,7 +12,7 @@ AWS.config.update({
   s3ForcePathStyle: true,
 });
 
-const isPipelineContainer = (name) => name.includes('qc') || name.includes('gem2s') || name.includes('subset');
+const isPipelineContainer = (name) => name.includes('qc') || name.includes('gem2s') || name.includes('subset') || name.includes('copy');
 
 const setVarsInTemplate = (template) => {
   const varNames = ['DEBUG_STEP', 'DEBUG_PATH', 'HOST_IP'];

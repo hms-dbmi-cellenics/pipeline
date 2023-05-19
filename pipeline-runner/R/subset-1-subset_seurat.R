@@ -64,7 +64,7 @@ generate_subset_config <- function(parent_processing_config, sample_id_map) {
 #' @export
 #'
 subset_seurat <- function(input, pipeline_config, prev_out = NULL) {
-  parent_data <- load_parent_experiment_data(input, pipeline_config)
+  parent_data <- load_from_experiment_data(input, pipeline_config)
 
   subset_scdata <- subset_experiment(input, parent_data)
   sample_id_map <- create_sample_id_map(unique(subset_scdata$samples))
