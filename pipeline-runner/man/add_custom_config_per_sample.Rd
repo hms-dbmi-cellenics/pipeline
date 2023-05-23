@@ -8,7 +8,6 @@ add_custom_config_per_sample(
   customize_template_config,
   config_template,
   scdata_list,
-  disable_qc_filters = FALSE,
   unfiltered_samples = NA
 )
 }
@@ -18,8 +17,6 @@ add_custom_config_per_sample(
 \item{config_template}{list - template of step configuration parameters}
 
 \item{scdata_list}{list - with Seurat objects}
-
-\item{disable_qc_filters}{logical}
 
 \item{unfiltered_samples}{character vector}
 }

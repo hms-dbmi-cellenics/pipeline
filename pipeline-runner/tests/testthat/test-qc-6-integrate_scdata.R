@@ -222,6 +222,38 @@ test_that("build_ribosomal_gene_list returns empty int vector when there aren't 
   expect_equal(res, expected_res)
 })
 
+
+test_that("build_mitochondrial_gene_list correctly makes the list of mitochondrial genes when there are matches", {
+  some_mito_genes <- c("mt-ND1", "mt-ND2", "mt-CO1", "mt-CO2", "mt-ATP6")
+  scdata_list <- mock_scdata(rename_genes = some_mito_genes)
+
+  cells_id <- mock_ids()
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+  all_genes <- merged_scdata@misc$gene_annotations
+
+  expected_res <- match(some_mito_genes, all_genes$name)
+  res <- build_mitochondrial_gene_list(all_genes)
+
+  expect_setequal(res, expected_res)
+})
+
+
+test_that("build_mitochondrial_gene_list returns empty int vector when there aren't matches", {
+  scdata_list <- mock_scdata()
+  cells_id <- mock_ids()
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+  all_genes <- merged_scdata@misc$gene_annotations
+  # remove mt genes in mocked data
+  all_genes <- all_genes[!grepl("^mt-", all_genes$name),]
+
+  # empty integer vector
+  expected_res <- integer()
+  res <- build_mitochondrial_gene_list(all_genes)
+
+  expect_equal(res, expected_res)
+})
+
+
 test_that("list_exclude_genes adds custom genes to exclusion", {
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
@@ -244,17 +276,20 @@ test_that("remove_genes removes the correct genes when there are genes to remove
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
   some_ribo_genes <- c("RPL23A", "RPL17", "RPS27A", "RPS14", "RPL13")
-  scdata_list <- mock_scdata(rename_genes = c(some_cc_genes, some_ribo_genes))
+  some_mito_genes <- c("mt-ND1", "mt-ND2", "mt-CO1", "mt-CO2", "mt-ATP6")
+  scdata_list <- mock_scdata(rename_genes = c(some_cc_genes, some_ribo_genes, some_mito_genes))
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations$input
 
-  res <- remove_genes(merged_scdata, exclude_groups = list("cellCycle", "ribosomal"))
+  res <- remove_genes(merged_scdata, exclude_groups = list("cellCycle", "ribosomal", "mitochondrial"))
 
   # only cc genes
-  expect_equal(nrow(res), nrow(merged_scdata) - (n_rename + length(some_ribo_genes)))
+  expect_equal(nrow(res), nrow(merged_scdata) - (n_rename + length(some_ribo_genes) + length(some_mito_genes)))
   expect_false(any(some_cc_genes %in% rownames(res)))
   expect_false(any(some_ribo_genes %in% rownames(res)))
+  expect_false(any(some_mito_genes %in% rownames(res)))
+
 
 
   exclude_custom <- sample(setdiff(all_genes, some_cc_genes), 7)

@@ -220,7 +220,7 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
   gene_lists <- list(
     "cellCycle" = build_cc_gene_list,
     "ribosomal" = build_ribosomal_gene_list,
-    "mitochondrial" = NULL
+    "mitochondrial" = build_mitochondrial_gene_list
   )
 
   exclude_gene_indices <- c()
@@ -255,7 +255,6 @@ list_exclude_genes <- function(all_genes, exclude_groups, exclude_custom) {
 #' @export
 #'
 build_cc_gene_list <- function(all_genes) {
-  message("Excluding Cell Cycle genes...")
   all_genes <- all_genes[["input"]]
   # TODO: change when adding species input
   human_cc_genes <- cc_genes[["human"]]
@@ -299,11 +298,9 @@ build_cc_gene_list <- function(all_genes) {
 #' @export
 #'
 build_ribosomal_gene_list <- function(all_genes) {
-  # Define regular expression to match ribosomal genes
-  ribo_regex <- "^M?RP[LS]|FAU|UBA52|DAP3"
   all_genes <- all_genes[["name"]]
 
-  ribo_gene_indices <- grep(ribo_regex, all_genes, ignore.case = TRUE)
+  ribo_gene_indices <- grep(RIBOSOMAL_REGEX, all_genes, ignore.case = TRUE)
 
   message(
     "Number of ribosomal genes to exclude: ",
@@ -313,6 +310,27 @@ build_ribosomal_gene_list <- function(all_genes) {
   return(ribo_gene_indices)
 }
 
+
+#' Make list of mitochondrial genes
+#'
+#' Matches mitochondrial genes using the same regular expression as used in QC's
+#' mitochondrial filter.
+#'
+#' @inheritParams build_cc_gene_list
+#'
+#' @return integer vector of mitochondrial gene indices
+#' @export
+#'
+build_mitochondrial_gene_list <- function(all_genes) {
+  all_genes <- all_genes[["name"]]
+
+  mito_gene_indices <- grep(MITOCHONDRIAL_REGEX, all_genes, ignore.case = TRUE)
+
+  message("Number of mitochondrial genes to exclude: ",
+          length(mito_gene_indices))
+
+  return(mito_gene_indices)
+}
 
 #' Add the metadata present in scdata_list into the merged SeuratObject
 #'

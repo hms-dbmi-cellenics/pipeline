@@ -15,7 +15,8 @@ prepare_experiment(input, pipeline_config, prev_out)
 }
 \value{
 prev_out \code{prev_out} with added slots 'scdata' containing merged
-\code{SeuratObject} and 'qc_config' containing default config for QC steps.
+\code{SeuratObject} and 'qc_config' containing default config for QC steps
+if it doesn't already exist.
 }
 \description{
 \enumerate{
