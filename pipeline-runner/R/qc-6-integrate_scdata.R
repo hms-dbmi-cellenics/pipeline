@@ -126,13 +126,19 @@ merge_scdata_list <- function(scdata_list, merge_data = FALSE) {
 
 
 add_dispersions <- function(scdata, method = "LogNormalize") {
-  if (method == "SCT" && Seurat::DefaultAssay(scdata) == "integrated") {
+
+  if (method == "default") {
+    vars <- Seurat::HVFInfo(scdata)
+  } else if (method == "SCT" && Seurat::DefaultAssay(scdata) == "integrated") {
     vars <- Seurat::HVFInfo(object = scdata, assay = "integrated", selection.method = "sctransform")
-    # change colnames as they are when run with selection.method = "vst", otherwise will break the listGenes worker task
-    colnames(vars) <- c("mean", "variance", "variance.standardized")
   } else {
     vars <- Seurat::HVFInfo(object = scdata, assay = "RNA", selection.method = "vst")
   }
+
+  # ensure colnames are as they are when run with selection.method = "vst"
+  # otherwise will break the listGenes worker task for SCT normalized data
+  colnames(vars) <- c("mean", "variance", "variance.standardized")
+
   annotations <- scdata@misc[["gene_annotations"]]
   vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
   vars$ENSEMBL <- rownames(vars)
