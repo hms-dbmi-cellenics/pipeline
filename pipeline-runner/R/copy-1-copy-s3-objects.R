@@ -10,10 +10,7 @@ copy_s3_objects <- function(input, pipeline_config, prev_out = NULL) {
 
   message("\n")
   message("Copy s3 objects step complete.")
-  return(list(
-    data = list(),
-    output = prev_out
-  ))
+  return(list(data = list(), output = prev_out))
 }
 
 copy_processed_rds <- function(
