@@ -3,9 +3,13 @@ copy_s3_objects <- function(input, pipeline_config, prev_out = NULL) {
   to_experiment_id <- input$toExperimentId
   sample_ids_map <- input$sampleIdsMap
 
+  message("Copying processed rds.")
   copy_processed_rds(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  message("Copying cell sets.")
   copy_cell_sets(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  message("Copying filtered cells.")
   copy_filtered_cells(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  message("Copying source.")
   copy_source(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
 
   message("\n")
