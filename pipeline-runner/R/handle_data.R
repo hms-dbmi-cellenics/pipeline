@@ -454,7 +454,7 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
 }
 
 
-#' Load cellsets object from s3
+#' Load cellsets object from s3 and flatten it for easier manipulation in R
 #'
 #' @param s3 paws::s3 object
 #' @param pipeline_config list
@@ -476,6 +476,49 @@ load_cellsets <- function(s3, pipeline_config, experiment_id) {
   obj <- jsonlite::fromJSON(rawConnection(body), flatten = T)
   return(obj)
 
+}
+
+#' Load cellsets object flattened (as is done by load_cellsets)
+#' and encode it back to the shape that is expected in s3
+#'
+#' @param s3 paws::s3 object
+#' @param pipeline_config list
+#' @param experiment_id character
+#'
+#' @return cellsets list
+#' @export
+#'
+unflatten_cell_sets <- function(cell_sets) {
+  formatted <- list()
+
+  for (i in seq_along(cell_sets$key)) {
+    cell_class <- list(
+      key = cell_sets$key[[i]],
+      name = cell_sets$name[[i]],
+      rootNode = cell_sets$rootNode[[i]],
+      type = cell_sets$type[[i]],
+      children = list()
+    )
+
+    for (j in seq_along(cell_sets$children[[i]]$key)) {
+      children <- cell_sets$children[[i]]
+
+      cell_set <- list(
+        key = children$key[[j]],
+        name = children$name[[j]],
+        rootNode = children$rootNode[[j]],
+        color = children$color[[j]],
+        type = children$type[[j]],
+        cellIds = ensure_is_list_in_json(children$cellIds[[j]])
+      )
+
+      cell_class$children <- append(cell_class$children, list(cell_set))
+    }
+
+    formatted <- append(formatted, list(cell_class))
+  }
+
+  return(formatted)
 }
 
 

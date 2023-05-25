@@ -12,7 +12,7 @@ copy_s3_objects <- function(input, pipeline_config, prev_out = NULL) {
   translated_scdata@misc$experimentId <- to_experiment_id
 
   translated_cell_sets <- list()
-  translated_cell_sets$cellSets <- format_cell_sets(
+  translated_cell_sets$cellSets <- unflatten_cell_sets(
     translate_cell_sets(original_cell_sets$cellSets, sample_ids_map)
   )
 
@@ -27,7 +27,6 @@ copy_s3_objects <- function(input, pipeline_config, prev_out = NULL) {
 
   return()
 }
-
 
 #' load parent experiment data
 #'
@@ -49,7 +48,7 @@ load_from_experiment_data <- function(experiment_id, pipeline_config) {
   return(list(scdata = parent_scdata, cell_sets = parent_cellsets))
 }
 
-#' Add new sample ids to the subset Seurat Object
+#' Replaces sample ids with their matches values in sample_id_map
 #'
 #' @param scdata Seurat Object
 #' @param sample_id_map data.table of parent/subset sample id map
@@ -63,6 +62,7 @@ translate_sample_ids <- function(scdata, sample_id_map) {
 
   return(scdata)
 }
+
 
 translate_cell_sets <- function(cell_sets, sample_ids_map) {
   # Loop through each element in the 'children' list
@@ -84,37 +84,4 @@ translate_cell_sets <- function(cell_sets, sample_ids_map) {
   }
 
   return(cell_sets)
-}
-
-format_cell_sets <- function(cell_sets) {
-  formatted <- list()
-
-  for (i in seq_along(cell_sets$key)) {
-    cell_class <- list(
-      key = cell_sets$key[[i]],
-      name = cell_sets$name[[i]],
-      rootNode = cell_sets$rootNode[[i]],
-      type = cell_sets$type[[i]],
-      children = list()
-    )
-
-    for (j in seq_along(cell_sets$children[[i]]$key)) {
-      children <- cell_sets$children[[i]]
-
-      cell_set <- list(
-        key = children$key[[j]],
-        name = children$name[[j]],
-        rootNode = children$rootNode[[j]],
-        color = children$color[[j]],
-        type = children$type[[j]],
-        cellIds = ensure_is_list_in_json(children$cellIds[[j]])
-      )
-
-      cell_class$children <- append(cell_class$children, list(cell_set))
-    }
-
-    formatted <- append(formatted, list(cell_class))
-  }
-
-  return(formatted)
 }
