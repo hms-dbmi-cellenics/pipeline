@@ -64,7 +64,7 @@ generate_subset_config <- function(parent_processing_config, sample_id_map) {
 #' @export
 #'
 subset_seurat <- function(input, pipeline_config, prev_out = NULL) {
-  parent_data <- load_from_experiment_data(input, pipeline_config)
+  parent_data <- load_parent_experiment_data(input, pipeline_config)
 
   subset_scdata <- subset_experiment(input, parent_data)
   sample_id_map <- create_sample_id_map(unique(subset_scdata$samples))
@@ -113,10 +113,8 @@ subset_seurat <- function(input, pipeline_config, prev_out = NULL) {
 load_parent_experiment_data <- function(input, pipeline_config) {
   # load parent processed scdata and cellsets
   s3 <- paws::s3(config = pipeline_config$aws_config)
-  parent_scdata <-
-    load_processed_scdata(s3, pipeline_config, input$parentExperimentId)
-  parent_cellsets <-
-    parse_cellsets(load_cellsets(s3, pipeline_config, input$parentExperimentId))
+  parent_scdata <- load_processed_scdata(s3, pipeline_config, input$parentExperimentId)
+  parent_cellsets <- parse_cellsets(load_cellsets(s3, pipeline_config, input$parentExperimentId))
 
   return(list(scdata = parent_scdata, cellsets = parent_cellsets))
 }

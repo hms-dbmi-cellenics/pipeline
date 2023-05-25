@@ -15,12 +15,10 @@ get_sample_ids_replacer <- function(sample_ids_map) {
 copy_s3_objects <- function(input, pipeline_config, prev_out = NULL) {
   from_experiment_id <- input$fromExperimentId
   to_experiment_id <- input$toExperimentId
-
-  original_data <- load_from_experiment_data(from_experiment_id, pipeline_config)
-
-  original_scdata <- original_data$scdata
-  original_cell_sets <- original_data$cell_sets
   sample_ids_map <- input$sampleIdsMap
+
+  original_scdata <- load_processed_scdata(s3, pipeline_config, experiment_id)
+  original_cell_sets <- load_cellsets(s3, pipeline_config, experiment_id)
 
   translated_scdata <- translate_sample_ids(original_scdata, sample_ids_map)
   translated_scdata@misc$experimentId <- to_experiment_id
@@ -52,26 +50,6 @@ copy_s3_objects <- function(input, pipeline_config, prev_out = NULL) {
     data = list(),
     output = prev_out
   ))
-}
-
-#' load parent experiment data
-#'
-#' Loads the processed rds and cellsets file from the parent experiment from s3.
-#'
-#' @param input list of input parameters
-#' @param pipelne_config list of pipeline parameters
-#'
-#' @return list with scdata and parsed cellsets
-#' @export
-#'
-load_from_experiment_data <- function(experiment_id, pipeline_config) {
-  # load parent processed scdata and cellsets
-  s3 <- paws::s3(config = pipeline_config$aws_config)
-  parent_scdata <- load_processed_scdata(s3, pipeline_config, experiment_id)
-
-  parent_cellsets <- load_cellsets(s3, pipeline_config, experiment_id)
-
-  return(list(scdata = parent_scdata, cell_sets = parent_cellsets))
 }
 
 translate_cell_sets <- function(cell_sets, sample_ids_map) {
