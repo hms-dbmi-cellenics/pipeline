@@ -1,5 +1,23 @@
-# Recursive copy function
-s3_copy_by_prefix <- function(source_bucket, source_prefix, destination_bucket, destination_prefix, aws_config, key_transform = identity) {
+#' Copy recursively all objects matching prefix
+#'
+#' @param source_bucket string
+#' @param source_prefix string
+#' @param destination_bucket string
+#' @param destination_prefix string
+#' @param aws_config
+#' @param key_transform function to transform keys of objects
+#' before uploading, identity by default
+#'
+#' @return
+#'
+s3_copy_by_prefix <- function(
+  source_bucket,
+  source_prefix,
+  destination_bucket,
+  destination_prefix,
+  aws_config,
+  key_transform = identity
+) {
   s3 <- paws::s3(config = aws_config)
 
   list_objects_response <- s3$list_objects(
@@ -15,17 +33,14 @@ s3_copy_by_prefix <- function(source_bucket, source_prefix, destination_bucket, 
 
     destination_key <- key_transform(destination_key)
 
-    str("destination_keyDebug")
-    str(destination_key)
-
     s3$copy_object(
       CopySource = paste0(source_bucket, "/", source_key),
       Bucket = destination_bucket,
       Key = destination_key
     )
 
-    cat("Copied object:", source_key, "to", destination_key, "\n")
+    message("Copied object:", source_key, "to", destination_key, "\n")
   }
 
-  cat("Recursive copy completed successfully\n")
+  message("Recursive copy completed successfully\n")
 }
