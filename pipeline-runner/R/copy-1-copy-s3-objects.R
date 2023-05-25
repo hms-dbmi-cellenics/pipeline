@@ -42,7 +42,7 @@ load_from_experiment_data <- function(experiment_id, pipeline_config) {
   # load parent processed scdata and cellsets
   s3 <- paws::s3(config = pipeline_config$aws_config)
   parent_scdata <- load_processed_scdata(s3, pipeline_config, experiment_id)
-  # parent_cellsets <- parse_cellsets(load_cellsets(s3, pipeline_config, experiment_id))
+
   parent_cellsets <- load_cellsets(s3, pipeline_config, experiment_id)
 
   return(list(scdata = parent_scdata, cell_sets = parent_cellsets))
