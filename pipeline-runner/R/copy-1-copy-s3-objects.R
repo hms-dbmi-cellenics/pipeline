@@ -104,6 +104,14 @@ copy_filtered_cells <- function(
   }
 }
 
+#' Replaces sample cell sets keys with their matched values in sample_ids_map
+#'
+#' @param cell_sets original cell sets with old sample ids as keys
+#' @param sample_ids_map data.table of parent/subset sample id map
+#'
+#' @return cell sets with new sample ids as keys instead of old ones
+#' @export
+#'
 translate_cell_sets <- function(cell_sets, sample_ids_map) {
   for (i in seq_along(cell_sets$children)) {
     key <- cell_sets$children[[i]]$key
@@ -128,12 +136,12 @@ translate_cell_sets <- function(cell_sets, sample_ids_map) {
 #' @param old_sample_ids old sample ids vector
 #' @param sample_ids_map data.table of parent/subset sample id map
 #'
-#' @return SeuratObject with new sample ids
+#' @return vector with new sample ids matching the order of old_sample_ids
 #' @export
 #'
 translate_sample_ids <- function(old_sample_ids, sample_ids_map) {
   sample_map_idx <- match(old_sample_ids, names(sample_ids_map))
-  old_sample_ids <- unname(unlist(sample_ids_map[sample_map_idx]))
+  new_sample_ids <- unname(unlist(sample_ids_map[sample_map_idx]))
 
-  return(old_sample_ids)
+  return(new_sample_ids)
 }

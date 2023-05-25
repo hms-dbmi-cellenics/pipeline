@@ -1,4 +1,4 @@
-#' Copy recursively all objects matching prefix
+#' Copy recursively all s3 objects matching prefix
 #'
 #' @param source_bucket string
 #' @param source_prefix string
