@@ -17,10 +17,7 @@ copy_s3_objects <- function(input, pipeline_config, prev_out = NULL) {
 }
 
 copy_processed_rds <- function(
-  from_experiment_id,
-  to_experiment_id,
-  sample_ids_map,
-  pipeline_config
+  from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config
 ) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
   scdata <- load_processed_scdata(s3, pipeline_config, from_experiment_id)
@@ -31,12 +28,7 @@ copy_processed_rds <- function(
   upload_matrix_to_s3(pipeline_config, to_experiment_id, scdata)
 }
 
-copy_cell_sets <- function(
-  from_experiment_id,
-  to_experiment_id,
-  sample_ids_map,
-  pipeline_config
-) {
+copy_cell_sets <- function(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
   original_cell_sets <- load_cellsets(s3, pipeline_config, from_experiment_id)
 
@@ -54,31 +46,28 @@ copy_cell_sets <- function(
   )
 }
 
-translate_cell_sets <- function(cell_sets, sample_ids_map) {
-  # Loop through each element in the 'children' list
-  for (i in seq_along(cell_sets$children)) {
-    key <- cell_sets$children[[i]]$key
+copy_source <- function(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config) {
+  replace_sample_ids <- function(key) {
+    new_key <- key
+    for (sample_id in names(sample_ids_map)) {
+      new_key <- gsub(sample_id, sample_ids_map[[sample_id]], new_key)
+    }
 
-    cell_sets$children[[i]]$key <- lapply(
-      key,
-      function(current_key) {
-        ifelse(
-          current_key %in% names(sample_ids_map),
-          sample_ids_map[[current_key]],
-          current_key
-        )
-      }
-    )
+    return(new_key)
   }
 
-  return(cell_sets)
+  s3_copy_by_prefix(
+    pipeline_config$source_bucket,
+    from_experiment_id,
+    pipeline_config$source_bucket,
+    to_experiment_id,
+    pipeline_config$aws_config,
+    key_transform = replace_sample_ids
+  )
 }
 
 copy_filtered_cells <- function(
-  from_experiment_id,
-  to_experiment_id,
-  sample_ids_map,
-  pipeline_config
+  from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config
 ) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
@@ -114,29 +103,28 @@ copy_filtered_cells <- function(
   }
 }
 
-copy_source <- function(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config) {
-  replace_sample_ids <- function(key) {
-    new_key <- key
-    for (sample_id in names(sample_ids_map)) {
-      new_key <- gsub(sample_id, sample_ids_map[[sample_id]], new_key)
-    }
+translate_cell_sets <- function(cell_sets, sample_ids_map) {
+  for (i in seq_along(cell_sets$children)) {
+    key <- cell_sets$children[[i]]$key
 
-    return(new_key)
+    cell_sets$children[[i]]$key <- lapply(
+      key,
+      function(current_key) {
+        ifelse(
+          current_key %in% names(sample_ids_map),
+          sample_ids_map[[current_key]],
+          current_key
+        )
+      }
+    )
   }
 
-  s3_copy_by_prefix(
-    pipeline_config$source_bucket,
-    from_experiment_id,
-    pipeline_config$source_bucket,
-    to_experiment_id,
-    pipeline_config$aws_config,
-    key_transform = replace_sample_ids
-  )
+  return(cell_sets)
 }
 
-#' Replaces sample ids with their matches values in sample_ids_map
+#' Replaces sample ids with their matched values in sample_ids_map
 #'
-#' @param old_sample_ids sample ids vector
+#' @param old_sample_ids old sample ids vector
 #' @param sample_ids_map data.table of parent/subset sample id map
 #'
 #' @return SeuratObject with new sample ids
