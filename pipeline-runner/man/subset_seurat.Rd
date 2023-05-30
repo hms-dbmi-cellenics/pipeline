@@ -13,6 +13,7 @@ subset_seurat(input, pipeline_config, prev_out = NULL)
 \item subsetExperimentId character
 \item cellSetKeys character vector of cellset keys to subset
 \item experimentName character
+\item parentProcessingConfig The processingConfig of the parent experiment
 }}
 
 \item{pipeline_config}{list}

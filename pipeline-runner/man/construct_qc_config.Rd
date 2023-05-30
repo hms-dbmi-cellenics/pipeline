@@ -4,12 +4,10 @@
 \alias{construct_qc_config}
 \title{Constructs default QC configuration}
 \usage{
-construct_qc_config(scdata_list, disable_qc_filters, unfiltered_samples)
+construct_qc_config(scdata_list, unfiltered_samples)
 }
 \arguments{
 \item{scdata_list}{list of Seurat objects}
-
-\item{disable_qc_filters}{bool indicating if filters should be disabled.}
 
 \item{unfiltered_samples}{character vector of unfiltered sample ids}
 }

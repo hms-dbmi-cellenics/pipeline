@@ -26,6 +26,15 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
 
   sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
 
+  if ("recomputeDoubletScore" %in% names(config)) {
+    if (config$recomputeDoubletScore) {
+    scores <- get_doublet_scores(sample_data@assays$RNA@counts)
+    sample_data <- add_dblscore(sample_data, scores)
+    # update doublet scores in original scdata
+    scdata_list[[sample_id]] <- add_dblscore(scdata_list[[sample_id]], scores)
+    }
+  }
+
   # Check if the experiment has doubletScores
   if (!"doublet_scores" %in% colnames(scdata_list[[sample_id]]@meta.data)) {
     message("Warning! No doubletScores scores has been computed for this experiment!")
@@ -45,6 +54,13 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
 
   plot1_data <- generate_doublets_plot_data(sample_data, num_cells_to_downsample)
 
+  # update config
+  config$filterSettings$probabilityThreshold <- probability_threshold
+
+  # Assign updated config to global env so that it can be accessed if there is an error
+  config_key <- paste0("config-", task_name, "-", sample_id)
+  assign(config_key, config, envir = globalenv())
+
   # Check whether the filter is set to true or false
   if (as.logical(toupper(config$enabled))) {
     # all barcodes that match threshold in the subset data
@@ -55,9 +71,6 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
   } else {
     remaining_ids <- sample_cell_ids
   }
-
-  # update config
-  config$filterSettings$probabilityThreshold <- probability_threshold
 
   guidata <- list()
 
