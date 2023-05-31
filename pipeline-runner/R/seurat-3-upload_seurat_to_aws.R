@@ -105,8 +105,7 @@ find_group_columns <- function(scdata) {
     dplyr::select(colnames(meta))
 
   ndistinct <- meta |>
-    dplyr::summarise_all(dplyr::n_distinct) |>
-    dplyr::select(colnames(meta))
+    dplyr::summarise_all(dplyr::n_distinct)
 
   nsamples <- length(unique(scdata$samples))
 
