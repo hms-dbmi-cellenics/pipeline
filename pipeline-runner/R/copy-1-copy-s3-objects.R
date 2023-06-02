@@ -82,7 +82,7 @@ copy_filtered_cells <- function(
 
   for (step in steps) {
     c(body, ...rest) %<-% s3$get_object(
-      Bucket = "biomage-filtered-cells-development-000000000000",
+      Bucket = pipeline_config$cells_id_bucket,
       Key = paste0(from_experiment_id, "/", step, "/", names(sample_ids_map)[[1]], ".rds")
     )
 
@@ -96,7 +96,7 @@ copy_filtered_cells <- function(
 
     for (sample_id in unlist(sample_ids_map)) {
       s3$put_object(
-        Bucket = "biomage-filtered-cells-development-000000000000",
+        Bucket = pipeline_config$cells_id_bucket,
         Key = paste0(to_experiment_id, "/", step, "/", sample_id, ".rds"),
         Body = filtered_cells_file
       )
