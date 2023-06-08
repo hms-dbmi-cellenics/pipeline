@@ -145,23 +145,23 @@ test_that("copy_filtered_cells works correctly", {
 
   copy_filtered_cells(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
 
-  # 1 call per each of the filter steps (5)
+  # expect 5 calls: 1 per each of the filter steps (5)
   expect_called(mock_get_s3_rds, 5)
-  # calls: #filter_steps(5) * #samples (2) = 10
+  # expect 10 calls: #filter_steps(5) * #samples (2) = 10
   expect_called(mock_put_s3_rds, 10)
 })
 
-# test_that("copy_source works correctly", {
-#   params <- get_mock_params()
-#   pipeline_config <- params$pipelineConfig
-#   from_experiment_id <- params$input$fromExperimentId
-#   to_experiment_id <- params$input$toExperimentId
-#   sample_ids_map <- params$input$sampleIdsMap
+test_that("copy_source works correctly", {
+  params <- get_mock_params()
+  pipeline_config <- params$pipelineConfig
+  from_experiment_id <- params$input$fromExperimentId
+  to_experiment_id <- params$input$toExperimentId
+  sample_ids_map <- params$input$sampleIdsMap
 
-#   # filtered_cells <- get_mock_filtered_cells()
+  mock_s3_copy_by_prefix <- mock()
+  mockery::stub(copy_source, "s3_copy_by_prefix", mock_s3_copy_by_prefix)
 
-#   mock_s3_get_object <- mock(function() {print("HOALHOALHOLADebug")})
-#   mock_s3_put_object <- mock()
-#   mockery::stub(copy_cell_sets, "s3$get_object", mock_s3_get_object)
-#   mockery::stub(copy_cell_sets, "s3$put_object", mock_s3_put_object)
-# })
+  copy_source(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+
+  expect_called(mock_s3_copy_by_prefix, 1)
+})

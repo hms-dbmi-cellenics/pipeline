@@ -85,7 +85,7 @@ copy_filtered_cells <- function(
   aws_config <- pipeline_config$aws_config
 
   for (step in steps) {
-    # get the one of the objects for this experiment, they are all identical
+    # get one of the objects for this experiment, they are all identical
     key <- paste0(from_experiment_id, "/", step, "/", names(sample_ids_map)[[1]], ".rds")
 
     filtered_cells <- get_s3_rds(bucket, key, aws_config)
