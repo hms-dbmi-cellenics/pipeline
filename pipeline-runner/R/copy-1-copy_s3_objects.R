@@ -141,29 +141,3 @@ translate_sample_ids <- function(old_sample_ids, sample_ids_map) {
 
   return(new_sample_ids)
 }
-
-get_s3_rds <- function(bucket, key, aws_config) {
-  s3 <- paws::s3(config = pipeline_config$aws_config)
-
-  c(body, ...rest) %<-% s3$get_object(
-    Bucket = bucket,
-    Key = key
-  )
-
-  conn <- gzcon(rawConnection(body))
-  object <- readRDS(conn)
-  return(object)
-}
-
-put_s3_rds <- function(bucket, key, aws_config, rds) {
-  s3 <- paws::s3(config = pipeline_config$aws_config)
-
-  file <- tempfile()
-  saveRDS(rds, file = file)
-
-  s3$put_object(
-    Bucket = bucket,
-    Key = key,
-    Body = file
-  )
-}
