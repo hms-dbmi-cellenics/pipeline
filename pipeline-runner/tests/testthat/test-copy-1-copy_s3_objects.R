@@ -22,9 +22,7 @@ mock_scdata_list <- function(sample_ids) {
   return(scdata_list)
 }
 
-mock_processed_scdata <- function(sample_ids) {
-  str("sample_idsDebug")
-  str(sample_ids)
+get_mock_processed_scdata <- function(sample_ids) {
   data("pbmc_small", package = "SeuratObject", envir = environment())
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
   pbmc_small@misc$gene_annotations <- data.frame(
@@ -37,16 +35,12 @@ mock_processed_scdata <- function(sample_ids) {
   return(pbmc_small)
 }
 
-mock_cell_sets <- function () {
+get_mock_cell_sets <- function () {
   cell_sets_path <- file.path(setup_test_paths()$mock_data, "cell_sets")
-  parent_cluster_cellsets_path <- file.path(cell_sets_path, "cell_sets_2_samples.json")
-  parent_cluster_cellsets <-
-    list(cellSets = jsonlite::fromJSON(parent_cluster_cellsets_path, flatten = T))
+  path <- file.path(cell_sets_path, "cell_sets_2_samples.json")
+  cell_sets <- list(cellSets = jsonlite::fromJSON(path, flatten = T))
 
-  # set correct structure, since this is an incomplete cellsets file
-  parent_cluster_cellsets$cellSets$children <- list(parent_cluster_cellsets$cellSets$children)
-
-  return(parent_cluster_cellsets)
+  return(cell_sets)
 }
 
 get_mock_params <- function() {
@@ -101,7 +95,7 @@ test_that("copy_processed_rds works correctly", {
   to_experiment_id <- params$input$toExperimentId
   sample_ids_map <- params$input$sampleIdsMap
 
-  processed_scdata <- mock_processed_scdata(names(sample_ids_map))
+  processed_scdata <- get_mock_processed_scdata(names(sample_ids_map))
 
   mock_load_processed_scdata <- mock(processed_scdata)
   mock_upload_matrix_to_s3 <- mock()
@@ -121,7 +115,7 @@ test_that("copy_cell_sets works correctly", {
   to_experiment_id <- params$input$toExperimentId
   sample_ids_map <- params$input$sampleIdsMap
 
-  cell_sets <- mock_cell_sets()
+  cell_sets <- get_mock_cell_sets()
 
   mock_load_cellsets <- mock(cell_sets)
   mock_put_object_in_s3 <- mock()
@@ -133,3 +127,41 @@ test_that("copy_cell_sets works correctly", {
   expect_called(mock_load_cellsets, 1)
   expect_called(mock_put_object_in_s3, 1)
 })
+
+test_that("copy_filtered_cells works correctly", {
+  params <- get_mock_params()
+  pipeline_config <- params$pipelineConfig
+  from_experiment_id <- params$input$fromExperimentId
+  to_experiment_id <- params$input$toExperimentId
+  sample_ids_map <- params$input$sampleIdsMap
+
+
+  filtered_cells_rds <- list("sample-id-1" = c(0, 1), "sample-id-2" = c(60, 61))
+
+  mock_get_s3_rds <- mock(filtered_cells_rds, cycle = TRUE)
+  mock_put_s3_rds <- mock(cycle = TRUE)
+  mockery::stub(copy_filtered_cells, "get_s3_rds", mock_get_s3_rds)
+  mockery::stub(copy_filtered_cells, "put_s3_rds", mock_put_s3_rds)
+
+  copy_filtered_cells(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+
+  # 1 call per each of the filter steps (5)
+  expect_called(mock_get_s3_rds, 5)
+  # calls: #filter_steps(5) * #samples (2) = 10
+  expect_called(mock_put_s3_rds, 10)
+})
+
+# test_that("copy_source works correctly", {
+#   params <- get_mock_params()
+#   pipeline_config <- params$pipelineConfig
+#   from_experiment_id <- params$input$fromExperimentId
+#   to_experiment_id <- params$input$toExperimentId
+#   sample_ids_map <- params$input$sampleIdsMap
+
+#   # filtered_cells <- get_mock_filtered_cells()
+
+#   mock_s3_get_object <- mock(function() {print("HOALHOALHOLADebug")})
+#   mock_s3_put_object <- mock()
+#   mockery::stub(copy_cell_sets, "s3$get_object", mock_s3_get_object)
+#   mockery::stub(copy_cell_sets, "s3$put_object", mock_s3_put_object)
+# })
