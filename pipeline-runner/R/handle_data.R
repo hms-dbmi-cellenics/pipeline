@@ -182,7 +182,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   )
 
   message("Uploading results to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
-  put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id) 
+  put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id)
 
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
@@ -268,7 +268,7 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
       )
 
       message("Uploading config to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
-      put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id) 
+      put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id)
 
       response <- build_qc_response(id, input, process_name, pipeline_config)
     }
