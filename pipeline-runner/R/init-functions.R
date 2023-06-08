@@ -493,6 +493,12 @@ start_heartbeat <- function(task_token, aws_config) {
   return(heartbeat_proc)
 }
 
+handlers <- c(
+  qc = call_qc,
+  gem2s = call_gem2s,
+  subset = call_subset,
+  copy = call_copy
+)
 
 #' calls the appropriate process, QC or gem2s
 #'
@@ -514,20 +520,13 @@ wrapper <- function(input, pipeline_config) {
   # common to gem2s and data processing
   server <- input$server
   input <- input[names(input) != "server"]
-
   process_name <- input$processName
 
-  if (process_name == "qc") {
-    message_id <- call_qc(task_name, input, pipeline_config)
-  } else if (process_name == "gem2s") {
-    message_id <- call_gem2s(task_name, input, pipeline_config)
-  } else if (process_name == "subset") {
-    message_id <- call_subset(task_name, input, pipeline_config) 
-  } else if (process_name == "copy") {
-    message_id <- call_copy(task_name, input, pipeline_config)
-  } else {
-    stop("Process name not recognized.")
+  if (!process_name %in% names(handlers)) {
+    stop("Process name not recognized")
   }
+
+  message_id <- handlers[[process_name]](task_name, input, pipeline_config)
 
   return(message_id)
 }
