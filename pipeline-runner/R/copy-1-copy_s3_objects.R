@@ -67,11 +67,12 @@ copy_source <- function(from_experiment_id, to_experiment_id, sample_ids_map, pi
   )
 }
 
+# TODO: Once the filtered_cells objects are actually separated by sample (not identical)
+#  then we can use s3_copy_by_prefix for this function instead of all this code,
+#  so basically replace this function by something similar to copy_source
 copy_filtered_cells <- function(
   from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config
 ) {
-  s3 <- paws::s3(config = pipeline_config$aws_config)
-
   steps <- c(
     "cellSizeDistribution",
     "dataIntegration",
@@ -80,26 +81,21 @@ copy_filtered_cells <- function(
     "numGenesVsNumUmis"
   )
 
-  for (step in steps) {
-    c(body, ...rest) %<-% s3$get_object(
-      Bucket = pipeline_config$cells_id_bucket,
-      Key = paste0(from_experiment_id, "/", step, "/", names(sample_ids_map)[[1]], ".rds")
-    )
+  bucket <- pipeline_config$cells_id_bucket
+  aws_config <- pipeline_config$aws_config
 
-    conn <- gzcon(rawConnection(body))
-    filtered_cells <- readRDS(conn)
+  for (step in steps) {
+    # get the one of the objects for this experiment, they are all identical
+    key <- paste0(from_experiment_id, "/", step, "/", names(sample_ids_map)[[1]], ".rds")
+
+    filtered_cells <- get_s3_rds(bucket, key, aws_config)
 
     names(filtered_cells) <- translate_sample_ids(names(filtered_cells), sample_ids_map)
 
-    filtered_cells_file <- tempfile()
-    saveRDS(filtered_cells, file = filtered_cells_file)
-
     for (sample_id in unlist(sample_ids_map)) {
-      s3$put_object(
-        Bucket = pipeline_config$cells_id_bucket,
-        Key = paste0(to_experiment_id, "/", step, "/", sample_id, ".rds"),
-        Body = filtered_cells_file
-      )
+      current_key <- paste0(to_experiment_id, "/", step, "/", sample_id, ".rds")
+
+      put_s3_rds(bucket, current_key, aws_config, filtered_cells)
     }
   }
 }
@@ -144,4 +140,30 @@ translate_sample_ids <- function(old_sample_ids, sample_ids_map) {
   new_sample_ids <- unname(unlist(sample_ids_map[sample_map_idx]))
 
   return(new_sample_ids)
+}
+
+get_s3_rds <- function(bucket, key, aws_config) {
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+
+  c(body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = key
+  )
+
+  conn <- gzcon(rawConnection(body))
+  object <- readRDS(conn)
+  return(object)
+}
+
+put_s3_rds <- function(bucket, key, aws_config, rds) {
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+
+  file <- tempfile()
+  saveRDS(rds, file = file)
+
+  s3$put_object(
+    Bucket = bucket,
+    Key = key,
+    Body = file
+  )
 }
