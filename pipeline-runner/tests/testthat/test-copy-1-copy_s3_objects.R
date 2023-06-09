@@ -16,7 +16,6 @@ mock_scdata_list <- function(sample_ids) {
 
     # add samples
     scdata$samples <- rep(sample_ids[i], each = n_cells)
-    # scdata_list <- Seurat::RenameCells(scdata, paste(scdata$samples, colnames(scdata), sep = ""))
     scdata_list[[sample_ids[i]]] <- scdata
   }
   return(scdata_list)
