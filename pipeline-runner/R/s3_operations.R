@@ -42,5 +42,5 @@ s3_copy_by_prefix <- function(
     message("Copied object:", source_key, "to", destination_key, "\n")
   }
 
-  message("Recursive copy completed successfully\n")
+  message("Copy by prefix completed successfully\n")
 }
