@@ -479,7 +479,8 @@ load_cellsets <- function(s3, pipeline_config, experiment_id) {
 }
 
 #' Load cellsets object flattened (as is done by load_cellsets)
-#' and encode it back to the shape that is expected in s3
+#' and change it back to the original shape
+#' This is useful to prepare the cell sets to upload back into s3
 #'
 #' @param s3 paws::s3 object
 #' @param pipeline_config list

@@ -373,3 +373,14 @@ test_that("send_pipeline_fail_update handles a qc call successfully with global_
   # Check that put_object_in_s3 was called with the correct parameters
   expect_snapshot(mockery::mock_args(mock_put_object_in_s3))
 })
+
+test_that("unflatten_cell_sets works", {
+  # Get flattened cell sets
+  flattened_cell_sets <- get_mock_cell_sets()
+
+  # Unflatten them
+  cell_sets <- unflatten_cell_sets(flattened_cell_sets$cellSets)
+
+  # They are unflattened
+  expect_snapshot(cell_sets)
+})
