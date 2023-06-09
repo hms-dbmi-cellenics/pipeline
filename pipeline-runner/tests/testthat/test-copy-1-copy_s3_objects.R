@@ -35,14 +35,6 @@ get_mock_processed_scdata <- function(sample_ids) {
   return(pbmc_small)
 }
 
-get_mock_cell_sets <- function () {
-  cell_sets_path <- file.path(setup_test_paths()$mock_data, "cell_sets")
-  path <- file.path(cell_sets_path, "cell_sets_2_samples.json")
-  cell_sets <- list(cellSets = jsonlite::fromJSON(path, flatten = T))
-
-  return(cell_sets)
-}
-
 get_mock_params <- function() {
   from_sample_ids <- list("sample-id-1", "sample-id-2")
   to_sample_ids <- list("cloned-sample-id-1", "cloned-sample-id-2")
