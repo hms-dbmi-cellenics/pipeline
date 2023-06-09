@@ -12,11 +12,20 @@ before_each <- function() {
   }
 }
 
-mock_cellsets <- function(){
+get_gem2s_mock_cellsets <- function() {
   # get a snapshot cellsets json
   paths <- setup_test_paths()
   jsonlite::fromJSON(file.path(paths$snaps, "gem2s", "gem2s-7-mock_experiment_id-cellsets.json"), flatten = TRUE)
 
+}
+
+
+get_mock_cell_sets <- function(flatten = TRUE) {
+  cell_sets_path <- file.path(setup_test_paths()$mock_data, "cell_sets")
+  path <- file.path(cell_sets_path, "cell_sets_2_samples.json")
+  cell_sets <- jsonlite::fromJSON(path, flatten = flatten)
+
+  return(cell_sets)
 }
 
 test_that("send_gem2s_update_to_api completes successfully", {
@@ -184,7 +193,7 @@ test_that("cbind_cellset_type names the bound column correctly", {
 test_that("parse_cellsets parses a cellset object", {
   before_each()
 
-  cellsets <- mock_cellsets()
+  cellsets <- get_gem2s_mock_cellsets()
 
   res <- parse_cellsets(cellsets)
 
