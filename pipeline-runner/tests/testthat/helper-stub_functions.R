@@ -82,8 +82,7 @@ stubbed_load_user_files <- function(input, pipeline_config, prev_out, input_dir)
 }
 
 
-stub_put_object_in_s3 <-
-  function(pipeline_config, bucket, object, key) {
+stub_put_object_in_s3 <- function(pipeline_config, bucket, object, key) {
     if (!dir.exists(bucket))
       dir.create(bucket)
     writeBin(object, file.path(bucket, key))
@@ -115,12 +114,13 @@ stub_put_object_in_s3_multipart <-
 #' @return list of paths
 #'
 setup_test_paths <- function() {
-  base_path <- ifelse(basename(getwd()) == "pipeline-runner",
-                      "./tests/testthat",
-                      ".")
+  base_path <- ifelse(
+    basename(getwd()) == "pipeline-runner",
+    "./tests/testthat",
+    "."
+  )
 
-  mock_data_path <- file.path(base_path,
-                              "mock_data")
+  mock_data_path <- file.path(base_path, "mock_data")
 
   snaps_path <- file.path(base_path, "_snaps")
 

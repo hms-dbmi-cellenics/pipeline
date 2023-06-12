@@ -286,19 +286,35 @@ call_subset <- function(task_name, input, pipeline_config) {
   return(message_id)
 }
 
-
-call_seurat <- function(task_name, input, pipeline_config) {
-
+#' Call copy
+#'
+#' Runs step `task_name` of the copy pipeline, sends output message to the API
+#'
+#' @param task_name character name of the step
+#' @param input list containing
+#'   - parentExperimentId
+#'   - childExperimentId
+#'   - sample IDs, and names
+#' @param pipeline_config list as defined by load_config
+#'
+#' @return character message id
+#'
+call_copy <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
 
-  # initial step
-  if (!exists("prev_out")) assign("prev_out", NULL, pos = ".GlobalEnv")
-  tasks <- lapply(SEURAT_TASK_LIST, get)
+  if (!exists("prev_out")) {
+    remove_cell_ids(pipeline_config, experiment_id)
+    assign("prev_out", NULL, pos = ".GlobalEnv")
+  }
+
+  check_input(input)
+  tasks <- lapply(COPY_TASK_LIST, get)
 
   c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'SeuratResponse')
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
+
   return(message_id)
 }
 
@@ -481,6 +497,13 @@ start_heartbeat <- function(task_token, aws_config) {
   return(heartbeat_proc)
 }
 
+handlers <- c(
+  qc = call_qc,
+  gem2s = call_gem2s,
+  seurat = call_seurat,
+  subset = call_subset,
+  copy = call_copy
+)
 
 #' calls the appropriate process, QC or gem2s
 #'
@@ -502,29 +525,15 @@ wrapper <- function(input, pipeline_config) {
   # common to gem2s and data processing
   server <- input$server
   input <- input[names(input) != "server"]
-
   process_name <- input$processName
 
-  if (process_name == "qc") {
-    message_id <- call_qc(task_name, input, pipeline_config)
-  } else if (process_name == "gem2s") {
-    message_id <- call_gem2s(task_name, input, pipeline_config)
-  } else if (process_name == "seurat") {
-    message_id <- call_seurat(task_name, input, pipeline_config)
-  } else if (process_name == "subset") {
-    message_id <- call_subset(task_name, input, pipeline_config)
-  } else {
-    stop("Process name not recognized.")
+  if (!process_name %in% names(handlers)) {
+    stop("Process name not recognized")
   }
 
+  message_id <- handlers[[process_name]](task_name, input, pipeline_config)
+
   return(message_id)
-}
-
-get_user_error <- function(msg) {
-  # check if error is a defined code with a corresponding message in the UI
-  if (msg %in% errors) return(msg)
-
-  return("We had an issue while processing your data.")
 }
 
 

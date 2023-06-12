@@ -28,6 +28,10 @@ SUBSET_SEURAT_TASK_LIST <- list(
   "uploadToAWS" = "upload_to_aws"
 )
 
+COPY_TASK_LIST <- list(
+  "copyS3Objects" = "copy_s3_objects"
+)
+
 # list of task functions named by task name
 QC_TASK_LIST <- list(
   "classifier" = "filter_emptydrops",
@@ -118,6 +122,7 @@ usethis::use_data(
   bucket_list,
   gem2s,
   SUBSET_SEURAT_TASK_LIST,
+  COPY_TASK_LIST,
   GEM2S_TASK_LIST,
   QC_TASK_LIST,
   SEURAT_TASK_LIST,
