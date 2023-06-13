@@ -556,6 +556,12 @@ wrapper <- function(input, pipeline_config) {
   return(message_id)
 }
 
+get_user_error <- function(msg) {
+  # check if error is a defined code with a corresponding message in the UI
+  if (msg %in% errors) return(msg)
+
+  return("We had an issue while processing your data.")
+}
 
 #' run the pipeline
 #'
