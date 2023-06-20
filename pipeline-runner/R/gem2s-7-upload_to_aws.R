@@ -215,7 +215,8 @@ build_metadata_cellsets <- function(input, scdata, color_pool, disable_qc_filter
       if (is.list(scdata)) {
         cell_ids <- get_metadata_cell_ids(scdata, valid_metadata_name, value)
       } else {
-        cells_in_value <- scdata[[valid_metadata_name]] == value
+        # need @meta.data for factor columns
+        cells_in_value <- scdata@meta.data[[valid_metadata_name]] == value
         cell_ids <- scdata$cells_id[cells_in_value]
       }
 
