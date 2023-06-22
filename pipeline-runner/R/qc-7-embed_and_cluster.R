@@ -85,12 +85,14 @@ format_cell_sets_object <-
         type = "cellSets",
         children = list()
       )
-    for (i in sort(unique(cell_sets$cluster))) {
-      cells <- cell_sets[cell_sets$cluster == i, "cell_ids"]
+    for (cluster in sort(unique(cell_sets$cluster))) {
+      cells <- cell_sets[cell_sets$cluster == cluster, "cell_ids"]
+      is.num <- !is.na(as.numeric(cluster))
+      set_name <- ifelse(is.num, paste("Cluster", cluster), cluster)
 
       new_set <- list(
-        key = paste0(clustering_method, "-", i),
-        name = paste0("Cluster ", i),
+        key = paste0(clustering_method, "-", cluster),
+        name = set_name,
         rootNode = FALSE,
         type = "cellSets",
         color = color_pool[1],

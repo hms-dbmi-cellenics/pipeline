@@ -6,7 +6,7 @@
 \usage{
 build_metadata_cellsets(
   input,
-  scdata_list,
+  scdata,
   color_pool,
   disable_qc_filters = FALSE,
   subset_cellsets = NA
@@ -15,7 +15,7 @@ build_metadata_cellsets(
 \arguments{
 \item{input}{list}
 
-\item{scdata_list}{list of Seurat objects}
+\item{scdata}{list of Seurat objects or a single Seurat object}
 
 \item{color_pool}{list of colors to use}
 }
