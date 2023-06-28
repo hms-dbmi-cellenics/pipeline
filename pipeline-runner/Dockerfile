@@ -54,6 +54,14 @@ RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = 
 COPY setup/get_sysdeps_run.R .
 RUN Rscript get_sysdeps_run.R
 
+# remove identified packages with potentially conflicting licenses
+COPY setup/create_ghost_packages.R .
+RUN Rscript create_ghost_packages.R
+
+# check for any potentially problematic licenses
+COPY setup/check_package_licenses.R .
+RUN Rscript check_package_licenses.R
+
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
 # ---------------------------------------------------

@@ -207,7 +207,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   return(result$MessageId)
 }
 
-send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input) {
+send_pipeline_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input, string_value) {
   message("Sending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
   job_id <- Sys.getenv("AWS_BATCH_JOB_ID", unset = "")
@@ -229,7 +229,7 @@ send_gem2s_update_to_api <- function(pipeline_config, experiment_id, task_name, 
     MessageAttributes = list(
       type = list(
         DataType = "String",
-        StringValue = "GEM2SResponse",
+        StringValue = string_value,
         BinaryValue = NULL
       )
     )
@@ -274,17 +274,17 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
     }
 
 
-  } else if (process_name == "gem2s") {
-    string_value <- "GEM2SResponse"
+  } else if (process_name %in% c("gem2s", "seurat")) {
+    string_value <- ifelse(process_name == "gem2s", "GEM2SResponse", "SeuratResponse")
 
     # TODO - REMOVE THE DUPLICATE EXPERIMENT ID FROM INPUT RESPONSE
     response <- list(
-      experimentId <- input$experimentId,
-      taskName <- input$taskName,
-      input <- input,
-      apiUrl <- pipeline_config$api_url,
-      response <- list(
-        error <- process_name
+      experimentId = input$experimentId,
+      taskName = input$taskName,
+      input = input,
+      apiUrl = pipeline_config$api_url,
+      response = list(
+        error = process_name
       )
     )
   } else {

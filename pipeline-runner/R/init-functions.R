@@ -27,6 +27,15 @@ build_activity_arn <- function(aws_region, aws_account_id, activity_id) {
 #'
 #' @return list with config parameters
 load_config <- function(development_aws_server) {
+
+  # running in linux needs the IP of the host to work. If it is set as an
+  # environment variable (by makefile) honor it instead of the provided
+  # parameter
+  overriden_server <- Sys.getenv("HOST_IP", "")
+  if (overriden_server != "") {
+    development_aws_server <- overriden_server
+  }
+
   label_path <- "/etc/podinfo/labels"
   aws_account_id <- Sys.getenv("AWS_ACCOUNT_ID", unset = "242905224710")
   aws_region <- Sys.getenv("AWS_DEFAULT_REGION", unset = "eu-west-1")
@@ -91,14 +100,6 @@ load_config <- function(development_aws_server) {
   }
   if (config$cluster_env == "production") {
     config$api_url <- paste0("https://api.", domain_name)
-  }
-
-  # running in linux needs the IP of the host to work. If it is set as an
-  # environment variable (by makefile) honor it instead of the provided
-  # parameter
-  overriden_server <- Sys.getenv("HOST_IP", "")
-  if (overriden_server != "") {
-    development_aws_server <- overriden_server
   }
 
   if (config$cluster_env == "development") {
@@ -247,7 +248,7 @@ call_gem2s <- function(task_name, input, pipeline_config) {
   c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
 
   return(message_id)
 }
@@ -280,8 +281,28 @@ call_subset <- function(task_name, input, pipeline_config) {
   c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
 
+  return(message_id)
+}
+
+call_seurat <- function(task_name, input, pipeline_config) {
+
+  experiment_id <- input$experimentId
+
+  # initial step
+  if (!exists("prev_out")) {
+    remove_cell_ids(pipeline_config, experiment_id)
+    assign("prev_out", NULL, pos = ".GlobalEnv")
+  }
+
+  check_input(input)
+  tasks <- lapply(SEURAT_TASK_LIST, get)
+
+  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
+  assign("prev_out", task_out, pos = ".GlobalEnv")
+
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'SeuratResponse')
   return(message_id)
 }
 
@@ -312,7 +333,7 @@ call_copy <- function(task_name, input, pipeline_config) {
   c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_gem2s_update_to_api(pipeline_config, experiment_id, task_name, data, input)
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
 
   return(message_id)
 }
@@ -372,8 +393,11 @@ call_qc <- function(task_name, input, pipeline_config) {
       samples <- names(scdata)
       assign("cells_id",
         load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples),
-        pos = ".GlobalEnv"
-      )
+        pos = ".GlobalEnv")
+
+      # won't be cells_id in S3 for uploaded Seurat object that is being subsetted
+      if (!length(cells_id)) cells_id <- generate_first_step_ids(scdata)
+
     } else {
       stop("Invalid task name given: ", task_name)
     }
@@ -496,6 +520,7 @@ start_heartbeat <- function(task_token, aws_config) {
 handlers <- c(
   qc = call_qc,
   gem2s = call_gem2s,
+  seurat = call_seurat,
   subset = call_subset,
   copy = call_copy
 )
@@ -531,6 +556,12 @@ wrapper <- function(input, pipeline_config) {
   return(message_id)
 }
 
+get_user_error <- function(msg) {
+  # check if error is a defined code with a corresponding message in the UI
+  if (msg %in% errors) return(msg)
+
+  return("We had an issue while processing your data.")
+}
 
 #' run the pipeline
 #'
@@ -601,7 +632,7 @@ init <- function() {
         message(error_txt)
         states$send_task_failure(
           taskToken = task_token,
-          error = "We had an issue while processing your data.",
+          error = get_user_error(e$message),
           cause = error_txt
         )
 

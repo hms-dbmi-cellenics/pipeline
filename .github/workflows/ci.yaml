@@ -121,7 +121,7 @@ jobs:
           echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
 
 
-          # This will take a GitHub repo name like `biomage-org/releases`
+          # This will take a GitHub repo name like `hms-dbmi-cellenics/releases`
           # and turns it into `releases`. This will be the name of the
           # ECR repository.
           IMAGE_REPO_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
@@ -157,7 +157,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: 'us-east-1'
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -268,7 +268,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: 'us-east-1'
 
       - id: login-ecr
         name: Login to Amazon ECR
