@@ -45,8 +45,18 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_
   return(res)
 }
 
-
-read_h5_file <- function(config, input_dir){
+#' Read h5 file
+#'
+#' Calls read10x_h5
+#'
+#' @param config
+#' @param input_dir
+#'
+#' @return
+#' @export
+#'
+#' @examples
+read_h5_file <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
 
@@ -55,22 +65,22 @@ read_h5_file <- function(config, input_dir){
   for (sample in samples) {
     sample_dir <- file.path(input_dir, sample)
     sample_fpaths <- list.files(sample_dir)
-    sample_counts_path <- file.path(sample_dir,sample_fpaths[[1]])
+    sample_counts_path <- file.path(sample_dir, sample_fpaths[[1]])
 
     message("\nSample --> ", sample)
-    message(
-      "Reading files from ",
-      sample_dir,
-      " --> ",
-      paste(sample_fpaths, collapse = " - ")
-    )
+    message("Reading files from ",
+            sample_dir,
+            " --> ",
+            paste(sample_fpaths, collapse = " - "))
 
-    if(length(sample_fpaths)>1) stop("Only one h5 expected. More files detected.")
+    if (length(sample_fpaths) > 1)
+      stop("Only one h5 expected. More files detected.")
 
     gene_names <- rownames(Seurat::Read10X_h5(sample_counts_path))
     counts <- Seurat::Read10X_h5(sample_counts_path, use.names = F)
 
-    annotations <- data.frame(input=rownames(counts),symbol=gene_names)
+    annotations <-
+      data.frame(input = rownames(counts), symbol = gene_names)
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annotations
   }
@@ -79,8 +89,6 @@ read_h5_file <- function(config, input_dir){
 
   return(list(counts_list = counts_list, annot = annot))
 }
-
-
 
 #' Calls Read10X
 #'

@@ -1,14 +1,18 @@
-local_h5_experiment <- function(experiment_dir, sample_dir, env = parent.frame()) {
-  sample_path <- file.path(experiment_dir, sample_dir)
-  dir.create(sample_path, recursive = T)
-  mock_h5_matrix(5,10,sample_path)
-  withr::defer(unlink(experiment_dir, recursive = T), envir = env)
+local_h5_experiment <-
+  function(experiment_dir, sample_dir, env = parent.frame()) {
+    sample_path <- file.path(experiment_dir, sample_dir)
+    dir.create(sample_path, recursive = T)
+    mock_h5_matrix(5, 10, sample_path)
+    withr::defer(unlink(experiment_dir, recursive = T), envir = env)
 
-}
+  }
 
 mock_h5_matrix <- function(num_cells, num_genes, sample_path) {
   # Generate example data in sparse matrix representation
-  data_matrix <- matrix(rpois(num_genes * num_cells, lambda = 5), nrow = num_genes, ncol = num_cells)
+  data_matrix <-
+    matrix(rpois(num_genes * num_cells, lambda = 5),
+           nrow = num_genes,
+           ncol = num_cells)
   sparse_matrix <- Matrix(data_matrix, sparse = TRUE)
   indices_matrix <- sparse_matrix@i
   indptr_matrix <- sparse_matrix@p
@@ -19,10 +23,10 @@ mock_h5_matrix <- function(num_cells, num_genes, sample_path) {
   gene_names <- paste0("Gene", 1:num_genes)
   gene_ids <- paste0("ENS", 1:num_genes)
   barcodes <- paste0("Cell", 1:num_cells)
-  feature_types <- rep("Gene Expression",num_genes)
+  feature_types <- rep("Gene Expression", num_genes)
 
   # Define file path and dataset names
-  file_path <- paste0(sample_path,"/example_counts.h5")
+  file_path <- paste0(sample_path, "/example_counts.h5")
   features_dataset_name <- "features/"
   main_slot <- "matrix/"
 
@@ -30,7 +34,7 @@ mock_h5_matrix <- function(num_cells, num_genes, sample_path) {
 
   # Create main groups
   rhdf5::h5createGroup(file_path, main_slot)
-  rhdf5::h5createGroup(file_path, paste0(main_slot,features_dataset_name))
+  rhdf5::h5createGroup(file_path, paste0(main_slot, features_dataset_name))
 
   # Create data, indices, and indptr datasets
   rhdf5::h5write(sparse_matrix@x, file_path, paste0(main_slot, "data"))
@@ -44,9 +48,17 @@ mock_h5_matrix <- function(num_cells, num_genes, sample_path) {
   rhdf5::h5write(gene_names, file_path, paste0(main_slot, "gene_names"))
 
   # Create features dataset and write the values
-  rhdf5::h5write(gene_names, file_path, paste0(main_slot,features_dataset_name,"name"))
-  rhdf5::h5write(gene_ids, file_path, paste0(main_slot,features_dataset_name,"id"))
-  rhdf5::h5write(feature_types, file_path, paste0(main_slot,features_dataset_name,"feature_type"))
+  rhdf5::h5write(gene_names,
+                 file_path,
+                 paste0(main_slot, features_dataset_name, "name"))
+  rhdf5::h5write(gene_ids,
+                 file_path,
+                 paste0(main_slot, features_dataset_name, "id"))
+  rhdf5::h5write(
+    feature_types,
+    file_path,
+    paste0(main_slot, features_dataset_name, "feature_type")
+  )
 
   # Create barcodes dataset and write the values
   rhdf5::h5write(barcodes, file_path, paste0(main_slot, "barcodes"))
@@ -61,8 +73,10 @@ test_that("load_user_files loads an h5 matrix", {
 
   local_h5_experiment(experiment_dir, sample)
 
-  prev_out <- list(config = list(samples = sample, input = list(type = "h5")))
-  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
+  prev_out <- list(config = list(samples = sample, input = list
+                                 (type = "h5")))
+  out <-
+    load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   expect_true("counts_list" %in% names(out))
   expect_true(sample %in% names(out$counts_list))
