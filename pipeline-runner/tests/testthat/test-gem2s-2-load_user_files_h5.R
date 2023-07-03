@@ -64,8 +64,6 @@ mock_h5_matrix <- function(num_cells, num_genes, sample_path) {
   rhdf5::h5write(barcodes, file_path, paste0(main_slot, "barcodes"))
 }
 
-mock_h5_matrix()
-unlink("example_counts.h5")
 
 test_that("load_user_files loads an h5 matrix", {
   experiment_dir <- "./experiment_1"
