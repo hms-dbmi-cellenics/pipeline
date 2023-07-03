@@ -13,7 +13,7 @@ mock_10x_h5_matrix <- function(num_cells, num_genes, sample_path) {
     matrix(rpois(num_genes * num_cells, lambda = 5),
            nrow = num_genes,
            ncol = num_cells)
-  sparse_matrix <- Matrix(data_matrix, sparse = TRUE)
+  sparse_matrix <- Matrix::Matrix(data_matrix, sparse = TRUE)
   indices_matrix <- sparse_matrix@i
   indptr_matrix <- sparse_matrix@p
   shape <- sparse_matrix@Dim
@@ -73,8 +73,7 @@ test_that("load_user_files loads an h5 matrix", {
 
   prev_out <- list(config = list(samples = sample, input = list
                                  (type = "10x_h5")))
-  out <-
-    load_user_files(NULL, NULL, prev_out, experiment_dir)$output
+  out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   expect_true("counts_list" %in% names(out))
   expect_true(sample %in% names(out$counts_list))
