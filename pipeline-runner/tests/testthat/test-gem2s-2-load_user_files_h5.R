@@ -7,7 +7,7 @@ local_h5_experiment <-
 
   }
 
-mock_h5_matrix <- function(num_cells, num_genes, sample_path) {
+mock_10x_h5_matrix <- function(num_cells, num_genes, sample_path) {
   # Generate example data in sparse matrix representation
   data_matrix <-
     matrix(rpois(num_genes * num_cells, lambda = 5),
