@@ -25,7 +25,7 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_
   read_fun <- switch(technology,
     "10x" = read_10x_files,
     "rhapsody" = read_rhapsody_files,
-    "h5" = read_h5_file
+    "10x_h5" = read_10x_h5_file
   )
 
   message(
