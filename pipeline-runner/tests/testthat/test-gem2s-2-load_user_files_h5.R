@@ -2,7 +2,7 @@ local_h5_experiment <-
   function(experiment_dir, sample_dir, env = parent.frame()) {
     sample_path <- file.path(experiment_dir, sample_dir)
     dir.create(sample_path, recursive = T)
-    mock_h5_matrix(5, 10, sample_path)
+    mock_10x_h5_matrix(5, 10, sample_path)
     withr::defer(unlink(experiment_dir, recursive = T), envir = env)
 
   }
