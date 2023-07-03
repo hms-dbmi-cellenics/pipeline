@@ -72,7 +72,7 @@ test_that("load_user_files loads an h5 matrix", {
   local_h5_experiment(experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list
-                                 (type = "h5")))
+                                 (type = "10x_h5")))
   out <-
     load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
