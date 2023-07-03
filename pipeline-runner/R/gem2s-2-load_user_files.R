@@ -20,7 +20,7 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_
   # destructure previous output
   config <- prev_out$config
 
-  technology <- ifelse(config$input$type %in% c("rhapsody","h5"),config$input$type , "10x")
+  technology <- ifelse(config$input$type %in% c("rhapsody","10x_h5"),config$input$type , "10x")
 
   read_fun <- switch(technology,
     "10x" = read_10x_files,
