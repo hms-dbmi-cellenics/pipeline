@@ -1,10 +1,10 @@
-mock_scdata_list <- function(sample_ids) {
+mock_source_data <- function(sample_ids, from_experiment_id) {
   pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
 
-  scdata_list <- {}
+  scdata_list <- list()
   for (i in seq_along(sample_ids)) {
     message(i)
     scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
@@ -14,9 +14,13 @@ mock_scdata_list <- function(sample_ids) {
 
     scdata$cells_id <- start_idx:end_idx
 
+
+    scdata@meta.data$samples <- rep(sample_ids[i], each = n_cells)
+    scdata@misc$experimentId <- from_experiment_id
+
     # add samples
     scdata$samples <- rep(sample_ids[i], each = n_cells)
-    scdata_list[[sample_ids[i]]] <- scdata
+    scdata_list[i] <- scdata
   }
   return(scdata_list)
 }
@@ -144,8 +148,8 @@ test_that("copy_filtered_cells works correctly", {
 
   copy_filtered_cells(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
 
-  # expect 5 calls: 1 per each of the filter steps (5)
-  expect_called(mock_get_s3_rds, 5)
+  # expect 10 calls: #filter_steps(5) * #samples (2) = 10
+  expect_called(mock_get_s3_rds, 10)
   # expect 10 calls: #filter_steps(5) * #samples (2) = 10
   expect_called(mock_put_s3_rds, 10)
 })
@@ -157,10 +161,18 @@ test_that("copy_source works correctly", {
   to_experiment_id <- params$input$toExperimentId
   sample_ids_map <- params$input$sampleIdsMap
 
-  mock_s3_copy_by_prefix <- mock()
-  mockery::stub(copy_source, "s3_copy_by_prefix", mock_s3_copy_by_prefix)
+  source_rds_list <- mock_source_data(names(sample_ids_map), from_experiment_id)
+
+  # mockery needs us to set each of the responses in different params and in order
+  mock_get_s3_rds <- mock(source_rds_list[[1]], source_rds_list[[2]], cycle = FALSE)
+  mock_put_s3_rds <- mock(cycle = TRUE)
+  mockery::stub(copy_source, "get_s3_rds", mock_get_s3_rds)
+  mockery::stub(copy_source, "put_s3_rds", mock_put_s3_rds)
 
   copy_source(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
 
-  expect_called(mock_s3_copy_by_prefix, 1)
+  # expect 2 calls, 1 for each sample
+  expect_called(mock_get_s3_rds, 2)
+  # expect 2 calls, 1 for each sample
+  expect_called(mock_put_s3_rds, 2)
 })
