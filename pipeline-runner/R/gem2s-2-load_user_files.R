@@ -76,8 +76,10 @@ read_10x_h5_file <- function(config, input_dir) {
     if (length(sample_fpaths) > 1)
       stop("Only one h5 expected. More files detected.")
 
-    gene_names <- rownames(Seurat::Read10X_h5(sample_counts_path))
-    counts <- Seurat::Read10X_h5(sample_counts_path, use.names = F)
+    ungzipped_counts_path <- R.utils::gunzip(sample_counts_path)
+
+    gene_names <- rownames(Seurat::Read10X_h5(ungzipped_counts_path))
+    counts <- Seurat::Read10X_h5(ungzipped_counts_path, use.names = F)
 
     annotations <-
       data.frame(input = rownames(counts), symbol = gene_names)
