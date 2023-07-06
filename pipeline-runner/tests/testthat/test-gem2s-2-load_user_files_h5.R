@@ -3,6 +3,7 @@ local_h5_experiment <-
     sample_path <- file.path(experiment_dir, sample_dir)
     dir.create(sample_path, recursive = T)
     mock_10x_h5_matrix(5, 10, sample_path)
+    R.utils::gzip(paste0(sample_path, "/matrix.h5"),paste0(sample_path, "/matrix.h5.gz"))
     withr::defer(unlink(experiment_dir, recursive = T), envir = env)
 
   }
@@ -26,7 +27,7 @@ mock_10x_h5_matrix <- function(num_cells, num_genes, sample_path) {
   feature_types <- rep("Gene Expression", num_genes)
 
   # Define file path and dataset names
-  file_path <- paste0(sample_path, "/example_counts.h5")
+  file_path <- paste0(sample_path, "/matrix.h5")
   features_dataset_name <- "features/"
   main_slot <- "matrix/"
 
