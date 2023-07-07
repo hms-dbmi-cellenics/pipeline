@@ -507,9 +507,11 @@ unflatten_cell_sets <- function(cell_sets) {
       cell_set <- list(
         key = children$key[[j]],
         name = children$name[[j]],
-        rootNode = children$rootNode[[j]],
+        rootNode = FALSE,
         color = children$color[[j]],
-        type = children$type[[j]],
+        # Take the type from the parent, some of the child cell sets don't have "type"
+        # Some others do, but all parents do
+        type = cell_sets$type[[i]],
         cellIds = ensure_is_list_in_json(children$cellIds[[j]])
       )
 
@@ -615,6 +617,9 @@ get_s3_rds <- function(bucket, key, aws_config) {
 
   conn <- gzcon(rawConnection(body))
   object <- readRDS(conn)
+  
+  close(conn)
+
   return(object)
 }
 
