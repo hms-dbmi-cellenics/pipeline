@@ -34,6 +34,7 @@ copy_cell_sets <- function(from_experiment_id, to_experiment_id, sample_ids_map,
   original_cell_sets <- load_cellsets(s3, pipeline_config, from_experiment_id)
 
   translated_cell_sets <- list()
+  
   translated_cell_sets$cellSets <- unflatten_cell_sets(
     translate_cell_sets(original_cell_sets$cellSets, sample_ids_map)
   )
@@ -50,11 +51,11 @@ copy_cell_sets <- function(from_experiment_id, to_experiment_id, sample_ids_map,
 copy_source <- function(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config) {
   bucket <- pipeline_config$source_bucket
 
-  for (i in seq_along(sample_ids_map)) {
-    original_sample_id <- names(sample_ids_map)[[i]]
-    copy_sample_id <- unlist(sample_ids_map)[[i]]
+  for (original_sample_id in names(sample_ids_map)) {
+    copy_sample_id <- sample_ids_map[[original_sample_id]]
 
     original_key <- paste0(from_experiment_id, "/", original_sample_id, "/", "r.rds")
+    copy_key <- paste0(to_experiment_id, "/", copy_sample_id, "/", "r.rds")
 
     source_data <- get_s3_rds(bucket, original_key, pipeline_config$aws_config)
 
@@ -66,8 +67,6 @@ copy_source <- function(from_experiment_id, to_experiment_id, sample_ids_map, pi
 
     source_data@misc$experimentId <- to_experiment_id
     # Finish translating relevant parts
-
-    copy_key <- paste0(to_experiment_id, "/", copy_sample_id, "/", "r.rds")
 
     message("Uploading ", original_key, "to ", copy_key, " with samples translated")
     put_s3_rds(bucket, copy_key, pipeline_config$aws_config, source_data)
@@ -92,20 +91,18 @@ copy_filtered_cells <- function(
   aws_config <- pipeline_config$aws_config
 
   for (step in steps) {
-    for (i in seq_along(sample_ids_map)) {
-      original_sample_id <- names(sample_ids_map)[[i]]
-      copy_sample_id <- unlist(sample_ids_map)[[i]]
+    for (original_sample_id in names(sample_ids_map)) {
+      copy_sample_id <- sample_ids_map[[original_sample_id]]
 
-      key <- paste0(from_experiment_id, "/", step, "/", original_sample_id, ".rds")
+      original_key <- paste0(from_experiment_id, "/", step, "/", original_sample_id, ".rds")
+      copy_key <- paste0(to_experiment_id, "/", step, "/", copy_sample_id, ".rds")
 
-      filtered_cells <- get_s3_rds(bucket, key, aws_config)
+      filtered_cells <- get_s3_rds(bucket, original_key, aws_config)
 
       names(filtered_cells) <- translate_sample_ids(names(filtered_cells), sample_ids_map)
 
-      current_key <- paste0(to_experiment_id, "/", step, "/", copy_sample_id, ".rds")
-
-      message("Uploading ", key, "to ", current_key, " with samples translated")
-      put_s3_rds(bucket, current_key, aws_config, filtered_cells)
+      message("Uploading ", original_key, "to ", copy_key, " with samples translated")
+      put_s3_rds(bucket, copy_key, aws_config, filtered_cells)
     }
   }
 }
