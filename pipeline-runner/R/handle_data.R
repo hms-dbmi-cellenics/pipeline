@@ -615,6 +615,9 @@ get_s3_rds <- function(bucket, key, aws_config) {
 
   conn <- gzcon(rawConnection(body))
   object <- readRDS(conn)
+  
+  close(conn)
+
   return(object)
 }
 
