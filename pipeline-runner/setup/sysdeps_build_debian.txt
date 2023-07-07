@@ -12,4 +12,5 @@ libcairo2-dev
 liblzma-dev
 libbz2-dev
 libgeos-dev
-
+libhdf5-dev
+patch
