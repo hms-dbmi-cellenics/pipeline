@@ -71,11 +71,12 @@ RANDOM_SEED <- 42
 DEBUG_PATH <- "/debug"
 
 # File management, it needs to match the sample_file_type enum in sql
-# (they are originally defined in 20220304184711_schema.js in the api)
+# (they are originally defined in the structure of the SQL database)
 file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x"),
   "seurat" = list("seurat"),
   "rhapsody" = list("rhapsody")
+  "10x_h5" = list("10XH5")
 )
 
 file_names <- list(
@@ -84,6 +85,7 @@ file_names <- list(
   matrix10x = "matrix.mtx.gz",
   seurat = "r.rds",
   rhapsody = "expression_data.st.gz"
+  "10XH5" = "matrix.h5.gz"
 )
 
 MITOCHONDRIAL_REGEX <- "^mt[-:]"
