@@ -75,7 +75,7 @@ DEBUG_PATH <- "/debug"
 file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x"),
   "seurat" = list("seurat"),
-  "rhapsody" = list("rhapsody")
+  "rhapsody" = list("rhapsody"),
   "10x_h5" = list("10XH5")
 )
 
@@ -84,7 +84,7 @@ file_names <- list(
   features10x = "features.tsv.gz",
   matrix10x = "matrix.mtx.gz",
   seurat = "r.rds",
-  rhapsody = "expression_data.st.gz"
+  rhapsody = "expression_data.st.gz",
   "10XH5" = "matrix.h5.gz"
 )
 
