@@ -59,9 +59,9 @@ Resources:
         ZipFile: |
           import subprocess
 
-          # Removes all containers that already exist and contain either 'qc' or 'gem2s' in their name.
+          # Removes all containers that already exist and contain either 'qc' or 'gem2s' or 'seurat' in their name.
           def handler(event, context):
-            proc = subprocess.run("docker kill $(docker ps -f name='qc|gem2s' --format '{{.Names}}') || true", shell=True, check=True)
+            proc = subprocess.run("docker kill $(docker ps -f name='qc|gem2s|seurat' --format '{{.Names}}') || true", shell=True, check=True)
 
             return proc.returncode
       Runtime: "python3.8"

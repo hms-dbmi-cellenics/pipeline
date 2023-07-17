@@ -4,10 +4,10 @@
 \alias{get_cell_sets}
 \title{Create initial cell sets object}
 \usage{
-get_cell_sets(scdata_list, input)
+get_cell_sets(scdata, input)
 }
 \arguments{
-\item{scdata_list}{list of Seurat objects}
+\item{scdata}{list of Seurat objects}
 
 \item{input}{The input object from the request}
 }
