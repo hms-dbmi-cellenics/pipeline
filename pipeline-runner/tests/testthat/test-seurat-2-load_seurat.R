@@ -157,6 +157,7 @@ test_that("load_seurat fails if there is no pca reduction", {
   unlink(data_dir, recursive = TRUE)
 })
 
+
 test_that("load_seurat fails if there is inappropriate logcounts data", {
   # setup
   input_dir <- tempdir()
@@ -167,7 +168,6 @@ test_that("load_seurat fails if there is inappropriate logcounts data", {
   # sparse matrix with wrong dimensions
   bad_data <- Matrix::sparseMatrix(1, 1, x = 1)
   expect_error(test_user_sparse_mat(bad_data), NA)
-
   orig_scdata@assays$RNA@data <- bad_data
   saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
 

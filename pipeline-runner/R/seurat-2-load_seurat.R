@@ -45,6 +45,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   tryCatch({
     user_scdata <- readRDS(dataset_fpath)
     stopifnot(methods::is(user_scdata, 'Seurat'))
+    SeuratObject::DefaultAssay(user_scdata) <- 'RNA'
   },
   error = function(e) {
     message(e$message)
@@ -57,24 +58,11 @@ reconstruct_seurat <- function(dataset_fpath) {
     test_user_sparse_mat(counts)
     rns <- row.names(counts)
     check_type_is_safe(rns)
+
   },
   error = function(e) {
     message(e$message)
     stop(errors$ERROR_SEURAT_COUNTS, call. = FALSE)
-  })
-
-  gene_annotations <- data.frame(input = rns, name = rns, original_name = rns, row.names = rns)
-  user_scdata@misc$gene_annotations <- gene_annotations
-
-  # add dispersions
-  tryCatch({
-    user_scdata <- add_dispersions(user_scdata, method = "default")
-    dispersions <- user_scdata@misc$gene_dispersion
-    test_user_df(dispersions)
-  },
-  error = function(e) {
-    message(e$message)
-    stop(errors$ERROR_SEURAT_HVFINFO, call. = FALSE)
   })
 
   # get meta data
@@ -92,14 +80,50 @@ reconstruct_seurat <- function(dataset_fpath) {
     stop(errors$ERROR_SEURAT_CLUSTERS, call. = FALSE)
 
 
-  # reconstruct seurat object
+  # reconstruct Seurat object
   scdata <- SeuratObject::CreateSeuratObject(
     counts,
     meta.data = metadata,
   )
 
-  # add dispersions and gene annotations to new scdata
-  scdata@misc$gene_dispersion <- dispersions
+  # add logcounts
+  tryCatch({
+    logcounts <- user_scdata[['RNA']]@data
+    test_user_sparse_mat(logcounts)
+
+    # shouldn't be raw counts
+    suspect.counts <- max(logcounts) > 100
+    if (suspect.counts) logcounts <- Seurat::NormalizeData(logcounts)
+
+    scdata[['RNA']]@data <- logcounts
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_SEURAT_LOGCOUNTS, call. = FALSE)
+  })
+
+
+  # add dispersions (need for gene list)
+  tryCatch({
+    dispersions <- Seurat::FindVariableFeatures(logcounts)[-3]
+    test_user_df(dispersions)
+    colnames(dispersions) <- gsub('^vst[.]', '', colnames(dispersions))
+    dispersions$SYMBOL <- dispersions$ENSEMBL <- row.names(dispersions)
+
+    scdata@misc$gene_dispersion <- dispersions
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_SEURAT_HVFINFO, call. = FALSE)
+  })
+
+  # add gene annotations
+  gene_annotations <- data.frame(
+    input = rns,
+    name = rns,
+    original_name = rns,
+    row.names = rns
+  )
   scdata@misc$gene_annotations <- gene_annotations
 
 
@@ -140,20 +164,8 @@ reconstruct_seurat <- function(dataset_fpath) {
     stop(errors$ERROR_SEURAT_REDUCTION, call. = FALSE)
   })
 
-  # add logcounts
-  tryCatch({
-    data <- user_scdata[['RNA']]@data
-    test_user_sparse_mat(data)
-    scdata[['RNA']]@data <- data
-  },
-  error = function(e) {
-    message(e$message)
-    stop(errors$ERROR_SEURAT_LOGCOUNTS, call. = FALSE)
-  })
-
   return(scdata)
 }
-
 
 test_user_df <- function(df) {
   for (col in colnames(df)) {
