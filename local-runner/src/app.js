@@ -33,7 +33,7 @@ const initStack = async () => {
 
   console.log('Creating mock Lambda function on InfraMock...');
   const cf = new AWS.CloudFormation({
-    region: 'eu-west-1',
+    region: process.env.AWS_DEFAULT_REGION || 'eu-west-1',
   });
 
   const stackName = {
