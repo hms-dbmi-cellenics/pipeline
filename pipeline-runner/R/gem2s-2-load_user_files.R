@@ -78,8 +78,16 @@ read_10x_h5_file <- function(config, input_dir) {
 
     ungzipped_counts_path <- R.utils::gunzip(sample_counts_path)
 
-    gene_names <- rownames(Seurat::Read10X_h5(ungzipped_counts_path))
-    counts <- Seurat::Read10X_h5(ungzipped_counts_path, use.names = F)
+    counts_names <- Seurat::Read10X_h5(ungzipped_counts_path)
+    counts <- Seurat::Read10X_h5(ungzipped_counts_path, use.names = FALSE)
+
+    # use Gene Expression modality if multiple
+    if (methods::is(counts, 'list')) {
+      counts_names <- counts_names$`Gene Expression`
+      counts <- counts$`Gene Expression`
+    }
+
+    gene_names <- row.names(counts_names)
 
     annotations <-
       data.frame(input = rownames(counts), symbol = gene_names)
