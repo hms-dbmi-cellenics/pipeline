@@ -35,7 +35,7 @@ test:
 	@(cd ./pipeline-runner && R -e "devtools::test()")
 setup-hooks: ## Configures path to git hooks
 	@git config core.hooksPath .githooks
-run: setup-hooks build run-only
+run: build run-only
 run-only:
 	@(cd ./local-runner && npm start)
 .PHONY: install build run run-only help
