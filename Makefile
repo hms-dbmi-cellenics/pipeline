@@ -33,7 +33,7 @@ build-batch-staging:
 	@docker push 242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:batch-staging
 test:
 	@(cd ./pipeline-runner && R -e "devtools::test()")
-setup-hooks: ## Configures path to git hooks
+hooks: ## Configures path to git hooks
 	@git config core.hooksPath .githooks
 run: build run-only
 run-only:
