@@ -33,7 +33,9 @@ build-batch-staging:
 	@docker push 242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:batch-staging
 test:
 	@(cd ./pipeline-runner && R -e "devtools::test()")
-run: build run-only
+setup-hooks: ## Configures path to git hooks
+	@git config core.hooksPath .githooks
+run: setup-hooks build run-only
 run-only:
 	@(cd ./local-runner && npm start)
 .PHONY: install build run run-only help
