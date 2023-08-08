@@ -68,6 +68,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   # get meta data
   tryCatch({
     metadata <- user_scdata@meta.data
+    metadata$active.ident <- user_scdata@active.ident
     test_user_df(metadata)
   },
   error = function(e) {
@@ -76,8 +77,8 @@ reconstruct_seurat <- function(dataset_fpath) {
   })
 
   # check for clusters
-  if (!'seurat_clusters' %in% colnames(metadata))
-    stop(errors$ERROR_SEURAT_CLUSTERS, call. = FALSE)
+  # if (!'seurat_clusters' %in% colnames(metadata))
+  #   stop(errors$ERROR_SEURAT_CLUSTERS, call. = FALSE)
 
 
   # reconstruct Seurat object
@@ -105,7 +106,9 @@ reconstruct_seurat <- function(dataset_fpath) {
 
   # add dispersions (need for gene list)
   tryCatch({
+    # don't use first 3 columns
     dispersions <- Seurat::FindVariableFeatures(logcounts)[-3]
+
     test_user_df(dispersions)
     colnames(dispersions) <- gsub('^vst[.]', '', colnames(dispersions))
     dispersions$SYMBOL <- dispersions$ENSEMBL <- row.names(dispersions)
