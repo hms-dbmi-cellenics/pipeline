@@ -76,11 +76,6 @@ reconstruct_seurat <- function(dataset_fpath) {
     stop(errors$ERROR_SEURAT_METADATA, call. = FALSE)
   })
 
-  # check for clusters
-  # if (!'seurat_clusters' %in% colnames(metadata))
-  #   stop(errors$ERROR_SEURAT_CLUSTERS, call. = FALSE)
-
-
   # reconstruct Seurat object
   scdata <- SeuratObject::CreateSeuratObject(
     counts,

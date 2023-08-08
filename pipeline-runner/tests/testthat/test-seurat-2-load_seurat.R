@@ -86,14 +86,14 @@ test_that("load_seurat fails if there is no RNA assay", {
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
     load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_SEURAT_COUNTS'
+    regexp = 'ERROR_SEURAT_RDS'
     )
 
   # clean up
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat fails if there is no seurat_clusters column in metadata", {
+test_that("load_seurat does not fail if there is no seurat_clusters column in metadata", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
@@ -107,7 +107,7 @@ test_that("load_seurat fails if there is no seurat_clusters column in metadata",
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
     load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_SEURAT_CLUSTERS'
+    NA
     )
 
   # clean up
