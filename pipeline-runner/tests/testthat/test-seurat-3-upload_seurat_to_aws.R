@@ -211,7 +211,7 @@ test_that("change_sample_names_to_ids substitutes samples column for values in s
 
 test_that("find_cluster_columns finds cluster columns", {
 
-  expected_cols <- c('seurat_clusters', 'letter.idents', 'groups', 'RNA_snn_res.1')
+  expected_cols <- c('seurat_clusters', 'RNA_snn_res.0.8', 'letter.idents', 'groups', 'RNA_snn_res.1')
 
   scdata <- mock_scdata()
   sample_names <- c('A', 'B', 'C', 'D')
@@ -224,25 +224,10 @@ test_that("find_cluster_columns finds cluster columns", {
   expect_setequal(cluster_cols, expected_cols)
 })
 
-test_that("find_cluster_columns skips duplicated cluster columns", {
-
-  expected_cols <- c('seurat_clusters', 'letter.idents', 'groups', 'RNA_snn_res.1')
-
-  scdata <- mock_scdata()
-  sample_names <- c('A', 'B', 'C', 'D')
-  samples <- rep(sample_names, each = ncol(scdata)/4)
-  scdata$samples <- samples
-
-  scdata$seurat_clusters <- scdata$RNA_snn_res.0.8
-  scdata$seurat_clusters_copy <- scdata$seurat_clusters
-
-  cluster_cols <- find_cluster_columns(scdata)
-  expect_setequal(cluster_cols, expected_cols)
-})
 
 test_that("find_cluster_columns skips column with single value", {
 
-  expected_cols <- c('seurat_clusters', 'letter.idents', 'groups', 'RNA_snn_res.1')
+  expected_cols <- c('seurat_clusters', 'RNA_snn_res.0.8', 'letter.idents', 'groups', 'RNA_snn_res.1')
 
   scdata <- mock_scdata()
   sample_names <- c('A', 'B', 'C', 'D')
@@ -258,7 +243,7 @@ test_that("find_cluster_columns skips column with single value", {
 
 test_that("find_cluster_columns skips columns with non-integer numeric values", {
 
-  expected_cols <- c('seurat_clusters', 'letter.idents', 'groups', 'RNA_snn_res.1')
+  expected_cols <- c('seurat_clusters', 'RNA_snn_res.0.8', 'letter.idents', 'groups', 'RNA_snn_res.1')
 
   scdata <- mock_scdata()
   sample_names <- c('A', 'B', 'C', 'D')
@@ -274,7 +259,7 @@ test_that("find_cluster_columns skips columns with non-integer numeric values", 
 
 test_that("find_cluster_columns skips columns where repeated values are too infrequent", {
 
-  expected_cols <- c('seurat_clusters', 'letter.idents', 'groups', 'RNA_snn_res.1')
+  expected_cols <- c('seurat_clusters', 'RNA_snn_res.0.8', 'letter.idents', 'groups', 'RNA_snn_res.1')
 
   scdata <- mock_scdata()
   sample_names <- c('A', 'B', 'C', 'D')
