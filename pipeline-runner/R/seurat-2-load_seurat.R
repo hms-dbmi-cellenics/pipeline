@@ -45,7 +45,6 @@ reconstruct_seurat <- function(dataset_fpath) {
   tryCatch({
     user_scdata <- readRDS(dataset_fpath)
     stopifnot(methods::is(user_scdata, 'Seurat'))
-    SeuratObject::DefaultAssay(user_scdata) <- 'RNA'
   },
   error = function(e) {
     message(e$message)
@@ -54,6 +53,7 @@ reconstruct_seurat <- function(dataset_fpath) {
 
   # get counts
   tryCatch({
+    SeuratObject::DefaultAssay(user_scdata) <- 'RNA'
     counts <- user_scdata[['RNA']]@counts
     test_user_sparse_mat(counts)
     rns <- row.names(counts)

@@ -86,7 +86,7 @@ test_that("load_seurat fails if there is no RNA assay", {
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
     load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_SEURAT_RDS'
+    regexp = 'ERROR_SEURAT_COUNTS'
     )
 
   # clean up
