@@ -40,7 +40,7 @@ RUN R -q -e "renv::deactivate()"
 # clean conda
 ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 RUN R -q -e "reticulate::install_miniconda()" && \
-    R -q -e "reticulate::conda_install('r-reticulate', c('geosketch', 'scanorama'), pip = TRUE)" && \
+    R -q -e "reticulate::conda_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3'), pip = TRUE)" && \
     CONDA_PATH=$(R -q -s -e "cat(reticulate::conda_binary())") && \
     $CONDA_PATH clean --force-pkgs-dirs -y
 
