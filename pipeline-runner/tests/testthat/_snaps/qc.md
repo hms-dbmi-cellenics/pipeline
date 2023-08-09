@@ -465,7 +465,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "25e05c91587f1b98bab951258271ad1f"
+      [1] "a9264c1066779e6f23fbd8248f45cf59"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -619,7 +619,7 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "af7b2d35abd5a00b51907c07cbf87d27"
+      [1] "14aa0c10d29fb177b983c2b50bf7febb"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
@@ -1045,7 +1045,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "25e05c91587f1b98bab951258271ad1f"
+      [1] "a9264c1066779e6f23fbd8248f45cf59"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -1625,7 +1625,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "25e05c91587f1b98bab951258271ad1f"
+      [1] "a9264c1066779e6f23fbd8248f45cf59"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -2205,7 +2205,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "25e05c91587f1b98bab951258271ad1f"
+      [1] "a9264c1066779e6f23fbd8248f45cf59"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -2359,7 +2359,7 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "56772520d5c0c75ad75f00b75cef4cff"
+      [1] "54e6e5937573a7cb22e708fb3bc860c2"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
@@ -6746,7 +6746,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "25e05c91587f1b98bab951258271ad1f"
+      [1] "a9264c1066779e6f23fbd8248f45cf59"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -6900,7 +6900,7 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "669b3e222d74861d9845bacb04201108"
+      [1] "7da115cc2757c7c3236acca7ec5cedc5"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
@@ -7126,7 +7126,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "204d12cf36b5f4f4e752334b59d98597"
+      [1] "6a4475546557490ee2b612312dc66290"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7234,11 +7234,11 @@
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.96 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.31 159.95 | __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.95 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.32 159.95 | __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:970] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings.projected: num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.96 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.31 159.95 | __truncated__ ...
+        .. .. .. ..@ feature.loadings.projected: num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.95 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.32 159.95 | __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:970] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
@@ -7376,7 +7376,7 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "0741c84a670e10c6722500ba279c0439"
+      [1] "73c43ae03e7c42b9460bd303f65b2808"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
@@ -7493,7 +7493,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "204d12cf36b5f4f4e752334b59d98597"
+      [1] "6a4475546557490ee2b612312dc66290"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7601,11 +7601,11 @@
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.96 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.31 159.95 | __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.95 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.32 159.95 | __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:970] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings.projected: num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.96 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.31 159.95 | __truncated__ ...
+        .. .. .. ..@ feature.loadings.projected: num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.95 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.32 159.95 | __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:970] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...

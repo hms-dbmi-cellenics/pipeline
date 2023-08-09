@@ -121,7 +121,7 @@ jobs:
           echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
 
 
-          # This will take a GitHub repo name like `biomage-org/releases`
+          # This will take a GitHub repo name like `hms-dbmi-cellenics/releases`
           # and turns it into `releases`. This will be the name of the
           # ECR repository.
           IMAGE_REPO_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
@@ -157,7 +157,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -268,7 +268,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -345,6 +345,7 @@ jobs:
           echo "sandbox-id=$SANDBOX_ID" >> $GITHUB_OUTPUT
           echo "kubernetes-env=$KUBERNETES_ENV" >> $GITHUB_OUTPUT
 
+          export GITHUB_OWNER=${{ github.repository_owner }}
           export NAMESPACE="$DEPLOYMENT_NAME-$SANDBOX_ID"
           export CHART_CRD_NAME="$DEPLOYMENT_NAME-chart"
           export IMAGE_POLICY_TAG="{\"\$imagepolicy\": \"$NAMESPACE:$DEPLOYMENT_NAME:tag\"}"
@@ -355,6 +356,7 @@ jobs:
             select(di == 1).metadata.name = strenv(CHART_CRD_NAME) |
             select(di == 1).metadata.namespace = strenv(NAMESPACE) |
             select(di == 1).spec.ref.[strenv(CHART_REF_TYPE)] = strenv(CHART_REF) |
+            select(di == 1).spec.url = "https://github.com/" + strenv(GITHUB_OWNER) + "/pipeline" |
             select(di == 2).metadata.name = strenv(DEPLOYMENT_NAME) |
             select(di == 2).metadata.namespace = strenv(NAMESPACE) |
             select(di == 2).spec.image = strenv(REGISTRY) + "/" + strenv(DEPLOYMENT_NAME) |

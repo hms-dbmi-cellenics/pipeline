@@ -43,6 +43,12 @@ QC_TASK_LIST <- list(
   "configureEmbedding" = "embed_and_cluster"
 )
 
+SEURAT_TASK_LIST <- list(
+  "downloadSeurat" = "download_user_files",
+  "processSeurat" = "load_seurat",
+  "uploadSeuratToAWS" = "upload_seurat_to_aws"
+)
+
 # directory where download_user_files downloads user files
 INPUT_DIR <- "/input"
 
@@ -68,6 +74,7 @@ DEBUG_PATH <- "/debug"
 # (they are originally defined in the structure of the SQL database)
 file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x"),
+  "seurat" = list("seurat"),
   "rhapsody" = list("rhapsody"),
   "10x_h5" = list("10XH5")
 )
@@ -76,6 +83,7 @@ file_names <- list(
   barcodes10x = "barcodes.tsv.gz",
   features10x = "features.tsv.gz",
   matrix10x = "matrix.mtx.gz",
+  seurat = "r.rds",
   rhapsody = "expression_data.st.gz",
   "10XH5" = "matrix.h5.gz"
 )
@@ -100,8 +108,18 @@ pipeline_version <- 2
 
 UNISAMPLE <- "unisample"
 
+# pipeline error constants
+errors <- list(
+  ERROR_SEURAT_RDS = 'ERROR_SEURAT_RDS',
+  ERROR_SEURAT_COUNTS = 'ERROR_SEURAT_COUNTS',
+  ERROR_SEURAT_HVFINFO = 'ERROR_SEURAT_HVFINFO',
+  ERROR_SEURAT_METADATA = 'ERROR_SEURAT_METADATA',
+  ERROR_SEURAT_CLUSTERS = 'ERROR_SEURAT_CLUSTERS',
+  ERROR_SEURAT_REDUCTION = 'ERROR_SEURAT_REDUCTION',
+  ERROR_SEURAT_LOGCOUNTS = 'ERROR_SEURAT_LOGCOUNTS'
+)
+
 usethis::use_data(
-  debug_timestamp,
   processing_config_template,
   bucket_list,
   gem2s,
@@ -109,6 +127,7 @@ usethis::use_data(
   COPY_TASK_LIST,
   GEM2S_TASK_LIST,
   QC_TASK_LIST,
+  SEURAT_TASK_LIST,
   INPUT_DIR,
   RANDOM_SEED,
   MIN_CELLS_IN_SAMPLE,
@@ -124,6 +143,7 @@ usethis::use_data(
   RIBOSOMAL_REGEX,
   pipeline_version,
   UNISAMPLE,
+  errors,
   internal = TRUE,
   overwrite = TRUE
 )

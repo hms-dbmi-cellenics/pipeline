@@ -33,9 +33,11 @@ Resources:
               f"--name {event['name']}-{random_string(10)}",
               f"{'-d' if event['detached'] else ''}",
               f"--env ACTIVITY_ARN={event.get('activityArn', '')}",
+              f"--env AWS_DEFAULT_REGION=__AWS_DEFAULT_REGION__",
               f"--env HOST_IP=__HOST_IP__",
               f"--env DEBUG_STEP=__DEBUG_STEP__",
               f"--env DEBUG_PATH=__DEBUG_PATH__",
+              f"--env AWS_DEFAULT_REGION=__AWS_DEFAULT_REGION__",
               f"-v __DEBUG_PATH__:/debug",
               event['image']
             ])
@@ -59,9 +61,9 @@ Resources:
         ZipFile: |
           import subprocess
 
-          # Removes all containers that already exist and contain either 'qc' or 'gem2s' in their name.
+          # Removes all containers that already exist and contain either 'qc' or 'gem2s' or 'seurat' in their name.
           def handler(event, context):
-            proc = subprocess.run("docker kill $(docker ps -f name='qc|gem2s' --format '{{.Names}}') || true", shell=True, check=True)
+            proc = subprocess.run("docker kill $(docker ps -f name='qc|gem2s|seurat' --format '{{.Names}}') || true", shell=True, check=True)
 
             return proc.returncode
       Runtime: "python3.8"

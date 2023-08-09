@@ -4,12 +4,12 @@
 \alias{build_sample_cellsets}
 \title{Create cell set using Seurat samples information}
 \usage{
-build_sample_cellsets(input, scdata_list, color_pool)
+build_sample_cellsets(input, scdata, color_pool)
 }
 \arguments{
 \item{input}{The input object from the request}
 
-\item{scdata_list}{list of Seurat objects}
+\item{scdata}{list of Seurat objects or a single Seurat object}
 
 \item{color_pool}{list of colors to use}
 }

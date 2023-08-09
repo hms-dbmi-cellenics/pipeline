@@ -28,7 +28,7 @@ get_mock_cell_sets <- function(flatten = TRUE) {
   return(cell_sets)
 }
 
-test_that("send_gem2s_update_to_api completes successfully", {
+test_that("send_pipeline_update_to_api completes successfully", {
     before_each()
 
     pipeline_config <- list(
@@ -36,13 +36,14 @@ test_that("send_gem2s_update_to_api completes successfully", {
         aws_config = NULL
     )
 
-    mockery::stub(send_gem2s_update_to_api, 'paws::sns', mock_sns)
+    mockery::stub(send_pipeline_update_to_api, 'paws::sns', mock_sns)
 
-    response <- send_gem2s_update_to_api(pipeline_config,
+    response <- send_pipeline_update_to_api(pipeline_config,
                             experiment_id = 'dfgdfg',
                             task_name = 'dsfdsdf',
                             data = 1:5,
-                            input = list(auth_JWT='ayylmao'))
+                            input = list(auth_JWT='ayylmao'),
+                            string_value = 'GEM2SResponse')
 
 
     expect_true(response == 'ok')

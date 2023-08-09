@@ -40,7 +40,7 @@ RUN R -q -e "renv::deactivate()"
 # clean conda
 ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 RUN R -q -e "reticulate::install_miniconda()" && \
-    R -q -e "reticulate::conda_install('r-reticulate', c('geosketch', 'scanorama'), pip = TRUE)" && \
+    R -q -e "reticulate::conda_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3'), pip = TRUE)" && \
     CONDA_PATH=$(R -q -s -e "cat(reticulate::conda_binary())") && \
     $CONDA_PATH clean --force-pkgs-dirs -y
 
@@ -53,6 +53,14 @@ RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
 RUN Rscript get_sysdeps_run.R
+
+# remove identified packages with potentially conflicting licenses
+COPY setup/create_ghost_packages.R .
+RUN Rscript create_ghost_packages.R
+
+# check for any potentially problematic licenses
+COPY setup/check_package_licenses.R .
+RUN Rscript check_package_licenses.R
 
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
