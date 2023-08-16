@@ -129,7 +129,7 @@ jobs:
             IMAGE_TAG=$REF_ID
             TIMESTAMP=""
             BATCH_IMAGE_TAG=production
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+          elif [ "${{ github.event_name }}" = "pull_request_target" ]; then
             COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
             TIMESTAMP=$TIMESTAMP
@@ -163,7 +163,7 @@ jobs:
       - id: ref-previous
         name: Format docker tag and repository name for the previous pushed image.
         run: |-
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
             echo "This is a pull request, base ref and sha set to the target branch."
             BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
             BASE_SHA=${{ github.event.pull_request.base.sha }}
@@ -446,7 +446,7 @@ jobs:
 
       - name: Change name of deployment file for staging deployment
         if:
-          (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
+          (github.event_name == 'pull_request_target' || github.event_name == 'push') && matrix.environment == 'staging'
         env:
           DEPLOYMENT_NAME: ${{ steps.fill-metadata.outputs.deployment-name }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
@@ -455,7 +455,7 @@ jobs:
 
       - name: Push staging deployment template to releases
         if:
-          (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
+          (github.event_name == 'pull_request_target' || github.event_name == 'push') && matrix.environment == 'staging'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
