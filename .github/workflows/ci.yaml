@@ -120,7 +120,7 @@ jobs:
 
           # In push & PR events we want the tag to contain the latest commit on the branch:
           # in push events, the latest commit of the master branch is GITHUB_SHA
-          # in PR synch the latest commit of the branch is found in github.event.pull_request.head.sha instead
+          # in PR synch the latest commit of the branch is found in github.sha instead
 
           TIMESTAMP=$(date +%s)
 
@@ -130,10 +130,18 @@ jobs:
             TIMESTAMP=""
             BATCH_IMAGE_TAG=production
           elif [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            COMMIT_SHA="${{ github.sha }}"
+              
+            # Construct the REF_ID for our pull request in the same format
+            # We can't use GITHUB_REF because it is set to master
+            # More info: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target
+            PR_GITHUB_REF="refs/pull/${{ github.event.pull_request.number }}/merge"
+            PR_REF_ID=$(echo $PR_GITHUB_REF | sed 's/\//-/g')
+
             COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
-            IMAGE_TAG="$REF_ID-$COMMIT_SHA"
+            IMAGE_TAG="$PR_REF_ID-$COMMIT_SHA"
             TIMESTAMP=$TIMESTAMP
-            BATCH_IMAGE_TAG=$REF_ID
+            BATCH_IMAGE_TAG=$PR_REF_ID
           else
             COMMIT_SHA=$GITHUB_SHA
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
