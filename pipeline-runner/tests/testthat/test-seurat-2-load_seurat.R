@@ -45,8 +45,8 @@ test_that("load_seurat has the correct structure", {
   # only the default and 'pca' reduction is present
   expect_equal(c(SeuratObject::DefaultDimReduc(orig_scdata), 'pca'), names(scdata@reductions))
 
-  # all metadata is preserved
-  expect_equal(scdata@meta.data, c(orig_scdata@meta.data, 'active.ident'))
+  # all metadata is preserved and active.ident is added
+  expect_equal(colnames(scdata@meta.data), c(colnames(orig_scdata@meta.data), 'active.ident'))
 
   # clean up
   unlink(data_dir, recursive = TRUE)
