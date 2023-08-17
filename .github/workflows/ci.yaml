@@ -138,7 +138,6 @@ jobs:
             PR_GITHUB_REF="refs/pull/${{ github.event.pull_request.number }}/merge"
             PR_REF_ID=$(echo $PR_GITHUB_REF | sed 's/\//-/g')
 
-            COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
             IMAGE_TAG="$PR_REF_ID-$COMMIT_SHA"
             TIMESTAMP=$TIMESTAMP
             BATCH_IMAGE_TAG=$PR_REF_ID
