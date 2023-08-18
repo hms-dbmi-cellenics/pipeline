@@ -222,21 +222,21 @@ jobs:
       - id: build
         name: Build Docker images
         run: |-
-          docker buildx build --target builder \
+          docker buildx build --target common \
             --output=type=docker \
-            --cache-from type=registry,ref=$PREVIOUS_IMAGE_NAME-builder \
+            --cache-from type=registry,ref=$PREVIOUS_IMAGE_NAME-common \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
-            --tag $IMAGE_NAME-builder .
+            --tag $IMAGE_NAME-common .
 
           docker buildx build --target prod \
             --output=type=docker \
-            --cache-from=$IMAGE_NAME-builder \
+            --cache-from=$IMAGE_NAME-common \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME .
 
           docker buildx build --target batch \
             --output=type=docker \
-            --cache-from=$IMAGE_NAME-builder \
+            --cache-from=$IMAGE_NAME-common \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $BATCH_IMAGE_NAME .
         env:
@@ -265,11 +265,11 @@ jobs:
       - id: push
         name: Push docker images to ECR
         run: |-
-          echo Pushing image $IMAGE_NAME-builder to ECR.
-          docker buildx build --push --target builder \
-            --cache-to type=registry,ref=$IMAGE_NAME-builder,mode=max,image-manifest=true \
+          echo Pushing image $IMAGE_NAME-common to ECR.
+          docker buildx build --push --target common \
+            --cache-to type=registry,ref=$IMAGE_NAME-common,mode=max,image-manifest=true \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
-            --tag $IMAGE_NAME-builder .
+            --tag $IMAGE_NAME-common .
 
           echo Pushing image $IMAGE_NAME to ECR.
           docker push $IMAGE_NAME
