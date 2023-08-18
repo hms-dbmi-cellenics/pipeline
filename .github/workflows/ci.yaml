@@ -256,6 +256,7 @@ jobs:
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
 
+
       - id: upload-coverage
         name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
