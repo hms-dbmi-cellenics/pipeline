@@ -5,6 +5,10 @@ const DockerEvents = require('docker-events');
 const { pt } = require('prepend-transform');
 const chalk = require('chalk');
 
+// set default values for the AWS region because otherwise setVarsInTemplate function
+// will silently fail
+process.env.AWS_DEFAULT_REGION = process.env.AWS_DEFAULT_REGION || 'eu-west-1';
+
 // Enable & connect to local Inframock.
 AWS.config.update({
   endpoint: 'http://localhost:4566',
@@ -33,7 +37,7 @@ const initStack = async () => {
 
   console.log('Creating mock Lambda function on InfraMock...');
   const cf = new AWS.CloudFormation({
-    region: process.env.AWS_DEFAULT_REGION || 'eu-west-1',
+    region: process.env.AWS_DEFAULT_REGION,
   });
 
   const stackName = {
