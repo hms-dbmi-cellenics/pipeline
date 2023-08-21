@@ -31,7 +31,7 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
     cluster_sets[[i]] <- data.frame(
       cluster = scdata@meta.data[[col]],
       cell_ids = scdata$cells_id
-    ) %>%
+    ) |>
       format_cell_sets_object(method, scdata@misc$color_pool, name = col)
   }
 
