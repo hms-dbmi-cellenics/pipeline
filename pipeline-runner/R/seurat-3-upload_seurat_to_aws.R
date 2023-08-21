@@ -95,7 +95,8 @@ find_cluster_columns <- function(scdata) {
     check_vals <- meta[[check_col]]
 
     # skip if too few or way too many values
-    n.vals <- length(table(check_vals))
+    value_counts <- table(check_vals)
+    n.vals <- length(value_counts)
     if (n.vals < 2) next()
     if (n.vals > 1000) next()
     cat("candidate cluster columns:", check_col, "--> nvals:", n.vals, '\n')
@@ -105,9 +106,8 @@ find_cluster_columns <- function(scdata) {
         !all(as.integer(check_vals) == check_vals)) next()
 
     # skip if more than 1/3 of values are repeated fewer than 4 times
-    value_counts <- table(check_vals)
     nreps_lt4 <- sum(value_counts < 4)
-    if (nreps_lt4 > length(unique(check_vals))/3) next()
+    if (nreps_lt4 > n.vals/3) next()
 
     # skip if col is same as samples or group column
     is_sample_col <- FALSE
