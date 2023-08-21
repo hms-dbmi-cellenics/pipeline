@@ -207,7 +207,7 @@ test_that("load_seurat generates HVFInfo if it is not present", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat identifies and log transforms counts stored in logcounts assay", {
+test_that("load_seurat identifies and log-transforms counts stored in data assay", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
