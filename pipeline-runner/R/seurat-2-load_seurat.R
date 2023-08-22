@@ -101,13 +101,13 @@ reconstruct_seurat <- function(dataset_fpath) {
 
   # add dispersions (need for gene list)
   tryCatch({
-    # don't use first 3 columns
-    dispersions <- Seurat::FindVariableFeatures(logcounts)[-3]
-
+    dispersions <- Seurat::FindVariableFeatures(logcounts)
     test_user_df(dispersions)
     colnames(dispersions) <- gsub('^vst[.]', '', colnames(dispersions))
-    dispersions$SYMBOL <- dispersions$ENSEMBL <- row.names(dispersions)
 
+    # keep columns that use: same as `HVFInfo(scdata)`
+    dispersions <- dispersions[, c('mean', 'variance', 'variance.standardized')]
+    dispersions$SYMBOL <- dispersions$ENSEMBL <- row.names(dispersions)
     scdata@misc$gene_dispersion <- dispersions
   },
   error = function(e) {
