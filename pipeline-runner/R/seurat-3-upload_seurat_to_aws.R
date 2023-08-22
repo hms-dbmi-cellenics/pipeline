@@ -25,8 +25,9 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   for (i in seq_along(cluster_columns)) {
     col <- cluster_columns[i]
 
-    # first cluster column used as louvain clusters
-    method <- ifelse(i == 1, 'louvain', col)
+    # first cluster column used as 'louvain' clusters if absent
+    louvain_exists <- 'louvain' %in% cluster_columns
+    method <- ifelse(i == 1 & !louvain_exists, 'louvain', col)
 
     cluster_sets[[i]] <- data.frame(
       cluster = scdata@meta.data[[col]],
