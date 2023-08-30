@@ -46,11 +46,15 @@ compute_sample_edrops <- function(sample_counts) {
 
   if (num_empty_drops < gem2s$max.empty.drops) {
     message("Detected sample as filtered --> Skipping emptyDrops.")
-    sample_edrops <- NULL
-  } else {
-    set.seed(RANDOM_SEED)
-    sample_edrops <- DropletUtils::emptyDrops(sample_counts)
+    return(NULL)
   }
 
-  return(sample_edrops)
+  set.seed(RANDOM_SEED)
+  tryCatch({
+      sample_edrops <- DropletUtils::emptyDrops(sample_counts)
+      return(sample_edrops)
+  }, error = function(e) {
+      message("Number of cells in sample too low for emptyDrops --> Skipping emptyDrops.")
+      return(NULL)
+  })
 }
