@@ -20,11 +20,12 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_
   # destructure previous output
   config <- prev_out$config
 
-  technology <- ifelse(config$input$type == "rhapsody", "rhapsody", "10x")
+  technology <- ifelse(config$input$type %in% c("rhapsody","10x_h5"),config$input$type , "10x")
 
   read_fun <- switch(technology,
     "10x" = read_10x_files,
-    "rhapsody" = read_rhapsody_files
+    "rhapsody" = read_rhapsody_files,
+    "10x_h5" = read_10x_h5_file
   )
 
   message(
@@ -44,6 +45,60 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_
   return(res)
 }
 
+#' Read h5 file
+#'
+#' Calls read10x_h5
+#'
+#' @param config
+#' @param input_dir
+#'
+#' @return
+#' @export
+#'
+#' @examples
+read_10x_h5_file <- function(config, input_dir) {
+  counts_list <- list()
+  annot_list <- list()
+
+  samples <- config$samples
+
+  for (sample in samples) {
+    sample_dir <- file.path(input_dir, sample)
+    sample_fpaths <- list.files(sample_dir)
+    sample_counts_path <- file.path(sample_dir, sample_fpaths[[1]])
+
+    message("\nSample --> ", sample)
+    message("Reading files from ",
+            sample_dir,
+            " --> ",
+            paste(sample_fpaths, collapse = " - "))
+
+    if (length(sample_fpaths) > 1)
+      stop("Only one h5 expected. More files detected.")
+
+    ungzipped_counts_path <- R.utils::gunzip(sample_counts_path)
+
+    counts_names <- Seurat::Read10X_h5(ungzipped_counts_path)
+    counts <- Seurat::Read10X_h5(ungzipped_counts_path, use.names = FALSE)
+
+    # use Gene Expression modality if multiple
+    if (methods::is(counts, 'list')) {
+      counts_names <- counts_names$`Gene Expression`
+      counts <- counts$`Gene Expression`
+    }
+
+    gene_names <- row.names(counts_names)
+
+    annotations <-
+      data.frame(input = rownames(counts), symbol = gene_names)
+    counts_list[[sample]] <- counts
+    annot_list[[sample]] <- annotations
+  }
+
+  annot <- format_annot(annot_list)
+
+  return(list(counts_list = counts_list, annot = annot))
+}
 
 #' Calls Read10X
 #'
@@ -520,3 +575,4 @@ filter_unnamed_features <- function(counts, annotations, sample) {
 
   return(list("counts" = counts, "annotations" = annotations))
 }
+

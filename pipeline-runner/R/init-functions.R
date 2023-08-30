@@ -94,7 +94,6 @@ load_config <- function(development_aws_server) {
     )
   )
 
-
   if (config$cluster_env == "staging") {
     config$api_url <- paste0("https://api-", sandbox, ".", domain_name)
   }
