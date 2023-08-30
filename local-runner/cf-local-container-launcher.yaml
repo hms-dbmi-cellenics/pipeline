@@ -37,6 +37,7 @@ Resources:
               f"--env HOST_IP=__HOST_IP__",
               f"--env DEBUG_STEP=__DEBUG_STEP__",
               f"--env DEBUG_PATH=__DEBUG_PATH__",
+              f"--env AWS_DEFAULT_REGION=__AWS_DEFAULT_REGION__",
               f"-v __DEBUG_PATH__:/debug",
               event['image']
             ])

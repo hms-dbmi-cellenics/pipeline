@@ -51,7 +51,12 @@ run_seuratv4 <- function(scdata_list, config, cells_id) {
     } else if (normalization == "SCT") {
       message("Started normalization using SCTransform")
       # conserve.memory parameter reduces the memory footprint but can significantly increase runtime
-      scdata_list[[i]] <- Seurat::SCTransform(scdata_list[[i]], vst.flavor = "v2", conserve.memory = FALSE)
+      scdata_list[[i]] <- Seurat::SCTransform(
+        scdata_list[[i]],
+        vst.flavor = "v2",
+        conserve.memory = FALSE,
+        variable.features.n = nfeatures
+      )
     } else {
       stop("No normalization method provided")
     }

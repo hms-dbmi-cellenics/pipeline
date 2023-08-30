@@ -15,15 +15,28 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   scdata <- change_sample_names_to_ids(scdata, input)
   cell_sets <- get_cell_sets(scdata, input)
 
-  # add louvain clusters
-  cluster_sets <- data.frame(
-    cluster = scdata$seurat_clusters,
-    cell_ids = scdata$cells_id
-  ) %>%
-    format_cell_sets_object('louvain', scdata@misc$color_pool)
+  # detect cluster metadata
+  cluster_columns <- find_cluster_columns(scdata)
+  if (!length(cluster_columns))
+    stop(errors$ERROR_SEURAT_CLUSTERS, call. = FALSE)
+
+  # add clusters
+  cluster_sets <- list()
+  for (i in seq_along(cluster_columns)) {
+    col <- cluster_columns[i]
+
+    # first cluster column used as 'louvain' clusters
+    method <- ifelse(i == 1, 'louvain', col)
+
+    cluster_sets[[i]] <- data.frame(
+      cluster = scdata@meta.data[[col]],
+      cell_ids = scdata$cells_id
+    ) |>
+      format_cell_sets_object(method, scdata@misc$color_pool, name = col)
+  }
 
   # cell sets file to s3
-  cell_sets$cellSets <- c(list(cluster_sets), cell_sets$cellSets)
+  cell_sets$cellSets <- c(cluster_sets, cell_sets$cellSets)
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
 
   put_object_in_s3(pipeline_config,
@@ -64,6 +77,69 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
+find_cluster_columns <- function(scdata) {
+
+  # exclude all group columns, including duplicates
+  group_cols <- find_group_columns(scdata, remove.dups = FALSE)
+  exclude_cols <- c(group_cols, 'samples')
+
+  # order meta to indicate preference for louvain clusters
+  meta <- scdata@meta.data
+  louvain_cols <- c('louvain', 'active.ident', 'seurat_clusters')
+  meta <- meta |> dplyr::relocate(dplyr::any_of(louvain_cols))
+
+  check_cols <- setdiff(colnames(meta), exclude_cols)
+
+  cluster_cols <- c()
+  for (check_col in check_cols) {
+    check_vals <- meta[[check_col]]
+
+    # skip if too few or way too many values
+    value_counts <- table(check_vals)
+    n.vals <- length(value_counts)
+    if (n.vals < 2) next()
+    if (n.vals > 1000) next()
+    cat("candidate cluster columns:", check_col, "--> nvals:", n.vals, '\n')
+
+    # skip if values are numeric but non-integer
+    if (is.numeric(check_vals) &&
+        !all(as.integer(check_vals) == check_vals)) next()
+
+    # skip if more than 1/3 of values are repeated fewer than 4 times
+    nreps_lt4 <- sum(value_counts < 4)
+    if (nreps_lt4 > n.vals/3) next()
+
+    # skip if col is same as samples or group column
+    is_sample_col <- FALSE
+    for (exclude_col in exclude_cols)  {
+      exclude_vals <- meta[[exclude_col]]
+      if (test_groups_equal(check_vals, exclude_vals)) {
+        is_sample_col <- TRUE
+        break
+      }
+    }
+    if (is_sample_col) next()
+
+    # TODO: decide if should skip if values are boolean?
+    # add remains to cluster_cols
+    cluster_cols <- c(cluster_cols, check_col)
+  }
+
+  return(cluster_cols)
+}
+
+make_vals_numeric <- function(vals) {
+  as.numeric(factor(vals, levels = unique(vals)))
+}
+
+test_groups_equal <- function(vals1, vals2) {
+  vals1 <- make_vals_numeric(vals1)
+  vals2 <- make_vals_numeric(vals2)
+
+  all(vals1 == vals2)
+}
+
+
 add_samples_to_input <- function(scdata, input) {
   samples <- unique(scdata$samples)
   input$sampleNames <- samples
@@ -96,7 +172,7 @@ add_metadata_to_input <- function(scdata, input) {
 }
 
 # get column names that are consistent with sample groups
-find_group_columns <- function(scdata) {
+find_group_columns <- function(scdata, remove.dups = TRUE) {
   meta <- scdata@meta.data
 
   ndistinct_sample <- meta |>
@@ -118,10 +194,15 @@ find_group_columns <- function(scdata) {
   one.per.sample <- apply(ndistinct_sample, 2, function(x) all(x == 1))
   group.cols <- names(ndistinct)[!too.many & !too.few & one.per.sample]
 
+  # remove duplicated group columns
+  if (remove.dups) {
+    meta[group.cols] <- lapply(meta[group.cols], make_vals_numeric)
+    dups <- duplicated(as.list(meta))
+    group.cols <- group.cols[group.cols %in% colnames(meta)[!dups]]
+  }
+
   return(group.cols)
 }
-
-
 
 # add 'cells_id'
 # 'samples' must be already added
