@@ -123,30 +123,30 @@ test_that("find_group_columns finds all group columns that are superset of sampl
 
   # ignores column that is just duplicate of samples
   scdata$samples_copy <- as.numeric(as.factor(samples))
-  expect_length(find_group_columns(scdata), 0)
+  expect_length(find_group_columns(scdata@meta.data), 0)
 
   # finds column that has two samples per group
   scdata$group1 <- ifelse(samples %in% c('A', 'B'), 'AB', 'CD')
-  expect_equal(find_group_columns(scdata), 'group1')
+  expect_equal(find_group_columns(scdata@meta.data), 'group1')
 
   # ignores column that has same grouping as another group column
   scdata$group1_copy <- ifelse(samples %in% c('A', 'B'), 'group_ab', 'group_cd')
-  expect_equal(find_group_columns(scdata), 'group1')
+  expect_equal(find_group_columns(scdata@meta.data), 'group1')
 
   # keeps column with same grouping as another if remove.dups is FALSE
-  expect_equal(find_group_columns(scdata, remove.dups = FALSE), c('group1', 'group1_copy'))
+  expect_equal(find_group_columns(scdata@meta.data, remove.dups = FALSE), c('group1', 'group1_copy'))
 
   # finds column that has three samples in one group
   scdata$group2 <- ifelse(samples %in% c('A', 'B', 'C'), 'ABC', 'D')
-  expect_equal(find_group_columns(scdata), c('group1', 'group2'))
+  expect_equal(find_group_columns(scdata@meta.data), c('group1', 'group2'))
 
   # ignores column that has all samples together (trivial)
   scdata$group3 <- 'ABCD'
-  expect_equal(find_group_columns(scdata), c('group1', 'group2'))
+  expect_equal(find_group_columns(scdata@meta.data), c('group1', 'group2'))
 
   # ignores columns that divide a sample between two+ groups
   scdata$group4 <- rep(LETTERS[1:8], each = ncol(scdata)/8)
-  expect_equal(find_group_columns(scdata), c('group1', 'group2'))
+  expect_equal(find_group_columns(scdata@meta.data), c('group1', 'group2'))
 })
 
 test_that("make_vals_numeric turns equivalent groups into identical vectors", {

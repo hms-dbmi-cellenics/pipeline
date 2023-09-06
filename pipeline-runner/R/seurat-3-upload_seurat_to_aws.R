@@ -80,7 +80,7 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 find_cluster_columns <- function(scdata) {
 
   # exclude all group columns, including duplicates
-  group_cols <- find_group_columns(scdata, remove.dups = FALSE)
+  group_cols <- find_group_columns(scdata@meta.data, remove.dups = FALSE)
   exclude_cols <- c(group_cols, 'samples')
 
   # order meta to indicate preference for louvain clusters
@@ -155,7 +155,7 @@ change_sample_names_to_ids <- function(scdata, input) {
 }
 
 add_metadata_to_input <- function(scdata, input) {
-  group_cols <- find_group_columns(scdata)
+  group_cols <- find_group_columns(scdata@meta.data)
 
   metadata <- list()
   meta_vals <- scdata@meta.data[!duplicated(scdata$samples), ]
@@ -172,18 +172,17 @@ add_metadata_to_input <- function(scdata, input) {
 }
 
 # get column names that are consistent with sample groups
-find_group_columns <- function(scdata, remove.dups = TRUE) {
-  meta <- scdata@meta.data
+find_group_columns <- function(metadata, remove.dups = TRUE) {
 
-  ndistinct_sample <- meta |>
+  ndistinct_sample <- metadata |>
     dplyr::group_by(samples) |>
     dplyr::summarise_all(dplyr::n_distinct) |>
-    dplyr::select(colnames(meta))
+    dplyr::select(colnames(metadata))
 
-  ndistinct <- meta |>
+  ndistinct <- metadata |>
     dplyr::summarise_all(dplyr::n_distinct)
 
-  nsamples <- length(unique(scdata$samples))
+  nsamples <- length(unique(metadata$samples))
 
   # group columns must:
   # - have fewer than the number of samples
@@ -196,9 +195,9 @@ find_group_columns <- function(scdata, remove.dups = TRUE) {
 
   # remove duplicated group columns
   if (remove.dups) {
-    meta[group.cols] <- lapply(meta[group.cols], make_vals_numeric)
-    dups <- duplicated(as.list(meta))
-    group.cols <- group.cols[group.cols %in% colnames(meta)[!dups]]
+    metadata[group.cols] <- lapply(metadata[group.cols], make_vals_numeric)
+    dups <- duplicated(as.list(metadata))
+    group.cols <- group.cols[group.cols %in% colnames(metadata)[!dups]]
   }
 
   return(group.cols)
