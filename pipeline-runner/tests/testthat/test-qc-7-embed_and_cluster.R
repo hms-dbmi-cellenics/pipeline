@@ -1,19 +1,9 @@
-mock_req <- function(type = "louvain") {
-  req <- list(body =
-                list(
-                  config = list(
-                    resolution = 2,
-                    apiUrl = "mock_api_url",
-                    authJwt = "mock_auth"
-
-                  ),
-                  type = type
-                ))
-}
-
 mock_scdata <- function() {
   data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
+  # shuffle cell ids, as we do in the platform
+  set.seed(1)
+  pbmc_small$cells_id <- sample(0:(ncol(pbmc_small) - 1))
+  pbmc_small$samples <- rep_len(paste0("sample_", 1:4), ncol(pbmc_small))
   pbmc_small@misc$gene_annotations <- data.frame(
     input = paste0("ENSG", seq_len(nrow(pbmc_small))),
     name = row.names(pbmc_small),
@@ -39,6 +29,31 @@ mock_color_pool <- function(n) {
   paste0("color_", 1:n)
 }
 
+
+mock_cl_metadata <- function(scdata) {
+  barcode <-  rownames(scdata@meta.data)
+  sample_name <- rep_len(paste0("sample_", 1:4), length(barcode))
+  cell_type <- rep_len(paste0("cell_type_", 1:10), length(barcode))
+  group_var <- rep_len(paste0("group_", 1:2), length(barcode))
+  redundant_group_var <- paste0("red_group_", sample_name)
+  continuos_var <- rnorm(length(barcode))
+
+  data.table::data.table(barcode, sample_name, cell_type, group_var, redundant_group_var, continuos_var)
+}
+
+
+mock_config <- function() {
+  config <-
+    list(clusteringSettings = list(
+      method = "louvain",
+      methodSettings = list(louvain = list(resolution = "0.8"))
+    ),
+    aws_config = list(aws = "mock_aws"),
+    metadataS3Path = "mock_s3_path"
+    )
+
+  return(config)
+}
 
 
 test_that("runClusters returns correct keys", {
@@ -323,3 +338,32 @@ test_that("getClusters uses the default value of 10 if there are enough PCs avai
 
 
 
+test_that("get_cell_id_barcode_map returns correct table with barcode and cell ids", {
+  scdata <- mock_scdata()
+  res <- get_cell_id_barcode_map(scdata)
+
+  expect_named(res, c("barcode", "cells_id", "samples"))
+  expect_type(res$barcode, "character")
+  expect_type(res$cells_id, "integer")
+  expect_type(res$samples, "character")
+  expect_equal(nrow(res), ncol(scdata))
+})
+
+
+
+test_that("make_cl_metadata_table correctly joins cell ids to metadata table", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  expect_named(res, c(names(cl_meta), "cells_id"))
+  expect_equal(rownames(scdata@meta.data), res$barcode)
+  expect_equal(scdata@meta.data$cells_id, res$cells_id)
+})
+
+
+test_that("make_cl_metadata_cellset makes correctly formatted cellsets", {
+
+})

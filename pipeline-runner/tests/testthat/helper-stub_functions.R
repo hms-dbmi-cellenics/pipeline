@@ -200,7 +200,7 @@ stubbed_upload_to_aws <- function(input, pipeline_config, prev_out) {
 }
 
 
-stub_update_sets_through_api <- function(cell_sets_object,
+stub_update_clusters_through_api <- function(cell_sets_object,
                                          api_url,
                                          experiment_id,
                                          cell_set_key,
@@ -227,8 +227,8 @@ stub_update_sets_through_api <- function(cell_sets_object,
 stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert) {
 
   mockery::stub(embed_and_cluster,
-                "update_sets_through_api",
-                stub_update_sets_through_api)
+                "update_clusters_through_api",
+                stub_update_clusters_through_api)
 
   embed_and_cluster(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert)
 }

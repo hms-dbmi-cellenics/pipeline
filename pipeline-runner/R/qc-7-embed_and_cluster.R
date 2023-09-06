@@ -36,8 +36,9 @@ embed_and_cluster <-
       ignore_ssl_cert
     )
 
-    # the result object will have to conform to this format:
-    # {data, config, plotData : {plot1, plot2}}
+    add_cl_metadata(scdata, config)
+
+
     result <- list(
       data = scdata,
       new_ids = cells_id,
@@ -110,3 +111,195 @@ update_clusters_through_api <-
                         "Authorization" = auth_JWT)
     )
   }
+
+
+add_cl_metadata <- function(scdata, config) {
+  s3 <- paws::s3(config = config$aws_config)
+  s3_path <- config$metadataS3Path
+
+  if (is.null(s3_path)) {
+    break
+  } else {
+    # TODO figure out best way to temporarily store file, or read from S3 directly
+    file_path <- file.path("/", basename(s3_path))
+    download_and_store(bucket_list$cl_metadata_bucket, s3_path, file_path, s3)
+    cl_metadata <- data.table::fread(file_path)
+
+    # TODO deduplicate using sample column (if present) in the cell-level metadata file
+    cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
+
+    # remove previously uploaded cell level metadata (to allow user to replace the file)
+    delete_cl_metadata_through_api(config$api_url,
+                                   config$experimentId, # ideally get from somewhere in config, if not, scdata
+                                   config$auth_JWT,
+                                   config$ignore_ssl_cert)
+
+    # extract barcode - cell_id (keep sample column for variable type detection)
+    barcode_cell_id_map <- get_cell_id_barcode_map(scdata)
+
+    # makes cell_id - metadata table
+    cl_metadata <-
+      make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
+
+    # detect cell level metadata types (see design doc)
+    # - group (CLMPerSample, like metadataCategorital)
+    # - "cellset type" (CLM, like cellSets)
+    # - excludes continuous/high cardinality variables (to avoid infinite cellsets)
+    var_types <- detect_variable_types(cl_metadata)
+
+    # creates cell-level metadata cellsets, setting the correct type
+    add_cell_level_cellsets(cellsets, cl_metadata, var_types)
+
+  }
+
+
+}
+
+
+deduplicate_cl_metadata <- function(scdata, cl_metadata) {
+
+}
+
+
+#' delete previous cell-level metadata cellsets
+#'
+#' Removes pre-existing cl metadata cellsets before adding new ones. Allows a
+#' user to upload a new cl metadata file to replace a previous one.
+#'
+#' @param api_url
+#' @param experiment_id
+#' @param auth_JWT
+#' @param ignore_ssl_cert
+#' @param types_to_remove character vector with cellset types to remove
+#'
+#' @return
+#' @export
+#'
+delete_cl_metadata_through_api <-
+  function(api_url,
+           experiment_id,
+           auth_JWT,
+           ignore_ssl_cert,
+           types_to_remove = c("CLM", "CLMPerSample")) {
+    message("Deleting elements with specified types through API")
+
+    # Constructing query to remove multiple types
+    types_string <-
+      paste(sapply(types_to_remove, function(x)
+        paste0("@.type == \"", x, "\"")), collapse = " || ")
+    httr_query_remove <- paste0("$[?(", types_string, ")]")
+
+    if (ignore_ssl_cert) {
+      httr::set_config(httr::config(ssl_verifypeer = 0L))
+    }
+
+    httr::PATCH(
+      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
+      body = list(list(
+        "$match" = list(query = httr_query_remove, value = list("$remove" = TRUE))
+      )),
+      encode = "json",
+      httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
+                        "Authorization" = auth_JWT)
+    )
+  }
+
+
+get_cell_id_barcode_map <- function(scdata) {
+  data.table::as.data.table(scdata@meta.data[c("cells_id", "samples")], keep.rownames = "barcode")
+}
+
+
+# make the cell-level metadata table, containing cells_id and the variables
+# to convert to cellsets
+make_cl_metadata_table <- function(cl_metadata, barcode_cell_ids) {
+  vars_to_add <- setdiff("barcode", names(cl_metadata))
+  data.table::setDT(cl_metadata)
+  #c("cells_id", ..vars_to_add)
+  cl_metadata[barcode_cell_ids, , on = c("barcode" = "barcode")]
+}
+
+
+find_clm_columns <- function(check_vals) {
+  # TODO refactor along pipeline::find_cluster_columns
+
+  # skip if too few or way too many values
+  value_counts <- table(check_vals)
+  n.vals <- length(value_counts)
+  if (n.vals < 2) {
+    return(FALSE)
+  }
+  if (n.vals > 1000) {
+    return(FALSE)
+  }
+
+  # skip if values are numeric but non-integer
+  if (is.numeric(check_vals) &&
+      !all(as.integer(check_vals) == check_vals)) {
+    return(FALSE)
+  }
+
+  # skip if more than 1/3 of values are repeated fewer than 4 times
+  nreps_lt4 <- sum(value_counts < 4)
+  if (nreps_lt4 > n.vals / 3) {
+    return(FALSE)
+  }
+  return(TRUE)
+}
+
+
+detect_variable_types <- function(cl_metadata) {
+
+  # do not remove dups; if a user uploads some metadata it should be there
+  clm_per_sample_cols <- find_group_columns(cl_metadata, remove.dups = F)
+
+  undesirable_cols <- lapply(cl_metadata[, -..group_cols], find_clm_cols)
+  clm_cols <- names(undesirable_cols[unlist(undesirable_cols)])
+
+  return(list(clm = clm_cols, clm_per_sample = clm_per_sample_cols))
+}
+
+
+make_cl_metadata_cellset <- function(cl_metadata, variable, type, color_pool) {
+
+  cl_metadata_cellset <- list(
+    key = uuid::UUIDgenerate(),
+    name = variable,
+    rootNode = TRUE,
+    children = list(),
+    type = type
+  )
+
+  values <- unique(cl_metadata[[variable]])
+
+  for (i in seq_along(values)) {
+    cl_metadata_cellset$children[[i]] <- list(
+      key = uuid::UUIDgenerate(),
+      name = values[i],
+      color = color_pool[1],
+      cellIds = ensure_is_list_in_json(cl_metadata[get(variable) == values[i], cells_id])
+    )
+    color_pool <- color_pool[-1]
+  }
+
+  return(cl_metadata_cellset)
+
+}
+
+
+add_cellset_group <- function(cellsets, cellset_to_add) {
+  # add group to the end of cellset list
+  cellsets$cellSets[[length(cellsets$cellSets) + 1]] <- cellset_to_add
+
+  return(cellsets)
+}
+
+
+add_cell_level_cellsets <- function(cellsets, cl_metadata, var_types) {
+  vars_to_cellset <- grep("cells_id", names(cl_metadata), value = T, invert = T)
+  for (var in vars_to_cellset) {
+    cellset_to_add <- make_cl_metadata_cellset(cl_metadata, var, var_type[[var]], color_pool)
+    cellsets <- add_cellset_group(cellsets, cellset_to_add)
+  }
+  return(cellsets)
+}
