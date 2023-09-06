@@ -11,27 +11,23 @@
 #' @export
 #'
 embed_and_cluster <-
-  function(scdata,
+ function(scdata,
            config,
            sample_id,
            cells_id,
            task_name = "configureEmbedding",
            ignore_ssl_cert = FALSE) {
 
-    message("starting clusters")
     clustering_method <- config$clusteringSettings$method
     methodSettings <-
       config$clusteringSettings$methodSettings[[clustering_method]]
-    message("Running clustering")
     cellSets <-
       runClusters(clustering_method, methodSettings$resolution, scdata)
-    message("formatting cellsets")
 
     formated_cell_sets <-
-      format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
-    message("updating through api")
+      format_cluster_cellsets(cellSets, clustering_method, scdata@misc$color_pool)
 
-    update_sets_through_api(
+    update_clusters_through_api(
       formated_cell_sets,
       config$api_url,
       scdata@misc$experimentId,
@@ -52,75 +48,55 @@ embed_and_cluster <-
     return(result)
   }
 
-#' Ensure is list in json
-#'
-#' When sending responses as json, Vectors of length 0 or 1 are converted to
-#' null and scalar (respectively) Using as.list fixes this, however, long R
-#' lists take a VERY long time to be converted to JSON.
-#' This function deals with the problematic cases, leaving vector as a vector
-#' when it isnt a problem.
-#'
-#' @param vector
-#'
-#' @export
-#'
-ensure_is_list_in_json <- function(vector) {
-  if (length(vector) <= 1) {
-    return(as.list(vector))
-  } else {
-    return(vector)
+
+format_cluster_cellsets <- function(cell_sets,
+                                    clustering_method,
+                                    color_pool,
+                                    name = paste0(clustering_method, " clusters")) {
+  message("Formatting cluster cellsets.")
+
+  # careful with capital l on type for the key.
+  cell_sets_object <-
+    list(
+      key = clustering_method,
+      name = name,
+      rootNode = TRUE,
+      type = "cellSets",
+      children = list()
+    )
+  for (cluster in sort(unique(cell_sets$cluster))) {
+    cells <- cell_sets[cell_sets$cluster == cluster, "cell_ids"]
+    is.num <- !is.na(as.numeric(cluster))
+    set_name <- ifelse(is.num, paste("Cluster", cluster), cluster)
+
+    new_set <- list(
+      key = paste0(clustering_method, "-", cluster),
+      name = set_name,
+      rootNode = FALSE,
+      type = "cellSets",
+      color = color_pool[1],
+      cellIds = ensure_is_list_in_json(unname(cells))
+    )
+    color_pool <- color_pool[-1]
+    cell_sets_object$children <-
+      append(cell_sets_object$children, list(new_set))
   }
+  return(cell_sets_object)
 }
 
-format_cell_sets_object <- function(
-    cell_sets,
-    clustering_method,
-    color_pool,
-    name = paste0(clustering_method, " clusters")
-    ) {
 
-    # careful with capital l on type for the key.
-    cell_sets_object <-
-      list(
-        key = clustering_method,
-        name = name,
-        rootNode = TRUE,
-        type = "cellSets",
-        children = list()
-      )
-    for (cluster in sort(unique(cell_sets$cluster))) {
-      cells <- cell_sets[cell_sets$cluster == cluster, "cell_ids"]
-      is.num <- !is.na(as.numeric(cluster))
-      set_name <- ifelse(is.num, paste("Cluster", cluster), cluster)
-
-      new_set <- list(
-        key = paste0(clustering_method, "-", cluster),
-        name = set_name,
-        rootNode = FALSE,
-        type = "cellSets",
-        color = color_pool[1],
-        cellIds = ensure_is_list_in_json(unname(cells))
-      )
-      color_pool <- color_pool[-1]
-      cell_sets_object$children <-
-        append(cell_sets_object$children, list(new_set))
-    }
-    return(cell_sets_object)
-  }
-
-update_sets_through_api <-
+update_clusters_through_api <-
   function(cell_sets_object,
            api_url,
            experiment_id,
            cell_set_key,
            auth_JWT,
-           ignore_ssl_cert
-    ) {
-
+           ignore_ssl_cert) {
+    message("updating cellsets through API")
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
     if (ignore_ssl_cert) {
-        httr::set_config(httr::config(ssl_verifypeer = 0L))
+      httr::set_config(httr::config(ssl_verifypeer = 0L))
     }
 
     httr::PATCH(

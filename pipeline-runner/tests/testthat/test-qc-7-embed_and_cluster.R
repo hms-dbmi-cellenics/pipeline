@@ -118,9 +118,9 @@ test_that("runClusters uses active.reduction in misc slot", {
 })
 
 with_fake_http(
-  test_that("update_sets_through_api sends patch request", {
+  test_that("update_clusters_through_api sends patch request", {
     expect_PATCH(
-      update_sets_through_api(
+      update_clusters_through_api(
         list(),
         "api_url",
         "experiment_id",
@@ -133,10 +133,10 @@ with_fake_http(
 )
 
 with_fake_http(
- test_that("update_sets_through_api diables SSL certificate checking if disabled", {
+ test_that("update_clusters_through_api diables SSL certificate checking if disabled", {
 
     expect_PATCH(
-      update_sets_through_api(
+      update_clusters_through_api(
         list(),
         "api_url",
         "experiment_id",
@@ -153,7 +153,7 @@ with_fake_http(
   })
 )
 
-test_that("format_cell_sets_object returns correct items", {
+test_that("format_cluster_cellsets returns correct items", {
   n_clusters <- 5
   cell_sets <- mock_cellset_object(1000, n_clusters)
   color_pool <- mock_color_pool(n_clusters)
@@ -168,7 +168,7 @@ test_that("format_cell_sets_object returns correct items", {
   )
 
   for (algo in algos) {
-    res <- format_cell_sets_object(cell_sets, algo, color_pool)
+    res <- format_cluster_cellsets(cell_sets, algo, color_pool)
 
     # expect all keys present
     expect_setequal(names(res), names(types))
@@ -180,7 +180,7 @@ test_that("format_cell_sets_object returns correct items", {
 })
 
 
-test_that("format_cell_sets_object correctly formats a cellset object", {
+test_that("format_cluster_cellsets correctly formats a cellset object", {
 
   n_clusters <- 5
   cell_sets <- mock_cellset_object(1000, n_clusters)
@@ -190,7 +190,7 @@ test_that("format_cell_sets_object correctly formats a cellset object", {
   expected_items <- c("key", "name", "rootNode", "type", "color", "cellIds")
 
   for (algo in algos) {
-    res <- format_cell_sets_object(cell_sets, algo, color_pool)
+    res <- format_cluster_cellsets(cell_sets, algo, color_pool)
 
 
     # each children has the expected items
@@ -209,7 +209,7 @@ test_that("format_cell_sets_object correctly formats a cellset object", {
 })
 
 
-test_that("format_cell_sets_object result has correct number of clusters",{
+test_that("format_cluster_cellsets result has correct number of clusters",{
   n_clusters <- c(0, 1, 4, 6)
   algos <- c("louvain", "leiden")
 
@@ -218,7 +218,7 @@ test_that("format_cell_sets_object result has correct number of clusters",{
       cell_sets <- mock_cellset_object(100, n)
       color_pool <- mock_color_pool(n)
 
-      res <- format_cell_sets_object(cell_sets, algo, color_pool)
+      res <- format_cluster_cellsets(cell_sets, algo, color_pool)
 
       # number of clusters is the number of children elements
       expect_equal(length(res$children), n)
@@ -226,7 +226,7 @@ test_that("format_cell_sets_object result has correct number of clusters",{
     }}
 })
 
-test_that("format_cell_sets_object returns empty children on empty cellset", {
+test_that("format_cluster_cellsets returns empty children on empty cellset", {
   n_clusters <- 5
   cell_sets <- mock_cellset_object(0, n_clusters)
 
@@ -234,7 +234,7 @@ test_that("format_cell_sets_object returns empty children on empty cellset", {
   algos <- c("louvain", "leiden")
 
   for (algo in algos) {
-    res <- format_cell_sets_object(cell_sets, algo, color_pool)
+    res <- format_cluster_cellsets(cell_sets, algo, color_pool)
     expect_equal(length(res$children), 0)
   }
 })
