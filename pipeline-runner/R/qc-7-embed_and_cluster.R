@@ -126,6 +126,7 @@ add_cl_metadata <- function(scdata, config) {
     cl_metadata <- data.table::fread(file_path)
 
     # TODO deduplicate using sample column (if present) in the cell-level metadata file
+    # TODO add "duplicated" variable to cl_metadata table to create cellset for duplicated barcodes
     cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
 
     # remove previously uploaded cell level metadata (to allow user to replace the file)
@@ -157,7 +158,10 @@ add_cl_metadata <- function(scdata, config) {
 
 
 deduplicate_cl_metadata <- function(scdata, cl_metadata) {
+  # try to deduplicate barcodes using sample information (assuming barcodes are not
+  # duplicated in a single sample; they would be assigned to the same droplet)
 
+  # add "duplicated" variable to cl_metadata, to create a cellset that contains them.
 }
 
 
