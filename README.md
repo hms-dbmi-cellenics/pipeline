@@ -172,4 +172,27 @@ Execution halted
 Turn off firewall or allow incoming traffic. This would allow AWS to send packages to the pipeline, which would otherwise be blocked by the firewall.
 
 1. Open *Firewall Configuration* from the Start Menu.
-2. Select **Allow** in the **Outgoing** dropdown menu (Alternatively, set **Status** to OFF). 
+2. Select **Allow** in the **Outgoing** dropdown menu (Alternatively, set **Status** to OFF).
+
+#### Javascript not connecting to the docker daemon
+When running the pipeline locally if you get: 
+``` bash
+Creating mock Lambda function on InfraMock...
+Stack with ARN arn:aws:cloudformation:eu-west-1:000000000000:stack/local-container-launcher/f693a088 successfully created.
+Waiting for Docker events...
+pipeline/local-runner/src/app.js:88
+    containers.forEach((info) => {
+               ^
+
+TypeError: Cannot read property 'forEach' of null
+    at Object.callback (pipeline/local-runner/src/app.js:88:16)
+    at pipeline/local-runner/node_modules/dockerode/lib/docker.js:428:12
+    at Modem.buildPayload (pipeline/local-runner/node_modules/docker-modem/lib/modem.js:297:19)
+    at ClientRequest.<anonymous> (pipeline/local-runner/node_modules/docker-modem/lib/modem.js:282:10)
+```
+
+To solve this you need to Allow the default Docker socket to be used by third parties 
+
+1. Open 'Settings' in the Docker desktop app (GUI)
+2. Click Advanced
+3. Make sure the setting 'Allow the default Docker socket to be used' is turned on
