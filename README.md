@@ -176,7 +176,7 @@ Turn off firewall or allow incoming traffic. This would allow AWS to send packag
 
 #### Javascript not connecting to the docker daemon
 When running the pipeline locally if you get: 
-``` bash
+```bash
 Creating mock Lambda function on InfraMock...
 Stack with ARN arn:aws:cloudformation:eu-west-1:000000000000:stack/local-container-launcher/f693a088 successfully created.
 Waiting for Docker events...
