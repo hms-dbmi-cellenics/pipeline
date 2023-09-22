@@ -117,9 +117,8 @@ add_cl_metadata <- function(scdata, config) {
   s3 <- paws::s3(config = config$aws_config)
   s3_path <- config$metadataS3Path
 
-  if (is.null(s3_path)) {
-    break
-  } else {
+  # if no tsv uploaded skip all this
+  if (!is.null(s3_path)) {
     # TODO figure out best way to temporarily store file, or read from S3 directly
     file_path <- file.path("/", basename(s3_path))
     download_and_store(bucket_list$cl_metadata_bucket, s3_path, file_path, s3)
@@ -127,7 +126,7 @@ add_cl_metadata <- function(scdata, config) {
 
     # TODO deduplicate using sample column (if present) in the cell-level metadata file
     # TODO add "duplicated" variable to cl_metadata table to create cellset for duplicated barcodes
-    cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
+    #cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
 
     # remove previously uploaded cell level metadata (to allow user to replace the file)
     delete_cl_metadata_through_api(config$api_url,
@@ -150,10 +149,7 @@ add_cl_metadata <- function(scdata, config) {
 
     # creates cell-level metadata cellsets, setting the correct type
     add_cell_level_cellsets(cellsets, cl_metadata, var_types)
-
   }
-
-
 }
 
 
@@ -217,10 +213,17 @@ get_cell_id_barcode_map <- function(scdata) {
 # make the cell-level metadata table, containing cells_id and the variables
 # to convert to cellsets
 make_cl_metadata_table <- function(cl_metadata, barcode_cell_ids) {
-  vars_to_add <- setdiff("barcode", names(cl_metadata))
+  #vars_to_add <- setdiff("barcode", names(cl_metadata))
   data.table::setDT(cl_metadata)
-  #c("cells_id", ..vars_to_add)
-  cl_metadata[barcode_cell_ids, , on = c("barcode" = "barcode")]
+
+  join_cols <- c("barcode", "samples")
+  if (!"samples" %in% names(cl_metadata)) {
+    join_cols <- setdiff(join_cols, "samples")
+    # remove samples from barcode-cell_id map if not used for join
+    barcode_cell_ids[,samples := NULL]
+  }
+
+  cl_metadata[barcode_cell_ids, , on = join_cols]
 }
 
 
@@ -300,7 +303,7 @@ add_cellset_group <- function(cellsets, cellset_to_add) {
 
 
 add_cell_level_cellsets <- function(cellsets, cl_metadata, var_types) {
-  vars_to_cellset <- grep("cells_id", names(cl_metadata), value = T, invert = T)
+  vars_to_cellset <- setdiff(names(cl_metadata), "cells_id")
   for (var in vars_to_cellset) {
     cellset_to_add <- make_cl_metadata_cellset(cl_metadata, var, var_type[[var]], color_pool)
     cellsets <- add_cellset_group(cellsets, cellset_to_add)

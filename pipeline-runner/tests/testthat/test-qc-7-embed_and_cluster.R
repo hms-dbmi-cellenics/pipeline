@@ -32,13 +32,13 @@ mock_color_pool <- function(n) {
 
 mock_cl_metadata <- function(scdata) {
   barcode <-  rownames(scdata@meta.data)
-  sample_name <- rep_len(paste0("sample_", 1:4), length(barcode))
+  samples <- rep_len(paste0("sample_", 1:4), length(barcode))
   cell_type <- rep_len(paste0("cell_type_", 1:10), length(barcode))
   group_var <- rep_len(paste0("group_", 1:2), length(barcode))
-  redundant_group_var <- paste0("red_group_", sample_name)
-  continuos_var <- rnorm(length(barcode))
+  redundant_group_var <- paste0("red_group_", samples)
+  continuous_var <- rnorm(length(barcode))
 
-  data.table::data.table(barcode, sample_name, cell_type, group_var, redundant_group_var, continuos_var)
+  data.table::data.table(barcode, samples, cell_type, group_var, redundant_group_var, continuous_var)
 }
 
 
@@ -361,6 +361,31 @@ test_that("make_cl_metadata_table correctly joins cell ids to metadata table", {
   expect_named(res, c(names(cl_meta), "cells_id"))
   expect_equal(rownames(scdata@meta.data), res$barcode)
   expect_equal(scdata@meta.data$cells_id, res$cells_id)
+})
+
+
+test_that("make_cl_metadata_table joins on samples and barcode if samples column in user-supplied cl metadata", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  expect_true("samples" %in% names(res))
+})
+
+
+test_that("make_cl_metadata_table joins barcode only if no samples column in user-supplied cl metadata", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  # remove samples column from cell-level metadata
+  cl_meta[, samples:= NULL]
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  expect_true(!"samples" %in% names(res))
 })
 
 
