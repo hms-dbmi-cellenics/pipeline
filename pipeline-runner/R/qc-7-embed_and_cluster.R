@@ -205,28 +205,60 @@ delete_cl_metadata_through_api <-
   }
 
 
+#' extract cell_id - barcode map
+#'
+#' Helper to get required variables from the SeuratObject
+#'
+#' @param scdata SeuratObject
+#'
+#' @return data.table containing cells_id, barcode, samples
+#' @export
+#'
 get_cell_id_barcode_map <- function(scdata) {
   data.table::as.data.table(scdata@meta.data[c("cells_id", "samples")], keep.rownames = "barcode")
 }
 
 
-# make the cell-level metadata table, containing cells_id and the variables
-# to convert to cellsets
+#' make cell-level metadata - cell_ids table
+#'
+#' Joins user supplied tsv file with the barcode-cell_id map, so that each cell_id
+#' is assigned to the corresponding values of the cell-level metadata variables
+#' provided.
+#'
+#' If a samples column is available, join is performed using the primary key
+#' samples + barcode, to avoid duplicated barcodes.
+#'
+#' @param cl_metadata data.table with cell-level metadata
+#' @param barcode_cell_ids data.table of barcodes, cell_ids and samples from scdata
+#'
+#' @return data.table of cell_ids and cell-level metadata
+#' @export
 make_cl_metadata_table <- function(cl_metadata, barcode_cell_ids) {
   #vars_to_add <- setdiff("barcode", names(cl_metadata))
-  data.table::setDT(cl_metadata)
+  #data.table::setDT(cl_metadata)
 
   join_cols <- c("barcode", "samples")
   if (!"samples" %in% names(cl_metadata)) {
     join_cols <- setdiff(join_cols, "samples")
     # remove samples from barcode-cell_id map if not used for join
-    barcode_cell_ids[,samples := NULL]
+    barcode_cell_ids <- barcode_cell_ids[, -"samples"]
   }
 
   cl_metadata[barcode_cell_ids, , on = join_cols]
 }
 
 
+#' check if variable is acceptable as cell-level metadata
+#'
+#' Tests values using several heurisitics to determine if a variable has a reasonable
+#' number of values to be made into cellsets. Cellsets are categorical, therefore
+#' continuous or high-cardinality variables are filtered out.
+#'
+#' @param check_vals vector of arbitrary type
+#'
+#' @return boolean specifying if variable is desirable or not
+#' @export
+#'
 find_clm_columns <- function(check_vals) {
   # TODO refactor along pipeline::find_cluster_columns
 
@@ -260,7 +292,7 @@ detect_variable_types <- function(cl_metadata) {
   # do not remove dups; if a user uploads some metadata it should be there
   clm_per_sample_cols <- find_group_columns(cl_metadata, remove.dups = F)
 
-  undesirable_cols <- lapply(cl_metadata[, -..group_cols], find_clm_cols)
+  undesirable_cols <- vapply(cl_metadata[, -..clm_per_sample_cols], find_clm_columns, logical(1))
   clm_cols <- names(undesirable_cols[unlist(undesirable_cols)])
 
   return(list(clm = clm_cols, clm_per_sample = clm_per_sample_cols))

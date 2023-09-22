@@ -35,7 +35,7 @@ mock_cl_metadata <- function(scdata) {
   samples <- rep_len(paste0("sample_", 1:4), length(barcode))
   cell_type <- rep_len(paste0("cell_type_", 1:10), length(barcode))
   group_var <- rep_len(paste0("group_", 1:2), length(barcode))
-  redundant_group_var <- paste0("red_group_", samples)
+  redundant_group_var <- paste0("red_group_", group_var)
   continuous_var <- rnorm(length(barcode))
 
   data.table::data.table(barcode, samples, cell_type, group_var, redundant_group_var, continuous_var)
@@ -364,18 +364,27 @@ test_that("make_cl_metadata_table correctly joins cell ids to metadata table", {
 })
 
 
-test_that("make_cl_metadata_table joins on samples and barcode if samples column in user-supplied cl metadata", {
+test_that("make_cl_metadata_table uses composite primary key for join if samples in user-supplied cl metadata", {
   scdata <- mock_scdata()
   cl_meta <- mock_cl_metadata(scdata)
 
   cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+
+  # tables should be identical save for the duplicated barcode
+  expected <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+  expected$barcode[1] <- expected$barcode[2]
+
+  # artificially duplicate a barcode
+  cl_meta$barcode[1] <- cl_meta$barcode[2]
+  cell_id_barcode_map$barcode[1] <- cell_id_barcode_map$barcode[2]
+
   res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
 
-  expect_true("samples" %in% names(res))
+  expect_equal(res, expected)
 })
 
 
-test_that("make_cl_metadata_table joins barcode only if no samples column in user-supplied cl metadata", {
+test_that("make_cl_metadata_table joins on barcode only if no samples column in user-supplied cl metadata", {
   scdata <- mock_scdata()
   cl_meta <- mock_cl_metadata(scdata)
 
@@ -385,10 +394,38 @@ test_that("make_cl_metadata_table joins barcode only if no samples column in use
   cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
   res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
 
-  expect_true(!"samples" %in% names(res))
+  # artificially duplicate a barcode
+  cl_meta$barcode[1] <- cl_meta$barcode[2]
+  cell_id_barcode_map$barcode[1] <- cell_id_barcode_map$barcode[2]
+
+  # the join will return 2 extra rows (when there are 2 dups) if the primary key
+  # is the barcode only
+  res2 <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  expect_true(nrow(res2) == nrow(res) + 2)
 })
 
 
 test_that("make_cl_metadata_cellset makes correctly formatted cellsets", {
 
 })
+
+
+test_that("detect_variable_types correctly detects variable types", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  expected_var_types <- list(clm = c())
+
+  res <- detect_variable_types(cl_metadata)
+
+
+})
+
+test_that("detect_variable_types removes continuous variables", {})
+
+test_that("detect_variable_types removes high-cardinality variables", {})
+
