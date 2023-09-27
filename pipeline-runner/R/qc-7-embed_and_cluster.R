@@ -36,7 +36,17 @@ embed_and_cluster <-
       ignore_ssl_cert
     )
 
-    add_cl_metadata(scdata, config)
+    # add cl metadata if any
+    if (!is.null(config$metadataS3Path)) {
+      cl_metadata_cellsets <- make_cl_metadata_cellsets(scdata, config)
+
+      update_clusters_through_api(cl_metadata_cellsets,
+                                  config$api_url,
+                                  scdata@misc$experiment_id,)
+
+
+    }
+
 
 
     result <- list(
@@ -56,7 +66,6 @@ format_cluster_cellsets <- function(cell_sets,
                                     name = paste0(clustering_method, " clusters")) {
   message("Formatting cluster cellsets.")
 
-  # careful with capital l on type for the key.
   cell_sets_object <-
     list(
       key = clustering_method,
@@ -113,96 +122,44 @@ update_clusters_through_api <-
   }
 
 
-add_cl_metadata <- function(scdata, config) {
+make_cl_metadata_cellsets <- function(scdata, config) {
   s3 <- paws::s3(config = config$aws_config)
   s3_path <- config$metadataS3Path
 
-  # if no tsv uploaded skip all this
-  if (!is.null(s3_path)) {
-    # TODO figure out best way to temporarily store file, or read from S3 directly
-    file_path <- file.path("/", basename(s3_path))
-    download_and_store(bucket_list$cl_metadata_bucket, s3_path, file_path, s3)
-    cl_metadata <- data.table::fread(file_path)
+  # TODO figure out best way to temporarily store file, or read from S3 directly
+  file_path <- file.path("/", basename(s3_path))
+  download_and_store(bucket_list$cl_metadata_bucket, s3_path, file_path, s3)
+  cl_metadata <- data.table::fread(file_path)
 
-    # TODO deduplicate using sample column (if present) in the cell-level metadata file
-    # TODO add "duplicated" variable to cl_metadata table to create cellset for duplicated barcodes
-    #cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
+  # TODO deduplicate using sample column (if present) in the cell-level metadata file
+  # TODO add "duplicated" variable to cl_metadata table to create cellset for duplicated barcodes
+  #cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
 
-    # remove previously uploaded cell level metadata (to allow user to replace the file)
-    delete_cl_metadata_through_api(config$api_url,
-                                   config$experimentId, # ideally get from somewhere in config, if not, scdata
-                                   config$auth_JWT,
-                                   config$ignore_ssl_cert)
+  # remove previously uploaded cell level metadata (to allow user to replace the file)
+  # delete_cl_metadata_through_api(config$api_url,
+  #                                config$experimentId, # ideally get from somewhere in config, if not, scdata
+  #                                config$auth_JWT,
+  #                                config$ignore_ssl_cert)
 
-    # extract barcode - cell_id (keep sample column for variable type detection)
-    barcode_cell_id_map <- get_cell_id_barcode_map(scdata)
+  # extract barcode - cell_id (keep sample column for variable type detection)
+  barcode_cell_id_map <- get_cell_id_barcode_map(scdata)
 
-    # makes cell_id - metadata table
-    cl_metadata <-
-      make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
+  # makes cell_id - metadata table
+  cl_metadata <-
+    make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
 
-    # detect cell level metadata types (see design doc)
-    # - group (CLMPerSample, like metadataCategorital)
-    # - "cellset type" (CLM, like cellSets)
-    # - excludes continuous/high cardinality variables (to avoid infinite cellsets)
-    var_types <- detect_variable_types(cl_metadata)
+  # detect cell level metadata types
+  # - group (CLMPerSample, like metadataCategorital)
+  # - "cellset type" (CLM, like cellSets)
+  # - excludes continuous/high cardinality (to avoid infinite cellsets)
+  var_types <- detect_variable_types(cl_metadata)
 
-    # creates cell-level metadata cellsets, setting the correct type
-    add_cell_level_cellsets(cellsets, cl_metadata, var_types)
-  }
+  # creates cell-level metadata cellsets, setting the correct type
+  cl_metadata_cellsets <-
+    add_cell_level_cellsets(cellsets, cl_metadata, var_types, scdata@misc$color_pool)
+
+  return(cl_metadata_cellsets)
 }
-
-
-deduplicate_cl_metadata <- function(scdata, cl_metadata) {
-  # try to deduplicate barcodes using sample information (assuming barcodes are not
-  # duplicated in a single sample; they would be assigned to the same droplet)
-
-  # add "duplicated" variable to cl_metadata, to create a cellset that contains them.
-}
-
-
-#' delete previous cell-level metadata cellsets
-#'
-#' Removes pre-existing cl metadata cellsets before adding new ones. Allows a
-#' user to upload a new cl metadata file to replace a previous one.
-#'
-#' @param api_url
-#' @param experiment_id
-#' @param auth_JWT
-#' @param ignore_ssl_cert
-#' @param types_to_remove character vector with cellset types to remove
-#'
-#' @return
-#' @export
-#'
-delete_cl_metadata_through_api <-
-  function(api_url,
-           experiment_id,
-           auth_JWT,
-           ignore_ssl_cert,
-           types_to_remove = c("CLM", "CLMPerSample")) {
-    message("Deleting elements with specified types through API")
-
-    # Constructing query to remove multiple types
-    types_string <-
-      paste(sapply(types_to_remove, function(x)
-        paste0("@.type == \"", x, "\"")), collapse = " || ")
-    httr_query_remove <- paste0("$[?(", types_string, ")]")
-
-    if (ignore_ssl_cert) {
-      httr::set_config(httr::config(ssl_verifypeer = 0L))
-    }
-
-    httr::PATCH(
-      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-      body = list(list(
-        "$match" = list(query = httr_query_remove, value = list("$remove" = TRUE))
-      )),
-      encode = "json",
-      httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
-                        "Authorization" = auth_JWT)
-    )
-  }
 
 
 #' extract cell_id - barcode map
@@ -295,11 +252,14 @@ detect_variable_types <- function(cl_metadata) {
   undesirable_cols <- vapply(cl_metadata[, -..clm_per_sample_cols], find_clm_columns, logical(1))
   clm_cols <- names(undesirable_cols[unlist(undesirable_cols)])
 
-  return(list(clm = clm_cols, clm_per_sample = clm_per_sample_cols))
+  # remove samples var, useless from this point on
+  clm_cols <- grep("^samples$", clm_cols, value = T, invert = T)
+
+  return(list(CLM = clm_cols, CLMPerSample = clm_per_sample_cols))
 }
 
 
-make_cl_metadata_cellset <- function(cl_metadata, variable, type, color_pool) {
+make_cl_metadata_cellset <- function(variable, type, cl_metadata, color_pool) {
 
   cl_metadata_cellset <- list(
     key = uuid::UUIDgenerate(),
@@ -326,19 +286,29 @@ make_cl_metadata_cellset <- function(cl_metadata, variable, type, color_pool) {
 }
 
 
-add_cellset_group <- function(cellsets, cellset_to_add) {
-  # add group to the end of cellset list
-  cellsets$cellSets[[length(cellsets$cellSets) + 1]] <- cellset_to_add
+add_cell_level_cellsets <-
+  function(cellsets,
+           cl_metadata,
+           var_types,
+           color_pool) {
+    # explicitly exclude cells_id var from cellset creation
+    vars_to_cellset <-
+      setdiff(names(cl_metadata), c("barcode", "cells_id"))
+    # only create cellsets for vars that passed type detection
+    vars_to_cellset <- lapply(var_types, intersect, vars_to_cellset)
 
-  return(cellsets)
-}
+    cl_metadata_cellsets <- list()
+    for (i in seq_along(vars_to_cellset)) {
+      cellsets <-
+        lapply(
+          vars_to_cellset[[i]],
+          make_cl_metadata_cellset,
+          names(vars_to_cellset)[i],
+          cl_metadata,
+          color_pool
+        )
+      cl_metadata_cellsets <- append(cl_metadata_cellsets, cellsets)
+    }
 
-
-add_cell_level_cellsets <- function(cellsets, cl_metadata, var_types) {
-  vars_to_cellset <- setdiff(names(cl_metadata), "cells_id")
-  for (var in vars_to_cellset) {
-    cellset_to_add <- make_cl_metadata_cellset(cl_metadata, var, var_type[[var]], color_pool)
-    cellsets <- add_cellset_group(cellsets, cellset_to_add)
+    return(cl_metadata_cellsets)
   }
-  return(cellsets)
-}

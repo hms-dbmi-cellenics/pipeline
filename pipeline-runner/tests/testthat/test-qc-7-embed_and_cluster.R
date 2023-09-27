@@ -416,16 +416,60 @@ test_that("detect_variable_types correctly detects variable types", {
   cl_meta <- mock_cl_metadata(scdata)
 
   cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
-  cl_metadata <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+  cl_metadata <-
+    make_cl_metadata_table(cl_meta, cell_id_barcode_map)
 
-  expected_var_types <- list(clm = c())
+  expected_var_types <-
+    list(
+      CLM = c("cell_type"),
+      CLMPerSample = c("group_var", "redundant_group_var")
+    )
 
   res <- detect_variable_types(cl_metadata)
 
-
+  expect_equal(res, expected_var_types)
 })
 
-test_that("detect_variable_types removes continuous variables", {})
+test_that("detect_variable_types removes samples variable", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
 
-test_that("detect_variable_types removes high-cardinality variables", {})
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata <-
+    make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  res <- detect_variable_types(cl_metadata)
+
+  expect_false("samples" %in% names(res))
+})
+
+
+test_that("detect_variable_types removes continuous variables", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata <-
+    make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  res <- detect_variable_types(cl_metadata)
+
+  expect_false("continuous_var" %in% names(res))
+})
+
+
+test_that("detect_variable_types removes high-cardinality variables", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata <-
+    make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  res <- detect_variable_types(cl_metadata)
+
+  # cells_id is explicitly excluded from cellset creation downstream, but it is
+  # a high cardinality variable, so useful for the test
+  expect_false("cells_id" %in% names(res))
+})
 
