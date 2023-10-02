@@ -234,9 +234,22 @@ stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_
 }
 
 
+#' (Stubbed) download cell-level metadata file
+#'
+#' @inheritSection download_cl_metadata_file description
+#' @inheritParams download_cl_metadata_file
+#' @inheritSection download_cl_metadata_file return
+#' @export
+#'
 stubbed_download_cl_metadata_file <- function(config) {
   mockedS3 <- list(get_object = stub_s3_get_object)
-  mockery::stub(download_cl_metadata_file, "paws::s3", mockedS3, depth = 3)
+  mockery::stub(download_cl_metadata_file, "paws::s3", mockedS3)
   mockery::stub(download_cl_metadata_file, "file.path", stub_file.path)
   download_cl_metadata_file(config)
+}
+
+
+stubbed_make_cl_metadata_cellsets <- function(scdata, config) {
+  mockery::stub(make_cl_metadata_cellsets, "download_cl_metadata_file", stubbed_download_cl_metadata_file)
+  make_cl_metadata_cellsets(scdata, config)
 }

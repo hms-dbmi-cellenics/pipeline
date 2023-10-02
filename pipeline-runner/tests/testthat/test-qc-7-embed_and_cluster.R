@@ -46,10 +46,11 @@ local_mock_cl_metadata_table <- function(mock_cl_metadata, experiment_id, env = 
   # calls mock_cl_metadata but makes it "local" (in withr speech), deleting
   # created stuff after the test finishes.
   bucket <- file.path(".", bucket_list$cl_metadata_bucket)
+
   dir.create(bucket)
+  withr::defer(unlink(bucket, recursive = TRUE), envir = env)
 
   data.table::fwrite(mock_cl_metadata, file.path(bucket, experiment_id), sep = "\t")
-  withr::defer(unlink(bucket, recursive = TRUE), envir = env)
 }
 
 
@@ -65,7 +66,6 @@ mock_config <- function() {
 
   return(config)
 }
-
 
 test_that("runClusters returns correct keys", {
   algos <- c("louvain", "leiden")
@@ -515,9 +515,35 @@ test_that("download_cl_metadata_file loads cl_metadata tables correctly", {
 
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
   res <- stubbed_download_cl_metadata_file(config)
+  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
 
   expect_s3_class(res, "data.table")
   expect_named(res, names(cl_metadata))
   expect_equal(nrow(res), nrow(cl_metadata))
   expect_equal(ncol(res), ncol(cl_metadata))
+})
+
+
+test_that("make_cl_metadata_cellsets makes cell-level metadata cellsets.", {
+  config <- mock_config()
+  scdata <- mock_scdata()
+  cl_metadata <- mock_cl_metadata(scdata)
+
+  local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
+
+  res <- stubbed_make_cl_metadata_cellsets(scdata, config)
+  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+
+  expect_equal(length(res), 3)
+  expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
+  expect_equal(length(res[[2]]$children), length(unique(cl_metadata$group_var)))
+  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$redundant_group_var)))
+
+  cell_class_names <- c("key", "name", "rootNode", "type", "children")
+  purrr::walk(res, expect_named, cell_class_names)
+
+  # cellsets have the same keys as cell classes except children, color and cellIds
+  for (i in seq_along(res)) {
+    purrr::walk(res[[i]]$children, expect_named, c(cell_class_names[-5], "color", "cellIds"))
+  }
 })
