@@ -306,7 +306,20 @@ detect_variable_types <- function(cl_metadata) {
 }
 
 
-make_cl_metadata_cellset <- function(variable, type, cl_metadata, color_pool) {
+#' Transform a variable into a cell-level metadata cell class
+#'
+#' The output is a list that contains one children cellset per value of the
+#' variable to transform.
+#'
+#' @param variable character - name of variable to transform
+#' @param type character - type of cell-level metadata variable
+#' @param cl_metadata data.table
+#' @param color_pool list
+#'
+#' @return list - correctly formatted cell-level metadata cellclass
+#' @export
+#'
+make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) {
 
   cl_metadata_cellset <- list(
     key = uuid::UUIDgenerate(),
@@ -335,6 +348,15 @@ make_cl_metadata_cellset <- function(variable, type, cl_metadata, color_pool) {
 }
 
 
+#' Formats cell-level metadata cellsets
+#'
+#' @param cl_metadata data.table
+#' @param var_types list of variable types
+#' @param color_pool list
+#'
+#' @return list of cell-level metadata cell classes
+#' @export
+#'
 format_cl_metadata_cellsets <-
   function(cl_metadata,
            var_types,
@@ -350,7 +372,7 @@ format_cl_metadata_cellsets <-
       cellsets <-
         lapply(
           vars_to_cellset[[i]],
-          make_cl_metadata_cellset,
+          make_cl_metadata_cellclass,
           names(vars_to_cellset)[i],
           cl_metadata,
           color_pool

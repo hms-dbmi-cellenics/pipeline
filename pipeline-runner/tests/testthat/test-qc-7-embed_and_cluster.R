@@ -417,7 +417,7 @@ test_that("make_cl_metadata_table joins on barcode only if no samples column in 
 })
 
 
-test_that("make_cl_metadata_cellset makes correctly formatted cellsets", {
+test_that("make_cl_metadata_cellclass makes correctly formatted cellsets", {
   scdata <- mock_scdata()
   cl_meta <- mock_cl_metadata(scdata)
 
@@ -430,7 +430,7 @@ test_that("make_cl_metadata_cellset makes correctly formatted cellsets", {
   var_to_cellset <- "cell_type"
   cellset_type <- "CLM"
 
-  res <- make_cl_metadata_cellset(var_to_cellset,
+  res <- make_cl_metadata_cellclass(var_to_cellset,
                                   cellset_type,
                                   cl_metadata_table,
                                   mock_color_pool(20))
