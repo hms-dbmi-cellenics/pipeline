@@ -133,9 +133,9 @@ test_that("runClusters uses active.reduction in misc slot", {
 })
 
 with_fake_http(
-  test_that("update_clusters_through_api sends patch request", {
+  test_that("replace_cell_class_through_api sends patch request", {
     expect_PATCH(
-      update_clusters_through_api(
+      replace_cell_class_through_api(
         list(),
         "api_url",
         "experiment_id",
@@ -148,10 +148,10 @@ with_fake_http(
 )
 
 with_fake_http(
- test_that("update_clusters_through_api diables SSL certificate checking if disabled", {
+ test_that("replace_cell_class_through_api diables SSL certificate checking if disabled", {
 
     expect_PATCH(
-      update_clusters_through_api(
+      replace_cell_class_through_api(
         list(),
         "api_url",
         "experiment_id",
@@ -407,6 +407,28 @@ test_that("make_cl_metadata_table joins on barcode only if no samples column in 
 
 
 test_that("make_cl_metadata_cellset makes correctly formatted cellsets", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  # remove samples column from cell-level metadata
+  cl_meta[, samples:= NULL]
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata_table <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  var_to_cellset <- "cell_type"
+  cellset_type <- "CLM"
+
+  res <- make_cl_metadata_cellset(var_to_cellset,
+                                  cellset_type,
+                                  cl_metadata_table,
+                                  mock_color_pool(20))
+
+  cell_class_names <- c("key", "name", "rootNode", "type", "children")
+  expect_named(res, cell_class_names)
+
+  # cellsets have the same keys as cell classes except children, color and cellIds
+  purrr::walk(res$children, expect_named, c(cell_class_names[-5], "color", "cellIds"))
 
 })
 
@@ -429,6 +451,7 @@ test_that("detect_variable_types correctly detects variable types", {
 
   expect_equal(res, expected_var_types)
 })
+
 
 test_that("detect_variable_types removes samples variable", {
   scdata <- mock_scdata()

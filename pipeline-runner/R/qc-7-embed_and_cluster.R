@@ -27,7 +27,7 @@ embed_and_cluster <-
     formated_cell_sets <-
       format_cluster_cellsets(cellSets, clustering_method, scdata@misc$color_pool)
 
-    update_clusters_through_api(
+    replace_cell_class_through_api(
       formated_cell_sets,
       config$api_url,
       scdata@misc$experimentId,
@@ -39,14 +39,8 @@ embed_and_cluster <-
     # add cl metadata if any
     if (!is.null(config$metadataS3Path)) {
       cl_metadata_cellsets <- make_cl_metadata_cellsets(scdata, config)
-
-      update_clusters_through_api(cl_metadata_cellsets,
-                                  config$api_url,
-                                  scdata@misc$experiment_id,)
-
-
+      # TODO: upload cellsets
     }
-
 
 
     result <- list(
@@ -95,15 +89,28 @@ format_cluster_cellsets <- function(cell_sets,
 }
 
 
-update_clusters_through_api <-
-  function(cell_sets_object,
+#' replace cell class by key
+#'
+#' @param cell_class_object
+#' @param api_url
+#' @param experiment_id
+#' @param cell_class_key
+#' @param auth_JWT
+#' @param ignore_ssl_cert
+#'
+#' @return
+#' @export
+#'
+#' @examples
+replace_cell_class_through_api <-
+  function(cell_class_object,
            api_url,
            experiment_id,
-           cell_set_key,
+           cell_class_key,
            auth_JWT,
            ignore_ssl_cert) {
     message("updating cellsets through API")
-    httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
+    httr_query <- paste0("$[?(@.key == \"", cell_class_key, "\")]")
 
     if (ignore_ssl_cert) {
       httr::set_config(httr::config(ssl_verifypeer = 0L))
@@ -114,7 +121,7 @@ update_clusters_through_api <-
       body = list(list(
         "$match" = list(query = httr_query, value = list("$remove" = TRUE))
       ),
-      list("$prepend" = cell_sets_object)),
+      list("$prepend" = cell_class_object)),
       encode = "json",
       httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
                         "Authorization" = auth_JWT)
@@ -265,8 +272,8 @@ make_cl_metadata_cellset <- function(variable, type, cl_metadata, color_pool) {
     key = uuid::UUIDgenerate(),
     name = variable,
     rootNode = TRUE,
-    children = list(),
-    type = type
+    type = type,
+    children = list()
   )
 
   values <- unique(cl_metadata[[variable]])
@@ -275,6 +282,8 @@ make_cl_metadata_cellset <- function(variable, type, cl_metadata, color_pool) {
     cl_metadata_cellset$children[[i]] <- list(
       key = uuid::UUIDgenerate(),
       name = values[i],
+      rootNode = FALSE,
+      type = type,
       color = color_pool[1],
       cellIds = ensure_is_list_in_json(cl_metadata[get(variable) == values[i], cells_id])
     )
