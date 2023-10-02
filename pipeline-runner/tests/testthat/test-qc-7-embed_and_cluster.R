@@ -547,3 +547,18 @@ test_that("make_cl_metadata_cellsets makes cell-level metadata cellsets.", {
     purrr::walk(res[[i]]$children, expect_named, c(cell_class_names[-5], "color", "cellIds"))
   }
 })
+
+
+with_fake_http(
+  test_that("replace_cl_metadata_through_api sends patch request", {
+    expect_PATCH(
+      replace_cl_metadata_through_api(
+        list(),
+        "api_url",
+        "experiment_id",
+        "auth",
+        FALSE
+      )
+    )
+  })
+)

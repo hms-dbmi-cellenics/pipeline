@@ -40,14 +40,14 @@ embed_and_cluster <-
     if (!is.null(config$metadataS3Path)) {
       cl_metadata_cellsets <- make_cl_metadata_cellsets(scdata, config)
 
-      # TODO: upload cellsets
       # remove previously uploaded cell level metadata (to allow user to replace the file)
-      # replace_cl_metadata_through_api(config$api_url,
-      #                                config$experimentId, # ideally get from somewhere in config, if not, scdata
-      #                                config$auth_JWT,
-      #                                config$ignore_ssl_cert)
-
-
+      replace_cl_metadata_through_api(
+        cl_metadata_cellsets,
+        config$api_url,
+        scdata@misc$experimentId,
+        config$auth_JWT,
+        ignore_ssl_cert
+      )
     }
 
 
@@ -138,6 +138,55 @@ replace_cell_class_through_api <-
     )
   }
 
+
+#' Replace and Append Cell Metadata Through API
+#'
+#' This function deletes cell-level metadata cellsets in an existing cellsets.json
+#' file based on specified types. It then appends new cell-level metadata cellsets.
+#'
+#' @param cl_metadata_cellsets A list that will be appended to the existing cell sets.
+#' @param api_url The base URL of the API.
+#' @param experiment_id The unique identifier for the experiment to be modified.
+#' @param auth_JWT The JSON Web Token used for authentication.
+#' @param ignore_ssl_cert Boolean flag to indicate whether to ignore SSL certificate verification.
+#'
+#' @return The response from the API after performing the PATCH operation.
+#'
+#' @export
+replace_cl_metadata_through_api <-
+  function(cl_metadata_cellsets,
+           api_url,
+           experiment_id,
+           auth_JWT,
+           ignore_ssl_cert) {
+    message("Deleting elements with specified types and appending new cellsets through API")
+
+    types_to_remove <-  c("CLM", "CLMPerSample")
+
+    # Constructing query to remove multiple types
+    types_string <-
+      paste0("@.type == \"",
+             paste(types_to_remove, collapse = "\" || @.type == \""),
+             "\"")
+    httr_query_remove <- paste0("$[?(", types_string, ")]")
+
+    if (ignore_ssl_cert) {
+      httr::set_config(httr::config(ssl_verifypeer = 0L))
+    }
+
+    httr::PATCH(
+      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
+      body = list(
+        list("$match" = list(
+          query = httr_query_remove, value = list("$remove" = TRUE)
+        )),
+        list("$append" = cl_metadata_cellsets)
+      ),
+      encode = "json",
+      httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
+                        "Authorization" = auth_JWT)
+    )
+  }
 
 #' Download and load cell-level metadata tsv file
 #'
