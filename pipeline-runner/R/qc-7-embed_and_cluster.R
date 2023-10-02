@@ -140,7 +140,7 @@ replace_cell_class_through_api <-
 get_cl_metadata_file <- function(config) {
 
   s3 <- paws::s3(config = config$aws_config)
-  s3_path <- config$metadataS3Path
+  s3_path <- basename(config$metadataS3Path)
 
   # TODO figure out best way to temporarily store file, or read from S3 directly
   file_path <- file.path("/", basename(s3_path))

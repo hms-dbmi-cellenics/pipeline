@@ -232,3 +232,9 @@ stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_
 
   embed_and_cluster(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert)
 }
+stubbed_get_cl_metadata_file <- function(config) {
+  mockedS3 <- list(get_object = stub_s3_get_object)
+  mockery::stub(get_cl_metadata_file, "paws::s3", mockedS3, depth = 3)
+  mockery::stub(get_cl_metadata_file, "file.path", stub_file.path)
+  get_cl_metadata_file(config)
+}

@@ -42,6 +42,17 @@ mock_cl_metadata <- function(scdata) {
 }
 
 
+local_mock_cl_metadata_table <- function(mock_cl_metadata, experiment_id, env = parent.frame()) {
+  # calls mock_cl_metadata but makes it "local" (in withr speech), deleting
+  # created stuff after the test finishes.
+  bucket <- file.path(".", bucket_list$cl_metadata_bucket)
+  dir.create(bucket)
+
+  data.table::fwrite(mock_cl_metadata, file.path(bucket, experiment_id), sep = "\t")
+  withr::defer(unlink(bucket, recursive = TRUE), envir = env)
+}
+
+
 mock_config <- function() {
   config <-
     list(clusteringSettings = list(
@@ -49,7 +60,7 @@ mock_config <- function() {
       methodSettings = list(louvain = list(resolution = "0.8"))
     ),
     aws_config = list(aws = "mock_aws"),
-    metadataS3Path = "mock_s3_path"
+    metadataS3Path = file.path(".", bucket_list$cl_metadata_bucket, "mock_experiment_id")
     )
 
   return(config)
@@ -492,7 +503,21 @@ test_that("detect_variable_types removes high-cardinality variables", {
   res <- detect_variable_types(cl_metadata)
 
   # cells_id is explicitly excluded from cellset creation downstream, but it is
-  # a high cardinality variable, so useful for the test
+  # a high cardinality variable, so useful testing
   expect_false("cells_id" %in% names(res))
 })
 
+
+test_that("get_cl_metadata_file loads cl_metadata tables correctly", {
+  config <- mock_config()
+  scdata <- mock_scdata()
+  cl_metadata <- mock_cl_metadata(scdata)
+
+  local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
+  res <- stubbed_get_cl_metadata_file(config)
+
+  expect_s3_class(res, "data.table")
+  expect_named(res, names(cl_metadata))
+  expect_equal(nrow(res), nrow(cl_metadata))
+  expect_equal(ncol(res), ncol(cl_metadata))
+})
