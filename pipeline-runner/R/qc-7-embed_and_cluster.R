@@ -39,7 +39,15 @@ embed_and_cluster <-
     # add cl metadata if any
     if (!is.null(config$metadataS3Path)) {
       cl_metadata_cellsets <- make_cl_metadata_cellsets(scdata, config)
+
       # TODO: upload cellsets
+      # remove previously uploaded cell level metadata (to allow user to replace the file)
+      # replace_cl_metadata_through_api(config$api_url,
+      #                                config$experimentId, # ideally get from somewhere in config, if not, scdata
+      #                                config$auth_JWT,
+      #                                config$ignore_ssl_cert)
+
+
     }
 
 
@@ -129,7 +137,8 @@ replace_cell_class_through_api <-
   }
 
 
-make_cl_metadata_cellsets <- function(scdata, config) {
+get_cl_metadata_file <- function(config) {
+
   s3 <- paws::s3(config = config$aws_config)
   s3_path <- config$metadataS3Path
 
@@ -138,15 +147,17 @@ make_cl_metadata_cellsets <- function(scdata, config) {
   download_and_store(bucket_list$cl_metadata_bucket, s3_path, file_path, s3)
   cl_metadata <- data.table::fread(file_path)
 
+  return(cl_metadata)
+}
+
+
+make_cl_metadata_cellsets <- function(scdata, config) {
+
+  cl_metadata <- get_cl_metadata_file(config)
+
   # TODO deduplicate using sample column (if present) in the cell-level metadata file
   # TODO add "duplicated" variable to cl_metadata table to create cellset for duplicated barcodes
   #cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
-
-  # remove previously uploaded cell level metadata (to allow user to replace the file)
-  # delete_cl_metadata_through_api(config$api_url,
-  #                                config$experimentId, # ideally get from somewhere in config, if not, scdata
-  #                                config$auth_JWT,
-  #                                config$ignore_ssl_cert)
 
   # extract barcode - cell_id (keep sample column for variable type detection)
   barcode_cell_id_map <- get_cell_id_barcode_map(scdata)
