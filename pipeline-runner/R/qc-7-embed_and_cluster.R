@@ -99,17 +99,19 @@ format_cluster_cellsets <- function(cell_sets,
 
 #' replace cell class by key
 #'
-#' @param cell_class_object
-#' @param api_url
-#' @param experiment_id
-#' @param cell_class_key
-#' @param auth_JWT
-#' @param ignore_ssl_cert
+#' Replaces an entire cell class (group of cellsets) by key. Used to replace
+#' clustering cellsets after re-clustering.
 #'
-#' @return
+#' @param cell_class_object list
+#' @param api_url character
+#' @param experiment_id character
+#' @param cell_class_key character
+#' @param auth_JWT character
+#' @param ignore_ssl_cert boolean
+#'
+#' @return NULL
 #' @export
 #'
-#' @examples
 replace_cell_class_through_api <-
   function(cell_class_object,
            api_url,
@@ -137,7 +139,14 @@ replace_cell_class_through_api <-
   }
 
 
-get_cl_metadata_file <- function(config) {
+#' Download and load cell-level metadata tsv file
+#'
+#' @param config list with AWS configuration and metadataS3Path
+#'
+#' @return data.table of cell-level metadata
+#' @export
+#'
+download_cl_metadata_file <- function(config) {
 
   s3 <- paws::s3(config = config$aws_config)
   s3_path <- basename(config$metadataS3Path)
@@ -151,9 +160,21 @@ get_cl_metadata_file <- function(config) {
 }
 
 
+#' Makes cell-level metadata cellsets
+#'
+#' Main cell-level metadata cellsets function. Downloads, parses, de-duplicates
+#' barcodes, detects variable types and formats cell-level metadata cellsets.
+#' Returning a list ready to add to `cellsets.json` file.
+#'
+#' @param scdata SeuratObject
+#' @param config list with AWS config and metadataS3Paths
+#'
+#' @return list of cell-level metadata cellsets
+#' @export
+#'
 make_cl_metadata_cellsets <- function(scdata, config) {
 
-  cl_metadata <- get_cl_metadata_file(config)
+  cl_metadata <- download_cl_metadata_file(config)
 
   # TODO deduplicate using sample column (if present) in the cell-level metadata file
   # TODO add "duplicated" variable to cl_metadata table to create cellset for duplicated barcodes
@@ -166,15 +187,11 @@ make_cl_metadata_cellsets <- function(scdata, config) {
   cl_metadata <-
     make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
 
-  # detect cell level metadata types
-  # - group (CLMPerSample, like metadataCategorital)
-  # - "cellset type" (CLM, like cellSets)
-  # - excludes continuous/high cardinality (to avoid infinite cellsets)
   var_types <- detect_variable_types(cl_metadata)
 
   # creates cell-level metadata cellsets, setting the correct type
   cl_metadata_cellsets <-
-    add_cell_level_cellsets(cellsets, cl_metadata, var_types, scdata@misc$color_pool)
+    format_cl_metadata_cellsets(cl_metadata, var_types, scdata@misc$color_pool)
 
   return(cl_metadata_cellsets)
 }
@@ -262,6 +279,18 @@ find_clm_columns <- function(check_vals) {
 }
 
 
+#' Detect cell-level metadata variable types
+#'
+#' detect cell level metadata types
+#'   - group (CLMPerSample, like metadataCategorital)
+#'   - "cellset type" (CLM, like cellSets)
+#'   - excludes continuous/high cardinality (to avoid infinite cellsets)
+#'
+#' @param cl_metadata data.table
+#'
+#' @return list of cell-level metadata types
+#' @export
+#'
 detect_variable_types <- function(cl_metadata) {
 
   # do not remove dups; if a user uploads some metadata it should be there
@@ -306,9 +335,8 @@ make_cl_metadata_cellset <- function(variable, type, cl_metadata, color_pool) {
 }
 
 
-add_cell_level_cellsets <-
-  function(cellsets,
-           cl_metadata,
+format_cl_metadata_cellsets <-
+  function(cl_metadata,
            var_types,
            color_pool) {
     # explicitly exclude cells_id var from cellset creation

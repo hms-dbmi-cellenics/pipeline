@@ -508,13 +508,13 @@ test_that("detect_variable_types removes high-cardinality variables", {
 })
 
 
-test_that("get_cl_metadata_file loads cl_metadata tables correctly", {
+test_that("download_cl_metadata_file loads cl_metadata tables correctly", {
   config <- mock_config()
   scdata <- mock_scdata()
   cl_metadata <- mock_cl_metadata(scdata)
 
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
-  res <- stubbed_get_cl_metadata_file(config)
+  res <- stubbed_download_cl_metadata_file(config)
 
   expect_s3_class(res, "data.table")
   expect_named(res, names(cl_metadata))

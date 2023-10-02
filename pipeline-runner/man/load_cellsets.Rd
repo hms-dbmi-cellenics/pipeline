@@ -2,7 +2,7 @@
 % Please edit documentation in R/handle_data.R
 \name{load_cellsets}
 \alias{load_cellsets}
-\title{Load cellsets object from s3}
+\title{Load cellsets object from s3 and flatten it for easier manipulation in R}
 \usage{
 load_cellsets(s3, pipeline_config, experiment_id)
 }
@@ -17,5 +17,5 @@ load_cellsets(s3, pipeline_config, experiment_id)
 cellsets list
 }
 \description{
-Load cellsets object from s3
+Load cellsets object from s3 and flatten it for easier manipulation in R
 }

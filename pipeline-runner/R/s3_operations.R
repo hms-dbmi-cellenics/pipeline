@@ -4,11 +4,10 @@
 #' @param source_prefix string
 #' @param destination_bucket string
 #' @param destination_prefix string
-#' @param aws_config
-#' @param key_transform function to transform keys of objects
-#' before uploading, identity by default
+#' @param aws_config list of AWS configuration
+#' @param key_transform function to transform keys of objects before uploading, identity by default
 #'
-#' @return
+#' @return NULL
 #'
 s3_copy_by_prefix <- function(
   source_bucket,
