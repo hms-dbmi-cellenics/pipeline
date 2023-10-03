@@ -569,3 +569,27 @@ test_that("build_scratchpad_cellsets builds multiple cellsets", {
     expect_setequal(cs$cellIds, subset_cellsets[(type == "scratchpad" & key == cs$key & name == cs$name), cell_id])
   }
 })
+
+
+test_that("extract_subset_user_metadata extracts subset cellsets correctly when regex characters present", {
+
+  input <- mock_input()
+  config <- mock_config(input)
+  color_pool <- get_color_pool()
+  scdata_list <- mock_scdata_list(config)
+
+  parent_cellsets <- mock_parsed_cellsets(scdata_list)
+
+  # create new metadata cellsets with some annoying symbols
+  new_parent_cellsets <- data.table::copy(parent_cellsets[type == "metadata"])
+  n <- floor(nrow(new_parent_cellsets)/2)
+  new_parent_cellsets[1:n, `:=`(key = "metadata_var-2-value_A+", name = "value_A+")]
+  new_parent_cellsets[n:.N, `:=`(key = "metadata_var-2-value_B-", name = "value_B-")]
+  parent_cellsets <- data.table::rbindlist(list(parent_cellsets, new_parent_cellsets))
+
+  res <- extract_subset_user_metadata(parent_cellsets)
+
+  expect_equal(names(res), c("metadata_var-1", "metadata_var-2"))
+  expect_equal(res[[1]], c("value_A", "value_B"))
+  expect_equal(res[[2]], c("value_A+", "value_B-"))
+})
