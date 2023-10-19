@@ -175,7 +175,7 @@ Turn off firewall or allow incoming traffic. This would allow AWS to send packag
 2. Select **Allow** in the **Outgoing** dropdown menu (Alternatively, set **Status** to OFF).
 
 #### Javascript not connecting to the docker daemon
-When running the pipeline locally if you get: 
+When running the pipeline locally you may get the following error: 
 ```bash
 Creating mock Lambda function on InfraMock...
 Stack with ARN arn:aws:cloudformation:eu-west-1:000000000000:stack/local-container-launcher/f693a088 successfully created.
