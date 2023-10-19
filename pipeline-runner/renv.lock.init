@@ -2371,9 +2371,11 @@
     "rgeos": {
       "Package": "rgeos",
       "Version": "0.5-9",
-      "Source": "Repository",
+      "Source": "URL",
       "Repository": "CRAN",
-      "Hash": "7cfa4f73a070042ecf141d5c1d1bfcae",
+      "RemoteType": "url",
+      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/rgeos/rgeos_0.5-9.tar.gz",
+      "Hash": "39b3cf09bd12b71e67066e5fe17683f1",
       "Requirements": [
         "sp"
       ]
