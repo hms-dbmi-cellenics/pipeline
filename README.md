@@ -191,7 +191,7 @@ TypeError: Cannot read property 'forEach' of null
     at ClientRequest.<anonymous> (pipeline/local-runner/node_modules/docker-modem/lib/modem.js:282:10)
 ```
 
-To solve this you need to Allow the default Docker socket to be used by third parties 
+To solve this you need to Allow the default Docker socket to be used by third parties:
 
 1. Open 'Settings' in the Docker desktop app (GUI)
 2. Click Advanced
