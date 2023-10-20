@@ -39,11 +39,9 @@ RUN R -q -e "renv::deactivate()"
 
 # install miniconda and geosketch
 # clean conda
-ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
-RUN R -q -e "reticulate::install_miniconda()" && \
-    R -q -e "reticulate::conda_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3'), pip = TRUE)" && \
-    CONDA_PATH=$(R -q -s -e "cat(reticulate::conda_binary())") && \
-    $CONDA_PATH clean --force-pkgs-dirs -y
+ENV WORKON_HOME=/src/.virtualenvs
+RUN R -q -e "reticulate::virtualenv_create('r-reticulate')" && \
+    R -q -e "reticulate::virtualenv_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3'), pip_options='--no-cache-dir')"
 
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
@@ -66,7 +64,6 @@ RUN Rscript check_package_licenses.R
 # ---------------------------------------------------
 FROM rocker/r-ver:4.2.2 AS common
 WORKDIR /src/pipeline-runner
-ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 
 # get source code and R packages
 COPY --from=builder /src /src
@@ -74,8 +71,7 @@ COPY --from=builder /src /src
 # add renv library to .libPaths
 ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site && \
-    echo "python3-pip" >> sysdeps_run.txt && \
-    echo "wget" >> sysdeps_run.txt && \
+    echo "wget python3-pip" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
@@ -151,4 +147,4 @@ ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
-ENTRYPOINT Rscript init.R
+ENTRYPOINT ["Rscript", "init.R"]
