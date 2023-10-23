@@ -69,7 +69,7 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
-# install umap-learn for RunUMAP
+# install python packages in virtualenv
 ENV WORKON_HOME=/src/.virtualenvs
 RUN R -q -e "reticulate::virtualenv_create('r-reticulate')" && \
     R -q -e "reticulate::virtualenv_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3'), pip_options='--no-cache-dir')" 
