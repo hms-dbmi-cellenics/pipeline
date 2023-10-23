@@ -146,7 +146,7 @@ update_sets_through_api <-
 #' @export
 #'
 sort_cluster_names <- function(strings) {
-  # Assumes that cluster
+  # extract letters and digits
   char <- gsub("\\d", "", strings)
   nums <- gsub("\\D", "", strings)
 
