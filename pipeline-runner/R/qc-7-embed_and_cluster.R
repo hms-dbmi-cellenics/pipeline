@@ -88,7 +88,7 @@ format_cell_sets_object <- function(
         type = "cellSets",
         children = list()
       )
-    for (cluster in stringr::str_sort(unique(cell_sets$cluster), numeric = TRUE)) {
+    for (cluster in sort_cluster_names(unique(cell_sets$cluster))) {
       cells <- cell_sets[cell_sets$cluster == cluster, "cell_ids"]
       is.num <- !is.na(as.numeric(cluster))
       set_name <- ifelse(is.num, paste("Cluster", cluster), cluster)
@@ -134,3 +134,26 @@ update_sets_through_api <-
                         "Authorization" = auth_JWT)
     )
   }
+
+
+#' Sort cluster names
+#'
+#' Sorts cluster names naturally, i.e. Cluster 1, Cluster 2, Cluster 10
+#'
+#' @param strings character vector of cluster names
+#'
+#' @return sorted character vector
+#' @export
+#'
+sort_cluster_names <- function(strings) {
+  # assumes cluster names are a word and number separated by space or hyphen
+  if (!is.character(strings)) {
+    return(sort(strings))
+  }
+  split_list <- strsplit(strings, " |-")
+
+  chars <- vapply(split_list, `[`, character(1), 1)
+  nums <- as.integer(vapply(split_list, `[`, character(1), 2))
+
+  return(strings[order(chars, nums)])
+}
