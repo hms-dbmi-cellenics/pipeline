@@ -140,20 +140,17 @@ update_sets_through_api <-
 #'
 #' Sorts cluster names naturally, i.e. Cluster 1, Cluster 2, Cluster 10
 #'
-#' @param strings character vector of cluster names
+#' @param strings cluster names
 #'
-#' @return sorted character vector
+#' @return sorted vector
 #' @export
 #'
 sort_cluster_names <- function(strings) {
-  # assumes cluster names are a word and number separated by space or hyphen
-  if (!is.character(strings)) {
-    return(sort(strings))
-  }
-  split_list <- strsplit(strings, " |-")
+  # Assumes that cluster
+  char <- gsub("\\d", "", strings)
+  nums <- gsub("\\D", "", strings)
 
-  chars <- vapply(split_list, `[`, character(1), 1)
-  nums <- as.integer(vapply(split_list, `[`, character(1), 2))
+  sorted_indices <- order(char, as.integer(nums))
 
-  return(strings[order(chars, nums)])
+  return(strings[sorted_indices])
 }
