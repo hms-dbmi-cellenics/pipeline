@@ -88,7 +88,7 @@ format_cell_sets_object <- function(
         type = "cellSets",
         children = list()
       )
-    for (cluster in gtools::mixedsort(unique(cell_sets$cluster))) {
+    for (cluster in stringr::str_sort(unique(cell_sets$cluster), numeric = TRUE)) {
       cells <- cell_sets[cell_sets$cluster == cluster, "cell_ids"]
       is.num <- !is.na(as.numeric(cluster))
       set_name <- ifelse(is.num, paste("Cluster", cluster), cluster)
