@@ -90,7 +90,7 @@
         .. ..$ active.reduction: chr "pca"
         .. ..$ numPCs          : num 2
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 4 1 4
         ..@ commands    :List of 4
         .. ..$ NormalizeData.RNA       :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "NormalizeData.RNA"

@@ -17,9 +17,9 @@ filter_unnamed_features(counts, annotations, sample)
 list of counts and annotations
 }
 \description{
-This function checks if genes whose annotations in the count matrix (\code{rownames(counts)})
+This function checks if genes whose annotations in the count matrix (`rownames(counts)`)
 are empty, can be annotated with a different column from the features file,
-read into the \code{annotations[["annot"]]} table. If it can, they are replaced everywhere
+read into the `annotations[["annot"]]` table. If it can, they are replaced everywhere
 (both in the count matrix and in all columns of the annotations table). In case
 the other columns do not provide a better annotation, they are removed from
 the count matrix and annotations table.

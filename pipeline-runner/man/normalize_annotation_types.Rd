@@ -27,10 +27,8 @@ list with normalized annotations and count matrices
 This function makes annotations compatible between samples with different types.
 There are three possible options for feature_types at this stage:
 0. SYM_SYM
-\enumerate{
-\item IDS_SYM
-\item IDS_IDS
-}
+1. IDS_SYM
+2. IDS_IDS
 }
 \details{
 In the case of combination of homogeneous samples (SYM_SYM and IDS_IDS) we need

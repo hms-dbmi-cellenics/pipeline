@@ -15,12 +15,10 @@ prepare_experiment(input, pipeline_config, prev_out)
 }
 \value{
 prev_out \code{prev_out} with added slots 'scdata' containing merged
-\code{SeuratObject} and 'qc_config' containing default config for QC steps
-if it doesn't already exist.
+ \code{SeuratObject} and 'qc_config' containing default config for QC steps
+ if it doesn't already exist.
 }
 \description{
-\enumerate{
-\item Adds metadata: cellsId, color_pool, and gene annotation
-\item Prepares QC configuration
-}
+1) Adds metadata: cellsId, color_pool, and gene annotation
+ 2) Prepares QC configuration
 }

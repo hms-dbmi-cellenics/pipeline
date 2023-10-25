@@ -16,6 +16,6 @@ data.frame of annotations
 }
 \description{
 This function tries to convert IDs to symbols using the key data.frame created
-with \code{make_annot_with_ids}. In case there's no symbol available, it keeps the
+with `make_annot_with_ids`. In case there's no symbol available, it keeps the
 existing ID
 }

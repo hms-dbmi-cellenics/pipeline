@@ -26,5 +26,5 @@ SCTransform for integration, and finds the integration anchors.
 For further details see the documentation for
 \code{\link[Seurat:SelectIntegrationFeatures]{Seurat::SelectIntegrationFeatures()}},
 \code{\link[Seurat:PrepSCTIntegration]{Seurat::PrepSCTIntegration()}},
-and \href{https://satijalab.org/seurat/articles/sctransform_v2_vignette.html#perform-integration-using-pearson-residuals-1}{sctransform_v2 vignette}.
+and [sctransform_v2 vignette](https://satijalab.org/seurat/articles/sctransform_v2_vignette.html#perform-integration-using-pearson-residuals-1).
 }

@@ -94,21 +94,21 @@
         .. .. .. ..@ misc                      :List of 1
         .. .. .. .. ..$ total.variance: num 10
         .. ..$ harmony        :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:80, 1:2] -0.7853 -0.7853 0.0789 -0.3166 -0.7853 ...
+        .. .. .. ..@ cell.embeddings           : num [1:80, 1:2] -0.7663 -0.7663 0.0881 -0.3779 -0.7663 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
         .. .. .. .. .. ..$ : chr [1:2] "harmony_1" "harmony_2"
-        .. .. .. ..@ feature.loadings          : num [1:10, 1:2] -13.1 -14.5 121.1 117.2 112.6 ...
+        .. .. .. ..@ feature.loadings          : num [1:10, 1:2] -12.4 -14.4 117.8 111.6 107.2 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CD1C" "PPBP" "PF4" ...
         .. .. .. .. .. ..$ : chr [1:2] "harmony_1" "harmony_2"
-        .. .. .. ..@ feature.loadings.projected: num [1:10, 1:2] -13.1 -14.5 121.1 117.2 112.6 ...
+        .. .. .. ..@ feature.loadings.projected: num [1:10, 1:2] -12.4 -14.4 117.8 111.6 107.2 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CD1C" "PPBP" "PF4" ...
         .. .. .. .. .. ..$ : chr [1:2] "harmony_1" "harmony_2"
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:2] 1.61 1.16
+        .. .. .. ..@ stdev                     : num [1:2] 1.57 1.17
         .. .. .. ..@ key                       : chr "harmony_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
@@ -134,7 +134,7 @@
         .. ..$ numPCs          : num 2
         .. ..$ active.reduction: chr "harmony"
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 4 1 4
         ..@ commands    :List of 5
         .. ..$ NormalizeData.RNA             :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "NormalizeData.RNA"

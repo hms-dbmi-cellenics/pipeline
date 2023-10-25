@@ -16,6 +16,6 @@ subsetted Seurat object
 }
 \description{
 Cell Ids are an internal representation used by Cellenics. They are stored in
-the \code{meta.data} slot of the Seurat object. This function subsets a Seurat
+the `meta.data` slot of the Seurat object. This function subsets a Seurat
 object given a vector of cell ids.
 }

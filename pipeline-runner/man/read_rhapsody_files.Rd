@@ -11,9 +11,9 @@ read_rhapsody_files(config, input_dir)
 }
 \value{
 list containing \itemize{
-\item{"counts_list"}{named list of dgCMatrix per sample}
-\item{"annot"}{data.frame with gene symbols}
-}
+  \item{"counts_list"}{named list of dgCMatrix per sample}
+  \item{"annot"}{data.frame with gene symbols}
+  }
 }
 \description{
 Currently we only have support for sparse expression matrices.

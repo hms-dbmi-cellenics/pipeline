@@ -7,13 +7,13 @@
 put_object_in_s3_multipart(pipeline_config, bucket, object, key)
 }
 \arguments{
-\item{pipeline_config}{A Paws S3 config object, e.g. from \code{paws::s3()}.}
+\item{pipeline_config}{A Paws S3 config object, e.g. from `paws::s3()`.}
 
-\item{bucket}{The name of the S3 bucket to be uploaded to, e.g. \code{my-bucket}.}
+\item{bucket}{The name of the S3 bucket to be uploaded to, e.g. `my-bucket`.}
 
 \item{object}{The path to the file to be uploaded.}
 
-\item{key}{The name to assign to the file in the S3 bucket, e.g. \code{path/to/file}.}
+\item{key}{The name to assign to the file in the S3 bucket, e.g. `path/to/file`.}
 }
 \description{
 Upload a file to S3 using multipart upload

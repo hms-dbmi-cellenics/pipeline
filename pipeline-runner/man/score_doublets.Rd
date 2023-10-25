@@ -15,7 +15,7 @@ score_doublets(input, pipeline_config, prev_out)
 }
 \value{
 \code{prev_out} with added slot 'doublet_scores' containing result of call to
-\code{\link{compute_doublet_scores}} for each sample.
+  \code{\link{compute_doublet_scores}} for each sample.
 }
 \description{
 Compute doublet score for count matrices

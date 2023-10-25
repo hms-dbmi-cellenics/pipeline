@@ -17,6 +17,6 @@ construct_metadata(counts, sample, config)
 data.frame of sample metadata
 }
 \description{
-This function creates a \code{data.frame} with the barcodes, sampleIDs and user supplied
+This function creates a `data.frame` with the barcodes, sampleIDs and user supplied
 metadata that corresponds to each one.
 }

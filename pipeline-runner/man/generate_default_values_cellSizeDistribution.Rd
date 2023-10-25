@@ -18,8 +18,8 @@ generate_default_values_cellSizeDistribution(scdata, config)
 - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
 to call generate_default_values_cellSizeDistribution)
 - filterSettings: slot with thresholds
-- minCellSize: Integer. Threshold that contain the minimun number of UMIs per cell
-- binStep: Integer. Bin size for the histogram}
+        - minCellSize: Integer. Threshold that contain the minimun number of UMIs per cell
+        - binStep: Integer. Bin size for the histogram}
 }
 \value{
 a list with the filtered seurat object by cell size ditribution, the config and the plot values

@@ -1,3 +1,4 @@
+library(data.table)
 library(httptest)
 library(mockery)
 library(withr)

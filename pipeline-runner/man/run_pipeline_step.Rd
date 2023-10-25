@@ -10,11 +10,9 @@ run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
 \item{prev_out}{list output from previous step}
 
 \item{input}{list
-\itemize{
-\item sampleIds character
-\item sampleNames character
-\item projectId character
-}}
+- sampleIds character
+- sampleNames character
+- projectId character}
 
 \item{pipeline_config}{list as defined by load_config}
 
@@ -24,7 +22,7 @@ run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
 list of task results
 }
 \description{
-Calls the corresponding \code{task_name} pipeline  step function.
+Calls the corresponding `task_name` pipeline  step function.
 }
 \details{
 The input list only contains experiment level parameters, such as project ID,

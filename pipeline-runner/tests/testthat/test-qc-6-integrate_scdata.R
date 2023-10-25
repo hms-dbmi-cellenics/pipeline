@@ -137,8 +137,8 @@ test_that("Integrate scdata filters out cell ids from the cells_id object", {
   sample_1_id <- names(scdata_list)[1]
   sample_2_id <- names(scdata_list)[2]
   cells_id <- mock_ids()
-  cells_id[[sample_1_id]] <- cells_id[[sample_1_id]][-c(23:31)]
-  cells_id[[sample_2_id]] <- cells_id[[sample_2_id]][-c(40:47)]
+  cells_id[[sample_1_id]] <- cells_id[[sample_1_id]][-c(29:31)]
+  cells_id[[sample_2_id]] <- cells_id[[sample_2_id]][-c(45:47)]
 
   config <- list(
     dimensionalityReduction = list(numPCs = 2),

@@ -1,2 +1,3 @@
 # ignore snapshots in dependency resolution
-/tests/testthat/_snaps/
+tests/testthat/_snaps/
+tests/testthat/mock_data/

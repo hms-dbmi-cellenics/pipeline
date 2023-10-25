@@ -17,6 +17,6 @@ load_seurat(input, pipeline_config, prev_out, input_dir = "/input")
 Seurat object is stored}
 }
 \description{
-This functions is a thin wrapper around \code{reconstruct_seurat}, which is used to
+This functions is a thin wrapper around `reconstruct_seurat`, which is used to
 safely read, check, and reconstruct the Seurat object for downstream use.
 }

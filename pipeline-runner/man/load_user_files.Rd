@@ -17,13 +17,13 @@ load_user_files(input, pipeline_config, prev_out, input_dir = INPUT_DIR)
 }
 \value{
 list with 'output' slot containing \itemize{
-\item{"counts_list"}{named list of dgCMatrix per sample}
-\item{"annot"}{data.frame with gene ids and/or symbols}
-}
+  \item{"counts_list"}{named list of dgCMatrix per sample}
+  \item{"annot"}{data.frame with gene ids and/or symbols}
+  }
 }
 \description{
 Checks technology used and dispatches call to correct reading function.
-In case of 10x, \code{annot} contains a data.frame from reading the
+In case of 10x, `annot` contains a data.frame from reading the
 features.tsv.gz file, while in rhapsody it contains the gene symbols as read
 from the count matrix.
 }

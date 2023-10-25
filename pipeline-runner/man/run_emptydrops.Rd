@@ -15,7 +15,7 @@ run_emptydrops(input, pipeline_config, prev_out)
 }
 \value{
 \code{prev_out} with added slot 'edrops' containing result of call to
-\code{\link[DropletUtils]{emptyDrops}} for each sample.
+  \code{\link[DropletUtils]{emptyDrops}} for each sample.
 }
 \description{
 Run emptyDrops from DropletUtils

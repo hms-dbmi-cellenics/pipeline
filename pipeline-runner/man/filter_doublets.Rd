@@ -19,9 +19,9 @@ filter_doublets(
 - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
 to call generate_default_values_doubletScores)
 - filterSettings: slot with thresholds
-- probabilityThreshold: Float. cut-off for the maximun probability scores that could have a cell. The doubletScores scores have been computed
-through scDblFinder
-- binStep: Float. Bin size for the histogram}
+        - probabilityThreshold: Float. cut-off for the maximun probability scores that could have a cell. The doubletScores scores have been computed
+        through scDblFinder
+        - binStep: Float. Bin size for the histogram}
 }
 \value{
 a list with the filtered seurat object by doublet score, the config and the plot values

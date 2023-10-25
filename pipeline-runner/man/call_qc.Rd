@@ -10,11 +10,9 @@ call_qc(task_name, input, pipeline_config)
 \item{task_name}{character name of the step}
 
 \item{input}{list containing:
-\itemize{
-\item step parameters for all samples
-\item current sample UUID
-\item uploadCountMatrix (whether or not to upload matrix after step)
-}}
+- step parameters for all samples
+- current sample UUID
+- uploadCountMatrix (whether or not to upload matrix after step)}
 
 \item{pipeline_config}{list as defined by load_config}
 }
@@ -22,6 +20,6 @@ call_qc(task_name, input, pipeline_config)
 character message id
 }
 \description{
-Runs step \code{task_name} of the data processing pipeline, sends plot data to s3
+Runs step `task_name` of the data processing pipeline, sends plot data to s3
 and the output message to the API
 }

@@ -84,7 +84,7 @@ mock_parsed_cellsets <- function(scdata_list) {
     rep("sample", length(cells_ids_by_sample)), rep("metadata", length(cells_ids_by_sample))
   )
 
-  parsed_cellsets <- data.table(key, "name" = name, "cell_id" = cell_id, "type" = type)
+  parsed_cellsets <- data.table::data.table(key, "name" = name, "cell_id" = cell_id, "type" = type)
 
   return(parsed_cellsets)
 }

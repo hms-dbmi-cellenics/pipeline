@@ -20,7 +20,7 @@ mock_source_data <- function(sample_ids, from_experiment_id) {
 
     # add samples
     scdata$samples <- rep(sample_ids[i], each = n_cells)
-    scdata_list[i] <- scdata
+    scdata_list[[i]] <- scdata
   }
   return(scdata_list)
 }
@@ -57,13 +57,13 @@ get_mock_params <- function() {
 
   pipeline_config <- list(aws_config = "")
 
-  return(list(input = input, pipeline_config = pipeline_config))
+  return(list(input = input, pipelineConfig = pipeline_config))
 }
 
 get_mock_cell_sets <- function(flatten = TRUE) {
   cell_sets_path <- file.path(setup_test_paths()$mock_data, "cell_sets")
   path <- file.path(cell_sets_path, "cell_sets_2_samples.json")
-  cell_sets <- jsonlite::fromJSON(path, flatten = flatten)
+  cell_sets <- jsonlite::read_json(path, flatten = flatten)
 
   return(cell_sets)
 }
@@ -102,9 +102,10 @@ test_that("copy_processed_rds works correctly", {
 
   mock_load_processed_scdata <- mock(processed_scdata)
   mock_upload_matrix_to_s3 <- mock()
+  mock_s3 <- mockery::mock()
   mockery::stub(copy_processed_rds, "load_processed_scdata", mock_load_processed_scdata)
   mockery::stub(copy_processed_rds, "upload_matrix_to_s3", mock_upload_matrix_to_s3)
-
+  mockery::stub(copy_processed_rds, "paws::s3", mock_s3)
   copy_processed_rds(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
 
   expect_called(mock_load_processed_scdata, 1)
@@ -122,8 +123,11 @@ test_that("copy_cell_sets works correctly", {
 
   mock_load_cellsets <- mock(cell_sets)
   mock_put_object_in_s3 <- mock()
+  mock_s3 <- mockery::mock()
+
   mockery::stub(copy_cell_sets, "load_cellsets", mock_load_cellsets)
   mockery::stub(copy_cell_sets, "put_object_in_s3", mock_put_object_in_s3)
+  mockery::stub(copy_cell_sets, "paws::s3", mock_s3)
 
   copy_cell_sets(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
 
