@@ -68,6 +68,7 @@ format_cluster_cellsets <- function(cell_sets,
                                     name = paste0(clustering_method, " clusters")) {
   message("Formatting cluster cellsets.")
 
+  # careful with capital l on type for the key.
   cell_sets_object <-
     list(
       key = clustering_method,
@@ -76,7 +77,7 @@ format_cluster_cellsets <- function(cell_sets,
       type = "cellSets",
       children = list()
     )
-  for (cluster in sort(unique(cell_sets$cluster))) {
+  for (cluster in sort_cluster_names(unique(cell_sets$cluster))) {
     cells <- cell_sets[cell_sets$cluster == cluster, "cell_ids"]
     is.num <- !is.na(as.numeric(cluster))
     set_name <- ifelse(is.num, paste("Cluster", cluster), cluster)
@@ -95,6 +96,7 @@ format_cluster_cellsets <- function(cell_sets,
   }
   return(cell_sets_object)
 }
+
 
 
 #' replace cell class by key
@@ -431,3 +433,22 @@ format_cl_metadata_cellsets <-
 
     return(cl_metadata_cellsets)
   }
+
+#' Sort cluster names
+#'
+#' Sorts cluster names naturally, i.e. Cluster 1, Cluster 2, Cluster 10
+#'
+#' @param strings cluster names
+#'
+#' @return sorted vector
+#' @export
+#'
+sort_cluster_names <- function(strings) {
+  # extract letters and digits
+  char <- gsub("\\d", "", strings)
+  nums <- gsub("\\D", "", strings)
+
+  sorted_indices <- order(char, as.integer(nums))
+
+  return(strings[sorted_indices])
+}

@@ -256,7 +256,9 @@ get_metadata_cell_ids <- function(scdata_list, valid_metadata_name, value) {
 extract_subset_user_metadata <- function(subset_cellsets) {
   # metadata keys are the <track_name>-<value>, and name are the values alone
   metadata <- unique(subset_cellsets[type == "metadata"], by = "key")
-  metadata[, metadata_track := gsub(paste0("-", name, "$"), "", key), by = "key"]
+  # escape regex characters to avoid errors when creating cellsets
+  metadata[, escaped_name := gsub("([.\\\\+*?\\[^\\]$(){}=!<>|:-])", "\\\\\\1", name, perl = TRUE)]
+  metadata[, metadata_track := gsub(paste0("-", escaped_name, "$"), "", key), by = "key"]
 
   metadata <- metadata[, c("metadata_track", "name")]
   data.table::setnames(metadata, "name", "metadata_value")

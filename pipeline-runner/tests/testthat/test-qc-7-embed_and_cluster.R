@@ -262,9 +262,30 @@ test_that("format_cluster_cellsets returns empty children on empty cellset", {
   for (algo in algos) {
     res <- format_cluster_cellsets(cell_sets, algo, color_pool)
     expect_equal(length(res$children), 0)
+
   }
 })
 
+
+test_that("format_cell_sets_object orders clusters lexicographically", {
+  n_clusters <- 5
+  cell_sets <- mock_cellset_object(50, n_clusters)
+  troublesome_clusters <- c(11, 12, 21, 45)
+  more_cell_sets <- data.frame(cluster = troublesome_clusters, cell_ids = c(101, 102, 103, 104))
+  cell_sets <- rbind(cell_sets, more_cell_sets)
+
+  color_pool <- mock_color_pool(n_clusters)
+  algos <- c("louvain", "leiden")
+
+  expected_order <-
+    list(louvain = paste0("louvain-", c(1:5, troublesome_clusters)),
+         leiden = paste0("leiden-", c(1:5, troublesome_clusters)))
+
+  for (algo in algos) {
+    res <- format_cluster_cellsets(cell_sets, algo, color_pool)
+    expect_equal(unlist(lapply(res$children, `[[`, "key")), expected_order[[algo]])
+  }
+})
 
 
 test_that("embed_and_cluster works", {

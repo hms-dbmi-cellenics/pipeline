@@ -312,13 +312,13 @@
       [1] "KO"
       
       [[3]]$children[[1]]$rootNode
-      NULL
+      [1] FALSE
       
       [[3]]$children[[1]]$color
       [1] "#8c564b"
       
       [[3]]$children[[1]]$type
-      NULL
+      [1] "metadataCategorical"
       
       [[3]]$children[[1]]$cellIds
        [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
@@ -333,13 +333,13 @@
       [1] "WT1"
       
       [[3]]$children[[2]]$rootNode
-      NULL
+      [1] FALSE
       
       [[3]]$children[[2]]$color
       [1] "#d62728"
       
       [[3]]$children[[2]]$type
-      NULL
+      [1] "metadataCategorical"
       
       [[3]]$children[[2]]$cellIds
        [1] 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65
@@ -370,13 +370,13 @@
       [1] "KMeta"
       
       [[4]]$children[[1]]$rootNode
-      NULL
+      [1] FALSE
       
       [[4]]$children[[1]]$color
       [1] "#8c564b"
       
       [[4]]$children[[1]]$type
-      NULL
+      [1] "metadataCategorical"
       
       [[4]]$children[[1]]$cellIds
        [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
@@ -391,13 +391,13 @@
       [1] "WMetaT"
       
       [[4]]$children[[2]]$rootNode
-      NULL
+      [1] FALSE
       
       [[4]]$children[[2]]$color
       [1] "#d62728"
       
       [[4]]$children[[2]]$type
-      NULL
+      [1] "metadataCategorical"
       
       [[4]]$children[[2]]$cellIds
        [1]  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59
