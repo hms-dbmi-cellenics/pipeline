@@ -18,5 +18,5 @@ Uses cell cycle gene list from Tirosh et. al. 2016, bundled with Seurat.
 \details{
 For now it's only useful for Homo sapiens. But could be easily extended to mice
 converting the human gene names to their orthologs in mice, as suggested by
-satijalab in \href{https://github.com/satijalab/seurat/issues/2493#issuecomment-575702274}{this github issue}
+satijalab in [this github issue](https://github.com/satijalab/seurat/issues/2493#issuecomment-575702274)
 }

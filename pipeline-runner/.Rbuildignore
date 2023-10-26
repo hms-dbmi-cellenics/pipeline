@@ -1,5 +1,5 @@
 ^requirements\.txt$
 ^renv$
 ^renv\.lock$
-^pipeline-runner\.Rproj$
+^.*\.Rproj$
 ^\.Rproj\.user$

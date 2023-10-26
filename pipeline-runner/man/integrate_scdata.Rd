@@ -15,19 +15,19 @@ integrate_scdata(
 \arguments{
 \item{config}{list containing the following information
 - dataIntegration
-- method: String. Method to be used. "harmony by default.
-- methodSettings: List with the method as key and:
-- numGenes: Numeric. Number of gene to be used.
-- normalisation: String. Normalisation method to be used.
+    - method: String. Method to be used. "harmony by default.
+    - methodSettings: List with the method as key and:
+        - numGenes: Numeric. Number of gene to be used.
+        - normalisation: String. Normalisation method to be used.
 - dimensionalityReduction
-- method: String. Method to be used. "rpca" by default.
-- numPCs: Numeric. Number of principal components.
-- excludeGeneCategories: List. Categories of genes to be excluded.
+    - method: String. Method to be used. "rpca" by default.
+    - numPCs: Numeric. Number of principal components.
+    - excludeGeneCategories: List. Categories of genes to be excluded.
 - downsampling
-- method: String. Method to be used to downsample. "geosketch" by default
-- methodSettings: List with required parameters for each downsampling method
-- geosketch
-- percentageToKeep: percentage of cells to keep}
+  - method: String. Method to be used to downsample. "geosketch" by default
+  - methodSettings: List with required parameters for each downsampling method
+    - geosketch
+      - percentageToKeep: percentage of cells to keep}
 }
 \value{
 a list with the integrated seurat object, the cell ids, the config and the plot values.

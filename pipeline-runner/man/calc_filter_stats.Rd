@@ -13,10 +13,10 @@ calc_filter_stats(scdata)
 }
 \value{
 list with \itemize{
-\item{"num_cells"}{Number of cells in sample}
-\item{"total_genes"}{Number of detected genes in sample}
-\item{"median_genes"}{Median number of genes detected per cell}
-\item{"median_umis"}{Median number of counts per cell}
+  \item{"num_cells"}{Number of cells in sample}
+  \item{"total_genes"}{Number of detected genes in sample}
+  \item{"median_genes"}{Median number of genes detected per cell}
+  \item{"median_umis"}{Median number of counts per cell}
 }
 }
 \description{

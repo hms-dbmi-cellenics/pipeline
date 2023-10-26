@@ -12,6 +12,6 @@ reconstruct_seurat(dataset_fpath)
 \description{
 The slots needed from the Seurat object are extracted and then their in-built types
 are strictly checked before creating a new Seurat object. This reconstruction and type
-checking prevents potentially malicious executable code  (e.g. type \code{closure} or \code{environment})
+checking prevents potentially malicious executable code  (e.g. type `closure` or `environment`)
 from being stored in the final Seurat object.
 }

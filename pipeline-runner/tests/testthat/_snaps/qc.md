@@ -465,7 +465,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "25e05c91587f1b98bab951258271ad1f"
+      [1] "d2c24792448261bedbb982ead4390cf3"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -504,8 +504,8 @@
         .. .. ..$ nFeature_RNA      : int [1:460] 24 80 59 95 51 34 108 39 42 14 13 75 39 119 75 94 82 63 151 90 43 81 76 94 114 108 121 42 85 135 46 12 68 97 47 4| __truncated__ ...
         .. .. ..$ samples           : chr [1:460] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
         .. .. ..$ percent.mt        : num [1:460] 19.57 12.8 25.3 30.8 7.77 20.43 18.22 20.79 14.29 31.71 36.84 9.09 38.27 19.09 18.01 18.39 22.91 14.02 31.57 28.1| __truncated__ ...
-        .. .. ..$ doublet_scores    : num [1:460] NA 0.13 0.295 0.923 NA NA 0.984 NA NA NA NA 0.406 NA 0.979 0.144 NA 0.961 NA 0.998 0.173 NA 0.052 NA 0.257 0.256 ...
-        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 2 NA NA 2 NA NA NA NA 1 NA 2 1 NA 2 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
+        .. .. ..$ doublet_scores    : num [1:460] NA 0.1021 0.2497 0.314 NA NA 0.9736 NA NA NA NA 0.5057 NA 0.5166 0.1293 NA 0.2733 NA 0.5361 0.0751 NA 0.0546 NA 0.136 0.1682 ...
+        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 2 NA NA NA NA 1 NA 1 1 NA 1 NA 1 1 NA 1 NA 1 1 1 1 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
         .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0009 0.0001 0.0001 NA 0.0001 0.0016 0.0002 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
@@ -527,7 +527,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 4 1 0
+        .. .. ..$ : int [1:3] 4 1 4
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -565,8 +565,8 @@
         .. .. ..$ nFeature_RNA      : int [1:436] 36 138 22 66 151 82 196 130 56 57 47 21 30 195 140 49 12 25 79 27 78 72 49 61 88 204 17 116 168 26 125 26 56 57 1| __truncated__ ...
         .. .. ..$ samples           : chr [1:436] "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" ...
         .. .. ..$ percent.mt        : num [1:436] 76.44 25.36 53.06 64.23 11.25 8.81 27.16 21.04 66.81 85.6 20.17 59.32 28.57 20.88 14.74 20 50 6.9 10.76 44.23 13.| __truncated__ ...
-        .. .. ..$ doublet_scores    : num [1:436] NA 0.337 NA 0.379 0.28 0.741 0.189 0.389 NA 0.728 NA NA NA 0.612 0.277 NA NA NA 0.325 NA 0.52 NA NA NA 0.161 ...
-        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 2 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
+        .. .. ..$ doublet_scores    : num [1:436] NA 0.1943 NA 0.3992 0.1601 0.5305 0.1112 0.2898 NA 0.3433 NA NA NA 0.3107 0.2699 NA NA NA 0.1687 NA 0.0749 NA NA NA 0.21 ...
+        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 2 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
         .. .. ..$ emptyDrops_PValue : num [1:436] 0.9235 0.0001 NA 0.1191 0.0001 0.0001 0.0001 0.0001 0.0028 0.7043 0.0011 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
@@ -588,7 +588,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 4 1 0
+        .. .. ..$ : int [1:3] 4 1 4
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -1045,7 +1045,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "25e05c91587f1b98bab951258271ad1f"
+      [1] "d2c24792448261bedbb982ead4390cf3"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -1084,8 +1084,8 @@
         .. .. ..$ nFeature_RNA      : int [1:460] 24 80 59 95 51 34 108 39 42 14 13 75 39 119 75 94 82 63 151 90 43 81 76 94 114 108 121 42 85 135 46 12 68 97 47 4| __truncated__ ...
         .. .. ..$ samples           : chr [1:460] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
         .. .. ..$ percent.mt        : num [1:460] 19.57 12.8 25.3 30.8 7.77 20.43 18.22 20.79 14.29 31.71 36.84 9.09 38.27 19.09 18.01 18.39 22.91 14.02 31.57 28.1| __truncated__ ...
-        .. .. ..$ doublet_scores    : num [1:460] NA 0.13 0.295 0.923 NA NA 0.984 NA NA NA NA 0.406 NA 0.979 0.144 NA 0.961 NA 0.998 0.173 NA 0.052 NA 0.257 0.256 ...
-        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 2 NA NA 2 NA NA NA NA 1 NA 2 1 NA 2 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
+        .. .. ..$ doublet_scores    : num [1:460] NA 0.1021 0.2497 0.314 NA NA 0.9736 NA NA NA NA 0.5057 NA 0.5166 0.1293 NA 0.2733 NA 0.5361 0.0751 NA 0.0546 NA 0.136 0.1682 ...
+        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 2 NA NA NA NA 1 NA 1 1 NA 1 NA 1 1 NA 1 NA 1 1 1 1 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
         .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0009 0.0001 0.0001 NA 0.0001 0.0016 0.0002 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
@@ -1107,7 +1107,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 4 1 0
+        .. .. ..$ : int [1:3] 4 1 4
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -1145,8 +1145,8 @@
         .. .. ..$ nFeature_RNA      : int [1:436] 36 138 22 66 151 82 196 130 56 57 47 21 30 195 140 49 12 25 79 27 78 72 49 61 88 204 17 116 168 26 125 26 56 57 1| __truncated__ ...
         .. .. ..$ samples           : chr [1:436] "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" ...
         .. .. ..$ percent.mt        : num [1:436] 76.44 25.36 53.06 64.23 11.25 8.81 27.16 21.04 66.81 85.6 20.17 59.32 28.57 20.88 14.74 20 50 6.9 10.76 44.23 13.| __truncated__ ...
-        .. .. ..$ doublet_scores    : num [1:436] NA 0.337 NA 0.379 0.28 0.741 0.189 0.389 NA 0.728 NA NA NA 0.612 0.277 NA NA NA 0.325 NA 0.52 NA NA NA 0.161 ...
-        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 2 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
+        .. .. ..$ doublet_scores    : num [1:436] NA 0.1943 NA 0.3992 0.1601 0.5305 0.1112 0.2898 NA 0.3433 NA NA NA 0.3107 0.2699 NA NA NA 0.1687 NA 0.0749 NA NA NA 0.21 ...
+        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 2 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
         .. .. ..$ emptyDrops_PValue : num [1:436] 0.9235 0.0001 NA 0.1191 0.0001 0.0001 0.0001 0.0001 0.0028 0.7043 0.0011 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
@@ -1168,7 +1168,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 4 1 0
+        .. .. ..$ : int [1:3] 4 1 4
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -1625,7 +1625,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "25e05c91587f1b98bab951258271ad1f"
+      [1] "d2c24792448261bedbb982ead4390cf3"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -1664,8 +1664,8 @@
         .. .. ..$ nFeature_RNA      : int [1:460] 24 80 59 95 51 34 108 39 42 14 13 75 39 119 75 94 82 63 151 90 43 81 76 94 114 108 121 42 85 135 46 12 68 97 47 4| __truncated__ ...
         .. .. ..$ samples           : chr [1:460] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
         .. .. ..$ percent.mt        : num [1:460] 19.57 12.8 25.3 30.8 7.77 20.43 18.22 20.79 14.29 31.71 36.84 9.09 38.27 19.09 18.01 18.39 22.91 14.02 31.57 28.1| __truncated__ ...
-        .. .. ..$ doublet_scores    : num [1:460] NA 0.13 0.295 0.923 NA NA 0.984 NA NA NA NA 0.406 NA 0.979 0.144 NA 0.961 NA 0.998 0.173 NA 0.052 NA 0.257 0.256 ...
-        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 2 NA NA 2 NA NA NA NA 1 NA 2 1 NA 2 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
+        .. .. ..$ doublet_scores    : num [1:460] NA 0.1021 0.2497 0.314 NA NA 0.9736 NA NA NA NA 0.5057 NA 0.5166 0.1293 NA 0.2733 NA 0.5361 0.0751 NA 0.0546 NA 0.136 0.1682 ...
+        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 2 NA NA NA NA 1 NA 1 1 NA 1 NA 1 1 NA 1 NA 1 1 1 1 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
         .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0009 0.0001 0.0001 NA 0.0001 0.0016 0.0002 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
@@ -1687,7 +1687,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 4 1 0
+        .. .. ..$ : int [1:3] 4 1 4
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -1725,8 +1725,8 @@
         .. .. ..$ nFeature_RNA      : int [1:436] 36 138 22 66 151 82 196 130 56 57 47 21 30 195 140 49 12 25 79 27 78 72 49 61 88 204 17 116 168 26 125 26 56 57 1| __truncated__ ...
         .. .. ..$ samples           : chr [1:436] "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" ...
         .. .. ..$ percent.mt        : num [1:436] 76.44 25.36 53.06 64.23 11.25 8.81 27.16 21.04 66.81 85.6 20.17 59.32 28.57 20.88 14.74 20 50 6.9 10.76 44.23 13.| __truncated__ ...
-        .. .. ..$ doublet_scores    : num [1:436] NA 0.337 NA 0.379 0.28 0.741 0.189 0.389 NA 0.728 NA NA NA 0.612 0.277 NA NA NA 0.325 NA 0.52 NA NA NA 0.161 ...
-        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 2 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
+        .. .. ..$ doublet_scores    : num [1:436] NA 0.1943 NA 0.3992 0.1601 0.5305 0.1112 0.2898 NA 0.3433 NA NA NA 0.3107 0.2699 NA NA NA 0.1687 NA 0.0749 NA NA NA 0.21 ...
+        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 2 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
         .. .. ..$ emptyDrops_PValue : num [1:436] 0.9235 0.0001 NA 0.1191 0.0001 0.0001 0.0001 0.0001 0.0028 0.7043 0.0011 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
@@ -1748,7 +1748,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 4 1 0
+        .. .. ..$ : int [1:3] 4 1 4
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -2205,7 +2205,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "25e05c91587f1b98bab951258271ad1f"
+      [1] "d2c24792448261bedbb982ead4390cf3"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -2244,8 +2244,8 @@
         .. .. ..$ nFeature_RNA      : int [1:460] 24 80 59 95 51 34 108 39 42 14 13 75 39 119 75 94 82 63 151 90 43 81 76 94 114 108 121 42 85 135 46 12 68 97 47 4| __truncated__ ...
         .. .. ..$ samples           : chr [1:460] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
         .. .. ..$ percent.mt        : num [1:460] 19.57 12.8 25.3 30.8 7.77 20.43 18.22 20.79 14.29 31.71 36.84 9.09 38.27 19.09 18.01 18.39 22.91 14.02 31.57 28.1| __truncated__ ...
-        .. .. ..$ doublet_scores    : num [1:460] NA 0.13 0.295 0.923 NA NA 0.984 NA NA NA NA 0.406 NA 0.979 0.144 NA 0.961 NA 0.998 0.173 NA 0.052 NA 0.257 0.256 ...
-        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 2 NA NA 2 NA NA NA NA 1 NA 2 1 NA 2 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
+        .. .. ..$ doublet_scores    : num [1:460] NA 0.1021 0.2497 0.314 NA NA 0.9736 NA NA NA NA 0.5057 NA 0.5166 0.1293 NA 0.2733 NA 0.5361 0.0751 NA 0.0546 NA 0.136 0.1682 ...
+        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 2 NA NA NA NA 1 NA 1 1 NA 1 NA 1 1 NA 1 NA 1 1 1 1 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
         .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0009 0.0001 0.0001 NA 0.0001 0.0016 0.0002 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
@@ -2267,7 +2267,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 4 1 0
+        .. .. ..$ : int [1:3] 4 1 4
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -2305,8 +2305,8 @@
         .. .. ..$ nFeature_RNA      : int [1:436] 36 138 22 66 151 82 196 130 56 57 47 21 30 195 140 49 12 25 79 27 78 72 49 61 88 204 17 116 168 26 125 26 56 57 1| __truncated__ ...
         .. .. ..$ samples           : chr [1:436] "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" ...
         .. .. ..$ percent.mt        : num [1:436] 76.44 25.36 53.06 64.23 11.25 8.81 27.16 21.04 66.81 85.6 20.17 59.32 28.57 20.88 14.74 20 50 6.9 10.76 44.23 13.| __truncated__ ...
-        .. .. ..$ doublet_scores    : num [1:436] NA 0.337 NA 0.379 0.28 0.741 0.189 0.389 NA 0.728 NA NA NA 0.612 0.277 NA NA NA 0.325 NA 0.52 NA NA NA 0.161 ...
-        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 2 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
+        .. .. ..$ doublet_scores    : num [1:436] NA 0.1943 NA 0.3992 0.1601 0.5305 0.1112 0.2898 NA 0.3433 NA NA NA 0.3107 0.2699 NA NA NA 0.1687 NA 0.0749 NA NA NA 0.21 ...
+        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 2 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
         .. .. ..$ emptyDrops_PValue : num [1:436] 0.9235 0.0001 NA 0.1191 0.0001 0.0001 0.0001 0.0001 0.0028 0.7043 0.0011 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
@@ -2328,7 +2328,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 4 1 0
+        .. .. ..$ : int [1:3] 4 1 4
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -2359,7 +2359,7 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "56772520d5c0c75ad75f00b75cef4cff"
+      [1] "b53df8779756ec7577dd12add2e648fa"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
@@ -6746,7 +6746,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "25e05c91587f1b98bab951258271ad1f"
+      [1] "d2c24792448261bedbb982ead4390cf3"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -6785,8 +6785,8 @@
         .. .. ..$ nFeature_RNA      : int [1:460] 24 80 59 95 51 34 108 39 42 14 13 75 39 119 75 94 82 63 151 90 43 81 76 94 114 108 121 42 85 135 46 12 68 97 47 4| __truncated__ ...
         .. .. ..$ samples           : chr [1:460] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
         .. .. ..$ percent.mt        : num [1:460] 19.57 12.8 25.3 30.8 7.77 20.43 18.22 20.79 14.29 31.71 36.84 9.09 38.27 19.09 18.01 18.39 22.91 14.02 31.57 28.1| __truncated__ ...
-        .. .. ..$ doublet_scores    : num [1:460] NA 0.13 0.295 0.923 NA NA 0.984 NA NA NA NA 0.406 NA 0.979 0.144 NA 0.961 NA 0.998 0.173 NA 0.052 NA 0.257 0.256 ...
-        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 2 NA NA 2 NA NA NA NA 1 NA 2 1 NA 2 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
+        .. .. ..$ doublet_scores    : num [1:460] NA 0.1021 0.2497 0.314 NA NA 0.9736 NA NA NA NA 0.5057 NA 0.5166 0.1293 NA 0.2733 NA 0.5361 0.0751 NA 0.0546 NA 0.136 0.1682 ...
+        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 2 NA NA NA NA 1 NA 1 1 NA 1 NA 1 1 NA 1 NA 1 1 1 1 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
         .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0009 0.0001 0.0001 NA 0.0001 0.0016 0.0002 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
@@ -6808,7 +6808,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 4 1 0
+        .. .. ..$ : int [1:3] 4 1 4
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -6846,8 +6846,8 @@
         .. .. ..$ nFeature_RNA      : int [1:436] 36 138 22 66 151 82 196 130 56 57 47 21 30 195 140 49 12 25 79 27 78 72 49 61 88 204 17 116 168 26 125 26 56 57 1| __truncated__ ...
         .. .. ..$ samples           : chr [1:436] "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" ...
         .. .. ..$ percent.mt        : num [1:436] 76.44 25.36 53.06 64.23 11.25 8.81 27.16 21.04 66.81 85.6 20.17 59.32 28.57 20.88 14.74 20 50 6.9 10.76 44.23 13.| __truncated__ ...
-        .. .. ..$ doublet_scores    : num [1:436] NA 0.337 NA 0.379 0.28 0.741 0.189 0.389 NA 0.728 NA NA NA 0.612 0.277 NA NA NA 0.325 NA 0.52 NA NA NA 0.161 ...
-        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 2 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
+        .. .. ..$ doublet_scores    : num [1:436] NA 0.1943 NA 0.3992 0.1601 0.5305 0.1112 0.2898 NA 0.3433 NA NA NA 0.3107 0.2699 NA NA NA 0.1687 NA 0.0749 NA NA NA 0.21 ...
+        .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 2 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
         .. .. ..$ emptyDrops_PValue : num [1:436] 0.9235 0.0001 NA 0.1191 0.0001 0.0001 0.0001 0.0001 0.0028 0.7043 0.0011 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
@@ -6869,7 +6869,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 4 1 0
+        .. .. ..$ : int [1:3] 4 1 4
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -6883,13 +6883,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "a76a0147c9d141fb0e4585448a87c4e5"
+      [1] "d55a996087c010a44d8996257df56b0f"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
-       $ mock_sample_2_id: int [1:319] 1 9 11 13 15 19 21 22 25 26 34 36 39 40 41 44 48 52 53 58 59 62 72 75 77 79 81 85 86 90 93 96 97 99 104 106 108 1| __truncated__ ...
-       $ mock_sample_1_id: int [1:265] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 42 50 54 55 63 65 68 70 71 74 78 80 82 91 94 95 105 117 119 121 124 128 13| __truncated__ ...
+       $ mock_sample_2_id: int [1:338] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
+       $ mock_sample_1_id: int [1:272] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 42 50 54 55 63 65 68 70 71 74 78 80 82 91 94 95 98 100 105 117 119 121 124| __truncated__ ...
 
 ---
 
@@ -6900,7 +6900,7 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "669b3e222d74861d9845bacb04201108"
+      [1] "dc2e55a2a3d9a4bd0bcb980d302a95bf"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
@@ -6908,201 +6908,201 @@
        $ mock_sample_1_id-doubletScores-0:List of 285
         ..$ : Named num NA
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.301
+        ..$ : Named num 0.346
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num NA
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.29
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.117
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.389
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.537
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.234
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.379
+        ..$ : Named num 0.073
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num 0.206
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.382
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.917
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.985
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.528
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.304
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.373
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.311
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.289
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.15
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.998
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.743
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.296
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.557
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.998
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.998
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.64
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.369
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.416
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
+        ..$ : Named num 0.29
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num 0.275
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.283
+        ..$ : Named num 0.0748
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.975
+        ..$ : Named num 0.0495
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.0635
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.0691
+        ..$ : Named num 0.175
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num NA
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.0936
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.619
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.473
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.129
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.481
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.33
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.264
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.233
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.795
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.998
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.406
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.264
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.401
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.416
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num NA
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.865
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.096
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.313
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.917
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.294
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num 0.177
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.171
+        ..$ : Named num NA
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.19
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.69
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.0781
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.393
-        .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.407
+        ..$ : Named num 0.788
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num NA
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.804
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.829
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.179
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.134
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.232
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num NA
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.325
+        ..$ : Named num 0.257
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.12
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.109
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.984
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.447
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.0961
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.097
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.39
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.467
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.581
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.101
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.0578
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.334
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.11
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.538
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.125
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.0353
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.231
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.363
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.269
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.222
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.176
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.139
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.0823
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.16
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.388
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.774
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.387
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.081
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.332
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.219
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num NA
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.31
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.0574
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.175
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num 0.826
         .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.33
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.301
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.406
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.109
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.823
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.172
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.268
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.964
+        .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num NA
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.653
+        ..$ : Named num 0.315
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num NA
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.527
+        ..$ : Named num 0.169
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.198
+        ..$ : Named num 0.116
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.32
+        ..$ : Named num NA
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.982
+        ..$ : Named num 0.391
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.141
+        ..$ : Named num NA
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.742
+        ..$ : Named num 0.0625
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.531
+        ..$ : Named num 0.715
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.973
+        ..$ : Named num 0.21
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.426
+        ..$ : Named num 0.378
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.23
+        ..$ : Named num 0.0536
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.539
+        ..$ : Named num 0.163
         .. ..- attr(*, "names")= chr "doubletP"
-        ..$ : Named num 0.564
+        ..$ : Named num 0.417
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.407
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.582
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.077
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.137
+        .. ..- attr(*, "names")= chr "doubletP"
+        ..$ : Named num 0.137
         .. ..- attr(*, "names")= chr "doubletP"
         .. [list output truncated]
        $ mock_sample_1_id-doubletScores-1:List of 2
@@ -7112,10 +7112,10 @@
         .. ..$ median_genes: int 98
         .. ..$ median_umis : num 311
         ..$ after :List of 4
-        .. ..$ num_cells   : int 265
-        .. ..$ total_genes : int 908
-        .. ..$ median_genes: int 92
-        .. ..$ median_umis : num 298
+        .. ..$ num_cells   : int 272
+        .. ..$ total_genes : int 918
+        .. ..$ median_genes: num 93
+        .. ..$ median_umis : num 302
 
 ---
 
@@ -7126,7 +7126,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "204d12cf36b5f4f4e752334b59d98597"
+      [1] "2940bf3a4bd7bc883f7890c6c113e4a4"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7134,72 +7134,72 @@
         ..@ assays      :List of 1
         .. ..$ RNA:Formal class 'Assay' [package "SeuratObject"] with 8 slots
         .. .. .. ..@ counts       :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. ..@ i       : int [1:53873] 19 117 128 133 175 224 255 277 284 294 307 309 327 345 414 440 447 468 556 605 657 686 706 718 810 838 894 907 93| __truncated__ ...
-        .. .. .. .. .. ..@ p       : int [1:585] 0 66 113 167 276 348 408 468 626 759 840 928 1091 1177 1220 1337 1386 1425 1510 1575 1655 1731 1789 1884 1939 199| __truncated__ ...
-        .. .. .. .. .. ..@ Dim     : int [1:2] 2000 584
+        .. .. .. .. .. ..@ i       : int [1:56928] 19 117 128 133 175 224 255 277 284 294 307 309 327 345 414 440 447 468 556 605 657 686 706 718 810 838 894 907 93| __truncated__ ...
+        .. .. .. .. .. ..@ p       : int [1:611] 0 66 113 167 276 348 408 468 626 759 840 996 1084 1247 1333 1376 1493 1542 1581 1666 1731 1811 1887 1945 2040 213| __truncated__ ...
+        .. .. .. .. .. ..@ Dim     : int [1:2] 2000 610
         .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
-        .. .. .. .. .. ..@ x       : num [1:53873] 3 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 3 1 1 4 1 1 1 1 3 2 1 4 1 1 2 1 1 2 3 1 2 1 21 2 1 ...
+        .. .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
+        .. .. .. .. .. ..@ x       : num [1:56928] 3 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 3 1 1 4 1 1 1 1 3 2 1 4 1 1 2 1 1 2 3 1 2 1 21 2 1 ...
         .. .. .. .. .. ..@ factors : list()
         .. .. .. ..@ data         :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. ..@ i       : int [1:53873] 19 117 128 133 175 224 255 277 284 294 307 309 327 345 414 440 447 468 556 605 657 686 706 718 810 838 894 907 93| __truncated__ ...
-        .. .. .. .. .. ..@ p       : int [1:585] 0 66 113 167 276 348 408 468 626 759 840 928 1091 1177 1220 1337 1386 1425 1510 1575 1655 1731 1789 1884 1939 199| __truncated__ ...
-        .. .. .. .. .. ..@ Dim     : int [1:2] 2000 584
+        .. .. .. .. .. ..@ i       : int [1:56928] 19 117 128 133 175 224 255 277 284 294 307 309 327 345 414 440 447 468 556 605 657 686 706 718 810 838 894 907 93| __truncated__ ...
+        .. .. .. .. .. ..@ p       : int [1:611] 0 66 113 167 276 348 408 468 626 759 840 996 1084 1247 1333 1376 1493 1542 1581 1666 1731 1811 1887 1945 2040 213| __truncated__ ...
+        .. .. .. .. .. ..@ Dim     : int [1:2] 2000 610
         .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
-        .. .. .. .. .. ..@ x       : num [1:53873] 4.82 3.74 3.74 3.74 3.74 3.74 4.42 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 4.42 ...
+        .. .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
+        .. .. .. .. .. ..@ x       : num [1:56928] 4.82 3.74 3.74 3.74 3.74 3.74 4.42 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 4.42 ...
         .. .. .. .. .. ..@ factors : list()
-        .. .. .. ..@ scale.data   : num [1:970, 1:584] -0.1381 -0.1438 -0.0414 -0.0828 -0.2724 -0.3064 1.1631 -0.2008 -0.0414 -0.0917 -0.0575 -0.5258 -0.0583 -0.0917 -0| __truncated__ ...
+        .. .. .. ..@ scale.data   : num [1:980, 1:610] -0.1409 -0.1464 -0.0405 -0.0902 -0.266 -0.3118 1.1689 -0.2049 -0.0405 -0.0898 -0.0563 -0.5314 -0.07 -0.0897 -0.52| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:970] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
-        .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
+        .. .. .. .. .. ..$ : chr [1:980] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "PTX3" "DCBLD1" "FUNDC1" "KCNE1" ...
+        .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. ..@ key          : Named chr "rna_"
         .. .. .. .. ..- attr(*, "names")= chr ""
         .. .. .. ..@ assay.orig   : NULL
-        .. .. .. ..@ var.features : chr [1:970] "S100A12" "CAVIN2" "FCRL5" "CLIC3" "CRIP1" "CD8B" "LILRA5" "TMEM176B" "TREML1" "FKBP5" "ALPL" "CCR2" "TMEM40" "TRBV6-2" "PPM1N" "ITGA2B" "C3AR1" "ZNF605" "KCNQ1OT1" "KIF11" ...
+        .. .. .. ..@ var.features : chr [1:980] "S100A12" "CAVIN2" "FCRL5" "CRIP1" "TREML1" "CLIC3" "TMEM40" "CD8B" "LRG1" "FKBP5" "TMEM176B" "ITGA2B" "LILRA5" "ALPL" "CCR2" "KCNQ1OT1" "PPM1N" "C3AR1" "TRBV6-2" "TRIM58" ...
         .. .. .. ..@ meta.features:'data.frame':	2000 obs. of  5 variables:
-        .. .. .. .. ..$ vst.mean                 : num [1:2000] 0.01884 0 0 0 0 0.02397 0.00171 0 0 0.00685 0 0 0 0 0.08562 0 0.09075 0 0 1.12158 0.05308 0 0.00171 0.00856 0.00342 ...
-        .. .. .. .. ..$ vst.variance             : num [1:2000] 0.01851 0 0 0 0 0.0303 0.00171 0 0 0.00681 0 0 0 0 0.11616 0 0.08952 0 0 1.32482 0.10524 0 0.00171 0.0085 0.00342 ...
-        .. .. .. .. ..$ vst.variance.expected    : num [1:2000] 0.02211 0 0 0 0 0.02811 0.00171 0 0 0.00731 0 0 0 0 0.10087 0 0.10753 0 0 2.37221 0.05941 0 0.00171 0.00923 0.00366 ...
-        .. .. .. .. ..$ vst.variance.standardized: num [1:2000] 0.837 0 0 0 0 1.078 1 0 0 0.932 0 0 0 0 1.152 0 0.833 0 0 0.558 1.771 0 1 0.922 0.935 ...
+        .. .. .. .. ..$ vst.mean                 : num [1:2000] 0.01967 0 0 0 0 0.02459 0.00164 0 0 0.0082 0 0 0 0 0.07869 0 0.09344 0 0 1.13443 0.0541 0 0.00164 0.0082 0.00328 ...
+        .. .. .. .. ..$ vst.variance             : num [1:2000] 0.01932 0 0 0 0 0.03059 0.00164 0 0 0.00814 0 0 0 0 0.09889 0 0.09142 0 0 1.34807 0.1038 0 0.00164 0.00814 0.00327 ...
+        .. .. .. .. ..$ vst.variance.expected    : num [1:2000] 0.02314 0 0 0 0 0.02852 0.00164 0 0 0.00892 0 0 0 0 0.09232 0 0.11179 0 0 2.43829 0.06262 0 0.00164 0.00892 0.00356 ...
+        .. .. .. .. ..$ vst.variance.standardized: num [1:2000] 0.835 0 0 0 0 1.073 1 0 0 0.913 0 0 0 0 1.071 0 0.818 0 0 0.553 1.658 0 1 0.913 0.92 ...
         .. .. .. .. ..$ vst.variable             : logi [1:2000] TRUE FALSE FALSE FALSE FALSE TRUE TRUE FALSE FALSE TRUE FALSE FALSE FALSE FALSE TRUE FALSE TRUE FALSE FALSE TRUE | __truncated__ ...
         .. .. .. ..@ misc         : list()
-        ..@ meta.data   :'data.frame':	584 obs. of  14 variables:
-        .. ..$ barcode           : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
-        .. ..$ orig.ident        : chr [1:584] "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" ...
-        .. ..$ nCount_RNA        : num [1:584] 243 144 183 339 232 289 111 523 380 243 230 462 220 117 310 258 101 219 202 272 226 176 271 103 131 198 223 190 2| __truncated__ ...
-        .. ..$ nFeature_RNA      : int [1:584] 66 47 54 109 72 60 60 158 133 81 88 163 86 43 117 49 39 85 65 80 76 58 95 55 59 69 90 68 70 76 151 79 46 65 52 10| __truncated__ ...
-        .. ..$ samples           : chr [1:584] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
-        .. ..$ percent.mt        : num [1:584] 9.88 19.44 8.74 24.19 18.1 13.15 27.03 24.47 23.42 19.75 16.52 23.38 20 21.37 26.45 22.48 20.79 30.59 14.85 17.65| __truncated__ ...
-        .. ..$ doublet_scores    : num [1:584] 0.3233 NA NA 0.4433 0.2716 0.0643 NA 0.594 0.1193 0.1881 0.2128 0.4774 0.1875 NA 0.0411 0.4751 NA 0.3653 0.087 0.| __truncated__ ...
-        .. ..$ doublet_class     : chr [1:584] "singlet" NA NA "singlet" "singlet" "singlet" NA "singlet" "singlet" "singlet" "singlet" "singlet" "singlet" NA "singlet" "singlet" NA "singlet" "singlet" "singlet" ...
-        .. ..$ emptyDrops_Total  : int [1:584] 243 144 183 339 232 289 111 523 380 243 230 462 220 117 310 258 101 219 202 272 226 176 271 103 131 198 223 190 2| __truncated__ ...
-        .. ..$ emptyDrops_LogProb: num [1:584] -316 -210 -252 -451 -328 -297 -280 -675 -563 -352 -385 -685 -355 -184 -486 -233 -172 -345 -283 -342 -308 -254 -403 -231 -251 ...
-        .. ..$ emptyDrops_PValue : num [1:584] 0.0001 0.0006 0.0002 0.0001 0.0001 0.0003 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.002 0.0001 0.0686 0.| __truncated__ ...
-        .. ..$ emptyDrops_Limited: logi [1:584] TRUE FALSE FALSE TRUE TRUE FALSE TRUE TRUE TRUE TRUE TRUE TRUE TRUE FALSE TRUE FALSE FALSE TRUE TRUE TRUE TRUE TR| __truncated__ ...
-        .. ..$ emptyDrops_FDR    : num [1:584] 0 0.000685 0.000239 0 0 0 0.000124 0 0 0 0 0 0 0.002223 0 0 0.001789 0 0 0 0 0.000124 0 0.000124 0.000124 ...
-        .. ..$ cells_id          : int [1:584] 1 9 11 13 15 19 21 22 25 26 34 36 39 40 41 44 48 52 53 58 59 62 72 75 77 79 81 85 86 90 93 96 97 99 104 106 108 1| __truncated__ ...
+        ..@ meta.data   :'data.frame':	610 obs. of  14 variables:
+        .. ..$ barcode           : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
+        .. ..$ orig.ident        : chr [1:610] "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" ...
+        .. ..$ nCount_RNA        : num [1:610] 243 144 183 339 232 289 111 523 380 243 497 230 462 220 117 310 258 101 219 202 272 226 176 271 263 103 131 198 2| __truncated__ ...
+        .. ..$ nFeature_RNA      : int [1:610] 66 47 54 109 72 60 60 158 133 81 156 88 163 86 43 117 49 39 85 65 80 76 58 95 95 55 59 69 90 68 70 76 151 79 46 6| __truncated__ ...
+        .. ..$ samples           : chr [1:610] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
+        .. ..$ percent.mt        : num [1:610] 9.88 19.44 8.74 24.19 18.1 13.15 27.03 24.47 23.42 19.75 24.55 16.52 23.38 20 21.37 26.45 22.48 20.79 30.59 14.85| __truncated__ ...
+        .. ..$ doublet_scores    : num [1:610] 0.2305 NA NA 0.2023 0.2806 0.1694 NA 0.2046 0.0308 0.1054 0.3377 0.085 0.2918 0.0949 NA 0.0858 0.2551 NA 0.057 0.| __truncated__ ...
+        .. ..$ doublet_class     : chr [1:610] "singlet" NA NA "singlet" "singlet" "singlet" NA "singlet" "singlet" "singlet" "singlet" "singlet" "singlet" "singlet" NA "singlet" "singlet" NA "singlet" "singlet" ...
+        .. ..$ emptyDrops_Total  : int [1:610] 243 144 183 339 232 289 111 523 380 243 497 230 462 220 117 310 258 101 219 202 272 226 176 271 263 103 131 198 2| __truncated__ ...
+        .. ..$ emptyDrops_LogProb: num [1:610] -316 -210 -252 -451 -328 -297 -280 -675 -563 -352 -660 -385 -685 -355 -184 -486 -233 -172 -345 -283 -342 -308 -254 -403 -404 ...
+        .. ..$ emptyDrops_PValue : num [1:610] 0.0001 0.0006 0.0002 0.0001 0.0001 0.0003 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.002 0.0001 0.| __truncated__ ...
+        .. ..$ emptyDrops_Limited: logi [1:610] TRUE FALSE FALSE TRUE TRUE FALSE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE FALSE TRUE FALSE FALSE TRUE TRUE TRUE TR| __truncated__ ...
+        .. ..$ emptyDrops_FDR    : num [1:610] 0 0.000685 0.000239 0 0 0 0.000124 0 0 0 0 0 0 0 0.002223 0 0 0.001789 0 0 0 0 0.000124 0 0 ...
+        .. ..$ cells_id          : int [1:610] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
         ..@ active.assay: chr "RNA"
         ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
-        .. ..- attr(*, "names")= chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
+        .. ..- attr(*, "names")= chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         ..@ graphs      : list()
         ..@ neighbors   : list()
         ..@ reductions  :List of 3
         .. ..$ pca            :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:584, 1:50] -5.237 -5.301 -5.619 5.121 -4.308 -5.332 -4.224 5.693 7.111 -3.38 -3.584 9.739 1.966 -5.11 5.965 -5.562 -6.101 2.| __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:610, 1:50] -5.33 -5.33 -5.69 4.99 -4.33 -5.38 -4.2 5.67 7.09 -3.44 8.63 -3.64 9.68 1.91 -5.24 5.88 -5.58 -6.16 2.34 -3.77 -3| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
+        .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:970, 1:50] 0.133181 0.011875 -0.038007 -0.008902 0.048151 -0.054306 0.112794 0.071946 0.000191 0.109294 0.001923 0.087876 0.| __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:980, 1:50] 0.132629 0.012089 -0.038779 0.044521 0.001769 -0.009128 0.002386 -0.053652 0.062412 0.107626 0.071343 0.003206 0.| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:970] "S100A12" "CAVIN2" "FCRL5" "CLIC3" "CRIP1" "CD8B" "LILRA5" "TMEM176B" "TREML1" "FKBP5" "ALPL" "CCR2" "TMEM40" "TRBV6-2" "PPM1N" "ITGA2B" "C3AR1" "ZNF605" "KCNQ1OT1" "KIF11" ...
+        .. .. .. .. .. ..$ : chr [1:980] "S100A12" "CAVIN2" "FCRL5" "CRIP1" "TREML1" "CLIC3" "TMEM40" "CD8B" "LRG1" "FKBP5" "TMEM176B" "ITGA2B" "LILRA5" "ALPL" "CCR2" "KCNQ1OT1" "PPM1N" "C3AR1" "TRBV6-2" "TRIM58" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:50] 5.49 2.84 2.71 2.54 2.4 2.33 2.17 2.16 2.11 2.09 2.07 2.04 2.04 2.03 2.01 2.01 2.01 2 1.98 1.97 1.97 1.96 1.95 1.95 1.94 ...
+        .. .. .. ..@ stdev                     : num [1:50] 5.53 2.86 2.74 2.52 2.46 2.39 2.16 2.14 2.09 2.06 2.04 2.03 2.02 2.02 1.99 1.98 1.97 1.96 1.96 1.95 1.94 1.94 1.93 1.92 1.92 ...
         .. .. .. ..@ key                       : chr "PC_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
@@ -7207,20 +7207,20 @@
         .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 779
+        .. .. .. .. ..$ total.variance: num 783
         .. ..$ pca_for_harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:584, 1:30] 5.237 5.301 5.619 -5.121 4.308 5.332 4.224 -5.693 -7.111 3.38 3.584 -9.739 -1.966 5.11 -5.965 5.562 6.101 -2.482 | __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:610, 1:30] 5.33 5.33 5.69 -4.99 4.33 5.38 4.2 -5.67 -7.09 3.44 -8.63 3.64 -9.68 -1.91 5.24 -5.88 5.58 6.16 -2.34 3.77 3.46 3| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
+        .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. .. .. ..$ : chr [1:30] "PCh_1" "PCh_2" "PCh_3" "PCh_4" "PCh_5" "PCh_6" "PCh_7" "PCh_8" "PCh_9" "PCh_10" "PCh_11" "PCh_12" "PCh_13" "PCh_14" "PCh_15" "PCh_16" "PCh_17" "PCh_18" "PCh_19" "PCh_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:970, 1:30] -0.133181 -0.011875 0.038007 0.008902 -0.048151 0.054306 -0.112794 -0.071946 -0.000191 -0.109294 -0.001923 -0.087| __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:980, 1:30] -0.132629 -0.012089 0.038779 -0.044521 -0.001769 0.009128 -0.002386 0.053652 -0.062412 -0.107626 -0.071343 -0.003| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:970] "S100A12" "CAVIN2" "FCRL5" "CLIC3" "CRIP1" "CD8B" "LILRA5" "TMEM176B" "TREML1" "FKBP5" "ALPL" "CCR2" "TMEM40" "TRBV6-2" "PPM1N" "ITGA2B" "C3AR1" "ZNF605" "KCNQ1OT1" "KIF11" ...
+        .. .. .. .. .. ..$ : chr [1:980] "S100A12" "CAVIN2" "FCRL5" "CRIP1" "TREML1" "CLIC3" "TMEM40" "CD8B" "LRG1" "FKBP5" "TMEM176B" "ITGA2B" "LILRA5" "ALPL" "CCR2" "KCNQ1OT1" "PPM1N" "C3AR1" "TRBV6-2" "TRIM58" ...
         .. .. .. .. .. ..$ : chr [1:30] "PCh_1" "PCh_2" "PCh_3" "PCh_4" "PCh_5" "PCh_6" "PCh_7" "PCh_8" "PCh_9" "PCh_10" "PCh_11" "PCh_12" "PCh_13" "PCh_14" "PCh_15" "PCh_16" "PCh_17" "PCh_18" "PCh_19" "PCh_20" ...
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:30] 5.49 2.84 2.71 2.54 2.4 2.33 2.17 2.16 2.11 2.09 2.07 2.04 2.04 2.03 2.01 2.01 2.01 2 1.98 1.97 1.97 1.96 1.95 1.95 1.94 ...
+        .. .. .. ..@ stdev                     : num [1:30] 5.53 2.86 2.74 2.52 2.46 2.39 2.16 2.14 2.09 2.06 2.04 2.03 2.02 2.02 1.99 1.98 1.97 1.96 1.96 1.95 1.94 1.94 1.93 1.92 1.92 ...
         .. .. .. ..@ key                       : chr "PCh_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
@@ -7228,23 +7228,23 @@
         .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 779
+        .. .. .. .. ..$ total.variance: num 783
         .. ..$ harmony        :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:584, 1:30] 4.838 4.967 5.148 -7.386 4.133 4.839 3.334 -6.072 -7.458 2.412 2.61 -12.117 -4.254 4.803 -8.102 5.111 5.762 -4.75| __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:610, 1:30] 4.99 4.99 5.26 -6.79 4.15 5.06 3.79 -5.39 -7.61 3.22 -10.71 3.73 -10.73 -4.37 4.95 -7.65 4.86 5.8 -5 3.14 3.26 3.| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
+        .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.96 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.31 159.95 | __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:980, 1:30] 401.75 322.62 50.12 241.53 642.88 -38.1 -261.46 -242.97 37.97 -243.63 -27.73 -1151.69 33.18 -90.74 -778.02 117.44| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:970] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
+        .. .. .. .. .. ..$ : chr [1:980] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "PTX3" "DCBLD1" "FUNDC1" "KCNE1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings.projected: num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.96 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.31 159.95 | __truncated__ ...
+        .. .. .. ..@ feature.loadings.projected: num [1:980, 1:30] 401.75 322.62 50.12 241.53 642.88 -38.1 -261.46 -242.97 37.97 -243.63 -27.73 -1151.69 33.18 -90.74 -778.02 117.44| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:970] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
+        .. .. .. .. .. ..$ : chr [1:980] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "PTX3" "DCBLD1" "FUNDC1" "KCNE1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:30] 5.38 2.74 2.57 2.4 2.11 2.11 2.11 1.91 2.03 2.04 2.03 1.98 2.03 2.01 1.99 1.97 1.91 1.97 1.95 1.94 1.93 1.93 1.92 1.94 1.88 ...
+        .. .. .. ..@ stdev                     : num [1:30] 5.44 2.74 2.6 2.36 2.25 2.12 1.9 2.09 2.05 2.02 1.98 2 1.96 1.99 1.96 1.95 1.96 1.94 1.91 1.89 1.9 1.91 1.9 1.91 1.88 ...
         .. .. .. ..@ key                       : chr "harmony_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
@@ -7265,14 +7265,14 @@
         .. ..$ ingestionDate   : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. ..$ active.reduction: chr "harmony"
         .. ..$ gene_dispersion :'data.frame':	2000 obs. of  5 variables:
-        .. .. ..$ mean                 : num [1:2000] 0.01884 0 0 0 0 0.02397 0.00171 0 0 0.00685 0 0 0 0 0.08562 0 0.09075 0 0 1.12158 0.05308 0 0.00171 0.00856 0.00342 ...
-        .. .. ..$ variance             : num [1:2000] 0.01851 0 0 0 0 0.0303 0.00171 0 0 0.00681 0 0 0 0 0.11616 0 0.08952 0 0 1.32482 0.10524 0 0.00171 0.0085 0.00342 ...
-        .. .. ..$ variance.standardized: num [1:2000] 0.837 0 0 0 0 1.078 1 0 0 0.932 0 0 0 0 1.152 0 0.833 0 0 0.558 1.771 0 1 0.922 0.935 ...
+        .. .. ..$ mean                 : num [1:2000] 0.01967 0 0 0 0 0.02459 0.00164 0 0 0.0082 0 0 0 0 0.07869 0 0.09344 0 0 1.13443 0.0541 0 0.00164 0.0082 0.00328 ...
+        .. .. ..$ variance             : num [1:2000] 0.01932 0 0 0 0 0.03059 0.00164 0 0 0.00814 0 0 0 0 0.09889 0 0.09142 0 0 1.34807 0.1038 0 0.00164 0.00814 0.00327 ...
+        .. .. ..$ variance.standardized: num [1:2000] 0.835 0 0 0 0 1.073 1 0 0 0.913 0 0 0 0 1.071 0 0.818 0 0 0.553 1.658 0 1 0.913 0.92 ...
         .. .. ..$ SYMBOL               : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ ENSEMBL              : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. ..$ numPCs          : num 30
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 4 1 4
         ..@ commands    :List of 5
         .. ..$ NormalizeData.RNA             :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "NormalizeData.RNA"
@@ -7309,7 +7309,7 @@
         .. .. .. ..@ assay.used : chr "RNA"
         .. .. .. ..@ call.string: chr [1:3] "ScaleData(Seurat::FindVariableFeatures(Seurat::NormalizeData(scdata, " "    normalization.method = normalization, verbose = FALSE), nfeatures = nfeatures, " "    verbose = FALSE), verbose = FALSE)"
         .. .. .. ..@ params     :List of 10
-        .. .. .. .. ..$ features          : chr [1:970] "S100A12" "CAVIN2" "FCRL5" "CLIC3" "CRIP1" "CD8B" "LILRA5" "TMEM176B" "TREML1" "FKBP5" "ALPL" "CCR2" "TMEM40" "TRBV6-2" "PPM1N" "ITGA2B" "C3AR1" "ZNF605" "KCNQ1OT1" "KIF11" ...
+        .. .. .. .. ..$ features          : chr [1:980] "S100A12" "CAVIN2" "FCRL5" "CRIP1" "TREML1" "CLIC3" "TMEM40" "CD8B" "LRG1" "FKBP5" "TMEM176B" "ITGA2B" "LILRA5" "ALPL" "CCR2" "KCNQ1OT1" "PPM1N" "C3AR1" "TRBV6-2" "TRIM58" ...
         .. .. .. .. ..$ assay             : chr "RNA"
         .. .. .. .. ..$ model.use         : chr "linear"
         .. .. .. .. ..$ use.umi           : logi FALSE
@@ -7317,7 +7317,7 @@
         .. .. .. .. ..$ do.center         : logi TRUE
         .. .. .. .. ..$ scale.max         : num 10
         .. .. .. .. ..$ block.size        : num 1000
-        .. .. .. .. ..$ min.cells.to.block: num 584
+        .. .. .. .. ..$ min.cells.to.block: num 610
         .. .. .. .. ..$ verbose           : logi FALSE
         .. ..$ RunPCA.RNA                    :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "RunPCA.RNA"
@@ -7359,13 +7359,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "a76a0147c9d141fb0e4585448a87c4e5"
+      [1] "d55a996087c010a44d8996257df56b0f"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
-       $ mock_sample_2_id: int [1:319] 1 9 11 13 15 19 21 22 25 26 34 36 39 40 41 44 48 52 53 58 59 62 72 75 77 79 81 85 86 90 93 96 97 99 104 106 108 1| __truncated__ ...
-       $ mock_sample_1_id: int [1:265] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 42 50 54 55 63 65 68 70 71 74 78 80 82 91 94 95 105 117 119 121 124 128 13| __truncated__ ...
+       $ mock_sample_2_id: int [1:338] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
+       $ mock_sample_1_id: int [1:272] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 42 50 54 55 63 65 68 70 71 74 78 80 82 91 94 95 98 100 105 117 119 121 124| __truncated__ ...
 
 ---
 
@@ -7376,70 +7376,70 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "0741c84a670e10c6722500ba279c0439"
+      [1] "43dae973a415d39a607642ae05139e20"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
       List of 2
        $ dataIntegration-0: list()
        $ dataIntegration-1:List of 50
-        ..$ : Named num [1:2] 1 0.133
+        ..$ : Named num [1:2] 1 0.136
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 2 0.0357
+        ..$ : Named num [1:2] 2 0.0365
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 3 0.0324
+        ..$ : Named num [1:2] 3 0.0333
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 4 0.0284
+        ..$ : Named num [1:2] 4 0.0282
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 5 0.0254
+        ..$ : Named num [1:2] 5 0.027
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 6 0.024
+        ..$ : Named num [1:2] 6 0.0255
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 7 0.0208
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 8 0.0205
+        ..$ : Named num [1:2] 8 0.0204
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 9 0.0196
+        ..$ : Named num [1:2] 9 0.0195
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 10 0.0192
+        ..$ : Named num [1:2] 10 0.0189
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 11 0.0188
+        ..$ : Named num [1:2] 11 0.0186
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 12 0.0184
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 13 0.0183
+        ..$ : Named num [1:2] 13 0.0181
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 14 0.0182
+        ..$ : Named num [1:2] 14 0.0181
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 15 0.0178
+        ..$ : Named num [1:2] 15 0.0177
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 16 0.0178
+        ..$ : Named num [1:2] 16 0.0175
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 17 0.0177
+        ..$ : Named num [1:2] 17 0.0173
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 18 0.0176
+        ..$ : Named num [1:2] 18 0.0172
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 19 0.0173
+        ..$ : Named num [1:2] 19 0.0171
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 20 0.0172
+        ..$ : Named num [1:2] 20 0.0169
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 21 0.0171
+        ..$ : Named num [1:2] 21 0.0168
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 22 0.0169
+        ..$ : Named num [1:2] 22 0.0167
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 23 0.0168
+        ..$ : Named num [1:2] 23 0.0165
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 24 0.0167
+        ..$ : Named num [1:2] 24 0.0165
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 25 0.0167
+        ..$ : Named num [1:2] 25 0.0164
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 26 0.0164
+        ..$ : Named num [1:2] 26 0.0163
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 27 0.0163
+        ..$ : Named num [1:2] 27 0.0161
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 28 0.0162
+        ..$ : Named num [1:2] 28 0.016
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 29 0.0161
+        ..$ : Named num [1:2] 29 0.0159
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 30 0.0159
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
@@ -7449,39 +7449,39 @@
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 33 0.0155
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 34 0.0154
+        ..$ : Named num [1:2] 34 0.0153
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 35 0.0154
+        ..$ : Named num [1:2] 35 0.0152
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 36 0.0153
+        ..$ : Named num [1:2] 36 0.0151
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 37 0.0151
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 38 0.015
+        ..$ : Named num [1:2] 38 0.0149
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 39 0.015
+        ..$ : Named num [1:2] 39 0.0149
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 40 0.0148
+        ..$ : Named num [1:2] 40 0.0147
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 41 0.0148
+        ..$ : Named num [1:2] 41 0.0146
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 42 0.0147
+        ..$ : Named num [1:2] 42 0.0145
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 43 0.0146
+        ..$ : Named num [1:2] 43 0.0145
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 44 0.0145
+        ..$ : Named num [1:2] 44 0.0143
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 45 0.0144
+        ..$ : Named num [1:2] 45 0.0142
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 46 0.0144
+        ..$ : Named num [1:2] 46 0.0142
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 47 0.0143
+        ..$ : Named num [1:2] 47 0.0142
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 48 0.0142
+        ..$ : Named num [1:2] 48 0.014
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 49 0.0141
+        ..$ : Named num [1:2] 49 0.014
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 50 0.014
+        ..$ : Named num [1:2] 50 0.0139
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
 
 ---
@@ -7493,7 +7493,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "204d12cf36b5f4f4e752334b59d98597"
+      [1] "2940bf3a4bd7bc883f7890c6c113e4a4"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7501,72 +7501,72 @@
         ..@ assays      :List of 1
         .. ..$ RNA:Formal class 'Assay' [package "SeuratObject"] with 8 slots
         .. .. .. ..@ counts       :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. ..@ i       : int [1:53873] 19 117 128 133 175 224 255 277 284 294 307 309 327 345 414 440 447 468 556 605 657 686 706 718 810 838 894 907 93| __truncated__ ...
-        .. .. .. .. .. ..@ p       : int [1:585] 0 66 113 167 276 348 408 468 626 759 840 928 1091 1177 1220 1337 1386 1425 1510 1575 1655 1731 1789 1884 1939 199| __truncated__ ...
-        .. .. .. .. .. ..@ Dim     : int [1:2] 2000 584
+        .. .. .. .. .. ..@ i       : int [1:56928] 19 117 128 133 175 224 255 277 284 294 307 309 327 345 414 440 447 468 556 605 657 686 706 718 810 838 894 907 93| __truncated__ ...
+        .. .. .. .. .. ..@ p       : int [1:611] 0 66 113 167 276 348 408 468 626 759 840 996 1084 1247 1333 1376 1493 1542 1581 1666 1731 1811 1887 1945 2040 213| __truncated__ ...
+        .. .. .. .. .. ..@ Dim     : int [1:2] 2000 610
         .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
-        .. .. .. .. .. ..@ x       : num [1:53873] 3 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 3 1 1 4 1 1 1 1 3 2 1 4 1 1 2 1 1 2 3 1 2 1 21 2 1 ...
+        .. .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
+        .. .. .. .. .. ..@ x       : num [1:56928] 3 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 3 1 1 4 1 1 1 1 3 2 1 4 1 1 2 1 1 2 3 1 2 1 21 2 1 ...
         .. .. .. .. .. ..@ factors : list()
         .. .. .. ..@ data         :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. ..@ i       : int [1:53873] 19 117 128 133 175 224 255 277 284 294 307 309 327 345 414 440 447 468 556 605 657 686 706 718 810 838 894 907 93| __truncated__ ...
-        .. .. .. .. .. ..@ p       : int [1:585] 0 66 113 167 276 348 408 468 626 759 840 928 1091 1177 1220 1337 1386 1425 1510 1575 1655 1731 1789 1884 1939 199| __truncated__ ...
-        .. .. .. .. .. ..@ Dim     : int [1:2] 2000 584
+        .. .. .. .. .. ..@ i       : int [1:56928] 19 117 128 133 175 224 255 277 284 294 307 309 327 345 414 440 447 468 556 605 657 686 706 718 810 838 894 907 93| __truncated__ ...
+        .. .. .. .. .. ..@ p       : int [1:611] 0 66 113 167 276 348 408 468 626 759 840 996 1084 1247 1333 1376 1493 1542 1581 1666 1731 1811 1887 1945 2040 213| __truncated__ ...
+        .. .. .. .. .. ..@ Dim     : int [1:2] 2000 610
         .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
-        .. .. .. .. .. ..@ x       : num [1:53873] 4.82 3.74 3.74 3.74 3.74 3.74 4.42 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 4.42 ...
+        .. .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
+        .. .. .. .. .. ..@ x       : num [1:56928] 4.82 3.74 3.74 3.74 3.74 3.74 4.42 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 3.74 4.42 ...
         .. .. .. .. .. ..@ factors : list()
-        .. .. .. ..@ scale.data   : num [1:970, 1:584] -0.1381 -0.1438 -0.0414 -0.0828 -0.2724 -0.3064 1.1631 -0.2008 -0.0414 -0.0917 -0.0575 -0.5258 -0.0583 -0.0917 -0| __truncated__ ...
+        .. .. .. ..@ scale.data   : num [1:980, 1:610] -0.1409 -0.1464 -0.0405 -0.0902 -0.266 -0.3118 1.1689 -0.2049 -0.0405 -0.0898 -0.0563 -0.5314 -0.07 -0.0897 -0.52| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:970] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
-        .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
+        .. .. .. .. .. ..$ : chr [1:980] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "PTX3" "DCBLD1" "FUNDC1" "KCNE1" ...
+        .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. ..@ key          : Named chr "rna_"
         .. .. .. .. ..- attr(*, "names")= chr ""
         .. .. .. ..@ assay.orig   : NULL
-        .. .. .. ..@ var.features : chr [1:970] "S100A12" "CAVIN2" "FCRL5" "CLIC3" "CRIP1" "CD8B" "LILRA5" "TMEM176B" "TREML1" "FKBP5" "ALPL" "CCR2" "TMEM40" "TRBV6-2" "PPM1N" "ITGA2B" "C3AR1" "ZNF605" "KCNQ1OT1" "KIF11" ...
+        .. .. .. ..@ var.features : chr [1:980] "S100A12" "CAVIN2" "FCRL5" "CRIP1" "TREML1" "CLIC3" "TMEM40" "CD8B" "LRG1" "FKBP5" "TMEM176B" "ITGA2B" "LILRA5" "ALPL" "CCR2" "KCNQ1OT1" "PPM1N" "C3AR1" "TRBV6-2" "TRIM58" ...
         .. .. .. ..@ meta.features:'data.frame':	2000 obs. of  5 variables:
-        .. .. .. .. ..$ vst.mean                 : num [1:2000] 0.01884 0 0 0 0 0.02397 0.00171 0 0 0.00685 0 0 0 0 0.08562 0 0.09075 0 0 1.12158 0.05308 0 0.00171 0.00856 0.00342 ...
-        .. .. .. .. ..$ vst.variance             : num [1:2000] 0.01851 0 0 0 0 0.0303 0.00171 0 0 0.00681 0 0 0 0 0.11616 0 0.08952 0 0 1.32482 0.10524 0 0.00171 0.0085 0.00342 ...
-        .. .. .. .. ..$ vst.variance.expected    : num [1:2000] 0.02211 0 0 0 0 0.02811 0.00171 0 0 0.00731 0 0 0 0 0.10087 0 0.10753 0 0 2.37221 0.05941 0 0.00171 0.00923 0.00366 ...
-        .. .. .. .. ..$ vst.variance.standardized: num [1:2000] 0.837 0 0 0 0 1.078 1 0 0 0.932 0 0 0 0 1.152 0 0.833 0 0 0.558 1.771 0 1 0.922 0.935 ...
+        .. .. .. .. ..$ vst.mean                 : num [1:2000] 0.01967 0 0 0 0 0.02459 0.00164 0 0 0.0082 0 0 0 0 0.07869 0 0.09344 0 0 1.13443 0.0541 0 0.00164 0.0082 0.00328 ...
+        .. .. .. .. ..$ vst.variance             : num [1:2000] 0.01932 0 0 0 0 0.03059 0.00164 0 0 0.00814 0 0 0 0 0.09889 0 0.09142 0 0 1.34807 0.1038 0 0.00164 0.00814 0.00327 ...
+        .. .. .. .. ..$ vst.variance.expected    : num [1:2000] 0.02314 0 0 0 0 0.02852 0.00164 0 0 0.00892 0 0 0 0 0.09232 0 0.11179 0 0 2.43829 0.06262 0 0.00164 0.00892 0.00356 ...
+        .. .. .. .. ..$ vst.variance.standardized: num [1:2000] 0.835 0 0 0 0 1.073 1 0 0 0.913 0 0 0 0 1.071 0 0.818 0 0 0.553 1.658 0 1 0.913 0.92 ...
         .. .. .. .. ..$ vst.variable             : logi [1:2000] TRUE FALSE FALSE FALSE FALSE TRUE TRUE FALSE FALSE TRUE FALSE FALSE FALSE FALSE TRUE FALSE TRUE FALSE FALSE TRUE | __truncated__ ...
         .. .. .. ..@ misc         : list()
-        ..@ meta.data   :'data.frame':	584 obs. of  14 variables:
-        .. ..$ barcode           : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
-        .. ..$ orig.ident        : chr [1:584] "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" ...
-        .. ..$ nCount_RNA        : num [1:584] 243 144 183 339 232 289 111 523 380 243 230 462 220 117 310 258 101 219 202 272 226 176 271 103 131 198 223 190 2| __truncated__ ...
-        .. ..$ nFeature_RNA      : int [1:584] 66 47 54 109 72 60 60 158 133 81 88 163 86 43 117 49 39 85 65 80 76 58 95 55 59 69 90 68 70 76 151 79 46 65 52 10| __truncated__ ...
-        .. ..$ samples           : chr [1:584] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
-        .. ..$ percent.mt        : num [1:584] 9.88 19.44 8.74 24.19 18.1 13.15 27.03 24.47 23.42 19.75 16.52 23.38 20 21.37 26.45 22.48 20.79 30.59 14.85 17.65| __truncated__ ...
-        .. ..$ doublet_scores    : num [1:584] 0.3233 NA NA 0.4433 0.2716 0.0643 NA 0.594 0.1193 0.1881 0.2128 0.4774 0.1875 NA 0.0411 0.4751 NA 0.3653 0.087 0.| __truncated__ ...
-        .. ..$ doublet_class     : chr [1:584] "singlet" NA NA "singlet" "singlet" "singlet" NA "singlet" "singlet" "singlet" "singlet" "singlet" "singlet" NA "singlet" "singlet" NA "singlet" "singlet" "singlet" ...
-        .. ..$ emptyDrops_Total  : int [1:584] 243 144 183 339 232 289 111 523 380 243 230 462 220 117 310 258 101 219 202 272 226 176 271 103 131 198 223 190 2| __truncated__ ...
-        .. ..$ emptyDrops_LogProb: num [1:584] -316 -210 -252 -451 -328 -297 -280 -675 -563 -352 -385 -685 -355 -184 -486 -233 -172 -345 -283 -342 -308 -254 -403 -231 -251 ...
-        .. ..$ emptyDrops_PValue : num [1:584] 0.0001 0.0006 0.0002 0.0001 0.0001 0.0003 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.002 0.0001 0.0686 0.| __truncated__ ...
-        .. ..$ emptyDrops_Limited: logi [1:584] TRUE FALSE FALSE TRUE TRUE FALSE TRUE TRUE TRUE TRUE TRUE TRUE TRUE FALSE TRUE FALSE FALSE TRUE TRUE TRUE TRUE TR| __truncated__ ...
-        .. ..$ emptyDrops_FDR    : num [1:584] 0 0.000685 0.000239 0 0 0 0.000124 0 0 0 0 0 0 0.002223 0 0 0.001789 0 0 0 0 0.000124 0 0.000124 0.000124 ...
-        .. ..$ cells_id          : int [1:584] 1 9 11 13 15 19 21 22 25 26 34 36 39 40 41 44 48 52 53 58 59 62 72 75 77 79 81 85 86 90 93 96 97 99 104 106 108 1| __truncated__ ...
+        ..@ meta.data   :'data.frame':	610 obs. of  14 variables:
+        .. ..$ barcode           : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
+        .. ..$ orig.ident        : chr [1:610] "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" ...
+        .. ..$ nCount_RNA        : num [1:610] 243 144 183 339 232 289 111 523 380 243 497 230 462 220 117 310 258 101 219 202 272 226 176 271 263 103 131 198 2| __truncated__ ...
+        .. ..$ nFeature_RNA      : int [1:610] 66 47 54 109 72 60 60 158 133 81 156 88 163 86 43 117 49 39 85 65 80 76 58 95 95 55 59 69 90 68 70 76 151 79 46 6| __truncated__ ...
+        .. ..$ samples           : chr [1:610] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
+        .. ..$ percent.mt        : num [1:610] 9.88 19.44 8.74 24.19 18.1 13.15 27.03 24.47 23.42 19.75 24.55 16.52 23.38 20 21.37 26.45 22.48 20.79 30.59 14.85| __truncated__ ...
+        .. ..$ doublet_scores    : num [1:610] 0.2305 NA NA 0.2023 0.2806 0.1694 NA 0.2046 0.0308 0.1054 0.3377 0.085 0.2918 0.0949 NA 0.0858 0.2551 NA 0.057 0.| __truncated__ ...
+        .. ..$ doublet_class     : chr [1:610] "singlet" NA NA "singlet" "singlet" "singlet" NA "singlet" "singlet" "singlet" "singlet" "singlet" "singlet" "singlet" NA "singlet" "singlet" NA "singlet" "singlet" ...
+        .. ..$ emptyDrops_Total  : int [1:610] 243 144 183 339 232 289 111 523 380 243 497 230 462 220 117 310 258 101 219 202 272 226 176 271 263 103 131 198 2| __truncated__ ...
+        .. ..$ emptyDrops_LogProb: num [1:610] -316 -210 -252 -451 -328 -297 -280 -675 -563 -352 -660 -385 -685 -355 -184 -486 -233 -172 -345 -283 -342 -308 -254 -403 -404 ...
+        .. ..$ emptyDrops_PValue : num [1:610] 0.0001 0.0006 0.0002 0.0001 0.0001 0.0003 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.002 0.0001 0.| __truncated__ ...
+        .. ..$ emptyDrops_Limited: logi [1:610] TRUE FALSE FALSE TRUE TRUE FALSE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE FALSE TRUE FALSE FALSE TRUE TRUE TRUE TR| __truncated__ ...
+        .. ..$ emptyDrops_FDR    : num [1:610] 0 0.000685 0.000239 0 0 0 0.000124 0 0 0 0 0 0 0 0.002223 0 0 0.001789 0 0 0 0 0.000124 0 0 ...
+        .. ..$ cells_id          : int [1:610] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
         ..@ active.assay: chr "RNA"
         ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
-        .. ..- attr(*, "names")= chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
+        .. ..- attr(*, "names")= chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         ..@ graphs      : list()
         ..@ neighbors   : list()
         ..@ reductions  :List of 3
         .. ..$ pca            :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:584, 1:50] -5.237 -5.301 -5.619 5.121 -4.308 -5.332 -4.224 5.693 7.111 -3.38 -3.584 9.739 1.966 -5.11 5.965 -5.562 -6.101 2.| __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:610, 1:50] -5.33 -5.33 -5.69 4.99 -4.33 -5.38 -4.2 5.67 7.09 -3.44 8.63 -3.64 9.68 1.91 -5.24 5.88 -5.58 -6.16 2.34 -3.77 -3| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
+        .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:970, 1:50] 0.133181 0.011875 -0.038007 -0.008902 0.048151 -0.054306 0.112794 0.071946 0.000191 0.109294 0.001923 0.087876 0.| __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:980, 1:50] 0.132629 0.012089 -0.038779 0.044521 0.001769 -0.009128 0.002386 -0.053652 0.062412 0.107626 0.071343 0.003206 0.| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:970] "S100A12" "CAVIN2" "FCRL5" "CLIC3" "CRIP1" "CD8B" "LILRA5" "TMEM176B" "TREML1" "FKBP5" "ALPL" "CCR2" "TMEM40" "TRBV6-2" "PPM1N" "ITGA2B" "C3AR1" "ZNF605" "KCNQ1OT1" "KIF11" ...
+        .. .. .. .. .. ..$ : chr [1:980] "S100A12" "CAVIN2" "FCRL5" "CRIP1" "TREML1" "CLIC3" "TMEM40" "CD8B" "LRG1" "FKBP5" "TMEM176B" "ITGA2B" "LILRA5" "ALPL" "CCR2" "KCNQ1OT1" "PPM1N" "C3AR1" "TRBV6-2" "TRIM58" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:50] 5.49 2.84 2.71 2.54 2.4 2.33 2.17 2.16 2.11 2.09 2.07 2.04 2.04 2.03 2.01 2.01 2.01 2 1.98 1.97 1.97 1.96 1.95 1.95 1.94 ...
+        .. .. .. ..@ stdev                     : num [1:50] 5.53 2.86 2.74 2.52 2.46 2.39 2.16 2.14 2.09 2.06 2.04 2.03 2.02 2.02 1.99 1.98 1.97 1.96 1.96 1.95 1.94 1.94 1.93 1.92 1.92 ...
         .. .. .. ..@ key                       : chr "PC_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
@@ -7574,20 +7574,20 @@
         .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 779
+        .. .. .. .. ..$ total.variance: num 783
         .. ..$ pca_for_harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:584, 1:30] 5.237 5.301 5.619 -5.121 4.308 5.332 4.224 -5.693 -7.111 3.38 3.584 -9.739 -1.966 5.11 -5.965 5.562 6.101 -2.482 | __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:610, 1:30] 5.33 5.33 5.69 -4.99 4.33 5.38 4.2 -5.67 -7.09 3.44 -8.63 3.64 -9.68 -1.91 5.24 -5.88 5.58 6.16 -2.34 3.77 3.46 3| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
+        .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. .. .. ..$ : chr [1:30] "PCh_1" "PCh_2" "PCh_3" "PCh_4" "PCh_5" "PCh_6" "PCh_7" "PCh_8" "PCh_9" "PCh_10" "PCh_11" "PCh_12" "PCh_13" "PCh_14" "PCh_15" "PCh_16" "PCh_17" "PCh_18" "PCh_19" "PCh_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:970, 1:30] -0.133181 -0.011875 0.038007 0.008902 -0.048151 0.054306 -0.112794 -0.071946 -0.000191 -0.109294 -0.001923 -0.087| __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:980, 1:30] -0.132629 -0.012089 0.038779 -0.044521 -0.001769 0.009128 -0.002386 0.053652 -0.062412 -0.107626 -0.071343 -0.003| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:970] "S100A12" "CAVIN2" "FCRL5" "CLIC3" "CRIP1" "CD8B" "LILRA5" "TMEM176B" "TREML1" "FKBP5" "ALPL" "CCR2" "TMEM40" "TRBV6-2" "PPM1N" "ITGA2B" "C3AR1" "ZNF605" "KCNQ1OT1" "KIF11" ...
+        .. .. .. .. .. ..$ : chr [1:980] "S100A12" "CAVIN2" "FCRL5" "CRIP1" "TREML1" "CLIC3" "TMEM40" "CD8B" "LRG1" "FKBP5" "TMEM176B" "ITGA2B" "LILRA5" "ALPL" "CCR2" "KCNQ1OT1" "PPM1N" "C3AR1" "TRBV6-2" "TRIM58" ...
         .. .. .. .. .. ..$ : chr [1:30] "PCh_1" "PCh_2" "PCh_3" "PCh_4" "PCh_5" "PCh_6" "PCh_7" "PCh_8" "PCh_9" "PCh_10" "PCh_11" "PCh_12" "PCh_13" "PCh_14" "PCh_15" "PCh_16" "PCh_17" "PCh_18" "PCh_19" "PCh_20" ...
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:30] 5.49 2.84 2.71 2.54 2.4 2.33 2.17 2.16 2.11 2.09 2.07 2.04 2.04 2.03 2.01 2.01 2.01 2 1.98 1.97 1.97 1.96 1.95 1.95 1.94 ...
+        .. .. .. ..@ stdev                     : num [1:30] 5.53 2.86 2.74 2.52 2.46 2.39 2.16 2.14 2.09 2.06 2.04 2.03 2.02 2.02 1.99 1.98 1.97 1.96 1.96 1.95 1.94 1.94 1.93 1.92 1.92 ...
         .. .. .. ..@ key                       : chr "PCh_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
@@ -7595,23 +7595,23 @@
         .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 779
+        .. .. .. .. ..$ total.variance: num 783
         .. ..$ harmony        :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:584, 1:30] 4.838 4.967 5.148 -7.386 4.133 4.839 3.334 -6.072 -7.458 2.412 2.61 -12.117 -4.254 4.803 -8.102 5.111 5.762 -4.75| __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:610, 1:30] 4.99 4.99 5.26 -6.79 4.15 5.06 3.79 -5.39 -7.61 3.22 -10.71 3.73 -10.73 -4.37 4.95 -7.65 4.86 5.8 -5 3.14 3.26 3.| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:584] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" "CATCAAGTCAAAGGTA-1" ...
+        .. .. .. .. .. ..$ : chr [1:610] "CGATGGCAGACTCGAG-1" "ACCGTTCGTGGTCAAG-1" "CATCCGTGTCAGTCCG-1" "GTTGCTCAGTAGCCAG-1" "CATGCTCTCTCTCGCA-1" "GGAGATGGTCTCAGAT-1" "GCAGCCATCCTGCCAT-1" "GACTCTCAGATACATG-1" "CTGGCAGGTTGCCAAT-1" "AGTAGTCAGGTGATAT-1" "AGTTCCCCATACACCA-1" "TTACCGCCAACCCGCA-1" "GACTCAAAGAAGTCCG-1" "TTCACGCGTCTCGGGT-1" "ATCAGGTAGACTAAGT-1" "AACGAAAAGGAACGAA-1" "ATCCGTCGTGGCTACC-1" "TCGTGGGTCGTGTCAA-1" "GGGAGATCAGTTCACA-1" "TATCCTAAGACATACA-1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.96 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.31 159.95 | __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:980, 1:30] 401.75 322.62 50.12 241.53 642.88 -38.1 -261.46 -242.97 37.97 -243.63 -27.73 -1151.69 33.18 -90.74 -778.02 117.44| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:970] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
+        .. .. .. .. .. ..$ : chr [1:980] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "PTX3" "DCBLD1" "FUNDC1" "KCNE1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings.projected: num [1:970, 1:30] 371.13 301.5 48.43 219.98 607.9 -64.65 -259.19 -257.96 35.78 -233.64 -25.87 -1092.49 63.73 -84.32 -791.31 159.95 | __truncated__ ...
+        .. .. .. ..@ feature.loadings.projected: num [1:980, 1:30] 401.75 322.62 50.12 241.53 642.88 -38.1 -261.46 -242.97 37.97 -243.63 -27.73 -1151.69 33.18 -90.74 -778.02 117.44| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:970] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "FOXJ1" "PTX3" "DCBLD1" "FUNDC1" ...
+        .. .. .. .. .. ..$ : chr [1:980] "CERNA1" "GPR174" "DCLK2" "AC001226.2" "PAX5" "SMG6" "EDF1" "ZNF605" "LINC02413" "ACTR3B" "AC004067.1" "HSD17B4" "AC007881.3" "KCNAB3" "PSMA3" "LIPE" "PTX3" "DCBLD1" "FUNDC1" "KCNE1" ...
         .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:30] 5.38 2.74 2.57 2.4 2.11 2.11 2.11 1.91 2.03 2.04 2.03 1.98 2.03 2.01 1.99 1.97 1.91 1.97 1.95 1.94 1.93 1.93 1.92 1.94 1.88 ...
+        .. .. .. ..@ stdev                     : num [1:30] 5.44 2.74 2.6 2.36 2.25 2.12 1.9 2.09 2.05 2.02 1.98 2 1.96 1.99 1.96 1.95 1.96 1.94 1.91 1.89 1.9 1.91 1.9 1.91 1.88 ...
         .. .. .. ..@ key                       : chr "harmony_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
@@ -7632,14 +7632,14 @@
         .. ..$ ingestionDate   : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. ..$ active.reduction: chr "harmony"
         .. ..$ gene_dispersion :'data.frame':	2000 obs. of  5 variables:
-        .. .. ..$ mean                 : num [1:2000] 0.01884 0 0 0 0 0.02397 0.00171 0 0 0.00685 0 0 0 0 0.08562 0 0.09075 0 0 1.12158 0.05308 0 0.00171 0.00856 0.00342 ...
-        .. .. ..$ variance             : num [1:2000] 0.01851 0 0 0 0 0.0303 0.00171 0 0 0.00681 0 0 0 0 0.11616 0 0.08952 0 0 1.32482 0.10524 0 0.00171 0.0085 0.00342 ...
-        .. .. ..$ variance.standardized: num [1:2000] 0.837 0 0 0 0 1.078 1 0 0 0.932 0 0 0 0 1.152 0 0.833 0 0 0.558 1.771 0 1 0.922 0.935 ...
+        .. .. ..$ mean                 : num [1:2000] 0.01967 0 0 0 0 0.02459 0.00164 0 0 0.0082 0 0 0 0 0.07869 0 0.09344 0 0 1.13443 0.0541 0 0.00164 0.0082 0.00328 ...
+        .. .. ..$ variance             : num [1:2000] 0.01932 0 0 0 0 0.03059 0.00164 0 0 0.00814 0 0 0 0 0.09889 0 0.09142 0 0 1.34807 0.1038 0 0.00164 0.00814 0.00327 ...
+        .. .. ..$ variance.standardized: num [1:2000] 0.835 0 0 0 0 1.073 1 0 0 0.913 0 0 0 0 1.071 0 0.818 0 0 0.553 1.658 0 1 0.913 0.92 ...
         .. .. ..$ SYMBOL               : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ ENSEMBL              : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. ..$ numPCs          : num 30
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 4 1 4
         ..@ commands    :List of 5
         .. ..$ NormalizeData.RNA             :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "NormalizeData.RNA"
@@ -7676,7 +7676,7 @@
         .. .. .. ..@ assay.used : chr "RNA"
         .. .. .. ..@ call.string: chr [1:3] "ScaleData(Seurat::FindVariableFeatures(Seurat::NormalizeData(scdata, " "    normalization.method = normalization, verbose = FALSE), nfeatures = nfeatures, " "    verbose = FALSE), verbose = FALSE)"
         .. .. .. ..@ params     :List of 10
-        .. .. .. .. ..$ features          : chr [1:970] "S100A12" "CAVIN2" "FCRL5" "CLIC3" "CRIP1" "CD8B" "LILRA5" "TMEM176B" "TREML1" "FKBP5" "ALPL" "CCR2" "TMEM40" "TRBV6-2" "PPM1N" "ITGA2B" "C3AR1" "ZNF605" "KCNQ1OT1" "KIF11" ...
+        .. .. .. .. ..$ features          : chr [1:980] "S100A12" "CAVIN2" "FCRL5" "CRIP1" "TREML1" "CLIC3" "TMEM40" "CD8B" "LRG1" "FKBP5" "TMEM176B" "ITGA2B" "LILRA5" "ALPL" "CCR2" "KCNQ1OT1" "PPM1N" "C3AR1" "TRBV6-2" "TRIM58" ...
         .. .. .. .. ..$ assay             : chr "RNA"
         .. .. .. .. ..$ model.use         : chr "linear"
         .. .. .. .. ..$ use.umi           : logi FALSE
@@ -7684,7 +7684,7 @@
         .. .. .. .. ..$ do.center         : logi TRUE
         .. .. .. .. ..$ scale.max         : num 10
         .. .. .. .. ..$ block.size        : num 1000
-        .. .. .. .. ..$ min.cells.to.block: num 584
+        .. .. .. .. ..$ min.cells.to.block: num 610
         .. .. .. .. ..$ verbose           : logi FALSE
         .. ..$ RunPCA.RNA                    :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "RunPCA.RNA"
@@ -7726,13 +7726,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "a76a0147c9d141fb0e4585448a87c4e5"
+      [1] "d55a996087c010a44d8996257df56b0f"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
-       $ mock_sample_2_id: int [1:319] 1 9 11 13 15 19 21 22 25 26 34 36 39 40 41 44 48 52 53 58 59 62 72 75 77 79 81 85 86 90 93 96 97 99 104 106 108 1| __truncated__ ...
-       $ mock_sample_1_id: int [1:265] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 42 50 54 55 63 65 68 70 71 74 78 80 82 91 94 95 105 117 119 121 124 128 13| __truncated__ ...
+       $ mock_sample_2_id: int [1:338] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 106| __truncated__ ...
+       $ mock_sample_1_id: int [1:272] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 42 50 54 55 63 65 68 70 71 74 78 80 82 91 94 95 98 100 105 117 119 121 124| __truncated__ ...
 
 ---
 

@@ -19,12 +19,12 @@ filter_high_mito(
 - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
 to call generate_default_values_mitochondrialContent)
 - filterSettings: slot with thresholds
-- method: String. Method to be used {absoluteThreshold}
-- methodSettings: List with the method as key and contain all the filterSettings for this specific method.
-* absoluteThreshold: based on a cut-off threshold
-- maxFraction: Float. maximun pct MT-content that we considere for a alive cell
-- binStep: Float. Bin size for the histogram
-* we are supposed to add more methods ....}
+        - method: String. Method to be used {absoluteThreshold}
+        - methodSettings: List with the method as key and contain all the filterSettings for this specific method.
+                * absoluteThreshold: based on a cut-off threshold
+                        - maxFraction: Float. maximun pct MT-content that we considere for a alive cell
+                        - binStep: Float. Bin size for the histogram
+                * we are supposed to add more methods ....}
 }
 \value{
 a list with the filtered seurat object by mitochondrial content, the config and the plot values

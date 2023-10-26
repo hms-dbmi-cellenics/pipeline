@@ -217,7 +217,7 @@ test_that("parse_rhapsody_matrix uses RSEC if DBEC corrected counts are missing"
   # keep RSEC values
   expected_values <- original$RSEC_Adjusted_Molecules
 
-  res <- pipeline:::parse_rhapsody_matrix(config, input_dir)
+  res <- parse_rhapsody_matrix(config, input_dir)
 
   row_idx <- as.integer(factor(original$Gene))
   col_idx <- match(original$Cell_Index, unique(original$Cell_Index))
@@ -237,12 +237,12 @@ test_that("parse_rhapsody_matrix filters out AbSeq genes if asked to", {
   prev_out <- mock_prev_out(samples, include_abseq = TRUE)
   config <- prev_out$config
 
-  with_abseq <- pipeline:::parse_rhapsody_matrix(config, input_dir)
+  with_abseq <- parse_rhapsody_matrix(config, input_dir)
 
   prev_out <- mock_prev_out(samples, include_abseq = FALSE)
   config <- prev_out$config
 
-  without_abseq <- pipeline:::parse_rhapsody_matrix(config, input_dir)
+  without_abseq <- parse_rhapsody_matrix(config, input_dir)
   abseq_pattern <- "(p_?ab_?o)$"
 
   for (sample in names(samples)) {

@@ -15,7 +15,7 @@ pipeline_heartbeat(task_token, aws_config)
 Sends a heartbeat to the state machine every 'wait_time' seconds Once the task
 is completed the heartbeat will fail accordingly with a task timeout and exit
 the loop and a new heartbeat will be set up by next task. This method is
-invoked with \code{callr::r_bg} which creates a new process which does not inherit
+invoked with `callr::r_bg` which creates a new process which does not inherit
 the current workspace or memory, only the provided parameters; that's why we
-need to re-import \code{tryCatchLog} & initialize states again.
+need to re-import `tryCatchLog` & initialize states again.
 }

@@ -8,13 +8,11 @@ subset_seurat(input, pipeline_config, prev_out = NULL)
 }
 \arguments{
 \item{input}{list containing:
-\itemize{
-\item parentExperimentId character
-\item subsetExperimentId character
-\item cellSetKeys character vector of cellset keys to subset
-\item experimentName character
-\item parentProcessingConfig The processingConfig of the parent experiment
-}}
+- parentExperimentId character
+- subsetExperimentId character
+- cellSetKeys character vector of cellset keys to subset
+- experimentName character
+- parentProcessingConfig The processingConfig of the parent experiment}
 
 \item{pipeline_config}{list}
 

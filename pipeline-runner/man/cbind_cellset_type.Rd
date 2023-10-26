@@ -16,5 +16,5 @@ data.table with cellset_type column
 }
 \description{
 helper to correctly name the cellset type column. some cellsets already
-contain a "type" slot, which complicates matters, so we chose \code{cellset_type},
+contain a "type" slot, which complicates matters, so we chose `cellset_type`,
 }

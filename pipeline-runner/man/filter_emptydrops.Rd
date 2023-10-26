@@ -19,13 +19,13 @@ filter_emptydrops(
 - auto: true/false. 'True' indicates that the filter setting need to be changed depending on some sensible value (it requires
 to call generate_default_values_mitochondrialContent)
 - filterSettings: slot with thresholds
-- methodSettings: List with the method as key and contain all the filterSettings for this specific method.
-- FDR: False Discovery Rate. Cells with FDR above this threshold will be filtered out.}
+        - methodSettings: List with the method as key and contain all the filterSettings for this specific method.
+            - FDR: False Discovery Rate. Cells with FDR above this threshold will be filtered out.}
 }
 \value{
 a list with the filtered seurat object by mitochondrial content, the config and the plot values
 }
 \description{
 Filters seurat object based on scores estimated by the classifier implemented
-in \code{DropletUtils::emptyDrops}
+ in `DropletUtils::emptyDrops`
 }

@@ -17,7 +17,7 @@ returns histogram plot data and knee plot data without fdr and ndrops values.}
 }
 \value{
 Named list of plot data. Possible items are \code{'hist'} and \code{'knee'},
-dependending on \code{is.cellsize}.
+  dependending on \code{is.cellsize}.
 }
 \description{
 Get Barcode Ranks Plot Data

@@ -98,7 +98,7 @@
         .. ..$ numPCs          : num 5
         .. ..$ active.reduction: chr "mnn"
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 4 1 4
         ..@ commands    :List of 1
         .. ..$ SeuratWrappers..RunFastMNN.RNA:Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "SeuratWrappers::RunFastMNN.RNA"

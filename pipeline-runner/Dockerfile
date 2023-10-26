@@ -1,6 +1,6 @@
 # Create builder step
 # pull official base image and use it as builder
-FROM rocker/r-ver:4.2.2 AS builder
+FROM rocker/r-ver:4.3.1 AS builder
 WORKDIR /src/pipeline-runner
 
 # install required debian packages to install R packages
@@ -20,34 +20,18 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 
 # install renv to install required R packages
 RUN R -q -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -q -e "remotes::install_github('rstudio/renv@0.16.0')" && \
+    R -q -e "remotes::install_github('rstudio/renv@v1.0.3')" && \
     R -q -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
 # fast pre-restore with pkgbuild
 # an initial lockfile is used to avoid frequent re-installs
 # copy renv.lock.init to renv.lock if R dependency updates become slow to build
-COPY ./renv.lock.init ./renv.lock
+COPY ./renv.lock ./renv.lock
 COPY setup/restore_fast.R .
 RUN Rscript restore_fast.R
 
-# restore anything pkgbuild missed
-COPY setup/restore_renv.R .
-RUN Rscript restore_renv.R
-
 # deactivate so that .libPaths used (set above)
 RUN R -q -e "renv::deactivate()"
-
-# install miniconda and geosketch
-# clean conda
-ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
-RUN R -q -e "reticulate::install_miniconda()" && \
-    R -q -e "reticulate::conda_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3'), pip = TRUE)" && \
-    CONDA_PATH=$(R -q -s -e "cat(reticulate::conda_binary())") && \
-    $CONDA_PATH clean --force-pkgs-dirs -y
-
-# use renv::snapshot() while R dependency updates are quick to build
-COPY ./renv.lock .
-RUN Rscript restore_renv.R
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
@@ -64,20 +48,24 @@ RUN Rscript check_package_licenses.R
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
 # ---------------------------------------------------
-FROM rocker/r-ver:4.2.2 AS common
+FROM rocker/r-ver:4.3.1 AS common
 WORKDIR /src/pipeline-runner
-ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 
 # get source code and R packages
 COPY --from=builder /src /src
-
-# add renv library to .libPaths
 ENV RENV_LIB=/src/lib
+
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site && \
-    echo "python3-pip" >> sysdeps_run.txt && \
-    echo "wget" >> sysdeps_run.txt && \
+    echo "python3-pip python3-venv python3-dev wget" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
+
+# create virtualenv for python packages
+RUN python3 -m venv /src/.virtualenvs/r-reticulate
+
+# install python packages in virtualenv
+ENV WORKON_HOME=/src/.virtualenvs
+RUN R -q -e "reticulate::virtualenv_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3'), pip_options='--no-cache-dir')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD

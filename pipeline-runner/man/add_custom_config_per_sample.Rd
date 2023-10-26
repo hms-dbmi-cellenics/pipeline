@@ -29,6 +29,6 @@ step customization function, which takes care of changing the QC parameters to
 sensible values for each sample in the running experiment.
 }
 \details{
-Values that apply to all experiments are defined in the \code{data-raw/processing_config_template.R}
+Values that apply to all experiments are defined in the `data-raw/processing_config_template.R`
 file.
 }

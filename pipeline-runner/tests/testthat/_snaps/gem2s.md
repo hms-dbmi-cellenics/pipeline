@@ -172,7 +172,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "597d5c11ceb195b121e7b768aafccb4c"
+      [1] "263e1dc4300e30e0c15cb638c36b6e0a"
     Code
       str(res)
     Output
@@ -256,11 +256,11 @@
         .. ..$ mock_sample_1_id:'data.frame':	216 obs. of  3 variables:
         .. .. ..$ barcodes      : chr [1:216] "GGTCACGAGTGAGCCA-1" "GGTTAACTCATATGGC-1" "TACCTCGTCGACCCAG-1" "GATGAGGCAGGCATTT-1" ...
         .. .. ..$ doublet_class : Factor w/ 2 levels "singlet","doublet": 1 1 1 1 1 1 1 1 1 1 ...
-        .. .. ..$ doublet_scores: num [1:216] 0.337 0.379 0.28 0.741 0.189 ...
+        .. .. ..$ doublet_scores: num [1:216] 0.194 0.399 0.16 0.531 0.111 ...
         .. ..$ mock_sample_2_id:'data.frame':	242 obs. of  3 variables:
         .. .. ..$ barcodes      : chr [1:242] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "CAGCGTGGTACGATCT-1" ...
-        .. .. ..$ doublet_class : Factor w/ 2 levels "singlet","doublet": 1 1 2 2 1 2 1 2 2 1 ...
-        .. .. ..$ doublet_scores: num [1:242] 0.13 0.295 0.923 0.984 0.406 ...
+        .. .. ..$ doublet_class : Factor w/ 2 levels "singlet","doublet": 1 1 1 2 1 1 1 1 1 1 ...
+        .. .. ..$ doublet_scores: num [1:242] 0.102 0.25 0.314 0.974 0.506 ...
 
 ---
 
@@ -271,7 +271,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "2c31159cdfa0c963cf61adb1008b0314"
+      [1] "cdf73f68f104e1f90f8fb3712984a12b"
     Code
       str(res)
     Output
@@ -355,11 +355,11 @@
         .. ..$ mock_sample_1_id:'data.frame':	216 obs. of  3 variables:
         .. .. ..$ barcodes      : chr [1:216] "GGTCACGAGTGAGCCA-1" "GGTTAACTCATATGGC-1" "TACCTCGTCGACCCAG-1" "GATGAGGCAGGCATTT-1" ...
         .. .. ..$ doublet_class : Factor w/ 2 levels "singlet","doublet": 1 1 1 1 1 1 1 1 1 1 ...
-        .. .. ..$ doublet_scores: num [1:216] 0.337 0.379 0.28 0.741 0.189 ...
+        .. .. ..$ doublet_scores: num [1:216] 0.194 0.399 0.16 0.531 0.111 ...
         .. ..$ mock_sample_2_id:'data.frame':	242 obs. of  3 variables:
         .. .. ..$ barcodes      : chr [1:242] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "CAGCGTGGTACGATCT-1" ...
-        .. .. ..$ doublet_class : Factor w/ 2 levels "singlet","doublet": 1 1 2 2 1 2 1 2 2 1 ...
-        .. .. ..$ doublet_scores: num [1:242] 0.13 0.295 0.923 0.984 0.406 ...
+        .. .. ..$ doublet_class : Factor w/ 2 levels "singlet","doublet": 1 1 1 2 1 1 1 1 1 1 ...
+        .. .. ..$ doublet_scores: num [1:242] 0.102 0.25 0.314 0.974 0.506 ...
         ..$ scdata_list       :List of 2
         .. ..$ mock_sample_1_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
         .. .. .. ..@ assays      :List of 1
@@ -395,7 +395,7 @@
         .. .. .. .. ..$ nFeature_RNA      : int [1:436] 36 138 22 66 151 82 196 130 56 57 ...
         .. .. .. .. ..$ samples           : chr [1:436] "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" ...
         .. .. .. .. ..$ percent.mt        : num [1:436] 76.4 25.4 53.1 64.2 11.2 ...
-        .. .. .. .. ..$ doublet_scores    : num [1:436] NA 0.337 NA 0.379 0.28 ...
+        .. .. .. .. ..$ doublet_scores    : num [1:436] NA 0.194 NA 0.399 0.16 ...
         .. .. .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 ...
         .. .. .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 ...
         .. .. .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 ...
@@ -412,7 +412,7 @@
         .. .. .. ..@ project.name: chr "mock_experiment"
         .. .. .. ..@ misc        : list()
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 4 1 0
+        .. .. .. .. ..$ : int [1:3] 4 1 4
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -450,8 +450,8 @@
         .. .. .. .. ..$ nFeature_RNA      : int [1:460] 24 80 59 95 51 34 108 39 42 14 ...
         .. .. .. .. ..$ samples           : chr [1:460] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
         .. .. .. .. ..$ percent.mt        : num [1:460] 19.57 12.8 25.3 30.8 7.77 ...
-        .. .. .. .. ..$ doublet_scores    : num [1:460] NA 0.13 0.295 0.923 NA ...
-        .. .. .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 2 NA NA 2 NA NA NA ...
+        .. .. .. .. ..$ doublet_scores    : num [1:460] NA 0.102 0.25 0.314 NA ...
+        .. .. .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 2 NA NA NA ...
         .. .. .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 ...
         .. .. .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 ...
         .. .. .. .. ..$ emptyDrops_PValue : num [1:460] NA 1e-04 9e-04 1e-04 1e-04 ...
@@ -467,7 +467,7 @@
         .. .. .. ..@ project.name: chr "mock_experiment"
         .. .. .. ..@ misc        : list()
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 4 1 0
+        .. .. .. .. ..$ : int [1:3] 4 1 4
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -482,7 +482,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "8269a793da36df7492182bb1b0d6656c"
+      [1] "c0bc7b07f276188e09be5339145cb636"
     Code
       str(res)
     Output
@@ -566,11 +566,11 @@
         .. ..$ mock_sample_1_id:'data.frame':	216 obs. of  3 variables:
         .. .. ..$ barcodes      : chr [1:216] "GGTCACGAGTGAGCCA-1" "GGTTAACTCATATGGC-1" "TACCTCGTCGACCCAG-1" "GATGAGGCAGGCATTT-1" ...
         .. .. ..$ doublet_class : Factor w/ 2 levels "singlet","doublet": 1 1 1 1 1 1 1 1 1 1 ...
-        .. .. ..$ doublet_scores: num [1:216] 0.337 0.379 0.28 0.741 0.189 ...
+        .. .. ..$ doublet_scores: num [1:216] 0.194 0.399 0.16 0.531 0.111 ...
         .. ..$ mock_sample_2_id:'data.frame':	242 obs. of  3 variables:
         .. .. ..$ barcodes      : chr [1:242] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "CAGCGTGGTACGATCT-1" ...
-        .. .. ..$ doublet_class : Factor w/ 2 levels "singlet","doublet": 1 1 2 2 1 2 1 2 2 1 ...
-        .. .. ..$ doublet_scores: num [1:242] 0.13 0.295 0.923 0.984 0.406 ...
+        .. .. ..$ doublet_class : Factor w/ 2 levels "singlet","doublet": 1 1 1 2 1 1 1 1 1 1 ...
+        .. .. ..$ doublet_scores: num [1:242] 0.102 0.25 0.314 0.974 0.506 ...
         ..$ scdata_list       :List of 2
         .. ..$ mock_sample_2_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
         .. .. .. ..@ assays      :List of 1
@@ -606,8 +606,8 @@
         .. .. .. .. ..$ nFeature_RNA      : int [1:460] 24 80 59 95 51 34 108 39 42 14 ...
         .. .. .. .. ..$ samples           : chr [1:460] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
         .. .. .. .. ..$ percent.mt        : num [1:460] 19.57 12.8 25.3 30.8 7.77 ...
-        .. .. .. .. ..$ doublet_scores    : num [1:460] NA 0.13 0.295 0.923 NA ...
-        .. .. .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 2 NA NA 2 NA NA NA ...
+        .. .. .. .. ..$ doublet_scores    : num [1:460] NA 0.102 0.25 0.314 NA ...
+        .. .. .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 2 NA NA NA ...
         .. .. .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 ...
         .. .. .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 ...
         .. .. .. .. ..$ emptyDrops_PValue : num [1:460] NA 1e-04 9e-04 1e-04 1e-04 ...
@@ -629,7 +629,7 @@
         .. .. .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 4 1 0
+        .. .. .. .. ..$ : int [1:3] 4 1 4
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -667,7 +667,7 @@
         .. .. .. .. ..$ nFeature_RNA      : int [1:436] 36 138 22 66 151 82 196 130 56 57 ...
         .. .. .. .. ..$ samples           : chr [1:436] "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" ...
         .. .. .. .. ..$ percent.mt        : num [1:436] 76.4 25.4 53.1 64.2 11.2 ...
-        .. .. .. .. ..$ doublet_scores    : num [1:436] NA 0.337 NA 0.379 0.28 ...
+        .. .. .. .. ..$ doublet_scores    : num [1:436] NA 0.194 NA 0.399 0.16 ...
         .. .. .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 ...
         .. .. .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 ...
         .. .. .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 ...
@@ -690,7 +690,7 @@
         .. .. .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 4 1 0
+        .. .. .. .. ..$ : int [1:3] 4 1 4
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -767,13 +767,13 @@
         .. .. .. ..$ enabled       : logi TRUE
         .. .. .. ..$ auto          : logi TRUE
         .. .. .. ..$ filterSettings:List of 2
-        .. .. .. .. ..$ probabilityThreshold: num 0.805
+        .. .. .. .. ..$ probabilityThreshold: num 0.69
         .. .. .. .. ..$ binStep             : num 0.02
         .. .. ..$ mock_sample_1_id:List of 3
         .. .. .. ..$ enabled       : logi TRUE
         .. .. .. ..$ auto          : logi TRUE
         .. .. .. ..$ filterSettings:List of 2
-        .. .. .. .. ..$ probabilityThreshold: num 0.865
+        .. .. .. .. ..$ probabilityThreshold: num 0.723
         .. .. .. .. ..$ binStep             : num 0.02
         .. ..$ dataIntegration     :List of 2
         .. .. ..$ dataIntegration        :List of 2
@@ -882,13 +882,13 @@
         .. .. .. ..$ enabled       : logi TRUE
         .. .. .. ..$ auto          : logi TRUE
         .. .. .. ..$ filterSettings:List of 2
-        .. .. .. .. ..$ probabilityThreshold: num 0.805
+        .. .. .. .. ..$ probabilityThreshold: num 0.69
         .. .. .. .. ..$ binStep             : num 0.02
         .. .. ..$ mock_sample_1_id:List of 3
         .. .. .. ..$ enabled       : logi TRUE
         .. .. .. ..$ auto          : logi TRUE
         .. .. .. ..$ filterSettings:List of 2
-        .. .. .. .. ..$ probabilityThreshold: num 0.865
+        .. .. .. .. ..$ probabilityThreshold: num 0.723
         .. .. .. .. ..$ binStep             : num 0.02
         .. ..$ dataIntegration     :List of 2
         .. .. ..$ dataIntegration        :List of 2
@@ -935,7 +935,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "f36676dd161db0719c49c78dfceee824"
+      [1] "2a707c6f29ceea00bd635460cb74c28c"
     Code
       str(res)
     Output
@@ -1020,13 +1020,13 @@
         .. .. .. .. ..$ enabled       : logi TRUE
         .. .. .. .. ..$ auto          : logi TRUE
         .. .. .. .. ..$ filterSettings:List of 2
-        .. .. .. .. .. ..$ probabilityThreshold: num 0.805
+        .. .. .. .. .. ..$ probabilityThreshold: num 0.69
         .. .. .. .. .. ..$ binStep             : num 0.02
         .. .. .. ..$ mock_sample_1_id:List of 3
         .. .. .. .. ..$ enabled       : logi TRUE
         .. .. .. .. ..$ auto          : logi TRUE
         .. .. .. .. ..$ filterSettings:List of 2
-        .. .. .. .. .. ..$ probabilityThreshold: num 0.865
+        .. .. .. .. .. ..$ probabilityThreshold: num 0.723
         .. .. .. .. .. ..$ binStep             : num 0.02
         .. .. ..$ dataIntegration     :List of 2
         .. .. .. ..$ dataIntegration        :List of 2
@@ -1135,13 +1135,13 @@
         .. .. .. .. ..$ enabled       : logi TRUE
         .. .. .. .. ..$ auto          : logi TRUE
         .. .. .. .. ..$ filterSettings:List of 2
-        .. .. .. .. .. ..$ probabilityThreshold: num 0.805
+        .. .. .. .. .. ..$ probabilityThreshold: num 0.69
         .. .. .. .. .. ..$ binStep             : num 0.02
         .. .. .. ..$ mock_sample_1_id:List of 3
         .. .. .. .. ..$ enabled       : logi TRUE
         .. .. .. .. ..$ auto          : logi TRUE
         .. .. .. .. ..$ filterSettings:List of 2
-        .. .. .. .. .. ..$ probabilityThreshold: num 0.865
+        .. .. .. .. .. ..$ probabilityThreshold: num 0.723
         .. .. .. .. .. ..$ binStep             : num 0.02
         .. .. ..$ dataIntegration     :List of 2
         .. .. .. ..$ dataIntegration        :List of 2

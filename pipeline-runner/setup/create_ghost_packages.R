@@ -41,6 +41,12 @@ install_ghost_package <- function(package) {
       ghost_fun <- function(...) {
         stop('removed due to licensing conflicts.')
       }
+    if (fun_name == 'omp_get_max_threads') {
+      ghost_fun <- function() {
+        # make it return FALSE, to be able to use new version of harmony
+        rlang::return_from(parent.frame(), FALSE)
+      }
+    }
 
       assign(fun_name, ghost_fun)
     }
@@ -102,6 +108,8 @@ ghost_list <- c(
   'ROCR',
   'gplots',
   'gtools',
+  'knitr',
+  'highr',
   'pbapply',
   'rtracklayer',
   'rjson',
@@ -109,6 +117,7 @@ ghost_list <- c(
   'lme4',
   'minqa',
   'pheatmap',
+  'plotly',
   'pscl',
   'slam',
   'spdep',

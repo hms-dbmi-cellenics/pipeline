@@ -13,9 +13,7 @@ start_heartbeat(task_token, aws_config)
 }
 \description{
 messages inside the background process will ONLY be printed into
-\verb{/tmp/[out|err]}. To see them:
-\enumerate{
-\item log into the R container
-\item \code{cat /tmp/out} or \code{tail -f /tmp/out}
-}
+`/tmp/[out|err]`. To see them:
+ 1. log into the R container
+ 2. `cat /tmp/out` or `tail -f /tmp/out`
 }

@@ -55,7 +55,6 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_
 #' @return
 #' @export
 #'
-#' @examples
 read_10x_h5_file <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()

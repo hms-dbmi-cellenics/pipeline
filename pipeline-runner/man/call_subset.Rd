@@ -10,11 +10,9 @@ call_subset(task_name, input, pipeline_config)
 \item{task_name}{character name of the step}
 
 \item{input}{list containing
-\itemize{
-\item parentExperimentId
-\item childExperimentId
-\item sample IDs, and names
-}}
+- parentExperimentId
+- childExperimentId
+- sample IDs, and names}
 
 \item{pipeline_config}{list as defined by load_config}
 }
@@ -22,5 +20,5 @@ call_subset(task_name, input, pipeline_config)
 character message id
 }
 \description{
-Runs step \code{task_name} of the subset seurat pipeline, sends output message to the API
+Runs step `task_name` of the subset seurat pipeline, sends output message to the API
 }

@@ -115,7 +115,7 @@
         .. ..$ active.reduction: chr "pca"
         .. ..$ numPCs          : num 50
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 4 1 4
         ..@ commands    :List of 5
         .. ..$ FindIntegrationAnchors  :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "Seurat::FindIntegrationAnchors"

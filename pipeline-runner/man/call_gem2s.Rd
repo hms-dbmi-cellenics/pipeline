@@ -10,10 +10,8 @@ call_gem2s(task_name, input, pipeline_config)
 \item{task_name}{character name of the step}
 
 \item{input}{list containing
-\itemize{
-\item experimentID
-\item sample IDs, names and S3 paths
-}}
+- experimentID
+- sample IDs, names and S3 paths}
 
 \item{pipeline_config}{list as defined by load_config}
 }
@@ -21,5 +19,5 @@ call_gem2s(task_name, input, pipeline_config)
 character message id
 }
 \description{
-Runs step \code{task_name} of the GEM2S pipeline, sends output message to the API
+Runs step `task_name` of the GEM2S pipeline, sends output message to the API
 }
