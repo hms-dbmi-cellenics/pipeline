@@ -229,7 +229,7 @@ make_cl_metadata_cellsets <- function(scdata, config) {
 
   # TODO deduplicate using sample column (if present) in the cell-level metadata file
   # TODO add "duplicated" variable to cl_metadata table to create cellset for duplicated barcodes
-  #cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
+  cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
 
   # extract barcode - cell_id (keep sample column for variable type detection)
   barcode_cell_id_map <- get_cell_id_barcode_map(scdata)
@@ -239,6 +239,9 @@ make_cl_metadata_cellsets <- function(scdata, config) {
     make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
 
   var_types <- detect_variable_types(cl_metadata)
+  if(rlang::has_name(cl_metadata, "duplicated")){
+    var_types$CLM <- "duplicated"
+  }
 
   # creates cell-level metadata cellsets, setting the correct type
   cl_metadata_cellsets <-
@@ -450,3 +453,16 @@ sort_cluster_names <- function(strings) {
 
   return(strings[sorted_indices])
 }
+
+
+deduplicate_cl_metadata <- function(scdata, cl_metadata) {
+  cl_metadata$duplicated <- FALSE
+
+  if (!all(duplicated(cl_metadata$barcode) == FALSE)) {
+    cl_metadata[which(duplicated(cl_metadata$barcode)), "duplicated"] <- TRUE
+  }
+
+  return(cl_metadata)
+}
+
+
