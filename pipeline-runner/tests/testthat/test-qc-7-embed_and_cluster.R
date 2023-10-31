@@ -609,4 +609,25 @@ test_that("make_cl_metadata_table works with duplicate barcodes", {
   }
 })
 
+test_that("add_duplicate_barcode_column handles empty input correctly", {
+  empty_cl_metadata <- data.frame(barcode = character(0))
+  expect_equal(nrow(add_duplicate_barcode_column(empty_cl_metadata)), 0)
+})
 
+test_that("add_duplicate_barcode_column handles unique barcodes correctly", {
+  unique_cl_metadata <- data.frame(barcode = c("BC01", "BC02", "BC03"))
+  unique_result <- add_duplicate_barcode_column(unique_cl_metadata)
+  expect_equal(unique_result$duplicate_barcode, NULL)
+})
+
+test_that("add_duplicate_barcode_column handles duplicate barcodes correctly", {
+  dup_cl_metadata <- data.frame(barcode = c("BC01", "BC01", "BC02"))
+  dup_result <- add_duplicate_barcode_column(dup_cl_metadata)
+  expect_equal(dup_result$duplicate_barcode, c("yes", "yes", "no"))
+})
+
+test_that("add_duplicate_barcode_column handles a mix of unique and duplicate barcodes correctly", {
+  mixed_cl_metadata <- data.frame(barcode = c("BC01", "BC02", "BC02", "BC03"))
+  mixed_result <- add_duplicate_barcode_column(mixed_cl_metadata)
+  expect_equal(mixed_result$duplicate_barcode, c("no", "yes", "yes", "no"))
+})
