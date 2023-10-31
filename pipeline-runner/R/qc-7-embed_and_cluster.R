@@ -277,8 +277,6 @@ get_cell_id_barcode_map <- function(scdata) {
 #' @return data.table of cell_ids and cell-level metadata
 #' @export
 make_cl_metadata_table <- function(cl_metadata, barcode_cell_ids) {
-  #vars_to_add <- setdiff("barcode", names(cl_metadata))
-  #data.table::setDT(cl_metadata)
 
   join_cols <- c("barcode", "samples")
   if (!"samples" %in% names(cl_metadata)) {
