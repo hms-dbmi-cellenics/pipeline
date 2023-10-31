@@ -229,7 +229,7 @@ make_cl_metadata_cellsets <- function(scdata, config) {
 
   # TODO deduplicate using sample column (if present) in the cell-level metadata file
   # TODO add "duplicated" variable to cl_metadata table to create cellset for duplicated barcodes
-  cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
+  cl_metadata <- add_duplicate_barcode_column(cl_metadata)
 
   # extract barcode - cell_id (keep sample column for variable type detection)
   barcode_cell_id_map <- get_cell_id_barcode_map(scdata)
@@ -239,9 +239,6 @@ make_cl_metadata_cellsets <- function(scdata, config) {
     make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
 
   var_types <- detect_variable_types(cl_metadata)
-  if(rlang::has_name(cl_metadata, "duplicated")){
-    var_types$CLM <- "duplicated"
-  }
 
   # creates cell-level metadata cellsets, setting the correct type
   cl_metadata_cellsets <-
@@ -354,6 +351,11 @@ detect_variable_types <- function(cl_metadata) {
   # remove samples var, useless from this point on
   clm_cols <- grep("^samples$", clm_cols, value = T, invert = T)
 
+  # add duplicate_barcode column if present
+  if(rlang::has_name(cl_metadata, "duplicate_barcode")){
+    clm_cols <- c(clm_cols, "duplicate_barcode")
+  }
+
   return(list(CLM = clm_cols, CLMPerSample = clm_per_sample_cols))
 }
 
@@ -384,13 +386,21 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
   values <- unique(cl_metadata[[variable]])
 
   for (i in seq_along(values)) {
+
+    cell_ids <- cl_metadata[get(variable) == values[i] & cl_metadata$duplicate_barcode == "no", cells_id]
+
+    # do not add duplicate barcodes, except for the duplicate_barcode cellset
+    if (variable == "duplicate_barcode") {
+      cell_ids <- cl_metadata[get(variable) == values[i], cells_id]
+    }
+
     cl_metadata_cellset$children[[i]] <- list(
       key = uuid::UUIDgenerate(),
       name = values[i],
       rootNode = FALSE,
       type = type,
       color = color_pool[1],
-      cellIds = ensure_is_list_in_json(cl_metadata[get(variable) == values[i], cells_id])
+      cellIds = ensure_is_list_in_json(cell_ids)
     )
     color_pool <- color_pool[-1]
   }
@@ -454,15 +464,11 @@ sort_cluster_names <- function(strings) {
   return(strings[sorted_indices])
 }
 
+add_duplicate_barcode_column <- function(cl_metadata){
+  dup_barcodes <- vctrs::vec_duplicate_detect(cl_metadata$barcode)
 
-deduplicate_cl_metadata <- function(scdata, cl_metadata) {
-  cl_metadata$duplicated <- FALSE
-
-  if (!all(duplicated(cl_metadata$barcode) == FALSE)) {
-    cl_metadata[which(duplicated(cl_metadata$barcode)), "duplicated"] <- TRUE
+  if(any(dup_barcodes)) {
+    cl_metadata$duplicate_barcode <- ifelse(dup_barcodes, "yes", "no")
   }
-
   return(cl_metadata)
 }
-
-

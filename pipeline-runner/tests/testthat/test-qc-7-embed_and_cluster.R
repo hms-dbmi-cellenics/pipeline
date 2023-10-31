@@ -584,7 +584,7 @@ with_fake_http(
   })
 )
 
-test_that("make_cl_metadata_table doesn't break with duplicate barcodes", {
+test_that("make_cl_metadata_table works with duplicate barcodes", {
   config <- mock_config()
   scdata <- mock_scdata()
   cl_metadata <- mock_cl_metadata(scdata)
@@ -595,11 +595,10 @@ test_that("make_cl_metadata_table doesn't break with duplicate barcodes", {
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
   withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
 
-
-  expect_equal(length(res), 3)
+  expect_equal(length(res), 4)
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
-  expect_equal(length(res[[2]]$children), length(unique(cl_metadata$group_var)))
-  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$redundant_group_var)))
+  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
+  expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))
 
   cell_class_names <- c("key", "name", "rootNode", "type", "children")
   purrr::walk(res, expect_named, cell_class_names)
