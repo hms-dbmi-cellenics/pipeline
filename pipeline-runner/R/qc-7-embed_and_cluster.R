@@ -331,7 +331,7 @@ find_clm_columns <- function(check_vals) {
 #' Detect cell-level metadata variable types
 #'
 #' detect cell level metadata types
-#'   - group (CLMPerSample, like metadataCategorital)
+#'   - group (CLMPerSample, like metadataCategorical)
 #'   - "cellset type" (CLM, like cellSets)
 #'   - excludes continuous/high cardinality (to avoid infinite cellsets)
 #'
