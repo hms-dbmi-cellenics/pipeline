@@ -9,6 +9,9 @@ reconstruct_seurat(dataset_fpath)
 \arguments{
 \item{dataset_fpath}{The path to the r.rds file containing the Seurat object.}
 }
+\value{
+reconstructed SeuratObject
+}
 \description{
 The slots needed from the Seurat object are extracted and then their in-built types
 are strictly checked before creating a new Seurat object. This reconstruction and type

@@ -156,6 +156,7 @@ calc_filter_stats <- function(scdata) {
 #' @export
 #'
 runClusters <- function(clustering_method, resolution, data) {
+  message("Running clustering")
   data <- getClusters(clustering_method, resolution, data)
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   # In the meta data slot the clustering is stored with the resolution used to calculate it
@@ -246,4 +247,25 @@ getSNNiGraph <- function(data, active.reduction) {
 
 safeTRUE <- function(x) {
   isTRUE(as.logical(x))
+}
+
+
+#' Ensure is list in json
+#'
+#' When sending responses as json, Vectors of length 0 or 1 are converted to
+#' null and scalar (respectively) Using as.list fixes this, however, long R
+#' lists take a VERY long time to be converted to JSON.
+#' This function deals with the problematic cases, leaving vector as a vector
+#' when it isnt a problem.
+#'
+#' @param vector
+#'
+#' @export
+#'
+ensure_is_list_in_json <- function(vector) {
+  if (length(vector) <= 1) {
+    return(as.list(vector))
+  } else {
+    return(vector)
+  }
 }
