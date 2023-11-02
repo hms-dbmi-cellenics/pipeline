@@ -203,7 +203,8 @@ download_cl_metadata_file <- function(config) {
   s3_path <- basename(config$metadataS3Path)
 
   # TODO figure out best way to temporarily store file, or read from S3 directly
-  file_path <- file.path("/", basename(s3_path))
+  file_path <- paste0("/", basename(s3_path), ".tsv.gz")
+  message("downloading cell-level metadata file to ", file_path)
   download_and_store(config$cl_metadata_bucket, s3_path, file_path, s3)
   cl_metadata <- data.table::fread(file_path)
 
@@ -258,7 +259,10 @@ make_cl_metadata_cellsets <- function(scdata, config) {
 #' @export
 #'
 get_cell_id_barcode_map <- function(scdata) {
-  data.table::as.data.table(scdata@meta.data[c("cells_id", "samples")], keep.rownames = "barcode")
+  message("extracting cell_id - barcode map")
+  # TODO add samples when able to get sample names from database, scdata contains sample ids only
+  cols_to_keep <- c("cells_id")
+  data.table::as.data.table(scdata@meta.data[cols_to_keep], keep.rownames = "barcode")
 }
 
 
@@ -306,9 +310,9 @@ find_clm_columns <- function(check_vals) {
   # skip if too few or way too many values
   value_counts <- table(check_vals)
   n.vals <- length(value_counts)
-  if (n.vals < 2) {
-    return(FALSE)
-  }
+  # if (n.vals < 2) {
+  #   return(FALSE)
+  # }
   if (n.vals > 1000) {
     return(FALSE)
   }
@@ -342,8 +346,13 @@ find_clm_columns <- function(check_vals) {
 #'
 detect_variable_types <- function(cl_metadata) {
 
-  # do not remove dups; if a user uploads some metadata it should be there
-  clm_per_sample_cols <- find_group_columns(cl_metadata, remove.dups = F)
+  # can only find group columns when samples are available
+  if ("samples" %in% names(cl_metadata)) {
+    # do not remove dups; if a user uploads some metadata it should be there
+    clm_per_sample_cols <- find_group_columns(cl_metadata, remove.dups = F)
+  } else {
+    clm_per_sample_cols <- character()
+  }
 
   undesirable_cols <- vapply(cl_metadata[, -..clm_per_sample_cols], find_clm_columns, logical(1))
   clm_cols <- names(undesirable_cols[unlist(undesirable_cols)])
