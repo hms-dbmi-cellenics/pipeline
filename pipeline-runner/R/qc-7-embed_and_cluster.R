@@ -178,12 +178,10 @@ replace_cl_metadata_through_api <-
 
     httr::PATCH(
       paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-      body = list(
-        list("$match" = list(
-          query = httr_query_remove, value = list("$remove" = TRUE)
-        )),
-        list("$append" = cl_metadata_cellsets)
+      body = list(list(
+        "$match" = list(query = httr_query_remove, value = list("$remove" = TRUE))
       ),
+      list("$append" = cl_metadata_cellsets)),
       encode = "json",
       httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
                         "Authorization" = auth_JWT)
