@@ -204,7 +204,7 @@ download_cl_metadata_file <- function(config) {
 
   # TODO figure out best way to temporarily store file, or read from S3 directly
   file_path <- file.path("/", basename(s3_path))
-  download_and_store(bucket_list$cl_metadata_bucket, s3_path, file_path, s3)
+  download_and_store(config$cl_metadata_bucket, s3_path, file_path, s3)
   cl_metadata <- data.table::fread(file_path)
 
   return(cl_metadata)
