@@ -371,6 +371,8 @@ call_qc <- function(task_name, input, pipeline_config) {
   config$api_url <- pipeline_config$api_url
   config$auth_JWT <- input$authJWT
 
+  config$clustering_should_run <- input$clusteringShouldRun
+
   if (!exists("scdata")) {
     message("No single-cell data has been loaded, reloading from S3...")
 
@@ -385,10 +387,14 @@ call_qc <- function(task_name, input, pipeline_config) {
   }
 
   if (!exists("cells_id")) {
-    message("No filtered cell ids have been loaded, loading from S3...")
     if (task_name == names(tasks)[1]) {
+      message("Generating first step filtered cell ids...")
       assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
+      message("Filtered cells id generated.")
+    } else if (task_name == "configureEmbedding") {
+      message("No filtered cell ids loading necessary for configureEmbedding step, skipping...")
     } else if (task_name %in% names(tasks)) {
+      message("No filtered cell ids have been loaded, loading from S3...")
       samples <- names(scdata)
       assign("cells_id",
         load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples),
@@ -397,10 +403,10 @@ call_qc <- function(task_name, input, pipeline_config) {
       # won't be cells_id in S3 for uploaded Seurat object that is being subsetted
       if (!length(cells_id)) cells_id <- generate_first_step_ids(scdata)
 
+      message("Cells id loaded.")
     } else {
       stop("Invalid task name given: ", task_name)
     }
-    message("Cells id loaded.")
   }
 
 

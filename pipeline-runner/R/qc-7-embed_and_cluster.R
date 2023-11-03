@@ -1,56 +1,66 @@
+run_clustering <- function(scdata, config, ignore_ssl_cert) {
+  message("starting clusters")
+  clustering_method <- config$clusteringSettings$method
+  methodSettings <-
+    config$clusteringSettings$methodSettings[[clustering_method]]
+  message("Running clustering")
+  cellSets <-
+    runClusters(clustering_method, methodSettings$resolution, scdata)
+  message("formatting cellsets")
+
+  formated_cell_sets <-
+    format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
+  message("updating through api")
+
+  update_sets_through_api(
+    formated_cell_sets,
+    config$api_url,
+    scdata@misc$experimentId,
+    clustering_method,
+    config$auth_JWT,
+    ignore_ssl_cert
+  )
+}
+
 #' run clustering
 #'
 #'
 #' @param scdata seurat object
 #' @param config list with clustering parameters
 #' @param sample_id character
-#' @param cells_id list of cell ids that passed all filters so far
+#' @param cells_id list of cell ids that passed all filters so far, not necessary for this step
 #' @param task_name character
 #'
 #' @return list
 #' @export
 #'
-embed_and_cluster <-
-  function(scdata,
-           config,
-           sample_id,
-           cells_id,
-           task_name = "configureEmbedding",
-           ignore_ssl_cert = FALSE) {
+embed_and_cluster <- function(
+  scdata,
+  config,
+  sample_id,
+  cells_id = NULL,
+  task_name = "configureEmbedding",
+  ignore_ssl_cert = FALSE
+) {
 
-    message("starting clusters")
-    clustering_method <- config$clusteringSettings$method
-    methodSettings <-
-      config$clusteringSettings$methodSettings[[clustering_method]]
+  if (config$clustering_should_run == TRUE) {
     message("Running clustering")
-    cellSets <-
-      runClusters(clustering_method, methodSettings$resolution, scdata)
-    message("formatting cellsets")
-
-    formated_cell_sets <-
-      format_cell_sets_object(cellSets, clustering_method, scdata@misc$color_pool)
-    message("updating through api")
-
-    update_sets_through_api(
-      formated_cell_sets,
-      config$api_url,
-      scdata@misc$experimentId,
-      clustering_method,
-      config$auth_JWT,
-      ignore_ssl_cert
-    )
-
-    # the result object will have to conform to this format:
-    # {data, config, plotData : {plot1, plot2}}
-    result <- list(
-      data = scdata,
-      new_ids = cells_id,
-      config = config,
-      plotData = list()
-    )
-
-    return(result)
+    run_clustering(scdata, config, ignore_ssl_cert)
+  } else {
+    message("Skipping clustering")
   }
+
+  # the result object will have to conform to this format:
+  # {data, config, plotData : {plot1, plot2}}
+  result <- list(
+    data = scdata,
+    new_ids = NULL,
+    config = config,
+    plotData = list()
+  )
+
+  return(result)
+}
 
 #' Ensure is list in json
 #'
