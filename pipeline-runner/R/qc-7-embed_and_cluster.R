@@ -276,7 +276,7 @@ get_cell_id_barcode_map <- function(scdata) {
 #' @export
 make_cl_metadata_table <- function(cl_metadata, barcode_cell_ids) {
 
-  join_cols <- c("barcode", "samples")
+  join_cols <- c("barcode")
   if (!"samples" %in% names(cl_metadata)) {
     join_cols <- setdiff(join_cols, "samples")
     # remove samples from barcode-cell_id map if not used for join

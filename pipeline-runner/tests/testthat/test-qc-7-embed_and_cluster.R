@@ -50,7 +50,7 @@ local_mock_cl_metadata_table <- function(mock_cl_metadata, experiment_id, env = 
   dir.create(bucket)
   withr::defer(unlink(bucket, recursive = TRUE), envir = env)
 
-  data.table::fwrite(mock_cl_metadata, file.path(bucket, experiment_id), sep = "\t")
+  data.table::fwrite(mock_cl_metadata, file.path(bucket, experiment_id), sep = "\t", compress = "gzip")
 }
 
 
@@ -375,10 +375,9 @@ test_that("get_cell_id_barcode_map returns correct table with barcode and cell i
   scdata <- mock_scdata()
   res <- get_cell_id_barcode_map(scdata)
 
-  expect_named(res, c("barcode", "cells_id", "samples"))
+  expect_named(res, c("barcode", "cells_id"))
   expect_type(res$barcode, "character")
   expect_type(res$cells_id, "integer")
-  expect_type(res$samples, "character")
   expect_equal(nrow(res), ncol(scdata))
 })
 
@@ -397,24 +396,25 @@ test_that("make_cl_metadata_table correctly joins cell ids to metadata table", {
 })
 
 
-test_that("make_cl_metadata_table uses composite primary key for join if samples in user-supplied cl metadata", {
-  scdata <- mock_scdata()
-  cl_meta <- mock_cl_metadata(scdata)
-
-  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
-
-  # tables should be identical save for the duplicated barcode
-  expected <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
-  expected$barcode[1] <- expected$barcode[2]
-
-  # artificially duplicate a barcode
-  cl_meta$barcode[1] <- cl_meta$barcode[2]
-  cell_id_barcode_map$barcode[1] <- cell_id_barcode_map$barcode[2]
-
-  res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
-
-  expect_equal(res, expected)
-})
+# test_that("make_cl_metadata_table uses composite primary key for join if samples in user-supplied cl metadata", {
+   # TODO enable when we support samples in user-supplied cl metadata
+#   scdata <- mock_scdata()
+#   cl_meta <- mock_cl_metadata(scdata)
+#
+#   cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+#
+#   # tables should be identical save for the duplicated barcode
+#   expected <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+#   expected$barcode[1] <- expected$barcode[2]
+#
+#   # artificially duplicate a barcode
+#   cl_meta$barcode[1] <- cl_meta$barcode[2]
+#   cell_id_barcode_map$barcode[1] <- cell_id_barcode_map$barcode[2]
+#
+#   res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+#
+#   expect_equal(res, expected)
+# })
 
 
 test_that("make_cl_metadata_table joins on barcode only if no samples column in user-supplied cl metadata", {
