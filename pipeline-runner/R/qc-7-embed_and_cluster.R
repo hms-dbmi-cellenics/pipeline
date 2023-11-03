@@ -133,8 +133,6 @@ replace_cell_class_through_api <-
       ),
       list("$prepend" = cell_class_object))
 
-    message("body replace: ", body)
-
     httr::PATCH(
       paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
       body = body,
