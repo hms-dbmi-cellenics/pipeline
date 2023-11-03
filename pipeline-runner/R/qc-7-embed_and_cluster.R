@@ -304,16 +304,7 @@ find_clm_columns <- function(check_vals) {
   # skip if too few or way too many values
   value_counts <- table(check_vals)
   n.vals <- length(value_counts)
-  # if (n.vals < 2) {
-  #   return(FALSE)
-  # }
-  if (n.vals > 1000) {
-    return(FALSE)
-  }
-
-  # skip if values are numeric but non-integer
-  if (is.numeric(check_vals) &&
-      !all(as.integer(check_vals) == check_vals)) {
+  if (n.vals > 500) {
     return(FALSE)
   }
 
