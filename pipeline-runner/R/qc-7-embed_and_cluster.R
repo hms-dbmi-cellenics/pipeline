@@ -197,7 +197,7 @@ download_cl_metadata_file <- function(config) {
   s3_path <- basename(config$metadataS3Path)
 
   # TODO figure out best way to temporarily store file, or read from S3 directly
-  file_path <- paste0("/", basename(s3_path), ".tsv.gz")
+  file_path <- paste0(basename(s3_path), ".tsv.gz")
   message("downloading cell-level metadata file to ", file_path)
   download_and_store(config$cl_metadata_bucket, s3_path, file_path, s3)
   cl_metadata <- data.table::fread(file_path)
