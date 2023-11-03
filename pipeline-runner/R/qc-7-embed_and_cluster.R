@@ -128,12 +128,16 @@ replace_cell_class_through_api <-
       httr::set_config(httr::config(ssl_verifypeer = 0L))
     }
 
-    httr::PATCH(
-      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-      body = list(list(
+    body <- list(list(
         "$match" = list(query = httr_query, value = list("$remove" = TRUE))
       ),
-      list("$prepend" = cell_class_object)),
+      list("$prepend" = cell_class_object))
+
+    message("body replace: ", body)
+
+    httr::PATCH(
+      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
+      body = body,
       encode = "json",
       httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
                         "Authorization" = auth_JWT)
@@ -161,27 +165,19 @@ replace_cl_metadata_through_api <-
            experiment_id,
            auth_JWT,
            ignore_ssl_cert) {
-    message("Deleting elements with specified types and appending new cellsets through API")
-
-    types_to_remove <-  c("CLM", "CLMPerSample")
-
-    # Constructing query to remove multiple types
-    types_string <-
-      paste0("@.type == \"",
-             paste(types_to_remove, collapse = "\" || @.type == \""),
-             "\"")
-    httr_query_remove <- paste0("$[?(", types_string, ")]")
 
     if (ignore_ssl_cert) {
       httr::set_config(httr::config(ssl_verifypeer = 0L))
     }
 
+    appends <- list()
+    for (i in seq_along(cl_metadata_cellsets)) {
+      appends <- append(appends, list(list("$append" = cl_metadata_cellsets[[i]])))
+    }
+
     httr::PATCH(
       paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-      body = list(list(
-        "$match" = list(query = httr_query_remove, value = list("$remove" = TRUE))
-      ),
-      list("$append" = cl_metadata_cellsets)),
+      body = appends,
       encode = "json",
       httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
                         "Authorization" = auth_JWT)
@@ -379,7 +375,7 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
 
   cl_metadata_cellset <- list(
     key = uuid::UUIDgenerate(),
-    name = variable,
+    name = as.character(variable),
     rootNode = TRUE,
     type = type,
     children = list()
@@ -390,7 +386,7 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
   for (i in seq_along(values)) {
     cl_metadata_cellset$children[[i]] <- list(
       key = uuid::UUIDgenerate(),
-      name = values[i],
+      name = as.character(values[i]),
       rootNode = FALSE,
       type = type,
       color = color_pool[1],
