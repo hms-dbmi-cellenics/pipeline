@@ -128,12 +128,14 @@ replace_cell_class_through_api <-
       httr::set_config(httr::config(ssl_verifypeer = 0L))
     }
 
-    httr::PATCH(
-      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-      body = list(list(
+    body <- list(list(
         "$match" = list(query = httr_query, value = list("$remove" = TRUE))
       ),
-      list("$prepend" = cell_class_object)),
+      list("$prepend" = cell_class_object))
+
+    httr::PATCH(
+      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
+      body = body,
       encode = "json",
       httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
                         "Authorization" = auth_JWT)
@@ -161,29 +163,19 @@ replace_cl_metadata_through_api <-
            experiment_id,
            auth_JWT,
            ignore_ssl_cert) {
-    message("Deleting elements with specified types and appending new cellsets through API")
-
-    types_to_remove <-  c("CLM", "CLMPerSample")
-
-    # Constructing query to remove multiple types
-    types_string <-
-      paste0("@.type == \"",
-             paste(types_to_remove, collapse = "\" || @.type == \""),
-             "\"")
-    httr_query_remove <- paste0("$[?(", types_string, ")]")
 
     if (ignore_ssl_cert) {
       httr::set_config(httr::config(ssl_verifypeer = 0L))
     }
 
+    appends <- list()
+    for (i in seq_along(cl_metadata_cellsets)) {
+      appends <- append(appends, list(list("$append" = cl_metadata_cellsets[[i]])))
+    }
+
     httr::PATCH(
       paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-      body = list(
-        list("$match" = list(
-          query = httr_query_remove, value = list("$remove" = TRUE)
-        )),
-        list("$append" = cl_metadata_cellsets)
-      ),
+      body = appends,
       encode = "json",
       httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
                         "Authorization" = auth_JWT)
@@ -203,8 +195,9 @@ download_cl_metadata_file <- function(config) {
   s3_path <- basename(config$metadataS3Path)
 
   # TODO figure out best way to temporarily store file, or read from S3 directly
-  file_path <- file.path("/", basename(s3_path))
-  download_and_store(bucket_list$cl_metadata_bucket, s3_path, file_path, s3)
+  file_path <- paste0(basename(s3_path), ".tsv.gz")
+  message("downloading cell-level metadata file to ", file_path)
+  download_and_store(config$cl_metadata_bucket, s3_path, file_path, s3)
   cl_metadata <- data.table::fread(file_path)
 
   return(cl_metadata)
@@ -258,7 +251,10 @@ make_cl_metadata_cellsets <- function(scdata, config) {
 #' @export
 #'
 get_cell_id_barcode_map <- function(scdata) {
-  data.table::as.data.table(scdata@meta.data[c("cells_id", "samples")], keep.rownames = "barcode")
+  message("extracting cell_id - barcode map")
+  # TODO add samples when able to get sample names from database, scdata contains sample ids only
+  cols_to_keep <- c("cells_id")
+  data.table::as.data.table(scdata@meta.data[cols_to_keep], keep.rownames = "barcode")
 }
 
 
@@ -278,7 +274,7 @@ get_cell_id_barcode_map <- function(scdata) {
 #' @export
 make_cl_metadata_table <- function(cl_metadata, barcode_cell_ids) {
 
-  join_cols <- c("barcode", "samples")
+  join_cols <- c("barcode")
   if (!"samples" %in% names(cl_metadata)) {
     join_cols <- setdiff(join_cols, "samples")
     # remove samples from barcode-cell_id map if not used for join
@@ -306,16 +302,7 @@ find_clm_columns <- function(check_vals) {
   # skip if too few or way too many values
   value_counts <- table(check_vals)
   n.vals <- length(value_counts)
-  if (n.vals < 2) {
-    return(FALSE)
-  }
-  if (n.vals > 1000) {
-    return(FALSE)
-  }
-
-  # skip if values are numeric but non-integer
-  if (is.numeric(check_vals) &&
-      !all(as.integer(check_vals) == check_vals)) {
+  if (n.vals > 500) {
     return(FALSE)
   }
 
@@ -342,8 +329,13 @@ find_clm_columns <- function(check_vals) {
 #'
 detect_variable_types <- function(cl_metadata) {
 
-  # do not remove dups; if a user uploads some metadata it should be there
-  clm_per_sample_cols <- find_group_columns(cl_metadata, remove.dups = F)
+  # can only find group columns when samples are available
+  if ("samples" %in% names(cl_metadata)) {
+    # do not remove dups; if a user uploads some metadata it should be there
+    clm_per_sample_cols <- find_group_columns(cl_metadata, remove.dups = F)
+  } else {
+    clm_per_sample_cols <- character()
+  }
 
   undesirable_cols <- vapply(cl_metadata[, -..clm_per_sample_cols], find_clm_columns, logical(1))
   clm_cols <- names(undesirable_cols[unlist(undesirable_cols)])
@@ -377,7 +369,7 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
 
   cl_metadata_cellset <- list(
     key = uuid::UUIDgenerate(),
-    name = variable,
+    name = as.character(variable),
     rootNode = TRUE,
     type = type,
     children = list()
@@ -396,7 +388,7 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
 
     cl_metadata_cellset$children[[i]] <- list(
       key = uuid::UUIDgenerate(),
-      name = values[i],
+      name = as.character(values[i]),
       rootNode = FALSE,
       type = type,
       color = color_pool[1],
