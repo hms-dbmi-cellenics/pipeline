@@ -522,13 +522,47 @@ test_that("detect_variable_types removes high-cardinality variables", {
   cl_metadata <-
     make_cl_metadata_table(cl_meta, cell_id_barcode_map)
 
+  cl_metadata$high_cardinality_var <- paste0("high_cardinality_value_", 1:nrow(cl_metadata))
+
   res <- detect_variable_types(cl_metadata)
 
-  # cells_id is explicitly excluded from cellset creation downstream, but it is
-  # a high cardinality variable, so useful testing
-  expect_false("cells_id" %in% names(res))
+  expect_false("high_cardinality_var" %in% names(res))
 })
 
+test_that("detect_variable_types removes extremely high-cardinality (n > 500) variables", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata <-
+    make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  while(nrow(cl_metadata) < 500) {
+    cl_metadata <- rbind(cl_metadata, cl_metadata)
+  }
+
+  cl_metadata$high_cardinality_var <- paste0("high_cardinality_value_", 1:nrow(cl_metadata))
+
+  res <- detect_variable_types(cl_metadata)
+
+  expect_false("high_cardinality_var" %in% names(res))
+})
+
+
+test_that("detect_variable_types returns empty character vector when detecting clm_per_sample cols if no samples column in cl-metadata", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata <-
+    make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  cl_metadata$samples <- NULL
+
+  res <- detect_variable_types(cl_metadata)
+
+  expect_equal(res$CLMPerSample, character(0))
+})
 
 test_that("download_cl_metadata_file loads cl_metadata tables correctly", {
   config <- mock_config()
