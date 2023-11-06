@@ -50,7 +50,7 @@ local_mock_cl_metadata_table <- function(mock_cl_metadata, experiment_id, env = 
   dir.create(bucket)
   withr::defer(unlink(bucket, recursive = TRUE), envir = env)
 
-  data.table::fwrite(mock_cl_metadata, file.path(bucket, experiment_id), sep = "\t")
+  data.table::fwrite(mock_cl_metadata, file.path(bucket, experiment_id), sep = "\t", compress = "gzip")
 }
 
 
@@ -61,7 +61,8 @@ mock_config <- function() {
       methodSettings = list(louvain = list(resolution = "0.8"))
     ),
     aws_config = list(aws = "mock_aws"),
-    metadataS3Path = file.path(".", bucket_list$cl_metadata_bucket, "mock_experiment_id")
+    metadataS3Path = file.path(".", bucket_list$cl_metadata_bucket, "mock_experiment_id"),
+    cl_metadata_bucket = bucket_list$cl_metadata_bucket
     )
 
   return(config)
@@ -374,10 +375,9 @@ test_that("get_cell_id_barcode_map returns correct table with barcode and cell i
   scdata <- mock_scdata()
   res <- get_cell_id_barcode_map(scdata)
 
-  expect_named(res, c("barcode", "cells_id", "samples"))
+  expect_named(res, c("barcode", "cells_id"))
   expect_type(res$barcode, "character")
   expect_type(res$cells_id, "integer")
-  expect_type(res$samples, "character")
   expect_equal(nrow(res), ncol(scdata))
 })
 
@@ -396,24 +396,25 @@ test_that("make_cl_metadata_table correctly joins cell ids to metadata table", {
 })
 
 
-test_that("make_cl_metadata_table uses composite primary key for join if samples in user-supplied cl metadata", {
-  scdata <- mock_scdata()
-  cl_meta <- mock_cl_metadata(scdata)
-
-  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
-
-  # tables should be identical save for the duplicated barcode
-  expected <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
-  expected$barcode[1] <- expected$barcode[2]
-
-  # artificially duplicate a barcode
-  cl_meta$barcode[1] <- cl_meta$barcode[2]
-  cell_id_barcode_map$barcode[1] <- cell_id_barcode_map$barcode[2]
-
-  res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
-
-  expect_equal(res, expected)
-})
+# test_that("make_cl_metadata_table uses composite primary key for join if samples in user-supplied cl metadata", {
+   # TODO enable when we support samples in user-supplied cl metadata
+#   scdata <- mock_scdata()
+#   cl_meta <- mock_cl_metadata(scdata)
+#
+#   cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+#
+#   # tables should be identical save for the duplicated barcode
+#   expected <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+#   expected$barcode[1] <- expected$barcode[2]
+#
+#   # artificially duplicate a barcode
+#   cl_meta$barcode[1] <- cl_meta$barcode[2]
+#   cell_id_barcode_map$barcode[1] <- cell_id_barcode_map$barcode[2]
+#
+#   res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+#
+#   expect_equal(res, expected)
+# })
 
 
 test_that("make_cl_metadata_table joins on barcode only if no samples column in user-supplied cl metadata", {
@@ -521,13 +522,47 @@ test_that("detect_variable_types removes high-cardinality variables", {
   cl_metadata <-
     make_cl_metadata_table(cl_meta, cell_id_barcode_map)
 
+  cl_metadata$high_cardinality_var <- paste0("high_cardinality_value_", 1:nrow(cl_metadata))
+
   res <- detect_variable_types(cl_metadata)
 
-  # cells_id is explicitly excluded from cellset creation downstream, but it is
-  # a high cardinality variable, so useful testing
-  expect_false("cells_id" %in% names(res))
+  expect_false("high_cardinality_var" %in% names(res))
 })
 
+test_that("detect_variable_types removes extremely high-cardinality (n > 500) variables", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata <-
+    make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  while(nrow(cl_metadata) < 500) {
+    cl_metadata <- rbind(cl_metadata, cl_metadata)
+  }
+
+  cl_metadata$high_cardinality_var <- paste0("high_cardinality_value_", 1:nrow(cl_metadata))
+
+  res <- detect_variable_types(cl_metadata)
+
+  expect_false("high_cardinality_var" %in% names(res))
+})
+
+
+test_that("detect_variable_types returns empty character vector when detecting clm_per_sample cols if no samples column in cl-metadata", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata <-
+    make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  cl_metadata$samples <- NULL
+
+  res <- detect_variable_types(cl_metadata)
+
+  expect_equal(res$CLMPerSample, character(0))
+})
 
 test_that("download_cl_metadata_file loads cl_metadata tables correctly", {
   config <- mock_config()
