@@ -343,10 +343,7 @@ detect_variable_types <- function(cl_metadata) {
   # remove samples var, useless from this point on
   clm_cols <- grep("^samples$", clm_cols, value = T, invert = T)
 
-  # add duplicate_barcode column if present
-  if(rlang::has_name(cl_metadata, "duplicate_barcode")){
-    clm_cols <- c(clm_cols, "duplicate_barcode")
-  }
+  clm_cols <- c(clm_cols, "duplicate_barcode")
 
   return(list(CLM = clm_cols, CLMPerSample = clm_per_sample_cols))
 }
@@ -459,8 +456,6 @@ sort_cluster_names <- function(strings) {
 add_duplicate_barcode_column <- function(cl_metadata){
   dup_barcodes <- vctrs::vec_duplicate_detect(cl_metadata$barcode)
 
-  if(any(dup_barcodes)) {
-    cl_metadata$duplicate_barcode <- ifelse(dup_barcodes, "yes", "no")
-  }
+  cl_metadata$duplicate_barcode <- ifelse(dup_barcodes, "yes", "no")
   return(cl_metadata)
 }

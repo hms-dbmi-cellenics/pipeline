@@ -476,7 +476,7 @@ test_that("detect_variable_types correctly detects variable types", {
 
   expected_var_types <-
     list(
-      CLM = c("cell_type"),
+      CLM = c("cell_type", "duplicate_barcode"),
       CLMPerSample = c("group_var", "redundant_group_var")
     )
 
@@ -590,10 +590,11 @@ test_that("make_cl_metadata_cellsets makes cell-level metadata cellsets.", {
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
   withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
 
-  expect_equal(length(res), 3)
+  expect_equal(length(res), 4)
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
-  expect_equal(length(res[[2]]$children), length(unique(cl_metadata$group_var)))
-  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$redundant_group_var)))
+  expect_equal(length(res[[2]]$children), 1)
+  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
+  expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))
 
   cell_class_names <- c("key", "name", "rootNode", "type", "children")
   purrr::walk(res, expect_named, cell_class_names)
@@ -632,6 +633,7 @@ test_that("make_cl_metadata_table works with duplicate barcodes", {
 
   expect_equal(length(res), 4)
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
+  expect_equal(length(res[[2]]$children), 2)
   expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
   expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))
 
@@ -652,7 +654,7 @@ test_that("add_duplicate_barcode_column handles empty input correctly", {
 test_that("add_duplicate_barcode_column handles unique barcodes correctly", {
   unique_cl_metadata <- data.frame(barcode = c("BC01", "BC02", "BC03"))
   unique_result <- add_duplicate_barcode_column(unique_cl_metadata)
-  expect_equal(unique_result$duplicate_barcode, NULL)
+  expect_equal(unique_result$duplicate_barcode, c("no", "no", "no"))
 })
 
 test_that("add_duplicate_barcode_column handles duplicate barcodes correctly", {
