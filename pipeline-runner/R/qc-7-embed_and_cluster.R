@@ -221,7 +221,6 @@ make_cl_metadata_cellsets <- function(scdata, config) {
   cl_metadata <- download_cl_metadata_file(config)
 
   # TODO deduplicate using sample column (if present) in the cell-level metadata file
-  # TODO add "duplicated" variable to cl_metadata table to create cellset for duplicated barcodes
   cl_metadata <- add_duplicate_barcode_column(cl_metadata)
 
   # extract barcode - cell_id (keep sample column for variable type detection)
