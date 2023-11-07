@@ -476,7 +476,7 @@ test_that("detect_variable_types correctly detects variable types", {
 
   expected_var_types <-
     list(
-      CLM = c("cell_type"),
+      CLM = c("cell_type", "duplicate_barcode"),
       CLMPerSample = c("group_var", "redundant_group_var")
     )
 
@@ -590,10 +590,11 @@ test_that("make_cl_metadata_cellsets makes cell-level metadata cellsets.", {
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
   withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
 
-  expect_equal(length(res), 3)
+  expect_equal(length(res), 4)
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
-  expect_equal(length(res[[2]]$children), length(unique(cl_metadata$group_var)))
-  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$redundant_group_var)))
+  expect_equal(length(res[[2]]$children), 1)
+  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
+  expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))
 
   cell_class_names <- c("key", "name", "rootNode", "type", "children")
   purrr::walk(res, expect_named, cell_class_names)
@@ -618,3 +619,88 @@ with_fake_http(
     )
   })
 )
+
+test_that("make_cl_metadata_table works with duplicate barcodes", {
+  config <- mock_config()
+  scdata <- mock_scdata()
+  cl_metadata <- mock_cl_metadata(scdata)
+  cl_metadata <- rbind(cl_metadata, cl_metadata[1:2,])
+
+  local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
+
+  res <- stubbed_make_cl_metadata_cellsets(scdata, config)
+  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+
+  expect_equal(length(res), 4)
+  expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
+  expect_equal(length(res[[2]]$children), 2)
+  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
+  expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))
+
+  cell_class_names <- c("key", "name", "rootNode", "type", "children")
+  purrr::walk(res, expect_named, cell_class_names)
+
+  # cellsets have the same keys as cell classes except children, color and cellIds
+  for (i in seq_along(res)) {
+    purrr::walk(res[[i]]$children, expect_named, c(cell_class_names[-5], "color", "cellIds"))
+  }
+})
+
+test_that("add_duplicate_barcode_column handles empty input correctly", {
+  empty_cl_metadata <- data.frame(barcode = character(0))
+  expect_equal(nrow(add_duplicate_barcode_column(empty_cl_metadata)), 0)
+})
+
+test_that("add_duplicate_barcode_column handles unique barcodes correctly", {
+  unique_cl_metadata <- data.frame(barcode = c("BC01", "BC02", "BC03"))
+  unique_result <- add_duplicate_barcode_column(unique_cl_metadata)
+  expect_equal(unique_result$duplicate_barcode, c("no", "no", "no"))
+})
+
+test_that("add_duplicate_barcode_column handles duplicate barcodes correctly", {
+  dup_cl_metadata <- data.frame(barcode = c("BC01", "BC01", "BC02"))
+  dup_result <- add_duplicate_barcode_column(dup_cl_metadata)
+  expect_equal(dup_result$duplicate_barcode, c("yes", "yes", "no"))
+})
+
+test_that("add_duplicate_barcode_column handles a mix of unique and duplicate barcodes correctly", {
+  mixed_cl_metadata <- data.frame(barcode = c("BC01", "BC02", "BC02", "BC03"))
+  mixed_result <- add_duplicate_barcode_column(mixed_cl_metadata)
+  expect_equal(mixed_result$duplicate_barcode, c("no", "yes", "yes", "no"))
+})
+
+test_that("duplicate barcodes are not present in the created cellsets", {
+  config <- mock_config()
+  scdata <- mock_scdata()
+  cl_metadata <- mock_cl_metadata(scdata)
+  cl_metadata <- rbind(cl_metadata, cl_metadata[1:2, ])
+
+  cl_metadata_res <- add_duplicate_barcode_column(cl_metadata)
+  barcode_cell_id_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata_table <-
+    make_cl_metadata_table(cl_metadata_res, barcode_cell_id_map)
+
+  local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
+
+  res <- stubbed_make_cl_metadata_cellsets(scdata, config)
+  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+
+  dup_barcodes <- unique(cl_metadata_table[duplicate_barcode == "yes", cells_id])
+
+  for (item in res) {
+    if (item$name != "duplicate_barcode") {
+      for (child in item$children) {
+        has_duplicate_barcodes <- any(child$cellIds %in% dup_barcodes)
+        expect_false(has_duplicate_barcodes,
+          info = paste(
+            "Duplicate barcodes detected in", item$name,
+            "-", child$name
+          )
+        )
+      }
+    }
+  }
+})
+
+
+

@@ -221,8 +221,7 @@ make_cl_metadata_cellsets <- function(scdata, config) {
   cl_metadata <- download_cl_metadata_file(config)
 
   # TODO deduplicate using sample column (if present) in the cell-level metadata file
-  # TODO add "duplicated" variable to cl_metadata table to create cellset for duplicated barcodes
-  #cl_metadata <- deduplicate_cl_metadata(scdata, cl_metadata)
+  cl_metadata <- add_duplicate_barcode_column(cl_metadata)
 
   # extract barcode - cell_id (keep sample column for variable type detection)
   barcode_cell_id_map <- get_cell_id_barcode_map(scdata)
@@ -343,6 +342,8 @@ detect_variable_types <- function(cl_metadata) {
   # remove samples var, useless from this point on
   clm_cols <- grep("^samples$", clm_cols, value = T, invert = T)
 
+  clm_cols <- c(clm_cols, "duplicate_barcode")
+
   return(list(CLM = clm_cols, CLMPerSample = clm_per_sample_cols))
 }
 
@@ -373,13 +374,21 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
   values <- unique(cl_metadata[[variable]])
 
   for (i in seq_along(values)) {
+
+    cell_ids <- cl_metadata[get(variable) == values[i] & cl_metadata$duplicate_barcode == "no", cells_id]
+
+    # do not add duplicate barcodes, except for the duplicate_barcode cellset
+    if (variable == "duplicate_barcode") {
+      cell_ids <- cl_metadata[get(variable) == values[i], cells_id]
+    }
+
     cl_metadata_cellset$children[[i]] <- list(
       key = uuid::UUIDgenerate(),
       name = as.character(values[i]),
       rootNode = FALSE,
       type = type,
       color = color_pool[1],
-      cellIds = ensure_is_list_in_json(cl_metadata[get(variable) == values[i], cells_id])
+      cellIds = ensure_is_list_in_json(cell_ids)
     )
     color_pool <- color_pool[-1]
   }
@@ -441,4 +450,11 @@ sort_cluster_names <- function(strings) {
   sorted_indices <- order(char, as.integer(nums))
 
   return(strings[sorted_indices])
+}
+
+add_duplicate_barcode_column <- function(cl_metadata){
+  dup_barcodes <- vctrs::vec_duplicate_detect(cl_metadata$barcode)
+
+  cl_metadata$duplicate_barcode <- ifelse(dup_barcodes, "yes", "no")
+  return(cl_metadata)
 }
