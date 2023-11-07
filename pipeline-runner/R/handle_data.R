@@ -169,7 +169,7 @@ build_qc_response <- function(id, input, error, pipeline_config) {
 send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   c(config, plot_data = plotData) %<-% output
 
-  config <- config[!names(config) %in% c("auth_JWT", "api_url")]
+  config <- config[!names(config) %in% c("auth_JWT", "api_url", "clustering_should_run")]
 
   # upload output
   id <- ids::uuid()

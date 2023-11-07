@@ -42,9 +42,7 @@ embed_and_cluster <- function(
   task_name = "configureEmbedding",
   ignore_ssl_cert = FALSE
 ) {
-
   if (config$clustering_should_run == TRUE) {
-    message("Running clustering")
     run_clustering(scdata, config, ignore_ssl_cert)
   } else {
     message("Skipping clustering")
