@@ -37,7 +37,7 @@ load_seurat <- function(input, pipeline_config, prev_out, input_dir = "/input") 
 #'
 #' @param dataset_fpath The path to the r.rds file containing the Seurat object.
 #'
-#' @return
+#' @return reconstructed SeuratObject
 #' @export
 reconstruct_seurat <- function(dataset_fpath) {
 
