@@ -51,7 +51,7 @@ embed_and_cluster <- function(
   }
 
   # add cl metadata if any
-  if (!is.null(config$metadataS3Path)) {
+  if (!is.null(config$metadata_s3_path)) {
     cl_metadata_cellsets <- make_cl_metadata_cellsets(scdata, config)
 
     # remove previously uploaded cell level metadata (to allow user to replace the file)
@@ -204,7 +204,7 @@ replace_cl_metadata_through_api <-
 download_cl_metadata_file <- function(config) {
 
   s3 <- paws::s3(config = config$aws_config)
-  s3_path <- basename(config$metadataS3Path)
+  s3_path <- basename(config$metadata_s3_path)
 
   # TODO figure out best way to temporarily store file, or read from S3 directly
   file_path <- paste0(basename(s3_path), ".tsv.gz")

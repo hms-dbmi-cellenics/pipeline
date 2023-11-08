@@ -571,7 +571,7 @@ test_that("download_cl_metadata_file loads cl_metadata tables correctly", {
 
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
   res <- stubbed_download_cl_metadata_file(config)
-  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+  withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
 
   expect_s3_class(res, "data.table")
   expect_named(res, names(cl_metadata))
@@ -588,7 +588,7 @@ test_that("make_cl_metadata_cellsets makes cell-level metadata cellsets.", {
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
 
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
-  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+  withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
 
   expect_equal(length(res), 4)
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
@@ -629,7 +629,7 @@ test_that("make_cl_metadata_table works with duplicate barcodes", {
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
 
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
-  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+  withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
 
   expect_equal(length(res), 4)
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
@@ -683,7 +683,7 @@ test_that("duplicate barcodes are not present in the created cellsets", {
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
 
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
-  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+  withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
 
   dup_barcodes <- unique(cl_metadata_table[duplicate_barcode == "yes", cells_id])
 
