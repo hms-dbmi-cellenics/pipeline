@@ -372,6 +372,11 @@ call_qc <- function(task_name, input, pipeline_config) {
   config$auth_JWT <- input$authJWT
 
   config$clustering_should_run <- input$clusteringShouldRun
+  
+  # need this for cell-level metadata
+  config$aws_config <- pipeline_config$aws_config
+  config$metadataS3Path <- input$metadataS3Path
+  config$cl_metadata_bucket <- pipeline_config$cl_metadata_bucket
 
   if (!exists("scdata")) {
     message("No single-cell data has been loaded, reloading from S3...")

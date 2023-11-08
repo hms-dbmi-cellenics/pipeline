@@ -8,7 +8,8 @@ bucket_list <- list(
   cells_id_bucket = "biomage-filtered-cells",
   plot_data_bucket = "plots-tables",
   cell_sets_bucket = "cell-sets",
-  debug_bucket = "biomage-pipeline-debug"
+  debug_bucket = "biomage-pipeline-debug",
+  cl_metadata_bucket = "cellenics-cell-level-metadata"
 )
 
 # list of task functions named by task name
