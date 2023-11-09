@@ -54,7 +54,6 @@ embed_and_cluster <- function(
   if (!is.null(config$metadata_s3_path)) {
     cl_metadata_cellsets <- make_cl_metadata_cellsets(scdata, config)
 
-    # remove previously uploaded cell level metadata (to allow user to replace the file)
     replace_cl_metadata_through_api(
       cl_metadata_cellsets,
       config$api_url,
