@@ -309,7 +309,8 @@ test_that("embed_and_cluster works", {
           minimumDistance = 0.3
         )
       )
-    )
+    ),
+    clustering_should_run = TRUE
   )
 
   sample_id <- "mock_sample_id"
