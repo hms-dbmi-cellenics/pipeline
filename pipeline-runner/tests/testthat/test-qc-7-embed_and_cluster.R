@@ -705,4 +705,49 @@ test_that("duplicate barcodes are not present in the created cellsets", {
 })
 
 
+test_that("doesnt run clustering if clustering_should_run is FALSE", {
+  scdata <- mock_scdata()
 
+  config <- list(
+    clusteringSettings = list(
+      method = "louvain",
+      methodSettings = list(louvain = list(resolution = 0.8))
+    ),
+    embeddingSettings = list(
+      method = "umap",
+      methodSettings = list(
+        tsne = list(
+          learningRate = 738.75,
+          perplexity = 30
+        ),
+        umap = list(
+          distanceMetric = "cosine",
+          minimumDistance = 0.3
+        )
+      )
+    ),
+    clustering_should_run = FALSE
+  )
+
+  sample_id <- "mock_sample_id"
+  cells_id <- "83abbeea-b664-499a-8e6e-d2dbae4c60a9"
+  task_name <- "configureEmbedding"
+  ignore_ssl_cert <- FALSE
+
+  cell_sets_bucket <- "./mock_data/cell_sets_bucket"
+
+
+  mock_run_clustering <- mockery::mock()
+  mockery::stub(embed_and_cluster, "embed_and_cluster", mock_run_clustering)
+
+  stubbed_embed_and_cluster(
+    scdata,
+    config,
+    sample_id,
+    cells_id,
+    task_name,
+    ignore_ssl_cert
+  )
+
+  expect_called(mock_run_clustering, 0)
+})
