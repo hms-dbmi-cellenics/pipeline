@@ -134,6 +134,8 @@ test_qc <- function(experiment_id) {
         }
       } else {
         config <- setup$qc_config[[task_name]]
+        config$clustering_should_run <- TRUE
+
         global_vars <- run_qc_step(
           scdata = global_vars$data,
           config = config,

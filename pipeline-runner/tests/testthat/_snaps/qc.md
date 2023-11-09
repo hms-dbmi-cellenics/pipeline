@@ -7726,13 +7726,11 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "a76a0147c9d141fb0e4585448a87c4e5"
+      [1] "ae743e0fbd718c21f2cca632e77bd180"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
-      List of 2
-       $ mock_sample_2_id: int [1:319] 1 9 11 13 15 19 21 22 25 26 34 36 39 40 41 44 48 52 53 58 59 62 72 75 77 79 81 85 86 90 93 96 97 99 104 106 108 1| __truncated__ ...
-       $ mock_sample_1_id: int [1:265] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 42 50 54 55 63 65 68 70 71 74 78 80 82 91 94 95 105 117 119 121 124 128 13| __truncated__ ...
+       NULL
 
 ---
 
