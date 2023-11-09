@@ -61,7 +61,8 @@ mock_config <- function() {
       methodSettings = list(louvain = list(resolution = "0.8"))
     ),
     aws_config = list(aws = "mock_aws"),
-    metadataS3Path = file.path(".", bucket_list$cl_metadata_bucket, "mock_experiment_id"),
+    metadata_s3_path = file.path(".", bucket_list$cl_metadata_bucket, "mock_experiment_id"),
+    clustering_should_run = TRUE,
     cl_metadata_bucket = bucket_list$cl_metadata_bucket
     )
 

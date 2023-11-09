@@ -196,7 +196,7 @@ replace_cl_metadata_through_api <-
 
 #' Download and load cell-level metadata tsv file
 #'
-#' @param config list with AWS configuration and metadataS3Path
+#' @param config list with AWS configuration and metadata_s3_path
 #'
 #' @return data.table of cell-level metadata
 #' @export
@@ -223,7 +223,7 @@ download_cl_metadata_file <- function(config) {
 #' Returning a list ready to add to `cellsets.json` file.
 #'
 #' @param scdata SeuratObject
-#' @param config list with AWS config and metadataS3Paths
+#' @param config list with AWS config and metadata_s3_path
 #'
 #' @return list of cell-level metadata cellsets
 #' @export
