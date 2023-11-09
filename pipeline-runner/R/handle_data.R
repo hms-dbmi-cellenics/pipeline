@@ -169,6 +169,7 @@ build_qc_response <- function(id, input, error, pipeline_config) {
 send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   c(config, plot_data = plotData) %<-% output
 
+  # Anything stored in the config by the pipeline will return to the api if we don't remove it manually
   config <- config[!names(config) %in% c("auth_JWT", "api_url", "clustering_should_run", "metadata_s3_path", "cl_metadata_bucket")]
 
   # upload output
