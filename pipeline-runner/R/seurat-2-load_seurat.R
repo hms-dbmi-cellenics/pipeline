@@ -132,6 +132,23 @@ reconstruct_seurat <- function(dataset_fpath) {
     names(user_scdata@reductions) <- tolower(names(user_scdata@reductions))
     red_name <- SeuratObject::DefaultDimReduc(user_scdata)
     check_type_is_safe(red_name)
+    red_match <- grep("umap|tsne", red_name, value = TRUE)
+
+    is_umap <- grepl("umap", red_match)
+    is_tsne <- grepl("tsne", red_match)
+
+    if (length(red_match) > 0 && !(red_match %in% c("umap", "tsne"))) {
+      new_red_name <- ifelse(is_umap, "umap", ifelse(is_tsne, "tsne", NA))
+      if (is.na(new_red_name)) {
+        stop("Error: no umap or tsne reductions found.")
+      }
+
+      message("Found reduction name ", red_match," containing ", new_red_name)
+      user_scdata <- update_reduction_name(user_scdata, red_name, new_red_name)
+      red_name <- SeuratObject::DefaultDimReduc(user_scdata)
+      message("Updated default reduction: ", red_name)
+    }
+
     stopifnot(red_name %in% c('umap', 'tsne'))
 
     embedding <- user_scdata@reductions[[red_name]]@cell.embeddings
@@ -192,3 +209,16 @@ check_type_is_safe <- function(x) {
     stop('Unexpected data type in uploaded .rds file.')
   }
 }
+
+
+update_reduction_name <- function(scdata, red_name, new_name) {
+  current_names <- names(scdata@reductions)
+  if (new_name %in% current_names) {
+    message("Renaming existing reduction name ", names(scdata@reductions)[current_names == new_name], " to ", paste0(new_name, ".ori"))
+    names(scdata@reductions)[current_names == new_name] <- paste0(new_name, ".ori")
+  }
+  names(scdata@reductions)[current_names == red_name] <- new_name
+
+  return(scdata)
+}
+
