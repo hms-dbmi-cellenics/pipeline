@@ -50,7 +50,7 @@ local_mock_cl_metadata_table <- function(mock_cl_metadata, experiment_id, env = 
   dir.create(bucket)
   withr::defer(unlink(bucket, recursive = TRUE), envir = env)
 
-  data.table::fwrite(mock_cl_metadata, file.path(bucket, experiment_id), sep = "\t")
+  data.table::fwrite(mock_cl_metadata, file.path(bucket, experiment_id), sep = "\t", compress = "gzip")
 }
 
 
@@ -61,7 +61,8 @@ mock_config <- function() {
       methodSettings = list(louvain = list(resolution = "0.8"))
     ),
     aws_config = list(aws = "mock_aws"),
-    metadataS3Path = file.path(".", bucket_list$cl_metadata_bucket, "mock_experiment_id")
+    metadataS3Path = file.path(".", bucket_list$cl_metadata_bucket, "mock_experiment_id"),
+    cl_metadata_bucket = bucket_list$cl_metadata_bucket
     )
 
   return(config)
@@ -374,10 +375,9 @@ test_that("get_cell_id_barcode_map returns correct table with barcode and cell i
   scdata <- mock_scdata()
   res <- get_cell_id_barcode_map(scdata)
 
-  expect_named(res, c("barcode", "cells_id", "samples"))
+  expect_named(res, c("barcode", "cells_id"))
   expect_type(res$barcode, "character")
   expect_type(res$cells_id, "integer")
-  expect_type(res$samples, "character")
   expect_equal(nrow(res), ncol(scdata))
 })
 
@@ -396,24 +396,25 @@ test_that("make_cl_metadata_table correctly joins cell ids to metadata table", {
 })
 
 
-test_that("make_cl_metadata_table uses composite primary key for join if samples in user-supplied cl metadata", {
-  scdata <- mock_scdata()
-  cl_meta <- mock_cl_metadata(scdata)
-
-  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
-
-  # tables should be identical save for the duplicated barcode
-  expected <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
-  expected$barcode[1] <- expected$barcode[2]
-
-  # artificially duplicate a barcode
-  cl_meta$barcode[1] <- cl_meta$barcode[2]
-  cell_id_barcode_map$barcode[1] <- cell_id_barcode_map$barcode[2]
-
-  res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
-
-  expect_equal(res, expected)
-})
+# test_that("make_cl_metadata_table uses composite primary key for join if samples in user-supplied cl metadata", {
+   # TODO enable when we support samples in user-supplied cl metadata
+#   scdata <- mock_scdata()
+#   cl_meta <- mock_cl_metadata(scdata)
+#
+#   cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+#
+#   # tables should be identical save for the duplicated barcode
+#   expected <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+#   expected$barcode[1] <- expected$barcode[2]
+#
+#   # artificially duplicate a barcode
+#   cl_meta$barcode[1] <- cl_meta$barcode[2]
+#   cell_id_barcode_map$barcode[1] <- cell_id_barcode_map$barcode[2]
+#
+#   res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+#
+#   expect_equal(res, expected)
+# })
 
 
 test_that("make_cl_metadata_table joins on barcode only if no samples column in user-supplied cl metadata", {
@@ -475,7 +476,7 @@ test_that("detect_variable_types correctly detects variable types", {
 
   expected_var_types <-
     list(
-      CLM = c("cell_type"),
+      CLM = c("cell_type", "duplicate_barcode"),
       CLMPerSample = c("group_var", "redundant_group_var")
     )
 
@@ -521,13 +522,47 @@ test_that("detect_variable_types removes high-cardinality variables", {
   cl_metadata <-
     make_cl_metadata_table(cl_meta, cell_id_barcode_map)
 
+  cl_metadata$high_cardinality_var <- paste0("high_cardinality_value_", 1:nrow(cl_metadata))
+
   res <- detect_variable_types(cl_metadata)
 
-  # cells_id is explicitly excluded from cellset creation downstream, but it is
-  # a high cardinality variable, so useful testing
-  expect_false("cells_id" %in% names(res))
+  expect_false("high_cardinality_var" %in% names(res))
 })
 
+test_that("detect_variable_types removes extremely high-cardinality (n > 500) variables", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata <-
+    make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  while(nrow(cl_metadata) < 500) {
+    cl_metadata <- rbind(cl_metadata, cl_metadata)
+  }
+
+  cl_metadata$high_cardinality_var <- paste0("high_cardinality_value_", 1:nrow(cl_metadata))
+
+  res <- detect_variable_types(cl_metadata)
+
+  expect_false("high_cardinality_var" %in% names(res))
+})
+
+
+test_that("detect_variable_types returns empty character vector when detecting clm_per_sample cols if no samples column in cl-metadata", {
+  scdata <- mock_scdata()
+  cl_meta <- mock_cl_metadata(scdata)
+
+  cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata <-
+    make_cl_metadata_table(cl_meta, cell_id_barcode_map)
+
+  cl_metadata$samples <- NULL
+
+  res <- detect_variable_types(cl_metadata)
+
+  expect_equal(res$CLMPerSample, character(0))
+})
 
 test_that("download_cl_metadata_file loads cl_metadata tables correctly", {
   config <- mock_config()
@@ -555,10 +590,11 @@ test_that("make_cl_metadata_cellsets makes cell-level metadata cellsets.", {
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
   withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
 
-  expect_equal(length(res), 3)
+  expect_equal(length(res), 4)
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
-  expect_equal(length(res[[2]]$children), length(unique(cl_metadata$group_var)))
-  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$redundant_group_var)))
+  expect_equal(length(res[[2]]$children), 1)
+  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
+  expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))
 
   cell_class_names <- c("key", "name", "rootNode", "type", "children")
   purrr::walk(res, expect_named, cell_class_names)
@@ -583,3 +619,88 @@ with_fake_http(
     )
   })
 )
+
+test_that("make_cl_metadata_table works with duplicate barcodes", {
+  config <- mock_config()
+  scdata <- mock_scdata()
+  cl_metadata <- mock_cl_metadata(scdata)
+  cl_metadata <- rbind(cl_metadata, cl_metadata[1:2,])
+
+  local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
+
+  res <- stubbed_make_cl_metadata_cellsets(scdata, config)
+  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+
+  expect_equal(length(res), 4)
+  expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
+  expect_equal(length(res[[2]]$children), 2)
+  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
+  expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))
+
+  cell_class_names <- c("key", "name", "rootNode", "type", "children")
+  purrr::walk(res, expect_named, cell_class_names)
+
+  # cellsets have the same keys as cell classes except children, color and cellIds
+  for (i in seq_along(res)) {
+    purrr::walk(res[[i]]$children, expect_named, c(cell_class_names[-5], "color", "cellIds"))
+  }
+})
+
+test_that("add_duplicate_barcode_column handles empty input correctly", {
+  empty_cl_metadata <- data.frame(barcode = character(0))
+  expect_equal(nrow(add_duplicate_barcode_column(empty_cl_metadata)), 0)
+})
+
+test_that("add_duplicate_barcode_column handles unique barcodes correctly", {
+  unique_cl_metadata <- data.frame(barcode = c("BC01", "BC02", "BC03"))
+  unique_result <- add_duplicate_barcode_column(unique_cl_metadata)
+  expect_equal(unique_result$duplicate_barcode, c("no", "no", "no"))
+})
+
+test_that("add_duplicate_barcode_column handles duplicate barcodes correctly", {
+  dup_cl_metadata <- data.frame(barcode = c("BC01", "BC01", "BC02"))
+  dup_result <- add_duplicate_barcode_column(dup_cl_metadata)
+  expect_equal(dup_result$duplicate_barcode, c("yes", "yes", "no"))
+})
+
+test_that("add_duplicate_barcode_column handles a mix of unique and duplicate barcodes correctly", {
+  mixed_cl_metadata <- data.frame(barcode = c("BC01", "BC02", "BC02", "BC03"))
+  mixed_result <- add_duplicate_barcode_column(mixed_cl_metadata)
+  expect_equal(mixed_result$duplicate_barcode, c("no", "yes", "yes", "no"))
+})
+
+test_that("duplicate barcodes are not present in the created cellsets", {
+  config <- mock_config()
+  scdata <- mock_scdata()
+  cl_metadata <- mock_cl_metadata(scdata)
+  cl_metadata <- rbind(cl_metadata, cl_metadata[1:2, ])
+
+  cl_metadata_res <- add_duplicate_barcode_column(cl_metadata)
+  barcode_cell_id_map <- get_cell_id_barcode_map(scdata)
+  cl_metadata_table <-
+    make_cl_metadata_table(cl_metadata_res, barcode_cell_id_map)
+
+  local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
+
+  res <- stubbed_make_cl_metadata_cellsets(scdata, config)
+  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+
+  dup_barcodes <- unique(cl_metadata_table[duplicate_barcode == "yes", cells_id])
+
+  for (item in res) {
+    if (item$name != "duplicate_barcode") {
+      for (child in item$children) {
+        has_duplicate_barcodes <- any(child$cellIds %in% dup_barcodes)
+        expect_false(has_duplicate_barcodes,
+          info = paste(
+            "Duplicate barcodes detected in", item$name,
+            "-", child$name
+          )
+        )
+      }
+    }
+  }
+})
+
+
+
