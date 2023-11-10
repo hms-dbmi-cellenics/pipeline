@@ -7,7 +7,7 @@
 download_cl_metadata_file(config)
 }
 \arguments{
-\item{config}{list with AWS configuration and metadataS3Path}
+\item{config}{list with AWS configuration and metadata_s3_path}
 }
 \value{
 data.table of cell-level metadata

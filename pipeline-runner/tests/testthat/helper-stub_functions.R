@@ -228,7 +228,8 @@ stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_
 
   mockery::stub(embed_and_cluster,
                 "replace_cell_class_through_api",
-                stub_replace_cell_class_through_api)
+                stub_replace_cell_class_through_api,
+                depth=2)
 
   embed_and_cluster(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert)
 }
@@ -253,3 +254,4 @@ stubbed_make_cl_metadata_cellsets <- function(scdata, config) {
   mockery::stub(make_cl_metadata_cellsets, "download_cl_metadata_file", stubbed_download_cl_metadata_file)
   make_cl_metadata_cellsets(scdata, config)
 }
+
