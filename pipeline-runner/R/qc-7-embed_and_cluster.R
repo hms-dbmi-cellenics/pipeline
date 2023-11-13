@@ -1,65 +1,77 @@
+run_clustering <- function(scdata, config, ignore_ssl_cert) {
+  message("starting clusters")
+  clustering_method <- config$clusteringSettings$method
+  methodSettings <-
+    config$clusteringSettings$methodSettings[[clustering_method]]
+  message("Running clustering")
+  cellSets <-
+    runClusters(clustering_method, methodSettings$resolution, scdata)
+  message("formatting cellsets")
+
+  formated_cell_sets <-
+    format_cluster_cellsets(cellSets, clustering_method, scdata@misc$color_pool)
+  message("updating through api")
+
+  replace_cell_class_through_api(
+    formated_cell_sets,
+    config$api_url,
+    scdata@misc$experimentId,
+    clustering_method,
+    config$auth_JWT,
+    ignore_ssl_cert
+  )
+}
+
+
 #' run clustering
 #'
 #'
 #' @param scdata seurat object
 #' @param config list with clustering parameters
 #' @param sample_id character
-#' @param cells_id list of cell ids that passed all filters so far
+#' @param cells_id list of cell ids that passed all filters so far, not necessary for this step
 #' @param task_name character
 #'
 #' @return list
 #' @export
 #'
-embed_and_cluster <-
- function(scdata,
-           config,
-           sample_id,
-           cells_id,
-           task_name = "configureEmbedding",
-           ignore_ssl_cert = FALSE) {
+embed_and_cluster <- function(
+  scdata,
+  config,
+  sample_id,
+  cells_id,
+  task_name = "configureEmbedding",
+  ignore_ssl_cert = FALSE
+) {
 
-    clustering_method <- config$clusteringSettings$method
-    methodSettings <-
-      config$clusteringSettings$methodSettings[[clustering_method]]
-    cellSets <-
-      runClusters(clustering_method, methodSettings$resolution, scdata)
+  if (config$clustering_should_run == TRUE) {
+    run_clustering(scdata, config, ignore_ssl_cert)
+  } else {
+    message("Skipping clustering")
+  }
 
-    formated_cell_sets <-
-      format_cluster_cellsets(cellSets, clustering_method, scdata@misc$color_pool)
+  # add cl metadata if any
+  if (!is.null(config$metadata_s3_path)) {
+    cl_metadata_cellsets <- make_cl_metadata_cellsets(scdata, config)
 
-    replace_cell_class_through_api(
-      formated_cell_sets,
+    replace_cl_metadata_through_api(
+      cl_metadata_cellsets,
       config$api_url,
       scdata@misc$experimentId,
-      clustering_method,
       config$auth_JWT,
       ignore_ssl_cert
     )
-
-    # add cl metadata if any
-    if (!is.null(config$metadataS3Path)) {
-      cl_metadata_cellsets <- make_cl_metadata_cellsets(scdata, config)
-
-      # remove previously uploaded cell level metadata (to allow user to replace the file)
-      replace_cl_metadata_through_api(
-        cl_metadata_cellsets,
-        config$api_url,
-        scdata@misc$experimentId,
-        config$auth_JWT,
-        ignore_ssl_cert
-      )
-    }
-
-
-    result <- list(
-      data = scdata,
-      new_ids = cells_id,
-      config = config,
-      plotData = list()
-    )
-
-    return(result)
   }
+
+  result <- list(
+    data = scdata,
+    new_ids = NULL,
+    config = config,
+    plotData = list()
+  )
+
+  return(result)
+}
 
 
 format_cluster_cellsets <- function(cell_sets,
@@ -98,7 +110,6 @@ format_cluster_cellsets <- function(cell_sets,
 }
 
 
-
 #' replace cell class by key
 #'
 #' Replaces an entire cell class (group of cellsets) by key. Used to replace
@@ -121,26 +132,26 @@ replace_cell_class_through_api <-
            cell_class_key,
            auth_JWT,
            ignore_ssl_cert) {
-    message("updating cellsets through API")
-    httr_query <- paste0("$[?(@.key == \"", cell_class_key, "\")]")
+  message("updating cellsets through API")
+  httr_query <- paste0("$[?(@.key == \"", cell_class_key, "\")]")
 
-    if (ignore_ssl_cert) {
-      httr::set_config(httr::config(ssl_verifypeer = 0L))
-    }
-
-    body <- list(list(
-        "$match" = list(query = httr_query, value = list("$remove" = TRUE))
-      ),
-      list("$prepend" = cell_class_object))
-
-    httr::PATCH(
-      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-      body = body,
-      encode = "json",
-      httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
-                        "Authorization" = auth_JWT)
-    )
+  if (ignore_ssl_cert) {
+    httr::set_config(httr::config(ssl_verifypeer = 0L))
   }
+
+  body <- list(list(
+      "$match" = list(query = httr_query, value = list("$remove" = TRUE))
+    ),
+    list("$prepend" = cell_class_object))
+
+  httr::PATCH(
+    paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
+    body = body,
+    encode = "json",
+    httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
+                      "Authorization" = auth_JWT)
+  )
+}
 
 
 #' Replace and Append Cell Metadata Through API
@@ -184,7 +195,7 @@ replace_cl_metadata_through_api <-
 
 #' Download and load cell-level metadata tsv file
 #'
-#' @param config list with AWS configuration and metadataS3Path
+#' @param config list with AWS configuration and metadata_s3_path
 #'
 #' @return data.table of cell-level metadata
 #' @export
@@ -192,7 +203,7 @@ replace_cl_metadata_through_api <-
 download_cl_metadata_file <- function(config) {
 
   s3 <- paws::s3(config = config$aws_config)
-  s3_path <- basename(config$metadataS3Path)
+  s3_path <- basename(config$metadata_s3_path)
 
   # TODO figure out best way to temporarily store file, or read from S3 directly
   file_path <- paste0(basename(s3_path), ".tsv.gz")
@@ -211,7 +222,7 @@ download_cl_metadata_file <- function(config) {
 #' Returning a list ready to add to `cellsets.json` file.
 #'
 #' @param scdata SeuratObject
-#' @param config list with AWS config and metadataS3Paths
+#' @param config list with AWS config and metadata_s3_path
 #'
 #' @return list of cell-level metadata cellsets
 #' @export

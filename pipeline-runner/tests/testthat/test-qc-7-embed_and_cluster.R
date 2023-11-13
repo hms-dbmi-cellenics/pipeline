@@ -61,7 +61,8 @@ mock_config <- function() {
       methodSettings = list(louvain = list(resolution = "0.8"))
     ),
     aws_config = list(aws = "mock_aws"),
-    metadataS3Path = file.path(".", bucket_list$cl_metadata_bucket, "mock_experiment_id"),
+    metadata_s3_path = file.path(".", bucket_list$cl_metadata_bucket, "mock_experiment_id"),
+    clustering_should_run = TRUE,
     cl_metadata_bucket = bucket_list$cl_metadata_bucket
     )
 
@@ -309,7 +310,8 @@ test_that("embed_and_cluster works", {
           minimumDistance = 0.3
         )
       )
-    )
+    ),
+    clustering_should_run = TRUE
   )
 
   sample_id <- "mock_sample_id"
@@ -571,7 +573,7 @@ test_that("download_cl_metadata_file loads cl_metadata tables correctly", {
 
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
   res <- stubbed_download_cl_metadata_file(config)
-  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+  withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
 
   expect_s3_class(res, "data.table")
   expect_named(res, names(cl_metadata))
@@ -588,7 +590,7 @@ test_that("make_cl_metadata_cellsets makes cell-level metadata cellsets.", {
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
 
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
-  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+  withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
 
   expect_equal(length(res), 4)
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
@@ -629,7 +631,7 @@ test_that("make_cl_metadata_table works with duplicate barcodes", {
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
 
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
-  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+  withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
 
   expect_equal(length(res), 4)
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
@@ -683,7 +685,7 @@ test_that("duplicate barcodes are not present in the created cellsets", {
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
 
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
-  withr::defer(unlink(file.path(".", basename(config$metadataS3Path))))
+  withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
 
   dup_barcodes <- unique(cl_metadata_table[duplicate_barcode == "yes", cells_id])
 
@@ -703,4 +705,49 @@ test_that("duplicate barcodes are not present in the created cellsets", {
 })
 
 
+test_that("doesnt run clustering if clustering_should_run is FALSE", {
+  scdata <- mock_scdata()
 
+  config <- list(
+    clusteringSettings = list(
+      method = "louvain",
+      methodSettings = list(louvain = list(resolution = 0.8))
+    ),
+    embeddingSettings = list(
+      method = "umap",
+      methodSettings = list(
+        tsne = list(
+          learningRate = 738.75,
+          perplexity = 30
+        ),
+        umap = list(
+          distanceMetric = "cosine",
+          minimumDistance = 0.3
+        )
+      )
+    ),
+    clustering_should_run = FALSE
+  )
+
+  sample_id <- "mock_sample_id"
+  cells_id <- "83abbeea-b664-499a-8e6e-d2dbae4c60a9"
+  task_name <- "configureEmbedding"
+  ignore_ssl_cert <- FALSE
+
+  cell_sets_bucket <- "./mock_data/cell_sets_bucket"
+
+
+  mock_run_clustering <- mockery::mock()
+  mockery::stub(embed_and_cluster, "embed_and_cluster", mock_run_clustering)
+
+  stubbed_embed_and_cluster(
+    scdata,
+    config,
+    sample_id,
+    cells_id,
+    task_name,
+    ignore_ssl_cert
+  )
+
+  expect_called(mock_run_clustering, 0)
+})
