@@ -76,7 +76,8 @@ file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x"),
   "seurat" = list("seurat"),
   "rhapsody" = list("rhapsody"),
-  "10x_h5" = list("10XH5")
+  "10x_h5" = list("10XH5"),
+  "parse" = list("barcodesParse", "featuresParse", "matrixParse")
 )
 
 file_names <- list(
@@ -85,7 +86,10 @@ file_names <- list(
   matrix10x = "matrix.mtx.gz",
   seurat = "r.rds",
   rhapsody = "expression_data.st.gz",
-  "10XH5" = "matrix.h5.gz"
+  "10XH5" = "matrix.h5.gz",
+  barcodesParse = "cell_metadata.csv.gz",
+  featuresParse = "all_genes.csv.gz",
+  matrixParse = "DGE.mtx.gz"
 )
 
 MITOCHONDRIAL_REGEX <- "^mt[-:]"

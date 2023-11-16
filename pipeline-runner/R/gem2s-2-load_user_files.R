@@ -20,12 +20,13 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_
   # destructure previous output
   config <- prev_out$config
 
-  technology <- ifelse(config$input$type %in% c("rhapsody","10x_h5"),config$input$type , "10x")
+  technology <- ifelse(config$input$type %in% c("rhapsody","10x_h5","parse"),config$input$type , "10x")
 
   read_fun <- switch(technology,
     "10x" = read_10x_files,
     "rhapsody" = read_rhapsody_files,
-    "10x_h5" = read_10x_h5_file
+    "10x_h5" = read_10x_h5_file,
+    "parse" = read_parse_files
   )
 
   message(
@@ -43,6 +44,69 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_
 
   message("\nLoading of ", technology, " files step complete.")
   return(res)
+}
+
+#' Read Parse files
+#'
+#' @param config
+#' @param input_dir
+#'
+#' @return
+#' @export
+#'
+#' @examples
+read_parse_files <- function(config, input_dir) {
+  counts_list <- list()
+  annot_list <- list()
+  feature_types_list <- list()
+
+  samples <- config$samples
+
+  for (sample in samples) {
+    sample_dir <- file.path(input_dir, sample)
+    sample_fpaths <- list.files(sample_dir)
+    annot_fpath <- file.path(sample_dir, "all_genes.csv.gz")
+
+    message(list.files("./",include.dirs=TRUE))
+    message(sample_fpaths)
+    message("ASD")
+    message(list.files(file.path(input_dir,sample),include.dirs=TRUE))
+
+    message("\nSample --> ", sample)
+    message(
+      "Reading files from ",
+      sample_dir,
+      " --> ",
+      paste(sample_fpaths, collapse = " - ")
+    )
+
+    annotations <- read_parse_annotations(annot_fpath, sample)
+
+    mtx <- file.path(sample_dir, "DGE.mtx.gz")
+    cells <- file.path(sample_dir, "cell_metadata.csv.gz")
+    features <- file.path(sample_dir, "all_genes.csv.gz")
+
+    counts <- Seurat::ReadMtx(mtx = mtx, cells = cells, features = features,
+                   cell.column = 1, feature.column = 1, cell.sep = ",",
+                   feature.sep = ",", skip.cell = 1, skip.feature = 1, mtx.transpose = TRUE)
+
+    message(
+      sprintf(
+        "Sample %s has %s genes and %s droplets.",
+        sample, nrow(counts), ncol(counts)
+      )
+    )
+
+    c(counts, annotations) %<-% filter_unnamed_features(counts, annotations, sample)
+
+    counts_list[[sample]] <- counts
+    annot_list[[sample]] <- annotations
+  }
+
+  annot <- format_annot(annot_list)
+
+  return(list(counts_list = counts_list, annot = annot))
+
 }
 
 #' Read h5 file
@@ -273,6 +337,21 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   annot <- format_annot(annot_list)
 
   return(list(counts_list = counts_list, annot = annot))
+}
+
+read_parse_annotations <- function(annot_fpath, sample){
+  annot <- read.csv(annot_fpath, header = TRUE)
+
+  # Make the names in annot the same as the ones in the Read10x generated count matrix
+  # Since Seurat uses makes.unique, we need to as well.
+  # Only for the first column, at this stage column 1 are the counts matrix rownames.
+  annot[,1] <- make.unique(annot[,1])
+
+  # Equalizing number of columns in case there's no Gene Expression column
+  annot <- annot[, c(1,2)]
+  colnames(annot) <- c("input", "name")
+
+  return(annot)
 }
 
 #' Load and parse annotations from the feature files
