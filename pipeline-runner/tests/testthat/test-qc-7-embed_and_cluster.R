@@ -613,7 +613,7 @@ test_that("make_cl_metadata_cellsets skips making cellsets that are empty (no ce
   scdata <- mock_scdata()
   cl_metadata <- mock_cl_metadata(
     scdata,
-    c(rownames(scdata@meta.data), paste0(barcode, 1:50))
+    c(paste0("missing-barcode", 1:50))
   )
 
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
@@ -621,19 +621,8 @@ test_that("make_cl_metadata_cellsets skips making cellsets that are empty (no ce
   res <- stubbed_make_cl_metadata_cellsets(scdata, config)
   withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
 
-  expect_equal(length(res), 4)
-  expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
-  expect_equal(length(res[[2]]$children), 1)
-  expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
-  expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))
-
-  cell_class_names <- c("key", "name", "rootNode", "type", "children")
-  purrr::walk(res, expect_named, cell_class_names)
-
-  # cellsets have the same keys as cell classes except children, color and cellIds
-  for (i in seq_along(res)) {
-    purrr::walk(res[[i]]$children, expect_named, c(cell_class_names[-5], "color", "cellIds"))
-  }
+  expect_equal(length(res[[1]]$children), 0)
+  expect_equal(length(res[[2]]$children), 0)
 })
 
 
@@ -664,7 +653,6 @@ test_that("make_cl_metadata_table works with duplicate barcodes", {
 
   expect_equal(length(res), 4)
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
-
   expect_equal(length(res[[2]]$children), 2)
   expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
   expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))

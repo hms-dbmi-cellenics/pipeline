@@ -388,13 +388,13 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
 
     cell_ids <- cl_metadata[get(variable) == values[i] & cl_metadata$duplicate_barcode == "no", cells_id]
 
-    # Empty cell sets shouldn't be created based on cell level metadata
-    if (length(cell_ids) == 0) next
-
     # do not add duplicate barcodes, except for the duplicate_barcode cellset
     if (variable == "duplicate_barcode") {
       cell_ids <- cl_metadata[get(variable) == values[i], cells_id]
     }
+
+    # Empty cell sets shouldn't be created based on cell level metadata
+    if (length(cell_ids) == 0) next
 
     cl_metadata_cellset$children <- append(
       cl_metadata_cellset$children,
