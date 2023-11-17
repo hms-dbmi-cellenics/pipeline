@@ -364,7 +364,7 @@ detect_variable_types <- function(cl_metadata) {
   # remove samples var, useless from this point on
   clm_cols <- grep("^samples$", clm_cols, value = T, invert = T)
 
-  clm_cols <- c(clm_cols, "duplicate_barcode")
+  clm_cols <- union(clm_cols, "duplicate_barcode")
 
   return(list(CLM = clm_cols, CLMPerSample = clm_per_sample_cols))
 }
