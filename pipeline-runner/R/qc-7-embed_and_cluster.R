@@ -329,7 +329,7 @@ find_clm_columns <- function(check_vals) {
 
 find_group_columns_cl_metadata <- function(cl_metadata) {
 
-  ndistinct_sample <- get_n_distinct_per_sample(metadata)
+  ndistinct_sample <- get_n_distinct_per_sample(cl_metadata)
   one_per_sample <- apply(ndistinct_sample, 2, function(x) all(x == 1))
   group_cols <- names(ndistinct_sample)[one_per_sample]
 
