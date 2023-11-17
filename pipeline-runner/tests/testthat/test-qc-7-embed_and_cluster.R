@@ -30,8 +30,9 @@ mock_color_pool <- function(n) {
 }
 
 
-mock_cl_metadata <- function(scdata) {
-  barcode <-  rownames(scdata@meta.data)
+mock_cl_metadata <- function(scdata, optional_custom_barcodes) {
+  barcode <- if (missing(optional_custom_barcodes)) rownames(scdata@meta.data) else optional_custom_barcodes
+
   samples <- rep_len(paste0("sample_", 1:4), length(barcode))
   cell_type <- rep_len(paste0("cell_type_", 1:10), length(barcode))
   group_var <- rep_len(paste0("group_", 1:2), length(barcode))
@@ -605,6 +606,23 @@ test_that("make_cl_metadata_cellsets makes cell-level metadata cellsets.", {
   for (i in seq_along(res)) {
     purrr::walk(res[[i]]$children, expect_named, c(cell_class_names[-5], "color", "cellIds"))
   }
+})
+
+test_that("make_cl_metadata_cellsets skips making cellsets that are empty (no cellIds).", {
+  config <- mock_config()
+  scdata <- mock_scdata()
+  cl_metadata <- mock_cl_metadata(
+    scdata,
+    c(paste0("missing-barcode", 1:50))
+  )
+
+  local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
+
+  res <- stubbed_make_cl_metadata_cellsets(scdata, config)
+  withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
+
+  expect_equal(length(res[[1]]$children), 0)
+  expect_equal(length(res[[2]]$children), 0)
 })
 
 

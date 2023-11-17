@@ -393,14 +393,23 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
       cell_ids <- cl_metadata[get(variable) == values[i], cells_id]
     }
 
-    cl_metadata_cellset$children[[i]] <- list(
-      key = uuid::UUIDgenerate(),
-      name = as.character(values[i]),
-      rootNode = FALSE,
-      type = type,
-      color = color_pool[1],
-      cellIds = ensure_is_list_in_json(cell_ids)
+    # Empty cell sets shouldn't be created based on cell level metadata
+    if (length(cell_ids) == 0) next
+
+    cl_metadata_cellset$children <- append(
+      cl_metadata_cellset$children,
+      list(
+        list(
+          key = uuid::UUIDgenerate(),
+          name = as.character(values[i]),
+          rootNode = FALSE,
+          type = type,
+          color = color_pool[1],
+          cellIds = ensure_is_list_in_json(cell_ids)
+        )
+      )
     )
+
     color_pool <- color_pool[-1]
   }
 
