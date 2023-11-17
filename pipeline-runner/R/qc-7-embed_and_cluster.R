@@ -242,6 +242,9 @@ make_cl_metadata_cellsets <- function(scdata, config) {
     make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
 
   var_types <- detect_variable_types(cl_metadata)
+  message("Detected cell-level metadata variable types:\n")
+  str(var_types)
+
 
   # creates cell-level metadata cellsets, setting the correct type
   cl_metadata_cellsets <-
@@ -290,8 +293,7 @@ make_cl_metadata_table <- function(cl_metadata, barcode_cell_ids) {
     # remove samples from barcode-cell_id map if not used for join
     barcode_cell_ids <- barcode_cell_ids[, -"samples"]
   }
-
-  cl_metadata[barcode_cell_ids, , on = join_cols]
+  cl_metadata[barcode_cell_ids, , on = join_cols, nomatch = NULL]
 }
 
 
@@ -325,6 +327,15 @@ find_clm_columns <- function(check_vals) {
 }
 
 
+find_group_columns_cl_metadata <- function(cl_metadata) {
+
+  ndistinct_sample <- get_n_distinct_per_sample(metadata)
+  one_per_sample <- apply(ndistinct_sample, 2, function(x) all(x == 1))
+  group_cols <- names(ndistinct_sample)[one_per_sample]
+
+  return(group_cols)
+}
+
 #' Detect cell-level metadata variable types
 #'
 #' detect cell level metadata types
@@ -342,7 +353,7 @@ detect_variable_types <- function(cl_metadata) {
   # can only find group columns when samples are available
   if ("samples" %in% names(cl_metadata)) {
     # do not remove dups; if a user uploads some metadata it should be there
-    clm_per_sample_cols <- find_group_columns(cl_metadata, remove.dups = F)
+    clm_per_sample_cols <- find_group_columns_cl_metadata(cl_metadata)
   } else {
     clm_per_sample_cols <- character()
   }
