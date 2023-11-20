@@ -250,6 +250,9 @@ make_cl_metadata_cellsets <- function(scdata, config) {
   cl_metadata_cellsets <-
     format_cl_metadata_cellsets(cl_metadata, var_types, scdata@misc$color_pool)
 
+  message("cell-level metadata cellsets created:\n")
+  str(cl_metadata_cellsets)
+
   return(cl_metadata_cellsets)
 }
 
@@ -285,15 +288,21 @@ get_cell_id_barcode_map <- function(scdata) {
 #'
 #' @return data.table of cell_ids and cell-level metadata
 #' @export
-make_cl_metadata_table <- function(cl_metadata, barcode_cell_ids) {
+make_cl_metadata_table <- function(cl_metadata, barcode_cell_id_map) {
 
   join_cols <- c("barcode")
+
+  # remove Seurat sample suffix if present only in one of the tables
+  if (!all(grepl("_\\d+$", c(barcode_cell_id_map$barcode, cl_metadata$barcode)))) {
+    barcode_cell_id_map[, barcode := gsub("_\\d+$", "", barcode)]
+  }
+
   if (!"samples" %in% names(cl_metadata)) {
     join_cols <- setdiff(join_cols, "samples")
     # remove samples from barcode-cell_id map if not used for join
-    barcode_cell_ids <- barcode_cell_ids[, -"samples"]
+    barcode_cell_id_map <- barcode_cell_id_map[, -"samples"]
   }
-  cl_metadata[barcode_cell_ids, , on = join_cols, nomatch = NULL]
+  cl_metadata[barcode_cell_id_map, ,on = join_cols, nomatch = NULL]
 }
 
 
