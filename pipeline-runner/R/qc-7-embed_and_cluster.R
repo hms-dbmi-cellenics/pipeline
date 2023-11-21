@@ -336,8 +336,20 @@ find_clm_columns <- function(check_vals) {
 }
 
 
+#' Find group columns for cell-level metadata
+#'
+#' Find columns that can be used to group cells with sample granularity in
+#' cell-level metadata. The only requirement is that the column has the same
+#' value for all cells in a sample.
+#'
+#' @param cl_metadata data.table
+#'
+#' @return vector of column names
+#' @export
+#'
 find_group_columns_cl_metadata <- function(cl_metadata) {
 
+  # ignore duplicate_barcode column, manually defined as clm
   ndistinct_sample <- get_n_distinct_per_sample(cl_metadata[,-"duplicate_barcode"])
   one_per_sample <- apply(ndistinct_sample, 2, function(x) all(x == 1))
   group_cols <- names(ndistinct_sample)[one_per_sample]
@@ -373,6 +385,7 @@ detect_variable_types <- function(cl_metadata) {
   # remove samples var, useless from this point on
   clm_cols <- grep("^samples$", clm_cols, value = T, invert = T)
 
+  # duplicate_barcode may be detected as CLMPerSample, manually define it as CLM
   clm_cols <- union(clm_cols, "duplicate_barcode")
 
   return(list(CLM = clm_cols, CLMPerSample = clm_per_sample_cols))
