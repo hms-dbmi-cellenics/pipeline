@@ -226,10 +226,16 @@ make_cl_metadata_cellsets <- function(scdata, config) {
     make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
 
   var_types <- detect_variable_types(cl_metadata)
+  message("Detected cell-level metadata variable types:\n")
+  str(var_types)
+
 
   # creates cell-level metadata cellsets, setting the correct type
   cl_metadata_cellsets <-
     format_cl_metadata_cellsets(cl_metadata, var_types, scdata@misc$color_pool)
+
+  message("cell-level metadata cellsets created:\n")
+  str(cl_metadata_cellsets)
 
   return(cl_metadata_cellsets)
 }
@@ -266,16 +272,21 @@ get_cell_id_barcode_map <- function(scdata) {
 #'
 #' @return data.table of cell_ids and cell-level metadata
 #' @export
-make_cl_metadata_table <- function(cl_metadata, barcode_cell_ids) {
+make_cl_metadata_table <- function(cl_metadata, barcode_cell_id_map) {
 
   join_cols <- c("barcode")
+
+  # remove Seurat sample suffix if present only in one of the tables
+  if (!all(grepl("_\\d+$", c(barcode_cell_id_map$barcode, cl_metadata$barcode)))) {
+    barcode_cell_id_map[, barcode := gsub("_\\d+$", "", barcode)]
+  }
+
   if (!"samples" %in% names(cl_metadata)) {
     join_cols <- setdiff(join_cols, "samples")
     # remove samples from barcode-cell_id map if not used for join
-    barcode_cell_ids <- barcode_cell_ids[, -"samples"]
+    barcode_cell_id_map <- barcode_cell_id_map[, -"samples"]
   }
-
-  cl_metadata[barcode_cell_ids, , on = join_cols]
+  cl_metadata[barcode_cell_id_map, ,on = join_cols, nomatch = NULL]
 }
 
 
@@ -309,6 +320,27 @@ find_clm_columns <- function(check_vals) {
 }
 
 
+#' Find group columns for cell-level metadata
+#'
+#' Find columns that can be used to group cells with sample granularity in
+#' cell-level metadata. The only requirement is that the column has the same
+#' value for all cells in a sample.
+#'
+#' @param cl_metadata data.table
+#'
+#' @return vector of column names
+#' @export
+#'
+find_group_columns_cl_metadata <- function(cl_metadata) {
+
+  # ignore duplicate_barcode column, manually defined as clm
+  ndistinct_sample <- get_n_distinct_per_sample(cl_metadata[,-"duplicate_barcode"])
+  one_per_sample <- apply(ndistinct_sample, 2, function(x) all(x == 1))
+  group_cols <- names(ndistinct_sample)[one_per_sample]
+
+  return(group_cols)
+}
+
 #' Detect cell-level metadata variable types
 #'
 #' detect cell level metadata types
@@ -326,7 +358,7 @@ detect_variable_types <- function(cl_metadata) {
   # can only find group columns when samples are available
   if ("samples" %in% names(cl_metadata)) {
     # do not remove dups; if a user uploads some metadata it should be there
-    clm_per_sample_cols <- find_group_columns(cl_metadata, remove.dups = F)
+    clm_per_sample_cols <- find_group_columns_cl_metadata(cl_metadata)
   } else {
     clm_per_sample_cols <- character()
   }
@@ -337,7 +369,8 @@ detect_variable_types <- function(cl_metadata) {
   # remove samples var, useless from this point on
   clm_cols <- grep("^samples$", clm_cols, value = T, invert = T)
 
-  clm_cols <- c(clm_cols, "duplicate_barcode")
+  # duplicate_barcode may be detected as CLMPerSample, manually define it as CLM
+  clm_cols <- union(clm_cols, "duplicate_barcode")
 
   return(list(CLM = clm_cols, CLMPerSample = clm_per_sample_cols))
 }
@@ -377,14 +410,23 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
       cell_ids <- cl_metadata[get(variable) == values[i], cells_id]
     }
 
-    cl_metadata_cellset$children[[i]] <- list(
-      key = uuid::UUIDgenerate(),
-      name = as.character(values[i]),
-      rootNode = FALSE,
-      type = type,
-      color = color_pool[1],
-      cellIds = ensure_is_list_in_json(cell_ids)
+    # Empty cell sets shouldn't be created based on cell level metadata
+    if (length(cell_ids) == 0) next
+
+    cl_metadata_cellset$children <- append(
+      cl_metadata_cellset$children,
+      list(
+        list(
+          key = uuid::UUIDgenerate(),
+          name = as.character(values[i]),
+          rootNode = FALSE,
+          type = type,
+          color = color_pool[1],
+          cellIds = ensure_is_list_in_json(cell_ids)
+        )
+      )
     )
+
     color_pool <- color_pool[-1]
   }
 

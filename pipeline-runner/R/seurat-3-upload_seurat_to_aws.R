@@ -171,18 +171,24 @@ add_metadata_to_input <- function(scdata, input) {
   return(input)
 }
 
-# get column names that are consistent with sample groups
-find_group_columns <- function(metadata, remove.dups = TRUE) {
-
-  ndistinct_sample <- metadata |>
+get_n_distinct_per_sample <- function(metadata) {
+  metadata |>
     dplyr::group_by(samples) |>
     dplyr::summarise_all(dplyr::n_distinct) |>
     dplyr::select(colnames(metadata))
+}
+
+
+# get column names that are consistent with sample groups
+find_group_columns <- function(metadata, remove.dups = TRUE) {
+
+  ndistinct_sample <- get_n_distinct_per_sample(metadata)
 
   ndistinct <- metadata |>
     dplyr::summarise_all(dplyr::n_distinct)
 
   nsamples <- length(unique(metadata$samples))
+
 
   # group columns must:
   # - have fewer than the number of samples
