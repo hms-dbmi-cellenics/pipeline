@@ -109,6 +109,23 @@ format_cluster_cellsets <- function(cell_sets,
   return(cell_sets_object)
 }
 
+patch_cell_sets <- function(api_url, experiment_id, patch_data, auth_JWT, ignore_ssl_cert) {
+  if (ignore_ssl_cert) {
+    httr::set_config(httr::config(ssl_verifypeer = 0L))
+  }
+
+  response <- httr::PATCH(
+    paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
+    body = patch_data,
+    encode = "json",
+    httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
+                      "Authorization" = auth_JWT)
+  )
+
+  if (httr::status_code(response) >= 400) {
+    stop("API patch cell sets request failed with status code: ", httr::status_code(response))
+  }
+}
 
 #' replace cell class by key
 #'
@@ -125,34 +142,17 @@ format_cluster_cellsets <- function(cell_sets,
 #' @return NULL
 #' @export
 #'
-replace_cell_class_through_api <-
-  function(cell_class_object,
-           api_url,
-           experiment_id,
-           cell_class_key,
-           auth_JWT,
-           ignore_ssl_cert) {
+replace_cell_class_through_api <- function(cell_class_object, api_url, experiment_id, cell_class_key, auth_JWT, ignore_ssl_cert) {
   message("updating cellsets through API")
   httr_query <- paste0("$[?(@.key == \"", cell_class_key, "\")]")
-
-  if (ignore_ssl_cert) {
-    httr::set_config(httr::config(ssl_verifypeer = 0L))
-  }
 
   body <- list(list(
       "$match" = list(query = httr_query, value = list("$remove" = TRUE))
     ),
     list("$prepend" = cell_class_object))
 
-  httr::PATCH(
-    paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-    body = body,
-    encode = "json",
-    httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
-                      "Authorization" = auth_JWT)
-  )
+  patch_cell_sets(api_url, experiment_id, body, auth_JWT, ignore_ssl_cert)
 }
-
 
 #' Replace and Append Cell Metadata Through API
 #'
@@ -168,30 +168,14 @@ replace_cell_class_through_api <-
 #' @return The response from the API after performing the PATCH operation.
 #'
 #' @export
-replace_cl_metadata_through_api <-
-  function(cl_metadata_cellsets,
-           api_url,
-           experiment_id,
-           auth_JWT,
-           ignore_ssl_cert) {
-
-    if (ignore_ssl_cert) {
-      httr::set_config(httr::config(ssl_verifypeer = 0L))
-    }
-
-    appends <- list()
-    for (i in seq_along(cl_metadata_cellsets)) {
-      appends <- append(appends, list(list("$append" = cl_metadata_cellsets[[i]])))
-    }
-
-    httr::PATCH(
-      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-      body = appends,
-      encode = "json",
-      httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
-                        "Authorization" = auth_JWT)
-    )
+replace_cl_metadata_through_api <- function(cl_metadata_cellsets, api_url, experiment_id, auth_JWT, ignore_ssl_cert) {
+  appends <- list()
+  for (i in seq_along(cl_metadata_cellsets)) {
+    appends <- append(appends, list(list("$append" = cl_metadata_cellsets[[i]])))
   }
+
+  patch_cell_sets(api_url, experiment_id, appends, auth_JWT, ignore_ssl_cert)
+}
 
 #' Download and load cell-level metadata tsv file
 #'
