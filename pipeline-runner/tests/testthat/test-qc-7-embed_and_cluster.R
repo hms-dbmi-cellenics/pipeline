@@ -146,24 +146,28 @@ test_that("runClusters uses active.reduction in misc slot", {
   }
 })
 
-test_that("patch_cell_sets throws error on failed API response", {
-  # Mock the httr::PATCH function to return a response with a status code of 400
-  mock_response <- httr::response(status_code = 400)
-  mock_patch <- mock("httr::PATCH", mock_response)
+library(httr)
 
-  # Test if the patch_cell_sets function throws an error
-  expect_error(
-    patch_cell_sets(
-      "https://api.example.com",
-      "experiment_id",
-      list(data = "test"),
-      "auth_token",
-      FALSE
-    ),
-    "API patch cell sets request failed with status code: 400"
-  )
-  unmock(mock_patch)
-})
+with_mock(
+  `httr::PATCH` = function(url, ...) {
+    response <- httr::response()
+    response$status_code <- 400
+    response$content <- "API Error!"
+    return(response)
+  },
+  test_that("patch_cell_sets throws error on unsuccessful response", {
+    expect_error(
+      patch_cell_sets(
+        "api_url",
+        "experiment_id",
+        list(),  # Mock patch data
+        "auth_JWT",
+        FALSE
+      ),
+      "API patch cell sets request failed with status code: 400"
+    )
+  })
+)
 
 with_fake_http(
   test_that("replace_cell_class_through_api sends patch request", {
