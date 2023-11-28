@@ -147,6 +147,20 @@ test_that("runClusters uses active.reduction in misc slot", {
 })
 
 with_fake_http(
+  test_that("patch_cell_sets throws error on unsuccessful response", {
+    # Mock a response with a status code of 400
+    expect_error(
+      patch_cell_sets(
+        "api_url",
+        "experiment_id",
+        list(),  # Mock patch data
+        "auth_JWT",
+        FALSE
+    ), "API patch cell sets request failed with status code: 400")
+  })
+)
+
+with_fake_http(
   test_that("replace_cell_class_through_api sends patch request", {
     expect_PATCH(
       replace_cell_class_through_api(
