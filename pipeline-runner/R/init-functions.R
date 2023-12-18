@@ -181,7 +181,7 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, i
 
   ttask <- format(Sys.time() - tstart, digits = 2)
   message(
-    "❱︝ Time to complete ", task_name,
+    "⏱️ Time to complete ", task_name,
     " for sample ", sample_id, ": ", ttask, "\n"
   )
 
@@ -215,7 +215,7 @@ run_pipeline_step <- function(prev_out, input, pipeline_config, tasks, task_name
   tstart <- Sys.time()
   out <- task(input, pipeline_config, prev_out)
   ttask <- format(Sys.time() - tstart, digits = 2)
-  message("❱︝ Time to complete ", task_name, ": ", ttask, "\n")
+  message("⏱️ Time to complete ", task_name, ": ", ttask, "\n")
 
   return(out)
 }
@@ -353,10 +353,6 @@ call_copy <- function(task_name, input, pipeline_config) {
 #' @return character message id
 #'
 call_qc <- function(task_name, input, pipeline_config) {
-
-  message("CALL QC")
-  message(input)
-
   experiment_id <- input$experimentId
   config <- input$config
   upload_count_matrix <- input$uploadCountMatrix
@@ -447,7 +443,7 @@ call_qc <- function(task_name, input, pipeline_config) {
   message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
   ttask <- format(Sys.time() - tstart, digits = 2)
   message(
-    "❱︝ Time to upload ", task_name,
+    "⏱️ Time to upload ", task_name,
     " objects for sample ", sample_id,
     ": ", ttask
   )
