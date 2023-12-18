@@ -67,11 +67,6 @@ read_parse_files <- function(config, input_dir) {
     sample_fpaths <- list.files(sample_dir)
     annot_fpath <- file.path(sample_dir, "all_genes.csv.gz")
 
-    message(list.files("./",include.dirs=TRUE))
-    message(sample_fpaths)
-    message("ASD")
-    message(list.files(file.path(input_dir,sample),include.dirs=TRUE))
-
     message("\nSample --> ", sample)
     message(
       "Reading files from ",
