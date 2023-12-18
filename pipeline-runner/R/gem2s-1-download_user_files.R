@@ -27,32 +27,15 @@ download_s3_files <- function(input, originals_bucket, input_dir, s3) {
   sample_ids <- input$sampleIds
   sample_s3_paths <- input$sampleS3Paths
   technology <- input$input$type
-  message("input dir")
-  message(input_dir)
   unlink(input_dir, recursive = TRUE)
 
   for (sample_id in sample_ids) {
-    message("file types")
-    message(file_types_by_technology[[technology]])
     for (file_type in file_types_by_technology[[technology]]) {
       s3_path <- sample_s3_paths[[sample_id]][[file_type]]
 
-      print("filenames")
-      print(file_names)
-      print(file_names[[file_type]])
-
       local_fpath <- file.path(input_dir, sample_id, file_names[[file_type]])
 
-      message("Bucket")
-      message(originals_bucket)
-      message("s3path")
-      message(s3_path)
-      message("localpath")
-      message(local_fpath)
-
-      message("antes")
       download_and_store(originals_bucket, s3_path, local_fpath, s3)
-      message("pase")
     }
   }
 }
