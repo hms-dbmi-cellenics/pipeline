@@ -146,6 +146,27 @@ test_that("runClusters uses active.reduction in misc slot", {
   }
 })
 
+mock_patch <- function(url, ...) {
+  response <- list(status_code = 400, content = "API Error!")
+  class(response) <- "response"
+  return(response)
+}
+
+test_that("patch_cell_sets throws error on unsuccessful response", {
+  stub(patch_cell_sets, "httr::PATCH", mock_patch)
+
+  expect_error(
+    patch_cell_sets(
+      "api_url",
+      "experiment_id",
+      list(),  
+      "auth_JWT",
+      FALSE
+    ),
+    "API patch cell sets request failed with status code: 400"
+  )
+})
+
 with_fake_http(
   test_that("replace_cell_class_through_api sends patch request", {
     expect_PATCH(
