@@ -335,7 +335,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 }
 
 read_parse_annotations <- function(annot_fpath, sample){
-  annot <- read.csv(annot_fpath, header = TRUE)
+  annot <- read.delim(annot_fpath, header = FALSE, sep=",")
 
   # Make the names in annot the same as the ones in the Read10x generated count matrix
   # Since Seurat uses makes.unique, we need to as well.

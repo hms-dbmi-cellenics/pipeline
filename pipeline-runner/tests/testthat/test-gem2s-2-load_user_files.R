@@ -1,24 +1,4 @@
-mock_cellranger_files <- function(counts, features, sample_dir) {
-
-  # save features
-  features_path <- file.path(sample_dir, "features.tsv")
-  write.table(features, features_path, col.names = FALSE, quote = FALSE, sep = "\t", row.names = FALSE)
-  R.utils::gzip(features_path)
-
-  # save barcodes
-  barcodes <- colnames(counts)
-  barcodes_path <- file.path(sample_dir, "barcodes.tsv")
-  writeLines(barcodes, barcodes_path)
-  R.utils::gzip(barcodes_path)
-
-  # save Matrix
-  if (is(counts, "data.frame")) counts <- as.matrix(counts)
-  sparse.mat <- Matrix::Matrix(counts, sparse = TRUE)
-  matrix_path <- file.path(sample_dir, "matrix.mtx")
-  Matrix::writeMM(sparse.mat, matrix_path)
-  R.utils::gzip(matrix_path)
-}
-
+source("mock-gem2s-input-files.R")
 
 mock_counts <- function() {
   pbmc_raw <- read.table(
@@ -51,15 +31,6 @@ mock_annotations <- function(counts, multiome = "no") {
   }
 
   return(list("annot" = annot))
-}
-
-local_cellranger_experiment <- function(counts, features, experiment_dir, sample_dir, env = parent.frame()) {
-
-  sample_path <- file.path(experiment_dir, sample_dir)
-  dir.create(sample_path, recursive = T)
-  mock_cellranger_files(counts, features, sample_path)
-  withr::defer(unlink(experiment_dir, recursive = T), envir = env)
-
 }
 
 mock_lists <- function() {
@@ -123,7 +94,7 @@ test_that("load_user_files loads a 10x count matrix", {
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
+  local_experiment(counts, features, experiment_dir, sample)
 
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
@@ -146,7 +117,7 @@ test_that("load_user_files generates feature annotation for 10x data", {
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
+  local_experiment(counts, features, experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
   out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
@@ -173,7 +144,7 @@ test_that("load_user_files deduplicates gene symbols for 10x data", {
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
+  local_experiment(counts, features, experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
   annot <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output$annot
@@ -198,7 +169,7 @@ test_that("load_user_files uses appropriate feature columns for 10x data", {
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
+  local_experiment(counts, features, experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
   out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
@@ -232,7 +203,7 @@ test_that("load_user_files uses first column if no Gene Expression column presen
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
+  local_experiment(counts, features, experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
   out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
@@ -262,8 +233,8 @@ test_that("load_user_files loads 10x multisample experiments", {
   experiment_dir <- "./experiment_1"
   samples <- c("sample_a", "sample_b")
 
-  local_cellranger_experiment(counts, features, experiment_dir, samples[1])
-  local_cellranger_experiment(counts, features2, experiment_dir, samples[2])
+  local_experiment(counts, features, experiment_dir, samples[1])
+  local_experiment(counts, features2, experiment_dir, samples[2])
 
 
   prev_out <- list(config = list(samples = samples, input = list(type = "10x")))
@@ -295,7 +266,7 @@ test_that("read_10x_files returns error if files missing", {
   sample <- "sample_a"
   sample_dir <- file.path(experiment_dir, sample)
 
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
+  local_experiment(counts, features, experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list(type = "10x")))
 
@@ -329,7 +300,7 @@ test_that("read_10x_annotations inverts columns if Gene Expression in second pos
   sample <- "sample_a"
   annot_fpath <- file.path(experiment_dir, sample, "features.tsv.gz")
 
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
+  local_experiment(counts, features, experiment_dir, sample)
 
   res <- read_10x_annotations(annot_fpath, sample)
 
@@ -354,7 +325,7 @@ test_that("read_10x_annotations duplicates column if there's only one column in 
   sample <- "sample_a"
   annot_fpath <- file.path(experiment_dir, sample, "features.tsv.gz")
 
-  local_cellranger_experiment(counts, features, experiment_dir, sample)
+  local_experiment(counts, features, experiment_dir, sample)
 
   res <- read_10x_annotations(annot_fpath, sample)
 
@@ -738,7 +709,7 @@ test_that("read_10x_annotations removes features different from Gene Expression"
   sample <- "sample_a"
   annot_fpath <- file.path(experiment_dir, sample, "features.tsv.gz")
 
-  local_cellranger_experiment(counts, annotations, experiment_dir, sample)
+  local_experiment(counts, annotations, experiment_dir, sample)
 
   res <- read_10x_annotations(annot_fpath, sample)
 
