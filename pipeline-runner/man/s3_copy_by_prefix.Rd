@@ -22,8 +22,9 @@ s3_copy_by_prefix(
 
 \item{destination_prefix}{string}
 
-\item{key_transform}{function to transform keys of objects
-before uploading, identity by default}
+\item{aws_config}{list of AWS configuration}
+
+\item{key_transform}{function to transform keys of objects before uploading, identity by default}
 }
 \description{
 Copy recursively all s3 objects matching prefix

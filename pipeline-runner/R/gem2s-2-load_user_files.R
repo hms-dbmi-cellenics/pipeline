@@ -110,13 +110,12 @@ read_parse_files <- function(config, input_dir) {
 #'
 #' Calls read10x_h5
 #'
-#' @param config
-#' @param input_dir
+#' @param config list of configuration parameters
+#' @param input_dir character input dir
 #'
-#' @return
+#' @return list with counts and annotations
 #' @export
 #'
-#' @examples
 read_10x_h5_file <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()

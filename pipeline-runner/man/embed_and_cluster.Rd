@@ -20,7 +20,7 @@ embed_and_cluster(
 
 \item{sample_id}{character}
 
-\item{cells_id}{list of cell ids that passed all filters so far}
+\item{cells_id}{list of cell ids that passed all filters so far, not necessary for this step}
 
 \item{task_name}{character}
 }

@@ -7,7 +7,12 @@
 read_10x_h5_file(config, input_dir)
 }
 \arguments{
-\item{input_dir}{}
+\item{config}{list of configuration parameters}
+
+\item{input_dir}{character input dir}
+}
+\value{
+list with counts and annotations
 }
 \description{
 Calls read10x_h5

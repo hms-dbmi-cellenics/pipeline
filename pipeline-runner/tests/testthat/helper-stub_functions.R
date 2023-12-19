@@ -200,7 +200,7 @@ stubbed_upload_to_aws <- function(input, pipeline_config, prev_out) {
 }
 
 
-stub_update_sets_through_api <- function(cell_sets_object,
+stub_replace_cell_class_through_api <- function(cell_sets_object,
                                          api_url,
                                          experiment_id,
                                          cell_set_key,
@@ -227,8 +227,31 @@ stub_update_sets_through_api <- function(cell_sets_object,
 stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert) {
 
   mockery::stub(embed_and_cluster,
-                "update_sets_through_api",
-                stub_update_sets_through_api)
+                "replace_cell_class_through_api",
+                stub_replace_cell_class_through_api,
+                depth=2)
 
   embed_and_cluster(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert)
 }
+
+
+#' (Stubbed) download cell-level metadata file
+#'
+#' @inheritSection download_cl_metadata_file description
+#' @inheritParams download_cl_metadata_file
+#' @inheritSection download_cl_metadata_file return
+#' @export
+#'
+stubbed_download_cl_metadata_file <- function(config) {
+  mockedS3 <- list(get_object = stub_s3_get_object)
+  mockery::stub(download_cl_metadata_file, "paws::s3", mockedS3)
+  mockery::stub(download_cl_metadata_file, "file.path", stub_file.path)
+  download_cl_metadata_file(config)
+}
+
+
+stubbed_make_cl_metadata_cellsets <- function(scdata, config) {
+  mockery::stub(make_cl_metadata_cellsets, "download_cl_metadata_file", stubbed_download_cl_metadata_file)
+  make_cl_metadata_cellsets(scdata, config)
+}
+
