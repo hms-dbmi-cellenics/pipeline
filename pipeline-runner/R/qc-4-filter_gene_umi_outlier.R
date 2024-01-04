@@ -55,7 +55,7 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
   if (safeTRUE(config$auto))
     p_level <- min(0.001, 1 / ncol(sample_data))
   else
-    p_level <- config$filterSettings$regressionTypeSettings[[type]]$p.level
+    p_level <- 1 - config$filterSettings$predictionInterval
 
   p_level <- suppressWarnings(as.numeric(p_level))
   if(is.na(p_level)) stop("p_level couldn't be interpreted as a number.")
