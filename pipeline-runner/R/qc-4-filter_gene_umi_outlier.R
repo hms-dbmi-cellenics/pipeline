@@ -52,7 +52,7 @@ filter_gene_umi_outlier <- function(scdata_list, config, sample_id, cells_id, ta
 
   # get p_level and update in config
   # defaults from "gene.vs.molecule.cell.filter" in pagoda2
-  if (safeTRUE(config$auto))
+  if (safeTRUE(config$auto) || is.null(config$filterSettings$predictionInterval))
     p_level <- min(0.001, 1 / ncol(sample_data))
   else
     p_level <- 1 - as.numeric(config$filterSettings$predictionInterval)
