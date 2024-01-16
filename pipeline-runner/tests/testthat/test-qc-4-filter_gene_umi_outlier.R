@@ -164,6 +164,7 @@ test_that("Gene UMI filter works if input is a a float-interpretable string", {
   cells_id <- mock_ids()
   nstart <- ncol(scdata_list[[sample_2_id]])
   config$auto <- FALSE
+  config$filterSettings$predictionInterval <- "0.3"
 
   out_number <- filter_gene_umi_outlier(scdata_list, config, sample_2_id, cells_id)
 
