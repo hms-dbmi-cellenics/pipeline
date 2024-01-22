@@ -78,17 +78,18 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 }
 
 find_cluster_columns <- function(scdata) {
+  meta <- scdata@meta.data
 
   # exclude all group columns, including duplicates
-  group_cols <- find_group_columns(scdata@meta.data, remove.dups = FALSE)
+  group_cols <- find_group_columns(meta, remove.dups = FALSE)
+  scdblfinder_cols <- grep('^scDblFinder', colnames(meta), value = TRUE)
   exclude_cols <- c(group_cols, 'samples')
 
   # order meta to indicate preference for louvain clusters
-  meta <- scdata@meta.data
   louvain_cols <- c('louvain', 'active.ident', 'seurat_clusters')
   meta <- meta |> dplyr::relocate(dplyr::any_of(louvain_cols))
 
-  check_cols <- setdiff(colnames(meta), exclude_cols)
+  check_cols <- setdiff(colnames(meta), c(scdblfinder_cols, exclude_cols))
 
   cluster_cols <- c()
   for (check_col in check_cols) {
