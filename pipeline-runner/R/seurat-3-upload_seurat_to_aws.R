@@ -82,14 +82,14 @@ find_cluster_columns <- function(scdata) {
 
   # exclude all group columns, including duplicates
   group_cols <- find_group_columns(meta, remove.dups = FALSE)
+  group_cols <- c(group_cols, 'samples')
   scdblfinder_cols <- grep('^scDblFinder', colnames(meta), value = TRUE)
-  exclude_cols <- c(group_cols, 'samples')
 
   # order meta to indicate preference for louvain clusters
   louvain_cols <- c('louvain', 'active.ident', 'seurat_clusters')
   meta <- meta |> dplyr::relocate(dplyr::any_of(louvain_cols))
 
-  check_cols <- setdiff(colnames(meta), c(scdblfinder_cols, exclude_cols))
+  check_cols <- setdiff(colnames(meta), c(scdblfinder_cols, group_cols))
 
   cluster_cols <- c()
   for (check_col in check_cols) {
@@ -112,8 +112,8 @@ find_cluster_columns <- function(scdata) {
 
     # skip if col is same as samples or group column
     is_sample_col <- FALSE
-    for (exclude_col in exclude_cols)  {
-      exclude_vals <- meta[[exclude_col]]
+    for (group_col in group_cols)  {
+      exclude_vals <- meta[[group_col]]
       if (test_groups_equal(check_vals, exclude_vals)) {
         is_sample_col <- TRUE
         break
