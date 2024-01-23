@@ -113,8 +113,8 @@ find_cluster_columns <- function(scdata) {
     # skip if col is same as samples or group column
     is_sample_col <- FALSE
     for (group_col in group_cols)  {
-      exclude_vals <- meta[[group_col]]
-      if (test_groups_equal(check_vals, exclude_vals)) {
+      group_vals <- meta[[group_col]]
+      if (test_groups_equal(check_vals, group_vals)) {
         is_sample_col <- TRUE
         break
       }
