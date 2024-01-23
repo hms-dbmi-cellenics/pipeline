@@ -46,7 +46,7 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 
   # replicate qc config for simplicity
   # could also create a 'seurat_config' column in experiment table and change the ui/api around more
-  qc_config <- construct_qc_config(list(one = scdata), unfiltered_samples = 'one')
+  qc_config <- construct_qc_config(list(one = scdata), unfiltered_samples = 'one', technology="seurat")
   qc_config$configureEmbedding$embeddingSettings$useSaved <- TRUE
   qc_config$configureEmbedding$embeddingSettings$method <- SeuratObject::DefaultDimReduc(scdata)
 

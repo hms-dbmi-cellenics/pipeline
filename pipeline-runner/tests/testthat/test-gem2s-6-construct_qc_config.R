@@ -88,3 +88,23 @@ test_that("classifier filter config is enabled for unfiltered samples and disabl
     }
   }
 })
+
+test_that("NumGenesVsUmis filter config has spline as default for Parse Datasets", {
+  scdata_list <- mock_scdata_list()
+  unfiltered_samples <- c("123abc")
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, "parse")
+
+  for (sample in names(scdata_list)) {
+    expect_true(qc_config$numGenesVsNumUmis[[sample]]$filterSettings$regressionType == "spline")
+  }
+})
+
+test_that("NumGenesVsUmis filter config has linear as default for 10x datasets", {
+  scdata_list <- mock_scdata_list()
+  unfiltered_samples <- c("123abc")
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, "10X")
+
+  for (sample in names(scdata_list)) {
+    expect_true(qc_config$numGenesVsNumUmis[[sample]]$filterSettings$regressionType == "linear")
+  }
+})
