@@ -14,6 +14,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
   # NOTE: edrops is not required
   check_prev_out(prev_out, c("config", "counts_list", "annot"))
 
+  type <- input$input$type
   edrops_list <- prev_out$edrops
   counts_list <- prev_out$counts_list
   samples <- names(counts_list)
@@ -30,7 +31,8 @@ score_doublets <- function(input, pipeline_config, prev_out) {
       sample_counts <- sample_counts[, keep]
     }
 
-    scores[[sample]] <- get_doublet_scores(sample_counts)
+    # TODO: Pass also parse_kit when available from the UI
+    scores[[sample]] <- get_doublet_scores(sample_counts, type = type)
 
   }
 
@@ -51,9 +53,26 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 #'
 #' @return data.frame with doublet scores and assigned classes
 #'
-compute_sample_doublet_scores <- function(sample_counts) {
+compute_sample_doublet_scores <- function(sample_counts, type, parse_kit = "WT") {
   set.seed(RANDOM_SEED)
-  sce <- scDblFinder::scDblFinder(sample_counts)
+
+  if (type == "parse") {
+    if (!exists("parse_kit")) {
+      stop("Parse kit is not defined")
+    }
+
+    dbr <- switch(parse_kit,
+      "mini" = 0.046,
+      "WT" = 0.034,
+      "mega" = 0.064,
+      stop("Invalid parse kit value: ", parse_kit)
+    )
+
+    sce <- scDblFinder::scDblFinder(sample_counts, dbr = dbr)
+  } else {
+    sce <- scDblFinder::scDblFinder(sample_counts)
+  }
+
   doublet_res <- data.frame(
     row.names = colnames(sce),
     barcodes = colnames(sce),
@@ -65,7 +84,7 @@ compute_sample_doublet_scores <- function(sample_counts) {
 }
 
 
-get_doublet_scores <- function(sample_counts, max_attempts = 5) {
+get_doublet_scores <- function(sample_counts, max_attempts = 5, type) {
   # also filter low UMI as per scDblFinder:::.checkSCE()
   ntot <- Matrix::colSums(sample_counts)
 
@@ -77,7 +96,8 @@ get_doublet_scores <- function(sample_counts, max_attempts = 5) {
     # make the threshold stricter in every attempt
     empty_cells_mask <- ntot > (200 * attempt)
     try({
-      scores <- compute_sample_doublet_scores(sample_counts[, empty_cells_mask])
+      # TODO: Pass also parse_kit when available from the UI
+      scores <- compute_sample_doublet_scores(sample_counts[, empty_cells_mask], type)
       retry <- "not null"
     })
     attempt <- attempt + 1
