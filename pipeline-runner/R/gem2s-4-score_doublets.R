@@ -57,17 +57,12 @@ compute_sample_doublet_scores <- function(sample_counts, type, parse_kit = "WT")
   set.seed(RANDOM_SEED)
 
   if (type == "parse") {
-    if (!exists("parse_kit")) {
-      stop("Parse kit is not defined")
-    }
-
     dbr <- switch(parse_kit,
       "mini" = 0.046,
       "WT" = 0.034,
       "mega" = 0.064,
       stop("Invalid parse kit value: ", parse_kit)
     )
-
     sce <- scDblFinder::scDblFinder(sample_counts, dbr = dbr)
   } else {
     sce <- scDblFinder::scDblFinder(sample_counts)
