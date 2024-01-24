@@ -124,7 +124,6 @@ customize_doublet_config <-
     return(config)
   }
 
- 
 customize_genes_vs_umis_config <-
   function(scdata,
            config,
