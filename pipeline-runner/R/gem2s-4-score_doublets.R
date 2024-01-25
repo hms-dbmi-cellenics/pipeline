@@ -79,7 +79,7 @@ compute_sample_doublet_scores <- function(sample_counts, type, parse_kit = "WT")
 }
 
 
-get_doublet_scores <- function(sample_counts, max_attempts = 5, type) {
+get_doublet_scores <- function(sample_counts, max_attempts = 5, type = "10x") {
   # also filter low UMI as per scDblFinder:::.checkSCE()
   ntot <- Matrix::colSums(sample_counts)
 
