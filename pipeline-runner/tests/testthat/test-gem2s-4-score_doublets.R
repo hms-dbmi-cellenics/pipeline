@@ -7,9 +7,9 @@ mock_counts <- function(...) {
   return(Matrix::Matrix(counts, sparse = T))
 }
 
-mock_input <- function(type) {
+mock_input <- function(technology) {
   input <- list()
-  input$input$type <- type
+  input$input$type <- technology
   return(input)
 }
 
@@ -70,7 +70,7 @@ test_that("score_doublets fails if prev_out is missing 'config', 'counts_list', 
 })
 
 
-test_that("compute_sample_doublet_scores handles type 'parse' correctly", {
+test_that("compute_sample_doublet_scores handles technology 'parse' correctly", {
   counts <- mock_counts()
   input <- mock_input("parse")
 
@@ -103,9 +103,9 @@ test_that("compute_sample_doublet_scores uses correct dbr for different Parse ki
   set.seed(RANDOM_SEED)
   expected_sce_mega <- suppressWarnings(scDblFinder::scDblFinder(counts, dbr = dbr_mega))
 
-  observed_sce_mini <- suppressWarnings(compute_sample_doublet_scores(counts, type = "parse", parse_kit = "mini"))
-  observed_sce_wt <- suppressWarnings(compute_sample_doublet_scores(counts, type = "parse", parse_kit = "WT"))
-  observed_sce_mega <- suppressWarnings(compute_sample_doublet_scores(counts, type = "parse", parse_kit = "mega"))
+  observed_sce_mini <- suppressWarnings(compute_sample_doublet_scores(counts, technology = "parse", parse_kit = "mini"))
+  observed_sce_wt <- suppressWarnings(compute_sample_doublet_scores(counts, technology = "parse", parse_kit = "WT"))
+  observed_sce_mega <- suppressWarnings(compute_sample_doublet_scores(counts, technology = "parse", parse_kit = "mega"))
 
   expect_identical(expected_sce_mini$scDblFinder.score, observed_sce_mini$doublet_scores)
   expect_identical(expected_sce_wt$scDblFinder.score, observed_sce_wt$doublet_scores)
@@ -117,7 +117,7 @@ test_that("compute_sample_doublet_scores stops with an error for invalid parse_k
   counts <- mock_counts()
 
   expect_error(
-    compute_sample_doublet_scores(counts, type = "parse", parse_kit = "invalid_kit"),
+    compute_sample_doublet_scores(counts, technology = "parse", parse_kit = "invalid_kit"),
     "Invalid parse kit value"
   )
 })

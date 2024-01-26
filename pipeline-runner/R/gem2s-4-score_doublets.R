@@ -14,7 +14,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
   # NOTE: edrops is not required
   check_prev_out(prev_out, c("config", "counts_list", "annot"))
 
-  type <- input$input$type
+  technology <- input$input$type
   edrops_list <- prev_out$edrops
   counts_list <- prev_out$counts_list
   samples <- names(counts_list)
@@ -32,7 +32,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
     }
 
     # TODO: Pass also parse_kit when available from the UI
-    scores[[sample]] <- get_doublet_scores(sample_counts, type = type)
+    scores[[sample]] <- get_doublet_scores(sample_counts, technology = technology)
 
   }
 
@@ -53,11 +53,11 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 #'
 #' @return data.frame with doublet scores and assigned classes
 #'
-compute_sample_doublet_scores <- function(sample_counts, type, parse_kit = "WT") {
+compute_sample_doublet_scores <- function(sample_counts, technology, parse_kit = "WT") {
   set.seed(RANDOM_SEED)
 
   dbr <- NULL
-  if (type == "parse") {
+  if (technology == "parse") {
     dbr <- switch(parse_kit,
       "mini" = 0.046,
       "WT" = 0.034,
@@ -78,7 +78,7 @@ compute_sample_doublet_scores <- function(sample_counts, type, parse_kit = "WT")
 }
 
 
-get_doublet_scores <- function(sample_counts, max_attempts = 5, type = "10x") {
+get_doublet_scores <- function(sample_counts, max_attempts = 5, technology = "10x") {
   # also filter low UMI as per scDblFinder:::.checkSCE()
   ntot <- Matrix::colSums(sample_counts)
 
@@ -91,7 +91,7 @@ get_doublet_scores <- function(sample_counts, max_attempts = 5, type = "10x") {
     empty_cells_mask <- ntot > (200 * attempt)
     try({
       # TODO: Pass also parse_kit when available from the UI
-      scores <- compute_sample_doublet_scores(sample_counts[, empty_cells_mask], type)
+      scores <- compute_sample_doublet_scores(sample_counts[, empty_cells_mask], technology)
       retry <- "not null"
     })
     attempt <- attempt + 1
