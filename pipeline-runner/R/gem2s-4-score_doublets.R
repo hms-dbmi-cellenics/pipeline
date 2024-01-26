@@ -60,12 +60,11 @@ compute_sample_doublet_scores <- function(sample_counts, technology, parse_kit =
 
   dbr <- NULL
   if (technology == "parse") {
-    dbr <- switch(parse_kit,
-      "mini" = 0.046,
-      "WT" = 0.034,
-      "mega" = 0.064,
+    if (parse_kit %in% names(DOUBLET_RATE_PARSE)) {
+      dbr <- DOUBLET_RATE_PARSE[[parse_kit]]
+    } else {
       stop("Invalid parse kit value: ", parse_kit)
-    )
+    }
   }
   sce <- scDblFinder::scDblFinder(sample_counts, dbr = dbr)
 
