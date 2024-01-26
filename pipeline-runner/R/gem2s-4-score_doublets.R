@@ -50,6 +50,8 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 #' Compute doublets scores per sample.
 #'
 #' @param sample_counts Sparse matrix with the counts for one sample.
+#' @param technology Technology used to generate the data (e.g. 10x, Parse).
+#' @param parse_kit Kit used to generate the data (specific to Parse data).
 #'
 #' @return data.frame with doublet scores and assigned classes
 #'
