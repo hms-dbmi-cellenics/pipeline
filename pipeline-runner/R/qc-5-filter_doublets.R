@@ -28,7 +28,7 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
 
   if ("recomputeDoubletScore" %in% names(config)) {
     if (config$recomputeDoubletScore) {
-    scores <- get_doublet_scores(sample_data@assays$RNA@counts)
+    scores <- get_doublet_scores(sample_data@assays$RNA@counts, technology = config$sampleTechnology)
     sample_data <- add_dblscore(sample_data, scores)
     # update doublet scores in original scdata
     scdata_list[[sample_id]] <- add_dblscore(scdata_list[[sample_id]], scores)

@@ -4,10 +4,14 @@
 \alias{compute_sample_doublet_scores}
 \title{Compute doublets scores per sample.}
 \usage{
-compute_sample_doublet_scores(sample_counts)
+compute_sample_doublet_scores(sample_counts, technology, parse_kit = "WT")
 }
 \arguments{
 \item{sample_counts}{Sparse matrix with the counts for one sample.}
+
+\item{technology}{Technology used to generate the data (e.g. 10x, Parse).}
+
+\item{parse_kit}{Kit used to generate the data (specific to Parse data).}
 }
 \value{
 data.frame with doublet scores and assigned classes
