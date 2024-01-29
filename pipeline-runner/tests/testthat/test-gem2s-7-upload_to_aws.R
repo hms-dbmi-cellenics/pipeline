@@ -15,7 +15,9 @@ mock_scdata_list <- function(config) {
   prev_out <- mock_prev_out(config)
   scdata_list <- prev_out$scdata_list
 
-  task_out <- prepare_experiment(NULL, NULL, prev_out)$output
+  input <- mock_input()
+
+  task_out <- prepare_experiment(input, NULL, prev_out)$output
   scdata_list <- task_out$scdata_list
 }
 
@@ -26,7 +28,8 @@ mock_input <- function(metadata = NULL) {
     sampleIds = list("123abc", "123def", "123ghi"),
     metadata = metadata,
     experimentId = "mock_experiment_id",
-    projectId = "mock_experiment_id"
+    projectId = "mock_experiment_id",
+    input = list( type= "10x")
   )
 
   return(input)

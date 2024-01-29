@@ -34,7 +34,8 @@ prepare_experiment <- function(input, pipeline_config, prev_out) {
   # construct default QC config and update prev out
   message("Constructing default QC configuration...")
   unfiltered_samples <- names(prev_out$edrops[!is.null(prev_out$edrops)])
-  prev_out$default_qc_config <- construct_qc_config(scdata_list, unfiltered_samples)
+
+  prev_out$default_qc_config <- construct_qc_config(scdata_list, unfiltered_samples, input$input$type)
 
   # If we received a qc_config (subset pipeline case) then
   # we want to set that one as the custom config

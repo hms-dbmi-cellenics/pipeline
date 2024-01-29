@@ -109,6 +109,23 @@ format_cluster_cellsets <- function(cell_sets,
   return(cell_sets_object)
 }
 
+patch_cell_sets <- function(api_url, experiment_id, patch_data, auth_JWT, ignore_ssl_cert) {
+  if (ignore_ssl_cert) {
+    httr::set_config(httr::config(ssl_verifypeer = 0L))
+  }
+
+  response <- httr::PATCH(
+    paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
+    body = patch_data,
+    encode = "json",
+    httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
+                      "Authorization" = auth_JWT)
+  )
+
+  if (httr::status_code(response) >= 400) {
+    stop("API patch cell sets request failed with status code: ", httr::status_code(response))
+  }
+}
 
 #' replace cell class by key
 #'
@@ -125,34 +142,17 @@ format_cluster_cellsets <- function(cell_sets,
 #' @return NULL
 #' @export
 #'
-replace_cell_class_through_api <-
-  function(cell_class_object,
-           api_url,
-           experiment_id,
-           cell_class_key,
-           auth_JWT,
-           ignore_ssl_cert) {
+replace_cell_class_through_api <- function(cell_class_object, api_url, experiment_id, cell_class_key, auth_JWT, ignore_ssl_cert) {
   message("updating cellsets through API")
   httr_query <- paste0("$[?(@.key == \"", cell_class_key, "\")]")
-
-  if (ignore_ssl_cert) {
-    httr::set_config(httr::config(ssl_verifypeer = 0L))
-  }
 
   body <- list(list(
       "$match" = list(query = httr_query, value = list("$remove" = TRUE))
     ),
     list("$prepend" = cell_class_object))
 
-  httr::PATCH(
-    paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-    body = body,
-    encode = "json",
-    httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
-                      "Authorization" = auth_JWT)
-  )
+  patch_cell_sets(api_url, experiment_id, body, auth_JWT, ignore_ssl_cert)
 }
-
 
 #' Replace and Append Cell Metadata Through API
 #'
@@ -168,30 +168,14 @@ replace_cell_class_through_api <-
 #' @return The response from the API after performing the PATCH operation.
 #'
 #' @export
-replace_cl_metadata_through_api <-
-  function(cl_metadata_cellsets,
-           api_url,
-           experiment_id,
-           auth_JWT,
-           ignore_ssl_cert) {
-
-    if (ignore_ssl_cert) {
-      httr::set_config(httr::config(ssl_verifypeer = 0L))
-    }
-
-    appends <- list()
-    for (i in seq_along(cl_metadata_cellsets)) {
-      appends <- append(appends, list(list("$append" = cl_metadata_cellsets[[i]])))
-    }
-
-    httr::PATCH(
-      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-      body = appends,
-      encode = "json",
-      httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
-                        "Authorization" = auth_JWT)
-    )
+replace_cl_metadata_through_api <- function(cl_metadata_cellsets, api_url, experiment_id, auth_JWT, ignore_ssl_cert) {
+  appends <- list()
+  for (i in seq_along(cl_metadata_cellsets)) {
+    appends <- append(appends, list(list("$append" = cl_metadata_cellsets[[i]])))
   }
+
+  patch_cell_sets(api_url, experiment_id, appends, auth_JWT, ignore_ssl_cert)
+}
 
 #' Download and load cell-level metadata tsv file
 #'
@@ -242,10 +226,16 @@ make_cl_metadata_cellsets <- function(scdata, config) {
     make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
 
   var_types <- detect_variable_types(cl_metadata)
+  message("Detected cell-level metadata variable types:\n")
+  str(var_types)
+
 
   # creates cell-level metadata cellsets, setting the correct type
   cl_metadata_cellsets <-
     format_cl_metadata_cellsets(cl_metadata, var_types, scdata@misc$color_pool)
+
+  message("cell-level metadata cellsets created:\n")
+  str(cl_metadata_cellsets)
 
   return(cl_metadata_cellsets)
 }
@@ -282,16 +272,21 @@ get_cell_id_barcode_map <- function(scdata) {
 #'
 #' @return data.table of cell_ids and cell-level metadata
 #' @export
-make_cl_metadata_table <- function(cl_metadata, barcode_cell_ids) {
+make_cl_metadata_table <- function(cl_metadata, barcode_cell_id_map) {
 
   join_cols <- c("barcode")
+
+  # remove Seurat sample suffix if present only in one of the tables
+  if (!all(grepl("_\\d+$", c(barcode_cell_id_map$barcode, cl_metadata$barcode)))) {
+    barcode_cell_id_map[, barcode := gsub("_\\d+$", "", barcode)]
+  }
+
   if (!"samples" %in% names(cl_metadata)) {
     join_cols <- setdiff(join_cols, "samples")
     # remove samples from barcode-cell_id map if not used for join
-    barcode_cell_ids <- barcode_cell_ids[, -"samples"]
+    barcode_cell_id_map <- barcode_cell_id_map[, -"samples"]
   }
-
-  cl_metadata[barcode_cell_ids, , on = join_cols]
+  cl_metadata[barcode_cell_id_map, ,on = join_cols, nomatch = NULL]
 }
 
 
@@ -325,6 +320,27 @@ find_clm_columns <- function(check_vals) {
 }
 
 
+#' Find group columns for cell-level metadata
+#'
+#' Find columns that can be used to group cells with sample granularity in
+#' cell-level metadata. The only requirement is that the column has the same
+#' value for all cells in a sample.
+#'
+#' @param cl_metadata data.table
+#'
+#' @return vector of column names
+#' @export
+#'
+find_group_columns_cl_metadata <- function(cl_metadata) {
+
+  # ignore duplicate_barcode column, manually defined as clm
+  ndistinct_sample <- get_n_distinct_per_sample(cl_metadata[,-"duplicate_barcode"])
+  one_per_sample <- apply(ndistinct_sample, 2, function(x) all(x == 1))
+  group_cols <- names(ndistinct_sample)[one_per_sample]
+
+  return(group_cols)
+}
+
 #' Detect cell-level metadata variable types
 #'
 #' detect cell level metadata types
@@ -342,7 +358,7 @@ detect_variable_types <- function(cl_metadata) {
   # can only find group columns when samples are available
   if ("samples" %in% names(cl_metadata)) {
     # do not remove dups; if a user uploads some metadata it should be there
-    clm_per_sample_cols <- find_group_columns(cl_metadata, remove.dups = F)
+    clm_per_sample_cols <- find_group_columns_cl_metadata(cl_metadata)
   } else {
     clm_per_sample_cols <- character()
   }
@@ -353,7 +369,8 @@ detect_variable_types <- function(cl_metadata) {
   # remove samples var, useless from this point on
   clm_cols <- grep("^samples$", clm_cols, value = T, invert = T)
 
-  clm_cols <- c(clm_cols, "duplicate_barcode")
+  # duplicate_barcode may be detected as CLMPerSample, manually define it as CLM
+  clm_cols <- union(clm_cols, "duplicate_barcode")
 
   return(list(CLM = clm_cols, CLMPerSample = clm_per_sample_cols))
 }
@@ -393,14 +410,23 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
       cell_ids <- cl_metadata[get(variable) == values[i], cells_id]
     }
 
-    cl_metadata_cellset$children[[i]] <- list(
-      key = uuid::UUIDgenerate(),
-      name = as.character(values[i]),
-      rootNode = FALSE,
-      type = type,
-      color = color_pool[1],
-      cellIds = ensure_is_list_in_json(cell_ids)
+    # Empty cell sets shouldn't be created based on cell level metadata
+    if (length(cell_ids) == 0) next
+
+    cl_metadata_cellset$children <- append(
+      cl_metadata_cellset$children,
+      list(
+        list(
+          key = uuid::UUIDgenerate(),
+          name = as.character(values[i]),
+          rootNode = FALSE,
+          type = type,
+          color = color_pool[1],
+          cellIds = ensure_is_list_in_json(cell_ids)
+        )
+      )
     )
+
     color_pool <- color_pool[-1]
   }
 

@@ -15,7 +15,7 @@ list of cell-level metadata types
 \description{
 detect cell level metadata types
 \itemize{
-\item group (CLMPerSample, like metadataCategorital)
+\item group (CLMPerSample, like metadataCategorical)
 \item "cellset type" (CLM, like cellSets)
 \item excludes continuous/high cardinality (to avoid infinite cellsets)
 }

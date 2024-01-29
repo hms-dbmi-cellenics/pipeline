@@ -30,8 +30,9 @@ mock_color_pool <- function(n) {
 }
 
 
-mock_cl_metadata <- function(scdata) {
-  barcode <-  rownames(scdata@meta.data)
+mock_cl_metadata <- function(scdata, optional_custom_barcodes) {
+  barcode <- if (missing(optional_custom_barcodes)) rownames(scdata@meta.data) else optional_custom_barcodes
+
   samples <- rep_len(paste0("sample_", 1:4), length(barcode))
   cell_type <- rep_len(paste0("cell_type_", 1:10), length(barcode))
   group_var <- rep_len(paste0("group_", 1:2), length(barcode))
@@ -143,6 +144,27 @@ test_that("runClusters uses active.reduction in misc slot", {
   for (algo in algos) {
     expect_error(runClusters(algo,resolution, data), NA)
   }
+})
+
+mock_patch <- function(url, ...) {
+  response <- list(status_code = 400, content = "API Error!")
+  class(response) <- "response"
+  return(response)
+}
+
+test_that("patch_cell_sets throws error on unsuccessful response", {
+  stub(patch_cell_sets, "httr::PATCH", mock_patch)
+
+  expect_error(
+    patch_cell_sets(
+      "api_url",
+      "experiment_id",
+      list(),  
+      "auth_JWT",
+      FALSE
+    ),
+    "API patch cell sets request failed with status code: 400"
+  )
 })
 
 with_fake_http(
@@ -607,6 +629,23 @@ test_that("make_cl_metadata_cellsets makes cell-level metadata cellsets.", {
   }
 })
 
+test_that("make_cl_metadata_cellsets skips making cellsets that are empty (no cellIds).", {
+  config <- mock_config()
+  scdata <- mock_scdata()
+  cl_metadata <- mock_cl_metadata(
+    scdata,
+    c(paste0("missing-barcode", 1:50))
+  )
+
+  local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
+
+  res <- stubbed_make_cl_metadata_cellsets(scdata, config)
+  withr::defer(unlink(file.path(".", basename(config$metadata_s3_path))))
+
+  expect_equal(length(res[[1]]$children), 0)
+  expect_equal(length(res[[2]]$children), 0)
+})
+
 
 with_fake_http(
   test_that("replace_cl_metadata_through_api sends patch request", {
@@ -648,10 +687,27 @@ test_that("make_cl_metadata_table works with duplicate barcodes", {
   }
 })
 
+
+test_that("make_cl_metadata_table works when seurat object contains barcode suffix but the uploaded table does not.", {
+  config <- mock_config()
+  scdata <- mock_scdata()
+  cl_metadata <- mock_cl_metadata(scdata)
+
+  barcode_cell_id_map <- get_cell_id_barcode_map(scdata)
+  expected <- make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
+  barcode_cell_id_map$barcode <- paste0(barcode_cell_id_map$barcode, "_1")
+
+  res <- make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
+
+  expect_equal(res, expected)
+})
+
+
 test_that("add_duplicate_barcode_column handles empty input correctly", {
   empty_cl_metadata <- data.frame(barcode = character(0))
   expect_equal(nrow(add_duplicate_barcode_column(empty_cl_metadata)), 0)
 })
+
 
 test_that("add_duplicate_barcode_column handles unique barcodes correctly", {
   unique_cl_metadata <- data.frame(barcode = c("BC01", "BC02", "BC03"))
