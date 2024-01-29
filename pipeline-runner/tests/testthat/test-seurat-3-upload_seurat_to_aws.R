@@ -285,3 +285,19 @@ test_that("find_cluster_columns puts 'louvain' column first if exists", {
   cluster_cols <- find_cluster_columns(scdata)
   expect_equal(cluster_cols[1], 'louvain')
 })
+
+
+test_that("find_cluster_columns omits columns that start with scDblFinder", {
+
+  expected_cols <- c('RNA_snn_res.0.8', 'letter.idents', 'groups', 'RNA_snn_res.1')
+
+  scdata <- mock_scdata()
+  sample_names <- c('A', 'B', 'C', 'D')
+  samples <- rep(sample_names, each = ncol(scdata)/4)
+  scdata$samples <- samples
+
+  scdata$scDblFinder.cluster <- scdata$RNA_snn_res.0.8
+
+  cluster_cols <- find_cluster_columns(scdata)
+  expect_setequal(cluster_cols, expected_cols)
+})

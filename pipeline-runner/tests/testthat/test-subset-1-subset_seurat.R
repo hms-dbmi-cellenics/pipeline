@@ -28,7 +28,7 @@ mock_scdata_list <- function(samples = rep("mock_sample_1_id", 80)) {
 }
 
 mock_input <- function(parent_experiment_id, cellset_keys, samples = rep("mock_sample_1_id", 80), sample_ids = c("mock_sample_1_id")) {
-  parentProcessingConfig <- construct_qc_config(mock_scdata_list(samples), unfiltered_samples = sample_ids)
+  parentProcessingConfig <- construct_qc_config(mock_scdata_list(samples), unfiltered_samples = sample_ids, technology = "10x")
 
   list(
     parentExperimentId = parent_experiment_id,
@@ -190,7 +190,7 @@ test_that("generate_subset_config works correctly", {
   parent_sample_ids <- c("sample-id-1", "sample-id-2", "sample-id-3", "sample-id-4")
   scdata_list <- mock_scdata_list(samples = rep(parent_sample_ids, 20))
 
-  parent_processing_config <- construct_qc_config(scdata_list, unfiltered_samples = parent_sample_ids)
+  parent_processing_config <- construct_qc_config(scdata_list, unfiltered_samples = parent_sample_ids, technology = "10x")
 
   # Make some of the configs unique to each sample
   # so we can check that the translation preserves the configs

@@ -239,3 +239,46 @@ test_that("load_seurat identifies and log-transforms counts stored in data assay
   unlink(data_dir, recursive = TRUE)
 })
 
+test_that("load_seurat works when default reducion is different than umap or tsne", {
+  # setup
+  input_dir <- tempdir()
+  data_dir <- file.path(input_dir, 'pbmc_small')
+  dir.create(data_dir)
+  orig_scdata <- mock_scdata(data_dir)
+  withr::defer(unlink(data_dir, recursive = TRUE))
+
+  # simulate the condition where renaming is needed
+  names(orig_scdata@reductions)[names(orig_scdata@reductions) == "tsne"] <- "tsne.ref"
+  orig_scdata@reductions$tsne <- orig_scdata@reductions$tsne.ref
+  saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
+
+  prev_out <- list(config = list(samples = 'pbmc_small'))
+  res <- load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  scdata <- res$output$scdata
+
+  expect_true('tsne' %in% names(scdata@reductions))
+  expect_equal('tsne', SeuratObject::DefaultDimReduc(scdata))
+})
+
+test_that("update_reduction_name correctly renames dimensionality reductions", {
+  # setup
+  input_dir <- tempdir()
+  data_dir <- file.path(input_dir, 'pbmc_small')
+  dir.create(data_dir)
+  scdata <- mock_scdata(data_dir)
+  withr::defer(unlink(data_dir, recursive = TRUE))
+
+  # simulate the condition where renaming is needed
+  names(scdata@reductions)[names(scdata@reductions) == 'tsne'] <- 'tsne.ref'
+  scdata@reductions$tsne <- scdata@reductions$tsne.ref
+
+  red_name <- SeuratObject::DefaultDimReduc(scdata)
+  red_match <- grep('umap|tsne', red_name, value = TRUE)
+  is_umap <- grepl('umap', red_match)
+  is_tsne <- grepl('tsne', red_match)
+  new_red_name <- ifelse(is_umap, 'umap', ifelse(is_tsne, 'tsne', NA))
+
+  updated_scdata <- update_reduction_name(scdata, red_name, new_red_name)
+  expect_equal(SeuratObject::DefaultDimReduc(updated_scdata), new_red_name)
+  expect_true('tsne.ori' %in% names(updated_scdata@reductions))
+})

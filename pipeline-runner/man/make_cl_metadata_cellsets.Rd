@@ -9,7 +9,7 @@ make_cl_metadata_cellsets(scdata, config)
 \arguments{
 \item{scdata}{SeuratObject}
 
-\item{config}{list with AWS config and metadataS3Paths}
+\item{config}{list with AWS config and metadata_s3_path}
 }
 \value{
 list of cell-level metadata cellsets

@@ -4,7 +4,7 @@
 \alias{make_cl_metadata_table}
 \title{make cell-level metadata - cell_ids table}
 \usage{
-make_cl_metadata_table(cl_metadata, barcode_cell_ids)
+make_cl_metadata_table(cl_metadata, barcode_cell_id_map)
 }
 \arguments{
 \item{cl_metadata}{data.table with cell-level metadata}

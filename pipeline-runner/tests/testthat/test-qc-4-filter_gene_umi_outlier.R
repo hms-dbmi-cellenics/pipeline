@@ -164,6 +164,7 @@ test_that("Gene UMI filter works if input is a a float-interpretable string", {
   cells_id <- mock_ids()
   nstart <- ncol(scdata_list[[sample_2_id]])
   config$auto <- FALSE
+  config$filterSettings$predictionInterval <- "0.3"
 
   out_number <- filter_gene_umi_outlier(scdata_list, config, sample_2_id, cells_id)
 
@@ -183,3 +184,25 @@ test_that("Gene UMI filter throws error if input is a non float-interpretable st
 
   expect_error(filter_gene_umi_outlier(scdata, config, sample_2_id, cells_id))
 })
+
+test_that("Gene UMI filter works with manual settings and default prediction interval value", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  config <- mock_config()
+  cells_id <- mock_ids()
+  type <- "spline"
+  config$filterSettings$regressionType <- type
+
+  config$auto <- TRUE
+  out_auto <- filter_gene_umi_outlier(scdata_list, config, sample_1_id, cells_id)
+
+  config$auto <- FALSE
+  out_manual <- filter_gene_umi_outlier(scdata_list, config, sample_1_id, cells_id)
+
+  expect_null(config$filterSettings$predictionInterval)
+  expect_equal(
+    out_auto$config$filterSettings$regressionTypeSettings[[type]]$p.level,
+    out_manual$config$filterSettings$regressionTypeSettings[[type]]$p.level
+  )
+})
+
+
