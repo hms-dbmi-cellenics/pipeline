@@ -91,15 +91,15 @@ test_that("compute_sample_doublet_scores handles technology 'parse' correctly", 
 test_that("compute_sample_doublet_scores uses correct dbr for different Parse kits", {
   counts <- mock_counts()
 
-  dbr_mini <- DOUBLET_RATE_MINI
+  dbr_mini <- DOUBLET_RATE_PARSE[["mini"]]
   set.seed(RANDOM_SEED)
   expected_sce_mini <- suppressWarnings(scDblFinder::scDblFinder(counts, dbr = dbr_mini))
 
-  dbr_wt <- DOUBLET_RATE_WT
+  dbr_wt <- DOUBLET_RATE_PARSE[["WT"]]
   set.seed(RANDOM_SEED)
   expected_sce_wt <- suppressWarnings(scDblFinder::scDblFinder(counts, dbr = dbr_wt))
 
-  dbr_mega <- DOUBLET_RATE_MEGA
+  dbr_mega <- DOUBLET_RATE_PARSE[["mega"]]
   set.seed(RANDOM_SEED)
   expected_sce_mega <- suppressWarnings(scDblFinder::scDblFinder(counts, dbr = dbr_mega))
 
