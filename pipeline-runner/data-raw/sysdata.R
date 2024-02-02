@@ -113,6 +113,9 @@ pipeline_version <- 2
 
 UNISAMPLE <- "unisample"
 
+# Parse kits empirical doublet rates
+DOUBLET_RATE_PARSE <- list(mini = 0.046, WT = 0.034, mega = 0.064)
+
 # pipeline error constants
 errors <- list(
   ERROR_SEURAT_RDS = 'ERROR_SEURAT_RDS',
@@ -148,6 +151,7 @@ usethis::use_data(
   RIBOSOMAL_REGEX,
   pipeline_version,
   UNISAMPLE,
+  DOUBLET_RATE_PARSE,
   errors,
   internal = TRUE,
   overwrite = TRUE

@@ -27,7 +27,7 @@ mock_scdata_list <- function() {
 test_that("cellsize filter is disabled by default and classifier is pre-filtered", {
   scdata_list <- mock_scdata_list()
   unfiltered_samples <- c("123abc")
-  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples)
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, technology = "10X")
 
   for (sample in names(scdata_list)) {
     if (sample %in% unfiltered_samples) {
@@ -46,7 +46,7 @@ test_that("cellsize filter is disabled by default and classifier is pre-filtered
 test_that("cellsize filter is disabled by default and classifier is not pre-filtered", {
   scdata_list <- mock_scdata_list()
   unfiltered_samples <- c()
-  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples)
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, technology = "10X")
 
   for (sample in names(scdata_list)) {
     expect_false(qc_config$cellSizeDistribution[[sample]]$enabled)
@@ -63,7 +63,7 @@ test_that("cellsize filter is disabled by default and classifier is not pre-filt
 test_that("customize_doublet_config sets threshold to 0 when there are no singlets", {
   scdata_list <- mock_scdata_list()
   unfiltered_samples <- c("123abc")
-  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples)
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, technology = "10X")
 
   for (sample in names(scdata_list)) {
     scdata_list[[sample]]$doublet_class <- "doublet"
@@ -76,7 +76,7 @@ test_that("customize_doublet_config sets threshold to 0 when there are no single
 test_that("classifier filter config is enabled for unfiltered samples and disabled for pre-filtered samples", {
   scdata_list <- mock_scdata_list()
   unfiltered_samples <- c("123abc")
-  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples)
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, technology = "10X")
 
   for (sample in names(scdata_list)) {
     if (sample %in% unfiltered_samples) {
@@ -86,5 +86,25 @@ test_that("classifier filter config is enabled for unfiltered samples and disabl
       expect_false(qc_config$classifier[[sample]]$enabled)
       expect_true(qc_config$classifier[[sample]]$prefiltered)
     }
+  }
+})
+
+test_that("NumGenesVsUmis filter config has spline as default for Parse Datasets", {
+  scdata_list <- mock_scdata_list()
+  unfiltered_samples <- c("123abc")
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, "parse")
+
+  for (sample in names(scdata_list)) {
+    expect_true(qc_config$numGenesVsNumUmis[[sample]]$filterSettings$regressionType == "spline")
+  }
+})
+
+test_that("NumGenesVsUmis filter config has linear as default for 10x datasets", {
+  scdata_list <- mock_scdata_list()
+  unfiltered_samples <- c("123abc")
+  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, "10X")
+
+  for (sample in names(scdata_list)) {
+    expect_true(qc_config$numGenesVsNumUmis[[sample]]$filterSettings$regressionType == "linear")
   }
 })

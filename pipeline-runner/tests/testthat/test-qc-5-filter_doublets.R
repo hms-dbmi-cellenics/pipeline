@@ -4,14 +4,15 @@ mock_ids <- function() {
 }
 
 
-mock_config <- function(thr = 0.1, auto = FALSE, enabled = TRUE, recomputeDoubletScore = FALSE) {
+mock_config <- function(thr = 0.1, auto = FALSE, enabled = TRUE, recomputeDoubletScore = FALSE, sampleTechnology = "10x") {
   config <- list(
     auto = auto,
     enabled = enabled,
     filterSettings = list(
       probabilityThreshold = thr
     ),
-    recomputeDoubletScore = recomputeDoubletScore
+    recomputeDoubletScore = recomputeDoubletScore,
+    sampleTechnology = sampleTechnology
   )
   return(config)
 }
