@@ -91,9 +91,7 @@ rename_active_ident <- function(meta) {
       dup.cols <- c(dup.cols, col)
   }
 
-  # remove the first duplicate and rename active.ident
-  # keep same order (active.ident likely first) so that it is default clustering
-  # will result in same clusterings as supplied by user
+  # remove active.ident and move originating column first column (makes default)
   if (length(dup.cols)) {
     meta$active.ident <- NULL
     meta <- meta |> dplyr::relocate(dup.cols[1])
