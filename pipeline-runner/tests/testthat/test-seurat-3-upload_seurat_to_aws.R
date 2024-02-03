@@ -318,7 +318,6 @@ test_that("rename_active_ident renames active.ident correctly when there is a du
   expect_equal(colnames(meta_renamed)[1], expected_name)
   expect_false('active.ident' %in% colnames(meta_renamed))
   expect_equal(colnames(meta_renamed), c('cell_type', 'other_clustering'))
-
 })
 
 test_that("rename_active_ident does not rename active.ident when there isn't a duplicate column", {
@@ -331,5 +330,4 @@ test_that("rename_active_ident does not rename active.ident when there isn't a d
 
   meta_renamed <- rename_active_ident(meta)
   expect_identical(meta, meta_renamed)
-
 })
