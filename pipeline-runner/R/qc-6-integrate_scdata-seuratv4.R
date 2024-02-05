@@ -231,16 +231,12 @@ seuratv4_geosketch_find_and_integrate_anchors <-
     # merge
     scdata <- create_scdata(scdata_list, cells_id, merge_data = TRUE)
     # geosketch needs PCA to be run
-    active_assay <- Seurat::DefaultAssay(scdata)
-    switch(active_assay,
-      RNA = {
-        scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
-      },
-      SCT = {
-        scdata_features <- Seurat::SelectIntegrationFeatures(object.list = scdata_list, nfeatures = 2000)
-        Seurat::VariableFeatures(scdata[["SCT"]]) <- scdata_features
-      }
-    )
+  if (Seurat::DefaultAssay(scdata) == "SCT") {
+    scdata_features <- Seurat::SelectIntegrationFeatures(object.list = scdata_list, nfeatures = 2000)
+    Seurat::VariableFeatures(scdata[["SCT"]]) <- scdata_features
+  } else {
+    scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", nfeatures = 2000, verbose = FALSE)
+  }
     scdata <- scdata |>
       Seurat::ScaleData(verbose = FALSE) |>
       Seurat::RunPCA(npcs = npcs, verbose = FALSE)
