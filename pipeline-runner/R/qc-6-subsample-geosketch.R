@@ -30,7 +30,7 @@ run_geosketch <- function(scdata, dims, perc_num_cells, reduction = "pca") {
   embeddings <- scdata@reductions[[reduction]]@cell.embeddings[, 1:dims]
   index <- unlist(geosketch$gs(embeddings, as.integer(num_cells), one_indexed = TRUE))
   sketch <- scdata[, index]
-  Seurat::DefaultAssay(sketch) <- "RNA"
+
   sketch@misc[["active.reduction"]] <- reduction
 
   return(list(scdata = scdata, sketch = sketch))
