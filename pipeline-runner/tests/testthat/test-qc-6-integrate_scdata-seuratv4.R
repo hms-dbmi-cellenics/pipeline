@@ -313,24 +313,22 @@ test_that("misc slot is complete after Seurat V4 integration with geosketch", {
 })
 
 
-test_that("default assay in the integrated object matches normalization method after Seurat V4 integration with geosketch", {
+test_that("default assay in the integrated object matches normalisation method after Seurat V4 integration with geosketch", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
   c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
   cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
-
-  config_rna <- list(
-    dimensionalityReduction = list(numPCs = 10, method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "logNormalize"))),
-    downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
-  integrated_scdata_rna <- suppressWarnings(integrate_scdata(scdata_list, config_rna, "", cells_id, task_name = "dataIntegration")$data)
-  expect_s4_class(integrated_scdata_rna, "Seurat")
-  expect_equal(Seurat::DefaultAssay(integrated_scdata_rna), "RNA")
-
-  config_sct <- list(
-    dimensionalityReduction = list(numPCs = 10, method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "SCT"))),
-    downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
-  integrated_scdata_sct <- suppressWarnings(integrate_scdata(scdata_list, config_sct, "", cells_id, task_name = "dataIntegration")$data)
-  expect_s4_class(integrated_scdata_sct, "Seurat")
-  expect_equal(Seurat::DefaultAssay(integrated_scdata_sct), "SCT")
+  
+  normalisation_methods <- c("logNormalize", "SCT")
+  
+  for (normalisation_method in normalisation_methods) {
+    config <- list(
+      dimensionalityReduction = list(numPCs = 10, method = "rpca"),
+      dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = normalisation_method))),
+      downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
+    
+    integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")$data)
+    expect_s4_class(integrated_scdata, "Seurat")
+    expected_assay <- if (normalisation_method == "logNormalize") "RNA" else "SCT"
+    expect_equal(Seurat::DefaultAssay(integrated_scdata), expected_assay)
+  }
 })
