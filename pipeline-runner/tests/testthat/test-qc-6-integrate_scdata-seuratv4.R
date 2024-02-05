@@ -272,7 +272,6 @@ test_that("create_scdata merge the data slots when merge_data is TRUE", {
 
 
 test_that("misc slot is complete after Seurat V4 integration", {
-
   # mock a bigger dataset to run Seurat v4 integration without skipping it
   c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
   cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
@@ -311,4 +310,27 @@ test_that("misc slot is complete after Seurat V4 integration with geosketch", {
   expected_misc_names <- c("gene_annotations", "color_pool", "ingestionDate", "active.reduction", "numPCs", "geosketch")
 
   expect_setequal(names(integrated_scdata@misc), expected_misc_names)
+})
+
+
+test_that("default assay in the integrated object matches normalization method after Seurat V4 integration with geosketch", {
+  # mock a bigger dataset to run Seurat v4 integration without skipping it
+  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+
+  config_rna <- list(
+    dimensionalityReduction = list(numPCs = 10, method = "rpca"),
+    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "logNormalize"))),
+    downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
+  integrated_scdata_rna <- suppressWarnings(integrate_scdata(scdata_list, config_rna, "", cells_id, task_name = "dataIntegration")$data)
+  expect_s4_class(integrated_scdata_rna, "Seurat")
+  expect_equal(Seurat::DefaultAssay(integrated_scdata_rna), "RNA")
+
+  config_sct <- list(
+    dimensionalityReduction = list(numPCs = 10, method = "rpca"),
+    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "SCT"))),
+    downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
+  integrated_scdata_sct <- suppressWarnings(integrate_scdata(scdata_list, config_sct, "", cells_id, task_name = "dataIntegration")$data)
+  expect_s4_class(integrated_scdata_sct, "Seurat")
+  expect_equal(Seurat::DefaultAssay(integrated_scdata_sct), "SCT")
 })
