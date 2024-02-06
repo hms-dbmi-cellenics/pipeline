@@ -276,8 +276,8 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
     }
 
 
-  } else if (process_name %in% c("gem2s", "seurat")) {
-    string_value <- ifelse(process_name == "gem2s", "GEM2SResponse", "SeuratResponse")
+  } else if (process_name %in% c("gem2s", "seurat", "subset", "copy")) {
+    string_value <- ifelse(process_name == "seurat", "SeuratResponse", "GEM2SResponse")
 
     # TODO - REMOVE THE DUPLICATE EXPERIMENT ID FROM INPUT RESPONSE
     response <- list(
