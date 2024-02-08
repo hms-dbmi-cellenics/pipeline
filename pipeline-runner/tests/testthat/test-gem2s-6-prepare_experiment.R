@@ -55,8 +55,20 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL, prev_out_config =
   create_seurat(NULL, NULL, prev_out)$output
 }
 
-mock_input <- function(){
+mock_gem2s_input <- function(){
   input <- list(input = list(type="10X"), experimentId = "1234")
+}
+
+mock_subset_input <- function(){
+  input <- list(
+    experimentId = "1234",
+    taskName = "prepareExperiment",
+    processName = "subset",
+    ignoreSslCert = FALSE,
+    experimentName = "Subset of parentExperiment",
+    authJWT = "Bearar somehash",
+    input = list(type="10X")
+  )
 }
 
 test_that("prepare_experiment ensures gene_annotations are indexed correctly for each sample", {
@@ -64,7 +76,7 @@ test_that("prepare_experiment ensures gene_annotations are indexed correctly for
   samples <- c("a", "b", "c")
   prev_out <- mock_prev_out(samples = samples)
 
-  input <- mock_input()
+  input <- mock_gem2s_input()
 
   # remove some genes from each sample
   prev_out$counts_list$a <- prev_out$counts_list$a[-c(1:9), ]
@@ -147,7 +159,7 @@ test_that("add_metadata_to_samples generated cell ids do not depend on sample or
 
 test_that("prepare_experiment generates qc_config that matches snapshot", {
   prev_out <- mock_prev_out()
-  input <- mock_input()
+  input <- mock_gem2s_input()
   task_out <- prepare_experiment(input, NULL, prev_out)$output
 
   expect_snapshot(str(task_out$qc_config))
@@ -159,7 +171,7 @@ test_that("prepare_experiment creates a list of valid Seurat objects", {
   samples <- c("a", "b", "c")
   prev_out <- mock_prev_out(samples )
   scdata_list <- prev_out$scdata_list
-  input <- mock_input()
+  input <- mock_gem2s_input()
 
   task_out <- prepare_experiment(input, NULL, prev_out)$output
   scdata_list <- task_out$scdata_list
@@ -181,7 +193,7 @@ test_that("prepare_experiment properly populates the misc slot", {
   prev_out <- mock_prev_out(samples )
   scdata_list <- prev_out$scdata_list
 
-  input <- mock_input()
+  input <- mock_gem2s_input()
 
   task_out <- prepare_experiment(input, NULL, prev_out)$output
   scdata_list <- task_out$scdata_list
@@ -205,7 +217,7 @@ test_that("prepare_experiment properly populates the metadata slot", {
   prev_out <- mock_prev_out(samples)
   scdata_list <- prev_out$scdata_list
 
-  input <- mock_input()
+  input <- mock_gem2s_input()
 
   task_out <- prepare_experiment(input, NULL, prev_out)$output
   scdata_list <- task_out$scdata_list
@@ -240,7 +252,7 @@ test_that("Mitochondrial percentage is correct", {
   prev_out <- mock_prev_out(samples)
   scdata_list <- prev_out$scdata_list
 
-  input <- mock_input()
+  input <- mock_gem2s_input()
 
   task_out <- prepare_experiment(input, NULL, prev_out)$output
   scdata_list <- task_out$scdata_list
@@ -259,14 +271,14 @@ test_that("Mitochondrial percentage is correct", {
   }
 })
 
-test_that("Skips qc config creation if it is already created in prev_out", {
+test_that("Skips qc config creation if running a subset experiment (it is already created in prev_out)", {
   # If the config is already created in a previous step (we are running subset)
   # we will pass that config in prev_out
 
   samples <- c("a", "b", "c")
   prev_out <- mock_prev_out(samples = samples, prev_out_config = c('mocked'))
 
-  input <- mock_input()
+  input <- mock_subset_input()
 
   # re-create seurat object
   prev_out <- create_seurat(NULL, NULL, prev_out)$output
