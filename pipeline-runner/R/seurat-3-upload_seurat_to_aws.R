@@ -137,7 +137,7 @@ test_groups_equal <- function(vals1, vals2) {
   vals1 <- make_vals_numeric(vals1)
   vals2 <- make_vals_numeric(vals2)
 
-  all(vals1 == vals2)
+  all(vals1 == vals2, na.rm = TRUE)
 }
 
 
