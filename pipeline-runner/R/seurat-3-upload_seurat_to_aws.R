@@ -25,7 +25,7 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   for (i in seq_along(cluster_columns)) {
     col <- cluster_columns[i]
 
-    # first cluster column used as 'louvain' clusters
+    # first cluster column used as 'louvain' (default) clusters
     method <- ifelse(i == 1, 'louvain', col)
 
     cluster_sets[[i]] <- data.frame(
@@ -77,6 +77,30 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
+# rename active.ident (not familiar except to bioinformaticians)
+# to the user supplied column name
+# ensures it will still be the default clustering
+rename_active_ident <- function(meta) {
+
+  # determine columns that are duplicates of active.ident
+  test_vals <- meta$active.ident
+  dup.cols <- c()
+  for (col in setdiff(colnames(meta), 'active.ident')) {
+    col_vals <- meta[[col]]
+    if (identical(test_vals, col_vals))
+      dup.cols <- c(dup.cols, col)
+  }
+
+  # remove active.ident and move originating column first column (makes default)
+  if (length(dup.cols)) {
+    meta$active.ident <- NULL
+    meta <- meta |> dplyr::relocate(dup.cols[1])
+  }
+
+  return(meta)
+}
+
+
 find_cluster_columns <- function(scdata) {
   meta <- scdata@meta.data
 
@@ -85,9 +109,13 @@ find_cluster_columns <- function(scdata) {
   group_cols <- c(group_cols, 'samples')
   scdblfinder_cols <- grep('^scDblFinder', colnames(meta), value = TRUE)
 
-  # order meta to indicate preference for louvain clusters
+  # order meta to indicate preference for default clusters
   louvain_cols <- c('louvain', 'active.ident', 'seurat_clusters')
   meta <- meta |> dplyr::relocate(dplyr::any_of(louvain_cols))
+
+  # use user supplied name for active.ident if possible
+  if ('active.ident' %in% colnames(meta))
+    meta <- rename_active_ident(meta)
 
   check_cols <- setdiff(colnames(meta), c(scdblfinder_cols, group_cols))
 

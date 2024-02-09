@@ -301,3 +301,33 @@ test_that("find_cluster_columns omits columns that start with scDblFinder", {
   cluster_cols <- find_cluster_columns(scdata)
   expect_setequal(cluster_cols, expected_cols)
 })
+
+
+test_that("rename_active_ident renames active.ident correctly when there is a duplicate column", {
+
+  meta <- data.frame(
+    active.ident = c('cluster1', 'cluster2', 'cluster3'),
+    cell_type = c('cluster1', 'cluster2', 'cluster3'),
+    other_clustering = c('clusterA', 'clusterA', 'clusterB')
+  )
+
+  expected_name <- 'cell_type'
+
+  meta_renamed <- rename_active_ident(meta)
+
+  expect_equal(colnames(meta_renamed)[1], expected_name)
+  expect_false('active.ident' %in% colnames(meta_renamed))
+  expect_equal(colnames(meta_renamed), c('cell_type', 'other_clustering'))
+})
+
+test_that("rename_active_ident does not rename active.ident when there isn't a duplicate column", {
+
+  meta <- data.frame(
+    active.ident = c('cluster1', 'cluster2', 'cluster3'),
+    cell_type = c('cluster4', 'cluster5', 'cluster6'),
+    other_clustering = c('clusterA', 'clusterA', 'clusterB')
+  )
+
+  meta_renamed <- rename_active_ident(meta)
+  expect_identical(meta, meta_renamed)
+})
