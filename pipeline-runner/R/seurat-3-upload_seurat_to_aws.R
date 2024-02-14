@@ -80,6 +80,9 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 find_cluster_columns <- function(scdata) {
   meta <- scdata@meta.data
 
+  # exclude columns with NA values
+  meta <- meta |> dplyr::select(where(~ !any(is.na(.))))
+
   # exclude all group columns, including duplicates
   group_cols <- find_group_columns(meta, remove.dups = FALSE)
   group_cols <- c(group_cols, 'samples')
@@ -137,7 +140,7 @@ test_groups_equal <- function(vals1, vals2) {
   vals1 <- make_vals_numeric(vals1)
   vals2 <- make_vals_numeric(vals2)
 
-  all(vals1 == vals2, na.rm = TRUE)
+  all(vals1 == vals2)
 }
 
 
