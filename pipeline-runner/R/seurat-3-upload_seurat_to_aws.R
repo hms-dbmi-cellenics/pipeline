@@ -104,6 +104,9 @@ rename_active_ident <- function(meta) {
 find_cluster_columns <- function(scdata) {
   meta <- scdata@meta.data
 
+  # exclude columns with NA values
+  meta <- meta |> dplyr::select(where(~ !any(is.na(.))))
+
   # exclude all group columns, including duplicates
   group_cols <- find_group_columns(meta, remove.dups = FALSE)
   group_cols <- c(group_cols, 'samples')
