@@ -344,3 +344,21 @@ test_that("rename_active_ident does not rename active.ident when there isn't a d
   meta_renamed <- rename_active_ident(meta)
   expect_identical(meta, meta_renamed)
 })
+
+test_that("rename_active_ident works when one column is factor and the other is character", {
+
+  meta <- data.frame(
+    active.ident = c('cluster1', 'cluster2', 'cluster3'),
+    cell_type = factor(c('cluster1', 'cluster2', 'cluster3')),
+    other_clustering = c('clusterA', 'clusterA', 'clusterB')
+  )
+
+  expected_name <- 'cell_type'
+
+  meta_renamed <- rename_active_ident(meta)
+
+  expect_equal(colnames(meta_renamed)[1], expected_name)
+  expect_false('active.ident' %in% colnames(meta_renamed))
+  expect_equal(colnames(meta_renamed), c('cell_type', 'other_clustering'))
+})
+

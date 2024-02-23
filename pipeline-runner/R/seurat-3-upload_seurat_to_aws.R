@@ -83,10 +83,10 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
 rename_active_ident <- function(meta) {
 
   # determine columns that are duplicates of active.ident
-  test_vals <- meta$active.ident
+  test_vals <- as.character(meta$active.ident)
   dup.cols <- c()
   for (col in setdiff(colnames(meta), 'active.ident')) {
-    col_vals <- meta[[col]]
+    col_vals <- as.character(meta[[col]])
     if (identical(test_vals, col_vals))
       dup.cols <- c(dup.cols, col)
   }
