@@ -160,6 +160,19 @@ test_that("make_vals_numeric turns equivalent groups into identical vectors", {
   expect_failure(expect_identical(make_vals_numeric(vals1), bad_make_vals_numeric(vals2)))
 })
 
+test_that("make_vals_numeric works for columns with dates", {
+
+  # works when differently ordered
+  vals1 <- c('a', 'a', 'a', 'a', 'b', 'b', 'b')
+  vals2 <- as.Date(c(rep('1987-06-23', 4), rep('2017-02-07', 3)))
+  expect_identical(make_vals_numeric(vals1), make_vals_numeric(vals2))
+
+  old_make_vals_numeric <- function(vals) as.numeric(factor(vals, levels = unique(vals)))
+
+  expect_failure(expect_identical(make_vals_numeric(vals1), old_make_vals_numeric(vals2)))
+})
+
+
 test_that("add_metadata_to_input adds group metadata to input list", {
 
   scdata <- mock_scdata()

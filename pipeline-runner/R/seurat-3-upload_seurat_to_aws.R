@@ -161,6 +161,7 @@ find_cluster_columns <- function(scdata) {
 }
 
 make_vals_numeric <- function(vals) {
+  vals <- as.character(vals)
   as.numeric(factor(vals, levels = unique(vals)))
 }
 
