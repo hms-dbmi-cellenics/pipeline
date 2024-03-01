@@ -20,7 +20,7 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 
 # install renv to install required R packages
 RUN R -q -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -q -e "remotes::install_github('rstudio/renv')" && \
+    R -q -e "remotes::install_github('rstudio/renv@v1.0.5')" && \
     R -q -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
 # fast pre-restore with pkgbuild
