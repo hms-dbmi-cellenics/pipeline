@@ -6,7 +6,7 @@ renv::upgrade(reload = TRUE)
 
 # start with clean renv package cache
 # only keep renv
-renv_lib <- grep('renv', .libPaths(), value = TRUE)
+renv_lib <- grep('renv/sandbox', .libPaths(), value = TRUE)[1]
 
 del_pkgs <- list.files(renv_lib)
 del_pkgs <- del_pkgs[del_pkgs != 'renv']
@@ -60,9 +60,10 @@ while (!done) {
     done <- TRUE
 
   }, error = function(e) {
+    # browser()
     message(e$message)
     message('Updating failed package')
-    failed.pkg <- gsub("^install of package '(.+?)' failed .+?$", "\\1", e$message)
+    failed.pkg <- gsub("^Error installing package '(.+?)':.+?$", "\\1", e$message)
     updated <<- c(updated, failed.pkg)
 
     renv::install(failed.pkg, prompt = FALSE)

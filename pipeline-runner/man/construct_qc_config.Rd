@@ -4,7 +4,7 @@
 \alias{construct_qc_config}
 \title{Constructs default QC configuration}
 \usage{
-construct_qc_config(scdata_list, unfiltered_samples)
+construct_qc_config(scdata_list, unfiltered_samples, technology)
 }
 \arguments{
 \item{scdata_list}{list of Seurat objects}
