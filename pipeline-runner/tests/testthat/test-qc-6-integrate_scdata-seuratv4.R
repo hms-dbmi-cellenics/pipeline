@@ -317,18 +317,43 @@ test_that("default assay in the integrated object matches normalisation method a
   # mock a bigger dataset to run Seurat v4 integration without skipping it
   c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
   cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
-  
+
   normalisation_methods <- c("logNormalize", "SCT")
-  
+
   for (normalisation_method in normalisation_methods) {
     config <- list(
       dimensionalityReduction = list(numPCs = 10, method = "rpca"),
       dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = normalisation_method))),
       downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
-    
+
     integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")$data)
     expect_s4_class(integrated_scdata, "Seurat")
     expected_assay <- if (normalisation_method == "logNormalize") "RNA" else "SCT"
     expect_equal(Seurat::DefaultAssay(integrated_scdata), expected_assay)
   }
+})
+
+test_that("prepare_scdata_list_for_seurat_integration keeps cells_id cells only", {
+  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+
+ cells_id <- mock_ids()
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = 2, method = "rpca"),
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(seuratv4 = list(
+        numGenes = 1000, normalisation = "logNormalize"
+      ))
+    )
+  )
+
+  # filter out some cells
+  cells_id[[sample_1_id]] <- cells_id[[sample_1_id]][1:10]
+  cells_id[[sample_2_id]] <- cells_id[[sample_2_id]][1:10]
+
+  scdata_list <- prepare_scdata_list_for_seurat_integration(scdata_list, cells_id, config)
+
+  expect_equal(ncol(scdata_list[[sample_1_id]]), length(cells_id[[sample_1_id]]))
+  expect_equal(ncol(scdata_list[[sample_2_id]]), length(cells_id[[sample_2_id]]))
 })
