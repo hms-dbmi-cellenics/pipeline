@@ -83,7 +83,7 @@ run_seuratv4 <- function(scdata_list, config, cells_id) {
 
 #' prepare scdata list for seurat integration
 #'
-#' preprocess the scdata list before integration>
+#' preprocess the scdata list before integration
 #'
 #' @inheritParams run_seuratv4
 #' @return scdata list
