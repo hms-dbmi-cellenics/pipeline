@@ -352,7 +352,7 @@ test_that("prepare_scdata_list_for_seurat_integration keeps cells_id cells only"
   cells_id[[sample_1_id]] <- cells_id[[sample_1_id]][1:10]
   cells_id[[sample_2_id]] <- cells_id[[sample_2_id]][1:10]
 
-  scdata_list <- prepare_scdata_list_for_seurat_integration(scdata_list, cells_id, config)
+  scdata_list <- prepare_scdata_list_for_seurat_integration(scdata_list, config, cells_id)
 
   expect_equal(ncol(scdata_list[[sample_1_id]]), length(cells_id[[sample_1_id]]))
   expect_equal(ncol(scdata_list[[sample_2_id]]), length(cells_id[[sample_2_id]]))
