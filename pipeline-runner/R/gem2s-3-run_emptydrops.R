@@ -32,6 +32,30 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
+determine_dynamic_threshold <- function(sample_counts, adjust = 2, min_distance_from_peak = 0.5) {
+  umi_counts <- Matrix::colSums(sample_counts)
+  log_umi_counts <- log10(umi_counts + 1)
+
+  # Calculate the kernel density estimation on the log10-transformed data with smoothing
+  density_est <- density(log_umi_counts, adjust = adjust)
+  valleys <- find_valleys(density_est, min_distance_from_peak)
+  thresholds <- 10^valleys - 1
+  return(min(thresholds))
+}
+
+find_valleys <- function(density_est, min_distance_from_peak) {
+  gradient <- diff(density_est$y)
+  sign_change <- diff(sign(gradient))
+  potential_valleys <- which(sign_change == 2) + 1
+
+  peak_location <- which.max(density_est$y)
+  peak_x_value <- density_est$x[peak_location]
+
+  # Identify valid valleys based on distance from peak
+  valid_valleys <- potential_valleys[abs(density_est$x[potential_valleys] - peak_x_value) > min_distance_from_peak]
+
+  return(density_est$x[valid_valleys])
+}
 
 #' Calculate empty drops scores for sample
 #'
@@ -51,7 +75,9 @@ compute_sample_edrops <- function(sample_counts) {
 
   set.seed(RANDOM_SEED)
   tryCatch({
-      sample_edrops <- DropletUtils::emptyDrops(sample_counts)
+      dynamic_threshold <- determine_dynamic_threshold(sample_counts)
+      message("EmptyDrops lower = ", dynamic_threshold)
+      sample_edrops <- DropletUtils::emptyDrops(sample_counts, lower = dynamic_threshold)
       return(sample_edrops)
   }, error = function(e) {
       message("Number of cells in sample too low for emptyDrops --> Skipping emptyDrops.")
