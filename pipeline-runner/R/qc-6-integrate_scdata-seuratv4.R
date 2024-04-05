@@ -9,6 +9,7 @@
 #'
 #' @param scdata_list list of SeuratObjects
 #' @param config list of configuration parameters
+#' @param cells_id list of cells ids to keep
 #'
 #' @return normalized and integrated Seurat object
 #' @export
@@ -22,7 +23,6 @@ run_seuratv4 <- function(scdata_list, config, cells_id) {
   }
 
   reduction <- config$dimensionalityReduction$method
-  exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
 
   use_geosketch <- "downsampling" %in% names(config) && config$downsampling$method == "geosketch"
 
@@ -31,17 +31,12 @@ run_seuratv4 <- function(scdata_list, config, cells_id) {
   # use the min of what the user wants and what can be calculated
   npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
 
-  scdata_list <- order_by_size(scdata_list)
+  scdata_list <- prepare_scdata_list_for_seurat_integration(scdata_list, config, cells_id)
 
   # normalize single samples
   for (i in 1:length(scdata_list)) {
     # we need RNA assay to compute the integrated matrix
     Seurat::DefaultAssay(scdata_list[[i]]) <- "RNA"
-
-    # remove cell cycle genes if needed
-    if (length(exclude_groups) > 0) {
-      scdata_list[[i]] <- remove_genes(scdata_list[[i]], exclude_groups)
-    }
 
     if (normalization == "LogNormalize") {
       scdata_list[[i]] <- scdata_list[[i]] |>
@@ -85,6 +80,27 @@ run_seuratv4 <- function(scdata_list, config, cells_id) {
   return(scdata)
 }
 
+
+#' prepare scdata list for seurat integration
+#'
+#' preprocess the scdata list before integration
+#'
+#' @inheritParams run_seuratv4
+#' @return scdata list
+#' @export
+#'
+prepare_scdata_list_for_seurat_integration <- function(scdata_list, config, cells_id) {
+  exclude_groups <- config$dimensionalityReduction$excludeGeneCategories
+  scdata_list <- order_by_size(scdata_list)
+  scdata_list <- remove_filtered_cells(scdata_list, cells_id)
+
+  # remove cell cycle genes if needed
+  if (length(exclude_groups) > 0) {
+    scdata_list <- lapply(scdata_list, remove_genes, exclude_groups)
+  }
+
+  return(scdata_list)
+}
 
 
 #' Find and integrate anchors
