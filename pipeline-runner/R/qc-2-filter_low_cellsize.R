@@ -223,7 +223,7 @@ calc_count_cutoff <- function(scdata,
   # Adjust maximum cells based on sample size if needed
   if (adjust_max_cells) {
     # Define the total number of wells based on the kit type
-    total_wells <- ifelse(parse_kit == "mini", 12, ifelse(parse_kit == "WT", 48, ifelse(parse_kit == "mega", 96, 48)))
+    total_wells <- unlist(PARSE_KIT_WELLS[parse_kit])
     num_samples <- length(unique(scdata@meta.data$samples))
     # Calculate the estimated number of wells per sample
     wells_per_sample <- total_wells / num_samples

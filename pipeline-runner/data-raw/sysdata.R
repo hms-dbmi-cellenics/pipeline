@@ -116,6 +116,9 @@ UNISAMPLE <- "unisample"
 # Parse kits empirical doublet rates
 DOUBLET_RATE_PARSE <- list(mini = 0.046, WT = 0.034, mega = 0.064)
 
+# Parse kits number of wells
+PARSE_KIT_WELLS <- list(mini = 12, WT = 48, mega = 96)
+
 # pipeline error constants
 errors <- list(
   ERROR_SEURAT_RDS = 'ERROR_SEURAT_RDS',
@@ -152,6 +155,7 @@ usethis::use_data(
   pipeline_version,
   UNISAMPLE,
   DOUBLET_RATE_PARSE,
+  PARSE_KIT_WELLS,
   errors,
   internal = TRUE,
   overwrite = TRUE
