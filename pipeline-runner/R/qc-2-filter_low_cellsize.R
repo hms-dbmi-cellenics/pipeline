@@ -53,7 +53,7 @@ filter_low_cellsize <- function(scdata_list, config, sample_id, cells_id, task_n
 
   # update config
   config$filterSettings$minCellSize <- minCellSize
-  message("MIIN CELL SIZE: ", minCellSize)
+  message("MIN CELL SIZE: ", minCellSize)
 
   # Assign updated config to global env so that it can be accessed if there is an error
   config_key <- paste0("config-", task_name, "-", sample_id)
