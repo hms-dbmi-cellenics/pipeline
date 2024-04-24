@@ -213,9 +213,9 @@ calc_count_cutoff <- function(scdata,
   barcode_counts <- scdata@meta.data$nCount_RNA
   barcodes <- rownames(scdata@meta.data)
 
-  df <- data.frame(barcode = barcodes, count = barcode_counts)
-  df <- df[order(-df$count), ]
-  df$rank <- seq_along(df$count)
+  df <- data.table::data.table(barcode = barcodes, count = barcode_counts)
+  df <- df[order(-count)]
+  df[, rank := frank(-count, ties.method = "first")]
 
   df$log_count <- log10(df$count + 1)
   df$log_rank <- log10(df$rank)
