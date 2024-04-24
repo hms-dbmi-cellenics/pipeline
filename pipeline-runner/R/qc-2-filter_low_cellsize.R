@@ -53,6 +53,7 @@ filter_low_cellsize <- function(scdata_list, config, sample_id, cells_id, task_n
 
   # update config
   config$filterSettings$minCellSize <- minCellSize
+  message("MIIN CELL SIZE: ", minCellSize)
 
   # Assign updated config to global env so that it can be accessed if there is an error
   config_key <- paste0("config-", task_name, "-", sample_id)
@@ -162,16 +163,106 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
 # useful for determining a threshold for removing low-quality
 # samples.
 generate_default_values_cellSizeDistribution <- function(scdata, config) {
-  # `CalculateBarcodeInflections` including inflection point calculation
-  threshold_low <- if (ncol(scdata) <= 200) NULL else 100
-  scdata_tmp <- Seurat::CalculateBarcodeInflections(
-    object = scdata,
-    barcode.column = "nCount_RNA",
-    group.column = "samples",
-    threshold.low = threshold_low
-  )
-  # returned is both the rank(s) as well as inflection point
-  # extracting only inflection point(s)
-  sample_subset <- Seurat::Tool(scdata_tmp, slot = "Seurat::CalculateBarcodeInflections")$inflection_points
-  return(sample_subset$nCount_RNA)
+
+  result <- calc_count_cutoff(scdata)
+  inflection_point_rank <- result$cutoff_rank
+  inflection_point_UMI <- result$cutoff_count
+
+  message("INFLECTION POINT: ", inflection_point_UMI)
+  return(inflection_point_UMI)
+}
+
+mean_win_smooth <- function(vals, win_frac) {
+  win_side <- round(length(vals) * win_frac / 2, 0)
+  zoo::rollmean(vals, max(3, win_side * 2 + 1), fill = NA, align = "center")
+}
+
+first_derivative <- function(vals, win_frac) {
+  win_side <- round(length(vals) * win_frac / 2, 0)
+  # Ensure there's at least one element on each side for difference calculation
+  if (win_side >= 1) {
+    slopes <- (vals[-(1:win_side)] - vals[-((length(vals) - win_side + 1):length(vals))]) / (2 * win_side)
+  } else {
+    slopes <- c(NA, diff(vals), NA)
+  }
+  return(slopes)
+}
+
+umb_parab_tran_func <- function(n_steps, xfrac=0.5, yfrac=0.25, center_focus = TRUE) {
+  x <- seq(0, 1, length.out = n_steps)
+  y <- (x * 2 - 1)^2  # Parabolic transformation centered
+  y_shift <- (1 - xfrac)^2
+
+  # Apply additional centering focus if required
+  if (center_focus) {
+    y_shift <- y_shift + (x - 0.5)^2 * 4 * (1 - xfrac)  # Enhance the center focus
+  }
+
+  y <- pmax(y - y_shift, 0)
+  y <- ifelse(y_shift < 1, y / (1 - y_shift), y)
+  1 - y * yfrac
+}
+
+# Main function to calculate barcode rank plot cutoff
+calc_count_cutoff <- function(scdata,
+                              min_cnt = 30, max_cells = 30000,
+                              min_cells = 10,
+                              cv_smooth_win = 0.02, cv_slope_win = 0.02, center_focus = TRUE,
+                              min_cell_auc = 0.4, adjust_max_cells = FALSE, parse_kit = "WT") {
+
+  barcode_counts <- scdata@meta.data$nCount_RNA
+  barcodes <- rownames(scdata@meta.data)
+
+  df <- data.frame(barcode = barcodes, count = barcode_counts)
+  df <- df[order(-df$count), ]
+  df$rank <- seq_along(df$count)
+
+  df$log_count <- log10(df$count + 1)
+  df$log_rank <- log10(df$rank)
+
+  # Adjust maximum cells based on sample size if needed
+  if (adjust_max_cells) {
+    # Define the total number of wells based on the kit type
+    total_wells <- ifelse(parse_kit == "mini", 12, ifelse(parse_kit == "WT", 48, ifelse(parse_kit == "mega", 96, 48)))
+    num_samples <- length(unique(scdata@meta.data$samples))
+    # Calculate the estimated number of wells per sample
+    wells_per_sample <- total_wells / num_samples
+    # Scale max_cells based on the estimated number of wells per sample
+    max_cells <- max_cells * (wells_per_sample / total_wells)
+  }
+
+  # Apply dynamic minimum transcript counts based on data characteristics
+  if (min_cell_auc > 0) {
+    total_transcripts <- sum(df$count)
+    cumsum_perc <- cumsum(df$count) / total_transcripts
+    min_cells <- max(min_cells, which(cumsum_perc >= min_cell_auc)[1])
+  }
+
+  # Interpolate the log-transformed rank and count data
+  fit <- approxfun(df$log_rank, df$log_count, method = "linear")
+
+  # Create a sequence for interpolation
+  xout <- seq(min(df$log_rank), max(df$log_rank), length.out = nrow(df))
+  yout <- fit(xout)
+
+  # Smooth the interpolated values
+  y_smooth <- mean_win_smooth(yout, cv_smooth_win)
+
+  # Calculate the first derivative of the smoothed curve
+  y_slope <- first_derivative(y_smooth, cv_slope_win)
+
+  # Apply the umbrella-like transformation
+  n_steps <- length(y_slope)
+  weights <- umb_parab_tran_func(n_steps, xfrac = 0.5, yfrac = 0.25, center_focus = center_focus)
+  weighted_slope <- y_slope * weights
+
+  # Determine valid analysis window
+  valid_indices <- which(df$count >= min_cnt & df$rank <= max_cells & df$rank >= min_cells)
+  max_slope_index <- valid_indices[which.max(weighted_slope[valid_indices])]
+
+  # Get the cutoff point
+  cutoff_rank <- df$rank[max_slope_index]
+  cutoff_count <- df$count[max_slope_index]
+
+  list(cutoff_rank = cutoff_rank, cutoff_count = cutoff_count)
 }
