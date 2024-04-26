@@ -20,6 +20,7 @@
 #'
 filter_low_cellsize <- function(scdata_list, config, sample_id, cells_id, task_name = "cellSizeDistribution", num_cells_to_downsample = 6000) {
   sample_cell_ids <- cells_id[[sample_id]]
+  n_samples <- length(scdata_list)
 
   if (length(sample_cell_ids) == 0) {
     return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
@@ -46,7 +47,7 @@ filter_low_cellsize <- function(scdata_list, config, sample_id, cells_id, task_n
       if (ncol(sample_data) < threshold_low) {
         minCellSize <- min(sample_data$nCount_RNA)
       } else {
-        minCellSize <- generate_default_values_cellSizeDistribution(sample_data, config)
+        minCellSize <- generate_default_values_cellSizeDistribution(sample_data, n_samples, config)
       }
     }
   }
@@ -162,9 +163,9 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
 # of the barcode distribution for each sample group. This is
 # useful for determining a threshold for removing low-quality
 # samples.
-generate_default_values_cellSizeDistribution <- function(scdata, config) {
+generate_default_values_cellSizeDistribution <- function(scdata, n_samples, config) {
 
-  result <- calc_count_cutoff(scdata)
+  result <- calc_count_cutoff(scdata, n_samples)
   inflection_point_rank <- result$cutoff_rank
   inflection_point_UMI <- result$cutoff_count
 
@@ -203,66 +204,61 @@ umb_parab_tran_func <- function(n_steps, xfrac=0.5, yfrac=0.25, center_focus = T
   1 - y * yfrac
 }
 
-# Main function to calculate barcode rank plot cutoff
-calc_count_cutoff <- function(scdata,
-                              min_cnt = 30, max_cells = 30000,
-                              min_cells = 10,
-                              cv_smooth_win = 0.02, cv_slope_win = 0.02, center_focus = TRUE,
-                              min_cell_auc = 0.4, adjust_max_cells = FALSE, parse_kit = "WT") {
-
+calc_count_cutoff <- function(scdata, n_samples, min_cnt = 30, min_cells = 10, max_cells = 30000, cell_hard_min = 5, cv_smooth_win = 0.02,
+                              cv_slope_win = 0.02, center_focus = TRUE, min_cell_auc = 0.4,
+                              adjust_max_cells = TRUE, parse_kit = "WT") {
   barcode_counts <- scdata@meta.data$nCount_RNA
   barcodes <- rownames(scdata@meta.data)
 
+  # Data preparation
   df <- data.table::data.table(barcode = barcodes, count = barcode_counts)
   df <- df[order(-count)]
-  df[, rank := frank(-count, ties.method = "first")]
+  df[, rank := data.table::frank(-count, ties.method = "first")]
 
-  df$log_count <- log10(df$count + 1)
-  df$log_rank <- log10(df$rank)
+  # Log transformation
+  df[, `:=`(log_count = log10(count + 1), log_rank = log10(rank))]
 
-  # Adjust maximum cells based on sample size if needed
+  # Interpolation and smoothing
+  fit <- approxfun(df$log_rank, df$log_count, method = "linear")
+  xout <- seq(min(df$log_rank), max(df$log_rank), length.out = nrow(df))
+  yout <- fit(xout)
+  y_smooth <- mean_win_smooth(yout, cv_smooth_win)
+
+  # First derivative and transformation function application
+  y_slope <- first_derivative(y_smooth, cv_slope_win)
+
+  # Dynamic adjustments based on kit
   if (adjust_max_cells) {
     # Define the total number of wells based on the kit type
     total_wells <- unlist(PARSE_KIT_WELLS[parse_kit])
-    num_samples <- length(unique(scdata@meta.data$samples))
     # Calculate the estimated number of wells per sample
-    wells_per_sample <- total_wells / num_samples
-    # Scale max_cells based on the estimated number of wells per sample
-    max_cells <- max_cells * (wells_per_sample / total_wells)
+    wells_per_sample <- total_wells / n_samples
+
+    # Minimum and maximum cell adjustments
+    min_cells <- max(min_cells * (wells_per_sample / total_wells), cell_hard_min)
+    max_cells <- ifelse(parse_kit == "mega", 150000, 30000) * (wells_per_sample / total_wells)
   }
 
-  # Apply dynamic minimum transcript counts based on data characteristics
-  if (min_cell_auc > 0) {
-    total_transcripts <- sum(df$count)
-    cumsum_perc <- cumsum(df$count) / total_transcripts
-    min_cells <- max(min_cells, which(cumsum_perc >= min_cell_auc)[1])
-  }
+  # Define the valid analysis window based on dynamic cell count criteria
+  total_transcripts <- sum(df$count)
+  cumsum_perc <- cumsum(df$count) / total_transcripts
+  adjusted_min_cells <- max(min_cells, which(cumsum_perc >= min_cell_auc)[1])
+  valid_indices <- which(df$count >= min_cnt & df$rank <= max_cells & df$rank >= adjusted_min_cells)
 
-  # Interpolate the log-transformed rank and count data
-  fit <- approxfun(df$log_rank, df$log_count, method = "linear")
-
-  # Create a sequence for interpolation
-  xout <- seq(min(df$log_rank), max(df$log_rank), length.out = nrow(df))
-  yout <- fit(xout)
-
-  # Smooth the interpolated values
-  y_smooth <- mean_win_smooth(yout, cv_smooth_win)
-
-  # Calculate the first derivative of the smoothed curve
-  y_slope <- first_derivative(y_smooth, cv_slope_win)
+  # Subset the data for transformation application
+  y_slope_valid <- y_slope[valid_indices]
 
   # Apply the umbrella-like transformation
-  n_steps <- length(y_slope)
-  weights <- umb_parab_tran_func(n_steps, xfrac = 0.5, yfrac = 0.25, center_focus = center_focus)
-  weighted_slope <- y_slope * weights
+  weights <- umb_parab_tran_func(length(y_slope_valid), xfrac = 0.5, yfrac = 0.25, center_focus = center_focus)
+  weighted_slope <- y_slope_valid * weights
 
-  # Determine valid analysis window
-  valid_indices <- which(df$count >= min_cnt & df$rank <= max_cells & df$rank >= min_cells)
-  max_slope_index <- valid_indices[which.max(weighted_slope[valid_indices])]
+  # Determine the point with maximum modified slope
+  max_slope_index <- which.max(weighted_slope)
+  cutoff_index <- valid_indices[max_slope_index]
 
   # Get the cutoff point
-  cutoff_rank <- df$rank[max_slope_index]
-  cutoff_count <- df$count[max_slope_index]
+  cutoff_rank <- df$rank[cutoff_index]
+  cutoff_count <- df$count[cutoff_index]
 
-  list(cutoff_rank = cutoff_rank, cutoff_count = cutoff_count)
+  return(list(cutoff_rank = cutoff_rank, cutoff_count = cutoff_count))
 }
