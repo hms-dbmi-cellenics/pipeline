@@ -14,6 +14,7 @@
 #'
 construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
     samples <- names(scdata_list)
+    n_samples <- length(scdata_list)
     config_classifier <-
       add_custom_config_per_sample(
         customize_classifier_config,
@@ -27,6 +28,7 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
         customize_cellsize_config,
         processing_config_template[["cell_size"]],
         scdata_list,
+        n_samples = n_samples,
       )
 
     config_mitochondrial <-
@@ -77,6 +79,7 @@ customize_classifier_config <-
   function(scdata,
            config,
            sample_name,
+           n_samples,
            unfiltered_samples,
            technology) {
     config$enabled <- sample_name %in% unfiltered_samples
@@ -90,9 +93,10 @@ customize_cellsize_config <-
   function(scdata,
            config,
            sample_name,
+           n_samples,
            unfiltered_samples,
            technology) {
-    minCellSize <- generate_default_values_cellSizeDistribution(scdata, config)
+    minCellSize <- generate_default_values_cellSizeDistribution(scdata, n_samples, config)
     config$filterSettings$minCellSize <- minCellSize
     return(config)
   }
@@ -102,6 +106,7 @@ customize_mitochondrial_config <-
   function(scdata,
            config,
            sample_name,
+           n_samples,
            unfiltered_samples,
            technology) {
     default_max_fraction <- generate_default_values_mitochondrialContent(scdata, config)
@@ -116,6 +121,7 @@ customize_doublet_config <-
   function(scdata,
            config,
            sample_name,
+           n_samples,
            unfiltered_samples,
            technology) {
     probabilityThreshold <- generate_default_values_doubletScores(scdata)
@@ -128,6 +134,7 @@ customize_genes_vs_umis_config <-
   function(scdata,
            config,
            sample_name,
+           n_samples,
            unfiltered_samples,
            technology) {
     # Sensible values are based on the function "gene.vs.molecule.cell.filter"
@@ -178,10 +185,12 @@ get_embedding_config <- function(scdata_list, config) {
 #' @return list of customized QC parameters for each sample
 #' @export
 #'
+#'
 add_custom_config_per_sample <-
   function(customize_template_config,
            config_template,
            scdata_list,
+           n_samples = NA,
            unfiltered_samples = NA,
            technology = NA) {
     config <- list()
@@ -195,6 +204,7 @@ add_custom_config_per_sample <-
           sample_scdata,
           config_template,
           sample_name,
+          n_samples,
           unfiltered_samples,
           technology
         )
