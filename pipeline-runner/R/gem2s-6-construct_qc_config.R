@@ -20,7 +20,7 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
         customize_classifier_config,
         processing_config_template[["classifier"]],
         scdata_list,
-        unfiltered_samples
+        unfiltered_samples = unfiltered_samples
       )
 
     config_cell_size <-

@@ -58,6 +58,7 @@ read_parse_files <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
   feature_types_list <- list()
+  n_wells_list <- list()
 
   samples <- config$samples
 
@@ -99,11 +100,28 @@ read_parse_files <- function(config, input_dir) {
 
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annotations
+
+    # Number of wells per sample
+    cl_metadata <- read.csv2(barcodes_path, sep = ",")
+    if ("bc1_wind" %in% colnames(cl_metadata)) {
+      wells_colname <- "bc1_wind"
+    } else if ("rnd1_well" %in% colnames(cl_metadata)) {
+      wells_colname <- "rnd1_well"
+    } else {
+      wells_colname <- NULL
+    }
+
+    if (!is.null(wells_colname)) {
+      n_wells <- nrow(unique(cl_metadata[, c("sample", wells_colname)]))
+      n_wells_list[[sample]] <- n_wells
+    } else {
+      message("Valid well column not found. Skipping well count for sample: ", sample)
+    }
   }
 
   annot <- format_annot(annot_list)
 
-  return(list(counts_list = counts_list, annot = annot))
+  return(list(counts_list = counts_list, annot = annot, n_wells_list = n_wells_list))
 }
 
 #' Read h5 file

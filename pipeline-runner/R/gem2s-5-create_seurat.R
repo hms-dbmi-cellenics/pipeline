@@ -20,6 +20,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   annot <- prev_out$annot
   doublet_scores <- prev_out$doublet_scores
   edrops <- prev_out$edrops
+  n_wells_list <- prev_out$n_wells_list
 
   scdata_list <- list()
   samples <- names(counts_list)
@@ -32,7 +33,8 @@ create_seurat <- function(input, pipeline_config, prev_out) {
       edrops_out = edrops[[sample]],
       sample = sample,
       annot = annot,
-      config = config
+      config = config,
+      n_wells_list = n_wells_list
     )
   }
 
@@ -49,7 +51,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 }
 
 # construct SeuratObject
-construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, config, min.cells = 0, min.features = 10) {
+construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, config, min.cells = 0, min.features = 10, n_wells_list) {
   metadata <- construct_metadata(counts, sample, config)
 
   scdata <- Seurat::CreateSeuratObject(
@@ -59,6 +61,11 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
     min.cells = min.cells,
     min.features = min.features
   )
+
+  if(!is.null(n_wells_list)) {
+    message("Adding number of wells per sample...")
+    Seurat::Misc(scdata, slot = "n_wells") <- n_wells_list[[sample]]
+  }
 
   scdata <- scdata %>%
     add_mito(annot) %>%

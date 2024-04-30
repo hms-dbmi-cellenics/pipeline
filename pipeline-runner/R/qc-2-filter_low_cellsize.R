@@ -165,12 +165,102 @@ get_bcranks_plot_data <- function(sample_subset, nmax = 6000, is.cellsize = TRUE
 # samples.
 generate_default_values_cellSizeDistribution <- function(scdata, n_samples, config) {
 
-  result <- calc_count_cutoff(scdata, n_samples)
-  inflection_point_rank <- result$cutoff_rank
-  inflection_point_UMI <- result$cutoff_count
+  # technology <- config$technology
+  technology <- "parse"
 
-  message("INFLECTION POINT: ", inflection_point_UMI)
+  cutoff_functions <- list(
+    "10x" = function() calc_count_cutoff_10x(scdata, config = config),
+    "parse" = function() calc_count_cutoff_parse(scdata, n_samples = n_samples)
+  )
+
+  inflection_point_UMI <- cutoff_functions[[technology]]()
+
+
+  # if (technology == "10x") {
+  #   inflection_point_UMI <- calc_count_cutoff_10x(scdata, config)
+  # } else if (technology == "parse") {
+  #   # TODO: Pass also parse_kit when available from the UI
+  #   inflection_point_UMI <- calc_count_cutoff_parse(scdata, n_samples)
+  # }
+  #
   return(inflection_point_UMI)
+}
+
+calc_count_cutoff_10x <- function(scdata, config) {
+  # `CalculateBarcodeInflections` including inflection point calculation
+  threshold_low <- if (ncol(scdata) <= 200) NULL else 100
+  scdata_tmp <- Seurat::CalculateBarcodeInflections(
+    object = scdata,
+    barcode.column = "nCount_RNA",
+    group.column = "samples",
+    threshold.low = threshold_low
+  )
+  # returned is both the rank(s) as well as inflection point
+  # extracting only inflection point(s)
+  sample_subset <- Seurat::Tool(scdata_tmp, slot = "Seurat::CalculateBarcodeInflections")$inflection_points
+  return(sample_subset$nCount_RNA)
+}
+
+calc_count_cutoff_parse <- function(scdata, config, n_samples, min_cnt = 30, min_cells = 10, max_cells = 30000, cell_hard_min = 5, cv_smooth_win = 0.02,
+                              cv_slope_win = 0.02, center_focus = TRUE, min_cell_auc = 0.4,
+                              adjust_max_cells = TRUE, parse_kit = "WT") {
+  barcode_counts <- scdata@meta.data$nCount_RNA
+  barcodes <- rownames(scdata@meta.data)
+
+  # Data preparation
+  df <- data.table::data.table(barcode = barcodes, count = barcode_counts)
+  df <- df[order(-count)]
+  df[, rank := data.table::frank(-count, ties.method = "first")]
+
+  # Log transformation
+  df[, `:=`(log_count = log10(count + 1), log_rank = log10(rank))]
+
+  # Interpolation and smoothing
+  fit <- approxfun(df$log_rank, df$log_count, method = "linear")
+  xout <- seq(min(df$log_rank), max(df$log_rank), length.out = nrow(df))
+  yout <- fit(xout)
+  y_smooth <- mean_win_smooth(yout, cv_smooth_win)
+
+  # First derivative and transformation function application
+  y_slope <- first_derivative(y_smooth, cv_slope_win)
+
+  # Dynamic adjustments based on kit
+  if (adjust_max_cells) {
+    # Define the total number of wells based on the kit type
+    total_wells <- unlist(PARSE_KIT_WELLS[parse_kit])
+    if(!is.null(scdata@misc$n_wells)) {
+      wells_per_sample <- scdata@misc$n_wells
+    } else {
+      wells_per_sample <- total_wells / n_samples
+    }
+
+    # Minimum and maximum cell adjustments
+    min_cells <- max(min_cells * (wells_per_sample / total_wells), cell_hard_min)
+    max_cells <- ifelse(parse_kit == "mega", 150000, 30000) * (wells_per_sample / total_wells)
+  }
+
+  # Define the valid analysis window based on dynamic cell count criteria
+  total_transcripts <- sum(df$count)
+  cumsum_perc <- cumsum(df$count) / total_transcripts
+  adjusted_min_cells <- max(min_cells, which(cumsum_perc >= min_cell_auc)[1])
+  valid_indices <- which(df$count >= min_cnt & df$rank <= max_cells & df$rank >= adjusted_min_cells)
+
+  # Subset the data for transformation application
+  y_slope_valid <- y_slope[valid_indices]
+
+  # Apply the umbrella-like transformation
+  weights <- umb_parab_tran_func(length(y_slope_valid), xfrac = 0.5, yfrac = 0.25, center_focus = center_focus)
+  weighted_slope <- y_slope_valid * weights
+
+  # Determine the point with maximum modified slope
+  max_slope_index <- which.max(weighted_slope)
+  cutoff_index <- valid_indices[max_slope_index]
+
+  # Get the cutoff point
+  cutoff_rank <- df$rank[cutoff_index]
+  cutoff_count <- df$count[cutoff_index]
+
+  return(cutoff_count)
 }
 
 mean_win_smooth <- function(vals, win_frac) {
@@ -202,63 +292,4 @@ umb_parab_tran_func <- function(n_steps, xfrac=0.5, yfrac=0.25, center_focus = T
   y <- pmax(y - y_shift, 0)
   y <- ifelse(y_shift < 1, y / (1 - y_shift), y)
   1 - y * yfrac
-}
-
-calc_count_cutoff <- function(scdata, n_samples, min_cnt = 30, min_cells = 10, max_cells = 30000, cell_hard_min = 5, cv_smooth_win = 0.02,
-                              cv_slope_win = 0.02, center_focus = TRUE, min_cell_auc = 0.4,
-                              adjust_max_cells = TRUE, parse_kit = "WT") {
-  barcode_counts <- scdata@meta.data$nCount_RNA
-  barcodes <- rownames(scdata@meta.data)
-
-  # Data preparation
-  df <- data.table::data.table(barcode = barcodes, count = barcode_counts)
-  df <- df[order(-count)]
-  df[, rank := data.table::frank(-count, ties.method = "first")]
-
-  # Log transformation
-  df[, `:=`(log_count = log10(count + 1), log_rank = log10(rank))]
-
-  # Interpolation and smoothing
-  fit <- approxfun(df$log_rank, df$log_count, method = "linear")
-  xout <- seq(min(df$log_rank), max(df$log_rank), length.out = nrow(df))
-  yout <- fit(xout)
-  y_smooth <- mean_win_smooth(yout, cv_smooth_win)
-
-  # First derivative and transformation function application
-  y_slope <- first_derivative(y_smooth, cv_slope_win)
-
-  # Dynamic adjustments based on kit
-  if (adjust_max_cells) {
-    # Define the total number of wells based on the kit type
-    total_wells <- unlist(PARSE_KIT_WELLS[parse_kit])
-    # Calculate the estimated number of wells per sample
-    wells_per_sample <- total_wells / n_samples
-
-    # Minimum and maximum cell adjustments
-    min_cells <- max(min_cells * (wells_per_sample / total_wells), cell_hard_min)
-    max_cells <- ifelse(parse_kit == "mega", 150000, 30000) * (wells_per_sample / total_wells)
-  }
-
-  # Define the valid analysis window based on dynamic cell count criteria
-  total_transcripts <- sum(df$count)
-  cumsum_perc <- cumsum(df$count) / total_transcripts
-  adjusted_min_cells <- max(min_cells, which(cumsum_perc >= min_cell_auc)[1])
-  valid_indices <- which(df$count >= min_cnt & df$rank <= max_cells & df$rank >= adjusted_min_cells)
-
-  # Subset the data for transformation application
-  y_slope_valid <- y_slope[valid_indices]
-
-  # Apply the umbrella-like transformation
-  weights <- umb_parab_tran_func(length(y_slope_valid), xfrac = 0.5, yfrac = 0.25, center_focus = center_focus)
-  weighted_slope <- y_slope_valid * weights
-
-  # Determine the point with maximum modified slope
-  max_slope_index <- which.max(weighted_slope)
-  cutoff_index <- valid_indices[max_slope_index]
-
-  # Get the cutoff point
-  cutoff_rank <- df$rank[cutoff_index]
-  cutoff_count <- df$count[cutoff_index]
-
-  return(list(cutoff_rank = cutoff_rank, cutoff_count = cutoff_count))
 }
