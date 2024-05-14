@@ -16,7 +16,7 @@ run_clustering <- function(scdata, config, ignore_ssl_cert) {
     formated_cell_sets,
     config$api_url,
     scdata@misc$experimentId,
-    clustering_method,
+    "louvain",
     config$auth_JWT,
     ignore_ssl_cert
   )
@@ -83,7 +83,7 @@ format_cluster_cellsets <- function(cell_sets,
   # careful with capital l on type for the key.
   cell_sets_object <-
     list(
-      key = clustering_method,
+      key = "louvain",
       name = name,
       rootNode = TRUE,
       type = "cellSets",
