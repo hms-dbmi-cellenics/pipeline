@@ -1,4 +1,4 @@
-renv::restore(packages = 'pkgdepends')
+renv::restore(packages = 'pkgdepends', prompt = FALSE)
 lockfile <- renv:::renv_lockfile_read('renv.lock')
 
 # get records to install
