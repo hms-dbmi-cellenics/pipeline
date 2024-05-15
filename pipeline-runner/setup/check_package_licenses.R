@@ -20,7 +20,7 @@ licenses_to_avoid <- c('AGPL-3', 'AGPL-3 | file LICENSE', 'GPL-2', 'GPL-2 | file
 problematic <- licenses[licenses$license %in% licenses_to_avoid, 'module name']
 
 # manually checked as compatible with GPL-3
-safe <- c('speedglm', 'codetools', 'formatR', 'gtable', 'snow', 'stringr', 'mime')
+safe <- c('speedglm', 'codetools', 'formatR', 'gtable', 'snow', 'stringr', 'mime', 'highr', 'knitr')
 
 # packages that were removed as they are not needed by Cellenics
 exclude <- readRDS('exclude.rds')
