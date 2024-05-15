@@ -25,8 +25,6 @@
         .. .. .. .. .. ..@ x       : num [1:13368] 4.97 4.97 6.06 4.97 4.97 ...
         .. .. .. .. .. ..@ factors : list()
         .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. ..@ key          : Named chr "rna_"
-        .. .. .. .. ..- attr(*, "names")= chr ""
         .. .. .. ..@ assay.orig   : NULL
         .. .. .. ..@ var.features : chr [1:230] "IGLL5" "VDAC3" "TSC22D1" "PTCRA" ...
         .. .. .. ..@ meta.features:'data.frame':	230 obs. of  5 variables:
@@ -35,7 +33,9 @@
         .. .. .. .. ..$ vst.variance.expected    : num [1:230] 1.132 2.685 3.984 739.287 0.637 ...
         .. .. .. .. ..$ vst.variance.standardized: num [1:230] 0.898 0.473 1.086 0.973 1.356 ...
         .. .. .. .. ..$ vst.variable             : logi [1:230] TRUE TRUE TRUE TRUE TRUE TRUE ...
-        .. .. .. ..@ misc         : list()
+        .. .. .. ..@ misc         : Named list()
+        .. .. .. ..@ key          : Named chr "rna_"
+        .. .. .. .. ..- attr(*, "names")= chr ""
         .. ..$ integrated:Formal class 'Assay' [package "SeuratObject"] with 8 slots
         .. .. .. ..@ counts       :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
         .. .. .. .. .. ..@ i       : int(0) 
@@ -59,11 +59,11 @@
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
         .. .. .. .. .. ..$ : chr [1:240] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. ..@ key          : chr "integrated_"
         .. .. .. ..@ assay.orig   : NULL
         .. .. .. ..@ var.features : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
         .. .. .. ..@ meta.features:'data.frame':	230 obs. of  0 variables
         .. .. .. ..@ misc         : NULL
+        .. .. .. ..@ key          : chr "integrated_"
         ..@ meta.data   :'data.frame':	240 obs. of  5 variables:
         .. ..$ orig.ident  : chr [1:240] "SeuratProject" "SeuratProject" "SeuratProject" "SeuratProject" ...
         .. ..$ nCount_RNA  : num [1:240] 70 85 87 127 173 70 64 72 52 100 ...
@@ -89,7 +89,6 @@
         .. .. .. ..@ assay.used                : chr "integrated"
         .. .. .. ..@ global                    : logi FALSE
         .. .. .. ..@ stdev                     : num [1:50] 5.82 5.25 4.34 3.64 2.75 ...
-        .. .. .. ..@ key                       : chr "PC_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
@@ -97,6 +96,7 @@
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
         .. .. .. .. ..$ total.variance: num 230
+        .. .. .. ..@ key                       : chr "PC_"
         ..@ images      : list()
         ..@ project.name: chr "SeuratProject"
         ..@ misc        :List of 6
@@ -115,7 +115,7 @@
         .. ..$ active.reduction: chr "pca"
         .. ..$ numPCs          : num 50
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 5 0 2
         ..@ commands    :List of 5
         .. ..$ FindIntegrationAnchors  :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "Seurat::FindIntegrationAnchors"
@@ -166,7 +166,11 @@
         .. .. .. .. ..$ loess.span         : num 0.3
         .. .. .. .. ..$ clip.max           : chr "auto"
         .. .. .. .. ..$ mean.function      :function (mat, display_progress)  
+        .. .. .. .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 48 16 50 1 16 1 50 52
+        .. .. .. .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' <environment: 0x63a6d062c000> 
         .. .. .. .. ..$ dispersion.function:function (mat, display_progress)  
+        .. .. .. .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 60 15 62 1 15 1 62 64
+        .. .. .. .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' <environment: 0x63a6d062c000> 
         .. .. .. .. ..$ num.bin            : num 20
         .. .. .. .. ..$ binning.method     : chr "equal_width"
         .. .. .. .. ..$ nfeatures          : num 1000

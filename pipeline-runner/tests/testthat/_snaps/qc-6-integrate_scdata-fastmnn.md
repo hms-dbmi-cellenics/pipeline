@@ -25,12 +25,13 @@
         .. .. .. .. .. ..@ x       : num [1:4456] 4.97 4.97 6.06 4.97 4.97 ...
         .. .. .. .. .. ..@ factors : list()
         .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. ..@ key          : Named chr "rna_"
-        .. .. .. .. ..- attr(*, "names")= chr ""
         .. .. .. ..@ assay.orig   : NULL
         .. .. .. ..@ var.features : logi(0) 
         .. .. .. ..@ meta.features:'data.frame':	230 obs. of  0 variables
-        .. .. .. ..@ misc         : list()
+        .. .. .. ..@ misc         :List of 1
+        .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. ..@ key          : Named chr "rna_"
+        .. .. .. .. ..- attr(*, "names")= chr ""
         .. ..$ mnn.reconstructed:Formal class 'Assay' [package "SeuratObject"] with 8 slots
         .. .. .. ..@ counts       : num[0 , 0 ] 
         .. .. .. ..@ data         :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
@@ -43,11 +44,11 @@
         .. .. .. .. .. ..@ x       : num [1:18400] -0.0248 -0.0135 -0.0249 -0.0476 -0.0187 ...
         .. .. .. .. .. ..@ factors : list()
         .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. ..@ key          : chr "mnnreconstructed_"
         .. .. .. ..@ assay.orig   : NULL
         .. .. .. ..@ var.features : chr [1:230] "PPBP" "IGLL5" "VDAC3" "CD1C" ...
         .. .. .. ..@ meta.features:'data.frame':	230 obs. of  0 variables
-        .. .. .. ..@ misc         : list()
+        .. .. .. ..@ misc         : Named list()
+        .. .. .. ..@ key          : chr "mnnreconstructed_"
         ..@ meta.data   :'data.frame':	80 obs. of  5 variables:
         .. ..$ orig.ident  : chr [1:80] "SeuratProject" "SeuratProject" "SeuratProject" "SeuratProject" ...
         .. ..$ nCount_RNA  : num [1:80] 70 85 87 127 173 70 64 72 52 100 ...
@@ -61,11 +62,11 @@
         ..@ neighbors   : list()
         ..@ reductions  :List of 1
         .. ..$ mnn:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:80, 1:5] 0.055 0.119 0.144 0.246 0.221 ...
+        .. .. .. ..@ cell.embeddings           : num [1:80, 1:5] -0.055 -0.119 -0.144 -0.246 -0.221 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
         .. .. .. .. .. ..$ : chr [1:5] "mnn_1" "mnn_2" "mnn_3" "mnn_4" ...
-        .. .. .. ..@ feature.loadings          : num [1:230, 1:5] -0.01134 -0.03001 -0.02309 -0.14153 -0.00647 ...
+        .. .. .. ..@ feature.loadings          : num [1:230, 1:5] 0.01134 0.03001 0.02309 0.14153 0.00647 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
         .. .. .. .. .. ..$ : chr [1:5] "mnn_1" "mnn_2" "mnn_3" "mnn_4" ...
@@ -73,13 +74,13 @@
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
         .. .. .. ..@ stdev                     : num(0) 
-        .. .. .. ..@ key                       : chr "mnn_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
         .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      : list()
+        .. .. .. ..@ key                       : chr "mnn_"
         ..@ images      : list()
         ..@ project.name: chr "SeuratProject"
         ..@ misc        :List of 6
@@ -98,7 +99,7 @@
         .. ..$ numPCs          : num 5
         .. ..$ active.reduction: chr "mnn"
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 5 0 2
         ..@ commands    :List of 1
         .. ..$ SeuratWrappers..RunFastMNN.RNA:Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "SeuratWrappers::RunFastMNN.RNA"

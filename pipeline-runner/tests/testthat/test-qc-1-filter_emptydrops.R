@@ -18,6 +18,7 @@ mock_scdata_list <- function() {
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
 
   sample_ids <- c("sample_1", "sample_2")
   scdata_list <- {}

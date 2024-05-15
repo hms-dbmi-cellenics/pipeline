@@ -58,6 +58,7 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   sample_1_id <- "sample_1"
   sample_2_id <- "sample_2"
 
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
   # add samples

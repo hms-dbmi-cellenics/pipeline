@@ -187,6 +187,7 @@ test_that("create_seurat works with multiple samples", {
 test_that("create_seurat does not exclude genes without counts", {
   counts <- mock_counts()
   counts['NOT-EXPRESSED', ] = 0
+  counts <- as(as.matrix(counts), 'dgCMatrix')
 
   prev_out <- mock_prev_out(counts = counts)
 

@@ -68,7 +68,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
       harmony::RunHarmony(
         scdata,
         group.by.vars = "samples",
-        reduction = "pca_for_harmony",
+        reduction.use = "pca_for_harmony",
         dims.use = 1:npcs
       )
   }
@@ -115,7 +115,7 @@ RunGeosketchHarmony <- function(scdata,
     harmony::RunHarmony(
       geosketch_list$sketch,
       group.by.vars = "samples",
-      reduction = reduction,
+      reduction.use = reduction,
       dims.use = 1:npcs,
     )
   scdata_sketch_integrated@misc[["active.reduction"]] <- "harmony"

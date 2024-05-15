@@ -172,7 +172,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "597d5c11ceb195b121e7b768aafccb4c"
+      [1] "c32e610786c3fa3a375305aaf716dcda"
     Code
       str(res)
     Output
@@ -271,7 +271,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "2c31159cdfa0c963cf61adb1008b0314"
+      [1] "67a97a16c05c4ef3783406e83caad0b9"
     Code
       str(res)
     Output
@@ -383,11 +383,12 @@
         .. .. .. .. .. .. .. .. ..@ x       : num [1:36426] 1 2 1 1 1 1 3 1 1 1 ...
         .. .. .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. .. .. .. ..@ key          : chr "rna_"
         .. .. .. .. .. .. ..@ assay.orig   : NULL
         .. .. .. .. .. .. ..@ var.features : logi(0) 
         .. .. .. .. .. .. ..@ meta.features:'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc         : list()
+        .. .. .. .. .. .. ..@ misc         :List of 1
+        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ key          : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	436 obs. of  13 variables:
         .. .. .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
@@ -412,7 +413,7 @@
         .. .. .. ..@ project.name: chr "mock_experiment"
         .. .. .. ..@ misc        : list()
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 4 1 0
+        .. .. .. .. ..$ : int [1:3] 5 0 2
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -438,11 +439,12 @@
         .. .. .. .. .. .. .. .. ..@ x       : num [1:32918] 1 1 3 1 2 5 1 1 1 1 ...
         .. .. .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. .. .. .. ..@ key          : chr "rna_"
         .. .. .. .. .. .. ..@ assay.orig   : NULL
         .. .. .. .. .. .. ..@ var.features : logi(0) 
         .. .. .. .. .. .. ..@ meta.features:'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc         : list()
+        .. .. .. .. .. .. ..@ misc         :List of 1
+        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ key          : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	460 obs. of  13 variables:
         .. .. .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
@@ -467,7 +469,7 @@
         .. .. .. ..@ project.name: chr "mock_experiment"
         .. .. .. ..@ misc        : list()
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 4 1 0
+        .. .. .. .. ..$ : int [1:3] 5 0 2
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -482,7 +484,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "8269a793da36df7492182bb1b0d6656c"
+      [1] "41cd621a5a60525d23c46cd222e61ab8"
     Code
       str(res)
     Output
@@ -594,11 +596,12 @@
         .. .. .. .. .. .. .. .. ..@ x       : num [1:32918] 1 1 3 1 2 5 1 1 1 1 ...
         .. .. .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. .. .. .. ..@ key          : chr "rna_"
         .. .. .. .. .. .. ..@ assay.orig   : NULL
         .. .. .. .. .. .. ..@ var.features : logi(0) 
         .. .. .. .. .. .. ..@ meta.features:'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc         : list()
+        .. .. .. .. .. .. ..@ misc         :List of 1
+        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ key          : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	460 obs. of  14 variables:
         .. .. .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
@@ -629,7 +632,7 @@
         .. .. .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 4 1 0
+        .. .. .. .. ..$ : int [1:3] 5 0 2
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -655,11 +658,12 @@
         .. .. .. .. .. .. .. .. ..@ x       : num [1:36426] 1 2 1 1 1 1 3 1 1 1 ...
         .. .. .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. .. .. .. ..@ key          : chr "rna_"
         .. .. .. .. .. .. ..@ assay.orig   : NULL
         .. .. .. .. .. .. ..@ var.features : logi(0) 
         .. .. .. .. .. .. ..@ meta.features:'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc         : list()
+        .. .. .. .. .. .. ..@ misc         :List of 1
+        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ key          : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	436 obs. of  14 variables:
         .. .. .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
@@ -690,7 +694,7 @@
         .. .. .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 4 1 0
+        .. .. .. .. ..$ : int [1:3] 5 0 2
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE

@@ -28,8 +28,6 @@
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CD1C" "PPBP" "PF4" ...
         .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. ..@ key          : Named chr "rna_"
-        .. .. .. .. ..- attr(*, "names")= chr ""
         .. .. .. ..@ assay.orig   : NULL
         .. .. .. ..@ var.features : chr [1:10] "PPBP" "IGLL5" "VDAC3" "CD1C" ...
         .. .. .. ..@ meta.features:'data.frame':	230 obs. of  5 variables:
@@ -38,7 +36,9 @@
         .. .. .. .. ..$ vst.variance.expected    : num [1:230] 1.141 2.708 4.018 745.526 0.642 ...
         .. .. .. .. ..$ vst.variance.standardized: num [1:230] 0.898 0.473 1.086 0.973 1.356 ...
         .. .. .. .. ..$ vst.variable             : logi [1:230] FALSE FALSE FALSE FALSE FALSE FALSE ...
-        .. .. .. ..@ misc         : list()
+        .. .. .. ..@ misc         : Named list()
+        .. .. .. ..@ key          : Named chr "rna_"
+        .. .. .. .. ..- attr(*, "names")= chr ""
         ..@ meta.data   :'data.frame':	80 obs. of  5 variables:
         .. ..$ orig.ident  : chr [1:80] "SeuratProject" "SeuratProject" "SeuratProject" "SeuratProject" ...
         .. ..$ nCount_RNA  : num [1:80] 70 85 87 127 173 70 64 72 52 100 ...
@@ -64,7 +64,6 @@
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
         .. .. .. ..@ stdev                     : num [1:9] 2.086 1.309 1.029 0.986 0.923 ...
-        .. .. .. ..@ key                       : chr "PC_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
@@ -72,6 +71,7 @@
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
         .. .. .. .. ..$ total.variance: num 10
+        .. .. .. ..@ key                       : chr "PC_"
         .. ..$ pca_for_harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
         .. .. .. ..@ cell.embeddings           : num [1:80, 1:2] -0.73 -0.73 0.122 -0.591 -0.73 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
@@ -85,7 +85,6 @@
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
         .. .. .. ..@ stdev                     : num [1:2] 2.09 1.31
-        .. .. .. ..@ key                       : chr "PCh_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
@@ -93,29 +92,30 @@
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
         .. .. .. .. ..$ total.variance: num 10
+        .. .. .. ..@ key                       : chr "PCh_"
         .. ..$ harmony        :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:80, 1:2] -0.7853 -0.7853 0.0789 -0.3166 -0.7853 ...
+        .. .. .. ..@ cell.embeddings           : num [1:80, 1:2] -0.7623 -0.7623 0.0915 -0.3774 -0.7623 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
         .. .. .. .. .. ..$ : chr [1:2] "harmony_1" "harmony_2"
-        .. .. .. ..@ feature.loadings          : num [1:10, 1:2] -13.1 -14.5 121.1 117.2 112.6 ...
+        .. .. .. ..@ feature.loadings          : num [1:10, 1:2] -12.7 -15 121.2 117.3 112.6 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CD1C" "PPBP" "PF4" ...
         .. .. .. .. .. ..$ : chr [1:2] "harmony_1" "harmony_2"
-        .. .. .. ..@ feature.loadings.projected: num [1:10, 1:2] -13.1 -14.5 121.1 117.2 112.6 ...
+        .. .. .. ..@ feature.loadings.projected: num [1:10, 1:2] -12.7 -15 121.2 117.3 112.6 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CD1C" "PPBP" "PF4" ...
         .. .. .. .. .. ..$ : chr [1:2] "harmony_1" "harmony_2"
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:2] 1.61 1.16
-        .. .. .. ..@ key                       : chr "harmony_"
+        .. .. .. ..@ stdev                     : num [1:2] 1.62 1.17
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
         .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      : list()
+        .. .. .. ..@ key                       : chr "harmony_"
         ..@ images      : list()
         ..@ project.name: chr "SeuratProject"
         ..@ misc        :List of 6
@@ -134,7 +134,7 @@
         .. ..$ numPCs          : num 2
         .. ..$ active.reduction: chr "harmony"
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 5 0 2
         ..@ commands    :List of 5
         .. ..$ NormalizeData.RNA             :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "NormalizeData.RNA"
@@ -158,7 +158,11 @@
         .. .. .. .. ..$ loess.span         : num 0.3
         .. .. .. .. ..$ clip.max           : chr "auto"
         .. .. .. .. ..$ mean.function      :function (mat, display_progress)  
+        .. .. .. .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 48 16 50 1 16 1 50 52
+        .. .. .. .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' <environment: 0x63a6d062c000> 
         .. .. .. .. ..$ dispersion.function:function (mat, display_progress)  
+        .. .. .. .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 60 15 62 1 15 1 62 64
+        .. .. .. .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' <environment: 0x63a6d062c000> 
         .. .. .. .. ..$ num.bin            : num 20
         .. .. .. .. ..$ binning.method     : chr "equal_width"
         .. .. .. .. ..$ nfeatures          : num 10

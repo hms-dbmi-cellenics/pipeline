@@ -28,8 +28,6 @@
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
         .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. ..@ key          : Named chr "rna_"
-        .. .. .. .. ..- attr(*, "names")= chr ""
         .. .. .. ..@ assay.orig   : NULL
         .. .. .. ..@ var.features : chr [1:230] "PPBP" "IGLL5" "VDAC3" "CD1C" ...
         .. .. .. ..@ meta.features:'data.frame':	230 obs. of  5 variables:
@@ -38,7 +36,9 @@
         .. .. .. .. ..$ vst.variance.expected    : num [1:230] 1.141 2.708 4.018 745.526 0.642 ...
         .. .. .. .. ..$ vst.variance.standardized: num [1:230] 0.898 0.473 1.086 0.973 1.356 ...
         .. .. .. .. ..$ vst.variable             : logi [1:230] TRUE TRUE TRUE TRUE TRUE TRUE ...
-        .. .. .. ..@ misc         : list()
+        .. .. .. ..@ misc         : Named list()
+        .. .. .. ..@ key          : Named chr "rna_"
+        .. .. .. .. ..- attr(*, "names")= chr ""
         ..@ meta.data   :'data.frame':	80 obs. of  5 variables:
         .. ..$ orig.ident  : chr [1:80] "SeuratProject" "SeuratProject" "SeuratProject" "SeuratProject" ...
         .. ..$ nCount_RNA  : num [1:80] 70 85 87 127 173 70 64 72 52 100 ...
@@ -64,7 +64,6 @@
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
         .. .. .. ..@ stdev                     : num [1:39] 5.75 5.21 4.32 3.62 2.77 ...
-        .. .. .. ..@ key                       : chr "PC_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
@@ -72,6 +71,7 @@
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
         .. .. .. .. ..$ total.variance: num 230
+        .. .. .. ..@ key                       : chr "PC_"
         ..@ images      : list()
         ..@ project.name: chr "SeuratProject"
         ..@ misc        :List of 6
@@ -90,7 +90,7 @@
         .. ..$ active.reduction: chr "pca"
         .. ..$ numPCs          : num 2
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 5 0 2
         ..@ commands    :List of 4
         .. ..$ NormalizeData.RNA       :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "NormalizeData.RNA"
@@ -114,7 +114,11 @@
         .. .. .. .. ..$ loess.span         : num 0.3
         .. .. .. .. ..$ clip.max           : chr "auto"
         .. .. .. .. ..$ mean.function      :function (mat, display_progress)  
+        .. .. .. .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 48 16 50 1 16 1 50 52
+        .. .. .. .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' <environment: 0x63a6d062c000> 
         .. .. .. .. ..$ dispersion.function:function (mat, display_progress)  
+        .. .. .. .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 60 15 62 1 15 1 62 64
+        .. .. .. .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' <environment: 0x63a6d062c000> 
         .. .. .. .. ..$ num.bin            : num 20
         .. .. .. .. ..$ binning.method     : chr "equal_width"
         .. .. .. .. ..$ nfeatures          : num 1000

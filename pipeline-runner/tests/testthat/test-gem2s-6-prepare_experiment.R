@@ -1,8 +1,10 @@
 mock_counts <- function() {
-  read.table(
+  pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
+  return(pbmc_raw)
 }
 
 

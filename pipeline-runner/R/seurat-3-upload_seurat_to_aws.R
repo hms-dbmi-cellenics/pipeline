@@ -161,8 +161,10 @@ find_cluster_columns <- function(scdata) {
 }
 
 make_vals_numeric <- function(vals) {
-  vals <- as.character(vals)
-  as.numeric(factor(vals, levels = unique(vals)))
+  suppressWarnings({
+    vals <- as.character(vals)
+    as.numeric(factor(vals, levels = unique(vals)))
+  })
 }
 
 test_groups_equal <- function(vals1, vals2) {
@@ -183,7 +185,7 @@ add_samples_to_input <- function(scdata, input) {
 change_sample_names_to_ids <- function(scdata, input) {
   sample_ids <- input$sampleIds
   names(sample_ids) <- input$sampleNames
-  scdata$samples <- sample_ids[scdata$samples]
+  scdata$samples <- unname(sample_ids[scdata$samples])
   return(scdata)
 }
 

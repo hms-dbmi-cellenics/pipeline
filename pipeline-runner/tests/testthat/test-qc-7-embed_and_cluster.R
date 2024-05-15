@@ -134,7 +134,7 @@ test_that("runClusters uses active.reduction in misc slot", {
   data@graphs$RNA_snn <- NULL
 
   for (algo in algos) {
-    expect_error(runClusters(algo, resolution, data), "Cannot find 'pca'")
+    expect_error(runClusters(algo, resolution, data), "'pca' not found")
   }
 
   # will use active.reduction to get SNN graph
@@ -159,7 +159,7 @@ test_that("patch_cell_sets throws error on unsuccessful response", {
     patch_cell_sets(
       "api_url",
       "experiment_id",
-      list(),  
+      list(),
       "auth_JWT",
       FALSE
     ),
