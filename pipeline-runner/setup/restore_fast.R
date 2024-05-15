@@ -4,6 +4,9 @@ lockfile <- renv:::renv_lockfile_read('renv.lock')
 # get records to install
 records <- as.list(lockfile$Packages)
 
+# exclude packages causing issues (let renv install later)
+records <- records[!names(records) %in% c('SeuratWrappers')]
+
 # convert into specs compatible with pkgdepends, and install
 
 # functions from renv 1.0.0 that format the package specifications for pkgbuild
