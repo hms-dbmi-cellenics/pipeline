@@ -12,6 +12,7 @@ License: GPL-3.0
 Depends: 
     R (>= 4.2.0)
 Imports:
+    batchelor,
     covr,
     magrittr,
     data.table
