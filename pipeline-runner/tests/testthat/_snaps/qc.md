@@ -7136,7 +7136,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "1cd3513066b41e8c530fda573ceb485d"
+      [1] "1cd1c9149db12df77ef90f5fa0548c64"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7300,23 +7300,17 @@
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
         .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(Seurat::NormalizeData(scdata, normalization.method = normalization, " "    verbose = FALSE), nfeatures = nfeatures, verbose = FALSE)"
-        .. .. .. ..@ params     :List of 12
-        .. .. .. .. ..$ assay              : chr "RNA"
-        .. .. .. .. ..$ selection.method   : chr "vst"
-        .. .. .. .. ..$ loess.span         : num 0.3
-        .. .. .. .. ..$ clip.max           : chr "auto"
-        .. .. .. .. ..$ mean.function      :function (mat, display_progress)  
-        .. .. .. .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 48 16 50 1 16 1 50 52
-        .. .. .. .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' <environment: 0x63a6d062c000> 
-        .. .. .. .. ..$ dispersion.function:function (mat, display_progress)  
-        .. .. .. .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 60 15 62 1 15 1 62 64
-        .. .. .. .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' <environment: 0x63a6d062c000> 
-        .. .. .. .. ..$ num.bin            : num 20
-        .. .. .. .. ..$ binning.method     : chr "equal_width"
-        .. .. .. .. ..$ nfeatures          : num 2000
-        .. .. .. .. ..$ mean.cutoff        : num [1:2] 0.1 8
-        .. .. .. .. ..$ dispersion.cutoff  : num [1:2] 1 Inf
-        .. .. .. .. ..$ verbose            : logi FALSE
+        .. .. .. ..@ params     :List of 10
+        .. .. .. .. ..$ assay            : chr "RNA"
+        .. .. .. .. ..$ selection.method : chr "vst"
+        .. .. .. .. ..$ loess.span       : num 0.3
+        .. .. .. .. ..$ clip.max         : chr "auto"
+        .. .. .. .. ..$ num.bin          : num 20
+        .. .. .. .. ..$ binning.method   : chr "equal_width"
+        .. .. .. .. ..$ nfeatures        : num 2000
+        .. .. .. .. ..$ mean.cutoff      : num [1:2] 0.1 8
+        .. .. .. .. ..$ dispersion.cutoff: num [1:2] 1 Inf
+        .. .. .. .. ..$ verbose          : logi FALSE
         .. ..$ ScaleData.RNA                 :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "ScaleData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
@@ -7507,7 +7501,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "6d48b55da687fc5fd6213d92d6ae3ec7"
+      [1] "1cd1c9149db12df77ef90f5fa0548c64"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7671,23 +7665,17 @@
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
         .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(Seurat::NormalizeData(scdata, normalization.method = normalization, " "    verbose = FALSE), nfeatures = nfeatures, verbose = FALSE)"
-        .. .. .. ..@ params     :List of 12
-        .. .. .. .. ..$ assay              : chr "RNA"
-        .. .. .. .. ..$ selection.method   : chr "vst"
-        .. .. .. .. ..$ loess.span         : num 0.3
-        .. .. .. .. ..$ clip.max           : chr "auto"
-        .. .. .. .. ..$ mean.function      :function (mat, display_progress)  
-        .. .. .. .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 48 16 50 1 16 1 50 52
-        .. .. .. .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' <environment: 0x63a6d062c000> 
-        .. .. .. .. ..$ dispersion.function:function (mat, display_progress)  
-        .. .. .. .. .. ..- attr(*, "srcref")= 'srcref' int [1:8] 60 15 62 1 15 1 62 64
-        .. .. .. .. .. .. ..- attr(*, "srcfile")=Classes 'srcfilealias', 'srcfile' <environment: 0x63a6d062c000> 
-        .. .. .. .. ..$ num.bin            : num 20
-        .. .. .. .. ..$ binning.method     : chr "equal_width"
-        .. .. .. .. ..$ nfeatures          : num 2000
-        .. .. .. .. ..$ mean.cutoff        : num [1:2] 0.1 8
-        .. .. .. .. ..$ dispersion.cutoff  : num [1:2] 1 Inf
-        .. .. .. .. ..$ verbose            : logi FALSE
+        .. .. .. ..@ params     :List of 10
+        .. .. .. .. ..$ assay            : chr "RNA"
+        .. .. .. .. ..$ selection.method : chr "vst"
+        .. .. .. .. ..$ loess.span       : num 0.3
+        .. .. .. .. ..$ clip.max         : chr "auto"
+        .. .. .. .. ..$ num.bin          : num 20
+        .. .. .. .. ..$ binning.method   : chr "equal_width"
+        .. .. .. .. ..$ nfeatures        : num 2000
+        .. .. .. .. ..$ mean.cutoff      : num [1:2] 0.1 8
+        .. .. .. .. ..$ dispersion.cutoff: num [1:2] 1 Inf
+        .. .. .. .. ..$ verbose          : logi FALSE
         .. ..$ ScaleData.RNA                 :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "ScaleData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"

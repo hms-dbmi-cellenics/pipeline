@@ -50,13 +50,32 @@ clean_timestamp <- function(scdata) {
   return(scdata)
 }
 
+# Seurat object commands are sometimes functions which will have a new environment
+# for every call which breaks snapshots
+remove_commands_functions <- function(data) {
+  command_names <-  names(data@commands)
+  for (command_name in command_names) {
+    param_names <- names(data@commands[[command_name]]@params)
+
+    for (param_name in param_names) {
+      param <- data@commands[[command_name]]@params[[param_name]]
+
+      if (methods::is(param, 'function'))
+        data@commands[[command_name]]@params[[param_name]] <- NULL
+    }
+  }
+  return(data)
+}
+
 
 snapshot_qc_output <- function(task_name, snap_list) {
   # scdata_list is returned for every sample, so we'll have duplicated stuff here.
   if (is.list(snap_list$data)) {
     snap_list$data <- lapply(snap_list$data, clean_timestamp)
+    snap_list$data <- lapply(snap_list$data, remove_commands_functions)
   } else {
     snap_list$data <- clean_timestamp(snap_list$data)
+    snap_list$data <- remove_commands_functions(snap_list$data)
   }
 
   # repeating instead of lapply to get easier to interpret snapshots
@@ -145,6 +164,10 @@ test_qc <- function(experiment_id) {
           sample_id = "",
           debug_config = pipeline_config$debug_config
         )
+      }
+
+      if (task_name == 'dataIntegration') {
+        saveRDS(global_vars$data, '/home/alex/Documents/global_vars.rds')
       }
 
       snapshot_qc_output(
