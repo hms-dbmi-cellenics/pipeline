@@ -660,6 +660,13 @@
       ],
       "Hash": "c92ba8b9a2c5c9ff600a1062a3b7b727"
     },
+    "RhpcBLASctl": {
+      "Package": "RhpcBLASctl",
+      "Version": "0.23-42",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c966ea2957ff75e77afa5c908dfc89e1"
+    },
     "Rhtslib": {
       "Package": "Rhtslib",
       "Version": "3.0.0",
@@ -1821,31 +1828,24 @@
     },
     "harmony": {
       "Package": "harmony",
-      "Version": "1.0",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "harmony",
-      "RemoteUsername": "immunogenomics",
-      "RemoteRef": "c8f4901ef92d6e9b4e1373c52de3b67ff052db3e",
-      "RemoteSha": "c8f4901ef92d6e9b4e1373c52de3b67ff052db3e",
+      "Version": "1.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
       "Requirements": [
         "Matrix",
         "R",
         "Rcpp",
         "RcppArmadillo",
         "RcppProgress",
-        "SingleCellExperiment",
+        "RhpcBLASctl",
         "cowplot",
         "dplyr",
         "ggplot2",
-        "irlba",
         "methods",
         "rlang",
-        "tibble",
-        "tidyr"
+        "tibble"
       ],
-      "Hash": "1e4d60ace4f770191e14e925dd765198"
+      "Hash": "4f3b181961712ff4127a8634c1367f89"
     },
     "hdf5r": {
       "Package": "hdf5r",
