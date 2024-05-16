@@ -660,13 +660,6 @@
       ],
       "Hash": "c92ba8b9a2c5c9ff600a1062a3b7b727"
     },
-    "RhpcBLASctl": {
-      "Package": "RhpcBLASctl",
-      "Version": "0.23-42",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "c966ea2957ff75e77afa5c908dfc89e1"
-    },
     "Rhtslib": {
       "Package": "Rhtslib",
       "Version": "3.0.0",
@@ -1073,6 +1066,30 @@
         "utils"
       ],
       "Hash": "0f4e9d8caa6feaa7e409ae6c30f2ca66"
+    },
+    "bit": {
+      "Package": "bit",
+      "Version": "4.0.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "d242abec29412ce988848d0294b208fd"
+    },
+    "bit64": {
+      "Package": "bit64",
+      "Version": "4.0.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "bit",
+        "methods",
+        "stats",
+        "utils"
+      ],
+      "Hash": "9fe98599ca456d6552421db0d6772d8f"
     },
     "bitops": {
       "Package": "bitops",
@@ -1687,6 +1704,32 @@
       ],
       "Hash": "66488692cb8621bc78df1b9b819497a6"
     },
+    "glmGamPoi": {
+      "Package": "glmGamPoi",
+      "Version": "1.16.0",
+      "Source": "Bioconductor",
+      "Repository": "Bioconductor 3.19",
+      "Requirements": [
+        "BiocGenerics",
+        "DelayedArray",
+        "DelayedMatrixStats",
+        "HDF5Array",
+        "MatrixGenerics",
+        "Rcpp",
+        "RcppArmadillo",
+        "SingleCellExperiment",
+        "SummarizedExperiment",
+        "beachmat",
+        "matrixStats",
+        "methods",
+        "rlang",
+        "splines",
+        "stats",
+        "utils",
+        "vctrs"
+      ],
+      "Hash": "21e305cf5faebb13bee698a5a1c4bced"
+    },
     "globals": {
       "Package": "globals",
       "Version": "0.16.3",
@@ -1778,24 +1821,45 @@
     },
     "harmony": {
       "Package": "harmony",
-      "Version": "1.2.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Version": "1.0",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "harmony",
+      "RemoteUsername": "immunogenomics",
+      "RemoteRef": "c8f4901ef92d6e9b4e1373c52de3b67ff052db3e",
+      "RemoteSha": "c8f4901ef92d6e9b4e1373c52de3b67ff052db3e",
       "Requirements": [
         "Matrix",
         "R",
         "Rcpp",
         "RcppArmadillo",
         "RcppProgress",
-        "RhpcBLASctl",
+        "SingleCellExperiment",
         "cowplot",
         "dplyr",
         "ggplot2",
+        "irlba",
         "methods",
         "rlang",
-        "tibble"
+        "tibble",
+        "tidyr"
       ],
-      "Hash": "4f3b181961712ff4127a8634c1367f89"
+      "Hash": "1e4d60ace4f770191e14e925dd765198"
+    },
+    "hdf5r": {
+      "Package": "hdf5r",
+      "Version": "1.3.10",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "R6",
+        "bit64",
+        "methods",
+        "utils"
+      ],
+      "Hash": "455082f1cd7e02855a5bd087527706b5"
     },
     "here": {
       "Package": "here",
