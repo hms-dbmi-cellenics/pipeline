@@ -69,10 +69,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
         scdata,
         group.by.vars = "samples",
         reduction.use = "pca_for_harmony",
-        dims.use = 1:npcs,
-        # this leads to harmony:::setOMPthreads returning FALSE which avoids usage of
-        # RhpcBLASctl in harmony::RunHarmony (licensing conflict)
-        ncores = 2
+        dims.use = 1:npcs
       )
   }
 
