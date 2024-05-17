@@ -29,7 +29,8 @@ omp_set_num_threads <- function(ncores) NULL
 omp_get_max_threads <- function() 1
 
 
-alt_fnames <- c('theme_cowplot', 'pblapply', 'pbapply', 'pbsapply', 'generateSeedVectors')
+alt_fnames <- c('theme_cowplot', 'pblapply', 'pbapply', 'pbsapply', 'generateSeedVectors',
+                'blas_get_num_procs', 'omp_get_num_procs', 'blas_set_num_threads', 'omp_set_num_threads', 'omp_get_max_threads')
 
 
 install_ghost_package <- function(package) {

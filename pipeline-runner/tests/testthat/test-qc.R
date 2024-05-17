@@ -166,9 +166,6 @@ test_qc <- function(experiment_id) {
         )
       }
 
-      if (task_name == 'dataIntegration') {
-        saveRDS(global_vars$data, '/home/alex/Documents/global_vars.rds')
-      }
 
       snapshot_qc_output(
         task_name,

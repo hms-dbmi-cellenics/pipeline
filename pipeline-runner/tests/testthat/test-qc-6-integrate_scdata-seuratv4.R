@@ -127,6 +127,23 @@ clean_timestamp <- function(scdata) {
   return(scdata)
 }
 
+# Seurat object commands are sometimes functions which will have a new environment
+# for every call which breaks snapshots
+remove_commands_functions <- function(data) {
+  command_names <-  names(data@commands)
+  for (command_name in command_names) {
+    param_names <- names(data@commands[[command_name]]@params)
+
+    for (param_name in param_names) {
+      param <- data@commands[[command_name]]@params[[param_name]]
+
+      if (methods::is(param, 'function'))
+        data@commands[[command_name]]@params[[param_name]] <- NULL
+    }
+  }
+  return(data)
+}
+
 
 test_that("SeuratV4 integration doesnt error out with small dataset", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
@@ -284,6 +301,7 @@ test_that("misc slot is complete after Seurat V4 integration", {
 
   integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   integrated_scdata <- clean_timestamp(integrated_scdata)
+  integrated_scdata <- remove_commands_functions(integrated_scdata)
 
   expect_s4_class(integrated_scdata, "Seurat")
   expect_snapshot(str(integrated_scdata))
