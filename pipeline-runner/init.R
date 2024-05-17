@@ -5,7 +5,8 @@ library(tryCatchLog)
 library(magrittr)
 library(uuid)
 
-options(Seurat.object.assay.version = "v3")
+# this is the default but making explicit
+options(Seurat.object.assay.version = "v5")
 
 # increase maxSize from the default of 500MB to 32GB
 options(future.globals.maxSize = 32 * 1024 * 1024^2)

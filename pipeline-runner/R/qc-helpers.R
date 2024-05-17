@@ -136,7 +136,7 @@ calc_filter_stats <- function(scdata) {
   }
 
   # number of counts per gene
-  ncount <- Matrix::rowSums(scdata[["RNA"]]@counts)
+  ncount <- Matrix::rowSums(scdata[["RNA"]]$counts)
 
   list(
     num_cells = ncol(scdata),

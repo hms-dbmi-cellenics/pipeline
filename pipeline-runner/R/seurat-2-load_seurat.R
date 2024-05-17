@@ -54,7 +54,13 @@ reconstruct_seurat <- function(dataset_fpath) {
   # get counts
   tryCatch({
     SeuratObject::DefaultAssay(user_scdata) <- 'RNA'
-    counts <- user_scdata[['RNA']]@counts
+
+    # if layers are split, rejoin them
+    if (methods::is(user_scdata[['RNA']], 'Assay5'))
+      user_scdata[['RNA']] <- SeuratObject::JoinLayers(user_scdata[['RNA']])
+
+
+    counts <- user_scdata[['RNA']]$counts
     test_user_sparse_mat(counts)
     rns <- row.names(counts)
     check_type_is_safe(rns)
@@ -84,14 +90,14 @@ reconstruct_seurat <- function(dataset_fpath) {
 
   # add logcounts
   tryCatch({
-    logcounts <- user_scdata[['RNA']]@data
+    logcounts <- user_scdata[['RNA']]$data
     test_user_sparse_mat(logcounts)
 
     # shouldn't be raw counts
     suspect.counts <- max(logcounts) > 100
     if (suspect.counts) logcounts <- Seurat::NormalizeData(logcounts)
 
-    scdata[['RNA']]@data <- logcounts
+    scdata[['RNA']]$data <- logcounts
   },
   error = function(e) {
     message(e$message)

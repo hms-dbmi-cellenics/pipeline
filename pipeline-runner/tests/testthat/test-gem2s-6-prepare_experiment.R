@@ -139,12 +139,12 @@ test_that("add_metadata_to_samples generated cell ids do not depend on sample or
   prev_out <- mock_prev_out(samples = samples)
 
   scdata_list <- prev_out$scdata_list
-  # the ordering function relies on @counts@i parameter as a proxy for total number of cells
+  # the ordering function relies on $counts@i parameter as a proxy for total number of cells
   # we set it manually here to get a meaningful order in the test because otherwise
   # all fake samples have the same length
-  scdata_list[[1]]@assays[["RNA"]]@counts@i <- 0:100
-  scdata_list[[2]]@assays[["RNA"]]@counts@i <- 0:50
-  scdata_list[[3]]@assays[["RNA"]]@counts@i <- 0:10
+  scdata_list[[1]]@assays[["RNA"]]$counts@i <- 0:100
+  scdata_list[[2]]@assays[["RNA"]]$counts@i <- 0:50
+  scdata_list[[3]]@assays[["RNA"]]$counts@i <- 0:10
   annot <- prev_out$annot
   scdata_list <- add_metadata_to_samples(scdata_list, annot, experiment_id)
 
