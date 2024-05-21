@@ -41,6 +41,9 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   integration_function <- get(paste0("run_", method))
   scdata_integrated <- integration_function(scdata_list, config, cells_id)
 
+  if (methods::is(scdata_integrated[['RNA']], 'Assay5'))
+    scdata_integrated[['RNA']] <- SeuratObject::JoinLayers(scdata_integrated[['RNA']])
+
   message("Finished data integration")
 
   # Update config numPCs with estimated or user provided nPCs
