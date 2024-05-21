@@ -76,7 +76,7 @@ subset_safe <- function(scdata, cells) {
   if (length(cells) > 0) {
     return(subset(scdata, cells = cells))
   } else {
-    return(subset(scdata, cells = colnames(scdata)[1]))
+    return(subset(scdata, cells = colnames(scdata)[1:2]))
   }
 }
 

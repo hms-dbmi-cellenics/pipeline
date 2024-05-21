@@ -55,7 +55,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   tryCatch({
     SeuratObject::DefaultAssay(user_scdata) <- 'RNA'
 
-    # if layers are split, rejoin them
+    # if V5 object, ensure layers are rejoined
     if (methods::is(user_scdata[['RNA']], 'Assay5'))
       user_scdata[['RNA']] <- SeuratObject::JoinLayers(user_scdata[['RNA']])
 
@@ -90,8 +90,14 @@ reconstruct_seurat <- function(dataset_fpath) {
 
   # add logcounts
   tryCatch({
-    logcounts <- user_scdata[['RNA']]$data
-    test_user_sparse_mat(logcounts)
+
+    layers <- SeuratObject::Layers(user_scdata, assay = 'RNA')
+    if ('data' %in% layers) {
+      logcounts <- user_scdata[['RNA']]$data
+      test_user_sparse_mat(logcounts)
+    } else {
+      logcounts <- Seurat::NormalizeData(user_scdata[['RNA']]$counts)
+    }
 
     # shouldn't be raw counts
     suspect.counts <- max(logcounts) > 100
@@ -153,12 +159,12 @@ reconstruct_seurat <- function(dataset_fpath) {
 
     stopifnot(red_name %in% c('umap', 'tsne'))
 
-    embedding <- user_scdata@reductions[[red_name]]@cell.embeddings
-    test_user_df(embedding)
-    red <- SeuratObject::CreateDimReducObject(
-      embeddings = embedding,
-      assay = 'RNA'
-    )
+    red <- user_scdata@reductions[[red_name]]
+    test_user_df(red@cell.embeddings)
+    test_user_df(red@feature.loadings)
+    test_user_df(red@feature.loadings.projected)
+    red@assay.used <- 'RNA'
+
     scdata@reductions[[red_name]] <- red
   },
   error = function(e) {

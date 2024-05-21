@@ -79,6 +79,9 @@ create_scdata <- function(scdata_list, cells_id, merge_data = FALSE) {
   merged_scdatas <- merge_scdata_list(scdata_list, merge_data)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
+  if (methods::is(merged_scdatas[['RNA']], 'Assay5'))
+    merged_scdatas[['RNA']] <- SeuratObject::JoinLayers(merged_scdatas[['RNA']])
+
   return(merged_scdatas)
 }
 

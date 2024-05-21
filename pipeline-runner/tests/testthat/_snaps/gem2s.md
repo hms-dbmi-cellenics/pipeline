@@ -271,7 +271,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "66c863f6e5703179f9d97540ce526c3f"
+      [1] "2e2cc948bbe52bb13d26212b7e2e0021"
     Code
       str(res)
     Output
@@ -363,32 +363,41 @@
         ..$ scdata_list       :List of 2
         .. ..$ mock_sample_1_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
         .. .. .. ..@ assays      :List of 1
-        .. .. .. .. ..$ RNA:Formal class 'Assay' [package "SeuratObject"] with 8 slots
-        .. .. .. .. .. .. ..@ counts       :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. .. .. ..@ i       : int [1:36426] 70 194 290 307 435 467 506 512 573 618 ...
-        .. .. .. .. .. .. .. .. ..@ p       : int [1:437] 0 36 174 196 262 413 495 691 821 877 ...
-        .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 436
-        .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
-        .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        .. .. .. .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
+        .. .. .. .. .. .. ..@ layers    :List of 1
+        .. .. .. .. .. .. .. ..$ counts:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. .. .. .. ..@ i       : int [1:36426] 70 194 290 307 435 467 506 512 573 618 ...
+        .. .. .. .. .. .. .. .. .. ..@ p       : int [1:437] 0 36 174 196 262 413 495 691 821 877 ...
+        .. .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 436
+        .. .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. ..@ x       : num [1:36426] 1 2 1 1 1 1 3 1 1 1 ...
+        .. .. .. .. .. .. .. .. .. ..@ factors : list()
+        .. .. .. .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
+        .. .. .. .. .. .. .. .. ..@ .Data: logi [1:436, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. .. .. ..$ dim     : int [1:2] 436 1
+        .. .. .. .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. .. .. .. ..$ : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
-        .. .. .. .. .. .. .. .. ..@ x       : num [1:36426] 1 2 1 1 1 1 3 1 1 1 ...
-        .. .. .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. .. .. ..@ data         :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. .. .. ..@ i       : int [1:36426] 70 194 290 307 435 467 506 512 573 618 ...
-        .. .. .. .. .. .. .. .. ..@ p       : int [1:437] 0 36 174 196 262 413 495 691 821 877 ...
-        .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 436
-        .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. ..@ features  :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
+        .. .. .. .. .. .. .. .. ..@ .Data: logi [1:2000, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. .. .. ..$ dim     : int [1:2] 2000 1
+        .. .. .. .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. ..$ : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
-        .. .. .. .. .. .. .. .. ..@ x       : num [1:36426] 1 2 1 1 1 1 3 1 1 1 ...
-        .. .. .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. .. .. .. ..@ assay.orig   : NULL
-        .. .. .. .. .. .. ..@ var.features : logi(0) 
-        .. .. .. .. .. .. ..@ meta.features:'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc         :List of 1
+        .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. ..@ default   : int 1
+        .. .. .. .. .. .. ..@ assay.orig: chr(0) 
+        .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
+        .. .. .. .. .. .. ..@ misc      :List of 1
         .. .. .. .. .. .. .. ..$ calcN: logi TRUE
-        .. .. .. .. .. .. ..@ key          : chr "rna_"
+        .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	436 obs. of  13 variables:
         .. .. .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
@@ -419,32 +428,41 @@
         .. .. .. .. ..$ flag_filtered: logi FALSE
         .. ..$ mock_sample_2_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
         .. .. .. ..@ assays      :List of 1
-        .. .. .. .. ..$ RNA:Formal class 'Assay' [package "SeuratObject"] with 8 slots
-        .. .. .. .. .. .. ..@ counts       :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. .. .. ..@ i       : int [1:32918] 23 177 207 341 451 470 663 834 838 952 ...
-        .. .. .. .. .. .. .. .. ..@ p       : int [1:461] 0 24 104 163 258 309 343 451 490 532 ...
-        .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 460
-        .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
-        .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        .. .. .. .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
+        .. .. .. .. .. .. ..@ layers    :List of 1
+        .. .. .. .. .. .. .. ..$ counts:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. .. .. .. ..@ i       : int [1:32918] 23 177 207 341 451 470 663 834 838 952 ...
+        .. .. .. .. .. .. .. .. .. ..@ p       : int [1:461] 0 24 104 163 258 309 343 451 490 532 ...
+        .. .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 460
+        .. .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. ..@ x       : num [1:32918] 1 1 3 1 2 5 1 1 1 1 ...
+        .. .. .. .. .. .. .. .. .. ..@ factors : list()
+        .. .. .. .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
+        .. .. .. .. .. .. .. .. ..@ .Data: logi [1:460, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. .. .. ..$ dim     : int [1:2] 460 1
+        .. .. .. .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. .. .. .. ..$ : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
-        .. .. .. .. .. .. .. .. ..@ x       : num [1:32918] 1 1 3 1 2 5 1 1 1 1 ...
-        .. .. .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. .. .. ..@ data         :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. .. .. ..@ i       : int [1:32918] 23 177 207 341 451 470 663 834 838 952 ...
-        .. .. .. .. .. .. .. .. ..@ p       : int [1:461] 0 24 104 163 258 309 343 451 490 532 ...
-        .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 460
-        .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. ..@ features  :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
+        .. .. .. .. .. .. .. .. ..@ .Data: logi [1:2000, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. .. .. ..$ dim     : int [1:2] 2000 1
+        .. .. .. .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. ..$ : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
-        .. .. .. .. .. .. .. .. ..@ x       : num [1:32918] 1 1 3 1 2 5 1 1 1 1 ...
-        .. .. .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. .. .. .. ..@ assay.orig   : NULL
-        .. .. .. .. .. .. ..@ var.features : logi(0) 
-        .. .. .. .. .. .. ..@ meta.features:'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc         :List of 1
+        .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. ..@ default   : int 1
+        .. .. .. .. .. .. ..@ assay.orig: chr(0) 
+        .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
+        .. .. .. .. .. .. ..@ misc      :List of 1
         .. .. .. .. .. .. .. ..$ calcN: logi TRUE
-        .. .. .. .. .. .. ..@ key          : chr "rna_"
+        .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	460 obs. of  13 variables:
         .. .. .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
@@ -484,7 +502,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "cd34301b06f9caca9c0519b2c7ae121c"
+      [1] "74cc6db72966f21c24741313fa4e0743"
     Code
       str(res)
     Output
@@ -576,32 +594,41 @@
         ..$ scdata_list       :List of 2
         .. ..$ mock_sample_2_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
         .. .. .. ..@ assays      :List of 1
-        .. .. .. .. ..$ RNA:Formal class 'Assay' [package "SeuratObject"] with 8 slots
-        .. .. .. .. .. .. ..@ counts       :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. .. .. ..@ i       : int [1:32918] 23 177 207 341 451 470 663 834 838 952 ...
-        .. .. .. .. .. .. .. .. ..@ p       : int [1:461] 0 24 104 163 258 309 343 451 490 532 ...
-        .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 460
-        .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
-        .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        .. .. .. .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
+        .. .. .. .. .. .. ..@ layers    :List of 1
+        .. .. .. .. .. .. .. ..$ counts:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. .. .. .. ..@ i       : int [1:32918] 23 177 207 341 451 470 663 834 838 952 ...
+        .. .. .. .. .. .. .. .. .. ..@ p       : int [1:461] 0 24 104 163 258 309 343 451 490 532 ...
+        .. .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 460
+        .. .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. ..@ x       : num [1:32918] 1 1 3 1 2 5 1 1 1 1 ...
+        .. .. .. .. .. .. .. .. .. ..@ factors : list()
+        .. .. .. .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
+        .. .. .. .. .. .. .. .. ..@ .Data: logi [1:460, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. .. .. ..$ dim     : int [1:2] 460 1
+        .. .. .. .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. .. .. .. ..$ : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
-        .. .. .. .. .. .. .. .. ..@ x       : num [1:32918] 1 1 3 1 2 5 1 1 1 1 ...
-        .. .. .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. .. .. ..@ data         :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. .. .. ..@ i       : int [1:32918] 23 177 207 341 451 470 663 834 838 952 ...
-        .. .. .. .. .. .. .. .. ..@ p       : int [1:461] 0 24 104 163 258 309 343 451 490 532 ...
-        .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 460
-        .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. ..@ features  :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
+        .. .. .. .. .. .. .. .. ..@ .Data: logi [1:2000, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. .. .. ..$ dim     : int [1:2] 2000 1
+        .. .. .. .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. ..$ : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
-        .. .. .. .. .. .. .. .. ..@ x       : num [1:32918] 1 1 3 1 2 5 1 1 1 1 ...
-        .. .. .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. .. .. .. ..@ assay.orig   : NULL
-        .. .. .. .. .. .. ..@ var.features : logi(0) 
-        .. .. .. .. .. .. ..@ meta.features:'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc         :List of 1
+        .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. ..@ default   : int 1
+        .. .. .. .. .. .. ..@ assay.orig: chr(0) 
+        .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
+        .. .. .. .. .. .. ..@ misc      :List of 1
         .. .. .. .. .. .. .. ..$ calcN: logi TRUE
-        .. .. .. .. .. .. ..@ key          : chr "rna_"
+        .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	460 obs. of  14 variables:
         .. .. .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
@@ -638,32 +665,41 @@
         .. .. .. .. ..$ flag_filtered: logi FALSE
         .. ..$ mock_sample_1_id:Formal class 'Seurat' [package "SeuratObject"] with 13 slots
         .. .. .. ..@ assays      :List of 1
-        .. .. .. .. ..$ RNA:Formal class 'Assay' [package "SeuratObject"] with 8 slots
-        .. .. .. .. .. .. ..@ counts       :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. .. .. ..@ i       : int [1:36426] 70 194 290 307 435 467 506 512 573 618 ...
-        .. .. .. .. .. .. .. .. ..@ p       : int [1:437] 0 36 174 196 262 413 495 691 821 877 ...
-        .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 436
-        .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
-        .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        .. .. .. .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
+        .. .. .. .. .. .. ..@ layers    :List of 1
+        .. .. .. .. .. .. .. ..$ counts:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. .. .. .. ..@ i       : int [1:36426] 70 194 290 307 435 467 506 512 573 618 ...
+        .. .. .. .. .. .. .. .. .. ..@ p       : int [1:437] 0 36 174 196 262 413 495 691 821 877 ...
+        .. .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 436
+        .. .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. ..@ x       : num [1:36426] 1 2 1 1 1 1 3 1 1 1 ...
+        .. .. .. .. .. .. .. .. .. ..@ factors : list()
+        .. .. .. .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
+        .. .. .. .. .. .. .. .. ..@ .Data: logi [1:436, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. .. .. ..$ dim     : int [1:2] 436 1
+        .. .. .. .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. .. .. .. ..$ : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
-        .. .. .. .. .. .. .. .. ..@ x       : num [1:36426] 1 2 1 1 1 1 3 1 1 1 ...
-        .. .. .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. .. .. ..@ data         :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. .. .. ..@ i       : int [1:36426] 70 194 290 307 435 467 506 512 573 618 ...
-        .. .. .. .. .. .. .. .. ..@ p       : int [1:437] 0 36 174 196 262 413 495 691 821 877 ...
-        .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 436
-        .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. ..@ features  :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
+        .. .. .. .. .. .. .. .. ..@ .Data: logi [1:2000, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        .. .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. .. .. ..$ dim     : int [1:2] 2000 1
+        .. .. .. .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. ..$ : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
-        .. .. .. .. .. .. .. .. ..@ x       : num [1:36426] 1 2 1 1 1 1 3 1 1 1 ...
-        .. .. .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. .. .. ..@ scale.data   : num[0 , 0 ] 
-        .. .. .. .. .. .. ..@ assay.orig   : NULL
-        .. .. .. .. .. .. ..@ var.features : logi(0) 
-        .. .. .. .. .. .. ..@ meta.features:'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc         :List of 1
+        .. .. .. .. .. .. .. .. .. ..$ : chr "counts"
+        .. .. .. .. .. .. ..@ default   : int 1
+        .. .. .. .. .. .. ..@ assay.orig: chr(0) 
+        .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
+        .. .. .. .. .. .. ..@ misc      :List of 1
         .. .. .. .. .. .. .. ..$ calcN: logi TRUE
-        .. .. .. .. .. .. ..@ key          : chr "rna_"
+        .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	436 obs. of  14 variables:
         .. .. .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...

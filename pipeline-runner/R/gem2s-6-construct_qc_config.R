@@ -151,10 +151,10 @@ get_embedding_config <- function(scdata_list, config) {
   config$embeddingSettings$methodSettings$tsne <- list(
     perplexity = min(
       default_perplexity,
-      min(vapply(scdata_list, ncol, integer(1))) / 100),
+      min(vapply(scdata_list, ncol, numeric(1))) / 100),
     learningRate = max(
       default_learning_rate,
-      min(vapply(scdata_list, ncol, integer(1))) / 12)
+      min(vapply(scdata_list, ncol, numeric(1))) / 12)
   )
 
   return(config)
