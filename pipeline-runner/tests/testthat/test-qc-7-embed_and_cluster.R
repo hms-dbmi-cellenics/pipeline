@@ -319,11 +319,12 @@ test_that("format_cell_sets_object doesn't hardcore all keys as louvain (need fo
   cell_sets <- rbind(cell_sets, more_cell_sets)
 
   color_pool <- mock_color_pool(n_clusters)
-  algos <- c("louvain", "leiden")
+  algos <- c("louvain", "leiden", "other")
 
   for (algo in algos) {
     res <- format_cluster_cellsets(cell_sets, algo, color_pool)
-    expect_equal(res$key, algo)
+    expected <- ifelse(algo %in% c('louvain', 'leiden'), 'louvain', algo)
+    expect_equal(res$key, expected)
   }
 })
 
