@@ -311,6 +311,22 @@ test_that("format_cell_sets_object orders clusters lexicographically", {
   }
 })
 
+test_that("format_cell_sets_object doesn't hardcore all keys as louvain (need for Seurat object upload)", {
+  n_clusters <- 5
+  cell_sets <- mock_cellset_object(50, n_clusters)
+  troublesome_clusters <- c(11, 12, 21, 45)
+  more_cell_sets <- data.frame(cluster = troublesome_clusters, cell_ids = c(101, 102, 103, 104))
+  cell_sets <- rbind(cell_sets, more_cell_sets)
+
+  color_pool <- mock_color_pool(n_clusters)
+  algos <- c("louvain", "leiden")
+
+  for (algo in algos) {
+    res <- format_cluster_cellsets(cell_sets, algo, color_pool)
+    expect_equal(res$key, algo)
+  }
+})
+
 
 test_that("embed_and_cluster works", {
   scdata <- mock_scdata()
