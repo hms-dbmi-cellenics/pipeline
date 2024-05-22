@@ -9,7 +9,7 @@ run_clustering <- function(scdata, config, ignore_ssl_cert) {
   message("formatting cellsets")
 
   formated_cell_sets <-
-    format_cluster_cellsets(cellSets, clustering_method, scdata@misc$color_pool)
+    format_cluster_cellsets(cellSets, "louvain", scdata@misc$color_pool)
   message("updating through api")
 
   replace_cell_class_through_api(
@@ -83,7 +83,7 @@ format_cluster_cellsets <- function(cell_sets,
   # careful with capital l on type for the key.
   cell_sets_object <-
     list(
-      key = "louvain",
+      key = clustering_method,
       name = name,
       rootNode = TRUE,
       type = "cellSets",

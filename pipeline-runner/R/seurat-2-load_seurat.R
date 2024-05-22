@@ -146,10 +146,9 @@ reconstruct_seurat <- function(dataset_fpath) {
     check_type_is_safe(red_name)
     red_match <- grep("umap|tsne", red_name, value = TRUE)
 
-    if (length(red_match) > 0 && !(red_match %in% c("umap", "tsne"))) {
+    if (length(red_match) && !(red_match %in% c("umap", "tsne"))) {
       is_umap <- grepl("umap", red_match)
-      is_tsne <- grepl("tsne", red_match)
-      new_red_name <- ifelse(is_umap, "umap", ifelse(is_tsne, "tsne", NA))
+      new_red_name <- ifelse(is_umap, "umap", "tsne")
 
       message("Found reduction name ", red_match," containing ", new_red_name)
       user_scdata <- update_reduction_name(user_scdata, red_name, new_red_name)
