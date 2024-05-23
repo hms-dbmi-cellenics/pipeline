@@ -58,6 +58,7 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   sample_1_id <- "sample_1"
   sample_2_id <- "sample_2"
 
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
   # add samples
@@ -392,6 +393,7 @@ test_that("run_geosketch generates the correct number of sketches", {
   )
 
   merged_scdata <- suppressWarnings({merged_scdata |>
+    Seurat::NormalizeData() |>
     Seurat::FindVariableFeatures(assay = "RNA", nfeatures = 2000, verbose = FALSE) |>
     Seurat::ScaleData(verbose = FALSE) |>
     Seurat::RunPCA(verbose = FALSE)})

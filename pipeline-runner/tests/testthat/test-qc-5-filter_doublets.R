@@ -26,6 +26,7 @@ mock_scdata <- function() {
   sample_1_id <- "sample_1"
   sample_2_id <- "sample_2"
 
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
   scdata$cells_id <- 0:(ncol(scdata) - 1)
 

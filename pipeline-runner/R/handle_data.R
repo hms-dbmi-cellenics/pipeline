@@ -44,7 +44,7 @@ load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
 # get_nnzero will return how many non-zero counts the count matrix has
 # it is used to order samples according to their size
 get_nnzero <- function (x) {
-  return(length(x@assays[["RNA"]]@counts@i))
+  return(length(x@assays[["RNA"]]$counts@i))
 }
 
 order_by_size <- function(scdata_list) {
@@ -619,7 +619,7 @@ get_s3_rds <- function(bucket, key, aws_config) {
 
   conn <- gzcon(rawConnection(body))
   object <- readRDS(conn)
-  
+
   close(conn)
 
   return(object)

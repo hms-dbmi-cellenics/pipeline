@@ -7,7 +7,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
   }
 
   # calculate as many PCs for the PCA as possible, ideally 50, unless few cells
-  npcs_for_pca <- min(vapply(scdata_list, ncol, integer(1)) - 1, 50)
+  npcs_for_pca <- min(vapply(scdata_list, ncol, numeric(1)) - 1, 50)
   npcs <- config$dimensionalityReduction$numPCs
 
   # use the min of what the user wants and what can be calculated
@@ -68,7 +68,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
       harmony::RunHarmony(
         scdata,
         group.by.vars = "samples",
-        reduction = "pca_for_harmony",
+        reduction.use = "pca_for_harmony",
         dims.use = 1:npcs
       )
   }
@@ -115,7 +115,7 @@ RunGeosketchHarmony <- function(scdata,
     harmony::RunHarmony(
       geosketch_list$sketch,
       group.by.vars = "samples",
-      reduction = reduction,
+      reduction.use = reduction,
       dims.use = 1:npcs,
     )
   scdata_sketch_integrated@misc[["active.reduction"]] <- "harmony"

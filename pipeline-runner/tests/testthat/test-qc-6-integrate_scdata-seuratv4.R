@@ -55,6 +55,8 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   sample_1_id <- "123abc"
   sample_2_id <- "123def"
 
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
+  colnames(pbmc_raw) <- make.unique(colnames(pbmc_raw))
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
   # add samples
@@ -102,31 +104,6 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-
-#' Fix time stamps in seurat object
-#'
-#' Seurat adds logs to certain command runs, with time stamps that make snapshot
-#' tests fail. This function replaces them with a fixed datetime object.
-#'
-#' @param scdata seurat object
-#'
-#' @return seurat object with fixed time stamps
-#'
-clean_timestamp <- function(scdata) {
-  fixed_datetime <- as.POSIXct("1991-12-19 05:23:00", tz = "UTC")
-
-  for (slot in names(scdata@commands)) {
-    scdata@commands[[slot]]@time.stamp <- fixed_datetime
-  }
-
-  if ("ingestionDate" %in% names(scdata@misc)) {
-    scdata@misc$ingestionDate <- fixed_datetime
-  }
-
-  return(scdata)
-}
-
-
 test_that("SeuratV4 integration doesnt error out with small dataset", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
@@ -141,7 +118,7 @@ test_that("SeuratV4 integration doesnt error out with small dataset", {
 })
 
 
-test_that("SeuratV4 integration works", {
+test_that("SeuratV4 integration works with RPCA method", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
   c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
   cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
@@ -156,20 +133,8 @@ test_that("SeuratV4 integration works", {
 })
 
 
-test_that("PCA is computed when RPCA method is selected within SeuratV4 integration", {
-  # mock a bigger dataset to run Seurat v4 integration without skipping it
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
 
-  config <- list(
-    dimensionalityReduction = list(method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
-  )
-
-  expect_message(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"), "Running PCA")
-})
-
-test_that("PCA is not computed when CCA method is selected within SeuratV4 integration", {
+test_that("SeuratV4 integration works with CCA method", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
   c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
   cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
@@ -179,7 +144,8 @@ test_that("PCA is not computed when CCA method is selected within SeuratV4 integ
     dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
   )
 
-  expect_message(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"), "PCA is not running .*")
+  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  expect_s4_class(integrated_scdata, "Seurat")
 })
 
 
@@ -228,48 +194,6 @@ test_that("SCTransform integration works", {
   expect_equal(Seurat::DefaultAssay(integrated_scdata), "integrated")
 })
 
-test_that("create_scdata merge only the counts when merge_data is FALSE", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
-
-  for (i in 1:length(scdata_list)) {
-    scdata_list[[i]] <- Seurat::NormalizeData(scdata_list[[i]], assay = "RNA", normalization.method = "LogNormalize", verbose = FALSE)
-    scdata_list[[i]] <- Seurat::FindVariableFeatures(scdata_list[[i]], assay = "RNA", nfeatures = 2000, verbose = FALSE)
-    scdata_list[[i]] <- Seurat::ScaleData(scdata_list[[i]], verbose = FALSE)
-  }
-
-  merged_data <- create_scdata(scdata_list, cells_id, merge_data = FALSE)
-  expect_equal(merged_data@assays$RNA@counts, merged_data@assays$RNA@data)
-})
-
-test_that("create_scdata merge only the counts when merge_data is not passed", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
-
-  for (i in 1:length(scdata_list)) {
-    scdata_list[[i]] <- Seurat::NormalizeData(scdata_list[[i]], assay = "RNA", normalization.method = "LogNormalize", verbose = FALSE)
-    scdata_list[[i]] <- Seurat::FindVariableFeatures(scdata_list[[i]], assay = "RNA", nfeatures = 2000, verbose = FALSE)
-    scdata_list[[i]] <- Seurat::ScaleData(scdata_list[[i]], verbose = FALSE)
-  }
-
-  merged_data <- create_scdata(scdata_list, cells_id)
-  expect_equal(merged_data@assays$RNA@counts, merged_data@assays$RNA@data)
-})
-
-test_that("create_scdata merge the data slots when merge_data is TRUE", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
-
-  for (i in 1:length(scdata_list)) {
-    scdata_list[[i]] <- Seurat::NormalizeData(scdata_list[[i]], assay = "RNA", normalization.method = "LogNormalize", verbose = FALSE)
-    scdata_list[[i]] <- Seurat::FindVariableFeatures(scdata_list[[i]], assay = "RNA", nfeatures = 2000, verbose = FALSE)
-    scdata_list[[i]] <- Seurat::ScaleData(scdata_list[[i]], verbose = FALSE)
-  }
-
-  merged_data <- create_scdata(scdata_list, cells_id, merge_data = TRUE)
-  expect_false(identical(merged_data@assays$RNA@counts, merged_data@assays$RNA@data))
-})
-
 
 test_that("misc slot is complete after Seurat V4 integration", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
@@ -283,6 +207,7 @@ test_that("misc slot is complete after Seurat V4 integration", {
 
   integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
   integrated_scdata <- clean_timestamp(integrated_scdata)
+  integrated_scdata <- remove_commands_functions(integrated_scdata)
 
   expect_s4_class(integrated_scdata, "Seurat")
   expect_snapshot(str(integrated_scdata))

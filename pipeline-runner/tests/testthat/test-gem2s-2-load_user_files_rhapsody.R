@@ -31,19 +31,22 @@ mock_rhapsody_matrix <- function(counts, sample_dir, with_abseq) {
     "####################"
   )
   writeLines(header, matrix_path)
-  write.table(counts,
-    file = matrix_path,
-    append = TRUE,
-    quote = FALSE,
-    sep = "\t",
-    row.names = FALSE
-  )
+  suppressWarnings({
+    write.table(counts,
+      file = matrix_path,
+      append = TRUE,
+      quote = FALSE,
+      sep = "\t",
+      row.names = FALSE
+    )
+
+  })
 
   matrix_path
 }
 
 mock_counts <- function() {
-  pbmc_raw <- read.table(
+  read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )

@@ -5,40 +5,58 @@
     Output
       Formal class 'Seurat' [package "SeuratObject"] with 13 slots
         ..@ assays      :List of 1
-        .. ..$ RNA:Formal class 'Assay' [package "SeuratObject"] with 8 slots
-        .. .. .. ..@ counts       :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. ..@ i       : int [1:4456] 1 5 8 11 22 30 33 34 36 38 ...
-        .. .. .. .. .. ..@ p       : int [1:81] 0 47 99 149 205 258 306 342 387 423 ...
-        .. .. .. .. .. ..@ Dim     : int [1:2] 230 80
-        .. .. .. .. .. ..@ Dimnames:List of 2
-        .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
+        .. .. .. ..@ layers    :List of 3
+        .. .. .. .. ..$ counts    :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. ..@ i       : int [1:4456] 1 5 8 11 22 30 33 34 36 38 ...
+        .. .. .. .. .. .. ..@ p       : int [1:81] 0 47 99 149 205 258 306 342 387 423 ...
+        .. .. .. .. .. .. ..@ Dim     : int [1:2] 230 80
+        .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. ..@ x       : num [1:4456] 1 1 3 1 1 4 1 5 1 1 ...
+        .. .. .. .. .. .. ..@ factors : list()
+        .. .. .. .. ..$ data      :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. ..@ i       : int [1:4456] 1 5 8 11 22 30 33 34 36 38 ...
+        .. .. .. .. .. .. ..@ p       : int [1:81] 0 47 99 149 205 258 306 342 387 423 ...
+        .. .. .. .. .. .. ..@ Dim     : int [1:2] 230 80
+        .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. ..@ x       : num [1:4456] 4.97 4.97 6.06 4.97 4.97 ...
+        .. .. .. .. .. .. ..@ factors : list()
+        .. .. .. .. ..$ scale.data: num [1:230, 1:80] -0.409 1.64 -0.428 -1.375 -0.329 ...
+        .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
+        .. .. .. .. .. ..@ .Data: logi [1:80, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
+        .. .. .. .. .. ..$ dim     : int [1:2] 80 3
+        .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. .. .. ..@ x       : num [1:4456] 1 1 3 1 1 4 1 5 1 1 ...
-        .. .. .. .. .. ..@ factors : list()
-        .. .. .. ..@ data         :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. ..@ i       : int [1:4456] 1 5 8 11 22 30 33 34 36 38 ...
-        .. .. .. .. .. ..@ p       : int [1:81] 0 47 99 149 205 258 306 342 387 423 ...
-        .. .. .. .. .. ..@ Dim     : int [1:2] 230 80
-        .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
+        .. .. .. ..@ features  :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
+        .. .. .. .. .. ..@ .Data: logi [1:230, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
+        .. .. .. .. .. ..$ dim     : int [1:2] 230 3
+        .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
-        .. .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. .. .. ..@ x       : num [1:4456] 4.97 4.97 6.06 4.97 4.97 ...
-        .. .. .. .. .. ..@ factors : list()
-        .. .. .. ..@ scale.data   : num [1:230, 1:80] -0.409 1.64 -0.428 -1.375 -0.329 ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
-        .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. ..@ key          : Named chr "rna_"
-        .. .. .. .. ..- attr(*, "names")= chr ""
-        .. .. .. ..@ assay.orig   : NULL
-        .. .. .. ..@ var.features : chr [1:230] "PPBP" "IGLL5" "VDAC3" "CD1C" ...
-        .. .. .. ..@ meta.features:'data.frame':	230 obs. of  5 variables:
-        .. .. .. .. ..$ vst.mean                 : num [1:230] 0.388 0.6 0.7 13.425 0.3 ...
-        .. .. .. .. ..$ vst.variance             : num [1:230] 1.025 1.281 4.365 725.463 0.871 ...
-        .. .. .. .. ..$ vst.variance.expected    : num [1:230] 1.141 2.708 4.018 745.526 0.642 ...
-        .. .. .. .. ..$ vst.variance.standardized: num [1:230] 0.898 0.473 1.086 0.973 1.356 ...
-        .. .. .. .. ..$ vst.variable             : logi [1:230] TRUE TRUE TRUE TRUE TRUE TRUE ...
-        .. .. .. ..@ misc         : list()
+        .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
+        .. .. .. ..@ default   : int 1
+        .. .. .. ..@ assay.orig: chr(0) 
+        .. .. .. ..@ meta.data :'data.frame':	230 obs. of  8 variables:
+        .. .. .. .. ..$ vf_vst_counts_mean                 : num [1:230] 0.388 0.6 0.7 13.425 0.3 ...
+        .. .. .. .. ..$ vf_vst_counts_variance             : num [1:230] 1.025 1.281 4.365 725.463 0.871 ...
+        .. .. .. .. ..$ vf_vst_counts_variance.expected    : num [1:230] 1.141 2.708 4.018 745.526 0.642 ...
+        .. .. .. .. ..$ vf_vst_counts_variance.standardized: num [1:230] 0.898 0.473 1.086 0.973 1.356 ...
+        .. .. .. .. ..$ vf_vst_counts_variable             : logi [1:230] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. ..$ vf_vst_counts_rank                 : int [1:230] 118 204 88 107 44 105 109 200 188 94 ...
+        .. .. .. .. ..$ var.features                       : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. ..$ var.features.rank                  : int [1:230] 118 204 88 107 44 105 109 200 188 94 ...
+        .. .. .. ..@ misc      : list()
+        .. .. .. ..@ key       : chr "rna_"
         ..@ meta.data   :'data.frame':	80 obs. of  5 variables:
         .. ..$ orig.ident  : chr [1:80] "SeuratProject" "SeuratProject" "SeuratProject" "SeuratProject" ...
         .. ..$ nCount_RNA  : num [1:80] 70 85 87 127 173 70 64 72 52 100 ...
@@ -64,7 +82,6 @@
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
         .. .. .. ..@ stdev                     : num [1:39] 5.75 5.21 4.32 3.62 2.77 ...
-        .. .. .. ..@ key                       : chr "PC_"
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
@@ -72,6 +89,7 @@
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
         .. .. .. .. ..$ total.variance: num 230
+        .. .. .. ..@ key                       : chr "PC_"
         ..@ images      : list()
         ..@ project.name: chr "SeuratProject"
         ..@ misc        :List of 6
@@ -81,16 +99,17 @@
         .. .. ..$ original_name: chr [1:230] "SYMBOL - MS4A1" "SYMBOL - CD79B" "SYMBOL - CD79A" "SYMBOL - HLA-DRA" ...
         .. ..$ color_pool      : chr [1:383] "#77aadd" "#ee8866" "#eedd88" "#ffaabb" ...
         .. ..$ ingestionDate   : POSIXct[1:1], format: "1991-12-19 05:23:00"
-        .. ..$ gene_dispersion :'data.frame':	230 obs. of  5 variables:
+        .. ..$ gene_dispersion :'data.frame':	230 obs. of  6 variables:
         .. .. ..$ mean                 : num [1:230] 0.388 0.6 0.7 13.425 0.3 ...
         .. .. ..$ variance             : num [1:230] 1.025 1.281 4.365 725.463 0.871 ...
-        .. .. ..$ variance.standardized: num [1:230] 0.898 0.473 1.086 0.973 1.356 ...
+        .. .. ..$ variance.standardized: num [1:230] 1.141 2.708 4.018 745.526 0.642 ...
+        .. .. ..$ NA                   : num [1:230] 0.898 0.473 1.086 0.973 1.356 ...
         .. .. ..$ SYMBOL               : chr [1:230] "SYMBOL - MS4A1" "SYMBOL - CD79B" "SYMBOL - CD79A" "SYMBOL - HLA-DRA" ...
         .. .. ..$ ENSEMBL              : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
         .. ..$ active.reduction: chr "pca"
         .. ..$ numPCs          : num 2
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 4 1 0
+        .. ..$ : int [1:3] 5 0 2
         ..@ commands    :List of 4
         .. ..$ NormalizeData.RNA       :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "NormalizeData.RNA"
@@ -108,26 +127,23 @@
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
         .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(Seurat::NormalizeData(scdata, normalization.method = normalization, " "    verbose = FALSE), assay = \"RNA\", nfeatures = nfeatures, verbose = FALSE)"
-        .. .. .. ..@ params     :List of 12
-        .. .. .. .. ..$ assay              : chr "RNA"
-        .. .. .. .. ..$ selection.method   : chr "vst"
-        .. .. .. .. ..$ loess.span         : num 0.3
-        .. .. .. .. ..$ clip.max           : chr "auto"
-        .. .. .. .. ..$ mean.function      :function (mat, display_progress)  
-        .. .. .. .. ..$ dispersion.function:function (mat, display_progress)  
-        .. .. .. .. ..$ num.bin            : num 20
-        .. .. .. .. ..$ binning.method     : chr "equal_width"
-        .. .. .. .. ..$ nfeatures          : num 1000
-        .. .. .. .. ..$ mean.cutoff        : num [1:2] 0.1 8
-        .. .. .. .. ..$ dispersion.cutoff  : num [1:2] 1 Inf
-        .. .. .. .. ..$ verbose            : logi FALSE
+        .. .. .. ..@ params     :List of 10
+        .. .. .. .. ..$ assay            : chr "RNA"
+        .. .. .. .. ..$ selection.method : chr "vst"
+        .. .. .. .. ..$ loess.span       : num 0.3
+        .. .. .. .. ..$ clip.max         : chr "auto"
+        .. .. .. .. ..$ num.bin          : num 20
+        .. .. .. .. ..$ binning.method   : chr "equal_width"
+        .. .. .. .. ..$ nfeatures        : num 1000
+        .. .. .. .. ..$ mean.cutoff      : num [1:2] 0.1 8
+        .. .. .. .. ..$ dispersion.cutoff: num [1:2] 1 Inf
+        .. .. .. .. ..$ verbose          : logi FALSE
         .. ..$ ScaleData.RNA           :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "ScaleData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
         .. .. .. ..@ call.string: chr [1:3] "ScaleData(Seurat::FindVariableFeatures(Seurat::NormalizeData(scdata, " "    normalization.method = normalization, verbose = FALSE), assay = \"RNA\", " "    nfeatures = nfeatures, verbose = FALSE), verbose = FALSE)"
-        .. .. .. ..@ params     :List of 10
-        .. .. .. .. ..$ features          : chr [1:230] "PPBP" "IGLL5" "VDAC3" "CD1C" ...
+        .. .. .. ..@ params     :List of 9
         .. .. .. .. ..$ assay             : chr "RNA"
         .. .. .. .. ..$ model.use         : chr "linear"
         .. .. .. .. ..$ use.umi           : logi FALSE
@@ -135,7 +151,7 @@
         .. .. .. .. ..$ do.center         : logi TRUE
         .. .. .. .. ..$ scale.max         : num 10
         .. .. .. .. ..$ block.size        : num 1000
-        .. .. .. .. ..$ min.cells.to.block: num 80
+        .. .. .. .. ..$ min.cells.to.block: num 3000
         .. .. .. .. ..$ verbose           : logi FALSE
         .. ..$ RunPCA.RNA              :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "RunPCA.RNA"

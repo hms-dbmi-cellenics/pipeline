@@ -134,7 +134,7 @@ test_that("runClusters uses active.reduction in misc slot", {
   data@graphs$RNA_snn <- NULL
 
   for (algo in algos) {
-    expect_error(runClusters(algo, resolution, data), "Cannot find 'pca'")
+    expect_error(runClusters(algo, resolution, data), "'pca' not found")
   }
 
   # will use active.reduction to get SNN graph
@@ -159,7 +159,7 @@ test_that("patch_cell_sets throws error on unsuccessful response", {
     patch_cell_sets(
       "api_url",
       "experiment_id",
-      list(),  
+      list(),
       "auth_JWT",
       FALSE
     ),
@@ -308,6 +308,23 @@ test_that("format_cell_sets_object orders clusters lexicographically", {
   for (algo in algos) {
     res <- format_cluster_cellsets(cell_sets, algo, color_pool)
     expect_equal(unlist(lapply(res$children, `[[`, "key")), expected_order[[algo]])
+  }
+})
+
+test_that("format_cell_sets_object doesn't hardcore all keys as louvain (need for Seurat object upload)", {
+  n_clusters <- 5
+  cell_sets <- mock_cellset_object(50, n_clusters)
+  troublesome_clusters <- c(11, 12, 21, 45)
+  more_cell_sets <- data.frame(cluster = troublesome_clusters, cell_ids = c(101, 102, 103, 104))
+  cell_sets <- rbind(cell_sets, more_cell_sets)
+
+  color_pool <- mock_color_pool(n_clusters)
+  algos <- c("louvain", "leiden", "other")
+
+  for (algo in algos) {
+    res <- format_cluster_cellsets(cell_sets, algo, color_pool)
+    expected <- ifelse(algo %in% c('louvain', 'leiden'), 'louvain', algo)
+    expect_equal(res$key, expected)
   }
 })
 

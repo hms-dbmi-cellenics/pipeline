@@ -17,13 +17,15 @@
       $output$scdata_list
       $output$scdata_list$`this-is-not-a-uuid-1`
       An object of class Seurat 
-      2000 features across 178 samples within 1 assay 
+      2000 features across 190 samples within 1 assay 
       Active assay: RNA (2000 features, 0 variable features)
+       1 layer present: counts
       
       $output$scdata_list$`this-is-not-a-uuid-2`
       An object of class Seurat 
-      2000 features across 125 samples within 1 assay 
+      2000 features across 119 samples within 1 assay 
       Active assay: RNA (2000 features, 0 variable features)
+       1 layer present: counts
       
       
       $output$annot
@@ -2052,18 +2054,20 @@
       [1] TRUE
       
       $output$parent_cellsets
+      Index: <key>
                  key      name    type cell_id
-        1: louvain-0 Cluster 0 cluster      13
-        2: louvain-0 Cluster 0 cluster      25
-        3: louvain-0 Cluster 0 cluster      36
-        4: louvain-0 Cluster 0 cluster      39
-        5: louvain-0 Cluster 0 cluster      41
+              <char>    <char>  <char>   <int>
+        1: louvain-0 Cluster 0 cluster     320
+        2: louvain-0 Cluster 0 cluster     152
+        3: louvain-0 Cluster 0 cluster     227
+        4: louvain-0 Cluster 0 cluster     127
+        5: louvain-0 Cluster 0 cluster     838
        ---                                    
-      580: louvain-4 Cluster 4 cluster     782
-      581: louvain-4 Cluster 4 cluster     793
-      582: louvain-4 Cluster 4 cluster     837
-      583: louvain-4 Cluster 4 cluster     854
-      584: louvain-4 Cluster 4 cluster     857
+      582: louvain-5 Cluster 5 cluster     309
+      583: louvain-5 Cluster 5 cluster      28
+      584: louvain-5 Cluster 5 cluster     678
+      585: louvain-5 Cluster 5 cluster      27
+      586: louvain-5 Cluster 5 cluster     818
       
       $output$qc_config
       $output$qc_config$cellSizeDistribution

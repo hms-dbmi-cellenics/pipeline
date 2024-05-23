@@ -4,6 +4,7 @@ mock_scdata_list <- function() {
     as.is = TRUE
   )
 
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
   # add samples
   scdata$samples <- rep("123abc", 80)

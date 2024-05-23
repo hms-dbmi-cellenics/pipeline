@@ -56,6 +56,7 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   sample_1_id <- "123abc"
   sample_2_id <- "123def"
 
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
   # add samples
@@ -103,29 +104,6 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-#' Fix time stamps in seurat object
-#'
-#' Seurat adds logs to certain command runs, with time stamps that make snapshot
-#' tests fail. This function replaces them with a fixed datetime object.
-#'
-#' @param scdata seurat object
-#'
-#' @return seurat object with fixed time stamps
-#'
-clean_timestamp <- function(scdata) {
-  fixed_datetime <- as.POSIXct("1991-12-19 05:23:00", tz = "UTC")
-
-  for (slot in names(scdata@commands)) {
-    scdata@commands[[slot]]@time.stamp <- fixed_datetime
-  }
-
-  if ("ingestionDate" %in% names(scdata@misc)) {
-    scdata@misc$ingestionDate <- fixed_datetime
-  }
-
-  return(scdata)
-}
-
 test_that("harmony integration works", {
   c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
   cells_id <- mock_ids()
@@ -136,6 +114,7 @@ test_that("harmony integration works", {
 
   integrated_scdata <- suppressWarnings(run_harmony(scdata_list, config, cells_id))
   integrated_scdata <- clean_timestamp(integrated_scdata)
+  integrated_scdata <- remove_commands_functions(integrated_scdata)
 
   expect_s4_class(integrated_scdata, "Seurat")
   expect_snapshot(str(integrated_scdata))

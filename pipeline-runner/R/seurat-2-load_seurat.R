@@ -54,7 +54,13 @@ reconstruct_seurat <- function(dataset_fpath) {
   # get counts
   tryCatch({
     SeuratObject::DefaultAssay(user_scdata) <- 'RNA'
-    counts <- user_scdata[['RNA']]@counts
+
+    # if V5 object, ensure layers are rejoined
+    if (methods::is(user_scdata[['RNA']], 'Assay5'))
+      user_scdata[['RNA']] <- SeuratObject::JoinLayers(user_scdata[['RNA']])
+
+
+    counts <- user_scdata[['RNA']]$counts
     test_user_sparse_mat(counts)
     rns <- row.names(counts)
     check_type_is_safe(rns)
@@ -84,14 +90,20 @@ reconstruct_seurat <- function(dataset_fpath) {
 
   # add logcounts
   tryCatch({
-    logcounts <- user_scdata[['RNA']]@data
-    test_user_sparse_mat(logcounts)
+
+    layers <- SeuratObject::Layers(user_scdata, assay = 'RNA')
+    if ('data' %in% layers) {
+      logcounts <- user_scdata[['RNA']]$data
+      test_user_sparse_mat(logcounts)
+    } else {
+      logcounts <- Seurat::NormalizeData(user_scdata[['RNA']]$counts)
+    }
 
     # shouldn't be raw counts
     suspect.counts <- max(logcounts) > 100
     if (suspect.counts) logcounts <- Seurat::NormalizeData(logcounts)
 
-    scdata[['RNA']]@data <- logcounts
+    scdata[['RNA']]$data <- logcounts
   },
   error = function(e) {
     message(e$message)
@@ -134,10 +146,9 @@ reconstruct_seurat <- function(dataset_fpath) {
     check_type_is_safe(red_name)
     red_match <- grep("umap|tsne", red_name, value = TRUE)
 
-    if (length(red_match) > 0 && !(red_match %in% c("umap", "tsne"))) {
+    if (length(red_match) && !(red_match %in% c("umap", "tsne"))) {
       is_umap <- grepl("umap", red_match)
-      is_tsne <- grepl("tsne", red_match)
-      new_red_name <- ifelse(is_umap, "umap", ifelse(is_tsne, "tsne", NA))
+      new_red_name <- ifelse(is_umap, "umap", "tsne")
 
       message("Found reduction name ", red_match," containing ", new_red_name)
       user_scdata <- update_reduction_name(user_scdata, red_name, new_red_name)
@@ -147,12 +158,12 @@ reconstruct_seurat <- function(dataset_fpath) {
 
     stopifnot(red_name %in% c('umap', 'tsne'))
 
-    embedding <- user_scdata@reductions[[red_name]]@cell.embeddings
-    test_user_df(embedding)
-    red <- SeuratObject::CreateDimReducObject(
-      embeddings = embedding,
-      assay = 'RNA'
-    )
+    red <- user_scdata@reductions[[red_name]]
+    test_user_df(red@cell.embeddings)
+    test_user_df(red@feature.loadings)
+    test_user_df(red@feature.loadings.projected)
+    red@assay.used <- 'RNA'
+
     scdata@reductions[[red_name]] <- red
   },
   error = function(e) {

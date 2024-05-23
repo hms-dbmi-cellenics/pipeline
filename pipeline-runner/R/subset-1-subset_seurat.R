@@ -132,7 +132,7 @@ load_parent_experiment_data <- function(input, pipeline_config) {
 #'
 diet_scdata <- function(scdata) {
   lean_scdata <- Seurat::CreateSeuratObject(
-    counts = scdata@assays$RNA@counts,
+    counts = scdata@assays$RNA$counts,
     meta.data = scdata@meta.data,
     min.cells = 0,
     min.features = 0

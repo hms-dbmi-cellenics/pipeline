@@ -26,37 +26,14 @@ qc_setup <- function(experiment_id) {
   ))
 }
 
-
-#' Fix time stamps in seurat object
-#'
-#' Seurat adds logs to certain command runs, with time stamps that make snapshot
-#' tests fail. This function replaces them with a fixed datetime object.
-#'
-#' @param scdata seurat object
-#'
-#' @return seurat object with fixed time stamps
-#'
-clean_timestamp <- function(scdata) {
-  fixed_datetime <- as.POSIXct("1991-12-19 05:23:00", tz = "UTC")
-
-  for (slot in names(scdata@commands)) {
-    scdata@commands[[slot]]@time.stamp <- fixed_datetime
-  }
-
-  if ("ingestionDate" %in% names(scdata@misc)) {
-    scdata@misc$ingestionDate <- fixed_datetime
-  }
-
-  return(scdata)
-}
-
-
 snapshot_qc_output <- function(task_name, snap_list) {
   # scdata_list is returned for every sample, so we'll have duplicated stuff here.
   if (is.list(snap_list$data)) {
     snap_list$data <- lapply(snap_list$data, clean_timestamp)
+    snap_list$data <- lapply(snap_list$data, remove_commands_functions)
   } else {
     snap_list$data <- clean_timestamp(snap_list$data)
+    snap_list$data <- remove_commands_functions(snap_list$data)
   }
 
   # repeating instead of lapply to get easier to interpret snapshots
@@ -146,6 +123,7 @@ test_qc <- function(experiment_id) {
           debug_config = pipeline_config$debug_config
         )
       }
+
 
       snapshot_qc_output(
         task_name,

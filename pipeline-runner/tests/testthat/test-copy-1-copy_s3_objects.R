@@ -3,6 +3,7 @@ mock_source_data <- function(sample_ids, from_experiment_id) {
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
 
   scdata_list <- list()
   for (i in seq_along(sample_ids)) {
@@ -55,9 +56,9 @@ get_mock_params <- function() {
     sampleIdsMap = sample_ids_map
   )
 
-  pipeline_config <- list(aws_config = "")
+  pipeline_config <- list(aws_config = list())
 
-  return(list(input = input, pipeline_config = pipeline_config))
+  return(list(input = input, pipelineConfig = pipeline_config))
 }
 
 get_mock_cell_sets <- function(flatten = TRUE) {

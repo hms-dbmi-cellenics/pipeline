@@ -31,6 +31,7 @@ mock_scdata <- function(with_outlier = FALSE) {
   sample_1_id <- "123abc"
   sample_2_id <- "123def"
 
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
   scdata$cells_id <- 0:(ncol(scdata) - 1)
 

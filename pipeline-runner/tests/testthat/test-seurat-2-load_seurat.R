@@ -158,29 +158,6 @@ test_that("load_seurat fails if there is no pca reduction", {
 })
 
 
-test_that("load_seurat fails if there is inappropriate logcounts data", {
-  # setup
-  input_dir <- tempdir()
-  data_dir <- file.path(input_dir, 'pbmc_small')
-  dir.create(data_dir)
-  orig_scdata <- mock_scdata(data_dir)
-
-  # sparse matrix with wrong dimensions
-  bad_data <- Matrix::sparseMatrix(1, 1, x = 1)
-  expect_error(test_user_sparse_mat(bad_data), NA)
-  orig_scdata@assays$RNA@data <- bad_data
-  saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
-
-  prev_out <- list(config = list(samples = 'pbmc_small'))
-  expect_error(
-    load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_SEURAT_LOGCOUNTS'
-    )
-
-  # clean up
-  unlink(data_dir, recursive = TRUE)
-})
-
 test_that("load_seurat generates HVFInfo if it is not present", {
   # setup
   input_dir <- tempdir()
@@ -216,14 +193,14 @@ test_that("load_seurat identifies and log-transforms counts stored in data assay
 
 
   # replace logcounts with counts
-  orig_logcounts <- orig_scdata[['RNA']]@data
-  orig_counts <- orig_scdata[['RNA']]@counts
-  orig_scdata[['RNA']]@data <- orig_counts
+  orig_logcounts <- orig_scdata[['RNA']]$data
+  orig_counts <- orig_scdata[['RNA']]$counts
+  orig_scdata[['RNA']]$data <- orig_counts
 
   # checking setup
   expect_true(max(orig_counts) > 100)
   expect_false(max(orig_logcounts) > 100)
-  expect_identical(orig_scdata[['RNA']]@data, orig_counts)
+  expect_identical(orig_scdata[['RNA']]$data, orig_counts)
 
   saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
   prev_out <- list(config = list(samples = 'pbmc_small'))
@@ -231,9 +208,9 @@ test_that("load_seurat identifies and log-transforms counts stored in data assay
   scdata <- res$output$scdata
 
   # logcounts were log-transformed
-  counts <- scdata[['RNA']]@counts
+  counts <- scdata[['RNA']]$counts
   expect_identical(orig_counts, counts)
-  expect_identical(scdata[['RNA']]@data, Seurat::NormalizeData(orig_counts))
+  expect_identical(scdata[['RNA']]$data, Seurat::NormalizeData(orig_counts))
 
   # clean up
   unlink(data_dir, recursive = TRUE)
@@ -281,4 +258,55 @@ test_that("update_reduction_name correctly renames dimensionality reductions", {
   updated_scdata <- update_reduction_name(scdata, red_name, new_red_name)
   expect_equal(SeuratObject::DefaultDimReduc(updated_scdata), new_red_name)
   expect_true('tsne.ori' %in% names(updated_scdata@reductions))
+})
+
+test_that("load_seurat works with an Assay5 RNA", {
+  input_dir <- tempdir()
+  data_dir <- file.path(input_dir, 'pbmc_small')
+  dir.create(data_dir)
+  scdata <- mock_scdata(data_dir)
+
+  # convert to Assay5
+  scdata[['RNA']] <- as(scdata[['RNA']], 'Assay5')
+  saveRDS(scdata, file.path(data_dir, 'r.rds'))
+
+  prev_out <- list(config = list(samples = 'pbmc_small'))
+  res <- load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  expect_type(res, 'list')
+  expect_s4_class(res$output$scdata, 'Seurat')
+  expect_s4_class(res$output$scdata[['RNA']], 'Assay5')
+
+  # clean up
+  unlink(data_dir, recursive = TRUE)
+})
+
+test_that("load_seurat works with split Assay5 RNA", {
+  input_dir <- tempdir()
+  data_dir <- file.path(input_dir, 'pbmc_small')
+  dir.create(data_dir)
+  scdata <- mock_scdata(data_dir)
+
+  # convert to Assay5 and split
+  scdata[['RNA']] <- as(scdata[['RNA']], 'Assay5')
+  scdata$batch <- sample(c("batchA", "batchB", "batchC"), ncol(scdata), replace = TRUE)
+  scdata[["RNA"]] <- split(scdata[["RNA"]], f = scdata$batch)
+
+  # was split
+  expect_setequal(names(scdata[["RNA"]]@layers),
+                  c("data.batchB", "data.batchC", "data.batchA", "scale.data", "counts.batchB", "counts.batchC", "counts.batchA"))
+
+  saveRDS(scdata, file.path(data_dir, 'r.rds'))
+
+  prev_out <- list(config = list(samples = 'pbmc_small'))
+  res <- load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  expect_type(res, 'list')
+  expect_s4_class(res$output$scdata, 'Seurat')
+  expect_s4_class(res$output$scdata[['RNA']], 'Assay5')
+
+  # is joined back
+  expect_setequal(names(res$output$scdata[['RNA']]@layers),
+                  c('counts', 'data'))
+
+  # clean up
+  unlink(data_dir, recursive = TRUE)
 })

@@ -21,7 +21,16 @@ generateSeedVectors <- function(nseeds, nwords = 2L) {
   return(res)
 }
 
-alt_fnames <- c('theme_cowplot', 'pblapply', 'pbapply', 'pbsapply', 'generateSeedVectors')
+# functions from RhpcBLASctl used by harmony::RunHarmony
+blas_get_num_procs <- function() 1
+omp_get_num_procs <- function() 1
+blas_set_num_threads <- function(ncores) NULL
+omp_set_num_threads <- function(ncores) NULL
+omp_get_max_threads <- function() 1
+
+
+alt_fnames <- c('theme_cowplot', 'pblapply', 'pbapply', 'pbsapply', 'generateSeedVectors',
+                'blas_get_num_procs', 'omp_get_num_procs', 'blas_set_num_threads', 'omp_set_num_threads', 'omp_get_max_threads')
 
 
 install_ghost_package <- function(package) {

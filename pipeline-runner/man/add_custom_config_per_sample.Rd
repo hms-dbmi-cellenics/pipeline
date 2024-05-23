@@ -8,7 +8,8 @@ add_custom_config_per_sample(
   customize_template_config,
   config_template,
   scdata_list,
-  unfiltered_samples = NA
+  unfiltered_samples = NA,
+  technology = NA
 )
 }
 \arguments{

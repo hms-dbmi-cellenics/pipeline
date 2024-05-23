@@ -36,12 +36,12 @@ run_clustering <- function(scdata, config, ignore_ssl_cert) {
 #' @export
 #'
 embed_and_cluster <- function(
-  scdata,
-  config,
-  sample_id,
-  cells_id,
-  task_name = "configureEmbedding",
-  ignore_ssl_cert = FALSE
+    scdata,
+    config,
+    sample_id,
+    cells_id,
+    task_name = "configureEmbedding",
+    ignore_ssl_cert = FALSE
 ) {
 
   if (config$clustering_should_run == TRUE) {
@@ -80,10 +80,15 @@ format_cluster_cellsets <- function(cell_sets,
                                     name = paste0(clustering_method, " clusters")) {
   message("Formatting cluster cellsets.")
 
-  # careful with capital l on type for the key.
+  # needed for leiden clustering to work
+  cell_sets_key <- ifelse(
+    clustering_method %in% c('louvain', 'leiden'),
+    'louvain',
+    clustering_method)
+
   cell_sets_object <-
     list(
-      key = "louvain",
+      key = cell_sets_key,
       name = name,
       rootNode = TRUE,
       type = "cellSets",
@@ -147,9 +152,9 @@ replace_cell_class_through_api <- function(cell_class_object, api_url, experimen
   httr_query <- paste0("$[?(@.key == \"", cell_class_key, "\")]")
 
   body <- list(list(
-      "$match" = list(query = httr_query, value = list("$remove" = TRUE))
-    ),
-    list("$prepend" = cell_class_object))
+    "$match" = list(query = httr_query, value = list("$remove" = TRUE))
+  ),
+  list("$prepend" = cell_class_object))
 
   patch_cell_sets(api_url, experiment_id, body, auth_JWT, ignore_ssl_cert)
 }

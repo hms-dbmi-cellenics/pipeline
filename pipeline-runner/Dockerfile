@@ -1,6 +1,6 @@
 # Create builder step
 # pull official base image and use it as builder
-FROM rocker/r-ver:4.2.2 AS builder
+FROM rocker/r-ver:4.4.0 AS builder
 WORKDIR /src/pipeline-runner
 
 # install required debian packages to install R packages
@@ -20,7 +20,7 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 
 # install renv to install required R packages
 RUN R -q -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -q -e "remotes::install_github('rstudio/renv@v1.0.5')" && \
+    R -q -e "remotes::install_github('rstudio/renv@v1.0.7')" && \
     R -q -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
 # fast pre-restore with pkgbuild
@@ -56,7 +56,7 @@ RUN Rscript check_package_licenses.R
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
 # ---------------------------------------------------
-FROM rocker/r-ver:4.2.2 AS common
+FROM rocker/r-ver:4.4.0 AS common
 WORKDIR /src/pipeline-runner
 
 # get source code and R packages
@@ -71,8 +71,8 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 
 # install python packages in virtualenv
 ENV WORKON_HOME=/src/.virtualenvs
-RUN R -q -e "reticulate::virtualenv_create('r-reticulate')" && \
-    R -q -e "reticulate::virtualenv_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3'), pip_options='--no-cache-dir')" 
+RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which python3)')" && \
+    R -q -e "reticulate::virtualenv_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3'), pip_options='--no-cache-dir')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD

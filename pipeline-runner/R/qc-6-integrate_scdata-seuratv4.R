@@ -27,7 +27,7 @@ run_seuratv4 <- function(scdata_list, config, cells_id) {
   use_geosketch <- "downsampling" %in% names(config) && config$downsampling$method == "geosketch"
 
   # calculate as many PCs for the PCA as possible, ideally 50, unless few cells
-  npcs_for_pca <- min(vapply(scdata_list, ncol, integer(1)) - 1, 50)
+  npcs_for_pca <- min(vapply(scdata_list, ncol, numeric(1)) - 1, 50)
   # use the min of what the user wants and what can be calculated
   npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
 
