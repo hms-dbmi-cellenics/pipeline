@@ -6,13 +6,13 @@ mock_scdata <- function(data_dir) {
 }
 
 
-test_that("load_seurat works", {
+test_that("load_obj2s_file works", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
   mock_scdata(data_dir)
   prev_out <- list(config = list(samples = 'pbmc_small'))
-  res <- load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
   expect_type(res, 'list')
   expect_s4_class(res$output$scdata, 'Seurat')
 
@@ -20,7 +20,7 @@ test_that("load_seurat works", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat has the correct structure", {
+test_that("load_obj2s_file has the correct structure", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
@@ -28,7 +28,7 @@ test_that("load_seurat has the correct structure", {
   orig_scdata <- mock_scdata(data_dir)
   prev_out <- list(config = list(samples = 'pbmc_small'))
 
-  res <- load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
   scdata <- res$output$scdata
 
   # misc has dispersions and annotations
@@ -52,7 +52,7 @@ test_that("load_seurat has the correct structure", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat fails if the file isn't a .rds file", {
+test_that("load_obj2s_file fails if the file isn't a .rds file", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
@@ -64,7 +64,7 @@ test_that("load_seurat fails if the file isn't a .rds file", {
 
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
-    load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
+    load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
     regexp = 'ERROR_SEURAT_RDS'
   )
 
@@ -72,7 +72,7 @@ test_that("load_seurat fails if the file isn't a .rds file", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat fails if there is no RNA assay", {
+test_that("load_obj2s_file fails if there is no RNA assay", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
@@ -85,7 +85,7 @@ test_that("load_seurat fails if there is no RNA assay", {
 
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
-    load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
+    load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
     regexp = 'ERROR_SEURAT_COUNTS'
     )
 
@@ -93,7 +93,7 @@ test_that("load_seurat fails if there is no RNA assay", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat does not fail if there is no seurat_clusters column in metadata", {
+test_that("load_obj2s_file does not fail if there is no seurat_clusters column in metadata", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
@@ -106,7 +106,7 @@ test_that("load_seurat does not fail if there is no seurat_clusters column in me
 
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
-    load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
+    load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
     NA
     )
 
@@ -114,7 +114,7 @@ test_that("load_seurat does not fail if there is no seurat_clusters column in me
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat fails if there is no reduction", {
+test_that("load_obj2s_file fails if there is no reduction", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
@@ -128,7 +128,7 @@ test_that("load_seurat fails if there is no reduction", {
 
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
-    load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
+    load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
     regexp = 'ERROR_SEURAT_REDUCTION'
     )
 
@@ -136,7 +136,7 @@ test_that("load_seurat fails if there is no reduction", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat fails if there is no pca reduction", {
+test_that("load_obj2s_file fails if there is no pca reduction", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
@@ -149,7 +149,7 @@ test_that("load_seurat fails if there is no pca reduction", {
 
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
-    load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
+    load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
     regexp = 'ERROR_SEURAT_REDUCTION'
     )
 
@@ -158,7 +158,7 @@ test_that("load_seurat fails if there is no pca reduction", {
 })
 
 
-test_that("load_seurat generates HVFInfo if it is not present", {
+test_that("load_obj2s_file generates HVFInfo if it is not present", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
@@ -172,7 +172,7 @@ test_that("load_seurat generates HVFInfo if it is not present", {
 
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
-    res <- load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
+    res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
     NA)
 
   scdata <- res$output$scdata
@@ -184,7 +184,7 @@ test_that("load_seurat generates HVFInfo if it is not present", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat identifies and log-transforms counts stored in data assay", {
+test_that("load_obj2s_file identifies and log-transforms counts stored in data assay", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
@@ -204,7 +204,7 @@ test_that("load_seurat identifies and log-transforms counts stored in data assay
 
   saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
   prev_out <- list(config = list(samples = 'pbmc_small'))
-  res <- load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
   scdata <- res$output$scdata
 
   # logcounts were log-transformed
@@ -216,7 +216,7 @@ test_that("load_seurat identifies and log-transforms counts stored in data assay
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat works when default reducion is different than umap or tsne", {
+test_that("load_obj2s_file works when default reducion is different than umap or tsne", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
@@ -230,7 +230,7 @@ test_that("load_seurat works when default reducion is different than umap or tsn
   saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
 
   prev_out <- list(config = list(samples = 'pbmc_small'))
-  res <- load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
   scdata <- res$output$scdata
 
   expect_true('tsne' %in% names(scdata@reductions))
@@ -260,7 +260,7 @@ test_that("update_reduction_name correctly renames dimensionality reductions", {
   expect_true('tsne.ori' %in% names(updated_scdata@reductions))
 })
 
-test_that("load_seurat works with an Assay5 RNA", {
+test_that("load_obj2s_file works with an Assay5 RNA", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
@@ -271,7 +271,7 @@ test_that("load_seurat works with an Assay5 RNA", {
   saveRDS(scdata, file.path(data_dir, 'r.rds'))
 
   prev_out <- list(config = list(samples = 'pbmc_small'))
-  res <- load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
   expect_type(res, 'list')
   expect_s4_class(res$output$scdata, 'Seurat')
   expect_s4_class(res$output$scdata[['RNA']], 'Assay5')
@@ -280,7 +280,7 @@ test_that("load_seurat works with an Assay5 RNA", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_seurat works with split Assay5 RNA", {
+test_that("load_obj2s_file works with split Assay5 RNA", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
@@ -298,7 +298,7 @@ test_that("load_seurat works with split Assay5 RNA", {
   saveRDS(scdata, file.path(data_dir, 'r.rds'))
 
   prev_out <- list(config = list(samples = 'pbmc_small'))
-  res <- load_seurat(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
   expect_type(res, 'list')
   expect_s4_class(res$output$scdata, 'Seurat')
   expect_s4_class(res$output$scdata[['RNA']], 'Assay5')

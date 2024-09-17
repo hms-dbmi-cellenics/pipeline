@@ -11,10 +11,10 @@ mock_upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   return('object_key')
 }
 
-test_that("upload_seurat_to_aws completes successfully", {
+test_that("upload_obj2s_to_aws completes successfully", {
 
-  mockery::stub(upload_seurat_to_aws, 'put_object_in_s3', mock_put_object_in_s3)
-  mockery::stub(upload_seurat_to_aws, 'upload_matrix_to_s3', mock_upload_matrix_to_s3)
+  mockery::stub(upload_obj2s_to_aws, 'put_object_in_s3', mock_put_object_in_s3)
+  mockery::stub(upload_obj2s_to_aws, 'upload_matrix_to_s3', mock_upload_matrix_to_s3)
 
   scdata <- mock_scdata()
   samples <- rep(c('A', 'B', 'C', 'D'), each = ncol(scdata)/4)
@@ -24,7 +24,7 @@ test_that("upload_seurat_to_aws completes successfully", {
   input <- list(experimentId = '1234')
   prev_out <- list(scdata = scdata, config = list())
 
-  expect_error(upload_seurat_to_aws(input, NULL, prev_out), NA)
+  expect_error(upload_obj2s_to_aws(input, NULL, prev_out), NA)
 })
 
 
