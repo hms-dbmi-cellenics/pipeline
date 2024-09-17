@@ -65,7 +65,7 @@ test_that("load_obj2s_file fails if the file isn't a .rds file", {
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
     load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_SEURAT_RDS'
+    regexp = 'ERROR_OBJ2S_RDS'
   )
 
   # clean up
@@ -86,7 +86,7 @@ test_that("load_obj2s_file fails if there is no RNA assay", {
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
     load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_SEURAT_COUNTS'
+    regexp = 'ERROR_OBJ2S_COUNTS'
     )
 
   # clean up
@@ -129,7 +129,7 @@ test_that("load_obj2s_file fails if there is no reduction", {
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
     load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_SEURAT_REDUCTION'
+    regexp = 'ERROR_OBJ2S_REDUCTION'
     )
 
   # clean up
@@ -150,7 +150,7 @@ test_that("load_obj2s_file fails if there is no pca reduction", {
   prev_out <- list(config = list(samples = 'pbmc_small'))
   expect_error(
     load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_SEURAT_REDUCTION'
+    regexp = 'ERROR_OBJ2S_REDUCTION'
     )
 
   # clean up

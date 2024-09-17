@@ -44,7 +44,7 @@ reconstruct_sce <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_RDS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_RDS, call. = FALSE)
   })
 
   # get counts
@@ -57,7 +57,7 @@ reconstruct_sce <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_COUNTS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_COUNTS, call. = FALSE)
   })
 
   # get meta data
@@ -68,7 +68,7 @@ reconstruct_sce <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_METADATA, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_METADATA, call. = FALSE)
   })
 
   # reconstruct Seurat object
@@ -91,7 +91,7 @@ reconstruct_sce <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_LOGCOUNTS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
   })
 
   scdata <- add_obj2s_dispersions(scdata)
@@ -130,7 +130,7 @@ reconstruct_sce <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_REDUCTION, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
   })
 
   # add pca dimensionality reduction (need for trajectory analysis)
@@ -151,7 +151,7 @@ reconstruct_sce <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_REDUCTION, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
   })
 
   return(scdata)
@@ -177,7 +177,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_RDS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_RDS, call. = FALSE)
   })
 
   # get counts
@@ -197,7 +197,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_COUNTS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_COUNTS, call. = FALSE)
   })
 
   # get meta data
@@ -208,7 +208,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_METADATA, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_METADATA, call. = FALSE)
   })
 
   # reconstruct Seurat object
@@ -236,7 +236,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_LOGCOUNTS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
   })
 
 
@@ -282,7 +282,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_REDUCTION, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
   })
 
   # add pca dimensionality reduction (need for trajectory analysis)
@@ -297,7 +297,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_REDUCTION, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
   })
 
   return(scdata)
@@ -321,7 +321,7 @@ add_obj2s_dispersions <- function(scdata) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_HVFINFO, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_HVFINFO, call. = FALSE)
   })
 
   return(scdata)
