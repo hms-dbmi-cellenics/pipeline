@@ -1,4 +1,4 @@
-upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
+upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
   message("Uploading to AWS ...")
 
   experiment_id <- input$experimentId

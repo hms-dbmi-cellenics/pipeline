@@ -46,8 +46,8 @@ QC_TASK_LIST <- list(
 
 SEURAT_TASK_LIST <- list(
   "downloadSeurat" = "download_user_files",
-  "processSeurat" = "load_seurat",
-  "uploadSeuratToAWS" = "upload_seurat_to_aws"
+  "processSeurat" = "load_obj2s_file",
+  "uploadSeuratToAWS" = "upload_obj2s_to_aws"
 )
 
 # directory where download_user_files downloads user files
@@ -76,6 +76,7 @@ DEBUG_PATH <- "/debug"
 file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x"),
   "seurat" = list("seurat"),
+  "single_cell_experiment" = list("singleCellExperiment"),
   "rhapsody" = list("rhapsody"),
   "10x_h5" = list("10XH5"),
   "parse" = list("barcodesParse", "featuresParse", "matrixParse")
@@ -86,6 +87,7 @@ file_names <- list(
   features10x = "features.tsv.gz",
   matrix10x = "matrix.mtx.gz",
   seurat = "r.rds",
+  singleCellExperiment = "r.rds",
   rhapsody = "expression_data.st.gz",
   "10XH5" = "matrix.h5.gz",
   barcodesParse = "cell_metadata.csv.gz",
