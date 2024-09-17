@@ -16,7 +16,7 @@ AWS.config.update({
   s3ForcePathStyle: true,
 });
 
-const validPipelineTypes = ['qc', 'gem2s', 'subset', 'seurat', 'copy'];
+const validPipelineTypes = ['qc', 'gem2s', 'subset', 'obj2s', 'copy'];
 const isPipelineContainer = (name) => validPipelineTypes.some((keyword) => name.includes(keyword));
 
 const setVarsInTemplate = (template) => {

@@ -44,10 +44,10 @@ QC_TASK_LIST <- list(
   "configureEmbedding" = "embed_and_cluster"
 )
 
-SEURAT_TASK_LIST <- list(
-  "downloadSeurat" = "download_user_files",
-  "processSeurat" = "load_obj2s_file",
-  "uploadSeuratToAWS" = "upload_obj2s_to_aws"
+OBJ2S_TASK_LIST <- list(
+  "downloadObj2sFile" = "download_user_files",
+  "processObj2s" = "load_obj2s_file",
+  "uploadObj2sToAWS" = "upload_obj2s_to_aws"
 )
 
 # directory where download_user_files downloads user files
@@ -137,7 +137,7 @@ usethis::use_data(
   COPY_TASK_LIST,
   GEM2S_TASK_LIST,
   QC_TASK_LIST,
-  SEURAT_TASK_LIST,
+  OBJ2S_TASK_LIST,
   INPUT_DIR,
   RANDOM_SEED,
   MIN_CELLS_IN_SAMPLE,

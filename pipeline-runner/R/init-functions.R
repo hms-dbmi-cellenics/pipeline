@@ -285,7 +285,7 @@ call_subset <- function(task_name, input, pipeline_config) {
   return(message_id)
 }
 
-call_seurat <- function(task_name, input, pipeline_config) {
+call_obj2s <- function(task_name, input, pipeline_config) {
 
   experiment_id <- input$experimentId
 
@@ -296,12 +296,12 @@ call_seurat <- function(task_name, input, pipeline_config) {
   }
 
   check_input(input)
-  tasks <- lapply(SEURAT_TASK_LIST, get)
+  tasks <- lapply(OBJ2S_TASK_LIST, get)
 
   c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'SeuratResponse')
+  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'OBJ2SResponse')
   return(message_id)
 }
 
@@ -376,7 +376,7 @@ call_qc <- function(task_name, input, pipeline_config) {
   config$aws_config <- pipeline_config$aws_config
   config$metadata_s3_path <- input$metadataS3Path
   config$cl_metadata_bucket <- pipeline_config$cl_metadata_bucket
-  
+
   # For configure embedding
   config$clustering_should_run <- input$clusteringShouldRun
 
@@ -532,7 +532,7 @@ start_heartbeat <- function(task_token, aws_config) {
 handlers <- c(
   qc = call_qc,
   gem2s = call_gem2s,
-  seurat = call_seurat,
+  obj2s = call_obj2s,
   subset = call_subset,
   copy = call_copy
 )
