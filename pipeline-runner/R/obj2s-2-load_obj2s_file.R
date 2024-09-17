@@ -21,8 +21,8 @@ load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/inpu
 
   reconstruct_fun <- switch(
     obj2s_type,
-    'seurat' = reconstruct_seurat,
-    'single_cell_experiment' = reconstruct_sce
+    'seurat_object' = reconstruct_seurat,
+    'sce_object' = reconstruct_sce
   )
 
   scdata <- reconstruct_fun(dataset_fpath)

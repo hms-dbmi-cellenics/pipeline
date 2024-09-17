@@ -75,8 +75,8 @@ DEBUG_PATH <- "/debug"
 # (they are originally defined in the structure of the SQL database)
 file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x"),
-  "seurat" = list("seurat"),
-  "single_cell_experiment" = list("singleCellExperiment"),
+  "seurat_object" = list("seuratObject"),
+  "sce_object" = list("sceObject"),
   "rhapsody" = list("rhapsody"),
   "10x_h5" = list("10XH5"),
   "parse" = list("barcodesParse", "featuresParse", "matrixParse")
@@ -86,8 +86,8 @@ file_names <- list(
   barcodes10x = "barcodes.tsv.gz",
   features10x = "features.tsv.gz",
   matrix10x = "matrix.mtx.gz",
-  seurat = "r.rds",
-  singleCellExperiment = "r.rds",
+  seuratObject = "r.rds",
+  sceObject = "r.rds",
   rhapsody = "expression_data.st.gz",
   "10XH5" = "matrix.h5.gz",
   barcodesParse = "cell_metadata.csv.gz",
