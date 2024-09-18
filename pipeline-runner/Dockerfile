@@ -72,7 +72,7 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 # install python packages in virtualenv
 ENV WORKON_HOME=/src/.virtualenvs
 RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which python3)')" && \
-    R -q -e "reticulate::virtualenv_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3'), pip_options='--no-cache-dir')"
+    R -q -e "reticulate::virtualenv_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3', 'numpy<2'), pip_options='--no-cache-dir')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
