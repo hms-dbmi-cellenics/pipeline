@@ -80,7 +80,7 @@ reconstruct_sce <- function(dataset_fpath) {
   # add logcounts
   tryCatch({
 
-    if ('counts' %in% SummarizedExperiment::assayNames(user_scdata)) {
+    if ('logcounts' %in% SummarizedExperiment::assayNames(user_scdata)) {
       logcounts <- SingleCellExperiment::logcounts(user_scdata)
       test_user_sparse_mat(logcounts)
     } else {

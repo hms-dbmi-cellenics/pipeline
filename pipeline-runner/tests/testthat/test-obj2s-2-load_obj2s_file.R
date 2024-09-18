@@ -1,20 +1,30 @@
-mock_scdata <- function(data_dir) {
+mock_scdata <- function(data_dir, obj2s_type) {
   data("pbmc_small", package = 'SeuratObject')
   pbmc_small$seurat_clusters <- pbmc_small$RNA_snn_res.1
+
+  if (obj2s_type == 'sce_object') {
+    pbmc_small <- Seurat::as.SingleCellExperiment(pbmc_small)
+  }
+
   saveRDS(pbmc_small, file.path(data_dir, 'r.rds'))
   return(pbmc_small)
 }
+
+obj2s_types <- c('seurat_object', 'sce_object')
 
 
 test_that("load_obj2s_file works", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  mock_scdata(data_dir)
-  prev_out <- list(config = list(samples = 'pbmc_small'))
-  res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
-  expect_type(res, 'list')
-  expect_s4_class(res$output$scdata, 'Seurat')
+
+  for (obj2s_type in obj2s_types) {
+    mock_scdata(data_dir, obj2s_type)
+    prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = obj2s_type)))
+    res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+    expect_type(res, 'list')
+    expect_s4_class(res$output$scdata, 'Seurat')
+  }
 
   # clean up
   unlink(data_dir, recursive = TRUE)
@@ -25,28 +35,38 @@ test_that("load_obj2s_file has the correct structure", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  orig_scdata <- mock_scdata(data_dir)
-  prev_out <- list(config = list(samples = 'pbmc_small'))
 
-  res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
-  scdata <- res$output$scdata
+  for (obj2s_type in obj2s_types) {
 
-  # misc has dispersions and annotations
-  expect_setequal(names(scdata@misc), c('gene_dispersion', 'gene_annotations'))
+    orig_scdata <- mock_scdata(data_dir, obj2s_type)
+    mock_scdata(data_dir, obj2s_type)
+    prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = obj2s_type)))
+    res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+    scdata <- res$output$scdata
 
-  # dispersions have expected columns
-  dispersions <- scdata@misc$gene_dispersion
-  expect_setequal(colnames(dispersions), c('mean', 'variance', 'variance.standardized', 'SYMBOL', 'ENSEMBL'))
+    # misc has dispersions and annotations
+    expect_setequal(names(scdata@misc), c('gene_dispersion', 'gene_annotations'))
 
-  # annotations have expected columns
-  annot <- scdata@misc$gene_annotations
-  expect_setequal(colnames(annot), c('input', 'name', 'original_name'))
+    # dispersions have expected columns
+    dispersions <- scdata@misc$gene_dispersion
+    expect_setequal(colnames(dispersions), c('mean', 'variance', 'variance.standardized', 'SYMBOL', 'ENSEMBL'))
 
-  # only the default and 'pca' reduction is present
-  expect_equal(c(SeuratObject::DefaultDimReduc(orig_scdata), 'pca'), names(scdata@reductions))
+    # annotations have expected columns
+    annot <- scdata@misc$gene_annotations
+    expect_setequal(colnames(annot), c('input', 'name', 'original_name'))
 
-  # all metadata is preserved and active.ident is added
-  expect_equal(colnames(scdata@meta.data), c(colnames(orig_scdata@meta.data), 'active.ident'))
+    # only the default and 'pca' reduction is present
+    expect_equal(c('tsne', 'pca'), names(scdata@reductions))
+
+    if (obj2s_type == 'seurat_object') {
+      # all metadata is preserved and active.ident is added
+      expect_equal(colnames(scdata@meta.data), c(colnames(orig_scdata@meta.data), 'active.ident'))
+
+    } else if (obj2s_type == 'sce_object') {
+      # all metadata is preserved and active.ident is added
+      expect_equal(colnames(scdata@meta.data), colnames(orig_scdata@colData))
+    }
+  }
 
   # clean up
   unlink(data_dir, recursive = TRUE)
@@ -57,33 +77,36 @@ test_that("load_obj2s_file fails if the file isn't a .rds file", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  orig_scdata <- mock_scdata(data_dir)
 
-  # overwrite with mtcars csv
-  write.csv(mtcars, file.path(data_dir, 'r.rds'))
+  for (obj2s_type in obj2s_types) {
 
-  prev_out <- list(config = list(samples = 'pbmc_small'))
-  expect_error(
-    load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_OBJ2S_RDS'
-  )
+    mock_scdata(data_dir, obj2s_type)
+    # overwrite with mtcars csv
+    write.csv(mtcars, file.path(data_dir, 'r.rds'))
+
+    prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = obj2s_type)))
+    expect_error(
+      load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
+      regexp = 'ERROR_OBJ2S_RDS'
+    )
+  }
 
   # clean up
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_obj2s_file fails if there is no RNA assay", {
+test_that("load_obj2s_file fails if there is no RNA assay for seurat_object", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  orig_scdata <- mock_scdata(data_dir)
+  orig_scdata <- mock_scdata(data_dir, obj2s_type = 'seurat_object')
 
   # rename RNA assay
   names(orig_scdata@assays) <- 'blah'
   saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
 
-  prev_out <- list(config = list(samples = 'pbmc_small'))
+  prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = 'seurat_object')))
   expect_error(
     load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
     regexp = 'ERROR_OBJ2S_COUNTS'
@@ -98,13 +121,13 @@ test_that("load_obj2s_file does not fail if there is no seurat_clusters column i
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  orig_scdata <- mock_scdata(data_dir)
+  orig_scdata <- mock_scdata(data_dir, 'seurat_object')
 
   # remove seurat_clusters
   orig_scdata$seurat_clusters <- NULL
   saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
 
-  prev_out <- list(config = list(samples = 'pbmc_small'))
+  prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = 'seurat_object')))
   expect_error(
     load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
     NA
@@ -119,18 +142,25 @@ test_that("load_obj2s_file fails if there is no reduction", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  orig_scdata <- mock_scdata(data_dir)
+  scdata <- mock_scdata(data_dir, 'seurat_object')
 
   # remove reductions
-  orig_scdata@reductions$tsne <- NULL
-  orig_scdata@reductions$pca <- NULL
-  saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
+  scdata@reductions$tsne <- NULL
+  scdata@reductions$pca <- NULL
 
-  prev_out <- list(config = list(samples = 'pbmc_small'))
-  expect_error(
-    load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_OBJ2S_REDUCTION'
-    )
+  for (obj2s_type in obj2s_types) {
+    overwrite_scdata <- scdata
+    if (obj2s_type == 'sce_object')
+      overwrite_scdata <- Seurat::as.SingleCellExperiment(overwrite_scdata)
+
+    saveRDS(overwrite_scdata, file.path(data_dir, 'r.rds'))
+    prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = obj2s_type)))
+
+    expect_error(
+      load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
+      regexp = 'ERROR_OBJ2S_REDUCTION'
+      )
+  }
 
   # clean up
   unlink(data_dir, recursive = TRUE)
@@ -141,17 +171,24 @@ test_that("load_obj2s_file fails if there is no pca reduction", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  orig_scdata <- mock_scdata(data_dir)
+  scdata <- mock_scdata(data_dir, 'seurat_object')
 
   # remove reductions
-  orig_scdata@reductions$pca <- NULL
-  saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
+  scdata@reductions$pca <- NULL
 
-  prev_out <- list(config = list(samples = 'pbmc_small'))
-  expect_error(
-    load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-    regexp = 'ERROR_OBJ2S_REDUCTION'
+  for (obj2s_type in obj2s_types) {
+    overwrite_scdata <- scdata
+    if (obj2s_type == 'sce_object')
+      overwrite_scdata <- Seurat::as.SingleCellExperiment(overwrite_scdata)
+
+    saveRDS(overwrite_scdata, file.path(data_dir, 'r.rds'))
+    prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = obj2s_type)))
+
+    expect_error(
+      load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
+      regexp = 'ERROR_OBJ2S_REDUCTION'
     )
+  }
 
   # clean up
   unlink(data_dir, recursive = TRUE)
@@ -163,14 +200,14 @@ test_that("load_obj2s_file generates HVFInfo if it is not present", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  orig_scdata <- mock_scdata(data_dir)
+  orig_scdata <- mock_scdata(data_dir, 'seurat_object')
 
 
   # mess up meta.features (used by HVFInfo)
   colnames(orig_scdata@assays$RNA@meta.features) <- paste0('blah.', colnames(orig_scdata@assays$RNA@meta.features))
   saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
 
-  prev_out <- list(config = list(samples = 'pbmc_small'))
+  prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = 'seurat_object')))
   expect_error(
     res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
     NA)
@@ -184,13 +221,12 @@ test_that("load_obj2s_file generates HVFInfo if it is not present", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_obj2s_file identifies and log-transforms counts stored in data assay", {
+test_that("load_obj2s_file identifies and log-transforms counts stored in data assay of seurat_object", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  orig_scdata <- mock_scdata(data_dir)
-
+  orig_scdata <- mock_scdata(data_dir, 'seurat_object')
 
   # replace logcounts with counts
   orig_logcounts <- orig_scdata[['RNA']]$data
@@ -203,7 +239,7 @@ test_that("load_obj2s_file identifies and log-transforms counts stored in data a
   expect_identical(orig_scdata[['RNA']]$data, orig_counts)
 
   saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
-  prev_out <- list(config = list(samples = 'pbmc_small'))
+  prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = 'seurat_object')))
   res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
   scdata <- res$output$scdata
 
@@ -216,12 +252,37 @@ test_that("load_obj2s_file identifies and log-transforms counts stored in data a
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_obj2s_file works when default reducion is different than umap or tsne", {
+test_that("load_obj2s_file calculates logcounts for sce_object if not present", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  orig_scdata <- mock_scdata(data_dir)
+  orig_scdata <- mock_scdata(data_dir, 'sce_object')
+
+  # remove logcounts
+  SingleCellExperiment::logcounts(orig_scdata) <- NULL
+
+  saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
+  prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = 'sce_object')))
+  res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  scdata <- res$output$scdata
+
+  # logcounts are log-transformed counts
+  orig_counts <- SingleCellExperiment::counts(orig_scdata)
+  counts <- scdata[['RNA']]$counts
+  expect_identical(orig_counts, counts)
+  expect_identical(scdata[['RNA']]$data, Seurat::NormalizeData(orig_counts))
+
+  # clean up
+  unlink(data_dir, recursive = TRUE)
+})
+
+test_that("load_obj2s_file works when default reducion for seurat_object is different than umap or tsne", {
+  # setup
+  input_dir <- tempdir()
+  data_dir <- file.path(input_dir, 'pbmc_small')
+  dir.create(data_dir)
+  orig_scdata <- mock_scdata(data_dir, 'seurat_object')
   withr::defer(unlink(data_dir, recursive = TRUE))
 
   # simulate the condition where renaming is needed
@@ -229,7 +290,27 @@ test_that("load_obj2s_file works when default reducion is different than umap or
   orig_scdata@reductions$tsne <- orig_scdata@reductions$tsne.ref
   saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
 
-  prev_out <- list(config = list(samples = 'pbmc_small'))
+  prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = 'seurat_object')))
+  res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
+  scdata <- res$output$scdata
+
+  expect_true('tsne' %in% names(scdata@reductions))
+  expect_equal('tsne', SeuratObject::DefaultDimReduc(scdata))
+})
+
+test_that("load_obj2s_file works when reduction for sce_object is a string match for umap or tsne", {
+  # setup
+  input_dir <- tempdir()
+  data_dir <- file.path(input_dir, 'pbmc_small')
+  dir.create(data_dir)
+  orig_scdata <- mock_scdata(data_dir, 'sce_object')
+  withr::defer(unlink(data_dir, recursive = TRUE))
+
+  # simulate the condition where renaming is needed
+  SingleCellExperiment::reducedDimNames(orig_scdata) <- c('PCA', 'TSNE.REF')
+  saveRDS(orig_scdata, file.path(data_dir, 'r.rds'))
+
+  prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = 'sce_object')))
   res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
   scdata <- res$output$scdata
 
@@ -242,7 +323,7 @@ test_that("update_reduction_name correctly renames dimensionality reductions", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  scdata <- mock_scdata(data_dir)
+  scdata <- mock_scdata(data_dir, 'seurat_object')
   withr::defer(unlink(data_dir, recursive = TRUE))
 
   # simulate the condition where renaming is needed
@@ -260,17 +341,17 @@ test_that("update_reduction_name correctly renames dimensionality reductions", {
   expect_true('tsne.ori' %in% names(updated_scdata@reductions))
 })
 
-test_that("load_obj2s_file works with an Assay5 RNA", {
+test_that("load_obj2s_file works with an Assay5 RNA for seurat_object", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  scdata <- mock_scdata(data_dir)
+  scdata <- mock_scdata(data_dir, 'seurat_object')
 
   # convert to Assay5
   scdata[['RNA']] <- as(scdata[['RNA']], 'Assay5')
   saveRDS(scdata, file.path(data_dir, 'r.rds'))
 
-  prev_out <- list(config = list(samples = 'pbmc_small'))
+  prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = 'seurat_object')))
   res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
   expect_type(res, 'list')
   expect_s4_class(res$output$scdata, 'Seurat')
@@ -280,11 +361,11 @@ test_that("load_obj2s_file works with an Assay5 RNA", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_obj2s_file works with split Assay5 RNA", {
+test_that("load_obj2s_file works with split Assay5 RNA for seurat_object", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  scdata <- mock_scdata(data_dir)
+  scdata <- mock_scdata(data_dir, 'seurat_object')
 
   # convert to Assay5 and split
   scdata[['RNA']] <- as(scdata[['RNA']], 'Assay5')
@@ -297,7 +378,7 @@ test_that("load_obj2s_file works with split Assay5 RNA", {
 
   saveRDS(scdata, file.path(data_dir, 'r.rds'))
 
-  prev_out <- list(config = list(samples = 'pbmc_small'))
+  prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = 'seurat_object')))
   res <- load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir)
   expect_type(res, 'list')
   expect_s4_class(res$output$scdata, 'Seurat')
