@@ -1,4 +1,4 @@
-{{- if (eq .Values.clusterEnv "staging") }}
+{{- if or (eq .Values.clusterEnv "staging") (eq .Values.accountId "160782110667") }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:

@@ -395,6 +395,7 @@ jobs:
           export NAMESPACE="$DEPLOYMENT_NAME-$SANDBOX_ID"
           export CHART_CRD_NAME="$DEPLOYMENT_NAME-chart"
           export IMAGE_POLICY_TAG="{\"\$imagepolicy\": \"$NAMESPACE:$DEPLOYMENT_NAME:tag\"}"
+          export AWS_ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}"
 
           yq '
             select(di == 0).metadata.name = strenv(NAMESPACE) |
@@ -423,6 +424,7 @@ jobs:
             select(di == 5).spec.chart.spec.sourceRef.name = strenv(CHART_CRD_NAME) |
             select(di == 5).spec.chart.spec.sourceRef.namespace = strenv(NAMESPACE) |
             select(di == 5).spec.values.clusterEnv = strenv(KUBERNETES_ENV) |
+            select(di == 5).spec.values.accountId = strenv(AWS_ACCOUNT_ID) |
             select(di == 5).spec.values.image.registry = strenv(REGISTRY) |
             select(di == 5).spec.values.image.repository = strenv(REPOSITORY) |
             select(di == 5).spec.values.image.tag = strenv(IMAGE_NAME) |
