@@ -71,7 +71,7 @@ reconstruct_sce <- function(dataset_fpath) {
     stop(errors$ERROR_OBJ2S_METADATA, call. = FALSE)
   })
 
-  # reconstruct Seurat object
+  # construct Seurat object from SingleCellExperiment items
   scdata <- SeuratObject::CreateSeuratObject(
     counts,
     meta.data = metadata,
