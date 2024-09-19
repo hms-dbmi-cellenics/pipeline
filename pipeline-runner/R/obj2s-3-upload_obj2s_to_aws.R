@@ -1,4 +1,4 @@
-upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
+upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
   message("Uploading to AWS ...")
 
   experiment_id <- input$experimentId
@@ -18,7 +18,7 @@ upload_seurat_to_aws <- function(input, pipeline_config, prev_out) {
   # detect cluster metadata
   cluster_columns <- find_cluster_columns(scdata)
   if (!length(cluster_columns))
-    stop(errors$ERROR_SEURAT_CLUSTERS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_CLUSTERS, call. = FALSE)
 
   # add clusters
   cluster_sets <- list()

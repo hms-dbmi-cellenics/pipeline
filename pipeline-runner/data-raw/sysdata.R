@@ -44,10 +44,10 @@ QC_TASK_LIST <- list(
   "configureEmbedding" = "embed_and_cluster"
 )
 
-SEURAT_TASK_LIST <- list(
-  "downloadSeurat" = "download_user_files",
-  "processSeurat" = "load_seurat",
-  "uploadSeuratToAWS" = "upload_seurat_to_aws"
+OBJ2S_TASK_LIST <- list(
+  "downloadObj2sFile" = "download_user_files",
+  "processObj2s" = "load_obj2s_file",
+  "uploadObj2sToAWS" = "upload_obj2s_to_aws"
 )
 
 # directory where download_user_files downloads user files
@@ -75,7 +75,8 @@ DEBUG_PATH <- "/debug"
 # (they are originally defined in the structure of the SQL database)
 file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x"),
-  "seurat" = list("seurat"),
+  "seurat_object" = list("seuratObject"),
+  "sce_object" = list("sceObject"),
   "rhapsody" = list("rhapsody"),
   "10x_h5" = list("10XH5"),
   "parse" = list("barcodesParse", "featuresParse", "matrixParse")
@@ -85,7 +86,8 @@ file_names <- list(
   barcodes10x = "barcodes.tsv.gz",
   features10x = "features.tsv.gz",
   matrix10x = "matrix.mtx.gz",
-  seurat = "r.rds",
+  seuratObject = "r.rds",
+  sceObject = "r.rds",
   rhapsody = "expression_data.st.gz",
   "10XH5" = "matrix.h5.gz",
   barcodesParse = "cell_metadata.csv.gz",
@@ -118,13 +120,13 @@ DOUBLET_RATE_PARSE <- list(mini = 0.046, WT = 0.034, mega = 0.064)
 
 # pipeline error constants
 errors <- list(
-  ERROR_SEURAT_RDS = 'ERROR_SEURAT_RDS',
-  ERROR_SEURAT_COUNTS = 'ERROR_SEURAT_COUNTS',
-  ERROR_SEURAT_HVFINFO = 'ERROR_SEURAT_HVFINFO',
-  ERROR_SEURAT_METADATA = 'ERROR_SEURAT_METADATA',
-  ERROR_SEURAT_CLUSTERS = 'ERROR_SEURAT_CLUSTERS',
-  ERROR_SEURAT_REDUCTION = 'ERROR_SEURAT_REDUCTION',
-  ERROR_SEURAT_LOGCOUNTS = 'ERROR_SEURAT_LOGCOUNTS'
+  ERROR_OBJ2S_RDS = 'ERROR_OBJ2S_RDS',
+  ERROR_OBJ2S_COUNTS = 'ERROR_OBJ2S_COUNTS',
+  ERROR_OBJ2S_HVFINFO = 'ERROR_OBJ2S_HVFINFO',
+  ERROR_OBJ2S_METADATA = 'ERROR_OBJ2S_METADATA',
+  ERROR_OBJ2S_CLUSTERS = 'ERROR_OBJ2S_CLUSTERS',
+  ERROR_OBJ2S_REDUCTION = 'ERROR_OBJ2S_REDUCTION',
+  ERROR_OBJ2S_LOGCOUNTS = 'ERROR_OBJ2S_LOGCOUNTS'
 )
 
 usethis::use_data(
@@ -135,7 +137,7 @@ usethis::use_data(
   COPY_TASK_LIST,
   GEM2S_TASK_LIST,
   QC_TASK_LIST,
-  SEURAT_TASK_LIST,
+  OBJ2S_TASK_LIST,
   INPUT_DIR,
   RANDOM_SEED,
   MIN_CELLS_IN_SAMPLE,

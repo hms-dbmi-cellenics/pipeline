@@ -1,7 +1,7 @@
-#' Loads a Seurat object provided by the user
+#' Loads a Seurat/SingleCellExperiment/AnnData object provided by the user
 #'
-#' This functions is a thin wrapper around `reconstruct_seurat`, which is used to
-#' safely read, check, and reconstruct the Seurat object for downstream use.
+#' This functions is a thin wrapper around `reconstruct_*` functions, which are used to
+#' safely read, check, and reconstruct a Seurat object for downstream use.
 #'
 #'
 #' @param input The input params received from the api.
@@ -11,13 +11,21 @@
 #' Seurat object is stored
 #'
 #' @export
-load_seurat <- function(input, pipeline_config, prev_out, input_dir = "/input") {
+load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/input") {
 
   config <- prev_out$config
   dataset_dir <- config$samples[1]
+  obj2s_type <- config$input$type
+
   dataset_fpath <- file.path(input_dir, dataset_dir, 'r.rds')
 
-  scdata <- reconstruct_seurat(dataset_fpath)
+  reconstruct_fun <- switch(
+    obj2s_type,
+    'seurat_object' = reconstruct_seurat,
+    'sce_object' = reconstruct_sce
+  )
+
+  scdata <- reconstruct_fun(dataset_fpath)
 
   prev_out$scdata <- scdata
 
@@ -26,6 +34,127 @@ load_seurat <- function(input, pipeline_config, prev_out, input_dir = "/input") 
     output = prev_out
   )
   return(res)
+}
+
+reconstruct_sce <- function(dataset_fpath) {
+  # read it
+  tryCatch({
+    user_scdata <- readRDS(dataset_fpath)
+    stopifnot(methods::is(user_scdata, 'SingleCellExperiment'))
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_RDS, call. = FALSE)
+  })
+
+  # get counts
+  tryCatch({
+    counts <- SingleCellExperiment::counts(user_scdata)
+    test_user_sparse_mat(counts)
+    rns <- row.names(counts)
+    check_type_is_safe(rns)
+
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_COUNTS, call. = FALSE)
+  })
+
+  # get meta data
+  tryCatch({
+    metadata <- user_scdata@colData
+    metadata <- as.data.frame(metadata)
+    test_user_df(metadata)
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_METADATA, call. = FALSE)
+  })
+
+  # construct Seurat object from SingleCellExperiment items
+  scdata <- SeuratObject::CreateSeuratObject(
+    counts,
+    meta.data = metadata,
+  )
+
+  # add logcounts
+  tryCatch({
+
+    if ('logcounts' %in% SummarizedExperiment::assayNames(user_scdata)) {
+      logcounts <- SingleCellExperiment::logcounts(user_scdata)
+      test_user_sparse_mat(logcounts)
+    } else {
+      logcounts <- Seurat::NormalizeData(counts)
+    }
+
+    scdata[['RNA']]$data <- logcounts
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
+  })
+
+  scdata <- add_obj2s_dispersions(scdata)
+
+  # add gene annotations
+  gene_annotations <- data.frame(
+    input = rns,
+    name = rns,
+    original_name = rns,
+    row.names = rns
+  )
+  scdata@misc$gene_annotations <- gene_annotations
+
+  red_names <- tolower(SingleCellExperiment::reducedDimNames(user_scdata))
+
+  # add dimensionality reduction
+  tryCatch({
+    red_match <- grep("umap|tsne", red_names)
+
+    stopifnot(length(red_match) > 0)
+
+    # use last reduction as default (most recent call)
+    red.idx <- tail(red_match, 1)
+    red_name <- ifelse(grepl('umap', red_names[red.idx]), 'umap', 'tsne')
+
+    red <- SingleCellExperiment::reducedDims(user_scdata)[[red.idx]]
+    class(red) <- 'matrix'
+    test_user_df(red)
+
+    red <- Seurat::CreateDimReducObject(
+      embeddings = red,
+      assay = 'RNA',
+      key = paste0(red_name, '_'))
+
+    scdata@reductions[[red_name]] <- red
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
+  })
+
+  # add pca dimensionality reduction (need for trajectory analysis)
+  tryCatch({
+    pca.idx <- which(red_names == 'pca')
+    stopifnot(length(pca.idx) > 0)
+
+    pca <- SingleCellExperiment::reducedDims(user_scdata)[[pca.idx]]
+    class(pca) <- 'matrix'
+    test_user_df(pca)
+
+    pca <- SeuratObject::CreateDimReducObject(
+      embeddings = pca,
+      assay = 'RNA',
+      key = 'pca_'
+    )
+    scdata@reductions[['pca']] <- red
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
+  })
+
+  return(scdata)
 }
 
 #' Reconstructs the Seurat object provided by the user
@@ -48,7 +177,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_RDS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_RDS, call. = FALSE)
   })
 
   # get counts
@@ -68,7 +197,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_COUNTS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_COUNTS, call. = FALSE)
   })
 
   # get meta data
@@ -79,7 +208,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_METADATA, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_METADATA, call. = FALSE)
   })
 
   # reconstruct Seurat object
@@ -107,25 +236,12 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_LOGCOUNTS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
   })
 
 
   # add dispersions (need for gene list)
-  tryCatch({
-    dispersions <- Seurat::FindVariableFeatures(logcounts)
-    test_user_df(dispersions)
-    colnames(dispersions) <- gsub('^vst[.]', '', colnames(dispersions))
-
-    # keep columns that use: same as `HVFInfo(scdata)`
-    dispersions <- dispersions[, c('mean', 'variance', 'variance.standardized')]
-    dispersions$SYMBOL <- dispersions$ENSEMBL <- row.names(dispersions)
-    scdata@misc$gene_dispersion <- dispersions
-  },
-  error = function(e) {
-    message(e$message)
-    stop(errors$ERROR_SEURAT_HVFINFO, call. = FALSE)
-  })
+  scdata <- add_obj2s_dispersions(scdata)
 
   # add gene annotations
   gene_annotations <- data.frame(
@@ -138,8 +254,6 @@ reconstruct_seurat <- function(dataset_fpath) {
 
 
   # add default dimensionality reduction
-  # TODO: consider storing resolution, clustering metric, and distance metric
-  # for trajectory analysis
   tryCatch({
     names(user_scdata@reductions) <- tolower(names(user_scdata@reductions))
     red_name <- SeuratObject::DefaultDimReduc(user_scdata)
@@ -168,7 +282,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_REDUCTION, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
   })
 
   # add pca dimensionality reduction (need for trajectory analysis)
@@ -183,11 +297,36 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_SEURAT_REDUCTION, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
   })
 
   return(scdata)
 }
+
+
+add_obj2s_dispersions <- function(scdata) {
+
+  # add dispersions (need for gene list)
+  tryCatch({
+    logcounts <- scdata[['RNA']]$data
+
+    dispersions <- Seurat::FindVariableFeatures(logcounts)
+    test_user_df(dispersions)
+    colnames(dispersions) <- gsub('^vst[.]', '', colnames(dispersions))
+
+    # keep columns that use: same as `HVFInfo(scdata)`
+    dispersions <- dispersions[, c('mean', 'variance', 'variance.standardized')]
+    dispersions$SYMBOL <- dispersions$ENSEMBL <- row.names(dispersions)
+    scdata@misc$gene_dispersion <- dispersions
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_HVFINFO, call. = FALSE)
+  })
+
+  return(scdata)
+}
+
 
 test_user_df <- function(df) {
   for (col in colnames(df)) {

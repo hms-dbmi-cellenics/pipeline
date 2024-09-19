@@ -10,6 +10,8 @@ run_seuratv4(scdata_list, config, cells_id)
 \item{scdata_list}{list of SeuratObjects}
 
 \item{config}{list of configuration parameters}
+
+\item{cells_id}{list of cells ids to keep}
 }
 \value{
 normalized and integrated Seurat object
