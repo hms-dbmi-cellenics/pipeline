@@ -1,5 +1,13 @@
 mock_scdata <- function() {
   data("pbmc_small", package = 'SeuratObject')
+  rns <- row.names(pbmc_small)
+  pbmc_small@misc$gene_annotations <- data.frame(
+    input = rns,
+    name = rns,
+    original_name = rns,
+    row.names = rns
+  )
+
   return(pbmc_small)
 }
 
@@ -22,7 +30,7 @@ test_that("upload_obj2s_to_aws completes successfully", {
   scdata$seurat_clusters <- rep(letters[1:8], length.out = ncol(scdata))
 
   input <- list(experimentId = '1234')
-  prev_out <- list(scdata = scdata, config = list())
+  prev_out <- list(scdata = scdata, config = list(input = list(type = 'seurat_object')))
 
   expect_error(upload_obj2s_to_aws(input, NULL, prev_out), NA)
 })
@@ -106,15 +114,6 @@ test_that("format_obj2s ensures logcounts and counts have same nrow", {
   scdata_filtered <- Seurat::CreateSeuratObject(
     counts = scdata_orig[['RNA']]@counts,
     data = scdata_orig[['RNA']]@data[logcount.genes, ]
-  )
-
-  # add gene annotations
-  rns <- row.names(scdata_orig)
-  scdata_filtered@misc$gene_annotations <- data.frame(
-    input = rns,
-    name = rns,
-    original_name = rns,
-    row.names = rns
   )
 
   # check that are fewer genes in data
