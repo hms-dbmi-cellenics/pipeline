@@ -147,7 +147,7 @@ test_that("format_obj2s adds required metadata", {
 
   # added misc
   expect_equal(scdata@misc$experimentId, '1234')
-  expect_setequal(names(scdata@misc), c('experimentId', 'color_pool', 'ingestionDate'))
+  expect_setequal(names(scdata@misc), c('experimentId', 'color_pool', 'ingestionDate', 'gene_annotations'))
 
   # added required metadata columns
   expect_true(all(c('percent.mt', 'doublet_scores', 'doublet_class') %in% colnames(scdata@meta.data)))
