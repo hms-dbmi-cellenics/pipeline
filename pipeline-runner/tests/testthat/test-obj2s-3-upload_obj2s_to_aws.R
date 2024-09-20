@@ -116,6 +116,8 @@ test_that("format_obj2s ensures logcounts and counts have same nrow", {
     data = scdata_orig[['RNA']]@data[logcount.genes, ]
   )
 
+  scdata_filtered@misc$gene_annotations <- scdata_orig@misc$gene_annotations
+
   # check that are fewer genes in data
   expect_lt(nrow(scdata_filtered[['RNA']]$data), nrow(scdata_filtered[['RNA']]$counts))
 
