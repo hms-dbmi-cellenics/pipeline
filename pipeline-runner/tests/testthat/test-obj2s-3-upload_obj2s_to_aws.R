@@ -95,7 +95,7 @@ test_that("add_samples_col uses existing 'samples' or 'sample' metadata column",
 })
 
 
-test_that("format_obj2s adds required metadata", {
+test_that("format_obj2s ensures logcounts and counts have same nrow", {
 
 
   # filter out genes in logcounts
@@ -133,7 +133,7 @@ test_that("format_obj2s adds required metadata", {
 
 })
 
-test_that("format_obj2s ensures logcounts and counts have same nrow", {
+test_that("format_obj2s adds required metadata", {
 
   scdata <- mock_scdata()
   scdata <- format_obj2s(scdata, '1234')
