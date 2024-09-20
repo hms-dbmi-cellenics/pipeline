@@ -1,5 +1,13 @@
 mock_scdata <- function() {
   data("pbmc_small", package = 'SeuratObject')
+  rns <- row.names(pbmc_small)
+  pbmc_small@misc$gene_annotations <- data.frame(
+    input = rns,
+    name = rns,
+    original_name = rns,
+    row.names = rns
+  )
+
   return(pbmc_small)
 }
 
@@ -22,7 +30,7 @@ test_that("upload_obj2s_to_aws completes successfully", {
   scdata$seurat_clusters <- rep(letters[1:8], length.out = ncol(scdata))
 
   input <- list(experimentId = '1234')
-  prev_out <- list(scdata = scdata, config = list())
+  prev_out <- list(scdata = scdata, config = list(input = list(type = 'seurat_object')))
 
   expect_error(upload_obj2s_to_aws(input, NULL, prev_out), NA)
 })
@@ -95,10 +103,41 @@ test_that("add_samples_col uses existing 'samples' or 'sample' metadata column",
 })
 
 
-test_that("format_seurat adds requires metadata to a SeuratObject", {
+test_that("format_obj2s ensures logcounts and counts have same nrow", {
+
+
+  # filter out genes in logcounts
+  set.seed(0)
+  scdata_orig <- mock_scdata()
+  logcount.genes <- sample(row.names(scdata_orig), nrow(scdata_orig)/2)
+
+  scdata_filtered <- Seurat::CreateSeuratObject(
+    counts = scdata_orig[['RNA']]@counts,
+    data = scdata_orig[['RNA']]@data[logcount.genes, ]
+  )
+
+  scdata_filtered@misc$gene_annotations <- scdata_orig@misc$gene_annotations
+
+  # check that are fewer genes in data
+  expect_lt(nrow(scdata_filtered[['RNA']]$data), nrow(scdata_filtered[['RNA']]$counts))
+
+  scdata <- format_obj2s(scdata_filtered, '1234')
+
+  # check that are same genes after formatting
+  expect_equal(nrow(scdata[['RNA']]$data), nrow(scdata[['RNA']]$counts))
+
+  # check that row.names are correct
+  expect_setequal(row.names(scdata), logcount.genes)
+
+  # check that gene_annotations was also corrected
+  expect_setequal(row.names(scdata@misc$gene_annotations), logcount.genes)
+
+})
+
+test_that("format_obj2s adds required metadata", {
 
   scdata <- mock_scdata()
-  scdata <- format_seurat(scdata, '1234')
+  scdata <- format_obj2s(scdata, '1234')
 
   # added samples
   expect_true(all(scdata$samples == 'NA'))
@@ -108,7 +147,7 @@ test_that("format_seurat adds requires metadata to a SeuratObject", {
 
   # added misc
   expect_equal(scdata@misc$experimentId, '1234')
-  expect_setequal(names(scdata@misc), c('experimentId', 'color_pool', 'ingestionDate'))
+  expect_setequal(names(scdata@misc), c('experimentId', 'color_pool', 'ingestionDate', 'gene_annotations'))
 
   # added required metadata columns
   expect_true(all(c('percent.mt', 'doublet_scores', 'doublet_class') %in% colnames(scdata@meta.data)))
