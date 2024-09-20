@@ -95,10 +95,48 @@ test_that("add_samples_col uses existing 'samples' or 'sample' metadata column",
 })
 
 
-test_that("format_seurat adds requires metadata to a SeuratObject", {
+test_that("format_obj2s adds required metadata", {
+
+
+  # filter out genes in logcounts
+  set.seed(0)
+  scdata_orig <- mock_scdata()
+  logcount.genes <- sample(row.names(scdata_orig), nrow(scdata_orig)/2)
+
+  scdata_filtered <- Seurat::CreateSeuratObject(
+    counts = scdata_orig[['RNA']]@counts,
+    data = scdata_orig[['RNA']]@data[logcount.genes, ]
+  )
+
+  # add gene annotations
+  rns <- row.names(scdata_orig)
+  scdata_filtered@misc$gene_annotations <- data.frame(
+    input = rns,
+    name = rns,
+    original_name = rns,
+    row.names = rns
+  )
+
+  # check that are fewer genes in data
+  expect_lt(nrow(scdata_filtered[['RNA']]$data), nrow(scdata_filtered[['RNA']]$counts))
+
+  scdata <- format_obj2s(scdata_filtered, '1234')
+
+  # check that are same genes after formatting
+  expect_equal(nrow(scdata[['RNA']]$data), nrow(scdata[['RNA']]$counts))
+
+  # check that row.names are correct
+  expect_setequal(row.names(scdata), logcount.genes)
+
+  # check that gene_annotations was also corrected
+  expect_setequal(row.names(scdata@misc$gene_annotations), logcount.genes)
+
+})
+
+test_that("format_obj2s ensures logcounts and counts have same nrow", {
 
   scdata <- mock_scdata()
-  scdata <- format_seurat(scdata, '1234')
+  scdata <- format_obj2s(scdata, '1234')
 
   # added samples
   expect_true(all(scdata$samples == 'NA'))

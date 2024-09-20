@@ -7,7 +7,7 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
   scdata <- prev_out$scdata
   config <- prev_out$config
 
-  scdata <- format_seurat(scdata, experiment_id)
+  scdata <- format_obj2s(scdata, experiment_id)
 
   # change sample ids/names so that get sample cell sets
   input <- add_samples_to_input(scdata, input)
@@ -45,7 +45,7 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
                    key = experiment_id)
 
   # replicate qc config for simplicity
-  # could also create a 'seurat_config' column in experiment table and change the ui/api around more
+  # could also create a 'obj2s_config' column in experiment table and change the ui/api around more
   qc_config <- construct_qc_config(list(one = scdata), unfiltered_samples = 'one', technology = config$input$type)
   qc_config$configureEmbedding$embeddingSettings$useSaved <- TRUE
   qc_config$configureEmbedding$embeddingSettings$method <- SeuratObject::DefaultDimReduc(scdata)
@@ -247,7 +247,7 @@ find_group_columns <- function(metadata, remove.dups = TRUE) {
 # add 'cells_id'
 # 'samples' must be already added
 # current input$metadata not yet implemented
-format_seurat <- function(scdata, experiment_id) {
+format_obj2s <- function(scdata, experiment_id) {
 
   scdata <- add_samples_col(scdata)
   scdata$cells_id <- seq_len(ncol(scdata))-1
@@ -260,6 +260,13 @@ format_seurat <- function(scdata, experiment_id) {
   # need to mock processing config
   metadata_cols <- list('percent.mt' = 0, 'doublet_scores' = 0, 'doublet_class' = 'singlet')
   scdata <- mock_metadata(scdata, metadata_cols)
+
+  # need that logcounts and counts have same nrow
+  common.genes <- intersect(row.names(scdata[['RNA']]$counts),
+                            row.names(scdata[['RNA']]$data))
+
+  scdata <- scdata[common.genes, ]
+  scdata@misc$gene_annotations <- scdata@misc$gene_annotations[common.genes, ]
 
   return(scdata)
 }
