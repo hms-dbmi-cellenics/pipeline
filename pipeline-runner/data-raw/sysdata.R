@@ -77,6 +77,7 @@ file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x"),
   "seurat_object" = list("seuratObject"),
   "sce_object" = list("sceObject"),
+  "anndata_object" = list("anndataObject"),
   "rhapsody" = list("rhapsody"),
   "10x_h5" = list("10XH5"),
   "parse" = list("barcodesParse", "featuresParse", "matrixParse")
@@ -88,6 +89,7 @@ file_names <- list(
   matrix10x = "matrix.mtx.gz",
   seuratObject = "r.rds",
   sceObject = "r.rds",
+  anndataObject = "adata.h5ad",
   rhapsody = "expression_data.st.gz",
   "10XH5" = "matrix.h5.gz",
   barcodesParse = "cell_metadata.csv.gz",

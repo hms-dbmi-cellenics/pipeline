@@ -22,7 +22,8 @@ load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/inpu
   reconstruct_fun <- switch(
     obj2s_type,
     'seurat_object' = reconstruct_seurat,
-    'sce_object' = reconstruct_sce
+    'sce_object' = reconstruct_sce,
+    'anndata_object' = reconstruct_anndata,
   )
 
   scdata <- reconstruct_fun(dataset_fpath)
@@ -34,6 +35,10 @@ load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/inpu
     output = prev_out
   )
   return(res)
+}
+
+reconstruct_anndata <- function(dataset_fpath) {
+  # TODO: read adata fields and construct seurat object
 }
 
 reconstruct_sce <- function(dataset_fpath) {
