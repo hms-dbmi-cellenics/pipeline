@@ -17,7 +17,14 @@ load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/inpu
   dataset_dir <- config$samples[1]
   obj2s_type <- config$input$type
 
-  dataset_fpath <- file.path(input_dir, dataset_dir, 'r.rds')
+  dataset_fname <- switch(
+    obj2s_type,
+    'seurat_object' = 'r.rds',
+    'sce_object' = 'r.rds',
+    'anndata_object' = 'adata.h5ad'
+  )
+
+  dataset_fpath <- file.path(input_dir, dataset_dir, dataset_fname)
 
   reconstruct_fun <- switch(
     obj2s_type,
@@ -54,7 +61,13 @@ reconstruct_anndata <- function(dataset_fpath) {
 
   # get counts
   tryCatch({
-    user_scdata <- zellkonverter::readH5AD(dataset_fpath, raw = TRUE)
+    # read using anndata via reticulate
+    filename <- normalizePath(dataset_fpath, mustWork = FALSE)
+    anndata <- reticulate::import('anndata')
+    user_adata <- anndata$read_h5ad(filename)
+
+    # convert to SingleCellExperiment
+    user_scdata <- zellkonverter::AnnData2SCE(user_adata, raw = TRUE)
     stopifnot(methods::is(user_scdata, 'SingleCellExperiment'))
   },
   error = function(e) {
@@ -287,18 +300,18 @@ reconstruct_sce <- function(dataset_fpath) {
   # add pca dimensionality reduction (need for trajectory analysis)
   tryCatch({
     pca.idx <- which(red_names == 'pca')
-    stopifnot(length(pca.idx) > 0)
+    if (length(pca.idx) > 0) {
+      pca <- SingleCellExperiment::reducedDims(user_scdata)[[pca.idx]]
+      class(pca) <- 'matrix'
+      test_user_df(pca)
 
-    pca <- SingleCellExperiment::reducedDims(user_scdata)[[pca.idx]]
-    class(pca) <- 'matrix'
-    test_user_df(pca)
-
-    pca <- SeuratObject::CreateDimReducObject(
-      embeddings = pca,
-      assay = 'RNA',
-      key = 'pca_'
-    )
-    scdata@reductions[['pca']] <- red
+      pca <- SeuratObject::CreateDimReducObject(
+        embeddings = pca,
+        assay = 'RNA',
+        key = 'pca_'
+      )
+      scdata@reductions[['pca']] <- red
+    }
   },
   error = function(e) {
     message(e$message)

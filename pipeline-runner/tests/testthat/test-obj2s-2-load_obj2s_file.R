@@ -1,16 +1,37 @@
-mock_scdata <- function(data_dir, obj2s_type) {
+mock_scdata <- function(data_dir, obj2s_type, remove_reductions = NULL) {
   data("pbmc_small", package = 'SeuratObject')
   pbmc_small$seurat_clusters <- pbmc_small$RNA_snn_res.1
 
+  for (red in remove_reductions) {
+    pbmc_small@reductions[[red]] <- NULL
+  }
+
   if (obj2s_type == 'sce_object') {
     pbmc_small <- Seurat::as.SingleCellExperiment(pbmc_small)
+
+  } else if (obj2s_type == 'anndata_object') {
+    pbmc_small <- Seurat::as.SingleCellExperiment(pbmc_small)
+
+    # setup X with counts under '/X'
+    SingleCellExperiment::logcounts(pbmc_small) <- NULL
+    SummarizedExperiment::assayNames(pbmc_small, 'counts') <- 'X'
+
+    # change reduction names to match AnnData convention
+    SingleCellExperiment::reducedDimNames(pbmc_small) <- c('X_pca', 'X_tsne')
+
+    # write to h5ad
+    anndata <- reticulate::import('anndata')
+    adata <- zellkonverter::SCE2AnnData(pbmc_small)
+
+    anndata$AnnData$write_h5ad(adata, file.path(data_dir, 'adata.h5ad'))
+    return(pbmc_small)
   }
 
   saveRDS(pbmc_small, file.path(data_dir, 'r.rds'))
   return(pbmc_small)
 }
 
-obj2s_types <- c('seurat_object', 'sce_object')
+obj2s_types <- c('seurat_object', 'sce_object', 'anndata_object')
 
 
 test_that("load_obj2s_file works", {
@@ -62,8 +83,8 @@ test_that("load_obj2s_file has the correct structure", {
       # all metadata is preserved and active.ident is added
       expect_equal(colnames(scdata@meta.data), c(colnames(orig_scdata@meta.data), 'active.ident'))
 
-    } else if (obj2s_type == 'sce_object') {
-      # all metadata is preserved and active.ident is added
+    } else if (obj2s_type %in% c('sce_object', 'anndata_object')) {
+      # all metadata is preserved
       expect_equal(colnames(scdata@meta.data), colnames(orig_scdata@colData))
     }
   }
@@ -78,11 +99,19 @@ test_that("load_obj2s_file fails if the file isn't a .rds file", {
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
 
+
   for (obj2s_type in obj2s_types) {
+
+    dataset_fname <- switch(
+      obj2s_type,
+      'seurat_object' = 'r.rds',
+      'sce_object' = 'r.rds',
+      'anndata_object' = 'adata.h5ad'
+    )
 
     mock_scdata(data_dir, obj2s_type)
     # overwrite with mtcars csv
-    write.csv(mtcars, file.path(data_dir, 'r.rds'))
+    write.csv(mtcars, file.path(data_dir, dataset_fname))
 
     prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = obj2s_type)))
     expect_error(
@@ -142,18 +171,13 @@ test_that("load_obj2s_file fails if there is no reduction", {
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  scdata <- mock_scdata(data_dir, 'seurat_object')
 
   # remove reductions
   scdata@reductions$tsne <- NULL
   scdata@reductions$pca <- NULL
 
   for (obj2s_type in obj2s_types) {
-    overwrite_scdata <- scdata
-    if (obj2s_type == 'sce_object')
-      overwrite_scdata <- Seurat::as.SingleCellExperiment(overwrite_scdata)
-
-    saveRDS(overwrite_scdata, file.path(data_dir, 'r.rds'))
+    scdata <- mock_scdata(data_dir, obj2s_type, remove_reductions = c('pca', 'tsne'))
     prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = obj2s_type)))
 
     expect_error(
@@ -166,22 +190,14 @@ test_that("load_obj2s_file fails if there is no reduction", {
   unlink(data_dir, recursive = TRUE)
 })
 
-test_that("load_obj2s_file fails if there is no pca reduction", {
+test_that("load_obj2s_file does not fail if there is no pca reduction", {
   # setup
   input_dir <- tempdir()
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
-  scdata <- mock_scdata(data_dir, 'seurat_object')
-
-  # remove reductions
-  scdata@reductions$pca <- NULL
 
   for (obj2s_type in obj2s_types) {
-    overwrite_scdata <- scdata
-    if (obj2s_type == 'sce_object')
-      overwrite_scdata <- Seurat::as.SingleCellExperiment(overwrite_scdata)
-
-    saveRDS(overwrite_scdata, file.path(data_dir, 'r.rds'))
+    scdata <- mock_scdata(data_dir, obj2s_type, remove_reductions = 'pca')
     prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = obj2s_type)))
 
     expect_error(
