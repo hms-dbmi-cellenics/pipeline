@@ -37,8 +37,154 @@ load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/inpu
   return(res)
 }
 
+# zellkonverter seems to miss setting this
+get_h5ad_raw_rownames <- function(dataset_fpath) {
+  h5_list <- rhdf5::h5ls(dataset_fpath)
+  raw_name <- h5_list |>
+    dplyr::filter(group == '/raw/var') |>
+    dplyr::filter(name %in% c('_index', 'index')) |>
+    dplyr::pull(name) |>
+    dplyr::first()
+
+  rns <- rhdf5::h5read(dataset_fpath, file.path('/raw/var', raw_name))
+  rns <- as.character(rns)
+}
+
 reconstruct_anndata <- function(dataset_fpath) {
-  # TODO: read adata fields and construct seurat object
+
+  # get counts
+  tryCatch({
+    user_scdata <- zellkonverter::readH5AD(dataset_fpath, raw = TRUE)
+    stopifnot(methods::is(user_scdata, 'SingleCellExperiment'))
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_READ, call. = FALSE)
+  })
+
+  has.raw <- 'raw' %in% SingleCellExperiment::altExpNames(user_scdata)
+
+  # get X and X_raw matrices
+  tryCatch({
+
+    # counts are in 'raw/X' if present, otherwise '/X'
+    if (has.raw) {
+      raw <- SingleCellExperiment::altExp(user_scdata, 'raw')
+      counts <- SummarizedExperiment::assay(raw, 'X')
+      row.names(counts) <- get_h5ad_raw_rownames(dataset_fpath)
+
+    } else {
+      counts <- SummarizedExperiment::assay(user_scdata, 'X')
+
+    }
+
+    test_user_sparse_mat(counts)
+    rns <- row.names(counts)
+    check_type_is_safe(rns)
+
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_COUNTS, call. = FALSE)
+  })
+
+  # get meta data
+  tryCatch({
+    metadata <- user_scdata@colData
+    metadata <- as.data.frame(metadata)
+    test_user_df(metadata)
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_METADATA, call. = FALSE)
+  })
+
+  # construct Seurat object from SingleCellExperiment items
+  scdata <- SeuratObject::CreateSeuratObject(
+    counts,
+    meta.data = metadata,
+  )
+
+  # add logcounts
+  tryCatch({
+
+    # logcounts are in '/X' if '/raw/X' present, otherwise absent
+    if (has.raw) {
+      logcounts <- SummarizedExperiment::assay(user_scdata, 'X')
+      test_user_sparse_mat(logcounts)
+    } else {
+      logcounts <- Seurat::NormalizeData(counts)
+    }
+
+    scdata[['RNA']]$data <- logcounts
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
+  })
+
+  scdata <- add_obj2s_dispersions(scdata)
+
+  # add gene annotations
+  gene_annotations <- data.frame(
+    input = rns,
+    name = rns,
+    original_name = rns,
+    row.names = rns
+  )
+  scdata@misc$gene_annotations <- gene_annotations
+
+  red_names <- tolower(SingleCellExperiment::reducedDimNames(user_scdata))
+
+  # add dimensionality reduction
+  tryCatch({
+    red_match <- grep("x_umap|x_tsne", red_names)
+
+    stopifnot(length(red_match) > 0)
+
+    # use last reduction as default (most recent call)
+    red.idx <- tail(red_match, 1)
+    red_name <- ifelse(grepl('umap', red_names[red.idx]), 'umap', 'tsne')
+
+    red <- SingleCellExperiment::reducedDims(user_scdata)[[red.idx]]
+    class(red) <- 'matrix'
+    test_user_df(red)
+
+    red <- Seurat::CreateDimReducObject(
+      embeddings = red,
+      assay = 'RNA',
+      key = paste0(red_name, '_'))
+
+    scdata@reductions[[red_name]] <- red
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
+  })
+
+  # add pca dimensionality reduction (need for trajectory analysis)
+  tryCatch({
+    pca.idx <- which(red_names == 'x_pca')
+    if (length(pca.idx) > 0) {
+      pca <- SingleCellExperiment::reducedDims(user_scdata)[[pca.idx]]
+      class(pca) <- 'matrix'
+      test_user_df(pca)
+
+      pca <- SeuratObject::CreateDimReducObject(
+        embeddings = pca,
+        assay = 'RNA',
+        key = 'pca_'
+      )
+      scdata@reductions[['pca']] <- red
+    }
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
+  })
+
+  return(scdata)
+
 }
 
 reconstruct_sce <- function(dataset_fpath) {
@@ -49,7 +195,7 @@ reconstruct_sce <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_OBJ2S_RDS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_READ, call. = FALSE)
   })
 
   # get counts
@@ -182,7 +328,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   },
   error = function(e) {
     message(e$message)
-    stop(errors$ERROR_OBJ2S_RDS, call. = FALSE)
+    stop(errors$ERROR_OBJ2S_READ, call. = FALSE)
   })
 
   # get counts

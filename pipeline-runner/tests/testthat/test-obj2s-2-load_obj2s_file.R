@@ -87,7 +87,7 @@ test_that("load_obj2s_file fails if the file isn't a .rds file", {
     prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = obj2s_type)))
     expect_error(
       load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-      regexp = 'ERROR_OBJ2S_RDS'
+      regexp = 'ERROR_OBJ2S_READ'
     )
   }
 
