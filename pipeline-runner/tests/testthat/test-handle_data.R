@@ -103,7 +103,7 @@ test_that("upload_matrix_to_s3 completes successfully", {
 
     # generates correct S3 key
     key <- upload_matrix_to_s3(pipeline_config, experiment_id, data)
-    expect_equal(key, '1234/r.rds')
+    expect_equal(key, '1234/r.qs')
 })
 
 test_that("send_output_to_api completes successfully", {
