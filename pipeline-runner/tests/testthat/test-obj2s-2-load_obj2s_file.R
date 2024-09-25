@@ -172,10 +172,6 @@ test_that("load_obj2s_file fails if there is no reduction", {
   data_dir <- file.path(input_dir, 'pbmc_small')
   dir.create(data_dir)
 
-  # remove reductions
-  scdata@reductions$tsne <- NULL
-  scdata@reductions$pca <- NULL
-
   for (obj2s_type in obj2s_types) {
     scdata <- mock_scdata(data_dir, obj2s_type, remove_reductions = c('pca', 'tsne'))
     prev_out <- list(config = list(samples = 'pbmc_small', input = list(type = obj2s_type)))
@@ -202,7 +198,7 @@ test_that("load_obj2s_file does not fail if there is no pca reduction", {
 
     expect_error(
       load_obj2s_file(input = NULL, pipeline_config = NULL, prev_out = prev_out, input_dir = input_dir),
-      regexp = 'ERROR_OBJ2S_REDUCTION'
+      NA
     )
   }
 
