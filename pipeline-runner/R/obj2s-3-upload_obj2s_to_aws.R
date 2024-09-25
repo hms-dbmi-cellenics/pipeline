@@ -113,7 +113,7 @@ find_cluster_columns <- function(scdata) {
   scdblfinder_cols <- grep('^scDblFinder', colnames(meta), value = TRUE)
 
   # order meta to indicate preference for default clusters
-  louvain_cols <- c('louvain', 'active.ident', 'seurat_clusters')
+  louvain_cols <- c('louvain', 'active.ident', 'cell_type', 'seurat_clusters')
   meta <- meta |> dplyr::relocate(dplyr::any_of(louvain_cols))
 
   # use user supplied name for active.ident if possible
@@ -273,12 +273,13 @@ format_obj2s <- function(scdata, experiment_id) {
 
 # use 'samples' or 'sample' if present, otherwise assume one sample
 add_samples_col <- function(scdata) {
-  in.meta <- c('samples', 'sample') %in% colnames(scdata@meta.data)
+  samples_cols <- c('samples', 'sample', 'donor_id')
+  in.meta <- samples_cols %in% colnames(scdata@meta.data)
 
   if (!any(in.meta)) {
     scdata$samples <- 'NA'
   } else {
-    sample_col <- c('samples', 'sample')[which(in.meta)[1]]
+    sample_col <- samples_cols[which(in.meta)[1]]
     scdata$samples <- scdata@meta.data[[sample_col]]
   }
 

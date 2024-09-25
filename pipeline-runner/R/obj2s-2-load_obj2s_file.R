@@ -175,7 +175,7 @@ reconstruct_anndata <- function(dataset_fpath) {
     stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
   })
 
-  # add pca dimensionality reduction (need for trajectory analysis)
+  # add pca dimensionality reduction
   tryCatch({
     pca.idx <- which(red_names == 'x_pca')
     if (length(pca.idx) > 0) {
@@ -297,7 +297,7 @@ reconstruct_sce <- function(dataset_fpath) {
     stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
   })
 
-  # add pca dimensionality reduction (need for trajectory analysis)
+  # add pca dimensionality reduction
   tryCatch({
     pca.idx <- which(red_names == 'pca')
     if (length(pca.idx) > 0) {
@@ -418,8 +418,10 @@ reconstruct_seurat <- function(dataset_fpath) {
 
 
   # add default dimensionality reduction
+  red_names <- tolower(names(user_scdata@reductions))
+  names(user_scdata@reductions) <- red_names
+
   tryCatch({
-    names(user_scdata@reductions) <- tolower(names(user_scdata@reductions))
     red_name <- SeuratObject::DefaultDimReduc(user_scdata)
     check_type_is_safe(red_name)
     red_match <- grep("umap|tsne", red_name, value = TRUE)
@@ -449,15 +451,19 @@ reconstruct_seurat <- function(dataset_fpath) {
     stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
   })
 
-  # add pca dimensionality reduction (need for trajectory analysis)
+  # add pca dimensionality reduction
   tryCatch({
-    pca <- user_scdata@reductions[['pca']]@cell.embeddings
-    test_user_df(pca)
-    red <- SeuratObject::CreateDimReducObject(
-      embeddings = pca,
-      assay = 'RNA'
-    )
-    scdata@reductions[['pca']] <- red
+    if ('pca' %in% red_names) {
+
+      pca <- user_scdata@reductions[['pca']]@cell.embeddings
+      test_user_df(pca)
+      red <- SeuratObject::CreateDimReducObject(
+        embeddings = pca,
+        assay = 'RNA'
+      )
+      scdata@reductions[['pca']] <- red
+    }
+
   },
   error = function(e) {
     message(e$message)
