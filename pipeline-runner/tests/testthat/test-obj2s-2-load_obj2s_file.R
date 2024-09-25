@@ -17,7 +17,9 @@ mock_scdata <- function(data_dir, obj2s_type, remove_reductions = NULL) {
     SummarizedExperiment::assayNames(pbmc_small, 'counts') <- 'X'
 
     # change reduction names to match AnnData convention
-    SingleCellExperiment::reducedDimNames(pbmc_small) <- c('X_pca', 'X_tsne')
+    red_names <- SingleCellExperiment::reducedDimNames(pbmc_small)
+    if (length(red_names))
+      SingleCellExperiment::reducedDimNames(pbmc_small) <- paste0('X_', red_names)
 
     # write to h5ad
     anndata <- reticulate::import('anndata')
