@@ -337,12 +337,13 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
 }
 
 upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
-  object_key <- paste0(experiment_id, "/r.rds")
+  object_key <- paste0(experiment_id, "/r.qs")
 
+  message("Saving object for key: ", object_key, '...')
   count_matrix <- tempfile()
-  saveRDS(data, file = count_matrix)
+  qs::qsave(data, file = count_matrix)
 
-  message("Count matrix file size : ", format(object.size(count_matrix)))
+  message("Count matrix file size : ", fs::file_size(count_matrix))
   message("Uploading updated count matrix to S3 bucket ", pipeline_config$processed_bucket, " at key ", object_key, "...")
 
   put_object_in_s3_multipart(pipeline_config, pipeline_config$processed_bucket, count_matrix, object_key)
