@@ -19,6 +19,7 @@ load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/inpu
 
   dataset_fname <- switch(
     obj2s_type,
+    'seurat_spatial_object' = 'r.rds',
     'seurat_object' = 'r.rds',
     'sce_object' = 'r.rds',
     'anndata_object' = 'adata.h5ad'
@@ -29,6 +30,7 @@ load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/inpu
   reconstruct_fun <- switch(
     obj2s_type,
     'seurat_object' = reconstruct_seurat,
+    'seurat_spatial_object' = reconstruct_seurat_spatial,
     'sce_object' = reconstruct_sce,
     'anndata_object' = reconstruct_anndata,
   )
@@ -42,6 +44,159 @@ load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/inpu
     output = prev_out
   )
   return(res)
+}
+
+reconstruct_seurat_spatial <- function(dataset_fpath) {
+
+  # read it
+  tryCatch({
+    user_scdata <- readRDS(dataset_fpath)
+    stopifnot(methods::is(user_scdata, 'Seurat'))
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_READ, call. = FALSE)
+  })
+
+  # get counts
+  tryCatch({
+
+    # if V5 object, ensure layers are rejoined
+    if (methods::is(user_scdata[['Spatial']], 'Assay5'))
+      user_scdata[['Spatial']] <- SeuratObject::JoinLayers(user_scdata[['Spatial']])
+
+
+    counts <- user_scdata[['Spatial']]$counts
+    test_user_sparse_mat(counts)
+    rns <- row.names(counts)
+    check_type_is_safe(rns)
+
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_COUNTS, call. = FALSE)
+  })
+
+  # get meta data
+  tryCatch({
+    metadata <- user_scdata@meta.data
+    metadata$active.ident <- user_scdata@active.ident
+    test_user_df(metadata)
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_METADATA, call. = FALSE)
+  })
+
+  # reconstruct Seurat object
+  scdata <- SeuratObject::CreateSeuratObject(
+    assay = 'RNA',
+    counts,
+    meta.data = metadata,
+  )
+
+  # add image annotation
+  image_names <- Seurat::Images(user_scdata)
+  scdata$image <- NA
+  for (image_name in image_names) {
+    image_cells <- Seurat:::CellsByImage(user_scdata, image_name, unlist = TRUE)
+    scdata@meta.data[image_cells, 'image'] <- image_name
+  }
+
+  # use library size factors for logcounts
+  tryCatch({
+    size_factors <- scuttle::librarySizeFactors(counts)
+    logcounts <- scuttle::normalizeCounts(counts, size_factors = size_factors)
+    scdata[['RNA']]$data <- logcounts
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
+  })
+
+  # add dispersions (need for gene list)
+  # SCT assay uses log1p of SCT corrected counts
+  # see https://github.com/satijalab/seurat/issues/6412
+  scdata <- add_obj2s_dispersions(scdata)
+
+  # add gene annotations
+  gene_annotations <- data.frame(
+    input = rns,
+    name = rns,
+    original_name = rns,
+    row.names = rns
+  )
+  scdata@misc$gene_annotations <- gene_annotations
+
+
+  # add default dimensionality reduction
+  red_names <- tolower(names(user_scdata@reductions))
+  names(user_scdata@reductions) <- red_names
+
+  tryCatch({
+    red_name <- SeuratObject::DefaultDimReduc(user_scdata)
+    check_type_is_safe(red_name)
+    red_match <- grep("umap|tsne", red_name, value = TRUE)
+
+    if (length(red_match) && !(red_match %in% c("umap", "tsne"))) {
+      is_umap <- grepl("umap", red_match)
+      new_red_name <- ifelse(is_umap, "umap", "tsne")
+
+      message("Found reduction name ", red_match," containing ", new_red_name)
+      user_scdata <- update_reduction_name(user_scdata, red_name, new_red_name)
+      red_name <- SeuratObject::DefaultDimReduc(user_scdata)
+      message("Updated default reduction: ", red_name)
+    }
+
+    stopifnot(red_name %in% c('umap', 'tsne'))
+
+    red <- user_scdata@reductions[[red_name]]
+    test_user_df(red@cell.embeddings)
+    test_user_df(red@feature.loadings)
+    test_user_df(red@feature.loadings.projected)
+    red@assay.used <- 'RNA'
+
+    scdata@reductions[[red_name]] <- red
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
+  })
+
+  # add pca dimensionality reduction
+  tryCatch({
+    if ('pca' %in% red_names) {
+
+      pca <- user_scdata@reductions[['pca']]@cell.embeddings
+      test_user_df(pca)
+      red <- SeuratObject::CreateDimReducObject(
+        embeddings = pca,
+        assay = 'RNA'
+      )
+      scdata@reductions[['pca']] <- red
+    }
+
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
+  })
+
+  # add images
+  tryCatch({
+    image_names <- Seurat::Images(user_scdata)
+    for (image_name in image_names) {
+
+      # TODO: ensure class of image can be handled
+      # stopifnot(class(image) %in% c('VisiumV2', 'VisiumV1'))
+      image <- user_scdata@images[[image_name]]
+
+      check_type_is_safe(image)
+      scdata@images[[image_name]] <- image
+    }
+  })
+
+  return(scdata)
 }
 
 # zellkonverter seems to miss setting this
@@ -474,11 +629,11 @@ reconstruct_seurat <- function(dataset_fpath) {
 }
 
 
-add_obj2s_dispersions <- function(scdata) {
+add_obj2s_dispersions <- function(scdata, assay = 'RNA') {
 
   # add dispersions (need for gene list)
   tryCatch({
-    logcounts <- scdata[['RNA']]$data
+    logcounts <- scdata[[assay]]$data
 
     dispersions <- Seurat::FindVariableFeatures(logcounts)
     test_user_df(dispersions)
@@ -512,18 +667,32 @@ test_user_sparse_mat <- function(counts) {
   }
 }
 
+check_slot <- function(object, slot_name) {
+  slot <- methods::slot(object, slot_name)
+  check_type_is_safe(slot)
+}
+
 check_type_is_safe <- function(x) {
 
   # typeof determines the R internal type or storage mode of any object
   # whereas methods::is can be tricked by setting class inappropriately (e.g. disguising a function as a numeric)
-  safe.types <- c('character', 'double', 'integer', 'logical', 'NULL')
+  safe.types <- c('character', 'double', 'integer', 'logical', 'NULL', 'array')
+
 
   # recurse into lists until reach node
   if (typeof(x) == 'list') {
     lapply(x, check_type_is_safe)
+
+  } else if (isS4(x)) {
+    # check slots of S4 objects
+    slot_names <- methods::slotNames(x)
+    lapply(slot_names, check_slot, object = x)
+
   } else if (!typeof(x) %in% safe.types) {
-    stop('Unexpected data type in uploaded .rds file.')
+    stop(sprintf('Unsafe data type: "%s".', typeof(x)))
   }
+
+  invisible(NULL)
 }
 
 
