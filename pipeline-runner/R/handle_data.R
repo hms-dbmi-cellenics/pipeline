@@ -351,6 +351,105 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   return(object_key)
 }
 
+# based off of vitessce-python demo
+rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.integer(c(1, 256, 256)), axes = "cyx") {
+  # import python modules
+  np <- reticulate::import('numpy')
+  zarr <- reticulate::import('zarr')
+  ome_zarr <- reticulate::import('ome_zarr')
+
+  # Convert values from [0, 1] to [0, 255]
+  img_arr <- img_arr * 255.0
+
+  # convert img array to uint8
+  img_arr <- np$array(img_arr, dtype='uint8')
+
+  # Need to convert images from interleaved to non-interleaved (color axis should be first).
+  img_arr <- np$transpose(img_arr, as.integer(c(2, 0, 1)))
+
+
+  default_window <- list(
+    start = 0,
+    min = 0,
+    max = 255,
+    end = 255
+  )
+
+  z_root <- zarr$open_group(output_path, mode="w", )
+
+  ome_zarr$writer$write_image(
+    image=img_arr,
+    group=z_root,
+    axes=axes,
+    storage_options=list(chunks=chunks)
+  )
+
+  omero <- list(
+    "name" = img_name,
+    "version" = "0.3",
+    "rdefs" = list(),
+    "channels" = list(
+      list(
+        "label" = "R",
+        "color" = "FF0000",
+        "window" = default_window
+      ),
+      list(
+        "label" = "G",
+        "color" = "00FF00",
+        "window" = default_window
+      ),
+      list(
+        "label" = "B",
+        "color" = "0000FF",
+        "window" = default_window
+      )
+    )
+  )
+  reticulate::py_set_attr(z_root, 'omero', omero)
+  invisible()
+}
+
+upload_image_to_s3 <- function(pipeline_config, experiment_id, img_arr, img_name) {
+  # where to save zarr folder locally
+  zarr_name <- paste0(img_name, '.ome.zarr')
+  output_path <- file.path(tempdir(), zarr_name)
+
+  message("Saving image data to: ", output_path, '...')
+
+
+  # save as ome zarr folder
+  rgb_img_to_ome_zarr(img_arr, output_path, img_name)
+
+  # upload all files in zarr folder
+  zarr_key <- file.path(experiment_id, zarr_name)
+  zarr_files <- list.files(output_path, recursive = TRUE, include.dirs = FALSE)
+
+  message("Uploading image data to : ",
+          file.path(pipeline_config$spatial_image_bucket, zarr_key), '...')
+
+  for (zarr_file in zarr_files) {
+
+    put_object_in_s3(
+      pipeline_config,
+      pipeline_config$spatial_image_bucket,
+      object = file.path(output_path, zarr_file),
+      key = file.path(zarr_key, zarr_file))
+  }
+
+  invisible()
+}
+
+upload_images_to_s3 <- function(pipeline_config, experiment_id, scdata) {
+
+  img_names <- Seurat::Images(scdata)
+
+  for (img_name in img_names) {
+    img_arr <- scdata@images[[img_name]]@image
+    upload_image_to_s3(pipeline_config, experiment_id, img_arr, img_name)
+  }
+}
+
 upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
   fnames <- list.files(file.path(DEBUG_PATH, debug_prefix))
   bucket <- pipeline_config$debug_bucket
