@@ -48,7 +48,7 @@ get_nnzero <- function (x) {
 }
 
 order_by_size <- function(scdata_list) {
-    return(scdata_list[order(sapply(scdata_list, get_nnzero))])
+  return(scdata_list[order(sapply(scdata_list, get_nnzero))])
 }
 
 load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
@@ -102,9 +102,9 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
 load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, samples) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
   object_list <- s3$list_objects(
-                    Bucket = pipeline_config$cells_id_bucket,
-                    Prefix = paste0(experiment_id, "/", task_name, "/")
-                  )
+    Bucket = pipeline_config$cells_id_bucket,
+    Prefix = paste0(experiment_id, "/", task_name, "/")
+  )
   message(pipeline_config$cells_id_bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
   cells_id <- list()
@@ -146,15 +146,15 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
 
 build_qc_response <- function(id, input, error, pipeline_config) {
   msg <- list(
-      experimentId = input$experimentId,
-      taskName = input$taskName,
-      input = input,
-      response = list(
-        error = error
-      ),
-      pipelineVersion = pipeline_version,
-      apiUrl = pipeline_config$api_url
-    )
+    experimentId = input$experimentId,
+    taskName = input$taskName,
+    input = input,
+    response = list(
+      error = error
+    ),
+    pipelineVersion = pipeline_version,
+    apiUrl = pipeline_config$api_url
+  )
 
   if (!is.null(id)) {
     msg$output <- list(
@@ -375,7 +375,7 @@ rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.inte
     end = 255
   )
 
-  z_root <- zarr$open_group(output_path, mode="w", )
+  z_root <- zarr$open_group(output_path, mode="w")
 
   ome_zarr$writer$write_image(
     image=img_arr,
@@ -410,43 +410,126 @@ rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.inte
   invisible()
 }
 
-upload_image_to_s3 <- function(pipeline_config, experiment_id, img_arr, img_name) {
+upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, img_name, img_id) {
+  # things for api requests
+  api_url <- pipeline_config$api_url
+  authJWT <- input$authJWT
+
   # where to save zarr folder locally
   zarr_name <- paste0(img_name, '.ome.zarr')
   output_path <- file.path(tempdir(), zarr_name)
 
   message("Saving image data to: ", output_path, '...')
 
-
   # save as ome zarr folder
   rgb_img_to_ome_zarr(img_arr, output_path, img_name)
 
-  # upload all files in zarr folder
-  zarr_key <- file.path(experiment_id, zarr_name)
-  zarr_files <- list.files(output_path, recursive = TRUE, include.dirs = FALSE)
+  # zip all files in zarr folder
+  zip_name <- paste0(zarr_name, '.zip')
+  zip_path <- file.path(tempdir(), zip_name)
 
-  message("Uploading image data to : ",
-          file.path(pipeline_config$spatial_image_bucket, zarr_key), '...')
+  workdir <- getwd()
+  setwd(output_path)
+  utils::zip(zip_path, files = '.', flags = '-r0')
+  setwd(workdir)
 
-  for (zarr_file in zarr_files) {
+  # upload ome.zarr.zip to s3
+  # use unique id for the file that is distinct from the sample id
+  sample_file_id <- ids::uuid()
+  message(
+    "Uploading image data to bucket: ", pipeline_config$spatial_image_bucket,
+    ' at key: ', sample_file_id, '...')
 
-    put_object_in_s3(
-      pipeline_config,
-      pipeline_config$spatial_image_bucket,
-      object = file.path(output_path, zarr_file),
-      key = file.path(zarr_key, zarr_file))
-  }
+  put_object_in_s3(
+    pipeline_config,
+    pipeline_config$spatial_image_bucket,
+    object = zip_path,
+    key = sample_file_id
+  )
+
+  # create sql entry in sample_file, (also creates entry in sample_to_sample_file_map)
+  create_sample_file(
+    api_url,
+    experiment_id,
+    img_id,
+    'ome_zarr_zip',
+    file.size(zip_path),
+    sample_file_id, # gets used as s3_path by API
+    authJWT
+  )
 
   invisible()
 }
 
-upload_images_to_s3 <- function(pipeline_config, experiment_id, scdata) {
+create_sample_file <- function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, authJWT) {
+  url <- paste0(api_url, "/v2/experiments/", experiment_id, "/samples/", sample_id, '/sampleFiles/', file_type)
+
+  body <- list(
+    sampleFileId = sample_file_id,
+    size = file_size,
+    uploadStatus = 'uploaded'
+  )
+
+  response <- httr::POST(
+    url,
+    body = body,
+    encode = "json",
+    httr::add_headers("Content-Type" = "application/json",
+                      "Authorization" = authJWT)
+  )
+
+  if (httr::status_code(response) >= 400) {
+    stop("API post to create sample file failed with status code: ", httr::status_code(response))
+  }
+}
+
+create_sample <- function(api_url, experiment_id, sample_name, sample_technology, auth_JWT) {
+  url <- paste0(api_url, "/v2/experiments/", experiment_id, "/samples")
+
+  body <- list(list(
+    name = sample_name,
+    sampleTechnology = sample_technology,
+    options = c()
+  ))
+
+  response <- httr::POST(
+    url,
+    body = body,
+    encode = "json",
+    httr::add_headers("Content-Type" = "application/json",
+                      "Authorization" = auth_JWT)
+  )
+
+  if (httr::status_code(response) >= 400) {
+    stop("API post to create sample failed with status code: ", httr::status_code(response))
+  }
+  sample_id <- httr::content(response)[[1]]
+  return(sample_id)
+}
+
+
+convert_camel_to_snake <- function(camel_string) {
+  # Use gsub to find uppercase letters and replace them with an underscore followed by the lowercase version
+  snake_string <- gsub("([a-z0-9])([A-Z])", "\\1_\\2", camel_string)
+
+  # Convert the entire string to lowercase
+  snake_string <- tolower(snake_string)
+
+  return(snake_string)
+}
+
+upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
+
+  # sample name to id map
+  sample_ids <- input$sampleIds
+  names(sample_ids) <- input$sampleNames
 
   img_names <- Seurat::Images(scdata)
 
   for (img_name in img_names) {
+    img_id <- sample_ids[img_name]
     img_arr <- scdata@images[[img_name]]@image
-    upload_image_to_s3(pipeline_config, experiment_id, img_arr, img_name)
+    upload_image_to_s3(pipeline_config, input, experiment_id, img_arr, img_name, img_id)
   }
 }
 

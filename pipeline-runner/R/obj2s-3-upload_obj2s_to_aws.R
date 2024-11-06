@@ -9,8 +9,10 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
 
   scdata <- format_obj2s(scdata, experiment_id)
 
+  # add entries to sample table and get returned ids
+  input <- add_samples_to_input(scdata, pipeline_config, experiment_id, input)
+
   # change sample ids/names so that get sample cell sets
-  input <- add_samples_to_input(scdata, input)
   input <- add_metadata_to_input(scdata, input)
   scdata <- change_sample_names_to_ids(scdata, input)
   cell_sets <- get_cell_sets(scdata, input)
@@ -55,7 +57,7 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
   message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
 
   # images for spatial to s3
-  upload_images_to_s3(pipeline_config, experiment_id, scdata)
+  upload_images_to_s3(pipeline_config, input, experiment_id, scdata)
 
   experiment_data <- list(
     apiVersion = "2.0.0-data-ingest-seurat-rds-automated",
@@ -178,10 +180,25 @@ test_groups_equal <- function(vals1, vals2) {
 }
 
 
-add_samples_to_input <- function(scdata, input) {
+add_samples_to_input <- function(scdata, pipeline_config, experiment_id, input) {
   samples <- unique(scdata$samples)
+  sample_ids <- c()
+
+  for (sample_name in samples) {
+    sample_id <- create_sample(
+      pipeline_config$api_url,
+      experiment_id,
+      sample_name,
+      'obj2s_sample',
+      input$authJWT
+    )
+
+    sample_ids <- c(sample_ids, sample_id)
+  }
+
+
   input$sampleNames <- samples
-  input$sampleIds <- ids::uuid(n = length(samples))
+  input$sampleIds <- sample_ids
   return(input)
 }
 
@@ -276,7 +293,7 @@ format_obj2s <- function(scdata, experiment_id) {
 
 # use 'samples' or 'sample' if present, otherwise assume one sample
 add_samples_col <- function(scdata) {
-  samples_cols <- c('samples', 'sample', 'image')
+  samples_cols <- c('samples', 'sample')
   in.meta <- samples_cols %in% colnames(scdata@meta.data)
 
   if (!any(in.meta)) {

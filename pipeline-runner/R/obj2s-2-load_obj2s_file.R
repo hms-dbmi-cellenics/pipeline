@@ -95,12 +95,12 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
     meta.data = metadata,
   )
 
-  # add image annotation
+  # add image annotation as samples column
   image_names <- Seurat::Images(user_scdata)
-  scdata$image <- NA
+  scdata$samples <- NA
   for (image_name in image_names) {
     image_cells <- Seurat:::CellsByImage(user_scdata, image_name, unlist = TRUE)
-    scdata@meta.data[image_cells, 'image'] <- image_name
+    scdata@meta.data[image_cells, 'samples'] <- image_name
   }
 
   # use library size factors for logcounts
@@ -189,6 +189,7 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
 
       # TODO: ensure class of image can be handled
       # stopifnot(class(image) %in% c('VisiumV2', 'VisiumV1'))
+
       image <- user_scdata@images[[image_name]]
 
       check_type_is_safe(image)
