@@ -9,10 +9,8 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
 
   scdata <- format_obj2s(scdata, experiment_id)
 
-  # add entries to sample table and get returned ids
-  input <- add_samples_to_input(scdata, pipeline_config, experiment_id, input)
-
   # change sample ids/names so that get sample cell sets
+  input <- add_samples_to_input(scdata, input)
   input <- add_metadata_to_input(scdata, input)
   scdata <- change_sample_names_to_ids(scdata, input)
   cell_sets <- get_cell_sets(scdata, input)
@@ -180,25 +178,11 @@ test_groups_equal <- function(vals1, vals2) {
 }
 
 
-add_samples_to_input <- function(scdata, pipeline_config, experiment_id, input) {
+add_samples_to_input <- function(scdata, input) {
   samples <- unique(scdata$samples)
-  sample_ids <- c()
-
-  for (sample_name in samples) {
-    sample_id <- create_sample(
-      pipeline_config$api_url,
-      experiment_id,
-      sample_name,
-      'obj2s_sample',
-      input$authJWT
-    )
-
-    sample_ids <- c(sample_ids, sample_id)
-  }
-
-
   input$sampleNames <- samples
-  input$sampleIds <- sample_ids
+  input$obj2sSampleId <- input$sampleIds
+  input$sampleIds <- ids::uuid(n = length(samples))
   return(input)
 }
 

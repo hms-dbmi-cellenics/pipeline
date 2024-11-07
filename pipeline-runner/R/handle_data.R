@@ -410,7 +410,7 @@ rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.inte
   invisible()
 }
 
-upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, img_name, img_id) {
+upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, img_name, img_id, sample_id, overwrite_existing) {
   # things for api requests
   api_url <- pipeline_config$api_url
   authJWT <- input$authJWT
@@ -434,40 +434,40 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
   setwd(workdir)
 
   # upload ome.zarr.zip to s3
-  # use unique id for the file that is distinct from the sample id
-  sample_file_id <- ids::uuid()
   message(
     "Uploading image data to bucket: ", pipeline_config$spatial_image_bucket,
-    ' at key: ', sample_file_id, '...')
+    ' at key: ', img_id, '...')
 
   put_object_in_s3(
     pipeline_config,
     pipeline_config$spatial_image_bucket,
     object = zip_path,
-    key = sample_file_id
+    key = img_id
   )
 
   # create sql entry in sample_file, (also creates entry in sample_to_sample_file_map)
   create_sample_file(
     api_url,
     experiment_id,
-    img_id,
+    sample_id,
     'ome_zarr_zip',
     file.size(zip_path),
-    sample_file_id, # gets used as s3_path by API
+    img_id, # gets used as s3_path by API
+    overwrite_existing, # FALSE for obj2s so that can have multiple ome_zarr_zip for single sample
     authJWT
   )
 
   invisible()
 }
 
-create_sample_file <- function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, authJWT) {
+create_sample_file <- function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, overwrite_existing, authJWT) {
   url <- paste0(api_url, "/v2/experiments/", experiment_id, "/samples/", sample_id, '/sampleFiles/', file_type)
 
   body <- list(
     sampleFileId = sample_file_id,
     size = file_size,
-    uploadStatus = 'uploaded'
+    uploadStatus = 'uploaded',
+    overwriteExisting = overwrite_existing
   )
 
   response <- httr::POST(
@@ -520,16 +520,27 @@ convert_camel_to_snake <- function(camel_string) {
 
 upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
 
-  # sample name to id map
-  sample_ids <- input$sampleIds
-  names(sample_ids) <- input$sampleNames
+  # use the
+  img_ids <- input$sampleIds
+  names(img_ids) <- input$sampleNames
 
+  # associate obj2s images with single sample id for experiment
+  sample_id <- input$obj2sSampleId
   img_names <- Seurat::Images(scdata)
 
   for (img_name in img_names) {
-    img_id <- sample_ids[img_name]
     img_arr <- scdata@images[[img_name]]@image
-    upload_image_to_s3(pipeline_config, input, experiment_id, img_arr, img_name, img_id)
+    img_id <- img_ids[img_name]
+
+    upload_image_to_s3(
+      pipeline_config,
+      input,
+      experiment_id,
+      img_arr,
+      img_name,
+      img_id,
+      sample_id,
+      overwrite_existing = FALSE)
   }
 }
 
