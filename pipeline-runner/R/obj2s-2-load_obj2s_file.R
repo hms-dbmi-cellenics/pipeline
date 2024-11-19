@@ -187,10 +187,10 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
     image_names <- Seurat::Images(user_scdata)
     for (image_name in image_names) {
 
-      # TODO: ensure class of image can be handled
-      # stopifnot(class(image) %in% c('VisiumV2', 'VisiumV1'))
-
       image <- user_scdata@images[[image_name]]
+
+      # ensure class of image can be handled
+      stopifnot(class(image) %in% c('VisiumV2', 'VisiumV1'))
 
       check_type_is_safe(image)
       scdata@images[[image_name]] <- image
