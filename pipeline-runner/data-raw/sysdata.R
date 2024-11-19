@@ -8,6 +8,7 @@ bucket_list <- list(
   cells_id_bucket = "biomage-filtered-cells",
   plot_data_bucket = "plots-tables",
   cell_sets_bucket = "cell-sets",
+  spatial_image_bucket = "spatial-images",
   debug_bucket = "biomage-pipeline-debug",
   cl_metadata_bucket = "cellenics-cell-level-metadata"
 )
@@ -76,6 +77,7 @@ DEBUG_PATH <- "/debug"
 file_types_by_technology <- list(
   "10x" = list("barcodes10x", "features10x", "matrix10x"),
   "seurat_object" = list("seuratObject"),
+  "seurat_spatial_object" = list("seuratSpatialObject"),
   "sce_object" = list("sceObject"),
   "anndata_object" = list("anndataObject"),
   "rhapsody" = list("rhapsody"),
@@ -88,6 +90,7 @@ file_names <- list(
   features10x = "features.tsv.gz",
   matrix10x = "matrix.mtx.gz",
   seuratObject = "r.rds",
+  seuratSpatialObject = "r.rds",
   sceObject = "r.rds",
   anndataObject = "adata.h5ad",
   rhapsody = "expression_data.st.gz",
