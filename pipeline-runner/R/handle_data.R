@@ -483,41 +483,6 @@ create_sample_file <- function(api_url, experiment_id, sample_id, file_type, fil
   }
 }
 
-create_sample <- function(api_url, experiment_id, sample_name, sample_technology, auth_JWT) {
-  url <- paste0(api_url, "/v2/experiments/", experiment_id, "/samples")
-
-  body <- list(list(
-    name = sample_name,
-    sampleTechnology = sample_technology,
-    options = c()
-  ))
-
-  response <- httr::POST(
-    url,
-    body = body,
-    encode = "json",
-    httr::add_headers("Content-Type" = "application/json",
-                      "Authorization" = auth_JWT)
-  )
-
-  if (httr::status_code(response) >= 400) {
-    stop("API post to create sample failed with status code: ", httr::status_code(response))
-  }
-  sample_id <- httr::content(response)[[1]]
-  return(sample_id)
-}
-
-
-convert_camel_to_snake <- function(camel_string) {
-  # Use gsub to find uppercase letters and replace them with an underscore followed by the lowercase version
-  snake_string <- gsub("([a-z0-9])([A-Z])", "\\1_\\2", camel_string)
-
-  # Convert the entire string to lowercase
-  snake_string <- tolower(snake_string)
-
-  return(snake_string)
-}
-
 upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
 
   # use the
