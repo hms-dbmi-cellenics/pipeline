@@ -48,7 +48,7 @@ get_nnzero <- function (x) {
 }
 
 order_by_size <- function(scdata_list) {
-    return(scdata_list[order(sapply(scdata_list, get_nnzero))])
+  return(scdata_list[order(sapply(scdata_list, get_nnzero))])
 }
 
 load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
@@ -102,9 +102,9 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
 load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, samples) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
   object_list <- s3$list_objects(
-                    Bucket = pipeline_config$cells_id_bucket,
-                    Prefix = paste0(experiment_id, "/", task_name, "/")
-                  )
+    Bucket = pipeline_config$cells_id_bucket,
+    Prefix = paste0(experiment_id, "/", task_name, "/")
+  )
   message(pipeline_config$cells_id_bucket)
   message(paste(experiment_id, "r.rds", sep = "/"))
   cells_id <- list()
@@ -146,15 +146,15 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
 
 build_qc_response <- function(id, input, error, pipeline_config) {
   msg <- list(
-      experimentId = input$experimentId,
-      taskName = input$taskName,
-      input = input,
-      response = list(
-        error = error
-      ),
-      pipelineVersion = pipeline_version,
-      apiUrl = pipeline_config$api_url
-    )
+    experimentId = input$experimentId,
+    taskName = input$taskName,
+    input = input,
+    response = list(
+      error = error
+    ),
+    pipelineVersion = pipeline_version,
+    apiUrl = pipeline_config$api_url
+  )
 
   if (!is.null(id)) {
     msg$output <- list(
@@ -349,6 +349,164 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   put_object_in_s3_multipart(pipeline_config, pipeline_config$processed_bucket, count_matrix, object_key)
 
   return(object_key)
+}
+
+# based off of vitessce-python demo
+rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.integer(c(1, 256, 256)), axes = "cyx") {
+  # import python modules
+  np <- reticulate::import('numpy')
+  zarr <- reticulate::import('zarr')
+  ome_zarr <- reticulate::import('ome_zarr')
+
+  # Convert values from [0, 1] to [0, 255]
+  img_arr <- img_arr * 255.0
+
+  # convert img array to uint8
+  img_arr <- np$array(img_arr, dtype='uint8')
+
+  # Need to convert images from interleaved to non-interleaved (color axis should be first).
+  img_arr <- np$transpose(img_arr, as.integer(c(2, 0, 1)))
+
+
+  default_window <- list(
+    start = 0,
+    min = 0,
+    max = 255,
+    end = 255
+  )
+
+  z_root <- zarr$open_group(output_path, mode="w")
+
+  ome_zarr$writer$write_image(
+    image=img_arr,
+    group=z_root,
+    axes=axes,
+    storage_options=list(chunks=chunks)
+  )
+
+  omero <- list(
+    "name" = img_name,
+    "version" = "0.3",
+    "rdefs" = list(),
+    "channels" = list(
+      list(
+        "label" = "R",
+        "color" = "FF0000",
+        "window" = default_window
+      ),
+      list(
+        "label" = "G",
+        "color" = "00FF00",
+        "window" = default_window
+      ),
+      list(
+        "label" = "B",
+        "color" = "0000FF",
+        "window" = default_window
+      )
+    )
+  )
+  reticulate::py_set_attr(z_root, 'omero', omero)
+  invisible()
+}
+
+upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, img_name, img_id, sample_id, overwrite_existing) {
+  # things for api requests
+  api_url <- pipeline_config$api_url
+  authJWT <- input$authJWT
+
+  # where to save zarr folder locally
+  zarr_name <- paste0(img_name, '.ome.zarr')
+  output_path <- file.path(tempdir(), zarr_name)
+
+  message("Saving image data to: ", output_path, '...')
+
+  # save as ome zarr folder
+  rgb_img_to_ome_zarr(img_arr, output_path, img_name)
+
+  # zip all files in zarr folder
+  zip_name <- paste0(zarr_name, '.zip')
+  zip_path <- file.path(tempdir(), zip_name)
+
+  workdir <- getwd()
+  setwd(output_path)
+  utils::zip(zip_path, files = '.', flags = '-r0')
+  setwd(workdir)
+
+  # upload ome.zarr.zip to s3
+  message(
+    "Uploading image data to bucket: ", pipeline_config$spatial_image_bucket,
+    ' at key: ', img_id, '...')
+
+  put_object_in_s3(
+    pipeline_config,
+    pipeline_config$spatial_image_bucket,
+    object = zip_path,
+    key = img_id
+  )
+
+  # create sql entry in sample_file, (also creates entry in sample_to_sample_file_map)
+  create_sample_file(
+    api_url,
+    experiment_id,
+    sample_id,
+    'ome_zarr_zip',
+    file.size(zip_path),
+    img_id, # gets used as s3_path by API
+    overwrite_existing, # FALSE for obj2s so that can have multiple ome_zarr_zip for single sample
+    authJWT
+  )
+
+  invisible()
+}
+
+create_sample_file <- function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, overwrite_existing, authJWT) {
+  url <- paste0(api_url, "/v2/experiments/", experiment_id, "/samples/", sample_id, '/sampleFiles/', file_type)
+
+  body <- list(
+    sampleFileId = sample_file_id,
+    size = file_size,
+    uploadStatus = 'uploaded',
+    overwriteExisting = overwrite_existing
+  )
+
+  response <- httr::POST(
+    url,
+    body = body,
+    encode = "json",
+    httr::add_headers("Content-Type" = "application/json",
+                      "Authorization" = authJWT)
+  )
+
+  if (httr::status_code(response) >= 400) {
+    stop("API post to create sample file failed with status code: ", httr::status_code(response))
+  }
+}
+
+upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
+
+  # use the
+  img_ids <- input$sampleIds
+  names(img_ids) <- input$sampleNames
+
+  # associate obj2s images with single sample id for experiment
+  sample_id <- input$obj2sSampleId
+  img_names <- Seurat::Images(scdata)
+
+  for (img_name in img_names) {
+    img_arr <- scdata@images[[img_name]]@image
+    img_id <- img_ids[img_name]
+
+    upload_image_to_s3(
+      pipeline_config,
+      input,
+      experiment_id,
+      img_arr,
+      img_name,
+      img_id,
+      sample_id,
+      overwrite_existing = FALSE)
+  }
 }
 
 upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
