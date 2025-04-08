@@ -29,15 +29,55 @@ load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$processed_bucket
   message("Loading processed scdata")
   message(bucket)
-  message(paste(experiment_id, "r.rds", sep = "/"))
-
+  
+  # List the objects under the experiment_id folder
+  objects_response <- s3$list_objects_v2(
+    Bucket = bucket,
+    Prefix = paste0(experiment_id, "/")
+  )
+  
+  # Extract object keys
+  object_keys <- vapply(objects_response$Contents, `[[`, "", "Key")
+  
+  # Identify the appropriate file
+  rds_file <- grep("r.rds$", object_keys, value = TRUE)
+  qs_file <- grep("r.qs$", object_keys, value = TRUE)
+  
+  if (length(qs_file) > 0) {
+    message("Found .qs file: ", qs_file)
+    key_to_load <- qs_file
+    load_rds <- FALSE
+  } else if (length(rds_file) > 0) {
+    message("Found .rds file: ", rds_file)
+    key_to_load <- rds_file
+    load_rds <- TRUE
+  } else {
+    stop("No .qs or .rds files found")
+  }
+  
+  # Get the object
   c(body, ...rest) %<-% s3$get_object(
     Bucket = bucket,
-    Key = paste(experiment_id, "r.rds", sep = "/")
+    Key = key_to_load
   )
-  conn <- gzcon(rawConnection(body))
-  obj <- readRDS(conn)
-  close(conn)
+  
+  if (load_rds) {
+    # Load with readRDS
+    conn <- gzcon(rawConnection(body))
+    obj <- readRDS(conn)
+    close(conn)
+  } else {
+    # Load with qs::qread
+    tmp_file <- tempfile(fileext = ".qs")
+    tryCatch({
+      writeBin(body, tmp_file)
+      obj <- qs::qread(tmp_file)
+    }, finally = {
+      # Clean up the temporary file
+      unlink(tmp_file)
+    })
+  }
+  
   return(obj)
 }
 
