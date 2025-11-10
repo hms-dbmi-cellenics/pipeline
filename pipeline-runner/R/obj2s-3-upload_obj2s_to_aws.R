@@ -120,7 +120,8 @@ find_cluster_columns <- function(scdata) {
   meta <- meta |> dplyr::relocate(dplyr::any_of(louvain_cols))
 
   # use user supplied name for active.ident if possible
-  if ('active.ident' %in% colnames(meta))
+  # unless active.ident is a group column
+  if ('active.ident' %in% setdiff(colnames(meta), group_cols))
     meta <- rename_active_ident(meta)
 
   check_cols <- setdiff(colnames(meta), c(scdblfinder_cols, group_cols))
