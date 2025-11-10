@@ -343,6 +343,23 @@ test_that("find_cluster_columns omits columns that start with scDblFinder", {
   expect_setequal(cluster_cols, expected_cols)
 })
 
+test_that("find_cluster_columns works when active.ident is a group column that is duplicate of other column", {
+  
+  expected_cols <- c('RNA_snn_res.0.8', 'letter.idents', 'groups', 'RNA_snn_res.1')
+  
+  scdata <- mock_scdata()
+  sample_names <- c('A', 'B', 'C', 'D')
+  samples <- rep(sample_names, each = ncol(scdata)/4)
+  scdata$samples <- samples
+  
+  batch <- ifelse(samples %in% c('A', 'B'), 'Batch 1', 'Batch 2')
+  scdata$active.ident <- scdata$batch <- batch
+  
+  
+  cluster_cols <- find_cluster_columns(scdata)
+  expect_setequal(cluster_cols, expected_cols)
+})
+
 
 test_that("rename_active_ident renames active.ident correctly when there is a duplicate column", {
 
