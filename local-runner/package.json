@@ -17,7 +17,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.847.0",
+    "aws-sdk": "^2.1400.0",
     "chalk": "^4.1.0",
     "docker-events": "0.0.2",
     "dockerode": "^3.2.1",
