@@ -441,6 +441,9 @@ reconstruct_sce <- function(dataset_fpath) {
     class(red) <- 'matrix'
     test_user_df(red)
 
+    # red needs to have rownames
+    row.names(red) <- colnames(scdata)
+
     red <- Seurat::CreateDimReducObject(
       embeddings = red,
       assay = 'RNA',
@@ -460,6 +463,9 @@ reconstruct_sce <- function(dataset_fpath) {
       pca <- SingleCellExperiment::reducedDims(user_scdata)[[pca.idx]]
       class(pca) <- 'matrix'
       test_user_df(pca)
+
+      # pca needs to have rownames
+      row.names(pca) <- colnames(scdata)
 
       pca <- SeuratObject::CreateDimReducObject(
         embeddings = pca,
