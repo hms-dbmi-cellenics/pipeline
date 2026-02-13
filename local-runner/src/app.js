@@ -131,6 +131,8 @@ const main = async () => {
   } catch (e) {
     console.error();
     console.error('Could not initialize stack. Are you sure Inframock is running?');
+    console.error('Actual error:', e.message);
+    console.error('Full error:', e);
     console.error();
     process.exit(1);
   }
