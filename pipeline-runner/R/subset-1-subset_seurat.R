@@ -235,99 +235,15 @@ add_new_sample_ids <- function(subset_scdata, sample_id_map) {
 #' @param scdata seurat object
 #' @param sample_id_map list with mapping between sample_ids from
 #'  parent and subset experiments
-#' @param parent_cellsets data.table of cellsets from parent experiment (optional)
 #'
 #' @return scdata with additional metadata
 #' @export
 #'
-add_subset_metadata <- function(input, subset_scdata, sample_id_map, parent_cellsets = NULL) {
+add_subset_metadata <- function(input, subset_scdata, sample_id_map) {
   # add new sample_ids, keep originals in a new variable
   subset_scdata$parent_samples <- subset_scdata$samples
   subset_scdata <- add_new_sample_ids(subset_scdata, sample_id_map)
   subset_scdata@misc$experimentId <- input$experimentId
 
-  # Synchronize metadata columns with current cellsets values
-  # (handles case where labels were renamed in the UI)
-  if (!is.null(parent_cellsets)) {
-    subset_scdata <- sync_metadata_from_cellsets(subset_scdata, parent_cellsets)
-  }
-
   return(subset_scdata)
-}
-
-
-#' Synchronize metadata values from cellsets
-#'
-#' Updates metadata column values in the Seurat object to match the current
-#' cellsets. This handles the case where metadata labels were renamed in the UI
-#' and the Seurat object's metadata is out of sync with the cellsets.
-#'
-#' @param scdata seurat object
-#' @param parent_cellsets data.table of cellsets from parent experiment
-#'
-#' @return scdata with synchronized metadata values
-#'
-sync_metadata_from_cellsets <- function(scdata, parent_cellsets) {
-  # Extract metadata cellsets only
-  metadata <- parent_cellsets[type == "metadata"]
-  
-  if (nrow(metadata) == 0) {
-    # No metadata cellsets to sync
-    return(scdata)
-  }
-  
-  # Get the cell IDs from scdata
-  scdata_cell_ids <- scdata$cells_id
-  
-  # Build a mapping of cell_id -> values for each metadata track
-  track_mappings <- list()
-  
-  for (i in seq_len(nrow(metadata))) {
-    row <- metadata[i]
-    key <- row$key
-    cell_id <- row$cell_id
-    value <- row$name
-    
-    # Extract track name from key format "TrackName-Value"
-    # Split by hyphen and use all but the last part as the track name
-    parts <- strsplit(key, "-")[[1]]
-    if (length(parts) > 1) {
-      track_name <- paste(parts[-length(parts)], collapse = "-")
-    } else {
-      track_name <- parts[1]
-    }
-    
-    # Make column name syntactically valid
-    valid_track_name <- make.names(track_name)
-    
-    # Initialize track mapping if needed
-    if (!valid_track_name %in% names(track_mappings)) {
-      track_mappings[[valid_track_name]] <- list()
-    }
-    
-    # Store the new value for this cell_id
-    track_mappings[[valid_track_name]][[as.character(cell_id)]] <- value
-  }
-  
-  # Create or update each metadata track in the Seurat object
-  for (track_name in names(track_mappings)) {
-    # Initialize with NA for all cells
-    col_values <- rep(NA_character_, length(scdata_cell_ids))
-    
-    # Populate with values from cellsets
-    for (i in seq_len(length(scdata_cell_ids))) {
-      cell_id <- scdata_cell_ids[i]
-      cell_id_str <- as.character(cell_id)
-      
-      # Look up the value for this cell in cellsets
-      if (cell_id_str %in% names(track_mappings[[track_name]])) {
-        col_values[i] <- track_mappings[[track_name]][[cell_id_str]]
-      }
-    }
-    
-    # Add or update the column in the Seurat object
-    scdata@meta.data[[track_name]] <- col_values
-  }
-  
-  return(scdata)
 }
