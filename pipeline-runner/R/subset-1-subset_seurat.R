@@ -68,7 +68,7 @@ subset_seurat <- function(input, pipeline_config, prev_out = NULL) {
 
   subset_scdata <- subset_experiment(input, parent_data)
   sample_id_map <- create_sample_id_map(unique(subset_scdata$samples))
-  subset_scdata <- add_subset_metadata(input, subset_scdata, sample_id_map, parent_data$cellsets)
+  subset_scdata <- add_subset_metadata(input, subset_scdata, sample_id_map)
 
   subset_scdata_list <- Seurat::SplitObject(subset_scdata, split.by = "samples")
 
