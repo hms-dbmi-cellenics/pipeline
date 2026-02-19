@@ -1,12 +1,10 @@
 test_that("extract_subset_user_metadata extracts track names correctly from simple keys", {
   # Test: "Group-T1" should extract track="Group", value="T1"
   subset_cellsets <- data.table::data.table(
-    list(
-      key = c("Group-T1", "Group-T2"),
-      name = c("T1", "T2"),
-      type = c("metadata", "metadata"),
-      cell_id = c(1, 2)
-    )
+    key = c("Group-T1", "Group-T2"),
+    name = c("T1", "T2"),
+    type = c("metadata", "metadata"),
+    cell_id = c(1, 2)
   )
 
   result <- extract_subset_user_metadata(subset_cellsets)
@@ -19,12 +17,10 @@ test_that("extract_subset_user_metadata extracts track names correctly from simp
 test_that("extract_subset_user_metadata handles track names with hyphens", {
   # Test: "Cell-Type-Activated" should extract track="Cell-Type", value="Activated"
   subset_cellsets <- data.table::data.table(
-    list(
-      key = c("Cell-Type-Activated", "Cell-Type-Resting"),
-      name = c("Activated", "Resting"),
-      type = c("metadata", "metadata"),
-      cell_id = c(1, 2)
-    )
+    key = c("Cell-Type-Activated", "Cell-Type-Resting"),
+    name = c("Activated", "Resting"),
+    type = c("metadata", "metadata"),
+    cell_id = c(1, 2)
   )
 
   result <- extract_subset_user_metadata(subset_cellsets)
@@ -37,12 +33,10 @@ test_that("extract_subset_user_metadata handles track names with hyphens", {
 test_that("extract_subset_user_metadata handles multiple metadata tracks", {
   # Test: Multiple independent tracks
   subset_cellsets <- data.table::data.table(
-    list(
-      key = c("Group-T1", "Group-T2", "CellType-A", "CellType-B"),
-      name = c("T1", "T2", "A", "B"),
-      type = c("metadata", "metadata", "metadata", "metadata"),
-      cell_id = c(1, 2, 3, 4)
-    )
+    key = c("Group-T1", "Group-T2", "CellType-A", "CellType-B"),
+    name = c("T1", "T2", "A", "B"),
+    type = c("metadata", "metadata", "metadata", "metadata"),
+    cell_id = c(1, 2, 3, 4)
   )
 
   result <- extract_subset_user_metadata(subset_cellsets)
@@ -64,12 +58,10 @@ test_that("sync_metadata_from_cellsets updates seurat metadata correctly", {
 
   # Create cellsets with renamed values
   cellsets <- data.table::data.table(
-    list(
-      key = c("Group-T1", "Group-T1", "Group-T2", "Group-T2"),
-      name = c("T1", "T1", "T2", "T2"),  # New values
-      type = c("metadata", "metadata", "metadata", "metadata"),
-      cell_id = c(1, 2, 11, 12)  # Subset of cells
-    )
+    key = c("Group-T1", "Group-T1", "Group-T2", "Group-T2"),
+    name = c("T1", "T1", "T2", "T2"),  # New values
+    type = c("metadata", "metadata", "metadata", "metadata"),
+    cell_id = c(1, 2, 11, 12)  # Subset of cells
   )
 
   result <- sync_metadata_from_cellsets(scdata, cellsets)
@@ -89,12 +81,10 @@ test_that("sync_metadata_from_cellsets handles empty metadata cellsets", {
 
   # Empty cellsets
   cellsets <- data.table::data.table(
-    list(
-      key = character(),
-      name = character(),
-      type = character(),
-      cell_id = integer()
-    )
+    key = character(),
+    name = character(),
+    type = character(),
+    cell_id = integer()
   )
 
   result <- sync_metadata_from_cellsets(scdata, cellsets)
@@ -112,12 +102,10 @@ test_that("sync_metadata_from_cellsets handles multiple tracks with renamed valu
 
   # Cellsets with both group and celltype renamed
   cellsets <- data.table::data.table(
-    list(
-      key = c("Group-T1", "Group-T2", "CellType-TypeX", "CellType-TypeY"),
-      name = c("T1", "T2", "TypeX", "TypeY"),
-      type = c("metadata", "metadata", "metadata", "metadata"),
-      cell_id = c(1, 2, 3, 4)
-    )
+    key = c("Group-T1", "Group-T2", "CellType-TypeX", "CellType-TypeY"),
+    name = c("T1", "T2", "TypeX", "TypeY"),
+    type = c("metadata", "metadata", "metadata", "metadata"),
+    cell_id = c(1, 2, 3, 4)
   )
 
   result <- sync_metadata_from_cellsets(scdata, cellsets)
