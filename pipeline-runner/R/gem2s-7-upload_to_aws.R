@@ -256,9 +256,19 @@ get_metadata_cell_ids <- function(scdata_list, valid_metadata_name, value) {
 extract_subset_user_metadata <- function(subset_cellsets) {
   # metadata keys are the <track_name>-<value>, and name are the values alone
   metadata <- unique(subset_cellsets[type == "metadata"], by = "key")
-  # escape regex characters to avoid errors when creating cellsets
-  metadata[, escaped_name := gsub("([.\\\\+*?\\[^\\]$(){}=!<>|:-])", "\\\\\\1", name, perl = TRUE)]
-  metadata[, metadata_track := gsub(paste0("-", escaped_name, "$"), "", key), by = "key"]
+
+  # Extract track name by removing the last component after hyphen (the value)
+  # Keys have format "TrackName-Value"
+  track_names <- sapply(metadata$key, function(k) {
+    parts <- strsplit(k, "-")[[1]]
+    if (length(parts) > 1) {
+      paste(parts[-length(parts)], collapse = "-")
+    } else {
+      parts[1]
+    }
+  }, USE.NAMES = FALSE)
+  
+  metadata[, metadata_track := track_names]
 
   metadata <- metadata[, c("metadata_track", "name")]
   data.table::setnames(metadata, "name", "metadata_value")
@@ -411,4 +421,81 @@ build_scratchpad_cellsets <- function(color_pool, subset_cellsets) {
   }
 
   return(scratchpad)
+}
+
+
+#' Synchronize metadata values from cellsets
+#'
+#' Updates metadata column values in the Seurat object to match the current
+#' cellsets. This handles the case where metadata labels were renamed in the UI
+#' and the Seurat object's metadata needs to be updated.
+#'
+#' @param scdata seurat object
+#' @param cellsets data.table of cellsets
+#'
+#' @return scdata with synchronized metadata values
+#'
+sync_metadata_from_cellsets <- function(scdata, cellsets) {
+  # Extract metadata cellsets only
+  metadata <- cellsets[type == "metadata"]
+  
+  if (nrow(metadata) == 0) {
+    # No metadata cellsets to sync
+    return(scdata)
+  }
+  
+  # Get the cell IDs from scdata
+  scdata_cell_ids <- scdata$cells_id
+  
+  # Build a mapping of cell_id -> values for each metadata track
+  track_mappings <- list()
+  
+  for (i in seq_len(nrow(metadata))) {
+    row <- metadata[i]
+    key <- row$key
+    cell_id <- row$cell_id
+    value <- row$name
+    
+    # Extract track name from key format "TrackName-Value"
+    # Split by hyphen and use all but the last part as the track name
+    parts <- strsplit(key, "-")[[1]]
+    if (length(parts) > 1) {
+      track_name <- paste(parts[-length(parts)], collapse = "-")
+    } else {
+      track_name <- parts[1]
+    }
+    
+    # Make column name syntactically valid
+    valid_track_name <- make.names(track_name)
+    
+    # Initialize track mapping if needed
+    if (!valid_track_name %in% names(track_mappings)) {
+      track_mappings[[valid_track_name]] <- list()
+    }
+    
+    # Store the new value for this cell_id
+    track_mappings[[valid_track_name]][[as.character(cell_id)]] <- value
+  }
+  
+  # Create or update each metadata track in the Seurat object
+  for (track_name in names(track_mappings)) {
+    # Initialize with NA for all cells
+    col_values <- rep(NA_character_, length(scdata_cell_ids))
+    
+    # Populate with values from cellsets
+    for (i in seq_len(length(scdata_cell_ids))) {
+      cell_id <- scdata_cell_ids[i]
+      cell_id_str <- as.character(cell_id)
+      
+      # Look up the value for this cell in cellsets
+      if (cell_id_str %in% names(track_mappings[[track_name]])) {
+        col_values[i] <- track_mappings[[track_name]][[cell_id_str]]
+      }
+    }
+    
+    # Add or update the column in the Seurat object
+    scdata@meta.data[[track_name]] <- col_values
+  }
+  
+  return(scdata)
 }
