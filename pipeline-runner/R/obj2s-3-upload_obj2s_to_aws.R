@@ -44,11 +44,7 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
                    object = charToRaw(cell_sets_data),
                    key = experiment_id)
 
-  # replicate qc config for simplicity
-  # could also create a 'obj2s_config' column in experiment table and change the ui/api around more
-  qc_config <- construct_qc_config(list(one = scdata), unfiltered_samples = 'one', technology = config$input$type)
-  qc_config$configureEmbedding$embeddingSettings$useSaved <- TRUE
-  qc_config$configureEmbedding$embeddingSettings$method <- SeuratObject::DefaultDimReduc(scdata)
+  qc_config <- build_obj2s_qc_config(scdata)
 
   # seurat object to s3
   object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
@@ -289,6 +285,31 @@ add_samples_col <- function(scdata) {
   }
 
   return(scdata)
+}
+
+build_obj2s_qc_config <- function(scdata) {
+  # replicate qc config for simplicity
+  # For obj2s, use template defaults to avoid calculations like barcode inflections
+  
+  # Configure classifier
+  classifier_config <- processing_config_template[["classifier"]]
+  classifier_config$enabled <- FALSE
+  classifier_config$prefiltered <- TRUE
+  
+  # Configure embedding
+  embedding_config <- get_embedding_config(list(one = scdata), processing_config_template[["embedding_clustering"]])
+  embedding_config$embeddingSettings$useSaved <- TRUE
+  embedding_config$embeddingSettings$method <- SeuratObject::DefaultDimReduc(scdata)
+  
+  list(
+    cellSizeDistribution = list(one = processing_config_template[["cell_size"]]),
+    mitochondrialContent = list(one = processing_config_template[["mitochondrial"]]),
+    classifier = list(one = classifier_config),
+    numGenesVsNumUmis = list(one = processing_config_template[["genes_vs_umis"]]),
+    doubletScores = list(one = processing_config_template[["doublet"]]),
+    dataIntegration = processing_config_template[["data_integration"]],
+    configureEmbedding = embedding_config
+  )
 }
 
 mock_metadata <- function(scdata, metadata_cols) {
