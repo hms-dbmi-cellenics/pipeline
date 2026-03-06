@@ -550,20 +550,6 @@ upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
   }
 }
 
-upload_debug_folder_to_s3 <- function(debug_prefix, pipeline_config) {
-  fnames <- list.files(file.path(DEBUG_PATH, debug_prefix))
-  bucket <- pipeline_config$debug_bucket
-
-  message("Uploading logs and dump file to S3 bucket ", bucket, " with prefix ", debug_prefix, "...")
-  for (fname in fnames) {
-    fpath <- file.path(DEBUG_PATH, debug_prefix, fname)
-    key <- file.path(debug_prefix, fname)
-    put_object_in_s3_multipart(pipeline_config, bucket, fpath, key)
-  }
-
-  return(NULL)
-}
-
 put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging = NULL) {
   message(sprintf("Putting %s in %s", key, bucket))
   s3 <- paws::s3(config = pipeline_config$aws_config)

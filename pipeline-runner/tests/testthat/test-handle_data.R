@@ -53,44 +53,6 @@ stub_put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key
     return(NULL)
 }
 
-stub_put_object_in_s3 <- function(Bucket, Key, Body) {
-  return(NULL)
-}
-
-test_that("upload_debug_folder_to_s3 completes successfully", {
-    before_each()
-
-    # create fake logs and dump file
-    debug_path <- tempdir()
-    debug_timestamp <- 'now'
-    experiment_id <- '1234'
-    pipeline_config <- list(debug_bucket = 'pipeline-debug-development')
-
-    debug_prefix <- file.path(experiment_id, debug_timestamp)
-
-    debug_dir <- file.path(debug_path, debug_prefix)
-    dir.create(debug_dir, recursive = TRUE)
-    file.create(file.path(debug_dir, c('logs.txt', 'dump.rda')))
-
-    mockery::stub(upload_debug_folder_to_s3, 'put_object_in_s3_multipart', stub_put_object_in_s3_multipart)
-
-    # generates correct prefix
-    expect_message(
-        upload_debug_folder_to_s3(debug_prefix, pipeline_config),
-        regexp = "with prefix 1234/now"
-    )
-
-    # puts in right bucket
-    expect_message(
-        upload_debug_folder_to_s3(debug_prefix, pipeline_config),
-        regexp = pipeline_config$debug_bucket
-    )
-
-    # cleanup
-    unlink(list.files(debug_path), recursive = TRUE)
-})
-
-
 test_that("upload_matrix_to_s3 completes successfully", {
     before_each()
 
