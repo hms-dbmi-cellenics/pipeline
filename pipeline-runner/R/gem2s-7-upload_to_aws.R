@@ -261,7 +261,7 @@ build_metadata_cellsets <- function(input, scdata, color_pool, disable_qc_filter
 
       cell_set$children[[j]] <- list(
         "key" = paste(user_metadata_name, value, sep = "-"),
-        "name" = value,
+        "name" = as.character(value),
         "color" = color_pool[color_index],
         "cellIds" = unname(cell_ids)
       )

@@ -301,6 +301,36 @@ test_that("get_cell_sets with two metadata groups matches snapshot", {
 })
 
 
+test_that("get_cell_sets converts numeric metadata values to strings", {
+  # Test case for issue: obj2s Seurat uploads with numeric sample-level metadata
+  # should have string names in cellsets, not numeric values
+  metadata <- list(Seq_Batch = list(1, 2, 2))
+  input <- mock_input(metadata)
+  config <- mock_config(input)
+  scdata_list <- mock_scdata_list(config)
+
+  cell_sets <- get_cell_sets(scdata_list, input)
+
+  # Get the Seq_Batch cellset
+  seq_batch_cellset <- NULL
+  for (cs in cell_sets$cellSets) {
+    if (cs$key == "Seq_Batch") {
+      seq_batch_cellset <- cs
+      break
+    }
+  }
+
+  expect_true(!is.null(seq_batch_cellset))
+  expect_equal(seq_batch_cellset$type, "metadataCategorical")
+
+  # Test that all children have string names, not numeric
+  for (child in seq_batch_cellset$children) {
+    expect_type(child$name, "character")
+    expect_true(child$name %in% c("1", "2"))
+  }
+})
+
+
 test_that("upload_to_aws tries to upload the correct files to aws", {
   metadata <- list(Group1 = list("Hello", "WT2", "WT2"), Group2 = list("WT", "WT", "WT124"))
   input <- mock_input(metadata)
