@@ -53,6 +53,8 @@ RUN Rscript create_ghost_packages.R
 COPY setup/check_package_licenses.R .
 RUN Rscript check_package_licenses.R
 
+RUN R -q -e "remotes::install_github('bnprks/BPCells/r')"
+
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
 # ---------------------------------------------------
