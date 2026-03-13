@@ -66,7 +66,7 @@ compute_sample_doublet_scores <- function(sample_counts, technology, parse_kit =
       stop("Invalid parse kit value: ", parse_kit)
     }
   }
-  sce <- scDblFinder::scDblFinder(sample_counts, dbr = dbr)
+  sce <- scDblFinder_bpcells(sample_counts, dbr = dbr)
 
   doublet_res <- data.frame(
     row.names = colnames(sce),
@@ -76,6 +76,24 @@ compute_sample_doublet_scores <- function(sample_counts, technology, parse_kit =
   )
 
   return(doublet_res)
+}
+
+scDblFinder_bpcells <- function(counts, dbr = NULL) {
+  
+  # create a SingleCellExperiment object from the counts matrix
+  sce <- SingleCellExperiment::SingleCellExperiment(list(counts = counts))
+  k <- scDblFinder:::.defaultKnnKs(NULL, ncol(sce))
+  
+  # feature selection
+  sel_features <- scDblFinder::selFeatures(sce, NULL,
+                                           nfeatures = 1352,
+                                           propMarkers = 0)
+  
+  # materialise ONLY the selected features: 1352 x ncells dgCMatrix
+  counts_sub <- SingleCellExperiment::counts(sce)[sel_features, ]
+  counts_sub <- as(counts_sub, "dgCMatrix")
+  
+  scDblFinder::scDblFinder(counts_sub, nfeatures = sel_features, dbr = dbr, k = k)
 }
 
 
