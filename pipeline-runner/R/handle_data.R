@@ -29,20 +29,20 @@ load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$processed_bucket
   message("Loading processed scdata")
   message(bucket)
-  
+
   # List the objects under the experiment_id folder
   objects_response <- s3$list_objects_v2(
     Bucket = bucket,
     Prefix = paste0(experiment_id, "/")
   )
-  
+
   # Extract object keys
   object_keys <- vapply(objects_response$Contents, `[[`, "", "Key")
-  
+
   # Identify the appropriate file
   rds_file <- grep("r.rds$", object_keys, value = TRUE)
   qs_file <- grep("r.qs$", object_keys, value = TRUE)
-  
+
   if (length(qs_file) > 0) {
     message("Found .qs file: ", qs_file)
     key_to_load <- qs_file
@@ -54,13 +54,13 @@ load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
   } else {
     stop("No .qs or .rds files found")
   }
-  
+
   # Get the object
   c(body, ...rest) %<-% s3$get_object(
     Bucket = bucket,
     Key = key_to_load
   )
-  
+
   if (load_rds) {
     # Load with readRDS
     conn <- gzcon(rawConnection(body))
@@ -77,21 +77,160 @@ load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
       unlink(tmp_file)
     })
   }
-  
+
   return(obj)
 }
 
 # get_nnzero will return how many non-zero counts the count matrix has
 # it is used to order samples according to their size
 get_nnzero <- function (x) {
-  return(length(x@assays[["RNA"]]$counts@i))
+  return(sum(x$nFeature_RNA))
 }
 
 order_by_size <- function(scdata_list) {
   return(scdata_list[order(sapply(scdata_list, get_nnzero))])
 }
 
-load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
+# Update BPCells matrix paths after extraction
+replace_matrixdir_paths <- function(obj, new_dir) {
+  new_dir <- normalizePath(new_dir)
+  if (!dir.exists(new_dir))
+    stop(new_dir, " doesn't exist. Please move BPcells folder first.")
+
+  if (inherits(obj, "MatrixDir")) {
+    obj@dir <- new_dir
+    message('Updating MatrixDir: ', obj@dir)
+    return(obj)
+  }
+  if (is.list(obj)) {
+    return(lapply(obj, replace_matrixdir_paths, new_dir))
+  }
+  for (sn in slotNames(obj)) {
+    slot(obj, sn) <- replace_matrixdir_paths(slot(obj, sn), new_dir)
+  }
+  return(obj)
+}
+
+# Load a sample with BPCells data from S3
+load_bpcells_sample <- function(s3, bucket, experiment_id, sample_id) {
+  # Download and extract the _bpcells.tar file
+  tar_key <- paste(experiment_id, sample_id, "bpcells.tar", sep = "/")
+  message("Downloading BPCells tar file: ", tar_key)
+
+  c(tar_body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = tar_key
+  )
+
+  # Create directory for extraction in current working directory (persists across pipeline steps)
+  # Create a SEPARATE temp directory for tar extraction (not nested in final location)
+  tar_extract_dir <- file.path(tempdir(), paste0("bpcells_", sample_id, "_extract"))
+  if (!dir.exists(tar_extract_dir)) {
+    dir.create(tar_extract_dir, recursive = TRUE)
+  }
+
+  # Write tar file and extract
+  tar_file <- file.path(tar_extract_dir, "bpcells.tar")
+  writeBin(tar_body, con = tar_file)
+
+  # Extract tar archive
+  untar(tar_file, exdir = tar_extract_dir)
+  message("Extracted BPCells tar file")
+
+  # Debug: show what was extracted
+  extracted_items <- list.files(tar_extract_dir, all.files = TRUE, no.. = TRUE)
+  message("DEBUG: Items in tar_extract_dir: ", paste(extracted_items, collapse = ", "))
+  extracted_items <- extracted_items[extracted_items != "bpcells.tar"]
+  message("DEBUG: Items after filtering: ", paste(extracted_items, collapse = ", "))
+
+  if (length(extracted_items) == 0) {
+    stop("No files extracted from BPCells tar archive in: ", tar_extract_dir)
+  }
+
+  # The tar likely contains /input/... so we'll have "input" as a directory
+  source_dir <- file.path(tar_extract_dir, extracted_items[1])
+  message("DEBUG: source_dir = ", source_dir)
+  message("DEBUG: dir.exists(source_dir) = ", dir.exists(source_dir))
+
+  # Now create final location
+  extract_dir <- file.path(getwd(), "bpcells_data", experiment_id, sample_id)
+  message("DEBUG: extract_dir = ", extract_dir)
+
+  if (dir.exists(extract_dir)) {
+    unlink(extract_dir, recursive = TRUE)
+  }
+  dir.create(extract_dir, recursive = TRUE)
+
+  # Find the actual BPCells data directory (contains version file)
+  # It's typically under input/sample_id_bpcells
+  bpcells_source <- NULL
+  for (item in list.files(source_dir, all.files = TRUE, no.. = TRUE)) {
+    potential_path <- file.path(source_dir, item)
+    if (dir.exists(potential_path) && file.exists(file.path(potential_path, "version"))) {
+      bpcells_source <- potential_path
+      message("DEBUG: Found BPCells data at: ", potential_path)
+      break
+    }
+  }
+
+  if (is.null(bpcells_source)) {
+    stop("Could not find BPCells data directory (no version file found) in: ", source_dir)
+  }
+
+  # Copy the BPCells files to the final location
+  message("DEBUG: Copying BPCells files from ", bpcells_source, " to ", extract_dir)
+  items_to_copy <- list.files(bpcells_source, all.files = TRUE, no.. = TRUE)
+  message("DEBUG: Items to copy: ", paste(items_to_copy, collapse = ", "))
+
+  for (item in items_to_copy) {
+    src_path <- file.path(bpcells_source, item)
+    dst_path <- file.path(extract_dir, item)
+    file.copy(src_path, dst_path, recursive = TRUE, overwrite = TRUE)
+  }
+
+  bpcells_dir <- extract_dir
+
+  # Verify the copy worked
+  message("DEBUG: dir.exists(extract_dir) after copy = ", dir.exists(extract_dir))
+  files_in_final <- list.files(extract_dir, all.files = TRUE, no.. = TRUE)
+  message("DEBUG: Files in final directory: ", paste(files_in_final, collapse = ", "))
+
+  # Check for version file
+  version_file <- file.path(extract_dir, "version")
+  message("DEBUG: version file exists at ", version_file, ": ", file.exists(version_file))
+
+  # Clean up tar extraction directory
+  unlink(tar_extract_dir, recursive = TRUE)
+
+  # Download the r.rds file
+  rds_key <- paste(experiment_id, sample_id, "r.rds", sep = "/")
+  message("Downloading R object file: ", rds_key)
+
+  c(rds_body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = rds_key
+  )
+
+  # Load the R object
+  rds_file <- tempfile(fileext = ".rds")
+  writeBin(rds_body, con = rds_file)
+  obj <- readRDS(rds_file)
+  unlink(rds_file)
+
+  # Update matrix paths to point to extracted directory (now in bpcells_dir)
+  if (!is.null(obj@assays$RNA@layers)) {
+    obj@assays$RNA@layers <- lapply(
+      obj@assays$RNA@layers,
+      replace_matrixdir_paths,
+      bpcells_dir
+    )
+    message("Updated BPCells matrix paths for sample: ", sample_id)
+  }
+
+  return(obj)
+}
+
+load_source_scdata_list_old <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$source_bucket
   objects <- s3$list_objects(
     Bucket = bucket,
@@ -113,6 +252,71 @@ load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
     scdata_list[[sample_id]] <- obj
     # close connection explicitly or R will run out of available connections and fail
     close(conn)
+  }
+
+  # order samples according to their size to make the merge independent of samples order in the UI
+  return(order_by_size(scdata_list))
+}
+
+load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
+  bucket <- pipeline_config$source_bucket
+  objects <- s3$list_objects(
+    Bucket = bucket,
+    Prefix = experiment_id
+  )
+  samples <- objects$Contents
+  print(paste("Loading source scdata for experiment", experiment_id, ". samples:", paste(samples, collapse = ", ")))
+
+  scdata_list <- list()
+
+  # Group files by sample
+  sample_files <- list()
+  for (sample in samples) {
+    key <- sample$Key
+    parts <- strsplit(key, "/")[[1]]
+    if (length(parts) >= 3) {
+      sample_id <- parts[2]
+      file_name <- parts[3]
+      if (!is.null(sample_files[[sample_id]])) {
+        sample_files[[sample_id]][[file_name]] <- key
+      } else {
+        sample_files[[sample_id]] <- list()
+        sample_files[[sample_id]][[file_name]] <- key
+      }
+    }
+  }
+
+  # Load each sample
+  for (sample_id in names(sample_files)) {
+    files <- sample_files[[sample_id]]
+
+    # Check if this is BPCells format (has tar file)
+    if (!is.null(files[["bpcells.tar"]])) {
+      message("Detected BPCells format for sample: ", sample_id)
+      tryCatch({
+        obj <- load_bpcells_sample(s3, bucket, experiment_id, sample_id)
+        scdata_list[[sample_id]] <- obj
+      }, error = function(e) {
+        message("Error loading BPCells sample ", sample_id, ": ", e$message)
+        stop(e)
+      })
+    } else if (!is.null(files[["r.rds"]])) {
+      # Standard RDS format
+      key <- files[["r.rds"]]
+      message("Loading standard RDS file for sample: ", sample_id)
+
+      c(body, ...rest) %<-% s3$get_object(
+        Bucket = bucket,
+        Key = key
+      )
+      conn <- gzcon(rawConnection(body))
+      obj <- readRDS(conn)
+      scdata_list[[sample_id]] <- obj
+      # close connection explicitly or R will run out of available connections and fail
+      close(conn)
+    } else {
+      message("No recognizable data file found for sample: ", sample_id)
+    }
   }
 
   # order samples according to their size to make the merge independent of samples order in the UI
