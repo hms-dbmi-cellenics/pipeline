@@ -23,15 +23,13 @@ run_harmony <- function(scdata_list, config, cells_id) {
   Seurat::DefaultAssay(scdata) <- "RNA"
 
   # required pre-processing
+  # run PCA with npcs_for_pca for the elbow plot and the % of variance explained
   scdata <- scdata |>
     Seurat::NormalizeData(normalization.method = normalization, verbose = FALSE) |>
     Seurat::FindVariableFeatures(nfeatures = nfeatures, verbose = FALSE) |>
     Seurat::ScaleData(verbose = FALSE) |>
-    # run PCA with npcs_for_pca for the elbow plot and the % of variance explained
-    Seurat::RunPCA(
-      npcs = npcs_for_pca,
-      verbose = FALSE
-    )
+    run_pca(npcs = npcs_for_pca, verbose = FALSE)
+
 
   # estimate number of PCs to be used downstream, for integration and clustering
   if (is.null(npcs)) {
@@ -40,18 +38,6 @@ run_harmony <- function(scdata_list, config, cells_id) {
     message("Estimated number of PCs: ", npcs)
   }
 
-  # harmony ignores dims.use, using all dims available.
-  # https://github.com/immunogenomics/harmony/issues/151
-  # reduction.keys have to be globally unique, so PC_ fails
-  scdata <-
-    Seurat::RunPCA(
-      scdata,
-      npcs = npcs,
-      verbose = FALSE,
-      reduction.name = "pca_for_harmony",
-      reduction.key = "PCh_"
-    )
-
   # downsample
   # main function
   if (use_geosketch) {
@@ -59,7 +45,6 @@ run_harmony <- function(scdata_list, config, cells_id) {
       RunGeosketchHarmony(
         scdata,
         group.by.vars = "samples",
-        reduction = "pca_for_harmony",
         npcs = npcs,
         config
       )
@@ -68,7 +53,6 @@ run_harmony <- function(scdata_list, config, cells_id) {
       harmony::RunHarmony(
         scdata,
         group.by.vars = "samples",
-        reduction.use = "pca_for_harmony",
         dims.use = 1:npcs
       )
   }
@@ -77,6 +61,32 @@ run_harmony <- function(scdata_list, config, cells_id) {
   scdata@misc[["numPCs"]] <- npcs
   scdata@misc[["active.reduction"]] <- "harmony"
 
+  return(scdata)
+}
+
+run_pca <- function(scdata, npcs) {
+  scale.data <- scdata[['RNA']]$scale.data
+  scale.data_dir <- file.path(tempdir(), 'scale.data_bpcells')
+
+  # if BPCells write out operations for faster PCA
+  if (is(scale.data, "IterableMatrix")) {
+
+    BPCells::write_matrix_dir(scale.data, scale.data_dir)
+    scdata[['RNA']]$scale.data <- BPCells::open_matrix_dir(scale.data_dir)
+  }
+
+  # run PCA
+  scdata <- Seurat::RunPCA(
+    scdata,
+    npcs = npcs_for_pca,
+    verbose = FALSE
+  )
+
+  # cleanup disk scale.data
+  unlink(scale.data_dir, recursive = TRUE)
+
+  # restore scale.data to BPCells operations
+  scdata[['RNA']]$scale.data <- scale.data
   return(scdata)
 }
 
