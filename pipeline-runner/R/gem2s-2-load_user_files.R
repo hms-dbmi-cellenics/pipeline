@@ -25,7 +25,7 @@ load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_
   read_fun <- switch(technology,
     "10x" = read_10x_files,
     "rhapsody" = read_rhapsody_files,
-    "10x_h5" = read_10x_h5_file,
+    "10x_h5" = read_10x_h5_file_bpcells,
     "parse" = read_parse_files
   )
 
@@ -161,6 +161,93 @@ read_10x_h5_file <- function(config, input_dir) {
   annot <- format_annot(annot_list)
 
   return(list(counts_list = counts_list, annot = annot))
+}
+
+read_10x_h5_file_bpcells <- function(config, input_dir) {
+  counts_list <- list()
+  annot_list <- list()
+
+  samples <- config$samples
+
+  for (sample in samples) {
+    sample_dir <- file.path(input_dir, sample)
+    sample_fpaths <- list.files(sample_dir)
+    sample_counts_path <- file.path(sample_dir, sample_fpaths[[1]])
+
+    message("\nSample --> ", sample)
+    message(
+      "Reading files from ",
+      sample_dir,
+      " --> ",
+      paste(sample_fpaths, collapse = " - ")
+    )
+
+    if (length(sample_fpaths) > 1) {
+      stop("Only one h5 expected. More files detected.")
+    }
+
+    ungzipped_counts_path <- R.utils::gunzip(sample_counts_path)
+
+    gene_names <- read_10x_h5_feature_names(ungzipped_counts_path)
+    counts <- BPCells::open_matrix_10x_hdf5(ungzipped_counts_path)
+
+    # Write the matrix to a directory
+    bpcells_dir <- file.path(input_dir, paste0(sample, "_bpcells"))
+    BPCells::write_matrix_dir(counts, dir = bpcells_dir)
+    counts.mat <- BPCells::open_matrix_dir(dir = bpcells_dir)
+
+    # use Gene Expression modality if multiple
+    if (methods::is(gene_names, "list")) {
+      gene_names <- gene_names$`Gene Expression`
+    }
+
+    annotations <-
+      data.frame(input = rownames(counts.mat), symbol = gene_names)
+    counts_list[[sample]] <- counts.mat
+    annot_list[[sample]] <- annotations
+  }
+
+  annot <- format_annot(annot_list)
+
+  return(list(counts_list = counts_list, annot = annot))
+}
+
+read_10x_h5_feature_names <- function(filename, use.names = TRUE, unique.features = TRUE) {
+  if (isFALSE(requireNamespace("hdf5r", quietly = TRUE))) {
+    stop("Please install hdf5r to read HDF5 files")
+  }
+  if (!file.exists(filename)) {
+    stop("File not found")
+  }
+  
+  infile <- hdf5r::H5File$new(filename = filename, mode = "r")
+  genomes <- names(infile)
+  
+  # Determine feature slot based on file structure and use.names argument
+  if (hdf5r::existsGroup(infile, "matrix")) {
+    feature_slot <- ifelse(use.names, "features/name", "features/id")
+  } else {
+    feature_slot <- ifelse(use.names, "gene_names", "genes")
+  }
+  
+  output <- list()
+  for (genome in genomes) {
+    features <- infile[[paste0(genome, "/", feature_slot)]][]
+    
+    if (unique.features) {
+      features <- make.unique(names = features)
+    }
+    
+    output[[genome]] <- features
+  }
+  
+  infile$close_all()
+  
+  if (length(output) == 1) {
+    return(output[[genome]])
+  } else {
+    return(output)
+  }
 }
 
 #' Calls Read10X

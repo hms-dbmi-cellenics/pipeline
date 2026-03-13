@@ -55,6 +55,17 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       object = fpath,
       key = file.path(experiment_id, sample, "r.rds")
     )
+
+    tarfile <- tar_bpcells(sample)
+
+    if (!is.null(tarfile)) {
+      message("Uploading sample ", sample, " bpcells to S3 ...")
+      put_object_in_s3_multipart(pipeline_config,
+        bucket = pipeline_config$source_bucket,
+        object = tarfile,
+        key = file.path(experiment_id, sample, "bpcells.tar")
+      )
+    }
   }
 
   message("Samples uploaded")
@@ -83,6 +94,20 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   message("\nUpload to AWS step complete.")
   return(res)
+}
+
+tar_bpcells <- function(sample) {
+  bpcells_dir <- paste0(sample, "_bpcells")
+  bpcells_path <- file.path(INPUT_DIR, bpcells_dir)
+  if (!dir.exists(bpcells_path)) return(NULL)
+
+  tarfile <- file.path(tempdir(), paste0(sample, '_bpcells.tar'))
+  current_dir <- getwd()
+
+  setwd(INPUT_DIR)
+  tar(tarfile, files = bpcells_dir, compression = "none")
+  setwd(current_dir)
+  return(tarfile)
 }
 
 #' Create initial cell sets object
