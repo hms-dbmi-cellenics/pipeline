@@ -158,9 +158,7 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, i
   if (!task_name %in% names(tasks)) {
     stop("Invalid task: ", task_name)
   }
-
-  handle_debug(scdata, config, task_name, sample_id, debug_config)
-
+  
   # print info
   task <- tasks[[task_name]]
   message("Running: ", task_name)
@@ -356,6 +354,7 @@ call_qc <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
   config <- input$config
   upload_count_matrix <- input$uploadCountMatrix
+  upload_count_matrix_dir <- FALSE
   ignore_ssl_cert <- input$ignoreSslCert
   sample_id <- input$sampleUuid
   debug_config <- pipeline_config$debug_config
@@ -379,6 +378,9 @@ call_qc <- function(task_name, input, pipeline_config) {
 
   # For configure embedding
   config$clustering_should_run <- input$clusteringShouldRun
+
+  # for integration step
+  config$experiment_id <- experiment_id
 
   if (!exists("scdata")) {
     message("No single-cell data has been loaded, reloading from S3...")
@@ -450,6 +452,16 @@ call_qc <- function(task_name, input, pipeline_config) {
       "Count matrix uploaded to ", pipeline_config$processed_bucket,
       " with key ", object_key
     )
+  }
+
+  # Upload matrix dir for bpcells
+  upload_matrix_dir <-
+    upload_count_matrix && is(scdata[['RNA']]$counts, 'IterableMatrix')
+
+  if (upload_matrix_dir) {
+    upload_matrix_dir_to_s3(pipeline_config, experiment_id, scdata)
+    message(
+      "Matrix dir for bpcells uploaded to ", pipeline_config$processed_bucket)
   }
 
   # send result to API
