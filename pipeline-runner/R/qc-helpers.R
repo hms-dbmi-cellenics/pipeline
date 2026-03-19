@@ -94,25 +94,6 @@ downsample_plotdata <- function(ncol_sample, max_number_of_cells) {
   return(nkeep)
 }
 
-
-handle_debug <- function(scdata, config, task_name, sample_id, debug_config) {
-  is_debug <- debug_config$step %in% c(task_name, "all")
-
-  if (is_debug) {
-    # variable names used by functions
-    scdata <- scdata
-    num_cells_to_downsample <- 6000
-    sample_str <- ifelse(sample_id == "", "", paste0("_", sample_id))
-    fname <- paste0(task_name, sample_str, ".RData")
-    fpath_cont <- file.path(DEBUG_PATH, fname)
-    fpath_host <- file.path(debug_config$path, fname)
-    message(sprintf("⚠️ DEBUG_STEP = %s. Saving arguments.", task_name))
-    save(scdata, config, task_name, sample_id, num_cells_to_downsample, file = fpath_cont)
-    message(sprintf("⚠️ RUN load('%s') to restore environment.", fpath_host))
-  }
-}
-
-
 #' Calculates statistics before/after filter step
 #'
 #' @param scdata \code{SeuratObject}
@@ -156,7 +137,7 @@ calc_filter_stats <- function(scdata) {
 #' @export
 #'
 runClusters <- function(clustering_method, resolution, data) {
-  message("Running clustering")
+
   data <- getClusters(clustering_method, resolution, data)
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   # In the meta data slot the clustering is stored with the resolution used to calculate it
@@ -176,14 +157,24 @@ runClusters <- function(clustering_method, resolution, data) {
 #' @export
 #'
 getClusters <- function(clustering_method, resolution, data) {
-  res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
-  algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]
-  # To run clustering, we need to identify the active.reduction that is used in FindNeighbors.
+
+  # need to identify the active.reduction that is used in FindNeighbors
+  # if geosketch, will be e.g. "pca.sketch"
   if ("active.reduction" %in% names(data@misc)) {
     active.reduction <- data@misc[["active.reduction"]]
   } else {
     active.reduction <- "pca"
   }
+
+  # run clustering on sketch assay if it exists
+  # TODO: run based on QC setting (but assay shouldn't exist if not set)
+  has.sketch <- "sketch" %in% names(data@assays)
+  if (has.sketch) {
+    Seurat::DefaultAssay(data) <- "sketch"
+  }
+
+  res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
+  algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]
 
   if (clustering_method == "leiden") {
     # emulate FindClusters, which overwrites seurat_clusters slot and meta.data column
@@ -193,6 +184,7 @@ getClusters <- function(clustering_method, resolution, data) {
     names(clusters) <- clus_res$names
     clusters <- clusters[colnames(data)]
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters - 1)
+
   } else {
     graph_name <- paste0(Seurat::DefaultAssay(data), "_snn")
     if (!graph_name %in% names(data)) {
@@ -207,8 +199,38 @@ getClusters <- function(clustering_method, resolution, data) {
           verbose = FALSE,
         )
     }
-    data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm, random.seed = RANDOM_SEED)
+
+    data <-
+    Seurat::FindClusters(
+      data,
+      resolution = resolution,
+      verbose = FALSE,
+      algorithm = algorithm,
+      random.seed = RANDOM_SEED
+    )
   }
+
+  if (has.sketch) {
+    # prepare to project clusters from sketch to full data
+    data$seurat_clusters_sketch <- data$seurat_clusters
+    data$seurat_clusters <- NULL
+    npcs <- length(data@reductions[[active.reduction]])
+
+    # extend results to full dataset
+    # NOTE: uses stored calculations from previous call (during integration)
+    data <- Seurat::ProjectData(
+      object = data,
+      assay = "RNA",
+      full.reduction = gsub("[.]sketch$", "", active.reduction),
+      sketched.assay = "sketch",
+      sketched.reduction = active.reduction,
+      dims = 1:npcs,
+      refdata = list(seurat_clusters = "seurat_clusters_sketch")
+    )
+
+    Seurat::DefaultAssay(data) <- "RNA"
+  }
+
   return(data)
 }
 
