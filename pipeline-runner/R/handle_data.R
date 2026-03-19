@@ -91,172 +91,6 @@ order_by_size <- function(scdata_list) {
   return(scdata_list[order(sapply(scdata_list, get_nnzero))])
 }
 
-# Update BPCells matrix paths after extraction
-replace_matrixdir_paths <- function(obj, new_dir) {
-  new_dir <- normalizePath(new_dir)
-  if (!dir.exists(new_dir))
-    stop(new_dir, " doesn't exist. Please move BPcells folder first.")
-
-  if (inherits(obj, "MatrixDir")) {
-    obj@dir <- new_dir
-    message('Updating MatrixDir: ', obj@dir)
-    return(obj)
-  }
-  if (is.list(obj)) {
-    return(lapply(obj, replace_matrixdir_paths, new_dir))
-  }
-  for (sn in slotNames(obj)) {
-    slot(obj, sn) <- replace_matrixdir_paths(slot(obj, sn), new_dir)
-  }
-  return(obj)
-}
-
-# Load a sample with BPCells data from S3
-load_bpcells_sample <- function(s3, bucket, experiment_id, sample_id) {
-  # Download and extract the _bpcells.tar file
-  tar_key <- paste(experiment_id, sample_id, "bpcells.tar", sep = "/")
-  message("Downloading BPCells tar file: ", tar_key)
-
-  c(tar_body, ...rest) %<-% s3$get_object(
-    Bucket = bucket,
-    Key = tar_key
-  )
-
-  # Create directory for extraction in current working directory (persists across pipeline steps)
-  # Create a SEPARATE temp directory for tar extraction (not nested in final location)
-  tar_extract_dir <- file.path(tempdir(), paste0("bpcells_", sample_id, "_extract"))
-  if (!dir.exists(tar_extract_dir)) {
-    dir.create(tar_extract_dir, recursive = TRUE)
-  }
-
-  # Write tar file and extract
-  tar_file <- file.path(tar_extract_dir, "bpcells.tar")
-  writeBin(tar_body, con = tar_file)
-
-  # Extract tar archive
-  untar(tar_file, exdir = tar_extract_dir)
-  message("Extracted BPCells tar file")
-
-  # Debug: show what was extracted
-  extracted_items <- list.files(tar_extract_dir, all.files = TRUE, no.. = TRUE)
-  message("DEBUG: Items in tar_extract_dir: ", paste(extracted_items, collapse = ", "))
-  extracted_items <- extracted_items[extracted_items != "bpcells.tar"]
-  message("DEBUG: Items after filtering: ", paste(extracted_items, collapse = ", "))
-
-  if (length(extracted_items) == 0) {
-    stop("No files extracted from BPCells tar archive in: ", tar_extract_dir)
-  }
-
-  # The tar likely contains /input/... so we'll have "input" as a directory
-  source_dir <- file.path(tar_extract_dir, extracted_items[1])
-  message("DEBUG: source_dir = ", source_dir)
-  message("DEBUG: dir.exists(source_dir) = ", dir.exists(source_dir))
-
-  # Now create final location
-  extract_dir <- file.path(getwd(), "bpcells_data", experiment_id, sample_id)
-  message("DEBUG: extract_dir = ", extract_dir)
-
-  if (dir.exists(extract_dir)) {
-    unlink(extract_dir, recursive = TRUE)
-  }
-  dir.create(extract_dir, recursive = TRUE)
-
-  # Find the actual BPCells data directory (contains version file)
-  # It's typically under input/sample_id_bpcells
-  bpcells_source <- NULL
-  for (item in list.files(source_dir, all.files = TRUE, no.. = TRUE)) {
-    potential_path <- file.path(source_dir, item)
-    if (dir.exists(potential_path) && file.exists(file.path(potential_path, "version"))) {
-      bpcells_source <- potential_path
-      message("DEBUG: Found BPCells data at: ", potential_path)
-      break
-    }
-  }
-
-  if (is.null(bpcells_source)) {
-    stop("Could not find BPCells data directory (no version file found) in: ", source_dir)
-  }
-
-  # Copy the BPCells files to the final location
-  message("DEBUG: Copying BPCells files from ", bpcells_source, " to ", extract_dir)
-  items_to_copy <- list.files(bpcells_source, all.files = TRUE, no.. = TRUE)
-  message("DEBUG: Items to copy: ", paste(items_to_copy, collapse = ", "))
-
-  for (item in items_to_copy) {
-    src_path <- file.path(bpcells_source, item)
-    dst_path <- file.path(extract_dir, item)
-    file.copy(src_path, dst_path, recursive = TRUE, overwrite = TRUE)
-  }
-
-  bpcells_dir <- extract_dir
-
-  # Verify the copy worked
-  message("DEBUG: dir.exists(extract_dir) after copy = ", dir.exists(extract_dir))
-  files_in_final <- list.files(extract_dir, all.files = TRUE, no.. = TRUE)
-  message("DEBUG: Files in final directory: ", paste(files_in_final, collapse = ", "))
-
-  # Check for version file
-  version_file <- file.path(extract_dir, "version")
-  message("DEBUG: version file exists at ", version_file, ": ", file.exists(version_file))
-
-  # Clean up tar extraction directory
-  unlink(tar_extract_dir, recursive = TRUE)
-
-  # Download the r.rds file
-  rds_key <- paste(experiment_id, sample_id, "r.rds", sep = "/")
-  message("Downloading R object file: ", rds_key)
-
-  c(rds_body, ...rest) %<-% s3$get_object(
-    Bucket = bucket,
-    Key = rds_key
-  )
-
-  # Load the R object
-  rds_file <- tempfile(fileext = ".rds")
-  writeBin(rds_body, con = rds_file)
-  obj <- readRDS(rds_file)
-  unlink(rds_file)
-
-  # Update matrix paths to point to extracted directory (now in bpcells_dir)
-  if (!is.null(obj@assays$RNA@layers)) {
-    obj@assays$RNA@layers <- lapply(
-      obj@assays$RNA@layers,
-      replace_matrixdir_paths,
-      bpcells_dir
-    )
-    message("Updated BPCells matrix paths for sample: ", sample_id)
-  }
-
-  return(obj)
-}
-
-load_source_scdata_list_old <- function (s3, pipeline_config, experiment_id) {
-  bucket <- pipeline_config$source_bucket
-  objects <- s3$list_objects(
-    Bucket = bucket,
-    Prefix = experiment_id
-  )
-  samples <- objects$Contents
-
-  scdata_list <- list()
-  for (sample in samples) {
-    key <- sample$Key
-
-    c(body, ...rest) %<-% s3$get_object(
-      Bucket = bucket,
-      Key = paste(key, sep = "/")
-    )
-    conn <- gzcon(rawConnection(body))
-    obj <- readRDS(conn)
-    sample_id <- strsplit(key, "/")[[1]][[2]]
-    scdata_list[[sample_id]] <- obj
-    # close connection explicitly or R will run out of available connections and fail
-    close(conn)
-  }
-
-  # order samples according to their size to make the merge independent of samples order in the UI
-  return(order_by_size(scdata_list))
-}
 
 load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$source_bucket
@@ -264,63 +98,103 @@ load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
     Bucket = bucket,
     Prefix = experiment_id
   )
-  samples <- objects$Contents
-  print(paste("Loading source scdata for experiment", experiment_id, ". samples:", paste(samples, collapse = ", ")))
+  experiment_files <- objects$Contents
+  message("Loading source scdata for experiment ", experiment_id)
 
-  scdata_list <- list()
-
-  # Group files by sample
-  sample_files <- list()
-  for (sample in samples) {
-    key <- sample$Key
-    parts <- strsplit(key, "/")[[1]]
-    if (length(parts) >= 3) {
-      sample_id <- parts[2]
-      file_name <- parts[3]
-      if (!is.null(sample_files[[sample_id]])) {
-        sample_files[[sample_id]][[file_name]] <- key
-      } else {
-        sample_files[[sample_id]] <- list()
-        sample_files[[sample_id]][[file_name]] <- key
-      }
-    }
-  }
+  sample_files <- group_files_by_sample(experiment_files)
 
   # Load each sample
+  scdata_list <- list()
   for (sample_id in names(sample_files)) {
-    files <- sample_files[[sample_id]]
+    file_keys <- sample_files[[sample_id]]
+    rds_key <- file_keys[['r.rds']]
+    matrix_dir_key <- file_keys[['matrix_dir.tar']]
 
-    # Check if this is BPCells format (has tar file)
-    if (!is.null(files[["bpcells.tar"]])) {
-      message("Detected BPCells format for sample: ", sample_id)
-      tryCatch({
-        obj <- load_bpcells_sample(s3, bucket, experiment_id, sample_id)
-        scdata_list[[sample_id]] <- obj
-      }, error = function(e) {
-        message("Error loading BPCells sample ", sample_id, ": ", e$message)
-        stop(e)
-      })
-    } else if (!is.null(files[["r.rds"]])) {
-      # Standard RDS format
-      key <- files[["r.rds"]]
-      message("Loading standard RDS file for sample: ", sample_id)
+    scdata <- load_source_rds(s3, rds_key, bucket)
 
-      c(body, ...rest) %<-% s3$get_object(
-        Bucket = bucket,
-        Key = key
+    if (!is.null(matrix_dir_key)) {
+      # untar and update bpcells matrix dir
+      new_matrix_dir <- load_source_matrix_dir(s3, matrix_dir_key, bucket, sample_id)
+
+      scdata@assays$RNA@layers <- lapply(
+        scdata@assays$RNA@layers,
+        replace_matrix_dir_paths,
+        new_matrix_dir
       )
-      conn <- gzcon(rawConnection(body))
-      obj <- readRDS(conn)
-      scdata_list[[sample_id]] <- obj
-      # close connection explicitly or R will run out of available connections and fail
-      close(conn)
-    } else {
-      message("No recognizable data file found for sample: ", sample_id)
     }
+
+    scdata_list[[sample_id]] <- scdata
   }
 
   # order samples according to their size to make the merge independent of samples order in the UI
   return(order_by_size(scdata_list))
+}
+
+load_source_rds <- function(s3, rds_key, bucket) {
+  message("...loading r.rds key ", rds_key)
+
+  c(body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = rds_key
+  )
+
+  conn <- gzcon(rawConnection(body))
+  obj <- readRDS(conn)
+  # close connection explicitly or R will run out of available connections and fail
+  close(conn)
+  return(obj)
+}
+
+load_source_matrix_dir <- function(s3, matrix_dir_key, bucket, sample_id) {
+  message("...loading matrix_dir.tar key ", matrix_dir_key)
+
+  # download directly to tar file
+  new_matrix_dir <- file.path(tempdir(), paste0(sample_id, "_matrix_dir"))
+  tarfile <- paste0(new_matrix_dir, ".tar.zst")
+
+  s3$download_file(
+    Bucket = bucket,
+    Key = matrix_dir_key,
+    Filename = tarfile
+  )
+
+  # extract contents ({sample}_matrix_dir/*) to tempdir
+  untar_zstd(tarfile, exdir = tempdir())
+  unlink(tarfile)
+  return(new_matrix_dir)
+}
+
+# Update BPCells matrix paths after extraction
+replace_matrix_dir_paths <- function(obj, new_dir) {
+  new_dir <- normalizePath(new_dir)
+  if (!dir.exists(new_dir))
+    stop(new_dir, " doesn't exist. Please move BPcells folder first.")
+
+  if (inherits(obj, "MatrixDir")) {
+    obj@dir <- new_dir
+    message("Updating MatrixDir: ", obj@dir)
+    return(obj)
+  }
+  if (is.list(obj)) {
+    return(lapply(obj, replace_matrix_dir_paths, new_dir))
+  }
+  for (sn in slotNames(obj)) {
+    slot(obj, sn) <- replace_matrix_dir_paths(slot(obj, sn), new_dir)
+  }
+  return(obj)
+}
+
+group_files_by_sample <- function(experiment_files) {
+  # Group files by sample
+  sample_files <- list()
+  for (experiment_file in experiment_files) {
+    key <- experiment_file$Key
+    parts <- strsplit(key, "/")[[1]]
+    sample_id <- parts[2]
+    file_name <- parts[3]
+    sample_files[[sample_id]][[file_name]] <- key
+  }
+  return(sample_files)
 }
 
 # reload_data_from_s3 will reload:
@@ -428,7 +302,7 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     )
   )
 
-  message("Uploading results to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
+  message("Uploading results to S3 bucket ", pipeline_config$results_bucket, " at key ", id, "...")
   put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id)
 
   message("Sending to SNS topic ", pipeline_config$sns_topic)
@@ -589,11 +463,63 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   qs::qsave(data, file = count_matrix)
 
   message("Count matrix file size : ", fs::file_size(count_matrix))
-  message("Uploading updated count matrix to S3 bucket ", pipeline_config$processed_bucket, " at key ", object_key, "...")
+  message("Uploading updated count matrix to S3 bucket ",
+          pipeline_config$processed_bucket, " at key ", object_key, "...")
 
-  put_object_in_s3_multipart(pipeline_config, pipeline_config$processed_bucket, count_matrix, object_key)
+  put_object_in_s3_multipart(
+    pipeline_config, pipeline_config$processed_bucket, count_matrix, object_key)
 
   return(object_key)
+}
+
+
+
+upload_matrix_dir_to_s3 <- function(pipeline_config, experiment_id, data) {
+  object_key <- paste0(experiment_id, "/matrix_dir.tar")
+  message("Saving object for key: ", object_key, '...')
+
+  # should just be one
+  matrix_dir <- get_matrix_dirs(data)
+  print("matrix_dir!!!")
+  print(matrix_dir)
+
+
+  tarfile <- tar_matrix_dir(experiment_id, matrix_dir)
+  message("Matrix dir file size: ", fs::file_size(tarfile))
+
+  message("Uploading updated matrix dir to S3 bucket ",
+          pipeline_config$processed_bucket, " at key ", object_key, "...")
+
+  put_object_in_s3_multipart(
+    pipeline_config, pipeline_config$processed_bucket, tarfile, object_key)
+}
+
+find_matrix_dir_paths <- function(obj) {
+  matrix_dir_paths <- c()
+  if (inherits(obj, "MatrixDir")) {
+    return(obj@dir)
+  }
+  if (is.list(obj)) {
+    res <- lapply(obj, find_matrix_dir_paths)
+    return(unlist(res))
+  }
+  for (sn in slotNames(obj)) {
+    matrix_dir_paths <- c(
+      matrix_dir_paths,
+      find_matrix_dir_paths(slot(obj, sn)))
+  }
+  return(matrix_dir_paths)
+}
+
+get_matrix_dirs <- function(scdata) {
+
+  matrix_dirs <- lapply(
+    scdata@assays$RNA@layers,
+    find_matrix_dir_paths
+  )
+
+  matrix_dirs <- unique(unlist(matrix_dirs))
+  return(matrix_dirs)
 }
 
 # based off of vitessce-python demo
@@ -822,7 +748,7 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
 upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
   file_size <- file.size(object)
   megabyte <- 2^20
-  part_size <- 5 * megabyte
+  part_size <- 8 * megabyte
   num_parts <- ceiling(file_size / part_size)
 
   con <- base::file(object, open = "rb")
@@ -830,18 +756,50 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
     close(con)
   })
   parts <- list()
+  tstart <- Sys.time()
   for (i in 1:num_parts) {
     part <- readBin(con, what = "raw", n = part_size)
-    part_resp <- s3$upload_part(
-      Body = part,
-      Bucket = bucket,
-      Key = key,
-      PartNumber = i,
-      UploadId = upload_id
-    )
+    
+    message("Uploading part ", i, "/", num_parts, "...")
+    
+    # Run garbage collection every 50 parts to manage memory
+    if (i %% 50 == 0) gc()
+    
+    # Upload part with retries and exponential backoff
+    retry_count <- 0
+    max_retries <- 3
+    part_resp <- NULL
+    
+    while (retry_count < max_retries) {
+      tryCatch({
+        part_resp <- s3$upload_part(
+          Body = part,
+          Bucket = bucket,
+          Key = key,
+          PartNumber = i,
+          UploadId = upload_id
+        )
+        message("Part ", i, "/", num_parts, " uploaded successfully")
+        break
+      }, error = function(e) {
+        retry_count <<- retry_count + 1
+        message("Error uploading part ", i, ": ", e$message)
+        if (retry_count < max_retries) {
+          wait_time <- 2 ^ retry_count
+          message("Retrying part ", i, " in ", wait_time, " seconds (attempt ", retry_count, "/", max_retries, ")...")
+          Sys.sleep(wait_time)
+        }
+      })
+    }
+    
+    if (is.null(part_resp)) {
+      stop("Failed to upload part ", i, " after ", max_retries, " attempts")
+    }
+    
     parts <- c(parts, list(list(ETag = part_resp$ETag, PartNumber = i)))
   }
-
+  tend <- Sys.time()
+  message("Multipart upload time: ", tend - tstart)
   return(parts)
 }
 
