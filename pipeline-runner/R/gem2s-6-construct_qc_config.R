@@ -13,64 +13,69 @@
 #' @return list of QC configuration parameters
 #'
 construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
-    samples <- names(scdata_list)
-    config_classifier <-
-      add_custom_config_per_sample(
-        customize_classifier_config,
-        processing_config_template[["classifier"]],
-        scdata_list,
-        unfiltered_samples
-      )
-
-    config_cell_size <-
-      add_custom_config_per_sample(
-        customize_cellsize_config,
-        processing_config_template[["cell_size"]],
-        scdata_list,
-      )
-
-    config_mitochondrial <-
-      add_custom_config_per_sample(
-        customize_mitochondrial_config,
-        processing_config_template[["mitochondrial"]],
-        scdata_list,
-      )
-
-    config_genes_vs_umis <-
-      add_custom_config_per_sample(
-        customize_genes_vs_umis_config,
-        processing_config_template[["genes_vs_umis"]],
-        scdata_list,
-        technology = technology
-      )
-
-
-    config_doublet <-
-      add_custom_config_per_sample(
-        customize_doublet_config,
-        processing_config_template[["doublet"]],
-        scdata_list,
-      )
-
-    config_data_integration <-
-      processing_config_template[["data_integration"]]
-
-    config_embedding_clustering <-
-      get_embedding_config(scdata_list, processing_config_template[["embedding_clustering"]])
-
-    # combine config for all steps
-    config <- list(
-      cellSizeDistribution = config_cell_size,
-      mitochondrialContent = config_mitochondrial,
-      classifier = config_classifier,
-      numGenesVsNumUmis = config_genes_vs_umis,
-      doubletScores = config_doublet,
-      dataIntegration = config_data_integration,
-      configureEmbedding = config_embedding_clustering
+  samples <- names(scdata_list)
+  config_classifier <-
+    add_custom_config_per_sample(
+      customize_classifier_config,
+      processing_config_template[["classifier"]],
+      scdata_list,
+      unfiltered_samples
     )
 
-    return(config)
-  }
+  config_cell_size <-
+    add_custom_config_per_sample(
+      customize_cellsize_config,
+      processing_config_template[["cell_size"]],
+      scdata_list,
+    )
+
+  config_mitochondrial <-
+    add_custom_config_per_sample(
+      customize_mitochondrial_config,
+      processing_config_template[["mitochondrial"]],
+      scdata_list,
+    )
+
+  config_genes_vs_umis <-
+    add_custom_config_per_sample(
+      customize_genes_vs_umis_config,
+      processing_config_template[["genes_vs_umis"]],
+      scdata_list,
+      technology = technology
+    )
+
+
+  config_doublet <-
+    add_custom_config_per_sample(
+      customize_doublet_config,
+      processing_config_template[["doublet"]],
+      scdata_list,
+    )
+
+  config_data_integration <-
+    get_data_integration_config(
+      scdata_list,
+      processing_config_template[["data_integration"]]
+    )
+
+  config_embedding_clustering <-
+    get_embedding_config(
+      scdata_list,
+      processing_config_template[["embedding_clustering"]])
+
+  # combine config for all steps
+  config <- list(
+    cellSizeDistribution = config_cell_size,
+    mitochondrialContent = config_mitochondrial,
+    classifier = config_classifier,
+    numGenesVsNumUmis = config_genes_vs_umis,
+    doubletScores = config_doublet,
+    dataIntegration = config_data_integration,
+    configureEmbedding = config_embedding_clustering
+  )
+
+  return(config)
+}
 
 
 customize_classifier_config <-
@@ -156,6 +161,49 @@ get_embedding_config <- function(scdata_list, config) {
       default_learning_rate,
       min(vapply(scdata_list, ncol, numeric(1))) / 12)
   )
+
+  return(config)
+}
+
+get_data_integration_config <- function(scdata_list, config) {
+  FDR <- processing_config_template[["classifier"]]$filterSettings$FDR
+  GEOSKETCH_CELLS_THRESHOLD <- 300000
+
+  message("Calculating total cells across samples to determine if Geosketch is needed for data integration...")
+
+  total_cells <- 0
+  # Calculate total cells after estimated empty drops filtering
+  for (sample_name in names(scdata_list)) {
+    scdata_sample <- scdata_list[[sample_name]]
+
+    if (!scdata_sample@tools$flag_filtered) {
+      # uses the same filtering logic as qc-1-filter_emptydrops.R
+      ed_fdr <- scdata_sample$emptyDrops_FDR
+      ed_fdr[is.na(ed_fdr)] <- 1  # prevents filtering of NA FDRs if FDR=1
+      cells_in_sample <- sum(ed_fdr <= FDR, na.rm = TRUE)
+
+    } else {
+      cells_in_sample <- ncol(scdata_sample)
+    }
+
+    total_cells <- total_cells + cells_in_sample
+  }
+
+  message("Total cells after estimated emptyDrops filtering: ", total_cells)
+
+  # Enable geosketch if total cells exceed threshold
+  if (total_cells > GEOSKETCH_CELLS_THRESHOLD) {
+    message("Total cells exceed threshold for Geosketch, enabling downsampling...")
+    # Calculate percentageToKeep to downsample to approximately 50000 cells
+    percentageToKeep <- 50000 / total_cells * 100
+
+    config$downsampling <- list(
+      method = "geosketch",
+      methodSettings = list(
+        geosketch = list(percentageToKeep = percentageToKeep)
+      )
+    )
+  }
 
   return(config)
 }
