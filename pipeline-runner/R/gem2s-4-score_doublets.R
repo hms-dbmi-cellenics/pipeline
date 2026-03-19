@@ -66,7 +66,20 @@ compute_sample_doublet_scores <- function(sample_counts, technology, parse_kit =
       stop("Invalid parse kit value: ", parse_kit)
     }
   }
-  sce <- scDblFinder_bpcells(sample_counts, dbr = dbr)
+
+  if (ncol(sample_counts) > 100000) {
+    ncells <- ncol(sample_counts)
+    message("too many cells: ", ncells, ", skipping doublet scoring")
+    doublet_res <- data.frame(
+      row.names = colnames(sample_counts),
+      barcodes = colnames(sample_counts),
+      doublet_class = rep('singlet', ncells),
+      doublet_scores = rep(0, ncells)
+    )
+    return(doublet_res)
+  }
+  
+  sce <- scDblFinder::scDblFinder(sample_counts, dbr = dbr)
 
   doublet_res <- data.frame(
     row.names = colnames(sce),
@@ -79,21 +92,23 @@ compute_sample_doublet_scores <- function(sample_counts, technology, parse_kit =
 }
 
 scDblFinder_bpcells <- function(counts, dbr = NULL) {
-  
+
   # create a SingleCellExperiment object from the counts matrix
   sce <- SingleCellExperiment::SingleCellExperiment(list(counts = counts))
   k <- scDblFinder:::.defaultKnnKs(NULL, ncol(sce))
-  
+
+
   # feature selection
-  sel_features <- scDblFinder::selFeatures(sce, NULL,
-                                           nfeatures = 1352,
-                                           propMarkers = 0)
-  
-  # materialise ONLY the selected features: 1352 x ncells dgCMatrix
+  nfeatures <- 1352
+  sel_features <- scDblFinder::selFeatures(sce, nfeatures = nfeatures)
+
+  # materialise ONLY the selected features: nfeatures x ncells dgCMatrix
   counts_sub <- SingleCellExperiment::counts(sce)[sel_features, ]
   counts_sub <- as(counts_sub, "dgCMatrix")
-  
-  scDblFinder::scDblFinder(counts_sub, nfeatures = sel_features, dbr = dbr, k = k)
+  gc()
+
+  print(object.size(counts_sub), units = "auto")
+  scDblFinder::scDblFinder(counts_sub, nfeatures = nfeatures, dbr = dbr, k = k)
 }
 
 
