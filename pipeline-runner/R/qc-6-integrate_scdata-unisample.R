@@ -17,30 +17,39 @@ run_unisample <- function(scdata_list, config, cells_id) {
 
   scdata <- prepare_scdata_for_unisample(scdata_list, config, cells_id)
 
-  # in unisample we only need to normalize
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = normalization, verbose = FALSE) |>
-    Seurat::FindVariableFeatures(assay = "RNA", nfeatures = nfeatures, verbose = FALSE) |>
-    Seurat::ScaleData(verbose = FALSE)
-
-  scdata <- add_dispersions(scdata, normalization)
-
-  # run PCA with 50 PCs (or less if there are less cells)
-  scdata <-
-    Seurat::RunPCA(
-      scdata,
+  # in unisample we only need to run preprocessing
+  scdata <- scdata |>
+    RunPreprocessing(
+      normalization = normalization,
+      nfeatures = nfeatures,
       npcs = npcs_for_pca,
-      features = Seurat::VariableFeatures(object = scdata),
-      verbose = FALSE
+      config = config
     )
 
-  # estimate number of PCs to be used downstream, for clustering
+
+  # estimate number of PCs to be used downstream, for integration and clustering
+  use_geosketch <- is_geosketch(config)
+  active.reduction <- ifelse(use_geosketch, "pca.sketch", "pca")
   if (is.null(npcs)) {
-    scdata@misc[["active.reduction"]] <- "pca"
+    scdata@misc[["active.reduction"]] <- active.reduction
     npcs <- get_npcs(scdata)
     message("Estimated number of PCs: ", npcs)
   }
 
-  scdata@misc[["active.reduction"]] <- "pca"
+  if (use_geosketch) {
+    scdata <- ProjectGeosketchIntegration(
+      scdata,
+      npcs,
+      sketched.reduction = "pca.sketch",
+      full.reduction = "pca",
+      is.unisample = TRUE
+    )
+  }
+
+  # NOTE: if sketch, downstream steps use sketch reduction
+  message('Adding dispersions and setting active reduction to "', active.reduction, '" for unisample..')
+  scdata <- add_dispersions(scdata, normalization)
+  scdata@misc[["active.reduction"]] <- active.reduction
   scdata@misc[["numPCs"]] <- npcs
 
   return(scdata)
