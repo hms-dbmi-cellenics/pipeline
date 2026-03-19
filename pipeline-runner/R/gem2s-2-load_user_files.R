@@ -164,8 +164,10 @@ read_10x_h5_file <- function(config, input_dir) {
 }
 
 read_10x_h5_file_bpcells <- function(config, input_dir) {
-  counts_list <- list()
   annot_list <- list()
+  counts_list <- list()
+  matrix_dir_list <- list()
+
 
   samples <- config$samples
 
@@ -192,24 +194,28 @@ read_10x_h5_file_bpcells <- function(config, input_dir) {
     counts <- BPCells::open_matrix_10x_hdf5(ungzipped_counts_path)
 
     # Write the matrix to a directory
-    bpcells_dir <- file.path(input_dir, paste0(sample, "_bpcells"))
-    BPCells::write_matrix_dir(counts, dir = bpcells_dir)
-    counts.mat <- BPCells::open_matrix_dir(dir = bpcells_dir)
+    matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
+    BPCells::write_matrix_dir(counts, dir = matrix_dir)
+    counts.mat <- BPCells::open_matrix_dir(dir = matrix_dir)
 
     # use Gene Expression modality if multiple
     if (methods::is(gene_names, "list")) {
       gene_names <- gene_names$`Gene Expression`
     }
 
-    annotations <-
-      data.frame(input = rownames(counts.mat), symbol = gene_names)
+    annotations <- data.frame(input = rownames(counts.mat), symbol = gene_names)
     counts_list[[sample]] <- counts.mat
     annot_list[[sample]] <- annotations
+    matrix_dir_list[[sample]] <- matrix_dir
   }
 
   annot <- format_annot(annot_list)
 
-  return(list(counts_list = counts_list, annot = annot))
+  return(list(
+    counts_list = counts_list,
+    annot = annot,
+    matrix_dir_list = matrix_dir_list
+  ))
 }
 
 read_10x_h5_feature_names <- function(filename, use.names = TRUE, unique.features = TRUE) {
@@ -219,30 +225,30 @@ read_10x_h5_feature_names <- function(filename, use.names = TRUE, unique.feature
   if (!file.exists(filename)) {
     stop("File not found")
   }
-  
+
   infile <- hdf5r::H5File$new(filename = filename, mode = "r")
   genomes <- names(infile)
-  
+
   # Determine feature slot based on file structure and use.names argument
   if (hdf5r::existsGroup(infile, "matrix")) {
     feature_slot <- ifelse(use.names, "features/name", "features/id")
   } else {
     feature_slot <- ifelse(use.names, "gene_names", "genes")
   }
-  
+
   output <- list()
   for (genome in genomes) {
     features <- infile[[paste0(genome, "/", feature_slot)]][]
-    
+
     if (unique.features) {
       features <- make.unique(names = features)
     }
-    
+
     output[[genome]] <- features
   }
-  
+
   infile$close_all()
-  
+
   if (length(output) == 1) {
     return(output[[genome]])
   } else {
@@ -551,13 +557,14 @@ format_annot <- function(annot_list) {
 #'
 normalize_annotation_types <- function(annot_list, counts_list, feature_types_list, samples) {
   if (any(feature_types_list == IDS_IDS) &&
-    any(feature_types_list == SYM_SYM) &&
-    !any(feature_types_list == IDS_SYM)) {
+        any(feature_types_list == SYM_SYM) &&
+        !any(feature_types_list == IDS_SYM)) {
     stop("Incompatible features detected.")
   }
 
   if (any(feature_types_list == IDS_SYM) &&
-    any(feature_types_list == IDS_IDS) || any(feature_types_list == SYM_SYM)) {
+        any(feature_types_list == IDS_IDS) ||
+        any(feature_types_list == SYM_SYM)) {
     annot_with_ids <-
       make_annot_with_ids(annot_list, feature_types_list)
 
@@ -607,7 +614,8 @@ get_feature_types <- function(annot) {
   }
 
   # regular cases. sum of booleans returns ints. convert to char to string match
-  feature_type <- switch(as.character(sum(is_ens)),
+  feature_type <- switch(
+    as.character(sum(is_ens)),
     "0" = SYM_SYM,
     "1" = IDS_SYM,
     "2" = IDS_IDS
