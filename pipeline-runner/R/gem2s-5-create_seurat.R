@@ -60,9 +60,9 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
     min.features = min.features
   )
 
-  scdata <- scdata %>%
-    add_mito(annot) %>%
-    add_dblscore(doublet_score) %>%
+  scdata <- scdata |>
+    add_mito(annot) |>
+    add_dblscore(doublet_score) |>
     add_edrops(edrops_out)
 
   return(scdata)
@@ -120,14 +120,14 @@ add_edrops <- function(scdata, edout) {
   if (!scdata@tools$flag_filtered) {
     message("Adding emptyDrops scores...")
 
-    edout <- edout %>%
-      as.data.frame() %>%
-      rlang::set_names(~ paste0("emptyDrops_", .)) %>%
+    edout <- edout |>
+      as.data.frame() |>
+      rlang::set_names(~ paste0("emptyDrops_", .)) |>
       tibble::rownames_to_column("barcode")
 
     # adding emptydrops data to meta.data for later filtering (using left join)
-    meta.data <- scdata@meta.data %>%
-      tibble::rownames_to_column("barcode") %>%
+    meta.data <- scdata@meta.data |>
+      tibble::rownames_to_column("barcode") |>
       dplyr::left_join(edout)
     rownames(meta.data) <- meta.data$barcode
 
