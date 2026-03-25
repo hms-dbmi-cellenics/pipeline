@@ -41,11 +41,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   integration_function <- get(paste0("run_", method))
   scdata_integrated <- integration_function(scdata_list, config, cells_id)
 
-  if (methods::is(scdata_integrated[['RNA']], 'Assay5'))
-    scdata_integrated[['RNA']] <- SeuratObject::JoinLayers(scdata_integrated[['RNA']])
-
-  message("Finished data integration")
-
   # Update config numPCs with estimated or user provided nPCs
   config$dimensionalityReduction$numPCs <- scdata_integrated@misc$numPCs
 
@@ -53,7 +48,8 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 
   plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
 
-  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
+  # the result object will have to conform to this format:
+  # {data, config, plotData : {plot1, plot2}}
   result <- list(
     data = scdata_integrated,
     new_ids = cells_id,
@@ -62,7 +58,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   )
 
   return(result)
-
 }
 
 
@@ -82,8 +77,18 @@ create_scdata <- function(scdata_list, cells_id, merge_data = FALSE) {
   merged_scdatas <- merge_scdata_list(scdata_list, merge_data)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
-  if (methods::is(merged_scdatas[['RNA']], 'Assay5'))
-    merged_scdatas[['RNA']] <- SeuratObject::JoinLayers(merged_scdatas[['RNA']])
+  rna_assay <- merged_scdatas[['RNA']]
+  if (methods::is(rna_assay, 'Assay5')) {
+    rna_assay <- SeuratObject::JoinLayers(rna_assay)
+    merged_scdatas[['RNA']] <- rna_assay
+  }
+
+  # re-write disk backing so that just a single matrix_dir (bpcells)
+  if (methods::is(rna_assay$counts, 'IterableMatrix')) {
+    matrix_dir <- file.path(tempdir(), 'matrix_dir')
+    counts <- BPCells::write_matrix_dir(rna_assay$counts, matrix_dir)
+    merged_scdatas[['RNA']]$counts <- counts
+  }
 
   return(merged_scdatas)
 }
@@ -130,24 +135,32 @@ merge_scdata_list <- function(scdata_list, merge_data = FALSE) {
   return(scdata)
 }
 
-
 add_dispersions <- function(scdata, method = "LogNormalize") {
 
   if (method == "default") {
     vars <- Seurat::HVFInfo(scdata)
   } else if (method == "SCT" && Seurat::DefaultAssay(scdata) == "integrated") {
-    vars <- Seurat::HVFInfo(object = scdata, assay = "integrated", selection.method = "sctransform")
+    vars <- Seurat::HVFInfo(scdata, assay = "integrated", method = "sctransform")
   } else {
-    vars <- Seurat::HVFInfo(object = scdata, assay = "RNA", selection.method = "vst")
+    vars <- Seurat::HVFInfo(scdata, assay = "RNA", method = "vst")
   }
 
-  # ensure colnames are as they are when run with selection.method = "vst"
-  # otherwise will break the listGenes worker task for SCT normalized data
-  colnames(vars) <- c("mean", "variance", "variance.standardized")
+  # worker task listGenes needs one of these columns
+  # residual_variance from sctransform, variance.standardized from vst
+  cols_to_check <- c("residual_variance", "variance.standardized")
+  if (!any(cols_to_check %in% colnames(vars))) {
+    stop(paste(
+      "Missing columns in HVFInfo output. Expected columns:",
+      paste(cols_to_check, collapse = ", ")
+    ))
+  }
 
   annotations <- scdata@misc[["gene_annotations"]]
   vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
   vars$ENSEMBL <- rownames(vars)
+
+  message('in add_dispersions, here are the first rows of vars:')
+  print(head(vars))
   scdata@misc[["gene_dispersion"]] <- vars
   return(scdata)
 }
@@ -155,11 +168,15 @@ add_dispersions <- function(scdata, method = "LogNormalize") {
 
 get_explained_variance <- function(scdata) {
   # Compute explained variance for plotting and numPCs estimation.
-  # It can be computed from pca or other reductions such as mnn
-  if (scdata@misc[["active.reduction"]] == "mnn") {
-    var_explained <- scdata@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
-  } else {
-    eig_values <- (scdata@reductions$pca@stdev)^2
+  # It can be computed from pca (or pca.sketch) or other reductions such as mnn
+  active_reduction <- scdata@misc[["active.reduction"]]
+  if (active_reduction == "mnn") {
+    var_explained <-
+      scdata@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
+
+  } else if (grepl("pca", active_reduction)) {
+    message("Calculating explained variance from PCA reduction")
+    eig_values <- (scdata@reductions[[active_reduction]]@stdev)^2
     var_explained <- eig_values / sum(eig_values)
   }
   return(var_explained)

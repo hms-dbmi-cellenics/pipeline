@@ -845,7 +845,7 @@
     },
     "SeuratObject": {
       "Package": "SeuratObject",
-      "Version": "5.0.2",
+      "Version": "5.3.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
