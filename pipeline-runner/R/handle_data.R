@@ -108,13 +108,14 @@ load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
   for (sample_id in names(sample_files)) {
     file_keys <- sample_files[[sample_id]]
     rds_key <- file_keys[['r.rds']]
-    matrix_dir_key <- file_keys[['matrix_dir.tar']]
+    matrix_dir_key <- file_keys[['matrix_dir.tar.zst']]
 
     scdata <- load_source_rds(s3, rds_key, bucket)
 
     if (!is.null(matrix_dir_key)) {
       # untar and update bpcells matrix dir
-      new_matrix_dir <- load_source_matrix_dir(s3, matrix_dir_key, bucket, sample_id)
+      new_matrix_dir <-
+        load_source_matrix_dir(s3, matrix_dir_key, bucket, sample_id)
 
       scdata@assays$RNA@layers <- lapply(
         scdata@assays$RNA@layers,
@@ -126,7 +127,8 @@ load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
     scdata_list[[sample_id]] <- scdata
   }
 
-  # order samples according to their size to make the merge independent of samples order in the UI
+  # order samples according to their size
+  # to make the merge independent of samples order in the UI
   return(order_by_size(scdata_list))
 }
 
@@ -140,13 +142,14 @@ load_source_rds <- function(s3, rds_key, bucket) {
 
   conn <- gzcon(rawConnection(body))
   obj <- readRDS(conn)
-  # close connection explicitly or R will run out of available connections and fail
+  # close connection explicitly or
+  # R will run out of available connections and fail
   close(conn)
   return(obj)
 }
 
 load_source_matrix_dir <- function(s3, matrix_dir_key, bucket, sample_id) {
-  message("...loading matrix_dir.tar key ", matrix_dir_key)
+  message("...loading matrix_dir.tar.zst key ", matrix_dir_key)
 
   # download directly to tar file
   new_matrix_dir <- file.path(tempdir(), paste0(sample_id, "_matrix_dir"))
@@ -475,7 +478,7 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
 
 
 upload_matrix_dir_to_s3 <- function(pipeline_config, experiment_id, data) {
-  object_key <- paste0(experiment_id, "/matrix_dir.tar")
+  object_key <- paste0(experiment_id, "/matrix_dir.tar.zst")
   message("Saving object for key: ", object_key, '...')
 
   # should just be one
@@ -743,12 +746,13 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
   return(resp)
 }
 
-# The limit for part numbers is 10000, so we have a limit on 50GB objects.
-# This can be increased by changing the number of megabytes in the part_size parameter
+# The limit for part numbers is 10000
+# aws cli uses 8mb default, and recommends up to 64mb for files >1G
 upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
   file_size <- file.size(object)
   megabyte <- 2^20
-  part_size <- 8 * megabyte
+  gigabyte <- 2^30
+  part_size <- ifelse(file_size > gigabyte, 64 * megabyte, 8 * megabyte)
   num_parts <- ceiling(file_size / part_size)
 
   con <- base::file(object, open = "rb")
@@ -759,17 +763,14 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
   tstart <- Sys.time()
   for (i in 1:num_parts) {
     part <- readBin(con, what = "raw", n = part_size)
-    
-    message("Uploading part ", i, "/", num_parts, "...")
-    
-    # Run garbage collection every 50 parts to manage memory
-    if (i %% 50 == 0) gc()
-    
+
+    if (i %% 10 == 0) message("Uploading part ", i, "/", num_parts, "...")
+
     # Upload part with retries and exponential backoff
     retry_count <- 0
     max_retries <- 3
     part_resp <- NULL
-    
+
     while (retry_count < max_retries) {
       tryCatch({
         part_resp <- s3$upload_part(
@@ -779,27 +780,29 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
           PartNumber = i,
           UploadId = upload_id
         )
-        message("Part ", i, "/", num_parts, " uploaded successfully")
-        break
+        break  # Exit loop on successful upload
+
       }, error = function(e) {
         retry_count <<- retry_count + 1
         message("Error uploading part ", i, ": ", e$message)
+
         if (retry_count < max_retries) {
           wait_time <- 2 ^ retry_count
-          message("Retrying part ", i, " in ", wait_time, " seconds (attempt ", retry_count, "/", max_retries, ")...")
+          message("Retrying part ", i,
+                  " (attempt ", retry_count, "/", max_retries, ")...")
           Sys.sleep(wait_time)
         }
       })
     }
-    
+
     if (is.null(part_resp)) {
       stop("Failed to upload part ", i, " after ", max_retries, " attempts")
     }
-    
+
     parts <- c(parts, list(list(ETag = part_resp$ETag, PartNumber = i)))
   }
-  tend <- Sys.time()
-  message("Multipart upload time: ", tend - tstart)
+  ttask <- format(Sys.time() - tstart, digits = 2)
+  message("Multipart upload time: ", ttask)
   return(parts)
 }
 
@@ -825,7 +828,6 @@ load_cellsets <- function(s3, pipeline_config, experiment_id) {
 
   obj <- jsonlite::fromJSON(rawConnection(body), flatten = T)
   return(obj)
-
 }
 
 #' Load cellsets object flattened (as is done by load_cellsets)
@@ -920,10 +922,10 @@ is_uuid <- function(x) {
 
 get_cellset_type <- function(key, type) {
   cellset_type <- switch(key,
-                         louvain = "cluster",
-                         scratchpad = "scratchpad",
-                         sample = "sample",
-                         ifelse(is_uuid(key), "sctype", "metadata")
+    louvain = "cluster",
+    scratchpad = "scratchpad",
+    sample = "sample",
+    ifelse(is_uuid(key), "sctype", "metadata")
   )
 
   return(cellset_type)
@@ -942,7 +944,11 @@ get_cellset_type <- function(key, type) {
 parse_cellsets <- function(cellsets) {
 
   dt_list <- cellsets$cellSets$children
-  cellset_types <- purrr::map2_chr(cellsets$cellSets$key, cellsets$cellSets$type, get_cellset_type)
+  cellset_types <- purrr::map2_chr(
+    cellsets$cellSets$key,
+    cellsets$cellSets$type,
+    get_cellset_type
+  )
 
   lapply(dt_list, data.table::setDT)
 
