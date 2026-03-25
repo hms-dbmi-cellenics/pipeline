@@ -41,6 +41,12 @@ test-file: build ## Tests a specific test file (usage: make test-file FILE=test-
 		--entrypoint /bin/bash \
 		biomage-pipeline-runner \
 		-c "R -e \"pkgload::load_all(); testthat::test_file('tests/testthat/$(FILE)')\""
+snapshot: build ## Regenerates renv.lock snapshot from current packages
+	@docker run \
+		--entrypoint /bin/bash \
+		-v $(CURDIR)/pipeline-runner/renv.lock:/src/pipeline-runner/renv.lock \
+		biomage-pipeline-runner \
+		-c "R -e 'renv::snapshot(prompt=FALSE)'"
 hooks: ## Configures path to git hooks
 	@git config core.hooksPath .githooks
 run: build run-only

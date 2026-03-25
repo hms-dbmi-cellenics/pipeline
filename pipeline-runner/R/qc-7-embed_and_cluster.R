@@ -1,17 +1,24 @@
+# overall wrapper that is called
 run_clustering <- function(scdata, config, ignore_ssl_cert) {
+
   message("starting clusters")
-  clustering_method <- config$clusteringSettings$method
-  methodSettings <-
-    config$clusteringSettings$methodSettings[[clustering_method]]
+  clustering_settings <- config$clusteringSettings
+  clustering_method <- clustering_settings$method
+  method_settings <- clustering_settings$methodSettings[[clustering_method]]
+
   message("Running clustering")
-  cellSets <-
-    runClusters(clustering_method, methodSettings$resolution, scdata)
+  cell_sets <-
+    runClusters(clustering_method, method_settings$resolution, scdata)
+
   message("formatting cellsets")
-
   formated_cell_sets <-
-    format_cluster_cellsets(cellSets, clustering_method, scdata@misc$color_pool)
-  message("updating through api")
+    format_cluster_cellsets(
+      cell_sets,
+      clustering_method,
+      scdata@misc$color_pool
+    )
 
+  message("updating through api")
   replace_cell_class_through_api(
     formated_cell_sets,
     config$api_url,
@@ -24,7 +31,6 @@ run_clustering <- function(scdata, config, ignore_ssl_cert) {
 
 
 #' run clustering
-#'
 #'
 #' @param scdata seurat object
 #' @param config list with clustering parameters
