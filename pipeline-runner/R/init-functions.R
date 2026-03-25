@@ -400,8 +400,10 @@ call_qc <- function(task_name, input, pipeline_config) {
       message("Generating first step filtered cell ids...")
       assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
       message("Filtered cells id generated.")
+
     } else if (task_name == "configureEmbedding") {
       message("No filtered cell ids loading necessary for configureEmbedding step, skipping...")
+
     } else if (task_name %in% names(tasks)) {
       message("No filtered cell ids have been loaded, loading from S3...")
       samples <- names(scdata)
@@ -411,25 +413,32 @@ call_qc <- function(task_name, input, pipeline_config) {
 
       # won't be cells_id in S3 for uploaded Seurat object that is being subsetted
       if (!length(cells_id)) cells_id <- generate_first_step_ids(scdata)
-
       message("Cells id loaded.")
+
     } else {
       stop("Invalid task name given: ", task_name)
     }
   }
 
-
   # call function to run and update global variable
-  c(
-    data, new_ids, ...rest_of_results
-  ) %<-% run_qc_step(scdata, config, tasks, task_name, cells_id, sample_id, ignore_ssl_cert, debug_config)
-
+  c(data, new_ids, ...rest_of_results) %<-% 
+    run_qc_step(
+      scdata,
+      config,
+      tasks,
+      task_name,
+      cells_id,
+      sample_id,
+      ignore_ssl_cert,
+      debug_config
+    )
 
   assign("cells_id", new_ids, pos = ".GlobalEnv")
 
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
   task_index <- match(task_name, task_names)
+
   if (task_index < integration_index) {
     message(
       "Filtered cell ids from ", length(cells_id[[sample_id]]),
@@ -442,7 +451,8 @@ call_qc <- function(task_name, input, pipeline_config) {
 
   # upload plot data result to S3
   tstart <- Sys.time()
-  plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
+  plot_data_keys <-
+    send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
 
   # Upload count matrix data
   if (upload_count_matrix) {
@@ -461,7 +471,9 @@ call_qc <- function(task_name, input, pipeline_config) {
   if (upload_matrix_dir) {
     upload_matrix_dir_to_s3(pipeline_config, experiment_id, scdata)
     message(
-      "Matrix dir for bpcells uploaded to ", pipeline_config$processed_bucket)
+      "Matrix dir for bpcells uploaded to ",
+      pipeline_config$processed_bucket
+    )
   }
 
   # send result to API
@@ -665,8 +677,7 @@ init <- function() {
 
         message("recovered from error:", e$message)
       },
-      write.error.dump.file = TRUE,
-      write.error.dump.folder = dump_folder
+      write.error.dump.file = FALSE
     )
 
     # kill heartbeat process
