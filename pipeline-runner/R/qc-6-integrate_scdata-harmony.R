@@ -71,6 +71,8 @@ ProjectGeosketchIntegration <- function(scdata, npcs, sketched.reduction, full.r
 
   if (!is.unisample) {
     # project full data onto integrated DR from sketch
+    # TODO: understand what this does?
+    message("Projecting integration...")
     scdata <- Seurat::ProjectIntegration(
       object = scdata,
       assay = "RNA",
@@ -83,7 +85,7 @@ ProjectGeosketchIntegration <- function(scdata, npcs, sketched.reduction, full.r
   # for unisample: projects full PCA
   # for all: called to pre-compute weights and neighbors (stored in tools)
   # for future projections (clustering and UMAP)
-  message("Projecting data onto integrated space...")
+  # NOTE: subsequent calls to ProjectData require same npcs as here
   scdata <- Seurat::ProjectData(
     object = scdata,
     assay = "RNA",
@@ -93,8 +95,7 @@ ProjectGeosketchIntegration <- function(scdata, npcs, sketched.reduction, full.r
     dims = 1:npcs
   )
 
-  # uploaded after integration and before clustering
-  # worker assumes default assay is RNA
+  # set to RNA assay prior to upload for worker
   Seurat::DefaultAssay(scdata) <- "RNA"
   return(scdata)
 }
@@ -104,7 +105,7 @@ is_geosketch <- function(config) {
 }
 
 RunPreprocessing <- function(scdata, normalization, nfeatures, npcs, config) {
-  
+
   # SketchData takes normalized data and set of variable features
   scdata <-
     Seurat::NormalizeData(
@@ -133,7 +134,7 @@ RunPreprocessing <- function(scdata, normalization, nfeatures, npcs, config) {
       method = "LeverageScore",
       sketched.assay = "sketch"
     )
-  
+
     # vignettes run FindVariableFeatures before and after SketchData
     Seurat::DefaultAssay(scdata) <- "sketch"
     scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
