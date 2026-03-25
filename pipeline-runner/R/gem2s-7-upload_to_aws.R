@@ -67,7 +67,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       put_object_in_s3_multipart(pipeline_config,
         bucket = pipeline_config$source_bucket,
         object = tarfile,
-        key = file.path(experiment_id, sample, "matrix_dir.tar")
+        key = file.path(experiment_id, sample, "matrix_dir.tar.zst")
       )
     }
   }
