@@ -37,6 +37,7 @@ run_unisample <- function(scdata_list, config, cells_id) {
   }
 
   if (use_geosketch) {
+    message("Number of PCs for geosketch: ", npcs)
     scdata <- ProjectGeosketchIntegration(
       scdata,
       npcs,
