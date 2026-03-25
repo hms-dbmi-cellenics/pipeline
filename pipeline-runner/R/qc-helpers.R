@@ -140,13 +140,25 @@ runClusters <- function(clustering_method, resolution, data) {
 
   data <- getClusters(clustering_method, resolution, data)
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
-  # In the meta data slot the clustering is stored with the resolution used to calculate it
+  # clustering is stored with the resolution used to calculate it
   # RNA_snn_res.#resolution
-  df <- data.frame(cluster = data@meta.data[, res_col], cell_ids = data@meta.data$cells_id)
-  # get the cell barcodes as rownames
-  rownames(df) <- rownames(data@meta.data)
+  # cell barcodes as rownames
+  meta <- getActiveMetadata(data)
+  df <- data.frame(
+    cluster = meta[, res_col],
+    cell_ids = meta$cells_id,
+    row.names = rownames(meta)
+  )
+
   return(df)
 }
+
+# subset metadata to cells in active assay
+# needed e.g. for "sketch" assay where only subset of cells
+getActiveMetadata <- function(data) {
+  data@meta.data[Seurat::Cells(data), , drop = FALSE]
+}
+
 
 
 #' Get Clusters
@@ -158,6 +170,7 @@ runClusters <- function(clustering_method, resolution, data) {
 #'
 getClusters <- function(clustering_method, resolution, data) {
 
+
   # need to identify the active.reduction that is used in FindNeighbors
   # if geosketch, will be e.g. "pca.sketch"
   if ("active.reduction" %in% names(data@misc)) {
@@ -166,26 +179,32 @@ getClusters <- function(clustering_method, resolution, data) {
     active.reduction <- "pca"
   }
 
+  message("Running clustering with active reduction: ", active.reduction)
+  message("Default assay before running: ", Seurat::DefaultAssay(data))
   # run clustering on sketch assay if it exists
   # TODO: run based on QC setting (but assay shouldn't exist if not set)
   has.sketch <- "sketch" %in% names(data@assays)
-  if (has.sketch) {
-    Seurat::DefaultAssay(data) <- "sketch"
-  }
+  if (has.sketch) Seurat::DefaultAssay(data) <- "sketch"
 
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[clustering_method]]
 
   if (clustering_method == "leiden") {
-    # emulate FindClusters, which overwrites seurat_clusters slot and meta.data column
+    # emulate FindClusters: overwrites seurat_clusters slot and meta.data column
     snn_graph <- getSNNiGraph(data, active.reduction)
-    clus_res <- igraph::cluster_leiden(snn_graph, "modularity", resolution_parameter = resolution)
+    clus_res <- igraph::cluster_leiden(
+      snn_graph,
+      "modularity",
+      resolution_parameter = resolution
+    )
+
     clusters <- clus_res$membership
     names(clusters) <- clus_res$names
     clusters <- clusters[colnames(data)]
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters - 1)
 
   } else {
+
     graph_name <- paste0(Seurat::DefaultAssay(data), "_snn")
     if (!graph_name %in% names(data)) {
       # number of dimensions used must be lte to available dimensions
@@ -196,39 +215,56 @@ getClusters <- function(clustering_method, resolution, data) {
           annoy.metric = "cosine",
           reduction = active.reduction,
           dims = dims,
-          verbose = FALSE,
+          verbose = FALSE
         )
     }
-
     data <-
-    Seurat::FindClusters(
-      data,
-      resolution = resolution,
-      verbose = FALSE,
-      algorithm = algorithm,
-      random.seed = RANDOM_SEED
-    )
+      Seurat::FindClusters(
+        data,
+        resolution = resolution,
+        verbose = FALSE,
+        algorithm = algorithm,
+        random.seed = RANDOM_SEED
+      )
   }
 
   if (has.sketch) {
     # prepare to project clusters from sketch to full data
+    # want this for worker calculations even if only plotting sketch cells
     data$seurat_clusters_sketch <- data$seurat_clusters
     data$seurat_clusters <- NULL
-    npcs <- length(data@reductions[[active.reduction]])
+
+    # IMPORTANT: need to use same dims as previous call to ProjectData
+    full.reduction <- gsub("[.]sketch$", "", active.reduction)
+    full.npcs <- length(data@reductions[[full.reduction]])
+    message("Previous ProjectData num PCs: ", full.npcs)
+
+    message("full reduction: ", full.reduction)
+    message("sketch reduction: ", active.reduction)
+    message("Reductions available: ", paste(names(data@reductions), collapse = ", "))
 
     # extend results to full dataset
     # NOTE: uses stored calculations from previous call (during integration)
     data <- Seurat::ProjectData(
       object = data,
       assay = "RNA",
-      full.reduction = gsub("[.]sketch$", "", active.reduction),
+      full.reduction = full.reduction,
       sketched.assay = "sketch",
       sketched.reduction = active.reduction,
-      dims = 1:npcs,
+      dims = 1:full.npcs,
+      verbose = TRUE,
       refdata = list(seurat_clusters = "seurat_clusters_sketch")
     )
 
+    # transfer res_col from sketch to RNA assay
+    # this is what is uploaded to cellsets json for worker
+    # also used by worker to check for existing clustering if change resolution
+    rna_res_col <- gsub("sketch", "RNA", res_col)
+    data@meta.data[, rna_res_col] <- data$seurat_clusters
+
+    # set to RNA so that full projected clusters uploaded
     Seurat::DefaultAssay(data) <- "RNA"
+    message("Projected clusters from sketch to full data")
   }
 
   return(data)
