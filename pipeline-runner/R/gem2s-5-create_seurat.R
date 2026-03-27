@@ -142,10 +142,12 @@ add_edrops <- function(scdata, edout) {
 
 # add scDblFinder result to SeuratObject
 add_dblscore <- function(scdata, score) {
-  message("Adding doublet scores...")
+  if (!is.null(score)) {
+    message("Adding doublet scores...")
 
-  idt <- score$barcodes[score$barcodes %in% rownames(scdata@meta.data)]
-  scdata@meta.data[idt, "doublet_scores"] <- score[idt, "doublet_scores"]
-  scdata@meta.data[idt, "doublet_class"] <- score[idt, "doublet_class"]
+    idt <- score$barcodes[score$barcodes %in% rownames(scdata@meta.data)]
+    scdata@meta.data[idt, "doublet_scores"] <- score[idt, "doublet_scores"]
+    scdata@meta.data[idt, "doublet_class"] <- score[idt, "doublet_class"]
+  }
   return(scdata)
 }

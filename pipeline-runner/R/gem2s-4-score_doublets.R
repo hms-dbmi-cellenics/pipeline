@@ -70,15 +70,9 @@ compute_sample_doublet_scores <- function(sample_counts, technology, parse_kit =
   if (ncol(sample_counts) > 100000) {
     ncells <- ncol(sample_counts)
     message("too many cells: ", ncells, ", skipping doublet scoring")
-    doublet_res <- data.frame(
-      row.names = colnames(sample_counts),
-      barcodes = colnames(sample_counts),
-      doublet_class = rep('singlet', ncells),
-      doublet_scores = rep(0, ncells)
-    )
-    return(doublet_res)
+    return(NULL)
   }
-  
+
   sce <- scDblFinder::scDblFinder(sample_counts, dbr = dbr)
 
   doublet_res <- data.frame(
