@@ -37,9 +37,13 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
     message("Only one sample detected or method is non integrate.")
   }
 
+  # customize default geosketch config for first run
+  config <- customize_downsampling_config(config, scdata_list)
+
   # integrate
   integration_function <- get(paste0("run_", method))
   scdata_integrated <- integration_function(scdata_list, config, cells_id)
+  scdata_integrated <- run_postprocessing(scdata_integrated)
 
   # Update config numPCs with estimated or user provided nPCs
   config$dimensionalityReduction$numPCs <- scdata_integrated@misc$numPCs
@@ -60,6 +64,152 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   return(result)
 }
 
+run_postprocessing <- function(scdata_integrated) {
+
+  rna_assay <- scdata_integrated[["RNA"]]
+  if (methods::is(rna_assay, "Assay5")) {
+    rna_assay <- SeuratObject::JoinLayers(rna_assay)
+    scdata_integrated[["RNA"]] <- rna_assay
+  }
+
+  # re-write disk backing so that just a single matrix_dir (bpcells)
+  if (methods::is(rna_assay$counts, "IterableMatrix")) {
+    matrix_dir <- file.path(tempdir(), "matrix_dir")
+    counts <- BPCells::write_matrix_dir(rna_assay$counts, matrix_dir)
+    scdata_integrated[["RNA"]]$counts <- counts
+  }
+
+  return(scdata_integrated)
+}
+
+run_preprocessing <- function(scdata, normalization, nfeatures, use_geosketch = FALSE, percent_keep = NULL) {
+
+  # SketchData takes normalized data and set of variable features
+  scdata <-
+    Seurat::NormalizeData(
+      scdata,
+      normalization.method = normalization,
+      verbose = FALSE
+    )
+
+  scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
+
+  if (use_geosketch) {
+    num_samples <- length(unique(scdata$samples))
+    num_cells <- round(ncol(scdata) * (percent_keep / 100) / num_samples)
+    message(
+      "Sketching data with Geosketch, keeping ",
+      num_cells, " cells per sample."
+    )
+    scdata <- Seurat::SketchData(
+      object = scdata,
+      ncells = num_cells,
+      method = "LeverageScore",
+      sketched.assay = "sketch"
+    )
+
+    # vignettes run FindVariableFeatures before and after SketchData
+    Seurat::DefaultAssay(scdata) <- "sketch"
+    scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
+  }
+
+  return(scdata)
+}
+
+run_pca <- function(scdata, npcs, reduction.name = "pca") {
+
+  # if BPCells write out operations for faster PCA
+  is.bpcells <- is(scdata[['RNA']]$scale.data, "IterableMatrix")
+
+  if (is.bpcells) {
+    data_dir <- tempfile()
+    scale.data <- scdata[['RNA']]$scale.data
+    disk.scale.data <- BPCells::write_matrix_dir(scale.data, data_dir)
+    scdata[['RNA']]$scale.data <- disk.scale.data
+  }
+
+  # run PCA
+  message('Running PCA ...')
+  scdata <- Seurat::RunPCA(
+    scdata,
+    npcs = npcs,
+    reduction.name = reduction.name,
+    verbose = FALSE
+  )
+  message('PCA complete.')
+
+  if (is.bpcells) {
+    # cleanup restore scale.data to original object (removed disk backing)
+    unlink(data_dir, recursive = TRUE)
+    scdata[['RNA']]$scale.data <- scale.data
+  }
+
+  return(scdata)
+}
+
+project_geosketch_integration <- function(scdata, npcs, sketched.reduction, full.reduction, is.unisample = FALSE) {
+
+  if (!is.unisample) {
+    # project full data onto integrated DR from sketch
+    # TODO: understand what this does?
+    message("Projecting integration...")
+    scdata <- Seurat::ProjectIntegration(
+      object = scdata,
+      assay = "RNA",
+      sketched.assay = "sketch",
+      reduction = sketched.reduction,
+      reduction.name = full.reduction
+    )
+  }
+
+  # for unisample: projects full PCA
+  # for all: called to pre-compute weights and neighbors (stored in tools)
+  # for future projections (clustering and UMAP)
+  # NOTE: subsequent calls to ProjectData require same npcs as here
+  scdata <- Seurat::ProjectData(
+    object = scdata,
+    assay = "RNA",
+    sketched.assay = "sketch",
+    full.reduction = full.reduction,
+    sketched.reduction = sketched.reduction,
+    dims = 1:npcs
+  )
+
+  # set to RNA assay prior to upload for worker
+  Seurat::DefaultAssay(scdata) <- "RNA"
+  return(scdata)
+}
+
+is_geosketch <- function(config) {
+  "downsampling" %in% names(config) && config$downsampling$method == "geosketch"
+}
+
+customize_downsampling_config <- function(config, scdata_list) {
+  # for first run, downsampling is present but methodSettings is not
+  is_first_run <- !is.null(config$downsampling) &&
+    is.null(config$downsampling$methodSettings)
+
+  # dont alter config if not first run
+  if (!is_first_run) return(config)
+
+  # its first run: do we need to geosketch?
+  num_cells <- sum(sapply(scdata_list, ncol))
+
+  # if not: remove downsampling config
+  if (num_cells < MIN_CELLS_GEOSKETCH) {
+    config$downsampling <- NULL
+    return(config)
+  }
+
+  # if yes: add methodSettings and default to 50,000 cells
+  config$downsampling$methodSettings <- list(
+    geosketch = list(
+      percentageToKeep = DEFAULT_CELLS_GEOSKETCH / num_cells * 100
+    )
+  )
+  return(config)
+}
+
 
 #' Create the merged Seurat object
 #'
@@ -76,19 +226,6 @@ create_scdata <- function(scdata_list, cells_id, merge_data = FALSE) {
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list, merge_data)
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
-
-  rna_assay <- merged_scdatas[['RNA']]
-  if (methods::is(rna_assay, 'Assay5')) {
-    rna_assay <- SeuratObject::JoinLayers(rna_assay)
-    merged_scdatas[['RNA']] <- rna_assay
-  }
-
-  # re-write disk backing so that just a single matrix_dir (bpcells)
-  if (methods::is(rna_assay$counts, 'IterableMatrix')) {
-    matrix_dir <- file.path(tempdir(), 'matrix_dir')
-    counts <- BPCells::write_matrix_dir(rna_assay$counts, matrix_dir)
-    merged_scdatas[['RNA']]$counts <- counts
-  }
 
   return(merged_scdatas)
 }
@@ -170,13 +307,16 @@ get_explained_variance <- function(scdata) {
   # Compute explained variance for plotting and numPCs estimation.
   # It can be computed from pca (or pca.sketch) or other reductions such as mnn
   active_reduction <- scdata@misc[["active.reduction"]]
-  if (active_reduction == "mnn") {
+  if (grepl("mnn", active_reduction)) {
+    message("Extracting explained variance from RunFastMNN tool")
     var_explained <-
       scdata@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
 
-  } else if (grepl("pca", active_reduction)) {
-    message("Calculating explained variance from PCA reduction")
-    eig_values <- (scdata@reductions[[active_reduction]]@stdev)^2
+  } else {
+    is_geosketch <- "sketch" %in% names(scdata@assays)
+    pca_reduction <- ifelse(is_geosketch, "pca.sketch", "pca")
+    message("Calculating explained variance from: ", pca_reduction)
+    eig_values <- (scdata@reductions[[pca_reduction]]@stdev)^2
     var_explained <- eig_values / sum(eig_values)
   }
   return(var_explained)
@@ -423,4 +563,3 @@ generate_elbow_plot_data <- function(scdata_integrated, task_name, var_explained
 
   return(plots)
 }
-
