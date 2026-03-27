@@ -134,6 +134,10 @@ errors <- list(
   ERROR_OBJ2S_LOGCOUNTS = 'ERROR_OBJ2S_LOGCOUNTS'
 )
 
+# for customizing geosketch config on first run
+MIN_CELLS_GEOSKETCH <- 100000
+DEFAULT_CELLS_GEOSKETCH <- 50000
+
 usethis::use_data(
   processing_config_template,
   bucket_list,
@@ -160,6 +164,8 @@ usethis::use_data(
   UNISAMPLE,
   DOUBLET_RATE_PARSE,
   errors,
+  MIN_CELLS_GEOSKETCH,
+  DEFAULT_CELLS_GEOSKETCH,
   internal = TRUE,
   overwrite = TRUE
 )
