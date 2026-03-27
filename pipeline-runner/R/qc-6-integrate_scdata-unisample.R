@@ -17,28 +17,36 @@ run_unisample <- function(scdata_list, config, cells_id) {
 
   scdata <- prepare_scdata_for_unisample(scdata_list, config, cells_id)
 
-  # in unisample we only need to run preprocessing
+  # required pre-processing
+  # run PCA with npcs_for_pca for the elbow plot and the % of variance explained
+  use_geosketch <- is_geosketch(config)
+  percent_keep <- config$downsampling$methodSettings$geosketch$percentageToKeep
+
+  pca_reduction <- ifelse(use_geosketch, "pca.sketch", "pca")
+
+  # in unisample we only need to run preprocessing (no integration)
   scdata <- scdata |>
-    RunPreprocessing(
+    run_preprocessing(
       normalization = normalization,
       nfeatures = nfeatures,
-      npcs = npcs_for_pca,
-      config = config
-    )
+      use_geosketch = use_geosketch,
+      percent_keep = percent_keep
+    ) |>
+    Seurat::ScaleData(verbose = FALSE) |>
+    run_pca(npcs = npcs_for_pca, reduction.name = pca_reduction) |>
+    add_dispersions(normalization)
 
 
   # estimate number of PCs to be used downstream, for integration and clustering
-  use_geosketch <- is_geosketch(config)
-  active.reduction <- ifelse(use_geosketch, "pca.sketch", "pca")
   if (is.null(npcs)) {
-    scdata@misc[["active.reduction"]] <- active.reduction
+    scdata@misc[["active.reduction"]] <- pca_reduction
     npcs <- get_npcs(scdata)
     message("Estimated number of PCs: ", npcs)
   }
 
   if (use_geosketch) {
     message("Number of PCs for geosketch: ", npcs)
-    scdata <- ProjectGeosketchIntegration(
+    scdata <- project_geosketch_integration(
       scdata,
       npcs,
       sketched.reduction = "pca.sketch",
@@ -48,9 +56,7 @@ run_unisample <- function(scdata_list, config, cells_id) {
   }
 
   # NOTE: if sketch, downstream steps use sketch reduction
-  message('Adding dispersions and setting active reduction to "', active.reduction, '" for unisample..')
-  scdata <- add_dispersions(scdata, normalization)
-  scdata@misc[["active.reduction"]] <- active.reduction
+  scdata@misc[["active.reduction"]] <- pca_reduction
   scdata@misc[["numPCs"]] <- npcs
 
   return(scdata)
