@@ -185,9 +185,8 @@ is_geosketch <- function(config) {
 }
 
 customize_downsampling_config <- function(config, scdata_list) {
-  # for first run, downsampling is present but methodSettings is not
-  is_first_run <- !is.null(config$downsampling) &&
-    is.null(config$downsampling$methodSettings)
+  # for first run, downsampling method is "default"
+  is_first_run <- isTRUE(config$downsampling$method == "default")
 
   # dont alter config if not first run
   if (!is_first_run) return(config)
