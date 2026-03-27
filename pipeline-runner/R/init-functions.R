@@ -631,13 +631,6 @@ init <- function() {
     # parse data from state machine input
     input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
 
-    # save logs to file
-    debug_prefix <- file.path(input$experimentId, debug_timestamp)
-    dump_folder <- file.path(DEBUG_PATH, debug_prefix)
-    futile.logger::flog.appender(
-      futile.logger::appender.tee(file.path(dump_folder, "logs.txt"))
-    )
-
     heartbeat_proc <- start_heartbeat(task_token, pipeline_config$aws_config)
 
     tryCatchLog(
@@ -655,9 +648,10 @@ init <- function() {
       },
       error = function(e) {
         futile.logger::flog.error("🚩 ---------")
-        sample_text <- ifelse(is.null(input$sampleUuid),
-                              "",
-                              paste0(" for sample ", input$sampleUuid)
+        sample_text <- ifelse(
+          is.null(input$sampleUuid),
+          "",
+          paste0(" for sample ", input$sampleUuid)
         )
 
         error_txt <- paste0(
