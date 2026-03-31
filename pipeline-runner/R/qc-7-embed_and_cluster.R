@@ -1,16 +1,13 @@
 # overall wrapper that is called
 run_clustering <- function(scdata, config, ignore_ssl_cert) {
 
-  message("starting clusters")
   clustering_settings <- config$clusteringSettings
   clustering_method <- clustering_settings$method
   method_settings <- clustering_settings$methodSettings[[clustering_method]]
 
-  message("Running clustering")
   cell_sets <-
     runClusters(clustering_method, method_settings$resolution, scdata)
 
-  message("formatting cellsets")
   formated_cell_sets <-
     format_cluster_cellsets(
       cell_sets,
@@ -18,7 +15,6 @@ run_clustering <- function(scdata, config, ignore_ssl_cert) {
       scdata@misc$color_pool
     )
 
-  message("updating through api")
   replace_cell_class_through_api(
     formated_cell_sets,
     config$api_url,
