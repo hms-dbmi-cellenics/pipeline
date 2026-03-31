@@ -58,6 +58,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   for (sample in names(scdata_list)) {
     fpath <- file.path(tempdir(), "experiment.rds")
     message("\nSaving rds for sample: ", sample)
+
     saveRDS(scdata_list[[sample]], fpath)
     message("rds file size: ", fs::file_size(fpath))
 
