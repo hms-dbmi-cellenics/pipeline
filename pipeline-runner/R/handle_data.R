@@ -21,14 +21,19 @@ remove_cell_ids <- function(pipeline_config, experiment_id) {
 upload_cells_id <- function(pipeline_config, object_key, cells_id) {
   object_data <- tempfile()
   saveRDS(cells_id, file = object_data)
-  put_object_in_s3(pipeline_config, pipeline_config$cells_id_bucket, object_data, object_key)
+  message("\nUploading filtered cell ids to S3:")
+  put_object_in_s3(
+    pipeline_config,
+    pipeline_config$cells_id_bucket,
+    object_data,
+    object_key
+  )
   return(object_key)
 }
 
 load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$processed_bucket
   message("Loading processed scdata")
-  message(bucket)
 
   # List the objects under the experiment_id folder
   objects_response <- s3$list_objects_v2(
@@ -99,7 +104,7 @@ load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
     Prefix = experiment_id
   )
   experiment_files <- objects$Contents
-  message("Loading source scdata for experiment ", experiment_id)
+  message("Loading source scdata for experiment: ", experiment_id)
 
   sample_files <- group_files_by_sample(experiment_files)
 
@@ -107,8 +112,8 @@ load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
   scdata_list <- list()
   for (sample_id in names(sample_files)) {
     file_keys <- sample_files[[sample_id]]
-    rds_key <- file_keys[['r.rds']]
-    matrix_dir_key <- file_keys[['matrix_dir.tar.zst']]
+    rds_key <- file_keys[["r.rds"]]
+    matrix_dir_key <- file_keys[["matrix_dir.tar.zst"]]
 
     scdata <- load_source_rds(s3, rds_key, bucket)
 
@@ -210,7 +215,7 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
 
   # TODO: remove if block
   # this never runs, because embed and cluster runs in the worker if modified.
-  # If the task is after data integration, we need to get scdata from processed_matrix
+  # If the task is after data integration, we need scdata from processed_matrix
   if (match(task_name, task_names) > integration_index) {
     return(load_processed_scdata(s3, pipeline_config, experiment_id))
   }
@@ -226,14 +231,16 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
     Bucket = pipeline_config$cells_id_bucket,
     Prefix = paste0(experiment_id, "/", task_name, "/")
   )
-  message(pipeline_config$cells_id_bucket)
-  message(paste(experiment_id, "r.rds", sep = "/"))
+  message("- bucket: ", pipeline_config$cells_id_bucket)
+  message("- task name: ", task_name)
+
   cells_id <- list()
-  message("Total of ", length(object_list$Contents), " samples.")
+  message("\nTotal of ", length(object_list$Contents), " samples:")
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
 
-  # after data integration the cell ids are no longer used because there is no filtering
+  # after data integration the cell ids
+  # are no longer used because there is no filtering
   # so they are not loaded
   if (match(task_name, task_names) <= integration_index) {
     for (object in object_list$Contents) {
@@ -241,9 +248,13 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
       sample_id <- tools::file_path_sans_ext(basename(key))
 
       if (!sample_id %in% samples) {
-        message("Unexpected filtered ids object for sample ", sample_id, ". Filtered cell ids' objects for removed samples
-        should be removed in the first step of the QC pipeline after gem2s is triggered (due to sample removal).
-        Removing it now.")
+        message(
+          "Unexpected filtered ids object for sample ", sample_id,
+          ". Filtered cell ids' objects for removed samples ",
+          "should be removed in the first step of the QC pipeline ",
+          "after gem2s is triggered (due to sample removal). ",
+          "Removing it now."
+        )
         s3$delete_object(
           Bucket = pipeline_config$cells_id_bucket,
           Key = key
@@ -259,7 +270,10 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
       writeBin(body, con = id_file)
       sample <- readRDS(id_file)
       cells_id[[sample_id]] <- sample[[sample_id]]
-      message("Sample ", sample_id, " with ", length(cells_id[[sample_id]]), " cells")
+      message(
+        "- Sample ", sample_id,
+        " with ", length(cells_id[[sample_id]]), " cells"
+      )
     }
   }
   return(cells_id)
@@ -290,19 +304,7 @@ build_qc_response <- function(id, input, error, pipeline_config) {
 send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   c(config, plot_data = plotData) %<-% output
 
-  # Anything stored in the config by the pipeline will return to the api if we don't remove it manually
-  # Remove anything you don't want to end up in sql processing config
-  # aws_config is only present in development and contains mock AWS credentials
-  exclude_names <- c(
-    "auth_JWT",
-    "api_url",
-    "clustering_should_run",
-    "metadata_s3_path",
-    "cl_metadata_bucket",
-    "aws_config"
-  )
-
-  config <- config[!names(config) %in% exclude_names]
+  config <- config[!names(config) %in% exclude_from_config]
 
   # upload output
   id <- ids::uuid()
@@ -314,16 +316,21 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     )
   )
 
-  message("Uploading results to S3 bucket ", pipeline_config$results_bucket, " at key ", id, "...")
-  put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id)
+  message("\nUploading results to S3:")
+  put_object_in_s3(
+    pipeline_config,
+    pipeline_config$results_bucket,
+    charToRaw(output),
+    id
+  )
 
-  message("Sending to SNS topic ", pipeline_config$sns_topic)
+  message("\nSending to SNS topic: ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
 
-  message("Building the message")
+  message("... building the message")
   msg <- build_qc_response(id, input, FALSE, pipeline_config)
 
-  message("Publishing the message")
+  message("... publishing the message")
   result <- sns$publish(
     Message = RJSONIO::toJSON(msg),
     TopicArn = pipeline_config$sns_topic,
@@ -335,13 +342,13 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
       )
     )
   )
-  message("Done publishing")
+  message("... done publishing")
 
   return(result$MessageId)
 }
 
 send_pipeline_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input, string_value) {
-  message("Sending to SNS topic ", pipeline_config$sns_topic)
+  message("\nSending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
   job_id <- Sys.getenv("AWS_BATCH_JOB_ID", unset = "")
 
@@ -400,8 +407,12 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
         )
       )
 
-      message("Uploading config to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
-      put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id)
+      message("\nUploading config to S3:")
+      put_object_in_s3(
+        pipeline_config,
+        pipeline_config$results_bucket,
+        charToRaw(output), id
+      )
 
       response <- build_qc_response(id, input, process_name, pipeline_config)
     }
@@ -458,10 +469,19 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
       )
     )
 
-    message("Uploading plotData to S3 bucket", pipeline_config$plot_data_bucket, " at key ", id, "...")
+    tags <- paste0(
+      "experimentId=", experiment_id,
+      "&plotUuid=", plot_data_name
+    )
 
-    tags <- paste0("experimentId=", experiment_id , "&plotUuid=" , plot_data_name)
-    put_object_in_s3(pipeline_config, pipeline_config$plot_data_bucket, charToRaw(output), id, tags)
+    message("\nUploading plot data to S3:")
+    put_object_in_s3(
+      pipeline_config,
+      pipeline_config$plot_data_bucket,
+      charToRaw(output),
+      id,
+      tags
+    )
   }
 
   return(plot_data_keys)
@@ -470,16 +490,19 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
 upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   object_key <- paste0(experiment_id, "/r.qs")
 
-  message("Saving object for key: ", object_key, '...')
+  message("Saving count matrix...")
   count_matrix <- tempfile()
   qs::qsave(data, file = count_matrix)
 
-  message("Count matrix file size : ", fs::file_size(count_matrix))
-  message("Uploading updated count matrix to S3 bucket ",
-          pipeline_config$processed_bucket, " at key ", object_key, "...")
+  message("Count matrix file size: ", fs::file_size(count_matrix))
 
+  message("Uploading count matrix to S3...")
   put_object_in_s3_multipart(
-    pipeline_config, pipeline_config$processed_bucket, count_matrix, object_key)
+    pipeline_config,
+    pipeline_config$processed_bucket,
+    count_matrix,
+    object_key
+  )
 
   return(object_key)
 }
@@ -488,22 +511,21 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
 
 upload_matrix_dir_to_s3 <- function(pipeline_config, experiment_id, data) {
   object_key <- paste0(experiment_id, "/matrix_dir.tar.zst")
-  message("Saving object for key: ", object_key, '...')
+  message("\nSaving matrix dir to: ", object_key)
 
   # should just be one
   matrix_dir <- get_matrix_dirs(data)
-  print("matrix_dir!!!")
-  print(matrix_dir)
-
 
   tarfile <- tar_matrix_dir(experiment_id, matrix_dir)
   message("Matrix dir file size: ", fs::file_size(tarfile))
 
-  message("Uploading updated matrix dir to S3 bucket ",
-          pipeline_config$processed_bucket, " at key ", object_key, "...")
-
+  message("\nUploading matrix dir to S3:")
   put_object_in_s3_multipart(
-    pipeline_config, pipeline_config$processed_bucket, tarfile, object_key)
+    pipeline_config,
+    pipeline_config$processed_bucket,
+    tarfile,
+    object_key
+  )
 }
 
 find_matrix_dir_paths <- function(obj) {
@@ -617,10 +639,7 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
   setwd(workdir)
 
   # upload ome.zarr.zip to s3
-  message(
-    "Uploading image data to bucket: ", pipeline_config$spatial_image_bucket,
-    ' at key: ', img_id, '...')
-
+  message("\nUploading image data to S3:")
   put_object_in_s3(
     pipeline_config,
     pipeline_config$spatial_image_bucket,
@@ -628,15 +647,18 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
     key = img_id
   )
 
-  # create sql entry in sample_file, (also creates entry in sample_to_sample_file_map)
+  # create sql entry in sample_file,
+  # (also creates entry in sample_to_sample_file_map)
   create_sample_file(
     api_url,
     experiment_id,
     sample_id,
-    'ome_zarr_zip',
+    "ome_zarr_zip",
     file.size(zip_path),
-    img_id, # gets used as s3_path by API
-    overwrite_existing, # FALSE for obj2s so that can have multiple ome_zarr_zip for single sample
+    # gets used as s3_path by API
+    img_id,
+    # FALSE for obj2s so that can have multiple ome_zarr_zip for single sample
+    overwrite_existing,
     authJWT
   )
 
@@ -692,8 +714,19 @@ upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
   }
 }
 
-put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging = NULL) {
-  message(sprintf("Putting %s in %s", key, bucket))
+put_object_in_s3 <- function(
+  pipeline_config,
+  bucket,
+  object,
+  key,
+  tagging = NULL
+) {
+
+  message(
+    "- bucket: ", bucket, "\n",
+    "- key: ", key
+  )
+
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
   retry_count <- 0
@@ -707,11 +740,13 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging = NUL
         Body = object,
         Tagging = switch(!is.null(tagging), tagging)
       )
-      message("Object successfully uploaded to S3.")
+      message("... object successfully uploaded to S3.")
       return(response)
     }, error = function(e) {
       retry_count <<- retry_count + 1
-      message(sprintf("Upload failed. Retrying (%d/%d)...", retry_count, max_retries))
+      message(sprintf(
+        "... upload failed. Retrying (%d/%d)", retry_count, max_retries
+      ))
       # exponential back off, preventing sending a new request too fast
       Sys.sleep(2 ^ retry_count)
     })
@@ -723,9 +758,13 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging = NUL
 #' @param pipeline_config A Paws S3 config object, e.g. from `paws::s3()`.
 #' @param object The path to the file to be uploaded.
 #' @param bucket The name of the S3 bucket to be uploaded to, e.g. `my-bucket`.
-#' @param key The name to assign to the file in the S3 bucket, e.g. `path/to/file`.
+#' @param key The name to assign to the file in the S3 bucket e.g. `path/file`.
 put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
-  message(sprintf("Putting %s in %s from object %s", key, bucket, object))
+  message(
+    "- object: ", object, "\n",
+    "- bucket: ", bucket, "\n",
+    "- key: ", key
+  )
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
   multipart <- s3$create_multipart_upload(
@@ -742,7 +781,6 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
       )
     }
   })
-  message("Uploading multiparts")
   resp <- try({
     parts <- upload_multipart_parts(s3, bucket, object, key, multipart$UploadId)
     s3$complete_multipart_upload(
@@ -773,7 +811,8 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
   for (i in 1:num_parts) {
     part <- readBin(con, what = "raw", n = part_size)
 
-    if (i %% 10 == 0) message("Uploading part ", i, "/", num_parts, "...")
+    if (i %% 10 == 0 || i == num_parts)
+      message("... uploading part ", i, "/", num_parts)
 
     # Upload part with retries and exponential backoff
     retry_count <- 0
@@ -793,12 +832,14 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
 
       }, error = function(e) {
         retry_count <<- retry_count + 1
-        message("Error uploading part ", i, ": ", e$message)
+        message("... error uploading part ", i, ": ", e$message)
 
         if (retry_count < max_retries) {
           wait_time <- 2 ^ retry_count
-          message("Retrying part ", i,
-                  " (attempt ", retry_count, "/", max_retries, ")...")
+          message(
+            "... retrying part ", i,
+            " (attempt ", retry_count, "/", max_retries, ")"
+          )
           Sys.sleep(wait_time)
         }
       })
@@ -811,7 +852,7 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
     parts <- c(parts, list(list(ETag = part_resp$ETag, PartNumber = i)))
   }
   ttask <- format(Sys.time() - tstart, digits = 2)
-  message("Multipart upload time: ", ttask)
+  message("... ⏱️ upload time: ", ttask, "\n")
   return(parts)
 }
 
