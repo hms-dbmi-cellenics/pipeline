@@ -29,7 +29,6 @@
 #'
 integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
 
-  message("Started data integration")
   method <- config$dataIntegration$method
 
   if (length(scdata_list) == 1) {
@@ -84,23 +83,46 @@ run_postprocessing <- function(scdata_integrated) {
 
 run_preprocessing <- function(scdata, normalization, nfeatures, use_geosketch = FALSE, percent_keep = NULL) {
 
-  # SketchData takes normalized data and set of variable features
+  # for SCT we still:
+  # - log-normalize: for gene expression plots
+  # - find variable features: for gene list dispersions in Data Exploration
+  is_sct <- normalization == "SCT"
+
   scdata <-
     Seurat::NormalizeData(
       scdata,
-      normalization.method = normalization,
+      normalization.method = "LogNormalize",
+      verbose = FALSE
+    ) |>
+    Seurat::FindVariableFeatures(
+      nfeatures = nfeatures,
       verbose = FALSE
     )
 
-  scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
+  if (is_sct) {
+    # SCTransform replaces NormalizeData, ScaleData, and FindVariableFeatures
+    scdata <- Seurat::SCTransform(
+      scdata,
+      assay = Seurat::DefaultAssay(scdata),
+      vst.flavor = "v2",
+      conserve.memory = FALSE,
+      variable.features.n = nfeatures,
+      verbose = FALSE
+    )
+  }
 
   if (use_geosketch) {
+    # for SCT: assay isn't split into layers so num_cells is total to keep
     num_samples <- length(unique(scdata$samples))
-    num_cells <- round(ncol(scdata) * (percent_keep / 100) / num_samples)
+    num_cells <- ncol(scdata) * (percent_keep / 100)
+    num_cells <- ifelse(is_sct, num_cells, num_cells / num_samples)
+    num_cells <- round(num_cells)
+
     message(
       "Sketching data with Geosketch, keeping ",
-      num_cells, " cells per sample."
+      num_cells, ifelse(is_sct, " cells.", " cells per sample.")
     )
+
     scdata <- Seurat::SketchData(
       object = scdata,
       ncells = num_cells,
@@ -108,73 +130,96 @@ run_preprocessing <- function(scdata, normalization, nfeatures, use_geosketch = 
       sketched.assay = "sketch"
     )
 
-    # vignettes run FindVariableFeatures before and after SketchData
-    Seurat::DefaultAssay(scdata) <- "sketch"
-    scdata <- Seurat::FindVariableFeatures(scdata, nfeatures = nfeatures, verbose = FALSE)
+    # run FindVariableFeatures again after SketchData
+    # fewer cells so variable features may change
+    # https://github.com/satijalab/seurat/issues/9015#issuecomment-2187112098
+    if (!is_sct) {
+      scdata <- Seurat::FindVariableFeatures(
+        scdata,
+        nfeatures = nfeatures,
+        verbose = FALSE
+      )
+    }
   }
 
   return(scdata)
 }
 
-run_pca <- function(scdata, npcs, reduction.name = "pca") {
+run_pca <- function(scdata, npcs, reduction_name = "pca") {
 
-  # if BPCells write out operations for faster PCA
-  is.bpcells <- is(scdata[['RNA']]$scale.data, "IterableMatrix")
+  # if BPCells write scale.data for default assay (RNA, SCT, or sketch)
+  # default assay is used by RunPCA
+  assay <- Seurat::DefaultAssay(scdata)
+  is_bpcells <- is(scdata[[assay]]$scale.data, "IterableMatrix")
 
-  if (is.bpcells) {
+  if (is_bpcells) {
     data_dir <- tempfile()
-    scale.data <- scdata[['RNA']]$scale.data
-    disk.scale.data <- BPCells::write_matrix_dir(scale.data, data_dir)
-    scdata[['RNA']]$scale.data <- disk.scale.data
+    scale_data <- scdata[[assay]]$scale.data
+    disk_scale_data <- BPCells::write_matrix_dir(scale_data, data_dir)
+    scdata[[assay]]$scale.data <- disk_scale_data
   }
 
   # run PCA
-  message('Running PCA ...')
+  message("PCA running from assay: ", assay)
   scdata <- Seurat::RunPCA(
     scdata,
     npcs = npcs,
-    reduction.name = reduction.name,
+    reduction.name = reduction_name,
     verbose = FALSE
   )
-  message('PCA complete.')
+  message("PCA saved to reduction: ", reduction_name)
 
-  if (is.bpcells) {
+  if (is_bpcells) {
     # cleanup restore scale.data to original object (removed disk backing)
     unlink(data_dir, recursive = TRUE)
-    scdata[['RNA']]$scale.data <- scale.data
+    scdata[[assay]]$scale.data <- scale_data
   }
 
   return(scdata)
 }
 
-project_geosketch_integration <- function(scdata, npcs, sketched.reduction, full.reduction, is.unisample = FALSE) {
+project_geosketch_integration <- function(
+  scdata,
+  npcs,
+  sketched_reduction,
+  full_reduction,
+  is_unisample = FALSE,
+  assay = "RNA"
+) {
+  message("Projecting integration using:",
+    "\n- sketched reduction: ", sketched_reduction,
+    "\n- original assay: ", assay
+  )
 
-  if (!is.unisample) {
+  if (!is_unisample) {
     # project full data onto integrated DR from sketch
-    # TODO: understand what this does?
-    message("Projecting integration...")
     scdata <- Seurat::ProjectIntegration(
       object = scdata,
-      assay = "RNA",
+      assay = assay,
       sketched.assay = "sketch",
-      reduction = sketched.reduction,
-      reduction.name = full.reduction
+      reduction = sketched_reduction,
+      reduction.name = full_reduction,
+      verbose = FALSE
     )
   }
 
-  # for unisample: projects full PCA
-  # for all: called to pre-compute weights and neighbors (stored in tools)
+  # for unisample: projects full dataset to sketch PCA
+
+  # for all: called to pre-compute weights and neighbors (stored in tools),
   # for future projections (clustering and UMAP)
+
   # NOTE: subsequent calls to ProjectData require same npcs as here
   scdata <- Seurat::ProjectData(
     object = scdata,
-    assay = "RNA",
+    assay = assay,
     sketched.assay = "sketch",
-    full.reduction = full.reduction,
-    sketched.reduction = sketched.reduction,
-    dims = 1:npcs
+    full.reduction = full_reduction,
+    sketched.reduction = sketched_reduction,
+    dims = 1:npcs,
+    verbose = FALSE
   )
 
+  message("Projected integration saved to: ", full_reduction)
   # set to RNA assay prior to upload for worker
   Seurat::DefaultAssay(scdata) <- "RNA"
   return(scdata)
@@ -275,9 +320,8 @@ add_dispersions <- function(scdata, method = "LogNormalize") {
 
   if (method == "default") {
     vars <- Seurat::HVFInfo(scdata)
-  } else if (method == "SCT" && Seurat::DefaultAssay(scdata) == "integrated") {
-    vars <- Seurat::HVFInfo(scdata, assay = "integrated", method = "sctransform")
   } else {
+    # For LogNormalize, HVF info is in RNA assay with vst method
     vars <- Seurat::HVFInfo(scdata, assay = "RNA", method = "vst")
   }
 
@@ -295,8 +339,6 @@ add_dispersions <- function(scdata, method = "LogNormalize") {
   vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
   vars$ENSEMBL <- rownames(vars)
 
-  message('in add_dispersions, here are the first rows of vars:')
-  print(head(vars))
   scdata@misc[["gene_dispersion"]] <- vars
   return(scdata)
 }
