@@ -3,8 +3,9 @@ run_unisample <- function(scdata_list, config, cells_id) {
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
 
-  # grep in case misspelled
-  if (grepl("lognorm", normalization, ignore.case = TRUE)) normalization <- "LogNormalize"
+  if (grepl("lognorm", normalization, ignore.case = TRUE)) {
+    normalization <- "LogNormalize"
+  }
 
   # calculate as many PCs for the PCA as possible, ideally 50, unless few cells
   npcs_for_pca <- min(vapply(scdata_list, ncol, numeric(1)) - 1, 50)
@@ -33,7 +34,7 @@ run_unisample <- function(scdata_list, config, cells_id) {
       percent_keep = percent_keep
     ) |>
     Seurat::ScaleData(verbose = FALSE) |>
-    run_pca(npcs = npcs_for_pca, reduction.name = pca_reduction) |>
+    run_pca(npcs = npcs_for_pca, reduction_name = pca_reduction) |>
     add_dispersions(normalization)
 
 
@@ -49,9 +50,9 @@ run_unisample <- function(scdata_list, config, cells_id) {
     scdata <- project_geosketch_integration(
       scdata,
       npcs,
-      sketched.reduction = "pca.sketch",
-      full.reduction = "pca",
-      is.unisample = TRUE
+      sketched_reduction = "pca.sketch",
+      full_reduction = "pca",
+      is_unisample = TRUE
     )
   }
 
