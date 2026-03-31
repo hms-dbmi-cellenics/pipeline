@@ -1,9 +1,11 @@
 # if Seurat not attached can cause errors when accessing metadata
-library(Seurat)
-library(zeallot)
-library(tryCatchLog)
-library(magrittr)
-library(uuid)
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(zeallot)
+  library(tryCatchLog)
+  library(magrittr)
+  library(uuid)
+})
 
 # v5 is the default but making explicit
 options(Seurat.object.assay.version = "v5")
