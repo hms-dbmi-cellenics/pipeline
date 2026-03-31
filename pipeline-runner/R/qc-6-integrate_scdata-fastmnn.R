@@ -17,9 +17,6 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
 
   scdata <- prepare_scdata_for_fastmnn(scdata_list, config, cells_id)
 
-  # we need RNA assay to compute the integrated matrix
-  Seurat::DefaultAssay(scdata) <- "RNA"
-
   # required pre-processing
   # run PCA with npcs_for_pca for the elbow plot and the % of variance explained
   use_geosketch <- is_geosketch(config)
@@ -44,19 +41,13 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
   # once it's fixed, we can use it instead
   scdata <- fastmnn_integration(scdata, nfeatures, npcs, new_reduction)
 
-  message("scdata after fastmnn_integration:")
-  print(scdata)
-
   if (use_geosketch) {
     scdata <- project_geosketch_integration(
       scdata,
       npcs,
-      sketched.reduction = "mnn.sketch",
-      full.reduction = "mnn"
+      sketched_reduction = "mnn.sketch",
+      full_reduction = "mnn"
     )
-
-    message("scdata after project_geosketch_integration:")
-    print(scdata)
   }
 
   scdata@misc[["numPCs"]] <- npcs
