@@ -18,9 +18,6 @@ run_harmony <- function(scdata_list, config, cells_id) {
 
   scdata <- prepare_scdata_for_harmony(scdata_list, config, cells_id)
 
-  # we need RNA assay to compute the integrated matrix
-  Seurat::DefaultAssay(scdata) <- "RNA"
-
   # required pre-processing
   # run PCA with npcs_for_pca for the elbow plot and the % of variance explained
   use_geosketch <- is_geosketch(config)
@@ -37,7 +34,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
       percent_keep = percent_keep
     ) |>
     Seurat::ScaleData(verbose = FALSE) |>
-    run_pca(npcs = npcs_for_pca, reduction.name = pca_reduction) |>
+    run_pca(npcs = npcs_for_pca, reduction_name = pca_reduction) |>
     add_dispersions(normalization)
 
   # estimate number of PCs to be used downstream, for integration and clustering
@@ -53,15 +50,15 @@ run_harmony <- function(scdata_list, config, cells_id) {
     orig = pca_reduction,
     new.reduction = new_reduction,
     dims = 1:npcs,
-    verbose = TRUE
+    verbose = FALSE
   )
 
   if (use_geosketch) {
     scdata <- project_geosketch_integration(
       scdata,
       npcs,
-      sketched.reduction = "harmony.sketch",
-      full.reduction = "harmony"
+      sketched_reduction = "harmony.sketch",
+      full_reduction = "harmony"
     )
   }
 
