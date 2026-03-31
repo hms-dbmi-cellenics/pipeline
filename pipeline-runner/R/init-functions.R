@@ -154,16 +154,25 @@ load_config <- function(development_aws_server) {
 #'
 #' @return list of task results
 #'
-run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, ignore_ssl_cert, debug_config) {
+run_qc_step <- function(scdata,
+  config,
+  tasks,
+  task_name,
+  cells_id,
+  sample_id,
+  ignore_ssl_cert,
+  debug_config
+) {
   if (!task_name %in% names(tasks)) {
     stop("Invalid task: ", task_name)
   }
-  
+
   # print info
   task <- tasks[[task_name]]
-  message("Running: ", task_name)
-  message("Config:")
-  str(config)
+  message("\nRunning: ", task_name)
+  message("\nConfig:")
+  str(config[!names(config) %in% exclude_from_config])
+  message("\n")
 
   # run task and time it
   tstart <- Sys.time()
@@ -383,7 +392,7 @@ call_qc <- function(task_name, input, pipeline_config) {
   config$experiment_id <- experiment_id
 
   if (!exists("scdata")) {
-    message("No single-cell data has been loaded, reloading from S3...")
+    message("\nNo single-cell data has been loaded, loading from S3...")
 
     # assign it to the global environment so we can
     # persist it across runs of the wrapper
@@ -392,7 +401,7 @@ call_qc <- function(task_name, input, pipeline_config) {
       pos = ".GlobalEnv"
     )
 
-    message("Single-cell data loaded.")
+    message("Single-cell data loaded.\n")
   }
 
   if (!exists("cells_id")) {
@@ -402,16 +411,25 @@ call_qc <- function(task_name, input, pipeline_config) {
       message("Filtered cells id generated.")
 
     } else if (task_name == "configureEmbedding") {
-      message("No filtered cell ids loading necessary for configureEmbedding step, skipping...")
+      message(
+        "configureEmbedding doesn't need filtered cell ids, skipping..."
+      )
 
     } else if (task_name %in% names(tasks)) {
       message("No filtered cell ids have been loaded, loading from S3...")
       samples <- names(scdata)
       assign("cells_id",
-        load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples),
-        pos = ".GlobalEnv")
+        load_cells_id_from_s3(
+          pipeline_config,
+          experiment_id,
+          task_name,
+          tasks,
+          samples
+        ),
+        pos = ".GlobalEnv"
+      )
 
-      # won't be cells_id in S3 for uploaded Seurat object that is being subsetted
+      # no cells_id in S3 for uploaded Seurat object that is being subsetted
       if (!length(cells_id)) cells_id <- generate_first_step_ids(scdata)
       message("Cells id loaded.")
 
@@ -458,29 +476,26 @@ call_qc <- function(task_name, input, pipeline_config) {
   if (upload_count_matrix) {
     assign("scdata", data, pos = ".GlobalEnv")
     object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
-    message(
-      "Count matrix uploaded to ", pipeline_config$processed_bucket,
-      " with key ", object_key
-    )
   }
 
   # Upload matrix dir for bpcells
   upload_matrix_dir <-
-    upload_count_matrix && is(scdata[['RNA']]$counts, 'IterableMatrix')
+    upload_count_matrix && is(scdata[["RNA"]]$counts, "IterableMatrix")
 
   if (upload_matrix_dir) {
     upload_matrix_dir_to_s3(pipeline_config, experiment_id, scdata)
-    message(
-      "Matrix dir for bpcells uploaded to ",
-      pipeline_config$processed_bucket
-    )
   }
 
   # send result to API
-  message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
+  message_id <- send_output_to_api(
+    pipeline_config,
+    input,
+    plot_data_keys,
+    rest_of_results
+  )
   ttask <- format(Sys.time() - tstart, digits = 2)
   message(
-    "⏱️ Time to upload ", task_name,
+    "\n⏱️ Time to upload ", task_name,
     " objects for sample ", sample_id,
     ": ", ttask
   )
@@ -575,8 +590,7 @@ wrapper <- function(input, pipeline_config) {
   task_name <- input$taskName
   message("\n------\nStarting task: ", task_name, "\n")
   message("Input:")
-  # remove config from print to avoid huge redundant logs
-  str(input[names(input) != "config"])
+  str(input[!names(input) %in% c("config")], nchar.max=64)
 
   # common to gem2s and data processing
   server <- input$server
@@ -640,7 +654,7 @@ init <- function() {
 
         wrapper(input, pipeline_config)
 
-        message("Send task success\n------\n")
+        message("------\n")
         states$send_task_success(
           taskToken = task_token,
           output = "{}"
