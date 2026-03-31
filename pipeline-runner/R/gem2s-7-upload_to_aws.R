@@ -30,12 +30,18 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     cell_sets <- get_cell_sets(scdata_list, input)
   } else {
     message("Constructing cell sets for subset experiment ...")
-    cell_sets <- get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters)
+    cell_sets <- get_subset_cell_sets(
+      scdata_list,
+      input,
+      prev_out,
+      disable_qc_filters
+    )
   }
 
   # cell sets file to s3
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
 
+  message("\nUploading cell sets data to S3:")
   put_object_in_s3(pipeline_config,
     bucket = pipeline_config$cell_sets_bucket,
     object = charToRaw(cell_sets_data),
@@ -43,16 +49,23 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   )
 
   # remove previous existing data
-  remove_bucket_folder(pipeline_config, pipeline_config$source_bucket, experiment_id)
+  remove_bucket_folder(
+    pipeline_config,
+    pipeline_config$source_bucket,
+    experiment_id
+  )
 
   for (sample in names(scdata_list)) {
-    message("Uploading sample ", sample, " object to S3 ...")
     fpath <- file.path(tempdir(), "experiment.rds")
+    message("\nSaving rds for sample: ", sample)
     saveRDS(scdata_list[[sample]], fpath)
+    message("rds file size: ", fs::file_size(fpath))
 
     # can only upload up to 50Gb because multipart uploads work by uploading
     # smaller chunks (parts) and the max amount of parts is 10,000.
-    put_object_in_s3_multipart(pipeline_config,
+    message("\nUploading rds to S3:")
+    put_object_in_s3_multipart(
+      pipeline_config,
       bucket = pipeline_config$source_bucket,
       object = fpath,
       key = file.path(experiment_id, sample, "r.rds")
@@ -62,9 +75,13 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     matrix_dir <- matrix_dir_list[[sample]]
 
     if (!is.null(matrix_dir)) {
-      message("Uploading sample ", sample, " bpcells matrix_dir to S3 ...")
+      message("\nTarring matrix dir for sample: ", sample)
       tarfile <- tar_matrix_dir(sample, matrix_dir)
-      put_object_in_s3_multipart(pipeline_config,
+      message("Tar file size: ", fs::file_size(tarfile))
+
+      message("\nUploading tarred matrix dir:")
+      put_object_in_s3_multipart(
+        pipeline_config,
         bucket = pipeline_config$source_bucket,
         object = tarfile,
         key = file.path(experiment_id, sample, "matrix_dir.tar.zst")
