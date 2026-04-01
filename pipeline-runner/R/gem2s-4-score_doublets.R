@@ -55,7 +55,9 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 #'
 #' @return data.frame with doublet scores and assigned classes
 #'
-compute_sample_doublet_scores <- function(sample_counts, technology, parse_kit = "WT") {
+compute_sample_doublet_scores <- function(
+  sample_counts, technology, parse_kit = "WT"
+) {
   set.seed(RANDOM_SEED)
 
   dbr <- NULL
@@ -73,7 +75,7 @@ compute_sample_doublet_scores <- function(sample_counts, technology, parse_kit =
     return(NULL)
   }
 
-  sce <- scDblFinder::scDblFinder(sample_counts, dbr = dbr)
+  sce <- scdblfinder_bpcells(sample_counts, dbr = dbr)
 
   doublet_res <- data.frame(
     row.names = colnames(sce),
@@ -85,7 +87,7 @@ compute_sample_doublet_scores <- function(sample_counts, technology, parse_kit =
   return(doublet_res)
 }
 
-scDblFinder_bpcells <- function(counts, dbr = NULL) {
+scdblfinder_bpcells <- function(counts, dbr = NULL) {
 
   # create a SingleCellExperiment object from the counts matrix
   sce <- SingleCellExperiment::SingleCellExperiment(list(counts = counts))
@@ -101,12 +103,13 @@ scDblFinder_bpcells <- function(counts, dbr = NULL) {
   counts_sub <- as(counts_sub, "dgCMatrix")
   gc()
 
-  print(object.size(counts_sub), units = "auto")
   scDblFinder::scDblFinder(counts_sub, nfeatures = nfeatures, dbr = dbr, k = k)
 }
 
 
-get_doublet_scores <- function(sample_counts, max_attempts = 5, technology = "10x") {
+get_doublet_scores <- function(
+  sample_counts, max_attempts = 5, technology = "10x"
+) {
   # also filter low UMI as per scDblFinder:::.checkSCE()
   ntot <- Matrix::colSums(sample_counts)
 
@@ -114,12 +117,16 @@ get_doublet_scores <- function(sample_counts, max_attempts = 5, technology = "10
   retry <- NULL
   attempt <- 1
   while (is.null(retry) && attempt <= max_attempts) {
-    message("\nTrying to score doublets, attempt: ", attempt)
+    message("Trying to score doublets, attempt: ", attempt)
+
     # make the threshold stricter in every attempt
     empty_cells_mask <- ntot > (200 * attempt)
     try({
       # TODO: Pass also parse_kit when available from the UI
-      scores <- compute_sample_doublet_scores(sample_counts[, empty_cells_mask], technology)
+      scores <- compute_sample_doublet_scores(
+        sample_counts[, empty_cells_mask],
+        technology
+      )
       retry <- "not null"
     })
     attempt <- attempt + 1
