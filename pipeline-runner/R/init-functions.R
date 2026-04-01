@@ -169,10 +169,10 @@ run_qc_step <- function(scdata,
 
   # print info
   task <- tasks[[task_name]]
-  message("\nRunning: ", task_name)
+  
   message("\nConfig:")
   str(config[!names(config) %in% exclude_from_config])
-  message("\n")
+  cat("\n")
 
   # run task and time it
   tstart <- Sys.time()
@@ -188,8 +188,8 @@ run_qc_step <- function(scdata,
 
   ttask <- format(Sys.time() - tstart, digits = 2)
   message(
-    "⏱️ Time to complete ", task_name,
-    " for sample ", sample_id, ": ", ttask, "\n"
+    "\n⏱️ Time to complete ", task_name,
+    " for sample ", sample_id, ": ", ttask
   )
 
   return(out)
@@ -213,16 +213,19 @@ run_qc_step <- function(scdata,
 #'
 #' @return list of task results
 #'
-run_pipeline_step <- function(prev_out, input, pipeline_config, tasks, task_name) {
+run_pipeline_step <- function(
+  prev_out, input, pipeline_config, tasks, task_name
+) {
   if (!task_name %in% names(tasks)) {
     stop("Invalid task name given: ", task_name)
   }
   task <- tasks[[task_name]]
+  message("\nRunning: ", task_name)
 
   tstart <- Sys.time()
   out <- task(input, pipeline_config, prev_out)
   ttask <- format(Sys.time() - tstart, digits = 2)
-  message("⏱️ Time to complete ", task_name, ": ", ttask, "\n")
+  message("\n⏱️ Time to complete ", task_name, ": ", ttask)
 
   return(out)
 }
@@ -251,10 +254,18 @@ call_gem2s <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(GEM2S_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-% 
+    run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
+  message_id <-  send_pipeline_update_to_api(
+    pipeline_config,
+    experiment_id,
+    task_name,
+    data,
+    input,
+    "GEM2SResponse"
+  )
 
   return(message_id)
 }
@@ -284,10 +295,18 @@ call_subset <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(SUBSET_SEURAT_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-%
+    run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
+  message_id <- send_pipeline_update_to_api(
+    pipeline_config,
+    experiment_id,
+    task_name,
+    data,
+    input,
+    "GEM2SResponse"
+  )
 
   return(message_id)
 }
@@ -305,10 +324,18 @@ call_obj2s <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(OBJ2S_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-% 
+    run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'OBJ2SResponse')
+  message_id <- send_pipeline_update_to_api(
+    pipeline_config,
+    experiment_id,
+    task_name,
+    data,
+    input,
+    "OBJ2SResponse"
+  )
   return(message_id)
 }
 
@@ -336,10 +363,18 @@ call_copy <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(COPY_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-% 
+    run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
+  message_id <- send_pipeline_update_to_api(
+    pipeline_config,
+    experiment_id,
+    task_name,
+    data,
+    input,
+    "GEM2SResponse"
+  )
 
   return(message_id)
 }
@@ -590,7 +625,7 @@ wrapper <- function(input, pipeline_config) {
   task_name <- input$taskName
   message("\n------\nStarting task: ", task_name, "\n")
   message("Input:")
-  str(input[!names(input) %in% c("config")], nchar.max=64)
+  str(input[!names(input) %in% c("config")], nchar.max = 64)
 
   # common to gem2s and data processing
   server <- input$server
@@ -624,7 +659,7 @@ init <- function() {
   states <- paws::sfn(config = pipeline_config$aws_config)
   message("Loaded step function")
 
- print(sessionInfo())
+  print(sessionInfo(), locale = FALSE)
 
   futile.logger::flog.layout(futile.logger::layout.simple)
   futile.logger::flog.threshold(futile.logger::ERROR)

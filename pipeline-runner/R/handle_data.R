@@ -11,7 +11,10 @@ remove_bucket_folder <- function(pipeline_config, bucket, folder) {
     )
   }
 
-  message("Removed files from ", bucket, ": ", paste0(keys_to_remove, sep=' '))
+  message(
+    "\nRemoved files from ", bucket, ":",
+    "\n- ", paste0(keys_to_remove, sep = "\n- ")
+  )
 }
 
 remove_cell_ids <- function(pipeline_config, experiment_id) {
@@ -104,7 +107,10 @@ load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
     Prefix = experiment_id
   )
   experiment_files <- objects$Contents
-  message("Loading source scdata for experiment: ", experiment_id)
+  message(
+    "\nLoading source scdata for experiment: ", experiment_id,
+    "\n- bucket: ", bucket
+  )
 
   sample_files <- group_files_by_sample(experiment_files)
 
@@ -138,7 +144,7 @@ load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
 }
 
 load_source_rds <- function(s3, rds_key, bucket) {
-  message("...loading r.rds key ", rds_key)
+  message("... loading key ", rds_key)
 
   c(body, ...rest) %<-% s3$get_object(
     Bucket = bucket,
@@ -154,7 +160,7 @@ load_source_rds <- function(s3, rds_key, bucket) {
 }
 
 load_source_matrix_dir <- function(s3, matrix_dir_key, bucket, sample_id) {
-  message("...loading matrix_dir.tar.zst key ", matrix_dir_key)
+  message("... loading key ", matrix_dir_key)
 
   # download directly to tar file
   new_matrix_dir <- file.path(tempdir(), paste0(sample_id, "_matrix_dir"))
@@ -180,7 +186,6 @@ replace_matrix_dir_paths <- function(obj, new_dir) {
 
   if (inherits(obj, "MatrixDir")) {
     obj@dir <- new_dir
-    message("Updating MatrixDir: ", obj@dir)
     return(obj)
   }
   if (is.list(obj)) {
@@ -507,8 +512,6 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   return(object_key)
 }
 
-
-
 upload_matrix_dir_to_s3 <- function(pipeline_config, experiment_id, data) {
   object_key <- paste0(experiment_id, "/matrix_dir.tar.zst")
   message("\nSaving matrix dir to: ", object_key)
@@ -516,8 +519,9 @@ upload_matrix_dir_to_s3 <- function(pipeline_config, experiment_id, data) {
   # should just be one
   matrix_dir <- get_matrix_dirs(data)
 
+  message("\nTarring experiment matrix dir: ", matrix_dir)
   tarfile <- tar_matrix_dir(experiment_id, matrix_dir)
-  message("Matrix dir file size: ", fs::file_size(tarfile))
+  message("Tar file size: ", fs::file_size(tarfile))
 
   message("\nUploading matrix dir to S3:")
   put_object_in_s3_multipart(
@@ -852,7 +856,7 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
     parts <- c(parts, list(list(ETag = part_resp$ETag, PartNumber = i)))
   }
   ttask <- format(Sys.time() - tstart, digits = 2)
-  message("... ⏱️ upload time: ", ttask, "\n")
+  message("... upload time: ", ttask)
   return(parts)
 }
 

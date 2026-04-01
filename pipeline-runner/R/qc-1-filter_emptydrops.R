@@ -44,11 +44,16 @@ filter_emptydrops <- function(scdata_list, config, sample_id, cells_id, task_nam
   }
 
   if (config$enabled) {
-    message("Classify is enabled: filtering with FDR=", FDR)
+    message("\nClassify is enabled: filtering with FDR=", FDR)
     meta <- sample_data@meta.data
 
-    message("Info: empty-drops table of FDR threshold categories (# UMIs for a given threshold interval)")
-    print(table(meta$samples, cut(meta$emptyDrops_FDR, breaks = c(-Inf, 0, 0.0001, 0.01, 0.1, 0.5, 1, Inf)), useNA = "ifany"))
+    message("emptyDrops FDR table (# UMIs for a given threshold interval):")
+    print(table(
+      cut(meta$emptyDrops_FDR, 
+        breaks = c(-Inf, 0, 0.0001, 0.01, 0.1, 0.5, 1, Inf)
+      ),
+      useNA = "ifany"
+    ))
 
     # prevents filtering of NA FDRs if FDR=1
     ed_fdr <- sample_data$emptyDrops_FDR
