@@ -76,7 +76,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     matrix_dir <- matrix_dir_list[[sample]]
 
     if (!is.null(matrix_dir)) {
-      message("\nTarring matrix dir for sample: ", sample)
+      message("\nTarring sample matrix dir: ", matrix_dir)
       tarfile <- tar_matrix_dir(sample, matrix_dir)
       message("Tar file size: ", fs::file_size(tarfile))
 
@@ -118,10 +118,10 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
-tar_matrix_dir <- function(id, matrix_dir, suffix='') {
+tar_matrix_dir <- function(id, matrix_dir) {
 
   # where we write the tar file
-  tarfile <- file.path(tempdir(), paste0(id, '_matrix_dir', suffix, '.tar.zst'))
+  tarfile <- file.path(tempdir(), paste0(id, "_matrix_dir.tar.zst"))
 
   # move to parent of matrix_dir and tar it
   matrix_dir_parent <- dirname(matrix_dir)
