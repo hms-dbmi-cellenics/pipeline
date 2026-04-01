@@ -27,7 +27,9 @@
 #' @return a list with the integrated seurat object, the cell ids, the config and the plot values.
 #' @export
 #'
-integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+integrate_scdata <- function(
+  scdata_list, config, sample_id, cells_id, task_name = "dataIntegration"
+) {
 
   method <- config$dataIntegration$method
 
@@ -42,7 +44,13 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   # integrate
   integration_function <- get(paste0("run_", method))
   scdata_integrated <- integration_function(scdata_list, config, cells_id)
-  scdata_integrated <- run_postprocessing(scdata_integrated)
+
+  # join layers for RNA assay for worker 
+  rna_assay <- scdata_integrated[["RNA"]]
+  if (methods::is(rna_assay, "Assay5")) {
+    rna_assay <- SeuratObject::JoinLayers(rna_assay)
+    scdata_integrated[["RNA"]] <- rna_assay
+  }
 
   # Update config numPCs with estimated or user provided nPCs
   config$dimensionalityReduction$numPCs <- scdata_integrated@misc$numPCs
@@ -61,24 +69,6 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   )
 
   return(result)
-}
-
-run_postprocessing <- function(scdata_integrated) {
-
-  rna_assay <- scdata_integrated[["RNA"]]
-  if (methods::is(rna_assay, "Assay5")) {
-    rna_assay <- SeuratObject::JoinLayers(rna_assay)
-    scdata_integrated[["RNA"]] <- rna_assay
-  }
-
-  # re-write disk backing so that just a single matrix_dir (bpcells)
-  if (methods::is(rna_assay$counts, "IterableMatrix")) {
-    matrix_dir <- file.path(tempdir(), "matrix_dir")
-    counts <- BPCells::write_matrix_dir(rna_assay$counts, matrix_dir)
-    scdata_integrated[["RNA"]]$counts <- counts
-  }
-
-  return(scdata_integrated)
 }
 
 run_preprocessing <- function(scdata, normalization, nfeatures, use_geosketch = FALSE, percent_keep = NULL) {
@@ -269,8 +259,12 @@ customize_downsampling_config <- function(config, scdata_list) {
 create_scdata <- function(scdata_list, cells_id, merge_data = FALSE) {
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list, merge_data)
-  merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
 
+  # we re-write matrix dir before any preprocessing
+  # that would create dependencies on original matrix dirs
+  merged_scdatas <- write_merged_matrix_dir(merged_scdatas)
+
+  merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
   return(merged_scdatas)
 }
 
@@ -310,7 +304,32 @@ merge_scdata_list <- function(scdata_list, merge_data = FALSE) {
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
-    scdata <- merge(scdata_list[[1]], y = scdata_list[-1], merge.data = merge_data)
+    scdata <- merge(
+      scdata_list[[1]],
+      y = scdata_list[-1],
+      merge.data = merge_data
+    )
+  }
+
+  return(scdata)
+}
+
+write_merged_matrix_dir <- function(scdata) {
+  layer_names <- SeuratObject::Layers(scdata)
+  first_layer <- SeuratObject::LayerData(scdata, layer_names[1])
+
+  if (methods::is(first_layer, "IterableMatrix")) {
+    # temporarily join layers to write out single matrix dir
+    scdata[["RNA"]] <- SeuratObject::JoinLayers(scdata[["RNA"]])
+
+    # re-write disk backing
+    matrix_dir <- file.path(tempdir(), "matrix_dir")
+    message("Writing merged matrix dir to: ", matrix_dir)
+    counts <- BPCells::write_matrix_dir(scdata[["RNA"]]$counts, matrix_dir)
+
+    # restore consolidated counts then split
+    scdata[["RNA"]]$counts <- counts
+    scdata[["RNA"]] <- split(scdata[["RNA"]], f = scdata$samples)
   }
 
   return(scdata)
@@ -557,7 +576,8 @@ build_mitochondrial_gene_list <- function(all_genes) {
 add_metadata <- function(scdata, scdata_list) {
   message("Adding metadata.")
   # misc data is duplicated in each of the samples and it does not
-  # need to be merge so pick the data in the first one and add it to the merged dataset
+  # need to be merge so pick the data in the first one
+  # and add it to the merged dataset
   scdata@misc <- scdata_list[[1]]@misc
   experiment_id <- scdata_list[[1]]@misc[["experimentId"]]
 
@@ -568,7 +588,8 @@ add_metadata <- function(scdata, scdata_list) {
 
   scdata@misc[["gene_annotations"]] <- format_annot(annot_list)
 
-  # We store the color pool in a slot in order to be able to access it during configureEmbedding
+  # We store the color pool in a slot in order to
+  # be able to access it during configureEmbedding
   scdata@misc[["color_pool"]] <- get_color_pool()
   scdata@misc[["experimentId"]] <- experiment_id
   scdata@misc[["ingestionDate"]] <- Sys.time()
