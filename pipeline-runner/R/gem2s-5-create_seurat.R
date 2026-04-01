@@ -128,7 +128,7 @@ add_edrops <- function(scdata, edout) {
     # adding emptydrops data to meta.data for later filtering (using left join)
     meta.data <- scdata@meta.data |>
       tibble::rownames_to_column("barcode") |>
-      dplyr::left_join(edout)
+      dplyr::left_join(edout, by = "barcode")
     rownames(meta.data) <- meta.data$barcode
 
     scdata@meta.data <- meta.data
