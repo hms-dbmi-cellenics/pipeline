@@ -154,18 +154,25 @@ load_config <- function(development_aws_server) {
 #'
 #' @return list of task results
 #'
-run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, ignore_ssl_cert, debug_config) {
+run_qc_step <- function(scdata,
+  config,
+  tasks,
+  task_name,
+  cells_id,
+  sample_id,
+  ignore_ssl_cert,
+  debug_config
+) {
   if (!task_name %in% names(tasks)) {
     stop("Invalid task: ", task_name)
   }
 
-  handle_debug(scdata, config, task_name, sample_id, debug_config)
-
   # print info
   task <- tasks[[task_name]]
-  message("Running: ", task_name)
-  message("Config:")
-  str(config)
+  
+  message("\nConfig:")
+  str(config[!names(config) %in% exclude_from_config])
+  cat("\n")
 
   # run task and time it
   tstart <- Sys.time()
@@ -181,8 +188,8 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, i
 
   ttask <- format(Sys.time() - tstart, digits = 2)
   message(
-    "⏱️ Time to complete ", task_name,
-    " for sample ", sample_id, ": ", ttask, "\n"
+    "\n⏱️ Time to complete ", task_name,
+    " for sample ", sample_id, ": ", ttask
   )
 
   return(out)
@@ -206,16 +213,19 @@ run_qc_step <- function(scdata, config, tasks, task_name, cells_id, sample_id, i
 #'
 #' @return list of task results
 #'
-run_pipeline_step <- function(prev_out, input, pipeline_config, tasks, task_name) {
+run_pipeline_step <- function(
+  prev_out, input, pipeline_config, tasks, task_name
+) {
   if (!task_name %in% names(tasks)) {
     stop("Invalid task name given: ", task_name)
   }
   task <- tasks[[task_name]]
+  message("\nRunning: ", task_name)
 
   tstart <- Sys.time()
   out <- task(input, pipeline_config, prev_out)
   ttask <- format(Sys.time() - tstart, digits = 2)
-  message("⏱️ Time to complete ", task_name, ": ", ttask, "\n")
+  message("\n⏱️ Time to complete ", task_name, ": ", ttask)
 
   return(out)
 }
@@ -244,10 +254,18 @@ call_gem2s <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(GEM2S_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-% 
+    run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
+  message_id <-  send_pipeline_update_to_api(
+    pipeline_config,
+    experiment_id,
+    task_name,
+    data,
+    input,
+    "GEM2SResponse"
+  )
 
   return(message_id)
 }
@@ -277,10 +295,18 @@ call_subset <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(SUBSET_SEURAT_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-%
+    run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
+  message_id <- send_pipeline_update_to_api(
+    pipeline_config,
+    experiment_id,
+    task_name,
+    data,
+    input,
+    "GEM2SResponse"
+  )
 
   return(message_id)
 }
@@ -298,10 +324,18 @@ call_obj2s <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(OBJ2S_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-% 
+    run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'OBJ2SResponse')
+  message_id <- send_pipeline_update_to_api(
+    pipeline_config,
+    experiment_id,
+    task_name,
+    data,
+    input,
+    "OBJ2SResponse"
+  )
   return(message_id)
 }
 
@@ -329,10 +363,18 @@ call_copy <- function(task_name, input, pipeline_config) {
   check_input(input)
   tasks <- lapply(COPY_TASK_LIST, get)
 
-  c(data, task_out) %<-% run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
+  c(data, task_out) %<-% 
+    run_pipeline_step(prev_out, input, pipeline_config, tasks, task_name)
   assign("prev_out", task_out, pos = ".GlobalEnv")
 
-  message_id <- send_pipeline_update_to_api(pipeline_config, experiment_id, task_name, data, input, 'GEM2SResponse')
+  message_id <- send_pipeline_update_to_api(
+    pipeline_config,
+    experiment_id,
+    task_name,
+    data,
+    input,
+    "GEM2SResponse"
+  )
 
   return(message_id)
 }
@@ -356,6 +398,7 @@ call_qc <- function(task_name, input, pipeline_config) {
   experiment_id <- input$experimentId
   config <- input$config
   upload_count_matrix <- input$uploadCountMatrix
+  upload_count_matrix_dir <- FALSE
   ignore_ssl_cert <- input$ignoreSslCert
   sample_id <- input$sampleUuid
   debug_config <- pipeline_config$debug_config
@@ -380,8 +423,11 @@ call_qc <- function(task_name, input, pipeline_config) {
   # For configure embedding
   config$clustering_should_run <- input$clusteringShouldRun
 
+  # for integration step
+  config$experiment_id <- experiment_id
+
   if (!exists("scdata")) {
-    message("No single-cell data has been loaded, reloading from S3...")
+    message("\nNo single-cell data has been loaded, loading from S3...")
 
     # assign it to the global environment so we can
     # persist it across runs of the wrapper
@@ -390,7 +436,7 @@ call_qc <- function(task_name, input, pipeline_config) {
       pos = ".GlobalEnv"
     )
 
-    message("Single-cell data loaded.")
+    message("Single-cell data loaded.\n")
   }
 
   if (!exists("cells_id")) {
@@ -398,36 +444,54 @@ call_qc <- function(task_name, input, pipeline_config) {
       message("Generating first step filtered cell ids...")
       assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
       message("Filtered cells id generated.")
+
     } else if (task_name == "configureEmbedding") {
-      message("No filtered cell ids loading necessary for configureEmbedding step, skipping...")
+      message(
+        "configureEmbedding doesn't need filtered cell ids, skipping..."
+      )
+
     } else if (task_name %in% names(tasks)) {
       message("No filtered cell ids have been loaded, loading from S3...")
       samples <- names(scdata)
       assign("cells_id",
-        load_cells_id_from_s3(pipeline_config, experiment_id, task_name, tasks, samples),
-        pos = ".GlobalEnv")
+        load_cells_id_from_s3(
+          pipeline_config,
+          experiment_id,
+          task_name,
+          tasks,
+          samples
+        ),
+        pos = ".GlobalEnv"
+      )
 
-      # won't be cells_id in S3 for uploaded Seurat object that is being subsetted
+      # no cells_id in S3 for uploaded Seurat object that is being subsetted
       if (!length(cells_id)) cells_id <- generate_first_step_ids(scdata)
-
       message("Cells id loaded.")
+
     } else {
       stop("Invalid task name given: ", task_name)
     }
   }
 
-
   # call function to run and update global variable
-  c(
-    data, new_ids, ...rest_of_results
-  ) %<-% run_qc_step(scdata, config, tasks, task_name, cells_id, sample_id, ignore_ssl_cert, debug_config)
-
+  c(data, new_ids, ...rest_of_results) %<-% 
+    run_qc_step(
+      scdata,
+      config,
+      tasks,
+      task_name,
+      cells_id,
+      sample_id,
+      ignore_ssl_cert,
+      debug_config
+    )
 
   assign("cells_id", new_ids, pos = ".GlobalEnv")
 
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
   task_index <- match(task_name, task_names)
+
   if (task_index < integration_index) {
     message(
       "Filtered cell ids from ", length(cells_id[[sample_id]]),
@@ -440,23 +504,33 @@ call_qc <- function(task_name, input, pipeline_config) {
 
   # upload plot data result to S3
   tstart <- Sys.time()
-  plot_data_keys <- send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
+  plot_data_keys <-
+    send_plot_data_to_s3(pipeline_config, experiment_id, rest_of_results)
 
   # Upload count matrix data
   if (upload_count_matrix) {
     assign("scdata", data, pos = ".GlobalEnv")
     object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
-    message(
-      "Count matrix uploaded to ", pipeline_config$processed_bucket,
-      " with key ", object_key
-    )
+  }
+
+  # Upload matrix dir for bpcells
+  upload_matrix_dir <-
+    upload_count_matrix && is(scdata[["RNA"]]$counts, "IterableMatrix")
+
+  if (upload_matrix_dir) {
+    upload_matrix_dir_to_s3(pipeline_config, experiment_id, scdata)
   }
 
   # send result to API
-  message_id <- send_output_to_api(pipeline_config, input, plot_data_keys, rest_of_results)
+  message_id <- send_output_to_api(
+    pipeline_config,
+    input,
+    plot_data_keys,
+    rest_of_results
+  )
   ttask <- format(Sys.time() - tstart, digits = 2)
   message(
-    "⏱️ Time to upload ", task_name,
+    "\n⏱️ Time to upload ", task_name,
     " objects for sample ", sample_id,
     ": ", ttask
   )
@@ -551,8 +625,7 @@ wrapper <- function(input, pipeline_config) {
   task_name <- input$taskName
   message("\n------\nStarting task: ", task_name, "\n")
   message("Input:")
-  # remove config from print to avoid huge redundant logs
-  str(input[names(input) != "config"])
+  str(input[!names(input) %in% c("config")], nchar.max = 64)
 
   # common to gem2s and data processing
   server <- input$server
@@ -586,7 +659,7 @@ init <- function() {
   states <- paws::sfn(config = pipeline_config$aws_config)
   message("Loaded step function")
 
- print(sessionInfo())
+  print(sessionInfo(), locale = FALSE)
 
   futile.logger::flog.layout(futile.logger::layout.simple)
   futile.logger::flog.threshold(futile.logger::ERROR)
@@ -607,13 +680,6 @@ init <- function() {
     # parse data from state machine input
     input <- RJSONIO::fromJSON(input_json, simplify = FALSE)
 
-    # save logs to file
-    debug_prefix <- file.path(input$experimentId, debug_timestamp)
-    dump_folder <- file.path(DEBUG_PATH, debug_prefix)
-    futile.logger::flog.appender(
-      futile.logger::appender.tee(file.path(dump_folder, "logs.txt"))
-    )
-
     heartbeat_proc <- start_heartbeat(task_token, pipeline_config$aws_config)
 
     tryCatchLog(
@@ -623,7 +689,7 @@ init <- function() {
 
         wrapper(input, pipeline_config)
 
-        message("Send task success\n------\n")
+        message("------\n")
         states$send_task_success(
           taskToken = task_token,
           output = "{}"
@@ -631,9 +697,10 @@ init <- function() {
       },
       error = function(e) {
         futile.logger::flog.error("🚩 ---------")
-        sample_text <- ifelse(is.null(input$sampleUuid),
-                              "",
-                              paste0(" for sample ", input$sampleUuid)
+        sample_text <- ifelse(
+          is.null(input$sampleUuid),
+          "",
+          paste0(" for sample ", input$sampleUuid)
         )
 
         error_txt <- paste0(
@@ -653,8 +720,7 @@ init <- function() {
 
         message("recovered from error:", e$message)
       },
-      write.error.dump.file = TRUE,
-      write.error.dump.folder = dump_folder
+      write.error.dump.file = FALSE
     )
 
     # kill heartbeat process

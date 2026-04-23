@@ -53,6 +53,8 @@ RUN Rscript create_ghost_packages.R
 COPY setup/check_package_licenses.R .
 RUN Rscript check_package_licenses.R
 
+RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
+
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
 # ---------------------------------------------------
@@ -65,7 +67,7 @@ COPY --from=builder /src /src
 # add renv library to .libPaths
 ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site && \
-    echo "python3-pip python3-venv python3-dev wget" >> sysdeps_run.txt && \
+    echo "python3-pip python3-venv python3-dev wget zstd" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 

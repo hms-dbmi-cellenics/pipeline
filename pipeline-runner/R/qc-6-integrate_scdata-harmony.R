@@ -2,6 +2,7 @@ run_harmony <- function(scdata_list, config, cells_id) {
   settings <- config$dataIntegration$methodSettings[["harmony"]]
   nfeatures <- settings$numGenes
   normalization <- settings$normalisation
+
   if (grepl("lognorm", normalization, ignore.case = TRUE)) {
     normalization <- "LogNormalize"
   }
@@ -15,71 +16,57 @@ run_harmony <- function(scdata_list, config, cells_id) {
     npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
   }
 
-  use_geosketch <- "downsampling" %in% names(config) && config$downsampling$method == "geosketch"
-
   scdata <- prepare_scdata_for_harmony(scdata_list, config, cells_id)
 
-  # we need RNA assay to compute the integrated matrix
-  Seurat::DefaultAssay(scdata) <- "RNA"
-
   # required pre-processing
+  # run PCA with npcs_for_pca for the elbow plot and the % of variance explained
+  use_geosketch <- is_geosketch(config)
+  percent_keep <- config$downsampling$methodSettings$geosketch$percentageToKeep
+
+  pca_reduction <- ifelse(use_geosketch, "pca.sketch", "pca")
+  new_reduction <- ifelse(use_geosketch, "harmony.sketch", "harmony")
+
   scdata <- scdata |>
-    Seurat::NormalizeData(normalization.method = normalization, verbose = FALSE) |>
-    Seurat::FindVariableFeatures(nfeatures = nfeatures, verbose = FALSE) |>
+    run_preprocessing(
+      normalization = normalization,
+      nfeatures = nfeatures,
+      use_geosketch = use_geosketch,
+      percent_keep = percent_keep
+    ) |>
     Seurat::ScaleData(verbose = FALSE) |>
-    # run PCA with npcs_for_pca for the elbow plot and the % of variance explained
-    Seurat::RunPCA(
-      npcs = npcs_for_pca,
-      verbose = FALSE
-    )
+    run_pca(npcs = npcs_for_pca, reduction_name = pca_reduction) |>
+    add_dispersions(normalization)
 
   # estimate number of PCs to be used downstream, for integration and clustering
   if (is.null(npcs)) {
-    scdata@misc[["active.reduction"]] <- "pca"
+    scdata@misc[["active.reduction"]] <- pca_reduction
     npcs <- get_npcs(scdata)
     message("Estimated number of PCs: ", npcs)
   }
 
-  # harmony ignores dims.use, using all dims available.
-  # https://github.com/immunogenomics/harmony/issues/151
-  # reduction.keys have to be globally unique, so PC_ fails
-  scdata <-
-    Seurat::RunPCA(
-      scdata,
-      npcs = npcs,
-      verbose = FALSE,
-      reduction.name = "pca_for_harmony",
-      reduction.key = "PCh_"
-    )
+  scdata <- Seurat::IntegrateLayers(
+    scdata,
+    method = Seurat::HarmonyIntegration,
+    orig = pca_reduction,
+    new.reduction = new_reduction,
+    dims = 1:npcs,
+    verbose = FALSE
+  )
 
-  # downsample
-  # main function
   if (use_geosketch) {
-    scdata <-
-      RunGeosketchHarmony(
-        scdata,
-        group.by.vars = "samples",
-        reduction = "pca_for_harmony",
-        npcs = npcs,
-        config
-      )
-  } else {
-    scdata <-
-      harmony::RunHarmony(
-        scdata,
-        group.by.vars = "samples",
-        reduction.use = "pca_for_harmony",
-        dims.use = 1:npcs
-      )
+    scdata <- project_geosketch_integration(
+      scdata,
+      npcs,
+      sketched_reduction = "harmony.sketch",
+      full_reduction = "harmony"
+    )
   }
 
-  scdata <- add_dispersions(scdata, normalization)
   scdata@misc[["numPCs"]] <- npcs
-  scdata@misc[["active.reduction"]] <- "harmony"
+  scdata@misc[["active.reduction"]] <- new_reduction
 
   return(scdata)
 }
-
 
 prepare_scdata_for_harmony <- function(scdata_list, config, cells_id) {
   # pre-process
@@ -91,42 +78,6 @@ prepare_scdata_for_harmony <- function(scdata_list, config, cells_id) {
   if (length(exclude_groups) > 0) {
     scdata <- remove_genes(scdata, exclude_groups)
   }
-
-  return(scdata)
-}
-
-
-RunGeosketchHarmony <- function(scdata,
-                                group.by.vars,
-                                reduction,
-                                npcs,
-                                config) {
-  set.seed(RANDOM_SEED)
-  perc_num_cells <-
-    config$downsampling$methodSettings$geosketch$percentageToKeep
-  geosketch_list <- run_geosketch(
-    scdata,
-    dims = npcs,
-    perc_num_cells = perc_num_cells,
-    reduction = reduction
-  )
-
-  scdata_sketch_integrated <-
-    harmony::RunHarmony(
-      geosketch_list$sketch,
-      group.by.vars = "samples",
-      reduction.use = reduction,
-      dims.use = 1:npcs,
-    )
-  scdata_sketch_integrated@misc[["active.reduction"]] <- "harmony"
-
-  scdata <- learn_from_sketches(
-    geosketch_list$scdata,
-    geosketch_list$sketch,
-    scdata_sketch_integrated,
-    dims = npcs,
-    reduction = reduction
-  )
 
   return(scdata)
 }

@@ -27,9 +27,10 @@
 #' @return a list with the integrated seurat object, the cell ids, the config and the plot values.
 #' @export
 #'
-integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name = "dataIntegration") {
+integrate_scdata <- function(
+  scdata_list, config, sample_id, cells_id, task_name = "dataIntegration"
+) {
 
-  message("Started data integration")
   method <- config$dataIntegration$method
 
   if (length(scdata_list) == 1) {
@@ -37,14 +38,19 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
     message("Only one sample detected or method is non integrate.")
   }
 
+  # customize default geosketch config for first run
+  config <- customize_downsampling_config(config, scdata_list)
+
   # integrate
   integration_function <- get(paste0("run_", method))
   scdata_integrated <- integration_function(scdata_list, config, cells_id)
 
-  if (methods::is(scdata_integrated[['RNA']], 'Assay5'))
-    scdata_integrated[['RNA']] <- SeuratObject::JoinLayers(scdata_integrated[['RNA']])
-
-  message("Finished data integration")
+  # join layers for RNA assay for worker 
+  rna_assay <- scdata_integrated[["RNA"]]
+  if (methods::is(rna_assay, "Assay5")) {
+    rna_assay <- SeuratObject::JoinLayers(rna_assay)
+    scdata_integrated[["RNA"]] <- rna_assay
+  }
 
   # Update config numPCs with estimated or user provided nPCs
   config$dimensionalityReduction$numPCs <- scdata_integrated@misc$numPCs
@@ -53,7 +59,8 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 
   plots <- generate_elbow_plot_data(scdata_integrated, task_name, var_explained)
 
-  # the result object will have to conform to this format: {data, config, plotData : {plot1, plot2}}
+  # the result object will have to conform to this format:
+  # {data, config, plotData : {plot1, plot2}}
   result <- list(
     data = scdata_integrated,
     new_ids = cells_id,
@@ -62,7 +69,179 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
   )
 
   return(result)
+}
 
+run_preprocessing <- function(scdata, normalization, nfeatures, use_geosketch = FALSE, percent_keep = NULL) {
+
+  # for SCT we still:
+  # - log-normalize: for gene expression plots
+  # - find variable features: for gene list dispersions in Data Exploration
+  is_sct <- normalization == "SCT"
+
+  scdata <-
+    Seurat::NormalizeData(
+      scdata,
+      normalization.method = "LogNormalize",
+      verbose = FALSE
+    ) |>
+    Seurat::FindVariableFeatures(
+      nfeatures = nfeatures,
+      verbose = FALSE
+    )
+
+  if (is_sct) {
+    # SCTransform replaces NormalizeData, ScaleData, and FindVariableFeatures
+    scdata <- Seurat::SCTransform(
+      scdata,
+      assay = Seurat::DefaultAssay(scdata),
+      vst.flavor = "v2",
+      conserve.memory = FALSE,
+      variable.features.n = nfeatures,
+      verbose = FALSE
+    )
+  }
+
+  if (use_geosketch) {
+    # for SCT: assay isn't split into layers so num_cells is total to keep
+    num_samples <- length(unique(scdata$samples))
+    num_cells <- ncol(scdata) * (percent_keep / 100)
+    num_cells <- ifelse(is_sct, num_cells, num_cells / num_samples)
+    num_cells <- round(num_cells)
+
+    message(
+      "Sketching data with Geosketch, keeping ",
+      num_cells, ifelse(is_sct, " cells.", " cells per sample.")
+    )
+
+    scdata <- Seurat::SketchData(
+      object = scdata,
+      ncells = num_cells,
+      method = "LeverageScore",
+      sketched.assay = "sketch"
+    )
+
+    # run FindVariableFeatures again after SketchData
+    # fewer cells so variable features may change
+    # https://github.com/satijalab/seurat/issues/9015#issuecomment-2187112098
+    if (!is_sct) {
+      scdata <- Seurat::FindVariableFeatures(
+        scdata,
+        nfeatures = nfeatures,
+        verbose = FALSE
+      )
+    }
+  }
+
+  return(scdata)
+}
+
+run_pca <- function(scdata, npcs, reduction_name = "pca") {
+
+  # if BPCells write scale.data for default assay (RNA, SCT, or sketch)
+  # default assay is used by RunPCA
+  assay <- Seurat::DefaultAssay(scdata)
+  is_bpcells <- is(scdata[[assay]]$scale.data, "IterableMatrix")
+
+  if (is_bpcells) {
+    data_dir <- tempfile()
+    scale_data <- scdata[[assay]]$scale.data
+    disk_scale_data <- BPCells::write_matrix_dir(scale_data, data_dir)
+    scdata[[assay]]$scale.data <- disk_scale_data
+  }
+
+  # run PCA
+  message("PCA running from assay: ", assay)
+  scdata <- Seurat::RunPCA(
+    scdata,
+    npcs = npcs,
+    reduction.name = reduction_name,
+    verbose = FALSE
+  )
+  message("PCA saved to reduction: ", reduction_name)
+
+  if (is_bpcells) {
+    # cleanup restore scale.data to original object (removed disk backing)
+    unlink(data_dir, recursive = TRUE)
+    scdata[[assay]]$scale.data <- scale_data
+  }
+
+  return(scdata)
+}
+
+project_geosketch_integration <- function(
+  scdata,
+  npcs,
+  sketched_reduction,
+  full_reduction,
+  is_unisample = FALSE,
+  assay = "RNA"
+) {
+  message("Projecting integration using:",
+    "\n- sketched reduction: ", sketched_reduction,
+    "\n- original assay: ", assay
+  )
+
+  if (!is_unisample) {
+    # project full data onto integrated DR from sketch
+    scdata <- Seurat::ProjectIntegration(
+      object = scdata,
+      assay = assay,
+      sketched.assay = "sketch",
+      reduction = sketched_reduction,
+      reduction.name = full_reduction,
+      verbose = FALSE
+    )
+  }
+
+  # for unisample: projects full dataset to sketch PCA
+
+  # for all: called to pre-compute weights and neighbors (stored in tools),
+  # for future projections (clustering and UMAP)
+
+  # NOTE: subsequent calls to ProjectData require same npcs as here
+  scdata <- Seurat::ProjectData(
+    object = scdata,
+    assay = assay,
+    sketched.assay = "sketch",
+    full.reduction = full_reduction,
+    sketched.reduction = sketched_reduction,
+    dims = 1:npcs,
+    verbose = FALSE
+  )
+
+  message("Projected integration saved to: ", full_reduction)
+  # set to RNA assay prior to upload for worker
+  Seurat::DefaultAssay(scdata) <- "RNA"
+  return(scdata)
+}
+
+is_geosketch <- function(config) {
+  "downsampling" %in% names(config) && config$downsampling$method == "geosketch"
+}
+
+customize_downsampling_config <- function(config, scdata_list) {
+  # for first run, downsampling method is "default"
+  is_first_run <- isTRUE(config$downsampling$method == "default")
+
+  # dont alter config if not first run
+  if (!is_first_run) return(config)
+
+  # its first run: do we need to geosketch?
+  num_cells <- sum(sapply(scdata_list, ncol))
+
+  # if not: remove downsampling config
+  if (num_cells < MIN_CELLS_GEOSKETCH) {
+    config$downsampling <- NULL
+    return(config)
+  }
+
+  # if yes: add methodSettings and default to 50,000 cells
+  config$downsampling$methodSettings <- list(
+    geosketch = list(
+      percentageToKeep = DEFAULT_CELLS_GEOSKETCH / num_cells * 100
+    )
+  )
+  return(config)
 }
 
 
@@ -80,11 +259,12 @@ integrate_scdata <- function(scdata_list, config, sample_id, cells_id, task_name
 create_scdata <- function(scdata_list, cells_id, merge_data = FALSE) {
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list, merge_data)
+
+  # we re-write matrix dir before any preprocessing
+  # that would create dependencies on original matrix dirs
+  merged_scdatas <- write_merged_matrix_dir(merged_scdatas)
+
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
-
-  if (methods::is(merged_scdatas[['RNA']], 'Assay5'))
-    merged_scdatas[['RNA']] <- SeuratObject::JoinLayers(merged_scdatas[['RNA']])
-
   return(merged_scdatas)
 }
 
@@ -124,30 +304,60 @@ merge_scdata_list <- function(scdata_list, merge_data = FALSE) {
   if (length(scdata_list) == 1) {
     scdata <- scdata_list[[1]]
   } else {
-    scdata <- merge(scdata_list[[1]], y = scdata_list[-1], merge.data = merge_data)
+    scdata <- merge(
+      scdata_list[[1]],
+      y = scdata_list[-1],
+      merge.data = merge_data
+    )
   }
 
   return(scdata)
 }
 
+write_merged_matrix_dir <- function(scdata) {
+  layer_names <- SeuratObject::Layers(scdata)
+  first_layer <- SeuratObject::LayerData(scdata, layer_names[1])
+
+  if (methods::is(first_layer, "IterableMatrix")) {
+    # temporarily join layers to write out single matrix dir
+    scdata[["RNA"]] <- SeuratObject::JoinLayers(scdata[["RNA"]])
+
+    # re-write disk backing
+    matrix_dir <- file.path(tempdir(), "matrix_dir")
+    message("Writing merged matrix dir to: ", matrix_dir)
+    counts <- BPCells::write_matrix_dir(scdata[["RNA"]]$counts, matrix_dir)
+
+    # restore consolidated counts then split
+    scdata[["RNA"]]$counts <- counts
+    scdata[["RNA"]] <- split(scdata[["RNA"]], f = scdata$samples)
+  }
+
+  return(scdata)
+}
 
 add_dispersions <- function(scdata, method = "LogNormalize") {
 
   if (method == "default") {
     vars <- Seurat::HVFInfo(scdata)
-  } else if (method == "SCT" && Seurat::DefaultAssay(scdata) == "integrated") {
-    vars <- Seurat::HVFInfo(object = scdata, assay = "integrated", selection.method = "sctransform")
   } else {
-    vars <- Seurat::HVFInfo(object = scdata, assay = "RNA", selection.method = "vst")
+    # For LogNormalize, HVF info is in RNA assay with vst method
+    vars <- Seurat::HVFInfo(scdata, assay = "RNA", method = "vst")
   }
 
-  # ensure colnames are as they are when run with selection.method = "vst"
-  # otherwise will break the listGenes worker task for SCT normalized data
-  colnames(vars) <- c("mean", "variance", "variance.standardized")
+  # worker task listGenes needs one of these columns
+  # residual_variance from sctransform, variance.standardized from vst
+  cols_to_check <- c("residual_variance", "variance.standardized")
+  if (!any(cols_to_check %in% colnames(vars))) {
+    stop(paste(
+      "Missing columns in HVFInfo output. Expected columns:",
+      paste(cols_to_check, collapse = ", ")
+    ))
+  }
 
   annotations <- scdata@misc[["gene_annotations"]]
   vars$SYMBOL <- annotations$name[match(rownames(vars), annotations$input)]
   vars$ENSEMBL <- rownames(vars)
+
   scdata@misc[["gene_dispersion"]] <- vars
   return(scdata)
 }
@@ -155,11 +365,18 @@ add_dispersions <- function(scdata, method = "LogNormalize") {
 
 get_explained_variance <- function(scdata) {
   # Compute explained variance for plotting and numPCs estimation.
-  # It can be computed from pca or other reductions such as mnn
-  if (scdata@misc[["active.reduction"]] == "mnn") {
-    var_explained <- scdata@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
+  # It can be computed from pca (or pca.sketch) or other reductions such as mnn
+  active_reduction <- scdata@misc[["active.reduction"]]
+  if (grepl("mnn", active_reduction)) {
+    message("Extracting explained variance from RunFastMNN tool")
+    var_explained <-
+      scdata@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
+
   } else {
-    eig_values <- (scdata@reductions$pca@stdev)^2
+    is_geosketch <- "sketch" %in% names(scdata@assays)
+    pca_reduction <- ifelse(is_geosketch, "pca.sketch", "pca")
+    message("Calculating explained variance from: ", pca_reduction)
+    eig_values <- (scdata@reductions[[pca_reduction]]@stdev)^2
     var_explained <- eig_values / sum(eig_values)
   }
   return(var_explained)
@@ -359,7 +576,8 @@ build_mitochondrial_gene_list <- function(all_genes) {
 add_metadata <- function(scdata, scdata_list) {
   message("Adding metadata.")
   # misc data is duplicated in each of the samples and it does not
-  # need to be merge so pick the data in the first one and add it to the merged dataset
+  # need to be merge so pick the data in the first one
+  # and add it to the merged dataset
   scdata@misc <- scdata_list[[1]]@misc
   experiment_id <- scdata_list[[1]]@misc[["experimentId"]]
 
@@ -370,7 +588,8 @@ add_metadata <- function(scdata, scdata_list) {
 
   scdata@misc[["gene_annotations"]] <- format_annot(annot_list)
 
-  # We store the color pool in a slot in order to be able to access it during configureEmbedding
+  # We store the color pool in a slot in order to
+  # be able to access it during configureEmbedding
   scdata@misc[["color_pool"]] <- get_color_pool()
   scdata@misc[["experimentId"]] <- experiment_id
   scdata@misc[["ingestionDate"]] <- Sys.time()
@@ -406,4 +625,3 @@ generate_elbow_plot_data <- function(scdata_integrated, task_name, var_explained
 
   return(plots)
 }
-

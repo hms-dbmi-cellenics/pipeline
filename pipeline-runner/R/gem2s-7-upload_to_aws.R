@@ -20,6 +20,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   scdata_list <- prev_out$scdata_list
   config <- prev_out$config
   qc_config <- prev_out$qc_config
+  matrix_dir_list <- prev_out$matrix_dir_list
   default_qc_config <- prev_out$default_qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
 
@@ -29,12 +30,18 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     cell_sets <- get_cell_sets(scdata_list, input)
   } else {
     message("Constructing cell sets for subset experiment ...")
-    cell_sets <- get_subset_cell_sets(scdata_list, input, prev_out, disable_qc_filters)
+    cell_sets <- get_subset_cell_sets(
+      scdata_list,
+      input,
+      prev_out,
+      disable_qc_filters
+    )
   }
 
   # cell sets file to s3
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
 
+  message("\nUploading cell sets data to S3:")
   put_object_in_s3(pipeline_config,
     bucket = pipeline_config$cell_sets_bucket,
     object = charToRaw(cell_sets_data),
@@ -42,19 +49,45 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   )
 
   # remove previous existing data
-  remove_bucket_folder(pipeline_config, pipeline_config$source_bucket, experiment_id)
+  remove_bucket_folder(
+    pipeline_config,
+    pipeline_config$source_bucket,
+    experiment_id
+  )
 
   for (sample in names(scdata_list)) {
-    message("Uploading sample ", sample, " object to S3 ...")
     fpath <- file.path(tempdir(), "experiment.rds")
+    message("\nSaving rds for sample: ", sample)
+
     saveRDS(scdata_list[[sample]], fpath)
+    message("rds file size: ", fs::file_size(fpath))
+
     # can only upload up to 50Gb because multipart uploads work by uploading
     # smaller chunks (parts) and the max amount of parts is 10,000.
-    put_object_in_s3_multipart(pipeline_config,
+    message("\nUploading rds to S3:")
+    put_object_in_s3_multipart(
+      pipeline_config,
       bucket = pipeline_config$source_bucket,
       object = fpath,
       key = file.path(experiment_id, sample, "r.rds")
     )
+
+    # if this is bpcells also upload matrix_dir
+    matrix_dir <- matrix_dir_list[[sample]]
+
+    if (!is.null(matrix_dir)) {
+      message("\nTarring sample matrix dir: ", matrix_dir)
+      tarfile <- tar_matrix_dir(sample, matrix_dir)
+      message("Tar file size: ", fs::file_size(tarfile))
+
+      message("\nUploading tarred matrix dir:")
+      put_object_in_s3_multipart(
+        pipeline_config,
+        bucket = pipeline_config$source_bucket,
+        object = tarfile,
+        key = file.path(experiment_id, sample, "matrix_dir.tar.zst")
+      )
+    }
   }
 
   message("Samples uploaded")
@@ -83,6 +116,30 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   message("\nUpload to AWS step complete.")
   return(res)
+}
+
+tar_matrix_dir <- function(id, matrix_dir) {
+
+  # where we write the tar file
+  tarfile <- file.path(tempdir(), paste0(id, "_matrix_dir.tar.zst"))
+
+  # move to parent of matrix_dir and tar it
+  matrix_dir_parent <- dirname(matrix_dir)
+
+  current_dir <- getwd()
+  setwd(matrix_dir_parent)
+  tar_zstd(tarfile, files = basename(matrix_dir))
+  setwd(current_dir)
+  return(tarfile)
+}
+
+# TODO: newer R utils::tar supports zstd
+tar_zstd <- function(tarfile, files) {
+  system(paste("tar --zstd -cf", tarfile, files))
+}
+
+untar_zstd <- function(tarfile, exdir) {
+  system(paste("tar --zstd -xf", tarfile, "-C", exdir))
 }
 
 #' Create initial cell sets object
@@ -267,7 +324,7 @@ extract_subset_user_metadata <- function(subset_cellsets) {
       parts[1]
     }
   }, USE.NAMES = FALSE)
-  
+
   metadata[, metadata_track := track_names]
 
   metadata <- metadata[, c("metadata_track", "name")]
@@ -438,24 +495,24 @@ build_scratchpad_cellsets <- function(color_pool, subset_cellsets) {
 sync_metadata_from_cellsets <- function(scdata, cellsets) {
   # Extract metadata cellsets only
   metadata <- cellsets[type == "metadata"]
-  
+
   if (nrow(metadata) == 0) {
     # No metadata cellsets to sync
     return(scdata)
   }
-  
+
   # Get the cell IDs from scdata
   scdata_cell_ids <- scdata$cells_id
-  
+
   # Build a mapping of cell_id -> values for each metadata track
   track_mappings <- list()
-  
+
   for (i in seq_len(nrow(metadata))) {
     row <- metadata[i]
     key <- row$key
     cell_id <- row$cell_id
     value <- row$name
-    
+
     # Extract track name from key format "TrackName-Value"
     # Split by hyphen and use all but the last part as the track name
     parts <- strsplit(key, "-")[[1]]
@@ -464,38 +521,38 @@ sync_metadata_from_cellsets <- function(scdata, cellsets) {
     } else {
       track_name <- parts[1]
     }
-    
+
     # Make column name syntactically valid
     valid_track_name <- make.names(track_name)
-    
+
     # Initialize track mapping if needed
     if (!valid_track_name %in% names(track_mappings)) {
       track_mappings[[valid_track_name]] <- list()
     }
-    
+
     # Store the new value for this cell_id
     track_mappings[[valid_track_name]][[as.character(cell_id)]] <- value
   }
-  
+
   # Create or update each metadata track in the Seurat object
   for (track_name in names(track_mappings)) {
     # Initialize with NA for all cells
     col_values <- rep(NA_character_, length(scdata_cell_ids))
-    
+
     # Populate with values from cellsets
     for (i in seq_len(length(scdata_cell_ids))) {
       cell_id <- scdata_cell_ids[i]
       cell_id_str <- as.character(cell_id)
-      
+
       # Look up the value for this cell in cellsets
       if (cell_id_str %in% names(track_mappings[[track_name]])) {
         col_values[i] <- track_mappings[[track_name]][[cell_id_str]]
       }
     }
-    
+
     # Add or update the column in the Seurat object
     scdata@meta.data[[track_name]] <- col_values
   }
-  
+
   return(scdata)
 }

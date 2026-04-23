@@ -11,7 +11,10 @@ remove_bucket_folder <- function(pipeline_config, bucket, folder) {
     )
   }
 
-  message("Removed files from ", bucket, ": ", paste0(keys_to_remove, sep=' '))
+  message(
+    "\nRemoved files from ", bucket, ":",
+    "\n- ", paste0(keys_to_remove, sep = "\n- ")
+  )
 }
 
 remove_cell_ids <- function(pipeline_config, experiment_id) {
@@ -21,28 +24,33 @@ remove_cell_ids <- function(pipeline_config, experiment_id) {
 upload_cells_id <- function(pipeline_config, object_key, cells_id) {
   object_data <- tempfile()
   saveRDS(cells_id, file = object_data)
-  put_object_in_s3(pipeline_config, pipeline_config$cells_id_bucket, object_data, object_key)
+  message("\nUploading filtered cell ids to S3:")
+  put_object_in_s3(
+    pipeline_config,
+    pipeline_config$cells_id_bucket,
+    object_data,
+    object_key
+  )
   return(object_key)
 }
 
 load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$processed_bucket
   message("Loading processed scdata")
-  message(bucket)
-  
+
   # List the objects under the experiment_id folder
   objects_response <- s3$list_objects_v2(
     Bucket = bucket,
     Prefix = paste0(experiment_id, "/")
   )
-  
+
   # Extract object keys
   object_keys <- vapply(objects_response$Contents, `[[`, "", "Key")
-  
+
   # Identify the appropriate file
   rds_file <- grep("r.rds$", object_keys, value = TRUE)
   qs_file <- grep("r.qs$", object_keys, value = TRUE)
-  
+
   if (length(qs_file) > 0) {
     message("Found .qs file: ", qs_file)
     key_to_load <- qs_file
@@ -54,13 +62,13 @@ load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
   } else {
     stop("No .qs or .rds files found")
   }
-  
+
   # Get the object
   c(body, ...rest) %<-% s3$get_object(
     Bucket = bucket,
     Key = key_to_load
   )
-  
+
   if (load_rds) {
     # Load with readRDS
     conn <- gzcon(rawConnection(body))
@@ -77,19 +85,20 @@ load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
       unlink(tmp_file)
     })
   }
-  
+
   return(obj)
 }
 
 # get_nnzero will return how many non-zero counts the count matrix has
 # it is used to order samples according to their size
 get_nnzero <- function (x) {
-  return(length(x@assays[["RNA"]]$counts@i))
+  return(sum(x$nFeature_RNA))
 }
 
 order_by_size <- function(scdata_list) {
   return(scdata_list[order(sapply(scdata_list, get_nnzero))])
 }
+
 
 load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$source_bucket
@@ -97,26 +106,108 @@ load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
     Bucket = bucket,
     Prefix = experiment_id
   )
-  samples <- objects$Contents
+  experiment_files <- objects$Contents
+  message(
+    "\nLoading source scdata for experiment: ", experiment_id,
+    "\n- bucket: ", bucket
+  )
 
+  sample_files <- group_files_by_sample(experiment_files)
+
+  # Load each sample
   scdata_list <- list()
-  for (sample in samples) {
-    key <- sample$Key
+  for (sample_id in names(sample_files)) {
+    file_keys <- sample_files[[sample_id]]
+    rds_key <- file_keys[["r.rds"]]
+    matrix_dir_key <- file_keys[["matrix_dir.tar.zst"]]
 
-    c(body, ...rest) %<-% s3$get_object(
-      Bucket = bucket,
-      Key = paste(key, sep = "/")
-    )
-    conn <- gzcon(rawConnection(body))
-    obj <- readRDS(conn)
-    sample_id <- strsplit(key, "/")[[1]][[2]]
-    scdata_list[[sample_id]] <- obj
-    # close connection explicitly or R will run out of available connections and fail
-    close(conn)
+    scdata <- load_source_rds(s3, rds_key, bucket)
+
+    if (!is.null(matrix_dir_key)) {
+      # untar and update bpcells matrix dir
+      new_matrix_dir <-
+        load_source_matrix_dir(s3, matrix_dir_key, bucket, sample_id)
+
+      scdata@assays$RNA@layers <- lapply(
+        scdata@assays$RNA@layers,
+        replace_matrix_dir_paths,
+        new_matrix_dir
+      )
+    }
+
+    scdata_list[[sample_id]] <- scdata
   }
 
-  # order samples according to their size to make the merge independent of samples order in the UI
+  # order samples according to their size
+  # to make the merge independent of samples order in the UI
   return(order_by_size(scdata_list))
+}
+
+load_source_rds <- function(s3, rds_key, bucket) {
+  message("... loading key ", rds_key)
+
+  c(body, ...rest) %<-% s3$get_object(
+    Bucket = bucket,
+    Key = rds_key
+  )
+
+  conn <- gzcon(rawConnection(body))
+  obj <- readRDS(conn)
+  # close connection explicitly or
+  # R will run out of available connections and fail
+  close(conn)
+  return(obj)
+}
+
+load_source_matrix_dir <- function(s3, matrix_dir_key, bucket, sample_id) {
+  message("... loading key ", matrix_dir_key)
+
+  # download directly to tar file
+  new_matrix_dir <- file.path(tempdir(), paste0(sample_id, "_matrix_dir"))
+  tarfile <- paste0(new_matrix_dir, ".tar.zst")
+
+  s3$download_file(
+    Bucket = bucket,
+    Key = matrix_dir_key,
+    Filename = tarfile
+  )
+
+  # extract contents ({sample}_matrix_dir/*) to tempdir
+  untar_zstd(tarfile, exdir = tempdir())
+  unlink(tarfile)
+  return(new_matrix_dir)
+}
+
+# Update BPCells matrix paths after extraction
+replace_matrix_dir_paths <- function(obj, new_dir) {
+  new_dir <- normalizePath(new_dir)
+  if (!dir.exists(new_dir))
+    stop(new_dir, " doesn't exist. Please move BPcells folder first.")
+
+  if (inherits(obj, "MatrixDir")) {
+    obj@dir <- new_dir
+    return(obj)
+  }
+  if (is.list(obj)) {
+    return(lapply(obj, replace_matrix_dir_paths, new_dir))
+  }
+  for (sn in slotNames(obj)) {
+    slot(obj, sn) <- replace_matrix_dir_paths(slot(obj, sn), new_dir)
+  }
+  return(obj)
+}
+
+group_files_by_sample <- function(experiment_files) {
+  # Group files by sample
+  sample_files <- list()
+  for (experiment_file in experiment_files) {
+    key <- experiment_file$Key
+    parts <- strsplit(key, "/")[[1]]
+    sample_id <- parts[2]
+    file_name <- parts[3]
+    sample_files[[sample_id]][[file_name]] <- key
+  }
+  return(sample_files)
 }
 
 # reload_data_from_s3 will reload:
@@ -129,7 +220,7 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
 
   # TODO: remove if block
   # this never runs, because embed and cluster runs in the worker if modified.
-  # If the task is after data integration, we need to get scdata from processed_matrix
+  # If the task is after data integration, we need scdata from processed_matrix
   if (match(task_name, task_names) > integration_index) {
     return(load_processed_scdata(s3, pipeline_config, experiment_id))
   }
@@ -145,14 +236,16 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
     Bucket = pipeline_config$cells_id_bucket,
     Prefix = paste0(experiment_id, "/", task_name, "/")
   )
-  message(pipeline_config$cells_id_bucket)
-  message(paste(experiment_id, "r.rds", sep = "/"))
+  message("- bucket: ", pipeline_config$cells_id_bucket)
+  message("- task name: ", task_name)
+
   cells_id <- list()
-  message("Total of ", length(object_list$Contents), " samples.")
+  message("\nTotal of ", length(object_list$Contents), " samples:")
   task_names <- names(tasks)
   integration_index <- match("dataIntegration", task_names)
 
-  # after data integration the cell ids are no longer used because there is no filtering
+  # after data integration the cell ids
+  # are no longer used because there is no filtering
   # so they are not loaded
   if (match(task_name, task_names) <= integration_index) {
     for (object in object_list$Contents) {
@@ -160,9 +253,13 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
       sample_id <- tools::file_path_sans_ext(basename(key))
 
       if (!sample_id %in% samples) {
-        message("Unexpected filtered ids object for sample ", sample_id, ". Filtered cell ids' objects for removed samples
-        should be removed in the first step of the QC pipeline after gem2s is triggered (due to sample removal).
-        Removing it now.")
+        message(
+          "Unexpected filtered ids object for sample ", sample_id,
+          ". Filtered cell ids' objects for removed samples ",
+          "should be removed in the first step of the QC pipeline ",
+          "after gem2s is triggered (due to sample removal). ",
+          "Removing it now."
+        )
         s3$delete_object(
           Bucket = pipeline_config$cells_id_bucket,
           Key = key
@@ -178,7 +275,10 @@ load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tas
       writeBin(body, con = id_file)
       sample <- readRDS(id_file)
       cells_id[[sample_id]] <- sample[[sample_id]]
-      message("Sample ", sample_id, " with ", length(cells_id[[sample_id]]), " cells")
+      message(
+        "- Sample ", sample_id,
+        " with ", length(cells_id[[sample_id]]), " cells"
+      )
     }
   }
   return(cells_id)
@@ -209,10 +309,7 @@ build_qc_response <- function(id, input, error, pipeline_config) {
 send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
   c(config, plot_data = plotData) %<-% output
 
-  # Anything stored in the config by the pipeline will return to the api if we don't remove it manually
-  # Remove anything you don't want to end up in sql processing config
-  # aws_config is only present in development and contains mock AWS credentials
-  config <- config[!names(config) %in% c("auth_JWT", "api_url", "clustering_should_run", "metadata_s3_path", "cl_metadata_bucket", "aws_config")]
+  config <- config[!names(config) %in% exclude_from_config]
 
   # upload output
   id <- ids::uuid()
@@ -224,16 +321,21 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
     )
   )
 
-  message("Uploading results to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
-  put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id)
+  message("\nUploading results to S3:")
+  put_object_in_s3(
+    pipeline_config,
+    pipeline_config$results_bucket,
+    charToRaw(output),
+    id
+  )
 
-  message("Sending to SNS topic ", pipeline_config$sns_topic)
+  message("\nSending to SNS topic: ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
 
-  message("Building the message")
+  message("... building the message")
   msg <- build_qc_response(id, input, FALSE, pipeline_config)
 
-  message("Publishing the message")
+  message("... publishing the message")
   result <- sns$publish(
     Message = RJSONIO::toJSON(msg),
     TopicArn = pipeline_config$sns_topic,
@@ -245,13 +347,13 @@ send_output_to_api <- function(pipeline_config, input, plot_data_keys, output) {
       )
     )
   )
-  message("Done publishing")
+  message("... done publishing")
 
   return(result$MessageId)
 }
 
 send_pipeline_update_to_api <- function(pipeline_config, experiment_id, task_name, data, input, string_value) {
-  message("Sending to SNS topic ", pipeline_config$sns_topic)
+  message("\nSending to SNS topic ", pipeline_config$sns_topic)
   sns <- paws::sns(config = pipeline_config$aws_config)
   job_id <- Sys.getenv("AWS_BATCH_JOB_ID", unset = "")
 
@@ -310,8 +412,12 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
         )
       )
 
-      message("Uploading config to S3 bucket", pipeline_config$results_bucket, " at key ", id, "...")
-      put_object_in_s3(pipeline_config, pipeline_config$results_bucket, charToRaw(output), id)
+      message("\nUploading config to S3:")
+      put_object_in_s3(
+        pipeline_config,
+        pipeline_config$results_bucket,
+        charToRaw(output), id
+      )
 
       response <- build_qc_response(id, input, process_name, pipeline_config)
     }
@@ -368,10 +474,19 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
       )
     )
 
-    message("Uploading plotData to S3 bucket", pipeline_config$plot_data_bucket, " at key ", id, "...")
+    tags <- paste0(
+      "experimentId=", experiment_id,
+      "&plotUuid=", plot_data_name
+    )
 
-    tags <- paste0("experimentId=", experiment_id , "&plotUuid=" , plot_data_name)
-    put_object_in_s3(pipeline_config, pipeline_config$plot_data_bucket, charToRaw(output), id, tags)
+    message("\nUploading plot data to S3:")
+    put_object_in_s3(
+      pipeline_config,
+      pipeline_config$plot_data_bucket,
+      charToRaw(output),
+      id,
+      tags
+    )
   }
 
   return(plot_data_keys)
@@ -380,16 +495,69 @@ send_plot_data_to_s3 <- function(pipeline_config, experiment_id, output) {
 upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   object_key <- paste0(experiment_id, "/r.qs")
 
-  message("Saving object for key: ", object_key, '...')
+  message("\nSaving count matrix.")
   count_matrix <- tempfile()
   qs::qsave(data, file = count_matrix)
 
-  message("Count matrix file size : ", fs::file_size(count_matrix))
-  message("Uploading updated count matrix to S3 bucket ", pipeline_config$processed_bucket, " at key ", object_key, "...")
+  message("Count matrix file size: ", fs::file_size(count_matrix))
 
-  put_object_in_s3_multipart(pipeline_config, pipeline_config$processed_bucket, count_matrix, object_key)
+  message("\nUploading count matrix to S3:")
+  put_object_in_s3_multipart(
+    pipeline_config,
+    pipeline_config$processed_bucket,
+    count_matrix,
+    object_key
+  )
 
   return(object_key)
+}
+
+upload_matrix_dir_to_s3 <- function(pipeline_config, experiment_id, data) {
+  object_key <- paste0(experiment_id, "/matrix_dir.tar.zst")
+  message("\nSaving matrix dir to: ", object_key)
+
+  # should just be one
+  matrix_dir <- get_matrix_dirs(data)
+
+  message("\nTarring experiment matrix dir: ", matrix_dir)
+  tarfile <- tar_matrix_dir(experiment_id, matrix_dir)
+  message("Tar file size: ", fs::file_size(tarfile))
+
+  message("\nUploading matrix dir to S3:")
+  put_object_in_s3_multipart(
+    pipeline_config,
+    pipeline_config$processed_bucket,
+    tarfile,
+    object_key
+  )
+}
+
+find_matrix_dir_paths <- function(obj) {
+  matrix_dir_paths <- c()
+  if (inherits(obj, "MatrixDir")) {
+    return(obj@dir)
+  }
+  if (is.list(obj)) {
+    res <- lapply(obj, find_matrix_dir_paths)
+    return(unlist(res))
+  }
+  for (sn in slotNames(obj)) {
+    matrix_dir_paths <- c(
+      matrix_dir_paths,
+      find_matrix_dir_paths(slot(obj, sn)))
+  }
+  return(matrix_dir_paths)
+}
+
+get_matrix_dirs <- function(scdata) {
+
+  matrix_dirs <- lapply(
+    scdata@assays$RNA@layers,
+    find_matrix_dir_paths
+  )
+
+  matrix_dirs <- unique(unlist(matrix_dirs))
+  return(matrix_dirs)
 }
 
 # based off of vitessce-python demo
@@ -475,10 +643,7 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
   setwd(workdir)
 
   # upload ome.zarr.zip to s3
-  message(
-    "Uploading image data to bucket: ", pipeline_config$spatial_image_bucket,
-    ' at key: ', img_id, '...')
-
+  message("\nUploading image data to S3:")
   put_object_in_s3(
     pipeline_config,
     pipeline_config$spatial_image_bucket,
@@ -486,15 +651,18 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
     key = img_id
   )
 
-  # create sql entry in sample_file, (also creates entry in sample_to_sample_file_map)
+  # create sql entry in sample_file,
+  # (also creates entry in sample_to_sample_file_map)
   create_sample_file(
     api_url,
     experiment_id,
     sample_id,
-    'ome_zarr_zip',
+    "ome_zarr_zip",
     file.size(zip_path),
-    img_id, # gets used as s3_path by API
-    overwrite_existing, # FALSE for obj2s so that can have multiple ome_zarr_zip for single sample
+    # gets used as s3_path by API
+    img_id,
+    # FALSE for obj2s so that can have multiple ome_zarr_zip for single sample
+    overwrite_existing,
     authJWT
   )
 
@@ -550,8 +718,19 @@ upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
   }
 }
 
-put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging = NULL) {
-  message(sprintf("Putting %s in %s", key, bucket))
+put_object_in_s3 <- function(
+  pipeline_config,
+  bucket,
+  object,
+  key,
+  tagging = NULL
+) {
+
+  message(
+    "- bucket: ", bucket, "\n",
+    "- key: ", key
+  )
+
   s3 <- paws::s3(config = pipeline_config$aws_config)
 
   retry_count <- 0
@@ -565,11 +744,13 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging = NUL
         Body = object,
         Tagging = switch(!is.null(tagging), tagging)
       )
-      message("Object successfully uploaded to S3.")
+      message("... object successfully uploaded to S3.")
       return(response)
     }, error = function(e) {
       retry_count <<- retry_count + 1
-      message(sprintf("Upload failed. Retrying (%d/%d)...", retry_count, max_retries))
+      message(sprintf(
+        "... upload failed. Retrying (%d/%d)", retry_count, max_retries
+      ))
       # exponential back off, preventing sending a new request too fast
       Sys.sleep(2 ^ retry_count)
     })
@@ -581,9 +762,13 @@ put_object_in_s3 <- function(pipeline_config, bucket, object, key, tagging = NUL
 #' @param pipeline_config A Paws S3 config object, e.g. from `paws::s3()`.
 #' @param object The path to the file to be uploaded.
 #' @param bucket The name of the S3 bucket to be uploaded to, e.g. `my-bucket`.
-#' @param key The name to assign to the file in the S3 bucket, e.g. `path/to/file`.
+#' @param key The name to assign to the file in the S3 bucket e.g. `path/file`.
 put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
-  message(sprintf("Putting %s in %s from object %s", key, bucket, object))
+  message(
+    "- object: ", object, "\n",
+    "- bucket: ", bucket, "\n",
+    "- key: ", key
+  )
 
   s3 <- paws::s3(config = pipeline_config$aws_config)
   multipart <- s3$create_multipart_upload(
@@ -600,7 +785,6 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
       )
     }
   })
-  message("Uploading multiparts")
   resp <- try({
     parts <- upload_multipart_parts(s3, bucket, object, key, multipart$UploadId)
     s3$complete_multipart_upload(
@@ -613,12 +797,13 @@ put_object_in_s3_multipart <- function(pipeline_config, bucket, object, key) {
   return(resp)
 }
 
-# The limit for part numbers is 10000, so we have a limit on 50GB objects.
-# This can be increased by changing the number of megabytes in the part_size parameter
+# The limit for part numbers is 10000
+# aws cli uses 8mb default, and recommends up to 64mb for files >1G
 upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
   file_size <- file.size(object)
   megabyte <- 2^20
-  part_size <- 5 * megabyte
+  gigabyte <- 2^30
+  part_size <- ifelse(file_size > gigabyte, 64 * megabyte, 8 * megabyte)
   num_parts <- ceiling(file_size / part_size)
 
   con <- base::file(object, open = "rb")
@@ -626,18 +811,52 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
     close(con)
   })
   parts <- list()
+  tstart <- Sys.time()
   for (i in 1:num_parts) {
     part <- readBin(con, what = "raw", n = part_size)
-    part_resp <- s3$upload_part(
-      Body = part,
-      Bucket = bucket,
-      Key = key,
-      PartNumber = i,
-      UploadId = upload_id
-    )
+
+    if (i %% 10 == 0 || i == num_parts)
+      message("... uploading part ", i, "/", num_parts)
+
+    # Upload part with retries and exponential backoff
+    retry_count <- 0
+    max_retries <- 3
+    part_resp <- NULL
+
+    while (retry_count < max_retries) {
+      tryCatch({
+        part_resp <- s3$upload_part(
+          Body = part,
+          Bucket = bucket,
+          Key = key,
+          PartNumber = i,
+          UploadId = upload_id
+        )
+        break  # Exit loop on successful upload
+
+      }, error = function(e) {
+        retry_count <<- retry_count + 1
+        message("... error uploading part ", i, ": ", e$message)
+
+        if (retry_count < max_retries) {
+          wait_time <- 2 ^ retry_count
+          message(
+            "... retrying part ", i,
+            " (attempt ", retry_count, "/", max_retries, ")"
+          )
+          Sys.sleep(wait_time)
+        }
+      })
+    }
+
+    if (is.null(part_resp)) {
+      stop("Failed to upload part ", i, " after ", max_retries, " attempts")
+    }
+
     parts <- c(parts, list(list(ETag = part_resp$ETag, PartNumber = i)))
   }
-
+  ttask <- format(Sys.time() - tstart, digits = 2)
+  message("... upload time: ", ttask)
   return(parts)
 }
 
@@ -663,7 +882,6 @@ load_cellsets <- function(s3, pipeline_config, experiment_id) {
 
   obj <- jsonlite::fromJSON(rawConnection(body), flatten = T)
   return(obj)
-
 }
 
 #' Load cellsets object flattened (as is done by load_cellsets)
@@ -758,10 +976,10 @@ is_uuid <- function(x) {
 
 get_cellset_type <- function(key, type) {
   cellset_type <- switch(key,
-                         louvain = "cluster",
-                         scratchpad = "scratchpad",
-                         sample = "sample",
-                         ifelse(is_uuid(key), "sctype", "metadata")
+    louvain = "cluster",
+    scratchpad = "scratchpad",
+    sample = "sample",
+    ifelse(is_uuid(key), "sctype", "metadata")
   )
 
   return(cellset_type)
@@ -780,7 +998,11 @@ get_cellset_type <- function(key, type) {
 parse_cellsets <- function(cellsets) {
 
   dt_list <- cellsets$cellSets$children
-  cellset_types <- purrr::map2_chr(cellsets$cellSets$key, cellsets$cellSets$type, get_cellset_type)
+  cellset_types <- purrr::map2_chr(
+    cellsets$cellSets$key,
+    cellsets$cellSets$type,
+    get_cellset_type
+  )
 
   lapply(dt_list, data.table::setDT)
 

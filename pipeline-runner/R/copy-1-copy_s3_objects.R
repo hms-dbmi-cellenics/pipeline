@@ -12,7 +12,6 @@ copy_s3_objects <- function(input, pipeline_config, prev_out = NULL) {
   message("Copying source.")
   copy_source(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
 
-  message("\n")
   message("Copy s3 objects step complete.")
   return(list(data = list(), output = prev_out))
 }

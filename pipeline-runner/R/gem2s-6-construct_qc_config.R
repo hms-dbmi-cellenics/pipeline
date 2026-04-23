@@ -13,64 +13,66 @@
 #' @return list of QC configuration parameters
 #'
 construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
-    samples <- names(scdata_list)
-    config_classifier <-
-      add_custom_config_per_sample(
-        customize_classifier_config,
-        processing_config_template[["classifier"]],
-        scdata_list,
-        unfiltered_samples
-      )
-
-    config_cell_size <-
-      add_custom_config_per_sample(
-        customize_cellsize_config,
-        processing_config_template[["cell_size"]],
-        scdata_list,
-      )
-
-    config_mitochondrial <-
-      add_custom_config_per_sample(
-        customize_mitochondrial_config,
-        processing_config_template[["mitochondrial"]],
-        scdata_list,
-      )
-
-    config_genes_vs_umis <-
-      add_custom_config_per_sample(
-        customize_genes_vs_umis_config,
-        processing_config_template[["genes_vs_umis"]],
-        scdata_list,
-        technology = technology
-      )
-
-
-    config_doublet <-
-      add_custom_config_per_sample(
-        customize_doublet_config,
-        processing_config_template[["doublet"]],
-        scdata_list,
-      )
-
-    config_data_integration <-
-      processing_config_template[["data_integration"]]
-
-    config_embedding_clustering <-
-      get_embedding_config(scdata_list, processing_config_template[["embedding_clustering"]])
-
-    # combine config for all steps
-    config <- list(
-      cellSizeDistribution = config_cell_size,
-      mitochondrialContent = config_mitochondrial,
-      classifier = config_classifier,
-      numGenesVsNumUmis = config_genes_vs_umis,
-      doubletScores = config_doublet,
-      dataIntegration = config_data_integration,
-      configureEmbedding = config_embedding_clustering
+  samples <- names(scdata_list)
+  config_classifier <-
+    add_custom_config_per_sample(
+      customize_classifier_config,
+      processing_config_template[["classifier"]],
+      scdata_list,
+      unfiltered_samples
     )
 
-    return(config)
-  }
+  config_cell_size <-
+    add_custom_config_per_sample(
+      customize_cellsize_config,
+      processing_config_template[["cell_size"]],
+      scdata_list,
+    )
+
+  config_mitochondrial <-
+    add_custom_config_per_sample(
+      customize_mitochondrial_config,
+      processing_config_template[["mitochondrial"]],
+      scdata_list,
+    )
+
+  config_genes_vs_umis <-
+    add_custom_config_per_sample(
+      customize_genes_vs_umis_config,
+      processing_config_template[["genes_vs_umis"]],
+      scdata_list,
+      technology = technology
+    )
+
+
+  config_doublet <-
+    add_custom_config_per_sample(
+      customize_doublet_config,
+      processing_config_template[["doublet"]],
+      scdata_list,
+    )
+
+  config_data_integration <-
+    processing_config_template[["data_integration"]]
+
+  config_embedding_clustering <-
+    get_embedding_config(
+      scdata_list,
+      processing_config_template[["embedding_clustering"]])
+
+  # combine config for all steps
+  config <- list(
+    cellSizeDistribution = config_cell_size,
+    mitochondrialContent = config_mitochondrial,
+    classifier = config_classifier,
+    numGenesVsNumUmis = config_genes_vs_umis,
+    doubletScores = config_doublet,
+    dataIntegration = config_data_integration,
+    configureEmbedding = config_embedding_clustering
+  )
+
+  return(config)
+}
 
 
 customize_classifier_config <-
@@ -159,7 +161,6 @@ get_embedding_config <- function(scdata_list, config) {
 
   return(config)
 }
-
 
 #' Customize configuration for each sample in an experiment
 #'
