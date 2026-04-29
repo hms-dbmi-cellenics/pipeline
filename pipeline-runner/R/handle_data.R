@@ -91,7 +91,7 @@ load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
 
 # get_nnzero will return how many non-zero counts the count matrix has
 # it is used to order samples according to their size
-get_nnzero <- function (x) {
+get_nnzero <- function(x) {
   return(sum(x$nFeature_RNA))
 }
 
@@ -100,7 +100,7 @@ order_by_size <- function(scdata_list) {
 }
 
 
-load_source_scdata_list <- function (s3, pipeline_config, experiment_id) {
+load_source_scdata_list <- function(s3, pipeline_config, experiment_id) {
   bucket <- pipeline_config$source_bucket
   objects <- s3$list_objects(
     Bucket = bucket,
@@ -178,11 +178,29 @@ load_source_matrix_dir <- function(s3, matrix_dir_key, bucket, sample_id) {
   return(new_matrix_dir)
 }
 
+download_processed_matrix_dir <- function(s3, pipeline_config, experiment_id) {
+  bucket <- pipeline_config$processed_bucket
+  object_key <- paste0(experiment_id, "/matrix_dir.tar.zst")
+  message("\nDownloading processed matrix dir: ", object_key)
+
+  # download directly to tar file
+  tarfile <- file.path(tempdir(), paste0(experiment_id, "_matrix_dir.tar.zst"))
+
+  s3$download_file(
+    Bucket = bucket,
+    Key = object_key,
+    Filename = tarfile
+  )
+
+  return(tarfile)
+}
+
 # Update BPCells matrix paths after extraction
 replace_matrix_dir_paths <- function(obj, new_dir) {
   new_dir <- normalizePath(new_dir)
-  if (!dir.exists(new_dir))
+  if (!dir.exists(new_dir)) {
     stop(new_dir, " doesn't exist. Please move BPcells folder first.")
+  }
 
   if (inherits(obj, "MatrixDir")) {
     obj@dir <- new_dir
@@ -227,7 +245,6 @@ reload_data_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks
 
   # Otherwise, return scdata_list
   return(load_source_scdata_list(s3, pipeline_config, experiment_id))
-
 }
 
 load_cells_id_from_s3 <- function(pipeline_config, experiment_id, task_name, tasks, samples) {
@@ -421,8 +438,6 @@ send_pipeline_fail_update <- function(pipeline_config, input, error_message) {
 
       response <- build_qc_response(id, input, process_name, pipeline_config)
     }
-
-
   } else if (process_name %in% c("gem2s", "obj2s", "subset", "copy")) {
     string_value <- ifelse(process_name == "obj2s", "OBJ2SResponse", "GEM2SResponse")
 
@@ -512,25 +527,31 @@ upload_matrix_to_s3 <- function(pipeline_config, experiment_id, data) {
   return(object_key)
 }
 
-upload_matrix_dir_to_s3 <- function(pipeline_config, experiment_id, data) {
-  object_key <- paste0(experiment_id, "/matrix_dir.tar.zst")
-  message("\nSaving matrix dir to: ", object_key)
-
-  # should just be one
+save_matrix_dir_to_tarfile <- function(experiment_id, data) {
   matrix_dir <- get_matrix_dirs(data)
 
   message("\nTarring experiment matrix dir: ", matrix_dir)
   tarfile <- tar_matrix_dir(experiment_id, matrix_dir)
   message("Tar file size: ", fs::file_size(tarfile))
+  return(tarfile)
+}
+
+upload_matrix_dir_to_s3 <- function(
+  pipeline_config, experiment_id, matrix_dir_tarfile
+) {
+  object_key <- paste0(experiment_id, "/matrix_dir.tar.zst")
+  message("\nSaving matrix dir to: ", object_key)
 
   message("\nUploading matrix dir to S3:")
   put_object_in_s3_multipart(
     pipeline_config,
     pipeline_config$processed_bucket,
-    tarfile,
+    matrix_dir_tarfile,
     object_key
   )
 }
+
+
 
 find_matrix_dir_paths <- function(obj) {
   matrix_dir_paths <- c()
@@ -544,13 +565,13 @@ find_matrix_dir_paths <- function(obj) {
   for (sn in slotNames(obj)) {
     matrix_dir_paths <- c(
       matrix_dir_paths,
-      find_matrix_dir_paths(slot(obj, sn)))
+      find_matrix_dir_paths(slot(obj, sn))
+    )
   }
   return(matrix_dir_paths)
 }
 
 get_matrix_dirs <- function(scdata) {
-
   matrix_dirs <- lapply(
     scdata@assays$RNA@layers,
     find_matrix_dir_paths
@@ -563,15 +584,15 @@ get_matrix_dirs <- function(scdata) {
 # based off of vitessce-python demo
 rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.integer(c(1, 256, 256)), axes = "cyx") {
   # import python modules
-  np <- reticulate::import('numpy')
-  zarr <- reticulate::import('zarr')
-  ome_zarr <- reticulate::import('ome_zarr')
+  np <- reticulate::import("numpy")
+  zarr <- reticulate::import("zarr")
+  ome_zarr <- reticulate::import("ome_zarr")
 
   # Convert values from [0, 1] to [0, 255]
   img_arr <- img_arr * 255.0
 
   # convert img array to uint8
-  img_arr <- np$array(img_arr, dtype='uint8')
+  img_arr <- np$array(img_arr, dtype = "uint8")
 
   # Need to convert images from interleaved to non-interleaved (color axis should be first).
   img_arr <- np$transpose(img_arr, as.integer(c(2, 0, 1)))
@@ -584,13 +605,13 @@ rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.inte
     end = 255
   )
 
-  z_root <- zarr$open_group(output_path, mode="w")
+  z_root <- zarr$open_group(output_path, mode = "w")
 
   ome_zarr$writer$write_image(
-    image=img_arr,
-    group=z_root,
-    axes=axes,
-    storage_options=list(chunks=chunks)
+    image = img_arr,
+    group = z_root,
+    axes = axes,
+    storage_options = list(chunks = chunks)
   )
 
   omero <- list(
@@ -615,7 +636,7 @@ rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.inte
       )
     )
   )
-  reticulate::py_set_attr(z_root, 'omero', omero)
+  reticulate::py_set_attr(z_root, "omero", omero)
   invisible()
 }
 
@@ -625,21 +646,21 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
   authJWT <- input$authJWT
 
   # where to save zarr folder locally
-  zarr_name <- paste0(img_name, '.ome.zarr')
+  zarr_name <- paste0(img_name, ".ome.zarr")
   output_path <- file.path(tempdir(), zarr_name)
 
-  message("Saving image data to: ", output_path, '...')
+  message("Saving image data to: ", output_path, "...")
 
   # save as ome zarr folder
   rgb_img_to_ome_zarr(img_arr, output_path, img_name)
 
   # zip all files in zarr folder
-  zip_name <- paste0(zarr_name, '.zip')
+  zip_name <- paste0(zarr_name, ".zip")
   zip_path <- file.path(tempdir(), zip_name)
 
   workdir <- getwd()
   setwd(output_path)
-  utils::zip(zip_path, files = '.', flags = '-r0')
+  utils::zip(zip_path, files = ".", flags = "-r0")
   setwd(workdir)
 
   # upload ome.zarr.zip to s3
@@ -670,12 +691,12 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
 }
 
 create_sample_file <- function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, overwrite_existing, authJWT) {
-  url <- paste0(api_url, "/v2/experiments/", experiment_id, "/samples/", sample_id, '/sampleFiles/', file_type)
+  url <- paste0(api_url, "/v2/experiments/", experiment_id, "/samples/", sample_id, "/sampleFiles/", file_type)
 
   body <- list(
     sampleFileId = sample_file_id,
     size = file_size,
-    uploadStatus = 'uploaded',
+    uploadStatus = "uploaded",
     overwriteExisting = overwrite_existing
   )
 
@@ -683,8 +704,10 @@ create_sample_file <- function(api_url, experiment_id, sample_id, file_type, fil
     url,
     body = body,
     encode = "json",
-    httr::add_headers("Content-Type" = "application/json",
-                      "Authorization" = authJWT)
+    httr::add_headers(
+      "Content-Type" = "application/json",
+      "Authorization" = authJWT
+    )
   )
 
   if (httr::status_code(response) >= 400) {
@@ -693,7 +716,6 @@ create_sample_file <- function(api_url, experiment_id, sample_id, file_type, fil
 }
 
 upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
-
   # use the
   img_ids <- input$sampleIds
   names(img_ids) <- input$sampleNames
@@ -714,7 +736,8 @@ upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
       img_name,
       img_id,
       sample_id,
-      overwrite_existing = FALSE)
+      overwrite_existing = FALSE
+    )
   }
 }
 
@@ -725,7 +748,6 @@ put_object_in_s3 <- function(
   key,
   tagging = NULL
 ) {
-
   message(
     "- bucket: ", bucket, "\n",
     "- key: ", key
@@ -737,23 +759,28 @@ put_object_in_s3 <- function(
   max_retries <- 2
 
   while (retry_count < max_retries) {
-    tryCatch({
-      response <- s3$put_object(
-        Bucket = bucket,
-        Key = key,
-        Body = object,
-        Tagging = switch(!is.null(tagging), tagging)
-      )
-      message("... object successfully uploaded to S3.")
-      return(response)
-    }, error = function(e) {
-      retry_count <<- retry_count + 1
-      message(sprintf(
-        "... upload failed. Retrying (%d/%d)", retry_count, max_retries
-      ))
-      # exponential back off, preventing sending a new request too fast
-      Sys.sleep(2 ^ retry_count)
-    })
+    tryCatch(
+      {
+        response <- s3$put_object(
+          Bucket = bucket,
+          Key = key,
+          Body = object,
+          Tagging = switch(!is.null(tagging),
+            tagging
+          )
+        )
+        message("... object successfully uploaded to S3.")
+        return(response)
+      },
+      error = function(e) {
+        retry_count <<- retry_count + 1
+        message(sprintf(
+          "... upload failed. Retrying (%d/%d)", retry_count, max_retries
+        ))
+        # exponential back off, preventing sending a new request too fast
+        Sys.sleep(2^retry_count)
+      }
+    )
   }
   stop("Failed to upload object to S3 after maximum number of retries.")
 }
@@ -815,8 +842,9 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
   for (i in 1:num_parts) {
     part <- readBin(con, what = "raw", n = part_size)
 
-    if (i %% 10 == 0 || i == num_parts)
+    if (i %% 10 == 0 || i == num_parts) {
       message("... uploading part ", i, "/", num_parts)
+    }
 
     # Upload part with retries and exponential backoff
     retry_count <- 0
@@ -824,29 +852,31 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
     part_resp <- NULL
 
     while (retry_count < max_retries) {
-      tryCatch({
-        part_resp <- s3$upload_part(
-          Body = part,
-          Bucket = bucket,
-          Key = key,
-          PartNumber = i,
-          UploadId = upload_id
-        )
-        break  # Exit loop on successful upload
-
-      }, error = function(e) {
-        retry_count <<- retry_count + 1
-        message("... error uploading part ", i, ": ", e$message)
-
-        if (retry_count < max_retries) {
-          wait_time <- 2 ^ retry_count
-          message(
-            "... retrying part ", i,
-            " (attempt ", retry_count, "/", max_retries, ")"
+      tryCatch(
+        {
+          part_resp <- s3$upload_part(
+            Body = part,
+            Bucket = bucket,
+            Key = key,
+            PartNumber = i,
+            UploadId = upload_id
           )
-          Sys.sleep(wait_time)
+          break # Exit loop on successful upload
+        },
+        error = function(e) {
+          retry_count <<- retry_count + 1
+          message("... error uploading part ", i, ": ", e$message)
+
+          if (retry_count < max_retries) {
+            wait_time <- 2^retry_count
+            message(
+              "... retrying part ", i,
+              " (attempt ", retry_count, "/", max_retries, ")"
+            )
+            Sys.sleep(wait_time)
+          }
         }
-      })
+      )
     }
 
     if (is.null(part_resp)) {
@@ -996,7 +1026,6 @@ get_cellset_type <- function(key, type) {
 #' @export
 #'
 parse_cellsets <- function(cellsets) {
-
   dt_list <- cellsets$cellSets$children
   cellset_types <- purrr::map2_chr(
     cellsets$cellSets$key,

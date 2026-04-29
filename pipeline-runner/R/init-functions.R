@@ -518,7 +518,8 @@ call_qc <- function(task_name, input, pipeline_config) {
     upload_count_matrix && is(scdata[["RNA"]]$counts, "IterableMatrix")
 
   if (upload_matrix_dir) {
-    upload_matrix_dir_to_s3(pipeline_config, experiment_id, scdata)
+    matrix_dir_tarfile <- save_matrix_dir_to_tarfile(experiment_id, scdata)
+    upload_matrix_dir_to_s3(pipeline_config, experiment_id, matrix_dir_tarfile)
   }
 
   # send result to API

@@ -4,13 +4,39 @@ copy_s3_objects <- function(input, pipeline_config, prev_out = NULL) {
   sample_ids_map <- input$sampleIdsMap
 
   message("Copying processed rds.")
-  copy_processed_rds(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  copy_processed_rds(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
   message("Copying cell sets.")
-  copy_cell_sets(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  copy_cell_sets(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
   message("Copying filtered cells.")
-  copy_filtered_cells(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  copy_filtered_cells(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
   message("Copying source.")
-  copy_source(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  copy_source_rds(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
+  copy_source_matrix_dirs(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
 
   message("Copy s3 objects step complete.")
   return(list(data = list(), output = prev_out))
@@ -22,18 +48,33 @@ copy_processed_rds <- function(
   s3 <- paws::s3(config = pipeline_config$aws_config)
   scdata <- load_processed_scdata(s3, pipeline_config, from_experiment_id)
 
+
   scdata$samples <- translate_sample_ids(scdata$samples, sample_ids_map)
   scdata@misc$experimentId <- to_experiment_id
 
   upload_matrix_to_s3(pipeline_config, to_experiment_id, scdata)
+
+  # Also transfer matrix_dir if scdata contains IterableMatrix (disk-backed)
+  if (inherits(scdata[["RNA"]]$counts, "IterableMatrix")) {
+    from_experiment_tarfile <- download_processed_matrix_dir(
+      s3, pipeline_config, from_experiment_id
+    )
+    upload_matrix_dir_to_s3(
+      pipeline_config,
+      to_experiment_id,
+      from_experiment_tarfile
+    )
+  }
 }
 
-copy_cell_sets <- function(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config) {
+copy_cell_sets <- function(
+  from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config
+) {
   s3 <- paws::s3(config = pipeline_config$aws_config)
   original_cell_sets <- load_cellsets(s3, pipeline_config, from_experiment_id)
 
   translated_cell_sets <- list()
-  
+
   translated_cell_sets$cellSets <- unflatten_cell_sets(
     translate_cell_sets(original_cell_sets$cellSets, sample_ids_map)
   )
@@ -47,16 +88,28 @@ copy_cell_sets <- function(from_experiment_id, to_experiment_id, sample_ids_map,
   )
 }
 
-copy_source <- function(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config) {
+copy_source_rds <- function(
+  from_experiment_id,
+  to_experiment_id,
+  sample_ids_map,
+  pipeline_config
+) {
   bucket <- pipeline_config$source_bucket
+  s3 <- paws::s3(config = pipeline_config$aws_config)
 
   for (original_sample_id in names(sample_ids_map)) {
     copy_sample_id <- sample_ids_map[[original_sample_id]]
 
-    original_key <- paste0(from_experiment_id, "/", original_sample_id, "/", "r.rds")
+    original_key <- paste0(
+      from_experiment_id, "/", original_sample_id,
+      "/", "r.rds"
+    )
     copy_key <- paste0(to_experiment_id, "/", copy_sample_id, "/", "r.rds")
 
-    source_data <- get_s3_rds(bucket, original_key, pipeline_config$aws_config)
+    source_data <- get_s3_rds(
+      bucket, original_key,
+      pipeline_config$aws_config
+    )
 
     # Translate relevant parts
     source_data@meta.data$samples <- translate_sample_ids(
@@ -67,8 +120,75 @@ copy_source <- function(from_experiment_id, to_experiment_id, sample_ids_map, pi
     source_data@misc$experimentId <- to_experiment_id
     # Finish translating relevant parts
 
-    message("Uploading ", original_key, "to ", copy_key, " with samples translated")
+    message(
+      "Uploading ", original_key, "to ", copy_key,
+      " with samples translated"
+    )
     put_s3_rds(bucket, copy_key, pipeline_config$aws_config, source_data)
+  }
+}
+
+copy_source_matrix_dirs <- function(
+  from_experiment_id,
+  to_experiment_id,
+  sample_ids_map,
+  pipeline_config
+) {
+  bucket <- pipeline_config$source_bucket
+  s3 <- paws::s3(config = pipeline_config$aws_config)
+
+  # List all objects in source experiment
+  objects <- s3$list_objects(
+    Bucket = bucket,
+    Prefix = paste0(from_experiment_id, "/")
+  )
+
+  # Extract all keys from objects
+  existing_keys <- c()
+  if (!is.null(objects$Contents)) {
+    existing_keys <- sapply(objects$Contents, function(obj) obj$Key)
+  }
+
+  # Loop through sample_ids_map and copy matrix_dir if it exists
+  for (original_sample_id in names(sample_ids_map)) {
+    copy_sample_id <- sample_ids_map[[original_sample_id]]
+
+    matrix_dir_key <- paste0(
+      from_experiment_id, "/", original_sample_id,
+      "/matrix_dir.tar.zst"
+    )
+
+    # Skip if matrix_dir_key doesn't exist
+    if (!(matrix_dir_key %in% existing_keys)) {
+      next
+    }
+
+    copy_matrix_dir_key <- paste0(
+      to_experiment_id, "/", copy_sample_id,
+      "/matrix_dir.tar.zst"
+    )
+    tarfile <- file.path(
+      tempdir(),
+      paste0(original_sample_id, "_matrix_dir.tar.zst")
+    )
+
+    message("Downloading matrix_dir: ", matrix_dir_key)
+    s3$download_file(
+      Bucket = bucket,
+      Key = matrix_dir_key,
+      Filename = tarfile
+    )
+
+    message("Uploading matrix_dir to: ", copy_matrix_dir_key)
+    put_object_in_s3(
+      pipeline_config,
+      bucket,
+      tarfile,
+      copy_matrix_dir_key
+    )
+
+    # Cleanup
+    unlink(tarfile)
   }
 }
 
