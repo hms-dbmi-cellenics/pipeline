@@ -705,3 +705,103 @@ test_that("read_10x_annotations removes features different from Gene Expression"
 
   expect_equal(nrow(counts), nrow(res$annot))
 })
+
+# Tests for read_10x_h5_feature_names function
+test_that("read_10x_h5_feature_names errors if file does not exist", {
+  fake_file <- "/nonexistent/path/file.h5"
+  expect_error(
+    read_10x_h5_feature_names(fake_file),
+    "File not found"
+  )
+})
+
+test_that(
+  "read_10x_h5_feature_names requires hdf5r package",
+  {
+    # Mock requireNamespace to return FALSE
+    mockery::stub(
+      read_10x_h5_feature_names,
+      "requireNamespace",
+      FALSE
+    )
+
+    temp_file <- tempfile(fileext = ".h5")
+    expect_error(
+      read_10x_h5_feature_names(temp_file),
+      "Please install hdf5r"
+    )
+  }
+)
+
+test_that(
+  "read_10x_h5_file_bpcells returns expected structure",
+  {
+    # Create test data
+    set.seed(42)
+    mock_counts <- Matrix::Matrix(
+      sample(0:10, 100, replace = TRUE),
+      nrow = 10,
+      ncol = 10,
+      sparse = TRUE
+    )
+    mode(mock_counts@x) <- "integer"
+
+    gene_ids <- paste0("ENSG", seq_len(nrow(mock_counts)))
+    gene_symbols <- paste0("GENE", seq_len(nrow(mock_counts)))
+    barcodes <- paste0("CELL", seq_len(ncol(mock_counts)))
+
+    # Create temporary directory structure
+    temp_dir <- tempfile()
+    sample_dir <- file.path(temp_dir, "sample1")
+    dir.create(sample_dir, recursive = TRUE)
+
+    # Create HDF5 file (uncompressed)
+    h5_file <- file.path(sample_dir, "sample1.h5")
+    DropletUtils::write10xCounts(
+      h5_file,
+      mock_counts,
+      gene.id = gene_ids,
+      gene.symbol = gene_symbols,
+      barcodes = barcodes,
+      version = "3"
+    )
+
+    # Gzip the file - keep .gz extension
+    R.utils::gzip(h5_file, overwrite = TRUE)
+    # h5 file is removed by gzip, creating sample1.h5.gz
+
+    # Create config object
+    config <- list(samples = c("sample1"))
+
+    # Call function
+    result <- read_10x_h5_file_bpcells(config, temp_dir)
+
+    # Verify structure
+    expect_type(result, "list")
+    expect_named(
+      result,
+      c("counts_list", "annot", "matrix_dir_list")
+    )
+
+    # Verify counts_list
+    expect_length(result$counts_list, 1)
+    expect_named(result$counts_list, "sample1")
+    counts <- result$counts_list[[1]]
+    expect_equal(nrow(counts), nrow(mock_counts))
+    expect_equal(ncol(counts), ncol(mock_counts))
+
+    # Verify annotations
+    expect_s3_class(result$annot, "data.frame")
+    expect_equal(nrow(result$annot), nrow(mock_counts))
+
+    # Verify matrix directories exist
+    expect_length(result$matrix_dir_list, 1)
+    expect_true(dir.exists(result$matrix_dir_list[[1]]))
+
+    # Cleanup
+    unlink(temp_dir, recursive = TRUE)
+    for (dir in result$matrix_dir_list) {
+      if (dir.exists(dir)) unlink(dir, recursive = TRUE)
+    }
+  }
+)

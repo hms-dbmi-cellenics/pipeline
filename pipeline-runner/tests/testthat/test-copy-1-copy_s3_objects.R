@@ -3,15 +3,15 @@ mock_source_data <- function(sample_ids, from_experiment_id) {
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
-  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
+  pbmc_raw <- as(as.matrix(pbmc_raw), "dgCMatrix")
 
   scdata_list <- list()
   for (i in seq_along(sample_ids)) {
     message(i)
     scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
     n_cells <- ncol(scdata)
-    start_idx <- (i-1)*n_cells
-    end_idx <- ((i)*n_cells) - 1
+    start_idx <- (i - 1) * n_cells
+    end_idx <- ((i) * n_cells) - 1
 
     scdata$cells_id <- start_idx:end_idx
 
@@ -77,19 +77,26 @@ test_that("copy_s3_objects calls the correct functions", {
   mock_copy_processed_rds <- mockery::mock()
   mock_copy_cell_sets <- mockery::mock()
   mock_copy_filtered_cells <- mockery::mock()
-  mock_copy_source <- mockery::mock()
+  mock_copy_source_rds <- mockery::mock()
+  mock_copy_source_matrix_dirs <- mockery::mock()
 
   mockery::stub(copy_s3_objects, "copy_processed_rds", mock_copy_processed_rds)
   mockery::stub(copy_s3_objects, "copy_cell_sets", mock_copy_cell_sets)
-  mockery::stub(copy_s3_objects, "copy_filtered_cells", mock_copy_filtered_cells)
-  mockery::stub(copy_s3_objects, "copy_source", mock_copy_source)
+  mockery::stub(
+    copy_s3_objects, "copy_filtered_cells", mock_copy_filtered_cells
+  )
+  mockery::stub(copy_s3_objects, "copy_source_rds", mock_copy_source_rds)
+  mockery::stub(
+    copy_s3_objects, "copy_source_matrix_dirs", mock_copy_source_matrix_dirs
+  )
 
   result <- copy_s3_objects(input, pipeline_config)
 
   expect_called(mock_copy_processed_rds, 1)
   expect_called(mock_copy_cell_sets, 1)
   expect_called(mock_copy_filtered_cells, 1)
-  expect_called(mock_copy_source, 1)
+  expect_called(mock_copy_source_rds, 1)
+  expect_called(mock_copy_source_matrix_dirs, 1)
 })
 
 test_that("copy_processed_rds works correctly", {
@@ -103,10 +110,19 @@ test_that("copy_processed_rds works correctly", {
 
   mock_load_processed_scdata <- mock(processed_scdata)
   mock_upload_matrix_to_s3 <- mock()
-  mockery::stub(copy_processed_rds, "load_processed_scdata", mock_load_processed_scdata)
-  mockery::stub(copy_processed_rds, "upload_matrix_to_s3", mock_upload_matrix_to_s3)
+  mockery::stub(
+    copy_processed_rds, "load_processed_scdata", mock_load_processed_scdata
+  )
+  mockery::stub(
+    copy_processed_rds, "upload_matrix_to_s3", mock_upload_matrix_to_s3
+  )
 
-  copy_processed_rds(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  copy_processed_rds(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
 
   expect_called(mock_load_processed_scdata, 1)
   expect_called(mock_upload_matrix_to_s3, 1)
@@ -126,7 +142,12 @@ test_that("copy_cell_sets works correctly", {
   mockery::stub(copy_cell_sets, "load_cellsets", mock_load_cellsets)
   mockery::stub(copy_cell_sets, "put_object_in_s3", mock_put_object_in_s3)
 
-  copy_cell_sets(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  copy_cell_sets(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
 
   expect_called(mock_load_cellsets, 1)
   expect_called(mock_put_object_in_s3, 1)
@@ -147,7 +168,12 @@ test_that("copy_filtered_cells works correctly", {
   mockery::stub(copy_filtered_cells, "get_s3_rds", mock_get_s3_rds)
   mockery::stub(copy_filtered_cells, "put_s3_rds", mock_put_s3_rds)
 
-  copy_filtered_cells(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  copy_filtered_cells(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
 
   # expect 10 calls: #filter_steps(5) * #samples (2) = 10
   expect_called(mock_get_s3_rds, 10)
@@ -155,7 +181,7 @@ test_that("copy_filtered_cells works correctly", {
   expect_called(mock_put_s3_rds, 10)
 })
 
-test_that("copy_source works correctly", {
+test_that("copy_source_rds works correctly", {
   params <- get_mock_params()
   pipeline_config <- params$pipelineConfig
   from_experiment_id <- params$input$fromExperimentId
@@ -164,16 +190,78 @@ test_that("copy_source works correctly", {
 
   source_rds_list <- mock_source_data(names(sample_ids_map), from_experiment_id)
 
-  # mockery needs us to set each of the responses in different params and in order
-  mock_get_s3_rds <- mock(source_rds_list[[1]], source_rds_list[[2]], cycle = FALSE)
+  # mockery needs us to set each of the responses in different 
+  # params and in order
+  mock_get_s3_rds <- mock(
+    source_rds_list[[1]],
+    source_rds_list[[2]],
+    cycle = FALSE
+  )
   mock_put_s3_rds <- mock(cycle = TRUE)
-  mockery::stub(copy_source, "get_s3_rds", mock_get_s3_rds)
-  mockery::stub(copy_source, "put_s3_rds", mock_put_s3_rds)
+  mockery::stub(copy_source_rds, "get_s3_rds", mock_get_s3_rds)
+  mockery::stub(copy_source_rds, "put_s3_rds", mock_put_s3_rds)
 
-  copy_source(from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config)
+  copy_source_rds(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
 
   # expect 2 calls, 1 for each sample
   expect_called(mock_get_s3_rds, 2)
   # expect 2 calls, 1 for each sample
   expect_called(mock_put_s3_rds, 2)
+})
+
+test_that("copy_source_matrix_dirs works correctly", {
+  params <- get_mock_params()
+  pipeline_config <- params$pipelineConfig
+  from_experiment_id <- params$input$fromExperimentId
+  to_experiment_id <- params$input$toExperimentId
+  sample_ids_map <- params$input$sampleIdsMap
+
+  # Create mock S3 objects response with matrix_dir files
+  mock_s3_objects <- list(
+    Contents = list(
+      list(Key = "mock-from-experiment-id/sample-id-1/matrix_dir.tar.zst"),
+      list(Key = "mock-from-experiment-id/sample-id-2/matrix_dir.tar.zst")
+    )
+  )
+
+  mock_list_objects <- mock(mock_s3_objects)
+  mock_download_file <- mock()
+  mock_put_object_in_s3 <- mock()
+  mock_unlink <- mock()
+
+  mockery::stub(
+    copy_source_matrix_dirs, "paws::s3", function(config) {
+      list(
+        list_objects = function(Bucket, Prefix) {
+          mock_list_objects()
+        },
+        download_file = mock_download_file
+      )
+    }
+  )
+  mockery::stub(
+    copy_source_matrix_dirs, "put_object_in_s3", mock_put_object_in_s3
+  )
+  mockery::stub(copy_source_matrix_dirs, "unlink", mock_unlink)
+
+  copy_source_matrix_dirs(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
+
+  # expect 2 calls to list_objects (once)
+  expect_called(mock_list_objects, 1)
+  # expect 2 calls to download_file (1 per sample with matrix_dir)
+  expect_called(mock_download_file, 2)
+  # expect 2 calls to put_object_in_s3 (1 per sample with matrix_dir)
+  expect_called(mock_put_object_in_s3, 2)
+  # expect 2 calls to unlink (1 per downloaded tar file)
+  expect_called(mock_unlink, 2)
 })
