@@ -34,12 +34,12 @@ RUN Rscript restore_fast.R
 COPY setup/restore_renv.R .
 RUN Rscript restore_renv.R
 
-# deactivate so that .libPaths used (set above)
-RUN R -q -e "renv::deactivate()"
-
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
 RUN Rscript restore_renv.R
+
+# deactivate so that .libPaths used (set above)
+RUN R -q -e "renv::deactivate()"
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
