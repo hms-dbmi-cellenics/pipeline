@@ -35,20 +35,27 @@ test: build ## Executes unit tests (usage: make test [BPCELLS=true])
 	@docker run \
 		--entrypoint /bin/bash \
 		-e BPCELLS=$(BPCELLS) \
+		-v $(PWD)/pipeline-runner/tests/testthat/_snaps:/src/pipeline-runner/tests/testthat/_snaps \
 		biomage-pipeline-runner \
-		-c "R -e 'testthat::test_local()'"
+		-c "R -e 'testthat::test_local(stop_on_failure = FALSE)'"
 test-file: build ## Tests a specific test file (usage: make test-file FILE=test-file.R [BPCELLS=true])
 	@docker run \
 		--entrypoint /bin/bash \
 		-e BPCELLS=$(BPCELLS) \
+		-v $(PWD)/pipeline-runner/tests/testthat/_snaps:/src/pipeline-runner/tests/testthat/_snaps \
 		biomage-pipeline-runner \
 		-c "R -e \"pkgload::load_all(); testthat::test_file('tests/testthat/$(FILE)')\""
-snapshot: build ## Regenerates renv.lock snapshot from current packages
+snap-accept: build ## Accept updated snaps (usage: make snap-accept)
 	@docker run \
 		--entrypoint /bin/bash \
-		-v $(CURDIR)/pipeline-runner/renv.lock:/src/pipeline-runner/renv.lock \
+		-v $(PWD)/pipeline-runner/tests/testthat/_snaps:/src/pipeline-runner/tests/testthat/_snaps \
 		biomage-pipeline-runner \
-		-c "R -e 'renv::snapshot(prompt=FALSE)'"
+		-c "R -e \"testthat::snapshot_accept()\""
+update-renv-lock: build ## Update renv lock file (usage: make update-renv-lock)
+	@docker run \
+		--entrypoint /bin/bash \
+		-v $(PWD)/pipeline-runner/renv.lock:/src/pipeline-runner/renv.lock \
+		biomage-pipeline-runner
 hooks: ## Configures path to git hooks
 	@git config core.hooksPath .githooks
 run: build run-only
