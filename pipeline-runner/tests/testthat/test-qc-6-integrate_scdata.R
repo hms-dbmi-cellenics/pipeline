@@ -19,7 +19,10 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
     doublet_scores[[sample]] <- mock_doublet_scores(counts)
   }
 
-  annot <- data.frame(name = row.names(counts), input = row.names(counts))
+  annot <- data.frame(
+    name = row.names(counts),
+    input = row.names(counts)
+  )
 
   # as passed to create_seurat
   prev_out <- list(
@@ -34,7 +37,11 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   prev_out <- create_seurat(NULL, NULL, prev_out)$output
 
 
-  prev_out$scdata_list <- add_metadata_to_samples(prev_out$scdata_list, annot = annot, experiment_id = "expid")
+  prev_out$scdata_list <- add_metadata_to_samples(
+    prev_out$scdata_list,
+    annot = annot,
+    experiment_id = "expid"
+  )
 
   return(prev_out)
 }
@@ -58,13 +65,16 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   sample_1_id <- "sample_1"
   sample_2_id <- "sample_2"
 
-  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
+  pbmc_raw <- as(as.matrix(pbmc_raw), "dgCMatrix")
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
   # add samples
   scdata$samples <- rep(c(sample_1_id, sample_2_id), each = ncol(scdata) / 2)
   scdata$cells_id <- 0:(ncol(scdata) - 1)
-  scdata@misc$gene_annotations <- data.frame(input = rownames(scdata), name = rownames(scdata))
+  scdata@misc$gene_annotations <- data.frame(
+    input = rownames(scdata),
+    name = rownames(scdata)
+  )
   rownames(scdata@misc$gene_annotations) <- rownames(scdata)
 
   scdata_sample1 <- subset(scdata, samples == sample_1_id)
@@ -83,9 +93,12 @@ mock_ids <- function() {
 
 
 scdata_preprocessing <- function(scdata) {
-
   # scale and PCA
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
+  scdata <- Seurat::NormalizeData(
+    scdata,
+    normalization.method = "LogNormalize",
+    verbose = FALSE
+  )
   scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
@@ -111,10 +124,22 @@ test_that("Integrate scdata works", {
   cells_id <- mock_ids()
   config <- list(
     dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "harmony",
+      methodSettings = list(harmony = list(
+        numGenes = 10,
+        normalisation = "logNormalize"
+      ))
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
   expect_s4_class(integrated_scdata, "Seurat")
   expect_equal(ncol(integrated_scdata), 80)
 })
@@ -125,11 +150,29 @@ test_that("Integrate scdata is not affected by sample order", {
   cells_id <- mock_ids()
   config <- list(
     dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "harmony",
+      methodSettings = list(harmony = list(
+        numGenes = 10,
+        normalisation = "logNormalize"
+      ))
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
-  integrated_scdata_rev <- suppressWarnings(integrate_scdata(scdata_list_rev, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
+  integrated_scdata_rev <- suppressWarnings(integrate_scdata(
+    scdata_list_rev,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
   expect_equal(integrated_scdata, integrated_scdata_rev)
 })
 
@@ -143,14 +186,24 @@ test_that("Integrate scdata filters out cell ids from the cells_id object", {
 
   config <- list(
     dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "harmony",
+      methodSettings = list(harmony = list(
+        numGenes = 10,
+        normalisation = "logNormalize"
+      ))
+    )
   )
 
-  scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
   expect_lt(ncol(scdata), 80)
 })
-
-
 
 
 test_that("numPCs estimation works", {
@@ -214,7 +267,7 @@ test_that("build_ribosomal_gene_list returns empty int vector when there aren't 
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations
   # remove ribo genes in mocked data
-  all_genes <- all_genes[!grepl("^RP[LS]", all_genes$name),]
+  all_genes <- all_genes[!grepl("^RP[LS]", all_genes$name), ]
 
   # empty integer vector
   expected_res <- integer()
@@ -245,7 +298,7 @@ test_that("build_mitochondrial_gene_list returns empty int vector when there are
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations
   # remove mt genes in mocked data
-  all_genes <- all_genes[!grepl("^mt-", all_genes$name),]
+  all_genes <- all_genes[!grepl("^mt-", all_genes$name), ]
 
   # empty integer vector
   expected_res <- integer()
@@ -292,11 +345,14 @@ test_that("remove_genes removes the correct genes when there are genes to remove
   expect_false(any(some_mito_genes %in% rownames(res)))
 
 
-
   exclude_custom <- sample(setdiff(all_genes, some_cc_genes), 7)
 
   # cc genes and custom
-  res <- remove_genes(merged_scdata, exclude_groups = list("cellCycle"), exclude_custom)
+  res <- remove_genes(
+    merged_scdata,
+    exclude_groups = list("cellCycle"),
+    exclude_custom
+  )
 
   expect_equal(nrow(res), nrow(merged_scdata) - 17)
   expect_false(any(c(some_cc_genes, exclude_custom) %in% rownames(res)))
@@ -342,14 +398,29 @@ test_that("integrate_scdata calls remove_genes if there are groups to exclude", 
   cells_id <- mock_ids()
 
   config <- list(
-    dimensionalityReduction = list(numPCs = 2, excludeGeneCategories = "cellCycle"),
-    dataIntegration = list(method = "harmony", methodSettings = list(
-      harmony = list(numGenes = 10, normalisation = "logNormalize")
-    ))
+    dimensionalityReduction = list(
+      numPCs = 2,
+      excludeGeneCategories = "cellCycle"
+    ),
+    dataIntegration = list(
+      method = "harmony",
+      methodSettings = list(
+        harmony = list(
+          numGenes = 10,
+          normalisation = "logNormalize"
+        )
+      )
+    )
   )
 
   expect_message(
-    suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")),
+    suppressWarnings(integrate_scdata(
+      scdata_list,
+      config,
+      "",
+      cells_id,
+      task_name = "dataIntegration"
+    )),
     paste0("*Number of Cell Cycle genes to exclude: ", n_rename, "*")
   )
 })
@@ -360,10 +431,22 @@ test_that("integrate_scdata doesn't run geosketch if config does not contain geo
   cells_id <- mock_ids()
   config <- list(
     dimensionalityReduction = list(numPCs = 5),
-    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "harmony",
+      methodSettings = list(harmony = list(
+        numGenes = 10,
+        normalisation = "logNormalize"
+      ))
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
   expect_true(is.null(integrated_scdata@misc$geosketch))
 })
 
@@ -373,12 +456,32 @@ test_that("integrate_scdata run geosketch if config contains geosketch parameter
   cells_id <- mock_ids()
   merged_scdata <- create_scdata(scdata_list, cells_id)
   config <- list(
-    dimensionalityReduction = list(numPCs = 5, method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "logNormalize"))),
-    downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 5)))
+    dimensionalityReduction = list(
+      numPCs = 5,
+      method = "rpca"
+    ),
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(seuratv4 = list(
+        numGenes = 10,
+        normalisation = "logNormalize"
+      ))
+    ),
+    downsampling = list(
+      method = "geosketch",
+      methodSettings = list(geosketch = list(
+        percentageToKeep = 5
+      ))
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
   expect_true(integrated_scdata@misc$geosketch)
 })
 
@@ -389,14 +492,26 @@ test_that("run_geosketch generates the correct number of sketches", {
   merged_scdata <- create_scdata(scdata_list, cells_id)
   config <- list(
     dimensionalityReduction = list(numPCs = 5),
-    dataIntegration = list(method = "harmony", methodSettings = list(harmony = list(numGenes = 10, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "harmony",
+      methodSettings = list(harmony = list(
+        numGenes = 10,
+        normalisation = "logNormalize"
+      ))
+    )
   )
 
-  merged_scdata <- suppressWarnings({merged_scdata |>
-    Seurat::NormalizeData() |>
-    Seurat::FindVariableFeatures(assay = "RNA", nfeatures = 2000, verbose = FALSE) |>
-    Seurat::ScaleData(verbose = FALSE) |>
-    Seurat::RunPCA(verbose = FALSE)})
+  merged_scdata <- suppressWarnings({
+    merged_scdata |>
+      Seurat::NormalizeData() |>
+      Seurat::FindVariableFeatures(
+        assay = "RNA",
+        nfeatures = 2000,
+        verbose = FALSE
+      ) |>
+      Seurat::ScaleData(verbose = FALSE) |>
+      Seurat::RunPCA(verbose = FALSE)
+  })
   merged_scdata@misc[["active.reduction"]] <- "pca"
 
   perc_num_cells <- 5
@@ -410,12 +525,31 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
   scdata_list <- mock_scdata()
   cells_id <- mock_ids()
   config <- list(
-    dimensionalityReduction = list(numPCs = 5, method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "logNormalize"))),
-    downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 5)))
+    dimensionalityReduction = list(
+      numPCs = 5,
+      method = "rpca"
+    ),
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(seuratv4 = list(
+        numGenes = 10,
+        normalisation = "logNormalize"
+      ))
+    ),
+    downsampling = list(
+      method = "geosketch",
+      methodSettings = list(geosketch = list(
+        percentageToKeep = 5
+      ))
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
   expect_equal(integrated_scdata@misc[["active.reduction"]], "pca")
 })
-
