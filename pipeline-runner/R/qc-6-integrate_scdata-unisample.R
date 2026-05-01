@@ -12,9 +12,7 @@ run_unisample <- function(scdata_list, config, cells_id) {
   npcs <- config$dimensionalityReduction$numPCs
 
   # use the min nPCs of what the user wants and what can be calculated
-  if (!is.null(npcs)) {
-    npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
-  }
+  npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
 
   scdata <- prepare_scdata_for_unisample(scdata_list, config, cells_id)
 

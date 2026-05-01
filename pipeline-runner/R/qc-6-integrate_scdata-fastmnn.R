@@ -11,9 +11,7 @@ run_fastmnn <- function(scdata_list, config, cells_id) {
   npcs <- config$dimensionalityReduction$numPCs
 
   # use the min of what the user wants and what can be calculated
-  if (!is.null(npcs)) {
-    npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
-  }
+  npcs <- min(config$dimensionalityReduction$numPCs, npcs_for_pca)
 
   scdata <- prepare_scdata_for_fastmnn(scdata_list, config, cells_id)
 
