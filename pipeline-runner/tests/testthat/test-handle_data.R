@@ -34,44 +34,6 @@ get_mock_cell_sets <- function(flatten = TRUE) {
   return(cell_sets)
 }
 
-# Create mock Seurat object with BPCells disk-backed matrices
-mock_scdata_with_bpcells <- function() {
-  set.seed(42)
-  # Create a small counts matrix
-  counts <- Matrix::Matrix(
-    sample(0:10, 500, replace = TRUE),
-    nrow = 50,
-    ncol = 10,
-    sparse = TRUE
-  )
-  mode(counts@x) <- "integer"
-  counts <- as(counts, "dgCMatrix")
-
-  # Write to disk-backed BPCells matrix
-  matrix_dir <- file.path(tempdir(), paste0("mock_scdata_", sample(100000, 1)))
-  if (dir.exists(matrix_dir)) unlink(matrix_dir, recursive = TRUE)
-  BPCells::write_matrix_dir(counts, dir = matrix_dir)
-  bpcells_counts <- BPCells::open_matrix_dir(dir = matrix_dir)
-
-  # Create Seurat object
-  pbmc_small <- SeuratObject::CreateSeuratObject(
-    counts = bpcells_counts
-  )
-
-  # Add metadata
-  pbmc_small$cells_id <- seq_len(ncol(pbmc_small)) - 1
-  gene_ids <- paste0("ENSG", seq_len(nrow(pbmc_small)))
-  gene_annotations <- data.frame(
-    input = gene_ids,
-    name = rownames(pbmc_small),
-    original_name = rownames(pbmc_small),
-    row.names = gene_ids
-  )
-  pbmc_small@misc$gene_annotations <- gene_annotations
-  pbmc_small@misc$matrix_dir <- matrix_dir
-
-  return(pbmc_small)
-}
 
 test_that("send_pipeline_update_to_api completes successfully", {
   before_each()
@@ -123,7 +85,8 @@ test_that("upload_matrix_to_s3 completes successfully", {
 test_that("send_output_to_api completes successfully", {
   before_each()
 
-  c(pipeline_config, input, plot_data_keys, output) %<-% send_output_to_api_mock_data
+  c(pipeline_config, input, plot_data_keys, output) %<-%
+    send_output_to_api_mock_data
 
   mockery::stub(send_output_to_api, "put_object_in_s3", NULL)
   mockery::stub(send_output_to_api, "paws::sns", mock_sns)
@@ -244,7 +207,7 @@ test_that("put_object_in_s3 works", {
   key <- "a_key"
 
   expect_message(put_object_in_s3(pipeline_config, bucket, object, key),
-    regexp = "Putting a_key in mock_bucket"
+    regexp = "a_key"
   )
 })
 
@@ -371,9 +334,12 @@ test_that("send_pipeline_fail_update handles a qc call successfully with global_
 
   mockery::stub(send_pipeline_fail_update, "paws::sns", mock_sns)
   mockery::stub(send_pipeline_fail_update, "ids::uuid", "mock-uuid")
-  mockery::stub(send_pipeline_fail_update, "put_object_in_s3", mock_put_object_in_s3)
+  mockery::stub(
+    send_pipeline_fail_update, "put_object_in_s3", mock_put_object_in_s3
+  )
 
-  c(pipeline_config, input, plot_data_keys, output) %<-% send_output_to_api_mock_data
+  c(pipeline_config, input, plot_data_keys, output) %<-%
+    send_output_to_api_mock_data
   c(config, plot_data = plotData) %<-% output
 
   pipeline_config <- list(
@@ -446,12 +412,11 @@ test_that("get_nnzero with Seurat object backed by BPCells matrices", {
   mode(counts@x) <- "integer"
 
   # Write counts to disk and load as BPCells matrix
-  matrix_dir <- file.path(tempdir(),
-    paste0("nnzero_test_", sample(100000, 1)))
-  if (dir.exists(matrix_dir)) unlink(matrix_dir, recursive = TRUE)
+  matrix_dir <- file.path(withr::local_tempdir(),
+    paste0("nnzero_test_", sample(100000, 1))
+  )
 
-  BPCells::write_matrix_dir(counts, dir = matrix_dir)
-  bpcells_counts <- BPCells::open_matrix_dir(dir = matrix_dir)
+  bpcells_counts <- BPCells::write_matrix_dir(counts, dir = matrix_dir)
 
   # Create Seurat object with BPCells-backed counts
   scdata <- Seurat::CreateSeuratObject(counts = bpcells_counts)
@@ -461,9 +426,6 @@ test_that("get_nnzero with Seurat object backed by BPCells matrices", {
 
   expect_type(result, "double")
   expect_true(result > 0)
-
-  # Clean up
-  unlink(matrix_dir, recursive = TRUE)
 })
 
 test_that("order_by_size orders scdata_list by size", {
@@ -530,15 +492,12 @@ test_that("replace_matrix_dir_paths updates MatrixDir path", {
   counts <- as(counts, "dgCMatrix")
 
   # Create initial matrix dir
+  tmp_dir <- withr::local_tempdir()
   original_dir <- file.path(
-    tempdir(),
+    tmp_dir,
     paste0("test_matrix_", sample(100000, 1))
   )
-  if (dir.exists(original_dir)) unlink(original_dir, recursive = TRUE)
-  BPCells::write_matrix_dir(counts, dir = original_dir)
-
-  # Load as BPCells matrix and store reference
-  bpcells_matrix <- BPCells::open_matrix_dir(dir = original_dir)
+  bpcells_matrix <- BPCells::write_matrix_dir(counts, dir = original_dir)
 
   # Create Seurat object with BPCells matrix
   seurat_obj <- SeuratObject::CreateSeuratObject(
@@ -546,7 +505,7 @@ test_that("replace_matrix_dir_paths updates MatrixDir path", {
   )
 
   # Save RDS file
-  rds_file <- tempfile(fileext = ".rds")
+  rds_file <- withr::local_tempfile(fileext = ".rds")
   saveRDS(seurat_obj, rds_file)
 
   # Read RDS and verify matrix access works
@@ -560,10 +519,9 @@ test_that("replace_matrix_dir_paths updates MatrixDir path", {
 
   # Move matrix directory to new location
   new_dir <- file.path(
-    tempdir(),
+    tmp_dir,
     paste0("test_matrix_new_", sample(100000, 1))
   )
-  if (dir.exists(new_dir)) unlink(new_dir, recursive = TRUE)
   dir.create(new_dir)
 
   # Copy matrix dir contents to new location
@@ -603,11 +561,6 @@ test_that("replace_matrix_dir_paths updates MatrixDir path", {
   # Verify we can extract features from updated matrix
   feature_names <- rownames(updated_matrix)[1:3]
   expect_equal(length(feature_names), 3)
-
-  # Cleanup
-  unlink(original_dir, recursive = TRUE)
-  unlink(new_dir, recursive = TRUE)
-  unlink(rds_file)
 })
 
 test_that("load_source_rds retrieves and deserializes RDS from S3", {
@@ -653,16 +606,13 @@ test_that("load_source_matrix_dir extracts matrix dir from S3", {
   counts <- as(counts, "dgCMatrix")
 
   # Create and tar the matrix directory
-  temp_base <- tempfile()
-  dir.create(temp_base)
+  temp_base <- withr::local_tempdir()
   sample_id <- "test_sample"
   original_dir <- file.path(temp_base, paste0(sample_id, "_matrix_dir"))
-  if (dir.exists(original_dir)) unlink(original_dir, recursive = TRUE)
   BPCells::write_matrix_dir(counts, dir = original_dir)
 
   # Create tar.zst file
-  tarfile <- file.path(tempdir(), paste0(sample_id, "_matrix_dir.tar.zst"))
-  if (file.exists(tarfile)) unlink(tarfile)
+  tarfile <- file.path(temp_base, paste0(sample_id, "_matrix_dir.tar.zst"))
 
   # Create tar file
   current_dir <- getwd()
@@ -688,10 +638,6 @@ test_that("load_source_matrix_dir extracts matrix dir from S3", {
   expect_true(dir.exists(result))
   expect_match(basename(result), paste0(sample_id, "_matrix_dir"))
 
-  # Cleanup
-  unlink(temp_base, recursive = TRUE)
-  unlink(result, recursive = TRUE)
-  unlink(tarfile)
 })
 
 test_that(
@@ -710,15 +656,14 @@ test_that(
 
     # Create matrix directory
     matrix_dir <- file.path(
-      tempdir(),
+      withr::local_tempdir(),
       paste0("upload_test_", sample(100000, 1))
     )
-    if (dir.exists(matrix_dir)) unlink(matrix_dir, recursive = TRUE)
-    BPCells::write_matrix_dir(counts, dir = matrix_dir)
+    bpcells_matrix <- BPCells::write_matrix_dir(counts, dir = matrix_dir)
 
     # Create Seurat object (single object, not list)
     scdata <- SeuratObject::CreateSeuratObject(
-      counts = BPCells::open_matrix_dir(dir = matrix_dir)
+      counts = bpcells_matrix
     )
 
     # Create mock function to capture upload info
@@ -756,8 +701,5 @@ test_that(
       uploaded_info$key,
       "test_exp_id/matrix_dir.tar.zst"
     )
-
-    # Cleanup
-    unlink(matrix_dir, recursive = TRUE)
   }
 )

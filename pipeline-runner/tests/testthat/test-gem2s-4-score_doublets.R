@@ -172,17 +172,11 @@ test_that("scdblfinder_bpcells with disk-backed BPCells matrix", {
     counts@x <- as.integer(counts@x)
   }
 
-  # Create a unique temporary directory for this test
-  matrix_dir <- file.path(tempdir(),
-    paste0("bpcells_test_", sample(100000, 1))
-  )
-  if (dir.exists(matrix_dir)) unlink(matrix_dir, recursive = TRUE)
-
   # Write the matrix to disk
-  BPCells::write_matrix_dir(counts, dir = matrix_dir)
-
-  # Load it back as a disk-backed matrix
-  bpcells_matrix <- BPCells::open_matrix_dir(dir = matrix_dir)
+  bpcells_dir <- withr::local_tempfile()
+  bpcells_matrix <- BPCells::write_matrix_dir(
+    counts, dir = bpcells_dir
+  )
 
   # Run scdblfinder_bpcells with the disk-backed matrix
   result <- suppressWarnings(
@@ -196,8 +190,6 @@ test_that("scdblfinder_bpcells with disk-backed BPCells matrix", {
   )
   expect_equal(ncol(result), ncol(counts))
 
-  # Clean up
-  unlink(matrix_dir, recursive = TRUE)
 })
 
 test_that("scdblfinder_bpcells produces identical result to scDblFinder", {

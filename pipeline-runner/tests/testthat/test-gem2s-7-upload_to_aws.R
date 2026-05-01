@@ -728,7 +728,7 @@ test_that("extract_subset_user_metadata extracts subset cellsets correctly when 
 # Tests for tar_matrix_dir function
 test_that("tar_matrix_dir creates tarfile with correct name", {
   # Create a temporary directory with a test file
-  base_temp <- tempdir()
+  base_temp <- withr::local_tempdir()
   sample_id <- paste0("sample_", sample(100000, 1))
   matrix_dir <- file.path(base_temp, sample_id, "matrix_dir")
   dir.create(matrix_dir, showWarnings = FALSE, recursive = TRUE)
@@ -742,15 +742,11 @@ test_that("tar_matrix_dir creates tarfile with correct name", {
 
   expect_true(file.exists(tarfile))
   expect_match(tarfile, paste0(sample_id, "_matrix_dir\\.tar\\.zst$"))
-
-  # Clean up
-  unlink(tarfile)
-  unlink(file.path(base_temp, sample_id), recursive = TRUE)
 })
 
 test_that("tar_zstd creates compressed tarfile", {
   # Create a temporary directory with test files
-  base_temp <- tempdir()
+  base_temp <- withr::local_tempdir()
   test_id <- paste0("tar_test_", sample(100000, 1))
   test_dir <- file.path(base_temp, test_id)
   dir.create(test_dir, showWarnings = FALSE)
@@ -770,15 +766,11 @@ test_that("tar_zstd creates compressed tarfile", {
   })
 
   expect_true(file.exists(tarfile))
-
-  # Clean up
-  unlink(tarfile)
-  unlink(test_dir, recursive = TRUE)
 })
 
 test_that("untar_zstd extracts compressed tarfile", {
   # Create a temporary directory with test files
-  base_temp <- tempdir()
+  base_temp <- withr::local_tempdir()
   test_id <- paste0("untar_test_", sample(100000, 1))
   test_dir <- file.path(base_temp, test_id)
   dir.create(test_dir, showWarnings = FALSE)
@@ -806,9 +798,4 @@ test_that("untar_zstd extracts compressed tarfile", {
   # Verify extraction
   extracted_file <- file.path(extract_dir, test_id, "test.txt")
   expect_true(file.exists(extracted_file))
-
-  # Clean up
-  unlink(tarfile)
-  unlink(test_dir, recursive = TRUE)
-  unlink(extract_dir, recursive = TRUE)
 })
