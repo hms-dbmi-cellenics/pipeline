@@ -1,6 +1,5 @@
 # overall wrapper that is called
 run_clustering <- function(scdata, config, ignore_ssl_cert) {
-
   clustering_settings <- config$clusteringSettings
   clustering_method <- clustering_settings$method
   method_settings <- clustering_settings$methodSettings[[clustering_method]]
@@ -38,14 +37,13 @@ run_clustering <- function(scdata, config, ignore_ssl_cert) {
 #' @export
 #'
 embed_and_cluster <- function(
-    scdata,
-    config,
-    sample_id,
-    cells_id,
-    task_name = "configureEmbedding",
-    ignore_ssl_cert = FALSE
+  scdata,
+  config,
+  sample_id,
+  cells_id,
+  task_name = "configureEmbedding",
+  ignore_ssl_cert = FALSE
 ) {
-
   if (config$clustering_should_run == TRUE) {
     run_clustering(scdata, config, ignore_ssl_cert)
   } else {
@@ -84,9 +82,10 @@ format_cluster_cellsets <- function(cell_sets,
 
   # needed for leiden clustering to work
   cell_sets_key <- ifelse(
-    clustering_method %in% c('louvain', 'leiden'),
-    'louvain',
-    clustering_method)
+    clustering_method %in% c("louvain", "leiden"),
+    "louvain",
+    clustering_method
+  )
 
   cell_sets_object <-
     list(
@@ -125,8 +124,10 @@ patch_cell_sets <- function(api_url, experiment_id, patch_data, auth_JWT, ignore
     paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
     body = patch_data,
     encode = "json",
-    httr::add_headers("Content-Type" = "application/boschni-json-merger+json",
-                      "Authorization" = auth_JWT)
+    httr::add_headers(
+      "Content-Type" = "application/boschni-json-merger+json",
+      "Authorization" = auth_JWT
+    )
   )
 
   if (httr::status_code(response) >= 400) {
@@ -153,10 +154,12 @@ replace_cell_class_through_api <- function(cell_class_object, api_url, experimen
   message("updating cellsets through API")
   httr_query <- paste0("$[?(@.key == \"", cell_class_key, "\")]")
 
-  body <- list(list(
-    "$match" = list(query = httr_query, value = list("$remove" = TRUE))
-  ),
-  list("$prepend" = cell_class_object))
+  body <- list(
+    list(
+      "$match" = list(query = httr_query, value = list("$remove" = TRUE))
+    ),
+    list("$prepend" = cell_class_object)
+  )
 
   patch_cell_sets(api_url, experiment_id, body, auth_JWT, ignore_ssl_cert)
 }
@@ -192,7 +195,6 @@ replace_cl_metadata_through_api <- function(cl_metadata_cellsets, api_url, exper
 #' @export
 #'
 download_cl_metadata_file <- function(config) {
-
   s3 <- paws::s3(config = config$aws_config)
   s3_path <- basename(config$metadata_s3_path)
 
@@ -219,7 +221,6 @@ download_cl_metadata_file <- function(config) {
 #' @export
 #'
 make_cl_metadata_cellsets <- function(scdata, config) {
-
   cl_metadata <- download_cl_metadata_file(config)
 
   # TODO deduplicate using sample column (if present) in the cell-level metadata file
@@ -280,7 +281,6 @@ get_cell_id_barcode_map <- function(scdata) {
 #' @return data.table of cell_ids and cell-level metadata
 #' @export
 make_cl_metadata_table <- function(cl_metadata, barcode_cell_id_map) {
-
   join_cols <- c("barcode")
 
   # remove Seurat sample suffix if present only in one of the tables
@@ -300,7 +300,7 @@ make_cl_metadata_table <- function(cl_metadata, barcode_cell_id_map) {
       with = FALSE
     ]
   }
-  cl_metadata[barcode_cell_id_map, ,on = join_cols, nomatch = NULL]
+  cl_metadata[barcode_cell_id_map, , on = join_cols, nomatch = NULL]
 }
 
 
@@ -347,7 +347,6 @@ find_clm_columns <- function(check_vals) {
 #' @export
 #'
 find_group_columns_cl_metadata <- function(cl_metadata) {
-
   # ignore duplicate_barcode column, manually defined as clm
   ndistinct_sample <- get_n_distinct_per_sample(
     cl_metadata[
@@ -375,7 +374,6 @@ find_group_columns_cl_metadata <- function(cl_metadata) {
 #' @export
 #'
 detect_variable_types <- function(cl_metadata) {
-
   # can only find group columns when samples are available
   if ("samples" %in% names(cl_metadata)) {
     # do not remove dups; if a user uploads some metadata it should be there
@@ -417,7 +415,6 @@ detect_variable_types <- function(cl_metadata) {
 make_cl_metadata_cellclass <- function(
   variable, type, cl_metadata, color_pool
 ) {
-
   cl_metadata_cellset <- list(
     key = uuid::UUIDgenerate(),
     name = as.character(variable),
@@ -429,7 +426,6 @@ make_cl_metadata_cellclass <- function(
   values <- unique(cl_metadata[[variable]])
 
   for (i in seq_along(values)) {
-
     cell_ids <- cl_metadata[
       get(variable) == values[i] & cl_metadata$duplicate_barcode == "no",
       cells_id
@@ -461,7 +457,6 @@ make_cl_metadata_cellclass <- function(
   }
 
   return(cl_metadata_cellset)
-
 }
 
 
@@ -519,7 +514,7 @@ sort_cluster_names <- function(strings) {
   return(strings[sorted_indices])
 }
 
-add_duplicate_barcode_column <- function(cl_metadata){
+add_duplicate_barcode_column <- function(cl_metadata) {
   dup_barcodes <- vctrs::vec_duplicate_detect(cl_metadata$barcode)
 
   cl_metadata$duplicate_barcode <- ifelse(dup_barcodes, "yes", "no")
