@@ -411,7 +411,7 @@ test_that("runClusters does not crash with less than 10 dimensions available", {
   resolution <- 0.8
 
   # remove all pre-existing reductions and calculate low-PC PCA
-  scdata <- Seurat::DietSeurat(scdata, scale.data = TRUE)
+  scdata <- Seurat::DietSeurat(scdata)
   scdata <- suppressWarnings(
     Seurat::RunPCA(scdata, assay = "RNA", npcs = 2, verbose = FALSE)
   )
@@ -429,7 +429,7 @@ test_that("getClusters uses the default value of 10 if there are enough PCs avai
   resolution <- 0.8
 
   # remove all pre-existing reductions and calculate low-PC PCA
-  scdata <- Seurat::DietSeurat(scdata, scale.data = TRUE)
+  scdata <- Seurat::DietSeurat(scdata)
   scdata@commands <- list()
   scdata <- suppressWarnings(
     Seurat::RunPCA(scdata, assay = "RNA", npcs = 20, verbose = FALSE)

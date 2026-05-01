@@ -284,14 +284,21 @@ make_cl_metadata_table <- function(cl_metadata, barcode_cell_id_map) {
   join_cols <- c("barcode")
 
   # remove Seurat sample suffix if present only in one of the tables
-  if (!all(grepl("_\\d+$", c(barcode_cell_id_map$barcode, cl_metadata$barcode)))) {
+  if (!all(grepl(
+    "_\\d+$",
+    c(barcode_cell_id_map$barcode, cl_metadata$barcode)
+  ))) {
     barcode_cell_id_map[, barcode := gsub("_\\d+$", "", barcode)]
   }
 
   if (!"samples" %in% names(cl_metadata)) {
     join_cols <- setdiff(join_cols, "samples")
     # remove samples from barcode-cell_id map if not used for join
-    barcode_cell_id_map <- barcode_cell_id_map[, -"samples"]
+    barcode_cell_id_map <- barcode_cell_id_map[
+      ,
+      setdiff(names(barcode_cell_id_map), "samples"),
+      with = FALSE
+    ]
   }
   cl_metadata[barcode_cell_id_map, ,on = join_cols, nomatch = NULL]
 }
@@ -299,9 +306,10 @@ make_cl_metadata_table <- function(cl_metadata, barcode_cell_id_map) {
 
 #' check if variable is acceptable as cell-level metadata
 #'
-#' Tests values using several heurisitics to determine if a variable has a reasonable
-#' number of values to be made into cellsets. Cellsets are categorical, therefore
-#' continuous or high-cardinality variables are filtered out.
+#' Tests values using several heurisitics to determine if a
+#' variable has a reasonable number of values to be made into
+#' cellsets. Cellsets are categorical, therefore continuous or
+#' high-cardinality variables are filtered out.
 #'
 #' @param check_vals vector of arbitrary type
 #'
@@ -341,7 +349,13 @@ find_clm_columns <- function(check_vals) {
 find_group_columns_cl_metadata <- function(cl_metadata) {
 
   # ignore duplicate_barcode column, manually defined as clm
-  ndistinct_sample <- get_n_distinct_per_sample(cl_metadata[,-"duplicate_barcode"])
+  ndistinct_sample <- get_n_distinct_per_sample(
+    cl_metadata[
+      ,
+      setdiff(names(cl_metadata), "duplicate_barcode"),
+      with = FALSE
+    ]
+  )
   one_per_sample <- apply(ndistinct_sample, 2, function(x) all(x == 1))
   group_cols <- names(ndistinct_sample)[one_per_sample]
 
@@ -370,7 +384,11 @@ detect_variable_types <- function(cl_metadata) {
     clm_per_sample_cols <- character()
   }
 
-  undesirable_cols <- vapply(cl_metadata[, -..clm_per_sample_cols], find_clm_columns, logical(1))
+  undesirable_cols <- vapply(
+    cl_metadata[, -..clm_per_sample_cols],
+    find_clm_columns,
+    logical(1)
+  )
   clm_cols <- names(undesirable_cols[unlist(undesirable_cols)])
 
   # remove samples var, useless from this point on
@@ -396,7 +414,9 @@ detect_variable_types <- function(cl_metadata) {
 #' @return list - correctly formatted cell-level metadata cellclass
 #' @export
 #'
-make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) {
+make_cl_metadata_cellclass <- function(
+  variable, type, cl_metadata, color_pool
+) {
 
   cl_metadata_cellset <- list(
     key = uuid::UUIDgenerate(),
@@ -410,7 +430,10 @@ make_cl_metadata_cellclass <- function(variable, type, cl_metadata, color_pool) 
 
   for (i in seq_along(values)) {
 
-    cell_ids <- cl_metadata[get(variable) == values[i] & cl_metadata$duplicate_barcode == "no", cells_id]
+    cell_ids <- cl_metadata[
+      get(variable) == values[i] & cl_metadata$duplicate_barcode == "no",
+      cells_id
+    ]
 
     # do not add duplicate barcodes, except for the duplicate_barcode cellset
     if (variable == "duplicate_barcode") {
