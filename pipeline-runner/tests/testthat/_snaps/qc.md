@@ -7226,7 +7226,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "e84efdd731cc52215f52b879fad9d0da"
+      [1] "45ad2d7e1dce5977e96875c6cfa87013"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7234,15 +7234,6 @@
         ..@ assays      :List of 1
         .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
         .. .. .. ..@ layers    :List of 3
-        .. .. .. .. ..$ counts    :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. ..@ i       : int [1:55568] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
-        .. .. .. .. .. .. ..@ p       : int [1:601] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1133 1223 1304 1380 1474 1588 1696 1781 1916 1962 2030 2127 | __truncated__ ...
-        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 600
-        .. .. .. .. .. .. ..@ Dimnames:List of 2
-        .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. ..@ x       : num [1:55568] 2 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 4 3 1 1 1 1 1 1 2 1 1 1 1 1 2 4 1 1 1 ...
-        .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. ..$ data      :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
         .. .. .. .. .. .. ..@ i       : int [1:55568] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
         .. .. .. .. .. .. ..@ p       : int [1:601] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1133 1223 1304 1380 1474 1588 1696 1781 1916 1962 2030 2127 | __truncated__ ...
@@ -7251,6 +7242,15 @@
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. ..@ x       : num [1:55568] 4.25 4.25 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 ...
+        .. .. .. .. .. .. ..@ factors : list()
+        .. .. .. .. ..$ counts    :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. ..@ i       : int [1:55568] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
+        .. .. .. .. .. .. ..@ p       : int [1:601] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1133 1223 1304 1380 1474 1588 1696 1781 1916 1962 2030 2127 | __truncated__ ...
+        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 600
+        .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. ..@ x       : num [1:55568] 2 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 4 3 1 1 1 1 1 1 2 1 1 1 1 1 2 4 1 1 1 ...
         .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. ..$ scale.data: num [1:2000, 1:600] -0.1362 0 0 0 0 -0.1418 -0.0408 0 0 -0.0817 0 0 0 0 -0.2649 0 -0.3083 0 0 0.8688 -0.2025 0 -0.0408 -0.0905 -0.0567 ...
         .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
@@ -7273,15 +7273,21 @@
         .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
         .. .. .. ..@ default   : int 1
         .. .. .. ..@ assay.orig: chr(0) 
-        .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  8 variables:
-        .. .. .. .. ..$ vf_vst_counts_mean                 : num [1:2000] 0.01833 0 0 0 0 0.02333 0.00167 0 0 0.00667 0 0 0 0 0.07833 0 0.09167 0 0 1.13167 0.05333 0 0.00167 0.00833 0.00333 ...
-        .. .. .. .. ..$ vf_vst_counts_variance             : num [1:2000] 0.01803 0 0 0 0 0.0295 0.00167 0 0 0.00663 0 0 0 0 0.09903 0 0.09008 0 0 1.33656 0.104 0 0.00167 0.00828 0.00333 ...
-        .. .. .. .. ..$ vf_vst_counts_variance.expected    : num [1:2000] 0.0216 0 0 0 0 0.02754 0.00167 0 0 0.00715 0 0 0 0 0.09147 0 0.10958 0 0 2.40438 0.05971 0 0.00167 0.009 0.00359 ...
-        .. .. .. .. ..$ vf_vst_counts_variance.standardized: num [1:2000] 0.835 0 0 0 0 1.071 1 0 0 0.927 0 0 0 0 1.083 0 0.822 0 0 0.556 1.742 0 1 0.919 0.928 ...
-        .. .. .. .. ..$ vf_vst_counts_variable             : logi [1:2000] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. .. .. ..$ vf_vst_counts_rank                 : int [1:2000] 879 972 973 974 975 184 283 976 977 592 978 979 980 981 177 982 924 983 984 970 19 985 284 666 542 159 619 667 94| __truncated__ ...
-        .. .. .. .. ..$ var.features                       : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. ..$ var.features.rank                  : int [1:2000] 879 972 973 974 975 184 283 976 977 592 978 979 980 981 177 982 924 983 984 970 19 985 284 666 542 159 619 667 94| __truncated__ ...
+        .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  14 variables:
+        .. .. .. .. ..$ vf_vst_counts.1_mean                 : num [1:2000] 0.02395 0 0 0 0 0.02695 0 0 0 0.00898 0 0 0 0 0.10778 0 0.08683 0 0 1.05389 0.03593 0 0.00299 0.00299 0 ...
+        .. .. .. .. ..$ vf_vst_counts.1_variance             : num [1:2000] 0.02345 0 0 0 0 0.0323 0 0 0 0.00893 0 0 0 0 0.1385 0 0.09154 0 0 1.09018 0.03474 0 0.00299 0.00299 0 ...
+        .. .. .. .. ..$ vf_vst_counts.1_variance.expected    : num [1:2000] 0.02602 0 0 0 0 0.02932 0 0 0 0.00966 0 0 0 0 0.12327 0 0.09785 0 0 1.93177 0.03896 0 0.00299 0.00299 0 ...
+        .. .. .. .. ..$ vf_vst_counts.1_variance.standardized: num [1:2000] 0.901 0 0 0 0 1.102 0 0 0 0.924 0 0 0 0 1.124 0 0.935 0 0 0.564 0.892 0 1 1 0 ...
+        .. .. .. .. ..$ vf_vst_counts.1_variable             : logi [1:2000] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
+        .. .. .. .. ..$ vf_vst_counts.1_rank                 : int [1:2000] 668 854 855 856 857 150 858 859 860 521 861 862 863 864 137 865 500 866 867 852 732 868 266 267 869 169 268 560 7| __truncated__ ...
+        .. .. .. .. ..$ vf_vst_counts.2_mean                 : num [1:2000] 0.01128 0 0 0 0 0.0188 0.00376 0 0 0.00376 0 0 0 0 0.04135 0 0.09774 0 0 1.22932 0.07519 0 0 0.01504 0.00752 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance             : num [1:2000] 0.01119 0 0 0 0 0.02606 0.00376 0 0 0.00376 0 0 0 0 0.04734 0 0.08852 0 0 1.634 0.19055 0 0 0.01487 0.00749 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance.expected    : num [1:2000] 0.01263 0 0 0 0 0.02107 0.00376 0 0 0.00376 0 0 0 0 0.04769 0 0.11372 0 0 2.59844 0.08795 0 0 0.01688 0.00823 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance.standardized: num [1:2000] 0.886 0 0 0 0 1.237 1 0 0 1 0 0 0 0 0.993 0 0.778 0 0 0.629 2.13 0 0 0.881 0.911 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variable             : logi [1:2000] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
+        .. .. .. .. ..$ vf_vst_counts.2_rank                 : int [1:2000] 624 907 908 909 910 96 257 911 912 258 913 914 915 916 405 917 875 918 919 901 9 920 921 652 545 146 546 259 891 | __truncated__ ...
+        .. .. .. .. ..$ var.features                         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
+        .. .. .. .. ..$ var.features.rank                    : int [1:2000] 647 883 884 886 887 73 518 888 889 304 891 893 894 895 161 896 713 897 898 878 287 899 569 396 736 97 323 327 813| __truncated__ ...
         .. .. .. ..@ misc      : list()
         .. .. .. ..@ key       : chr "rna_"
         ..@ meta.data   :'data.frame':	600 obs. of  14 variables:
@@ -7304,65 +7310,38 @@
         .. ..- attr(*, "names")= chr [1:600] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" ...
         ..@ graphs      : list()
         ..@ neighbors   : list()
-        ..@ reductions  :List of 3
-        .. ..$ pca            :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:600, 1:50] 4.392 4.732 -3.798 5.613 0.655 4.731 4.255 3.215 -3.576 2.437 -2.367 1.774 -0.498 -5.444 -0.89 2.893 -0.642 1.605| __truncated__ ...
+        ..@ reductions  :List of 2
+        .. ..$ pca    :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
+        .. .. .. ..@ cell.embeddings           : num [1:600, 1:50] -3.3 -4.175 2.653 -4.411 -1.596 -3.639 -4.201 -3.847 3.324 -2.116 4.033 -2.8 0.342 5.924 2.932 -2.639 1.025 -2.30| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:600] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:971, 1:50] -0.19502 -0.15794 -0.00109 -0.00372 0.00263 -0.03647 -0.19413 -0.18367 -0.16243 0.03991 -0.01968 -0.04371 0.00694| __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:971, 1:50] 0.18718 0.07048 0.18522 0.17563 -0.02027 0.01284 0.06366 0.05502 0.0478 0.17361 -0.04063 -0.01686 -0.04148 0.1596| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:971] "S100A12" "FKBP5" "TREML1" "ALPL" "KCNQ1OT1" "PPM1N" "BRI3" "IL17RA" "GLIPR2" "C12orf75" "KIF11" "NRG1" "XCL1" "LINC01857" "LEF1" "KLF10" "FAM30A" "AC114490.3" "CPNE5" "AP1S2" ...
+        .. .. .. .. .. ..$ : chr [1:971] "S100A12" "CRIP1" "BRI3" "IL17RA" "CLIC3" "CAVIN2" "PTX3" "RPH3A" "NRG1" "ANXA5" "LINC01857" "DSP" "C12orf75" "GLIPR2" "FXYD6" "CCR2" "SLFN5" "C3AR1" "GNB4" "HIST1H2AL" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:50] 3.82 2.14 1.98 1.88 1.79 1.74 1.7 1.69 1.68 1.67 1.64 1.63 1.63 1.61 1.6 1.6 1.59 1.58 1.58 1.56 1.55 1.55 1.54 1.53 1.53 ...
+        .. .. .. ..@ stdev                     : num [1:50] 3.93 2.12 1.97 1.9 1.82 1.79 1.76 1.74 1.73 1.72 1.7 1.68 1.67 1.65 1.63 1.63 1.61 1.61 1.6 1.6 1.59 1.59 1.57 1.56 1.55 ...
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
         .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 363
+        .. .. .. .. ..$ total.variance: num 385
         .. .. .. ..@ key                       : chr "PC_"
-        .. ..$ pca_for_harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:600, 1:30] -4.392 -4.732 3.798 -5.613 -0.655 -4.731 -4.255 -3.215 3.576 -2.437 2.367 -1.774 0.498 5.444 0.89 -2.893 0.642 -1| __truncated__ ...
+        .. ..$ harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
+        .. .. .. ..@ cell.embeddings           : num [1:600, 1:50] -3.13 -4.052 3.749 -4.288 -1.738 -3.617 -4.114 -3.406 4.332 -2.092 4.627 -2.727 -0.22 6.979 3.977 -2.642 0.547 -2| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:600] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" ...
-        .. .. .. .. .. ..$ : chr [1:30] "PCh_1" "PCh_2" "PCh_3" "PCh_4" "PCh_5" "PCh_6" "PCh_7" "PCh_8" "PCh_9" "PCh_10" "PCh_11" "PCh_12" "PCh_13" "PCh_14" "PCh_15" "PCh_16" "PCh_17" "PCh_18" "PCh_19" "PCh_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:971, 1:30] 0.19502 0.15794 0.00109 0.00372 -0.00263 0.03647 0.19413 0.18367 0.16243 -0.03991 0.01968 0.04371 -0.00694 -0.048| __truncated__ ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:971] "S100A12" "FKBP5" "TREML1" "ALPL" "KCNQ1OT1" "PPM1N" "BRI3" "IL17RA" "GLIPR2" "C12orf75" "KIF11" "NRG1" "XCL1" "LINC01857" "LEF1" "KLF10" "FAM30A" "AC114490.3" "CPNE5" "AP1S2" ...
-        .. .. .. .. .. ..$ : chr [1:30] "PCh_1" "PCh_2" "PCh_3" "PCh_4" "PCh_5" "PCh_6" "PCh_7" "PCh_8" "PCh_9" "PCh_10" "PCh_11" "PCh_12" "PCh_13" "PCh_14" "PCh_15" "PCh_16" "PCh_17" "PCh_18" "PCh_19" "PCh_20" ...
+        .. .. .. .. .. ..$ : chr [1:50] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
+        .. .. .. ..@ feature.loadings          : num[0 , 0 ] 
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:30] 3.82 2.14 1.98 1.88 1.79 1.74 1.7 1.69 1.68 1.67 1.64 1.63 1.63 1.61 1.6 1.6 1.59 1.58 1.58 1.56 1.55 1.55 1.54 1.53 1.53 ...
-        .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
-        .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
-        .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
-        .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
-        .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
-        .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 363
-        .. .. .. ..@ key                       : chr "PCh_"
-        .. ..$ harmony        :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:600, 1:30] -4.217 -4.523 4.659 -5.52 -0.456 -4.513 -4.262 -3.099 3.823 -2.494 2.507 -1.641 0.262 6.393 0.752 -2.899 0.944 -1| __truncated__ ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:600] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" ...
-        .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:2000, 1:30] -276.5 0 0 0 0 -202.9 -41.4 0 0 -152.5 0 0 0 0 -449.8 0 39 0 0 159.4 182.5 0 -24.2 153.7 22.1 ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings.projected: num [1:2000, 1:30] -276.5 0 0 0 0 -202.9 -41.4 0 0 -152.5 0 0 0 0 -449.8 0 39 0 0 159.4 182.5 0 -24.2 153.7 22.1 ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ assay.used                : chr "RNA"
-        .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:30] 3.8 2.09 1.97 1.79 1.67 1.74 1.67 1.65 1.64 1.65 1.63 1.59 1.59 1.56 1.57 1.57 1.57 1.57 1.54 1.55 1.53 1.53 1.51 1.5 1.51 ...
+        .. .. .. ..@ stdev                     : num(0) 
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
@@ -7381,34 +7360,34 @@
         .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..$ color_pool      : chr [1:383] "#77aadd" "#ee8866" "#eedd88" "#ffaabb" "#99ddff" "#44bb99" "#bbcc33" "#999900" "#bc9cc9" "#295a8b" "#b14d2c" "#c2aa36" "#d4788a" "#3e8ab1" "#158364" "#737a38" "#4e4e00" "#835794" "#edf761" "#4d8cc4" ...
         .. ..$ ingestionDate   : POSIXct[1:1], format: "1991-12-19 05:23:00"
-        .. ..$ active.reduction: chr "harmony"
         .. ..$ gene_dispersion :'data.frame':	2000 obs. of  6 variables:
-        .. .. ..$ mean                 : num [1:2000] 0.01833 0 0 0 0 0.02333 0.00167 0 0 0.00667 0 0 0 0 0.07833 0 0.09167 0 0 1.13167 0.05333 0 0.00167 0.00833 0.00333 ...
-        .. .. ..$ variance             : num [1:2000] 0.01803 0 0 0 0 0.0295 0.00167 0 0 0.00663 0 0 0 0 0.09903 0 0.09008 0 0 1.33656 0.104 0 0.00167 0.00828 0.00333 ...
-        .. .. ..$ variance.standardized: num [1:2000] 0.0216 0 0 0 0 0.02754 0.00167 0 0 0.00715 0 0 0 0 0.09147 0 0.10958 0 0 2.40438 0.05971 0 0.00167 0.009 0.00359 ...
-        .. .. ..$ NA                   : num [1:2000] 0.835 0 0 0 0 1.071 1 0 0 0.927 0 0 0 0 1.083 0 0.822 0 0 0.556 1.742 0 1 0.919 0.928 ...
+        .. .. ..$ mean                 : num [1:2000] 0.02395 0 0 0 0 0.02695 0 0 0 0.00898 0 0 0 0 0.10778 0 0.08683 0 0 1.05389 0.03593 0 0.00299 0.00299 0 ...
+        .. .. ..$ variance             : num [1:2000] 0.02345 0 0 0 0 0.0323 0 0 0 0.00893 0 0 0 0 0.1385 0 0.09154 0 0 1.09018 0.03474 0 0.00299 0.00299 0 ...
+        .. .. ..$ variance.expected    : num [1:2000] 0.02602 0 0 0 0 0.02932 0 0 0 0.00966 0 0 0 0 0.12327 0 0.09785 0 0 1.93177 0.03896 0 0.00299 0.00299 0 ...
+        .. .. ..$ variance.standardized: num [1:2000] 0.901 0 0 0 0 1.102 0 0 0 0.924 0 0 0 0 1.124 0 0.935 0 0 0.564 0.892 0 1 1 0 ...
         .. .. ..$ SYMBOL               : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ ENSEMBL              : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. ..$ numPCs          : num 30
+        .. ..$ numPCs          : num 50
+        .. ..$ active.reduction: chr "harmony"
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 5 0 2
-        ..@ commands    :List of 5
-        .. ..$ NormalizeData.RNA             :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ : int [1:3] 5 3 0
+        ..@ commands    :List of 4
+        .. ..$ NormalizeData.RNA       :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "NormalizeData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "NormalizeData(scdata, normalization.method = normalization, " "    verbose = FALSE)"
+        .. .. .. ..@ call.string: chr [1:2] "NormalizeData(scdata, normalization.method = \"LogNormalize\", " "    verbose = FALSE)"
         .. .. .. ..@ params     :List of 5
         .. .. .. .. ..$ assay               : chr "RNA"
         .. .. .. .. ..$ normalization.method: chr "LogNormalize"
         .. .. .. .. ..$ scale.factor        : num 10000
         .. .. .. .. ..$ margin              : num 1
         .. .. .. .. ..$ verbose             : logi FALSE
-        .. ..$ FindVariableFeatures.RNA      :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ FindVariableFeatures.RNA:Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "FindVariableFeatures.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(Seurat::NormalizeData(scdata, normalization.method = normalization, " "    verbose = FALSE), nfeatures = nfeatures, verbose = FALSE)"
+        .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(Seurat::NormalizeData(scdata, normalization.method = \"LogNormalize\", " "    verbose = FALSE), nfeatures = nfeatures, verbose = FALSE)"
         .. .. .. ..@ params     :List of 10
         .. .. .. .. ..$ assay            : chr "RNA"
         .. .. .. .. ..$ selection.method : chr "vst"
@@ -7420,11 +7399,11 @@
         .. .. .. .. ..$ mean.cutoff      : num [1:2] 0.1 8
         .. .. .. .. ..$ dispersion.cutoff: num [1:2] 1 Inf
         .. .. .. .. ..$ verbose          : logi FALSE
-        .. ..$ ScaleData.RNA                 :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ ScaleData.RNA           :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "ScaleData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:3] "ScaleData(Seurat::FindVariableFeatures(Seurat::NormalizeData(scdata, " "    normalization.method = normalization, verbose = FALSE), nfeatures = nfeatures, " "    verbose = FALSE), verbose = FALSE)"
+        .. .. .. ..@ call.string: chr [1:3] "ScaleData(run_preprocessing(scdata, normalization = normalization, " "    nfeatures = nfeatures, use_geosketch = use_geosketch, percent_keep = percent_keep), " "    verbose = FALSE)"
         .. .. .. ..@ params     :List of 9
         .. .. .. .. ..$ assay             : chr "RNA"
         .. .. .. .. ..$ model.use         : chr "linear"
@@ -7435,35 +7414,22 @@
         .. .. .. .. ..$ block.size        : num 1000
         .. .. .. .. ..$ min.cells.to.block: num 3000
         .. .. .. .. ..$ verbose           : logi FALSE
-        .. ..$ RunPCA.RNA                    :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ RunPCA.RNA              :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "RunPCA.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "RunPCA(scdata, npcs = npcs, verbose = FALSE, reduction.name = \"pca_for_harmony\", " "    reduction.key = \"PCh_\")"
+        .. .. .. ..@ call.string: chr [1:2] "RunPCA(scdata, npcs = npcs, reduction.name = reduction_name, " "    verbose = FALSE)"
         .. .. .. ..@ params     :List of 10
         .. .. .. .. ..$ assay          : chr "RNA"
-        .. .. .. .. ..$ npcs           : num 30
+        .. .. .. .. ..$ npcs           : num 50
         .. .. .. .. ..$ rev.pca        : logi FALSE
         .. .. .. .. ..$ weight.by.var  : logi TRUE
         .. .. .. .. ..$ verbose        : logi FALSE
         .. .. .. .. ..$ ndims.print    : int [1:5] 1 2 3 4 5
         .. .. .. .. ..$ nfeatures.print: num 30
-        .. .. .. .. ..$ reduction.name : chr "pca_for_harmony"
-        .. .. .. .. ..$ reduction.key  : chr "PCh_"
+        .. .. .. .. ..$ reduction.name : chr "pca"
+        .. .. .. .. ..$ reduction.key  : chr "PC_"
         .. .. .. .. ..$ seed.use       : num 42
-        .. ..$ Seurat..ProjectDim.RNA.harmony:Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
-        .. .. .. ..@ name       : chr "Seurat::ProjectDim.RNA.harmony"
-        .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
-        .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "Seurat::ProjectDim(object, reduction = reduction.save, overwrite = TRUE, " "    verbose = FALSE)"
-        .. .. .. ..@ params     :List of 7
-        .. .. .. .. ..$ reduction      : chr "harmony"
-        .. .. .. .. ..$ assay          : chr "RNA"
-        .. .. .. .. ..$ dims.print     : int [1:5] 1 2 3 4 5
-        .. .. .. .. ..$ nfeatures.print: num 20
-        .. .. .. .. ..$ overwrite      : logi TRUE
-        .. .. .. .. ..$ do.center      : logi FALSE
-        .. .. .. .. ..$ verbose        : logi FALSE
         ..@ tools       : list()
 
 ---
@@ -7492,80 +7458,80 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "6e3036240a713e4983166ade08524070"
+      [1] "b67542122d9b46a521bc95120401d7af"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
       List of 2
        $ dataIntegration-0: list()
        $ dataIntegration-1:List of 50
-        ..$ : Named num [1:2] 1 0.109
+        ..$ : Named num [1:2] 1 0.111
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 2 0.0343
+        ..$ : Named num [1:2] 2 0.0322
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 3 0.0293
+        ..$ : Named num [1:2] 3 0.0278
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 4 0.0263
+        ..$ : Named num [1:2] 4 0.026
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 5 0.024
+        ..$ : Named num [1:2] 5 0.0237
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 6 0.0227
+        ..$ : Named num [1:2] 6 0.023
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 7 0.0216
+        ..$ : Named num [1:2] 7 0.0223
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 8 0.0213
+        ..$ : Named num [1:2] 8 0.0218
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 9 0.021
+        ..$ : Named num [1:2] 9 0.0215
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 10 0.0207
+        ..$ : Named num [1:2] 10 0.0213
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 11 0.0202
+        ..$ : Named num [1:2] 11 0.0206
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 12 0.02
+        ..$ : Named num [1:2] 12 0.0202
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 13 0.0197
+        ..$ : Named num [1:2] 13 0.02
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 14 0.0195
+        ..$ : Named num [1:2] 14 0.0196
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 15 0.0192
+        ..$ : Named num [1:2] 15 0.019
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 16 0.0191
+        ..$ : Named num [1:2] 16 0.019
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 17 0.019
+        ..$ : Named num [1:2] 17 0.0187
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 18 0.0187
+        ..$ : Named num [1:2] 18 0.0186
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 19 0.0186
+        ..$ : Named num [1:2] 19 0.0184
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 20 0.0182
+        ..$ : Named num [1:2] 20 0.0184
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 21 0.018
+        ..$ : Named num [1:2] 21 0.0182
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 22 0.0179
+        ..$ : Named num [1:2] 22 0.018
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 23 0.0177
+        ..$ : Named num [1:2] 23 0.0178
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 24 0.0175
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 25 0.0174
+        ..$ : Named num [1:2] 25 0.0173
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 26 0.0173
+        ..$ : Named num [1:2] 26 0.0172
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 27 0.0172
+        ..$ : Named num [1:2] 27 0.017
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 28 0.0169
+        ..$ : Named num [1:2] 28 0.0168
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 29 0.0166
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 30 0.0166
+        ..$ : Named num [1:2] 30 0.0165
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 31 0.0164
+        ..$ : Named num [1:2] 31 0.0163
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 32 0.0163
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 33 0.0161
+        ..$ : Named num [1:2] 33 0.0162
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 34 0.016
+        ..$ : Named num [1:2] 34 0.0161
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 35 0.016
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
@@ -7577,17 +7543,17 @@
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 39 0.0154
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 40 0.0153
+        ..$ : Named num [1:2] 40 0.0152
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 41 0.0151
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 42 0.015
+        ..$ : Named num [1:2] 42 0.0149
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 43 0.015
+        ..$ : Named num [1:2] 43 0.0148
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 44 0.0149
+        ..$ : Named num [1:2] 44 0.0147
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 45 0.0147
+        ..$ : Named num [1:2] 45 0.0146
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 46 0.0145
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
@@ -7595,9 +7561,9 @@
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 48 0.0143
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 49 0.0142
+        ..$ : Named num [1:2] 49 0.0143
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 50 0.0141
+        ..$ : Named num [1:2] 50 0.0142
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
 
 ---
@@ -7609,7 +7575,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "e84efdd731cc52215f52b879fad9d0da"
+      [1] "45ad2d7e1dce5977e96875c6cfa87013"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7617,15 +7583,6 @@
         ..@ assays      :List of 1
         .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
         .. .. .. ..@ layers    :List of 3
-        .. .. .. .. ..$ counts    :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. ..@ i       : int [1:55568] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
-        .. .. .. .. .. .. ..@ p       : int [1:601] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1133 1223 1304 1380 1474 1588 1696 1781 1916 1962 2030 2127 | __truncated__ ...
-        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 600
-        .. .. .. .. .. .. ..@ Dimnames:List of 2
-        .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. ..@ x       : num [1:55568] 2 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 4 3 1 1 1 1 1 1 2 1 1 1 1 1 2 4 1 1 1 ...
-        .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. ..$ data      :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
         .. .. .. .. .. .. ..@ i       : int [1:55568] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
         .. .. .. .. .. .. ..@ p       : int [1:601] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1133 1223 1304 1380 1474 1588 1696 1781 1916 1962 2030 2127 | __truncated__ ...
@@ -7634,6 +7591,15 @@
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. ..@ x       : num [1:55568] 4.25 4.25 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 ...
+        .. .. .. .. .. .. ..@ factors : list()
+        .. .. .. .. ..$ counts    :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. ..@ i       : int [1:55568] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
+        .. .. .. .. .. .. ..@ p       : int [1:601] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1133 1223 1304 1380 1474 1588 1696 1781 1916 1962 2030 2127 | __truncated__ ...
+        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 600
+        .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. ..@ x       : num [1:55568] 2 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 4 3 1 1 1 1 1 1 2 1 1 1 1 1 2 4 1 1 1 ...
         .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. ..$ scale.data: num [1:2000, 1:600] -0.1362 0 0 0 0 -0.1418 -0.0408 0 0 -0.0817 0 0 0 0 -0.2649 0 -0.3083 0 0 0.8688 -0.2025 0 -0.0408 -0.0905 -0.0567 ...
         .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
@@ -7656,15 +7622,21 @@
         .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
         .. .. .. ..@ default   : int 1
         .. .. .. ..@ assay.orig: chr(0) 
-        .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  8 variables:
-        .. .. .. .. ..$ vf_vst_counts_mean                 : num [1:2000] 0.01833 0 0 0 0 0.02333 0.00167 0 0 0.00667 0 0 0 0 0.07833 0 0.09167 0 0 1.13167 0.05333 0 0.00167 0.00833 0.00333 ...
-        .. .. .. .. ..$ vf_vst_counts_variance             : num [1:2000] 0.01803 0 0 0 0 0.0295 0.00167 0 0 0.00663 0 0 0 0 0.09903 0 0.09008 0 0 1.33656 0.104 0 0.00167 0.00828 0.00333 ...
-        .. .. .. .. ..$ vf_vst_counts_variance.expected    : num [1:2000] 0.0216 0 0 0 0 0.02754 0.00167 0 0 0.00715 0 0 0 0 0.09147 0 0.10958 0 0 2.40438 0.05971 0 0.00167 0.009 0.00359 ...
-        .. .. .. .. ..$ vf_vst_counts_variance.standardized: num [1:2000] 0.835 0 0 0 0 1.071 1 0 0 0.927 0 0 0 0 1.083 0 0.822 0 0 0.556 1.742 0 1 0.919 0.928 ...
-        .. .. .. .. ..$ vf_vst_counts_variable             : logi [1:2000] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. .. .. ..$ vf_vst_counts_rank                 : int [1:2000] 879 972 973 974 975 184 283 976 977 592 978 979 980 981 177 982 924 983 984 970 19 985 284 666 542 159 619 667 94| __truncated__ ...
-        .. .. .. .. ..$ var.features                       : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. ..$ var.features.rank                  : int [1:2000] 879 972 973 974 975 184 283 976 977 592 978 979 980 981 177 982 924 983 984 970 19 985 284 666 542 159 619 667 94| __truncated__ ...
+        .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  14 variables:
+        .. .. .. .. ..$ vf_vst_counts.1_mean                 : num [1:2000] 0.02395 0 0 0 0 0.02695 0 0 0 0.00898 0 0 0 0 0.10778 0 0.08683 0 0 1.05389 0.03593 0 0.00299 0.00299 0 ...
+        .. .. .. .. ..$ vf_vst_counts.1_variance             : num [1:2000] 0.02345 0 0 0 0 0.0323 0 0 0 0.00893 0 0 0 0 0.1385 0 0.09154 0 0 1.09018 0.03474 0 0.00299 0.00299 0 ...
+        .. .. .. .. ..$ vf_vst_counts.1_variance.expected    : num [1:2000] 0.02602 0 0 0 0 0.02932 0 0 0 0.00966 0 0 0 0 0.12327 0 0.09785 0 0 1.93177 0.03896 0 0.00299 0.00299 0 ...
+        .. .. .. .. ..$ vf_vst_counts.1_variance.standardized: num [1:2000] 0.901 0 0 0 0 1.102 0 0 0 0.924 0 0 0 0 1.124 0 0.935 0 0 0.564 0.892 0 1 1 0 ...
+        .. .. .. .. ..$ vf_vst_counts.1_variable             : logi [1:2000] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
+        .. .. .. .. ..$ vf_vst_counts.1_rank                 : int [1:2000] 668 854 855 856 857 150 858 859 860 521 861 862 863 864 137 865 500 866 867 852 732 868 266 267 869 169 268 560 7| __truncated__ ...
+        .. .. .. .. ..$ vf_vst_counts.2_mean                 : num [1:2000] 0.01128 0 0 0 0 0.0188 0.00376 0 0 0.00376 0 0 0 0 0.04135 0 0.09774 0 0 1.22932 0.07519 0 0 0.01504 0.00752 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance             : num [1:2000] 0.01119 0 0 0 0 0.02606 0.00376 0 0 0.00376 0 0 0 0 0.04734 0 0.08852 0 0 1.634 0.19055 0 0 0.01487 0.00749 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance.expected    : num [1:2000] 0.01263 0 0 0 0 0.02107 0.00376 0 0 0.00376 0 0 0 0 0.04769 0 0.11372 0 0 2.59844 0.08795 0 0 0.01688 0.00823 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance.standardized: num [1:2000] 0.886 0 0 0 0 1.237 1 0 0 1 0 0 0 0 0.993 0 0.778 0 0 0.629 2.13 0 0 0.881 0.911 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variable             : logi [1:2000] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
+        .. .. .. .. ..$ vf_vst_counts.2_rank                 : int [1:2000] 624 907 908 909 910 96 257 911 912 258 913 914 915 916 405 917 875 918 919 901 9 920 921 652 545 146 546 259 891 | __truncated__ ...
+        .. .. .. .. ..$ var.features                         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
+        .. .. .. .. ..$ var.features.rank                    : int [1:2000] 647 883 884 886 887 73 518 888 889 304 891 893 894 895 161 896 713 897 898 878 287 899 569 396 736 97 323 327 813| __truncated__ ...
         .. .. .. ..@ misc      : list()
         .. .. .. ..@ key       : chr "rna_"
         ..@ meta.data   :'data.frame':	600 obs. of  14 variables:
@@ -7687,65 +7659,38 @@
         .. ..- attr(*, "names")= chr [1:600] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" ...
         ..@ graphs      : list()
         ..@ neighbors   : list()
-        ..@ reductions  :List of 3
-        .. ..$ pca            :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:600, 1:50] 4.392 4.732 -3.798 5.613 0.655 4.731 4.255 3.215 -3.576 2.437 -2.367 1.774 -0.498 -5.444 -0.89 2.893 -0.642 1.605| __truncated__ ...
+        ..@ reductions  :List of 2
+        .. ..$ pca    :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
+        .. .. .. ..@ cell.embeddings           : num [1:600, 1:50] -3.3 -4.175 2.653 -4.411 -1.596 -3.639 -4.201 -3.847 3.324 -2.116 4.033 -2.8 0.342 5.924 2.932 -2.639 1.025 -2.30| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:600] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:971, 1:50] -0.19502 -0.15794 -0.00109 -0.00372 0.00263 -0.03647 -0.19413 -0.18367 -0.16243 0.03991 -0.01968 -0.04371 0.00694| __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:971, 1:50] 0.18718 0.07048 0.18522 0.17563 -0.02027 0.01284 0.06366 0.05502 0.0478 0.17361 -0.04063 -0.01686 -0.04148 0.1596| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:971] "S100A12" "FKBP5" "TREML1" "ALPL" "KCNQ1OT1" "PPM1N" "BRI3" "IL17RA" "GLIPR2" "C12orf75" "KIF11" "NRG1" "XCL1" "LINC01857" "LEF1" "KLF10" "FAM30A" "AC114490.3" "CPNE5" "AP1S2" ...
+        .. .. .. .. .. ..$ : chr [1:971] "S100A12" "CRIP1" "BRI3" "IL17RA" "CLIC3" "CAVIN2" "PTX3" "RPH3A" "NRG1" "ANXA5" "LINC01857" "DSP" "C12orf75" "GLIPR2" "FXYD6" "CCR2" "SLFN5" "C3AR1" "GNB4" "HIST1H2AL" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:50] 3.82 2.14 1.98 1.88 1.79 1.74 1.7 1.69 1.68 1.67 1.64 1.63 1.63 1.61 1.6 1.6 1.59 1.58 1.58 1.56 1.55 1.55 1.54 1.53 1.53 ...
+        .. .. .. ..@ stdev                     : num [1:50] 3.93 2.12 1.97 1.9 1.82 1.79 1.76 1.74 1.73 1.72 1.7 1.68 1.67 1.65 1.63 1.63 1.61 1.61 1.6 1.6 1.59 1.59 1.57 1.56 1.55 ...
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
         .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 363
+        .. .. .. .. ..$ total.variance: num 385
         .. .. .. ..@ key                       : chr "PC_"
-        .. ..$ pca_for_harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:600, 1:30] -4.392 -4.732 3.798 -5.613 -0.655 -4.731 -4.255 -3.215 3.576 -2.437 2.367 -1.774 0.498 5.444 0.89 -2.893 0.642 -1| __truncated__ ...
+        .. ..$ harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
+        .. .. .. ..@ cell.embeddings           : num [1:600, 1:50] -3.13 -4.052 3.749 -4.288 -1.738 -3.617 -4.114 -3.406 4.332 -2.092 4.627 -2.727 -0.22 6.979 3.977 -2.642 0.547 -2| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:600] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" ...
-        .. .. .. .. .. ..$ : chr [1:30] "PCh_1" "PCh_2" "PCh_3" "PCh_4" "PCh_5" "PCh_6" "PCh_7" "PCh_8" "PCh_9" "PCh_10" "PCh_11" "PCh_12" "PCh_13" "PCh_14" "PCh_15" "PCh_16" "PCh_17" "PCh_18" "PCh_19" "PCh_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:971, 1:30] 0.19502 0.15794 0.00109 0.00372 -0.00263 0.03647 0.19413 0.18367 0.16243 -0.03991 0.01968 0.04371 -0.00694 -0.048| __truncated__ ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:971] "S100A12" "FKBP5" "TREML1" "ALPL" "KCNQ1OT1" "PPM1N" "BRI3" "IL17RA" "GLIPR2" "C12orf75" "KIF11" "NRG1" "XCL1" "LINC01857" "LEF1" "KLF10" "FAM30A" "AC114490.3" "CPNE5" "AP1S2" ...
-        .. .. .. .. .. ..$ : chr [1:30] "PCh_1" "PCh_2" "PCh_3" "PCh_4" "PCh_5" "PCh_6" "PCh_7" "PCh_8" "PCh_9" "PCh_10" "PCh_11" "PCh_12" "PCh_13" "PCh_14" "PCh_15" "PCh_16" "PCh_17" "PCh_18" "PCh_19" "PCh_20" ...
+        .. .. .. .. .. ..$ : chr [1:50] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
+        .. .. .. ..@ feature.loadings          : num[0 , 0 ] 
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:30] 3.82 2.14 1.98 1.88 1.79 1.74 1.7 1.69 1.68 1.67 1.64 1.63 1.63 1.61 1.6 1.6 1.59 1.58 1.58 1.56 1.55 1.55 1.54 1.53 1.53 ...
-        .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
-        .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
-        .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
-        .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
-        .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
-        .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 363
-        .. .. .. ..@ key                       : chr "PCh_"
-        .. ..$ harmony        :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:600, 1:30] -4.217 -4.523 4.659 -5.52 -0.456 -4.513 -4.262 -3.099 3.823 -2.494 2.507 -1.641 0.262 6.393 0.752 -2.899 0.944 -1| __truncated__ ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:600] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" ...
-        .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:2000, 1:30] -276.5 0 0 0 0 -202.9 -41.4 0 0 -152.5 0 0 0 0 -449.8 0 39 0 0 159.4 182.5 0 -24.2 153.7 22.1 ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ feature.loadings.projected: num [1:2000, 1:30] -276.5 0 0 0 0 -202.9 -41.4 0 0 -152.5 0 0 0 0 -449.8 0 39 0 0 159.4 182.5 0 -24.2 153.7 22.1 ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. .. ..$ : chr [1:30] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
-        .. .. .. ..@ assay.used                : chr "RNA"
-        .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:30] 3.8 2.09 1.97 1.79 1.67 1.74 1.67 1.65 1.64 1.65 1.63 1.59 1.59 1.56 1.57 1.57 1.57 1.57 1.54 1.55 1.53 1.53 1.51 1.5 1.51 ...
+        .. .. .. ..@ stdev                     : num(0) 
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
@@ -7764,34 +7709,34 @@
         .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..$ color_pool      : chr [1:383] "#77aadd" "#ee8866" "#eedd88" "#ffaabb" "#99ddff" "#44bb99" "#bbcc33" "#999900" "#bc9cc9" "#295a8b" "#b14d2c" "#c2aa36" "#d4788a" "#3e8ab1" "#158364" "#737a38" "#4e4e00" "#835794" "#edf761" "#4d8cc4" ...
         .. ..$ ingestionDate   : POSIXct[1:1], format: "1991-12-19 05:23:00"
-        .. ..$ active.reduction: chr "harmony"
         .. ..$ gene_dispersion :'data.frame':	2000 obs. of  6 variables:
-        .. .. ..$ mean                 : num [1:2000] 0.01833 0 0 0 0 0.02333 0.00167 0 0 0.00667 0 0 0 0 0.07833 0 0.09167 0 0 1.13167 0.05333 0 0.00167 0.00833 0.00333 ...
-        .. .. ..$ variance             : num [1:2000] 0.01803 0 0 0 0 0.0295 0.00167 0 0 0.00663 0 0 0 0 0.09903 0 0.09008 0 0 1.33656 0.104 0 0.00167 0.00828 0.00333 ...
-        .. .. ..$ variance.standardized: num [1:2000] 0.0216 0 0 0 0 0.02754 0.00167 0 0 0.00715 0 0 0 0 0.09147 0 0.10958 0 0 2.40438 0.05971 0 0.00167 0.009 0.00359 ...
-        .. .. ..$ NA                   : num [1:2000] 0.835 0 0 0 0 1.071 1 0 0 0.927 0 0 0 0 1.083 0 0.822 0 0 0.556 1.742 0 1 0.919 0.928 ...
+        .. .. ..$ mean                 : num [1:2000] 0.02395 0 0 0 0 0.02695 0 0 0 0.00898 0 0 0 0 0.10778 0 0.08683 0 0 1.05389 0.03593 0 0.00299 0.00299 0 ...
+        .. .. ..$ variance             : num [1:2000] 0.02345 0 0 0 0 0.0323 0 0 0 0.00893 0 0 0 0 0.1385 0 0.09154 0 0 1.09018 0.03474 0 0.00299 0.00299 0 ...
+        .. .. ..$ variance.expected    : num [1:2000] 0.02602 0 0 0 0 0.02932 0 0 0 0.00966 0 0 0 0 0.12327 0 0.09785 0 0 1.93177 0.03896 0 0.00299 0.00299 0 ...
+        .. .. ..$ variance.standardized: num [1:2000] 0.901 0 0 0 0 1.102 0 0 0 0.924 0 0 0 0 1.124 0 0.935 0 0 0.564 0.892 0 1 1 0 ...
         .. .. ..$ SYMBOL               : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ ENSEMBL              : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. ..$ numPCs          : num 30
+        .. ..$ numPCs          : num 50
+        .. ..$ active.reduction: chr "harmony"
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 5 0 2
-        ..@ commands    :List of 5
-        .. ..$ NormalizeData.RNA             :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ : int [1:3] 5 3 0
+        ..@ commands    :List of 4
+        .. ..$ NormalizeData.RNA       :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "NormalizeData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "NormalizeData(scdata, normalization.method = normalization, " "    verbose = FALSE)"
+        .. .. .. ..@ call.string: chr [1:2] "NormalizeData(scdata, normalization.method = \"LogNormalize\", " "    verbose = FALSE)"
         .. .. .. ..@ params     :List of 5
         .. .. .. .. ..$ assay               : chr "RNA"
         .. .. .. .. ..$ normalization.method: chr "LogNormalize"
         .. .. .. .. ..$ scale.factor        : num 10000
         .. .. .. .. ..$ margin              : num 1
         .. .. .. .. ..$ verbose             : logi FALSE
-        .. ..$ FindVariableFeatures.RNA      :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ FindVariableFeatures.RNA:Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "FindVariableFeatures.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(Seurat::NormalizeData(scdata, normalization.method = normalization, " "    verbose = FALSE), nfeatures = nfeatures, verbose = FALSE)"
+        .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(Seurat::NormalizeData(scdata, normalization.method = \"LogNormalize\", " "    verbose = FALSE), nfeatures = nfeatures, verbose = FALSE)"
         .. .. .. ..@ params     :List of 10
         .. .. .. .. ..$ assay            : chr "RNA"
         .. .. .. .. ..$ selection.method : chr "vst"
@@ -7803,11 +7748,11 @@
         .. .. .. .. ..$ mean.cutoff      : num [1:2] 0.1 8
         .. .. .. .. ..$ dispersion.cutoff: num [1:2] 1 Inf
         .. .. .. .. ..$ verbose          : logi FALSE
-        .. ..$ ScaleData.RNA                 :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ ScaleData.RNA           :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "ScaleData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:3] "ScaleData(Seurat::FindVariableFeatures(Seurat::NormalizeData(scdata, " "    normalization.method = normalization, verbose = FALSE), nfeatures = nfeatures, " "    verbose = FALSE), verbose = FALSE)"
+        .. .. .. ..@ call.string: chr [1:3] "ScaleData(run_preprocessing(scdata, normalization = normalization, " "    nfeatures = nfeatures, use_geosketch = use_geosketch, percent_keep = percent_keep), " "    verbose = FALSE)"
         .. .. .. ..@ params     :List of 9
         .. .. .. .. ..$ assay             : chr "RNA"
         .. .. .. .. ..$ model.use         : chr "linear"
@@ -7818,35 +7763,22 @@
         .. .. .. .. ..$ block.size        : num 1000
         .. .. .. .. ..$ min.cells.to.block: num 3000
         .. .. .. .. ..$ verbose           : logi FALSE
-        .. ..$ RunPCA.RNA                    :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ RunPCA.RNA              :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "RunPCA.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "RunPCA(scdata, npcs = npcs, verbose = FALSE, reduction.name = \"pca_for_harmony\", " "    reduction.key = \"PCh_\")"
+        .. .. .. ..@ call.string: chr [1:2] "RunPCA(scdata, npcs = npcs, reduction.name = reduction_name, " "    verbose = FALSE)"
         .. .. .. ..@ params     :List of 10
         .. .. .. .. ..$ assay          : chr "RNA"
-        .. .. .. .. ..$ npcs           : num 30
+        .. .. .. .. ..$ npcs           : num 50
         .. .. .. .. ..$ rev.pca        : logi FALSE
         .. .. .. .. ..$ weight.by.var  : logi TRUE
         .. .. .. .. ..$ verbose        : logi FALSE
         .. .. .. .. ..$ ndims.print    : int [1:5] 1 2 3 4 5
         .. .. .. .. ..$ nfeatures.print: num 30
-        .. .. .. .. ..$ reduction.name : chr "pca_for_harmony"
-        .. .. .. .. ..$ reduction.key  : chr "PCh_"
+        .. .. .. .. ..$ reduction.name : chr "pca"
+        .. .. .. .. ..$ reduction.key  : chr "PC_"
         .. .. .. .. ..$ seed.use       : num 42
-        .. ..$ Seurat..ProjectDim.RNA.harmony:Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
-        .. .. .. ..@ name       : chr "Seurat::ProjectDim.RNA.harmony"
-        .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
-        .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "Seurat::ProjectDim(object, reduction = reduction.save, overwrite = TRUE, " "    verbose = FALSE)"
-        .. .. .. ..@ params     :List of 7
-        .. .. .. .. ..$ reduction      : chr "harmony"
-        .. .. .. .. ..$ assay          : chr "RNA"
-        .. .. .. .. ..$ dims.print     : int [1:5] 1 2 3 4 5
-        .. .. .. .. ..$ nfeatures.print: num 20
-        .. .. .. .. ..$ overwrite      : logi TRUE
-        .. .. .. .. ..$ do.center      : logi FALSE
-        .. .. .. .. ..$ verbose        : logi FALSE
         ..@ tools       : list()
 
 ---

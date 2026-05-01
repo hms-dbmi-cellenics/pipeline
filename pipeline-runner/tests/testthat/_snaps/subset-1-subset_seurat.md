@@ -17,13 +17,13 @@
       $output$scdata_list
       $output$scdata_list$`this-is-not-a-uuid-1`
       An object of class Seurat 
-      2000 features across 202 samples within 1 assay 
+      2000 features across 223 samples within 1 assay 
       Active assay: RNA (2000 features, 0 variable features)
        1 layer present: counts
       
       $output$scdata_list$`this-is-not-a-uuid-2`
       An object of class Seurat 
-      2000 features across 164 samples within 1 assay 
+      2000 features across 173 samples within 1 assay 
       Active assay: RNA (2000 features, 0 variable features)
        1 layer present: counts
       
@@ -2061,13 +2061,13 @@
         2: louvain-0 Cluster 0 cluster     600
         3: louvain-0 Cluster 0 cluster     621
         4: louvain-0 Cluster 0 cluster     296
-        5: louvain-0 Cluster 0 cluster     859
+        5: louvain-0 Cluster 0 cluster     882
        ---                                    
-      596: louvain-3 Cluster 3 cluster      91
-      597: louvain-3 Cluster 3 cluster     228
-      598: louvain-3 Cluster 3 cluster     271
-      599: louvain-3 Cluster 3 cluster     591
-      600: louvain-3 Cluster 3 cluster     854
+      596: louvain-3 Cluster 3 cluster     271
+      597: louvain-3 Cluster 3 cluster     591
+      598: louvain-3 Cluster 3 cluster     818
+      599: louvain-3 Cluster 3 cluster     854
+      600: louvain-3 Cluster 3 cluster     519
       
       $output$qc_config
       $output$qc_config$cellSizeDistribution
@@ -2225,6 +2225,11 @@
       
       $output$qc_config$dataIntegration$dimensionalityReduction$excludeGeneCategories
       list()
+      
+      
+      $output$qc_config$dataIntegration$downsampling
+      $output$qc_config$dataIntegration$downsampling$method
+      [1] "default"
       
       
       
@@ -2726,6 +2731,11 @@
       
       $dataIntegration$dimensionalityReduction$excludeGeneCategories
       list()
+      
+      
+      $dataIntegration$downsampling
+      $dataIntegration$downsampling$method
+      [1] "default"
       
       
       
