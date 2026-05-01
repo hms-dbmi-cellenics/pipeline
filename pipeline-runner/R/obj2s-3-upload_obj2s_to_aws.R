@@ -276,14 +276,13 @@ format_obj2s <- function(scdata, experiment_id) {
 
 # use 'samples' or 'sample' if present, otherwise assume one sample
 add_samples_col <- function(scdata) {
-  # check if column named sample or samples, case insensitive
-  meta_cols <- colnames(scdata@meta.data)
-  in.meta <- grep("^samples?$", meta_cols, ignore.case = TRUE)
+  samples_cols <- c("samples", "sample")
+  in.meta <- samples_cols %in% colnames(scdata@meta.data)
 
-  if (!length(in.meta)) {
-    scdata$samples <- 'NA'
+  if (!any(in.meta)) {
+    scdata$samples <- "NA"
   } else {
-    sample_col <- meta_cols[in.meta][1]
+    sample_col <- samples_cols[which(in.meta)[1]]
     scdata$samples <- scdata@meta.data[[sample_col]]
   }
 
