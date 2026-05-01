@@ -305,6 +305,14 @@ read_10x_files <- function(config, input_dir) {
       unique.features = TRUE
     )
 
+    # Handle case where read_10x_bpcells returns a list (multiple feature types)
+    if (is.list(counts_mat)) {
+      slot <- "Gene Expression"
+      # questionable: grab first slot if no slot named gene expression
+      if (!(slot %in% names(counts_mat))) slot <- names(counts_mat)[1]
+      counts_mat <- counts_mat[[slot]]
+    }
+
     # Write the matrix to a directory
     matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
     BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
