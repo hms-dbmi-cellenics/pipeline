@@ -46,7 +46,7 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   return(prev_out)
 }
 
-mock_scdata <- function(rename_genes = c(), n_rep = 1) {
+mock_scdata_list <- function(rename_genes = c(), n_rep = 1) {
   pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
@@ -55,6 +55,7 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   rownames(pbmc_raw)[grep("^RP[LS]", rownames(pbmc_raw))] <- "SOX1"
   # replicate matrix columns n times to create a bigger mock dataset
   pbmc_raw <- do.call("cbind", replicate(n_rep, pbmc_raw, simplify = FALSE))
+  colnames(pbmc_raw) <- make.unique(colnames(pbmc_raw))
 
   if (length(rename_genes) > 0) {
     # rename some genes to match cell cycle genes
@@ -69,7 +70,10 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
   # add samples
-  scdata$samples <- rep(c(sample_1_id, sample_2_id), each = ncol(scdata) / 2)
+  scdata$samples <- rep(
+    c(sample_1_id, sample_2_id),
+    each = ncol(scdata) / 2
+  )
   scdata$cells_id <- 0:(ncol(scdata) - 1)
   scdata@misc$gene_annotations <- data.frame(
     input = rownames(scdata),
@@ -87,8 +91,17 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   return(scdata_list)
 }
 
-mock_ids <- function() {
-  return(list("sample_1" = 0:39, "sample_2" = 40:79))
+mock_ids <- function(scdata_list) {
+  sample1_ncells <- ncol(scdata_list$sample_1)
+  sample2_ncells <- ncol(scdata_list$sample_2)
+
+  sample1_ids <- seq(0, sample1_ncells - 1)
+  sample2_ids <- seq(sample1_ncells, sample1_ncells + sample2_ncells - 1)
+
+  list(
+    "sample_1" = sample1_ids,
+    "sample_2" = sample2_ids
+  )
 }
 
 
@@ -120,8 +133,8 @@ mock_doublet_scores <- function(counts) {
 }
 
 test_that("Integrate scdata works", {
-  scdata_list <- mock_scdata()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list()
+  cells_id <- mock_ids(scdata_list)
   config <- list(
     dimensionalityReduction = list(numPCs = 2),
     dataIntegration = list(
@@ -145,9 +158,9 @@ test_that("Integrate scdata works", {
 })
 
 test_that("Integrate scdata is not affected by sample order", {
-  scdata_list <- mock_scdata()
+  scdata_list <- mock_scdata_list()
   scdata_list_rev <- rev(scdata_list)
-  cells_id <- mock_ids()
+  cells_id <- mock_ids(scdata_list)
   config <- list(
     dimensionalityReduction = list(numPCs = 2),
     dataIntegration = list(
@@ -177,10 +190,10 @@ test_that("Integrate scdata is not affected by sample order", {
 })
 
 test_that("Integrate scdata filters out cell ids from the cells_id object", {
-  scdata_list <- mock_scdata()
+  scdata_list <- mock_scdata_list()
   sample_1_id <- names(scdata_list)[1]
   sample_2_id <- names(scdata_list)[2]
-  cells_id <- mock_ids()
+  cells_id <- mock_ids(scdata_list)
   cells_id[[sample_1_id]] <- cells_id[[sample_1_id]][-c(23:31)]
   cells_id[[sample_2_id]] <- cells_id[[sample_2_id]][-c(40:47)]
 
@@ -207,8 +220,8 @@ test_that("Integrate scdata filters out cell ids from the cells_id object", {
 
 
 test_that("numPCs estimation works", {
-  scdata_list <- mock_scdata()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list()
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   merged_scdata <- suppressWarnings(scdata_preprocessing(merged_scdata))
   npcs <- get_npcs(merged_scdata)
@@ -219,9 +232,9 @@ test_that("numPCs estimation works", {
 test_that("build_cc_gene_list correctly makes the list of cc genes when there are matches", {
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
-  scdata_list <- mock_scdata(rename_genes = some_cc_genes)
+  scdata_list <- mock_scdata_list(rename_genes = some_cc_genes)
 
-  cells_id <- mock_ids()
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations
 
@@ -233,8 +246,8 @@ test_that("build_cc_gene_list correctly makes the list of cc genes when there ar
 
 
 test_that("build_cc_gene_list returns empty int vector when there aren't matches", {
-  scdata_list <- mock_scdata()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list()
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations
 
@@ -248,9 +261,9 @@ test_that("build_cc_gene_list returns empty int vector when there aren't matches
 
 test_that("build_ribosomal_gene_list correctly makes the list of ribosomal genes when there are matches", {
   some_ribo_genes <- c("RPL23A", "RPL17", "RPS27A", "RPS14", "RPL13")
-  scdata_list <- mock_scdata(rename_genes = some_ribo_genes)
+  scdata_list <- mock_scdata_list(rename_genes = some_ribo_genes)
 
-  cells_id <- mock_ids()
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations
 
@@ -262,8 +275,8 @@ test_that("build_ribosomal_gene_list correctly makes the list of ribosomal genes
 
 
 test_that("build_ribosomal_gene_list returns empty int vector when there aren't matches", {
-  scdata_list <- mock_scdata()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list()
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations
   # remove ribo genes in mocked data
@@ -279,9 +292,9 @@ test_that("build_ribosomal_gene_list returns empty int vector when there aren't 
 
 test_that("build_mitochondrial_gene_list correctly makes the list of mitochondrial genes when there are matches", {
   some_mito_genes <- c("mt-ND1", "mt-ND2", "mt-CO1", "mt-CO2", "mt-ATP6")
-  scdata_list <- mock_scdata(rename_genes = some_mito_genes)
+  scdata_list <- mock_scdata_list(rename_genes = some_mito_genes)
 
-  cells_id <- mock_ids()
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations
 
@@ -293,8 +306,8 @@ test_that("build_mitochondrial_gene_list correctly makes the list of mitochondri
 
 
 test_that("build_mitochondrial_gene_list returns empty int vector when there aren't matches", {
-  scdata_list <- mock_scdata()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list()
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations
   # remove mt genes in mocked data
@@ -311,8 +324,8 @@ test_that("build_mitochondrial_gene_list returns empty int vector when there are
 test_that("list_exclude_genes adds custom genes to exclusion", {
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
-  scdata_list <- mock_scdata(rename_genes = some_cc_genes)
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list(rename_genes = some_cc_genes)
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations
 
@@ -331,8 +344,8 @@ test_that("remove_genes removes the correct genes when there are genes to remove
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
   some_ribo_genes <- c("RPL23A", "RPL17", "RPS27A", "RPS14", "RPL13")
   some_mito_genes <- c("mt-ND1", "mt-ND2", "mt-CO1", "mt-CO2", "mt-ATP6")
-  scdata_list <- mock_scdata(rename_genes = c(some_cc_genes, some_ribo_genes, some_mito_genes))
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list(rename_genes = c(some_cc_genes, some_ribo_genes, some_mito_genes))
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations$input
 
@@ -360,8 +373,8 @@ test_that("remove_genes removes the correct genes when there are genes to remove
 
 
 test_that("remove_genes doesn't modify the object when there are no matches", {
-  scdata_list <- mock_scdata()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list()
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   # empty integer vector
   res <- remove_genes(merged_scdata, exclude_groups = "cellCycle")
@@ -394,8 +407,8 @@ test_that("merge_scdata_list returns first element of list if only one sample", 
 test_that("integrate_scdata calls remove_genes if there are groups to exclude", {
   n_rename <- 10
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
-  scdata_list <- mock_scdata(rename_genes = some_cc_genes)
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list(rename_genes = some_cc_genes)
+  cells_id <- mock_ids(scdata_list)
 
   config <- list(
     dimensionalityReduction = list(
@@ -427,8 +440,8 @@ test_that("integrate_scdata calls remove_genes if there are groups to exclude", 
 
 
 test_that("integrate_scdata doesn't run geosketch if config does not contain geosketch parameters", {
-  scdata_list <- mock_scdata()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list()
+  cells_id <- mock_ids(scdata_list)
   config <- list(
     dimensionalityReduction = list(numPCs = 5),
     dataIntegration = list(
@@ -447,13 +460,17 @@ test_that("integrate_scdata doesn't run geosketch if config does not contain geo
     cells_id,
     task_name = "dataIntegration"
   ))$data
-  expect_true(is.null(integrated_scdata@misc$geosketch))
+
+  expect_setequal(
+    "RNA",
+    Seurat::Assays(integrated_scdata)
+  )
 })
 
 
 test_that("integrate_scdata run geosketch if config contains geosketch parameters.", {
-  scdata_list <- mock_scdata()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list(n_rep = 3)
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   config <- list(
     dimensionalityReduction = list(
@@ -463,14 +480,14 @@ test_that("integrate_scdata run geosketch if config contains geosketch parameter
     dataIntegration = list(
       method = "seuratv4",
       methodSettings = list(seuratv4 = list(
-        numGenes = 10,
+        numGenes = 100,
         normalisation = "logNormalize"
       ))
     ),
     downsampling = list(
       method = "geosketch",
       methodSettings = list(geosketch = list(
-        percentageToKeep = 5
+        percentageToKeep = 50
       ))
     )
   )
@@ -482,20 +499,24 @@ test_that("integrate_scdata run geosketch if config contains geosketch parameter
     cells_id,
     task_name = "dataIntegration"
   ))$data
-  expect_true(integrated_scdata@misc$geosketch)
+
+  expect_setequal(
+    c("sketch", "RNA"),
+    Seurat::Assays(integrated_scdata)
+  )
 })
 
 
 test_that("run_geosketch generates the correct number of sketches", {
-  scdata_list <- mock_scdata()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list()
+  cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   config <- list(
     dimensionalityReduction = list(numPCs = 5),
     dataIntegration = list(
       method = "harmony",
       methodSettings = list(harmony = list(
-        numGenes = 10,
+        numGenes = 100,
         normalisation = "logNormalize"
       ))
     )
@@ -514,7 +535,7 @@ test_that("run_geosketch generates the correct number of sketches", {
   })
   merged_scdata@misc[["active.reduction"]] <- "pca"
 
-  perc_num_cells <- 5
+  perc_num_cells <- 50
   num_cells <- round(ncol(merged_scdata) * perc_num_cells / 100)
   geosketch_list <- run_geosketch(merged_scdata, dims = 50, perc_num_cells)
   expect_equal(ncol(geosketch_list$sketch), num_cells)
@@ -522,8 +543,8 @@ test_that("run_geosketch generates the correct number of sketches", {
 
 
 test_that("integrate_scdata with geosketch adds the correct integration method to the Seurat object", {
-  scdata_list <- mock_scdata()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list(n_rep = 3)
+  cells_id <- mock_ids(scdata_list)
   config <- list(
     dimensionalityReduction = list(
       numPCs = 5,
@@ -532,14 +553,14 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
     dataIntegration = list(
       method = "seuratv4",
       methodSettings = list(seuratv4 = list(
-        numGenes = 10,
+        numGenes = 100,
         normalisation = "logNormalize"
       ))
     ),
     downsampling = list(
       method = "geosketch",
       methodSettings = list(geosketch = list(
-        percentageToKeep = 5
+        percentageToKeep = 50
       ))
     )
   )
@@ -551,5 +572,9 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
     cells_id,
     task_name = "dataIntegration"
   ))$data
-  expect_equal(integrated_scdata@misc[["active.reduction"]], "pca")
+
+  expect_equal(
+    integrated_scdata@misc[["active.reduction"]],
+    "integrated.rpca.sketch"
+  )
 })
