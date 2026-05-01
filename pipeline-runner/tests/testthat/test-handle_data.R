@@ -34,6 +34,14 @@ get_mock_cell_sets <- function(flatten = TRUE) {
   return(cell_sets)
 }
 
+mock_counts <- function(ncells = 200, ngenes = 200) {
+  sce <- scuttle::mockSCE(ncells, ngenes)
+  counts <- SummarizedExperiment::assay(sce, "counts")
+  rownames(counts) <- gsub("_", "-", rownames(counts))
+  counts <- as(counts, "dgCMatrix")
+  maybe_bpcells(counts)
+}
+
 
 test_that("send_pipeline_update_to_api completes successfully", {
   before_each()
@@ -387,8 +395,7 @@ test_that("unflatten_cell_sets works", {
 test_that("get_nnzero returns sum of nFeature_RNA", {
   # Create a mock Seurat object
   set.seed(RANDOM_SEED)
-  sce <- scDblFinder::mockDoubletSCE(ncells = c(100, 100))
-  counts <- sce@assays@data$counts
+  counts <- mock_counts()
 
   # Create a Seurat object
   scdata <- Seurat::CreateSeuratObject(counts = counts)
@@ -404,8 +411,7 @@ test_that("get_nnzero returns sum of nFeature_RNA", {
 test_that("get_nnzero with Seurat object backed by BPCells matrices", {
   # Create a Seurat object using BPCells matrix storage
   set.seed(RANDOM_SEED)
-  sce <- scDblFinder::mockDoubletSCE(ncells = c(100, 100))
-  counts <- sce@assays@data$counts
+  counts <- mock_counts()
 
   # Ensure counts are integer
   counts <- as(counts, "dgCMatrix")
@@ -431,13 +437,9 @@ test_that("get_nnzero with Seurat object backed by BPCells matrices", {
 test_that("order_by_size orders scdata_list by size", {
   # Create multiple mock Seurat objects of different sizes
   set.seed(RANDOM_SEED)
-  sce1 <- scDblFinder::mockDoubletSCE(ncells = c(50, 50))
-  sce2 <- scDblFinder::mockDoubletSCE(ncells = c(100, 100))
-  sce3 <- scDblFinder::mockDoubletSCE(ncells = c(75, 75))
-
-  counts1 <- sce1@assays@data$counts
-  counts2 <- sce2@assays@data$counts
-  counts3 <- sce3@assays@data$counts
+  counts1 <- mock_counts(ncells = 100)
+  counts2 <- mock_counts(ncells = 200)
+  counts3 <- mock_counts(ncells = 150)
 
   scdata1 <- Seurat::CreateSeuratObject(counts = counts1)
   scdata2 <- Seurat::CreateSeuratObject(counts = counts2)
