@@ -46,7 +46,7 @@
         .. ..$ filterSettings:List of 2
         .. .. ..$ probabilityThreshold: num 0.8
         .. .. ..$ binStep             : num 0.02
-       $ dataIntegration     :List of 2
+       $ dataIntegration     :List of 3
         ..$ dataIntegration        :List of 2
         .. ..$ method        : chr "harmony"
         .. ..$ methodSettings:List of 4
@@ -66,6 +66,8 @@
         .. ..$ method               : chr "rpca"
         .. ..$ numPCs               : NULL
         .. ..$ excludeGeneCategories: list()
+        ..$ downsampling           :List of 1
+        .. ..$ method: chr "default"
        $ configureEmbedding  :List of 2
         ..$ embeddingSettings :List of 2
         .. ..$ method        : chr "umap"

@@ -4,10 +4,9 @@
       str(integrated_scdata)
     Output
       Formal class 'Seurat' [package "SeuratObject"] with 13 slots
-        ..@ assays      :List of 2
-        .. ..$ RNA       :Formal class 'Assay5' [package "SeuratObject"] with 8 slots
+        ..@ assays      :List of 1
+        .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
         .. .. .. ..@ layers    :List of 3
-        .. .. .. .. ..$ scale.data: num [1:230, 1:240] -0.476 1.47 -0.487 -1.34 -0.374 ...
         .. .. .. .. ..$ data      :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
         .. .. .. .. .. .. ..@ i       : int [1:13368] 1 5 8 11 22 30 33 34 36 38 ...
         .. .. .. .. .. .. ..@ p       : int [1:241] 0 47 99 149 205 258 306 342 387 423 ...
@@ -26,6 +25,7 @@
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. ..@ x       : num [1:13368] 1 1 3 1 1 4 1 5 1 1 ...
         .. .. .. .. .. .. ..@ factors : list()
+        .. .. .. .. ..$ scale.data: num [1:230, 1:240] -0.41 1.647 -0.429 -1.38 -0.33 ...
         .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
         .. .. .. .. .. ..@ .Data: logi [1:240, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE ...
         .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
@@ -63,59 +63,31 @@
         .. .. .. .. ..$ var.features.rank                    : int [1:230] 93 220 86 104 77 105 115 210 194 97 ...
         .. .. .. ..@ misc      : list()
         .. .. .. ..@ key       : chr "rna_"
-        .. ..$ integrated:Formal class 'Assay' [package "SeuratObject"] with 8 slots
-        .. .. .. ..@ counts       :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. ..@ i       : int(0) 
-        .. .. .. .. .. ..@ p       : int 0
-        .. .. .. .. .. ..@ Dim     : int [1:2] 0 0
-        .. .. .. .. .. ..@ Dimnames:List of 2
-        .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. ..@ x       : num(0) 
-        .. .. .. .. .. ..@ factors : list()
-        .. .. .. ..@ data         :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. ..@ i       : int [1:28305] 14 27 32 45 57 59 63 67 93 104 ...
-        .. .. .. .. .. ..@ p       : int [1:241] 0 47 99 149 205 258 306 342 387 423 ...
-        .. .. .. .. .. ..@ Dim     : int [1:2] 230 240
-        .. .. .. .. .. ..@ Dimnames:List of 2
-        .. .. .. .. .. .. ..$ : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
-        .. .. .. .. .. .. ..$ : chr [1:240] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. .. .. ..@ x       : num [1:28305] 5.66 4.97 4.97 5.66 4.97 ...
-        .. .. .. .. .. ..@ factors : list()
-        .. .. .. ..@ scale.data   : num [1:230, 1:240] -0.548 -0.192 -0.378 -0.429 -0.355 ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
-        .. .. .. .. .. ..$ : chr [1:240] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. ..@ assay.orig   : NULL
-        .. .. .. ..@ var.features : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
-        .. .. .. ..@ meta.features:'data.frame':	230 obs. of  0 variables
-        .. .. .. ..@ misc         : NULL
-        .. .. .. ..@ key          : chr "integrated_"
         ..@ meta.data   :'data.frame':	240 obs. of  5 variables:
         .. ..$ orig.ident  : chr [1:240] "SeuratProject" "SeuratProject" "SeuratProject" "SeuratProject" ...
         .. ..$ nCount_RNA  : num [1:240] 70 85 87 127 173 70 64 72 52 100 ...
         .. ..$ nFeature_RNA: int [1:240] 47 52 50 56 53 48 36 45 36 41 ...
         .. ..$ samples     : chr [1:240] "123abc" "123abc" "123abc" "123abc" ...
         .. ..$ cells_id    : int [1:240] 0 1 2 3 4 5 6 7 8 9 ...
-        ..@ active.assay: chr "integrated"
+        ..@ active.assay: chr "RNA"
         ..@ active.ident: Factor w/ 1 level "SeuratProject": 1 1 1 1 1 1 1 1 1 1 ...
         .. ..- attr(*, "names")= chr [1:240] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
         ..@ graphs      : list()
         ..@ neighbors   : list()
-        ..@ reductions  :List of 1
-        .. ..$ pca:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:240, 1:50] 3.27 3.69 2.67 3.72 3.07 ...
+        ..@ reductions  :List of 2
+        .. ..$ pca            :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
+        .. .. .. ..@ cell.embeddings           : num [1:240, 1:50] 3.13 3.58 2.41 3.45 2.79 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:240] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" ...
-        .. .. .. ..@ feature.loadings          : num [1:230, 1:50] 0.02823 0.00596 0.04809 0.04561 0.05145 ...
+        .. .. .. ..@ feature.loadings          : num [1:230, 1:50] 0.03005 0.00738 0.06095 0.05711 0.06203 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. ..$ : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" ...
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
-        .. .. .. ..@ assay.used                : chr "integrated"
+        .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:50] 5.82 5.25 4.34 3.64 2.75 ...
+        .. .. .. ..@ stdev                     : num [1:50] 5.75 5.21 4.32 3.62 2.77 ...
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
@@ -124,6 +96,26 @@
         .. .. .. ..@ misc                      :List of 1
         .. .. .. .. ..$ total.variance: num 230
         .. .. .. ..@ key                       : chr "PC_"
+        .. ..$ integrated.rpca:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
+        .. .. .. ..@ cell.embeddings           : num [1:240, 1:50] 3.13 3.58 2.41 3.45 2.79 ...
+        .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. ..$ : chr [1:240] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
+        .. .. .. .. .. ..$ : chr [1:50] "integratedrpca_1" "integratedrpca_2" "integratedrpca_3" "integratedrpca_4" ...
+        .. .. .. ..@ feature.loadings          : num [1:230, 1:50] 0.03005 0.00738 0.06095 0.05711 0.06203 ...
+        .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. ..$ : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
+        .. .. .. .. .. ..$ : chr [1:50] "integratedrpca_1" "integratedrpca_2" "integratedrpca_3" "integratedrpca_4" ...
+        .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
+        .. .. .. ..@ assay.used                : chr "RNA"
+        .. .. .. ..@ global                    : logi FALSE
+        .. .. .. ..@ stdev                     : num(0) 
+        .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
+        .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
+        .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
+        .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
+        .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
+        .. .. .. ..@ misc                      : list()
+        .. .. .. ..@ key                       : chr "integratedrpca_"
         ..@ images      : list()
         ..@ project.name: chr "SeuratProject"
         ..@ misc        :List of 6
@@ -136,58 +128,31 @@
         .. ..$ gene_dispersion :'data.frame':	230 obs. of  6 variables:
         .. .. ..$ mean                 : num [1:230] 0.508 0.675 0.858 11.025 0.367 ...
         .. .. ..$ variance             : num [1:230] 1.29 1.41 5.16 516.86 1.01 ...
-        .. .. ..$ variance.standardized: num [1:230] 1.68 3.91 5.87 506.74 1.11 ...
-        .. .. ..$ NA                   : num [1:230] 0.772 0.362 0.88 1.02 0.908 ...
+        .. .. ..$ variance.expected    : num [1:230] 1.68 3.91 5.87 506.74 1.11 ...
+        .. .. ..$ variance.standardized: num [1:230] 0.772 0.362 0.88 1.02 0.908 ...
         .. .. ..$ SYMBOL               : chr [1:230] "SYMBOL - MS4A1" "SYMBOL - CD79B" "SYMBOL - CD79A" "SYMBOL - HLA-DRA" ...
         .. .. ..$ ENSEMBL              : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
-        .. ..$ active.reduction: chr "pca"
         .. ..$ numPCs          : num 50
+        .. ..$ active.reduction: chr "integrated.rpca"
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 5 0 2
-        ..@ commands    :List of 5
-        .. ..$ FindIntegrationAnchors  :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
-        .. .. .. ..@ name       : chr "Seurat::FindIntegrationAnchors"
+        .. ..$ : int [1:3] 5 3 0
+        ..@ commands    :List of 4
+        .. ..$ NormalizeData.RNA       :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. .. .. ..@ name       : chr "NormalizeData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
-        .. .. .. ..@ assay.used : Named chr [1:2] "RNA" "RNA"
-        .. .. .. .. ..- attr(*, "names")= chr [1:2] "123abc" "123def"
-        .. .. .. ..@ call.string: chr [1:3] "Seurat::FindIntegrationAnchors(object.list = scdata_list, dims = 1:npcs, " "    k.filter = k.filter, normalization.method = normalization, " "    verbose = TRUE, reduction = reduction)"
-        .. .. .. ..@ params     :List of 15
-        .. .. .. .. ..$ assay               : Named chr [1:2] "RNA" "RNA"
-        .. .. .. .. .. ..- attr(*, "names")= chr [1:2] "123abc" "123def"
-        .. .. .. .. ..$ anchor.features     : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
-        .. .. .. .. ..$ scale               : logi TRUE
+        .. .. .. ..@ assay.used : chr "RNA"
+        .. .. .. ..@ call.string: chr [1:2] "NormalizeData(scdata, normalization.method = \"LogNormalize\", " "    verbose = FALSE)"
+        .. .. .. ..@ params     :List of 5
+        .. .. .. .. ..$ assay               : chr "RNA"
         .. .. .. .. ..$ normalization.method: chr "LogNormalize"
-        .. .. .. .. ..$ reduction           : chr "pca"
-        .. .. .. .. ..$ l2.norm             : logi TRUE
-        .. .. .. .. ..$ dims                : int [1:50] 1 2 3 4 5 6 7 8 9 10 ...
-        .. .. .. .. ..$ k.anchor            : num 5
-        .. .. .. .. ..$ k.filter            : logi NA
-        .. .. .. .. ..$ k.score             : num 30
-        .. .. .. .. ..$ max.features        : num 200
-        .. .. .. .. ..$ nn.method           : chr "annoy"
-        .. .. .. .. ..$ n.trees             : num 50
-        .. .. .. .. ..$ eps                 : num 0
-        .. .. .. .. ..$ verbose             : logi TRUE
-        .. ..$ withCallingHandlers     :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
-        .. .. .. ..@ name       : chr "withCallingHandlers"
-        .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
-        .. .. .. ..@ assay.used : NULL
-        .. .. .. ..@ call.string: chr [1:2] "withCallingHandlers(expr, warning = function(w) if (inherits(w, " "    classes)) tryInvokeRestart(\"muffleWarning\"))"
-        .. .. .. ..@ params     :List of 9
-        .. .. .. .. ..$ new.assay.name      : chr "integrated"
-        .. .. .. .. ..$ normalization.method: chr "LogNormalize"
-        .. .. .. .. ..$ features            : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
-        .. .. .. .. ..$ dims                : int [1:50] 1 2 3 4 5 6 7 8 9 10 ...
-        .. .. .. .. ..$ k.weight            : num 59
-        .. .. .. .. ..$ sd.weight           : num 1
-        .. .. .. .. ..$ preserve.order      : logi FALSE
-        .. .. .. .. ..$ eps                 : num 0
-        .. .. .. .. ..$ verbose             : logi TRUE
+        .. .. .. .. ..$ scale.factor        : num 10000
+        .. .. .. .. ..$ margin              : num 1
+        .. .. .. .. ..$ verbose             : logi FALSE
         .. ..$ FindVariableFeatures.RNA:Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "FindVariableFeatures.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(scdata, assay = \"RNA\", nfeatures = nfeatures, " "    verbose = FALSE)"
+        .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(Seurat::NormalizeData(scdata, normalization.method = \"LogNormalize\", " "    verbose = FALSE), nfeatures = nfeatures, verbose = FALSE)"
         .. .. .. ..@ params     :List of 10
         .. .. .. .. ..$ assay            : chr "RNA"
         .. .. .. .. ..$ selection.method : chr "vst"
@@ -199,30 +164,28 @@
         .. .. .. .. ..$ mean.cutoff      : num [1:2] 0.1 8
         .. .. .. .. ..$ dispersion.cutoff: num [1:2] 1 Inf
         .. .. .. .. ..$ verbose          : logi FALSE
-        .. ..$ ScaleData.integrated    :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
-        .. .. .. ..@ name       : chr "ScaleData.integrated"
+        .. ..$ ScaleData.RNA           :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. .. .. ..@ name       : chr "ScaleData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
-        .. .. .. ..@ assay.used : chr "integrated"
+        .. .. .. ..@ assay.used : chr "RNA"
         .. .. .. ..@ call.string: chr "ScaleData(scdata, verbose = FALSE)"
-        .. .. .. ..@ params     :List of 10
-        .. .. .. .. ..$ features          : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
-        .. .. .. .. ..$ assay             : chr "integrated"
+        .. .. .. ..@ params     :List of 9
+        .. .. .. .. ..$ assay             : chr "RNA"
         .. .. .. .. ..$ model.use         : chr "linear"
         .. .. .. .. ..$ use.umi           : logi FALSE
         .. .. .. .. ..$ do.scale          : logi TRUE
         .. .. .. .. ..$ do.center         : logi TRUE
         .. .. .. .. ..$ scale.max         : num 10
         .. .. .. .. ..$ block.size        : num 1000
-        .. .. .. .. ..$ min.cells.to.block: num 240
+        .. .. .. .. ..$ min.cells.to.block: num 3000
         .. .. .. .. ..$ verbose           : logi FALSE
-        .. ..$ RunPCA.integrated       :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
-        .. .. .. ..@ name       : chr "RunPCA.integrated"
+        .. ..$ RunPCA.RNA              :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. .. .. ..@ name       : chr "RunPCA.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
-        .. .. .. ..@ assay.used : chr "integrated"
-        .. .. .. ..@ call.string: chr [1:2] "RunPCA(scdata, npcs = npcs_for_pca, features = Seurat::VariableFeatures(object = scdata), " "    verbose = FALSE)"
-        .. .. .. ..@ params     :List of 11
-        .. .. .. .. ..$ assay          : chr "integrated"
-        .. .. .. .. ..$ features       : chr [1:230] "VDAC3" "IGLL5" "PF4" "PPBP" ...
+        .. .. .. ..@ assay.used : chr "RNA"
+        .. .. .. ..@ call.string: chr [1:2] "RunPCA(scdata, npcs = npcs, reduction.name = reduction_name, " "    verbose = FALSE)"
+        .. .. .. ..@ params     :List of 10
+        .. .. .. .. ..$ assay          : chr "RNA"
         .. .. .. .. ..$ npcs           : num 50
         .. .. .. .. ..$ rev.pca        : logi FALSE
         .. .. .. .. ..$ weight.by.var  : logi TRUE
@@ -232,20 +195,7 @@
         .. .. .. .. ..$ reduction.name : chr "pca"
         .. .. .. .. ..$ reduction.key  : chr "PC_"
         .. .. .. .. ..$ seed.use       : num 42
-        ..@ tools       :List of 1
-        .. ..$ Integration:Formal class 'IntegrationData' [package "Seurat"] with 7 slots
-        .. .. .. ..@ neighbors         : NULL
-        .. .. .. ..@ weights           : NULL
-        .. .. .. ..@ integration.matrix: NULL
-        .. .. .. ..@ anchors           :'data.frame':	640 obs. of  5 variables:
-        .. .. .. .. ..$ cell1   : num [1:640] 1 2 2 3 3 4 5 6 7 7 ...
-        .. .. .. .. ..$ cell2   : num [1:640] 41 42 45 43 49 44 45 46 47 46 ...
-        .. .. .. .. ..$ score   : num [1:640] 0.4 0.6 0.2 0.6 0.35 0.5 0.5 0.75 0.6 0.4 ...
-        .. .. .. .. ..$ dataset1: int [1:640] 1 1 1 1 1 1 1 1 1 1 ...
-        .. .. .. .. ..$ dataset2: int [1:640] 2 2 2 2 2 2 2 2 2 2 ...
-        .. .. .. ..@ offsets           : NULL
-        .. .. .. ..@ objects.ncell     : NULL
-        .. .. .. ..@ sample.tree       : int [1, 1:2] -1 -2
+        ..@ tools       : list()
 
 ---
 
@@ -262,10 +212,10 @@
        $ gene_dispersion :'data.frame':	230 obs. of  6 variables:
         ..$ mean                 : num [1:230] 0.508 0.675 0.858 11.025 0.367 ...
         ..$ variance             : num [1:230] 1.29 1.41 5.16 516.86 1.01 ...
-        ..$ variance.standardized: num [1:230] 1.68 3.91 5.87 506.74 1.11 ...
-        ..$ NA                   : num [1:230] 0.772 0.362 0.88 1.02 0.908 ...
+        ..$ variance.expected    : num [1:230] 1.68 3.91 5.87 506.74 1.11 ...
+        ..$ variance.standardized: num [1:230] 0.772 0.362 0.88 1.02 0.908 ...
         ..$ SYMBOL               : chr [1:230] "SYMBOL - MS4A1" "SYMBOL - CD79B" "SYMBOL - CD79A" "SYMBOL - HLA-DRA" ...
         ..$ ENSEMBL              : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
-       $ active.reduction: chr "pca"
        $ numPCs          : num 50
+       $ active.reduction: chr "integrated.rpca"
 
