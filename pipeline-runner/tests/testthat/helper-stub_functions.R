@@ -43,31 +43,31 @@ stub_file.path <- function(...) {
 #' @export
 #'
 stubbed_download_user_files <- function(input, pipeline_config, prev_out = list()) {
-    # helper to simplify calls to the stubbed function
+  # helper to simplify calls to the stubbed function
 
-    mockedS3 <- list(list_objects = stub_s3_list_objects,
-                     get_object = stub_s3_get_object)
+  mockedS3 <- list(list_objects = stub_s3_list_objects,
+                    get_object = stub_s3_get_object)
 
-    # where makes sure where we are stubbing the what calls.
-    mockery::stub(where = download_user_files,
-                  what = "paws::s3",
-                  how = mockedS3)
-    mockery::stub(download_s3_files, "s3$list_objects", mockedS3$list_objects)
+  # where makes sure where we are stubbing the what calls.
+  mockery::stub(where = download_user_files,
+                what = "paws::s3",
+                how = mockedS3)
+  mockery::stub(download_s3_files, "s3$list_objects", mockedS3$list_objects)
 
-    mockery::stub(download_user_files, "file.path", stub_file.path)
-    mockery::stub(download_s3_files, "file.path", stub_file.path)
+  mockery::stub(download_user_files, "file.path", stub_file.path)
+  mockery::stub(download_s3_files, "file.path", stub_file.path)
 
-    mockery::stub(download_and_store, "s3$get_object", mockedS3$get_object)
+  mockery::stub(download_and_store, "s3$get_object", mockedS3$get_object)
 
-    res <- download_user_files(input,
-                               pipeline_config,
-                               input_dir = "./input",
-                               prev_out = prev_out)
-    # download_user_files creates a "/input" folder in the pod. defer deleting
-    # it during tests.
-    withr::defer(unlink("./input", recursive = TRUE), envir = parent.frame(2))
+  res <- download_user_files(input,
+                              pipeline_config,
+                              input_dir = "./input",
+                              prev_out = prev_out)
+  # download_user_files creates a "/input" folder in the pod. defer deleting
+  # it during tests.
+  withr::defer(unlink("./input", recursive = TRUE), envir = parent.frame(2))
 
-    return(res)
+  return(res)
 }
 
 #' (stubbed) Read user input files
@@ -200,12 +200,14 @@ stubbed_upload_to_aws <- function(input, pipeline_config, prev_out) {
 }
 
 
-stub_replace_cell_class_through_api <- function(cell_sets_object,
-                                         api_url,
-                                         experiment_id,
-                                         cell_set_key,
-                                         auth_JWT,
-                                         ignore_ssl_cert = FALSE) {
+stub_replace_cell_class_through_api <- function(
+  cell_sets_object,
+  api_url,
+  experiment_id,
+  cell_set_key,
+  auth_JWT,
+  ignore_ssl_cert = FALSE
+) {
   cellsets_bucket <- "./mock_data/cell_sets_bucket"
   if (!dir.exists(cellsets_bucket)) {
     dir.create(cellsets_bucket)
@@ -224,14 +226,23 @@ stub_replace_cell_class_through_api <- function(cell_sets_object,
 #' @return list with scdata, cell_ids and config
 #' @export
 #'
-stubbed_embed_and_cluster <- function(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert) {
+stubbed_embed_and_cluster <- function(
+  scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert
+) {
 
   mockery::stub(embed_and_cluster,
                 "replace_cell_class_through_api",
                 stub_replace_cell_class_through_api,
                 depth=2)
 
-  embed_and_cluster(scdata, config, sample_id, cells_id, task_name, ignore_ssl_cert)
+  embed_and_cluster(
+    scdata,
+    config,
+    sample_id,
+    cells_id,
+    task_name,
+    ignore_ssl_cert
+  )
 }
 
 
@@ -251,7 +262,10 @@ stubbed_download_cl_metadata_file <- function(config) {
 
 
 stubbed_make_cl_metadata_cellsets <- function(scdata, config) {
-  mockery::stub(make_cl_metadata_cellsets, "download_cl_metadata_file", stubbed_download_cl_metadata_file)
+  mockery::stub(
+    make_cl_metadata_cellsets,
+    "download_cl_metadata_file",
+    stubbed_download_cl_metadata_file
+  )
   make_cl_metadata_cellsets(scdata, config)
 }
-

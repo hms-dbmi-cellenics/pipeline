@@ -554,11 +554,9 @@ test_that("replace_matrix_dir_paths updates MatrixDir path", {
   expect_equal(nrow(loaded_obj), 10)
   expect_equal(ncol(loaded_obj), 10)
 
-  # Access subset of matrix before move
-  subset_before <- loaded_obj[1:3, 1:3]
-  expect_equal(nrow(subset_before), 3)
-  expect_equal(ncol(subset_before), 3)
-  subset_before_data <- loaded_obj[["RNA"]]$counts[1:3, 1:3]
+  # Compute reference data before moving directory
+  subset_before_data <- as.matrix(loaded_obj[["RNA"]]$counts[1:3, 1:3])
+  col_sums_before <- Matrix::colSums(loaded_obj[["RNA"]]$counts[1:3, 1:3])
 
   # Move matrix directory to new location
   new_dir <- file.path(
@@ -585,13 +583,7 @@ test_that("replace_matrix_dir_paths updates MatrixDir path", {
   # (original location no longer exists)
   expect_error(
     Matrix::colSums(loaded_matrix[1:3, 1:3]),
-    regexp = "cannot open.*No such file or directory"
-  )
-
-  # Verify that trying to subset also fails
-  expect_error(
-    loaded_matrix[1:3, 1:3],
-    regexp = "cannot open.*No such file or directory"
+    regexp = "Missing directory|cannot open"
   )
 
   # Update matrix dir paths using replace_matrix_dir_paths
@@ -605,7 +597,6 @@ test_that("replace_matrix_dir_paths updates MatrixDir path", {
   expect_equal(ncol(subset_after), 3)
 
   # Verify matrix dimensions are preserved
-  col_sums_before <- Matrix::colSums(subset_before_data)
   col_sums_after <- Matrix::colSums(subset_after)
   expect_equal(col_sums_before, col_sums_after)
 

@@ -1,8 +1,9 @@
 mock_counts <- function() {
   set.seed(RANDOM_SEED)
-  DropletUtils:::simCounts()
+  counts <- DropletUtils:::simCounts()
+  bpcells_dir <- withr::local_tempfile(.local_envir = parent.frame())
+  maybe_bpcells(counts, bpcells_dir)
 }
-
 
 test_that("run_emptydrops is skipped when dataset is pre-filtered", {
   counts <- mock_counts()

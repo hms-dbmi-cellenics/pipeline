@@ -3,7 +3,10 @@ local_h5_experiment <-
     sample_path <- file.path(experiment_dir, sample_dir)
     dir.create(sample_path, recursive = T)
     mock_10x_h5_matrix(5, 10, sample_path)
-    R.utils::gzip(paste0(sample_path, "/matrix.h5"),paste0(sample_path, "/matrix.h5.gz"))
+    R.utils::gzip(
+      paste0(sample_path, "/matrix.h5"),
+      paste0(sample_path, "/matrix.h5.gz")
+    )
     withr::defer(unlink(experiment_dir, recursive = T), envir = env)
 
   }
@@ -49,12 +52,16 @@ mock_10x_h5_matrix <- function(num_cells, num_genes, sample_path) {
   rhdf5::h5write(gene_names, file_path, paste0(main_slot, "gene_names"))
 
   # Create features dataset and write the values
-  rhdf5::h5write(gene_names,
-                 file_path,
-                 paste0(main_slot, features_dataset_name, "name"))
-  rhdf5::h5write(gene_ids,
-                 file_path,
-                 paste0(main_slot, features_dataset_name, "id"))
+  rhdf5::h5write(
+    gene_names,
+    file_path,
+    paste0(main_slot, features_dataset_name, "name")
+  )
+  rhdf5::h5write(
+    gene_ids,
+    file_path,
+    paste0(main_slot, features_dataset_name, "id")
+  )
   rhdf5::h5write(
     feature_types,
     file_path,
@@ -70,6 +77,9 @@ test_that("load_user_files loads an h5 matrix", {
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
+  # Clean up any pre-existing temporary matrix directories
+  unlink(file.path(tempdir(), paste0(sample, "_matrix_dir")), recursive = TRUE)
+
   local_h5_experiment(experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list
@@ -79,5 +89,6 @@ test_that("load_user_files loads an h5 matrix", {
   expect_true("counts_list" %in% names(out))
   expect_true(sample %in% names(out$counts_list))
 
-  expect_s4_class(out$counts_list[[1]], "dgCMatrix")
+  # BPCells matrices are returned as IterableMatrix or MatrixDir, not dgCMatrix
+  expect_s4_class(out$counts_list[[1]], "IterableMatrix")
 })

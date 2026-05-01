@@ -31,14 +31,16 @@ build-batch-staging:
 	@(cd pipeline-runner && docker build --target batch --tag 242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:batch-staging --build-arg GITHUB_PAT=${GITHUB_API_TOKEN} .)
 	@aws ecr get-login-password --region 'eu-west-1' | docker login --username AWS --password-stdin 242905224710.dkr.ecr.eu-west-1.amazonaws.com
 	@docker push 242905224710.dkr.ecr.eu-west-1.amazonaws.com/pipeline:batch-staging
-test: build ## Executes unit tests
+test: build ## Executes unit tests (usage: make test [BPCELLS=true])
 	@docker run \
 		--entrypoint /bin/bash \
+		-e BPCELLS=$(BPCELLS) \
 		biomage-pipeline-runner \
 		-c "R -e 'testthat::test_local()'"
-test-file: build ## Tests a specific test file (usage: make test-file FILE=test-file.R)
+test-file: build ## Tests a specific test file (usage: make test-file FILE=test-file.R [BPCELLS=true])
 	@docker run \
 		--entrypoint /bin/bash \
+		-e BPCELLS=$(BPCELLS) \
 		biomage-pipeline-runner \
 		-c "R -e \"pkgload::load_all(); testthat::test_file('tests/testthat/$(FILE)')\""
 snapshot: build ## Regenerates renv.lock snapshot from current packages
