@@ -15,14 +15,15 @@ mock_scdata <- function() {
 }
 
 mock_cellset_object <- function(n_cells, n_clusters) {
-
   if (n_clusters == 0) {
     return(data.frame(cluster = integer(), cell_ids = integer()))
   }
 
   # cell_ids with no replacement to avoid repeated cell_ids
-  data.frame(cluster = sample(1:n_clusters, size = n_cells, replace = T),
-             cell_ids = sample(1:(2*n_cells), size = n_cells))
+  data.frame(
+    cluster = sample(1:n_clusters, size = n_cells, replace = T),
+    cell_ids = sample(1:(2 * n_cells), size = n_cells)
+  )
 }
 
 mock_color_pool <- function(n) {
@@ -31,7 +32,11 @@ mock_color_pool <- function(n) {
 
 
 mock_cl_metadata <- function(scdata, optional_custom_barcodes) {
-  barcode <- if (missing(optional_custom_barcodes)) rownames(scdata@meta.data) else optional_custom_barcodes
+  barcode <- if (missing(optional_custom_barcodes)) {
+    rownames(scdata@meta.data)
+  } else {
+    optional_custom_barcodes
+  }
 
   samples <- rep_len(paste0("sample_", 1:4), length(barcode))
   cell_type <- rep_len(paste0("cell_type_", 1:10), length(barcode))
@@ -39,11 +44,20 @@ mock_cl_metadata <- function(scdata, optional_custom_barcodes) {
   redundant_group_var <- paste0("red_group_", group_var)
   continuous_var <- rnorm(length(barcode))
 
-  data.table::data.table(barcode, samples, cell_type, group_var, redundant_group_var, continuous_var)
+  data.table::data.table(
+    barcode,
+    samples,
+    cell_type,
+    group_var,
+    redundant_group_var,
+    continuous_var
+  )
 }
 
 
-local_mock_cl_metadata_table <- function(mock_cl_metadata, experiment_id, env = parent.frame()) {
+local_mock_cl_metadata_table <- function(
+  mock_cl_metadata, experiment_id, env = parent.frame()
+) {
   # calls mock_cl_metadata but makes it "local" (in withr speech), deleting
   # created stuff after the test finishes.
   bucket <- file.path(".", bucket_list$cl_metadata_bucket)
@@ -51,20 +65,28 @@ local_mock_cl_metadata_table <- function(mock_cl_metadata, experiment_id, env = 
   dir.create(bucket)
   withr::defer(unlink(bucket, recursive = TRUE), envir = env)
 
-  data.table::fwrite(mock_cl_metadata, file.path(bucket, experiment_id), sep = "\t", compress = "gzip")
+  data.table::fwrite(
+    mock_cl_metadata,
+    file.path(bucket, experiment_id),
+    sep = "\t",
+    compress = "gzip"
+  )
 }
 
 
 mock_config <- function() {
   config <-
-    list(clusteringSettings = list(
-      method = "louvain",
-      methodSettings = list(louvain = list(resolution = "0.8"))
-    ),
-    aws_config = list(aws = "mock_aws"),
-    metadata_s3_path = file.path(".", bucket_list$cl_metadata_bucket, "mock_experiment_id"),
-    clustering_should_run = TRUE,
-    cl_metadata_bucket = bucket_list$cl_metadata_bucket
+    list(
+      clusteringSettings = list(
+        method = "louvain",
+        methodSettings = list(louvain = list(resolution = "0.8"))
+      ),
+      aws_config = list(aws = "mock_aws"),
+      metadata_s3_path = file.path(
+        ".", bucket_list$cl_metadata_bucket, "mock_experiment_id"
+      ),
+      clustering_should_run = TRUE,
+      cl_metadata_bucket = bucket_list$cl_metadata_bucket
     )
 
   return(config)
@@ -142,7 +164,7 @@ test_that("runClusters uses active.reduction in misc slot", {
   data@misc$active.reduction <- "blah_reduction"
 
   for (algo in algos) {
-    expect_error(runClusters(algo,resolution, data), NA)
+    expect_error(runClusters(algo, resolution, data), NA)
   }
 })
 
@@ -177,14 +199,13 @@ with_fake_http(
         "cell_set_key",
         "auth",
         FALSE
-    )
+      )
     )
   })
 )
 
 with_fake_http(
- test_that("replace_cell_class_through_api diables SSL certificate checking if disabled", {
-
+  test_that("replace_cell_class_through_api diables SSL certificate checking if disabled", {
     expect_PATCH(
       replace_cell_class_through_api(
         list(),
@@ -193,13 +214,12 @@ with_fake_http(
         "cell_set_key",
         "auth",
         TRUE
-    )
+      )
     )
 
     # set random config to get the previously used config
     old_config <- httr::set_config(httr::config(ssl_verifyhost = 0L))
     expect_equal(old_config$options$ssl_verifypeer, 0)
-
   })
 )
 
@@ -231,7 +251,6 @@ test_that("format_cluster_cellsets returns correct items", {
 
 
 test_that("format_cluster_cellsets correctly formats a cellset object", {
-
   n_clusters <- 5
   cell_sets <- mock_cellset_object(1000, n_clusters)
   color_pool <- mock_color_pool(n_clusters)
@@ -259,7 +278,7 @@ test_that("format_cluster_cellsets correctly formats a cellset object", {
 })
 
 
-test_that("format_cluster_cellsets result has correct number of clusters",{
+test_that("format_cluster_cellsets result has correct number of clusters", {
   n_clusters <- c(0, 1, 4, 6)
   algos <- c("louvain", "leiden")
 
@@ -272,8 +291,8 @@ test_that("format_cluster_cellsets result has correct number of clusters",{
 
       # number of clusters is the number of children elements
       expect_equal(length(res$children), n)
-
-    }}
+    }
+  }
 })
 
 test_that("format_cluster_cellsets returns empty children on empty cellset", {
@@ -286,7 +305,6 @@ test_that("format_cluster_cellsets returns empty children on empty cellset", {
   for (algo in algos) {
     res <- format_cluster_cellsets(cell_sets, algo, color_pool)
     expect_equal(length(res$children), 0)
-
   }
 })
 
@@ -295,19 +313,27 @@ test_that("format_cell_sets_object orders clusters lexicographically", {
   n_clusters <- 5
   cell_sets <- mock_cellset_object(50, n_clusters)
   troublesome_clusters <- c(11, 12, 21, 45)
-  more_cell_sets <- data.frame(cluster = troublesome_clusters, cell_ids = c(101, 102, 103, 104))
+  more_cell_sets <- data.frame(
+    cluster = troublesome_clusters,
+    cell_ids = c(101, 102, 103, 104)
+  )
   cell_sets <- rbind(cell_sets, more_cell_sets)
 
   color_pool <- mock_color_pool(n_clusters)
   algos <- c("louvain", "leiden")
 
   expected_order <-
-    list(louvain = paste0("louvain-", c(1:5, troublesome_clusters)),
-         leiden = paste0("leiden-", c(1:5, troublesome_clusters)))
+    list(
+      louvain = paste0("louvain-", c(1:5, troublesome_clusters)),
+      leiden = paste0("leiden-", c(1:5, troublesome_clusters))
+    )
 
   for (algo in algos) {
     res <- format_cluster_cellsets(cell_sets, algo, color_pool)
-    expect_equal(unlist(lapply(res$children, `[[`, "key")), expected_order[[algo]])
+    expect_equal(
+      unlist(lapply(res$children, `[[`, "key")),
+      expected_order[[algo]]
+    )
   }
 })
 
@@ -315,7 +341,10 @@ test_that("format_cell_sets_object doesn't hardcore all keys as louvain (need fo
   n_clusters <- 5
   cell_sets <- mock_cellset_object(50, n_clusters)
   troublesome_clusters <- c(11, 12, 21, 45)
-  more_cell_sets <- data.frame(cluster = troublesome_clusters, cell_ids = c(101, 102, 103, 104))
+  more_cell_sets <- data.frame(
+    cluster = troublesome_clusters,
+    cell_ids = c(101, 102, 103, 104)
+  )
   cell_sets <- rbind(cell_sets, more_cell_sets)
 
   color_pool <- mock_color_pool(n_clusters)
@@ -323,7 +352,7 @@ test_that("format_cell_sets_object doesn't hardcore all keys as louvain (need fo
 
   for (algo in algos) {
     res <- format_cluster_cellsets(cell_sets, algo, color_pool)
-    expected <- ifelse(algo %in% c('louvain', 'leiden'), 'louvain', algo)
+    expected <- ifelse(algo %in% c("louvain", "leiden"), "louvain", algo)
     expect_equal(res$key, expected)
   }
 })
@@ -366,12 +395,12 @@ test_that("embed_and_cluster works", {
     cells_id,
     task_name,
     ignore_ssl_cert
-)
+  )
 
   expect_snapshot_file(file.path(cell_sets_bucket, "cluster_cellsets.json"),
-                       name = "cluster_cell_sets.json")
+    name = "cluster_cell_sets.json"
+  )
   withr::defer(unlink(cell_sets_bucket, recursive = TRUE))
-
 })
 
 
@@ -382,8 +411,10 @@ test_that("runClusters does not crash with less than 10 dimensions available", {
   resolution <- 0.8
 
   # remove all pre-existing reductions and calculate low-PC PCA
-  scdata <- Seurat::DietSeurat(scdata, scale.data = T)
-  scdata <- suppressWarnings(Seurat::RunPCA(scdata, assay = "RNA", npcs = 2, verbose = F))
+  scdata <- Seurat::DietSeurat(scdata, scale.data = TRUE)
+  scdata <- suppressWarnings(
+    Seurat::RunPCA(scdata, assay = "RNA", npcs = 2, verbose = FALSE)
+  )
 
   for (algo in algos) {
     res <- runClusters(algo, resolution, scdata)
@@ -392,24 +423,32 @@ test_that("runClusters does not crash with less than 10 dimensions available", {
 })
 
 
-test_that("getClusters uses the default value of 10 if there are enough PCs available",{
+test_that("getClusters uses the default value of 10 if there are enough PCs available", {
   algos <- c("louvain", "leiden")
   scdata <- mock_scdata()
   resolution <- 0.8
 
   # remove all pre-existing reductions and calculate low-PC PCA
-  scdata <- Seurat::DietSeurat(scdata, scale.data = T)
+  scdata <- Seurat::DietSeurat(scdata, scale.data = TRUE)
   scdata@commands <- list()
-  scdata <- suppressWarnings(Seurat::RunPCA(scdata, assay = "RNA", npcs = 20, verbose = F))
+  scdata <- suppressWarnings(
+    Seurat::RunPCA(scdata, assay = "RNA", npcs = 20, verbose = FALSE)
+  )
 
   for (algo in algos) {
     clustered_scdata <- getClusters(algo, resolution, scdata)
-    if (algo == "louvain") expect_equal(clustered_scdata@commands$FindNeighbors.RNA.pca$dims, 1:10)
+    if (algo == "louvain")
+      expect_equal(
+        clustered_scdata@commands$FindNeighbors.RNA.pca$dims,
+        1:10
+      )
     # difficult to test in leiden, so test internal state as proxy
-    if (algo == "leiden") expect_true("seurat_clusters" %in% names(clustered_scdata@meta.data))
+    if (algo == "leiden")
+      expect_true(
+        "seurat_clusters" %in% names(clustered_scdata@meta.data)
+      )
   }
 })
-
 
 
 test_that("get_cell_id_barcode_map returns correct table with barcode and cell ids", {
@@ -421,7 +460,6 @@ test_that("get_cell_id_barcode_map returns correct table with barcode and cell i
   expect_type(res$cells_id, "integer")
   expect_equal(nrow(res), ncol(scdata))
 })
-
 
 
 test_that("make_cl_metadata_table correctly joins cell ids to metadata table", {
@@ -437,33 +475,12 @@ test_that("make_cl_metadata_table correctly joins cell ids to metadata table", {
 })
 
 
-# test_that("make_cl_metadata_table uses composite primary key for join if samples in user-supplied cl metadata", {
-   # TODO enable when we support samples in user-supplied cl metadata
-#   scdata <- mock_scdata()
-#   cl_meta <- mock_cl_metadata(scdata)
-#
-#   cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
-#
-#   # tables should be identical save for the duplicated barcode
-#   expected <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
-#   expected$barcode[1] <- expected$barcode[2]
-#
-#   # artificially duplicate a barcode
-#   cl_meta$barcode[1] <- cl_meta$barcode[2]
-#   cell_id_barcode_map$barcode[1] <- cell_id_barcode_map$barcode[2]
-#
-#   res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
-#
-#   expect_equal(res, expected)
-# })
-
-
 test_that("make_cl_metadata_table joins on barcode only if no samples column in user-supplied cl metadata", {
   scdata <- mock_scdata()
   cl_meta <- mock_cl_metadata(scdata)
 
   # remove samples column from cell-level metadata
-  cl_meta[, samples:= NULL]
+  cl_meta[, samples := NULL]
 
   cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
   res <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
@@ -485,7 +502,7 @@ test_that("make_cl_metadata_cellclass makes correctly formatted cellsets", {
   cl_meta <- mock_cl_metadata(scdata)
 
   # remove samples column from cell-level metadata
-  cl_meta[, samples:= NULL]
+  cl_meta[, samples := NULL]
 
   cell_id_barcode_map <- get_cell_id_barcode_map(scdata)
   cl_metadata_table <- make_cl_metadata_table(cl_meta, cell_id_barcode_map)
@@ -493,17 +510,23 @@ test_that("make_cl_metadata_cellclass makes correctly formatted cellsets", {
   var_to_cellset <- "cell_type"
   cellset_type <- "CLM"
 
-  res <- make_cl_metadata_cellclass(var_to_cellset,
-                                  cellset_type,
-                                  cl_metadata_table,
-                                  mock_color_pool(20))
+  res <- make_cl_metadata_cellclass(
+    var_to_cellset,
+    cellset_type,
+    cl_metadata_table,
+    mock_color_pool(20)
+  )
 
   cell_class_names <- c("key", "name", "rootNode", "type", "children")
   expect_named(res, cell_class_names)
 
-  # cellsets have the same keys as cell classes except children, color and cellIds
-  purrr::walk(res$children, expect_named, c(cell_class_names[-5], "color", "cellIds"))
-
+  # cellsets have the same keys as cell classes except children,
+  # color and cellIds
+  purrr::walk(
+    res$children,
+    expect_named,
+    c(cell_class_names[-5], "color", "cellIds")
+  )
 })
 
 
@@ -563,7 +586,10 @@ test_that("detect_variable_types removes high-cardinality variables", {
   cl_metadata <-
     make_cl_metadata_table(cl_meta, cell_id_barcode_map)
 
-  cl_metadata$high_cardinality_var <- paste0("high_cardinality_value_", 1:nrow(cl_metadata))
+  cl_metadata$high_cardinality_var <- paste0(
+    "high_cardinality_value_",
+    1:nrow(cl_metadata)
+  )
 
   res <- detect_variable_types(cl_metadata)
 
@@ -578,11 +604,13 @@ test_that("detect_variable_types removes extremely high-cardinality (n > 500) va
   cl_metadata <-
     make_cl_metadata_table(cl_meta, cell_id_barcode_map)
 
-  while(nrow(cl_metadata) < 500) {
+  while (nrow(cl_metadata) < 500) {
     cl_metadata <- rbind(cl_metadata, cl_metadata)
   }
 
-  cl_metadata$high_cardinality_var <- paste0("high_cardinality_value_", 1:nrow(cl_metadata))
+  cl_metadata$high_cardinality_var <- paste0(
+    "high_cardinality_value_", 1:nrow(cl_metadata)
+  )
 
   res <- detect_variable_types(cl_metadata)
 
@@ -635,7 +663,10 @@ test_that("make_cl_metadata_cellsets makes cell-level metadata cellsets.", {
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
   expect_equal(length(res[[2]]$children), 1)
   expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
-  expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))
+  expect_equal(
+    length(res[[4]]$children),
+    length(unique(cl_metadata$redundant_group_var))
+  )
 
   cell_class_names <- c("key", "name", "rootNode", "type", "children")
   purrr::walk(res, expect_named, cell_class_names)
@@ -682,7 +713,7 @@ test_that("make_cl_metadata_table works with duplicate barcodes", {
   config <- mock_config()
   scdata <- mock_scdata()
   cl_metadata <- mock_cl_metadata(scdata)
-  cl_metadata <- rbind(cl_metadata, cl_metadata[1:2,])
+  cl_metadata <- rbind(cl_metadata, cl_metadata[1:2, ])
 
   local_mock_cl_metadata_table(cl_metadata, "mock_experiment_id")
 
@@ -693,14 +724,22 @@ test_that("make_cl_metadata_table works with duplicate barcodes", {
   expect_equal(length(res[[1]]$children), length(unique(cl_metadata$cell_type)))
   expect_equal(length(res[[2]]$children), 2)
   expect_equal(length(res[[3]]$children), length(unique(cl_metadata$group_var)))
-  expect_equal(length(res[[4]]$children), length(unique(cl_metadata$redundant_group_var)))
+  expect_equal(
+    length(res[[4]]$children),
+    length(unique(cl_metadata$redundant_group_var))
+  )
 
   cell_class_names <- c("key", "name", "rootNode", "type", "children")
   purrr::walk(res, expect_named, cell_class_names)
 
-  # cellsets have the same keys as cell classes except children, color and cellIds
+  # cellsets have the same keys as cell classes
+  # except children, color and cellIds
   for (i in seq_along(res)) {
-    purrr::walk(res[[i]]$children, expect_named, c(cell_class_names[-5], "color", "cellIds"))
+    purrr::walk(
+      res[[i]]$children,
+      expect_named,
+      c(cell_class_names[-5], "color", "cellIds")
+    )
   }
 })
 
