@@ -36,9 +36,13 @@ snapshot_final_output <- function(res, experiment_id) {
 
 snapshot_cellsets_file <- function(experiment_id, pipeline_config) {
   step_n <- 7
-  cellset_snap_name <- make_snapshot_name(step_n, experiment_id, "cellsets.json")
-  expect_snapshot_file(file.path(pipeline_config$cell_sets_bucket, experiment_id),
-                       name = cellset_snap_name)
+  cellset_snap_name <- make_snapshot_name(
+    step_n, experiment_id, "cellsets.json"
+  )
+  expect_snapshot_file(
+    file.path(pipeline_config$cell_sets_bucket, experiment_id),
+    name = cellset_snap_name
+  )
 }
 
 
@@ -74,11 +78,9 @@ test_gem2s <- function(experiment_id) {
     res <- list()
 
     for (task_name in names(tasks)) {
-      res <- run_pipeline_step(res$output,
-                            input,
-                            pipeline_config,
-                            tasks,
-                            task_name)
+      res <- run_pipeline_step(
+        res$output, input, pipeline_config, tasks, task_name
+      )
       expect_snapshot({
         task_name
         rlang::hash(res)
@@ -100,6 +102,3 @@ test_gem2s <- function(experiment_id) {
   })
 
 }
-
-
-test_gem2s("mock_experiment_id")

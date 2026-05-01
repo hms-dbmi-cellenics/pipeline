@@ -7,7 +7,7 @@ local_h5_experiment <-
       paste0(sample_path, "/matrix.h5"),
       paste0(sample_path, "/matrix.h5.gz")
     )
-    withr::defer(unlink(experiment_dir, recursive = T), envir = env)
+    withr::defer(unlink(experiment_dir, recursive = TRUE), envir = env)
 
   }
 
@@ -77,13 +77,14 @@ test_that("load_user_files loads an h5 matrix", {
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
-  # Clean up any pre-existing temporary matrix directories
-  unlink(file.path(tempdir(), paste0(sample, "_matrix_dir")), recursive = TRUE)
-
   local_h5_experiment(experiment_dir, sample)
 
   prev_out <- list(config = list(samples = sample, input = list
                                  (type = "10x_h5")))
+
+  # cleanup any pre-existing matrix dirs
+  unlink(file.path(tempdir(), paste0(sample, "_matrix_dir")), recursive = TRUE)
+
   out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   expect_true("counts_list" %in% names(out))
@@ -91,4 +92,5 @@ test_that("load_user_files loads an h5 matrix", {
 
   # BPCells matrices are returned as IterableMatrix or MatrixDir, not dgCMatrix
   expect_s4_class(out$counts_list[[1]], "IterableMatrix")
+
 })
