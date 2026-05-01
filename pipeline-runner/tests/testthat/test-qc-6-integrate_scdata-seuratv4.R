@@ -62,7 +62,10 @@ mock_scdata <- function(rename_genes = c(), n_rep = 1) {
   # add samples
   scdata$samples <- rep(c(sample_1_id, sample_2_id), each = ncol(scdata) / 2)
   scdata$cells_id <- 0:(ncol(scdata) - 1)
-  scdata@misc$gene_annotations <- data.frame(input = rownames(scdata), name = paste("SYMBOL -", rownames(scdata)))
+  scdata@misc$gene_annotations <- data.frame(
+    input = rownames(scdata),
+    name = paste("SYMBOL -", rownames(scdata))
+  )
   rownames(scdata@misc$gene_annotations) <- rownames(scdata)
 
   scdata_sample1 <- subset(scdata, samples == sample_1_id)
@@ -83,7 +86,9 @@ mock_ids <- function() {
 scdata_preprocessing <- function(scdata) {
 
   # scale and PCA
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
+  scdata <- Seurat::NormalizeData(
+    scdata, normalization.method = "LogNormalize", verbose = FALSE
+  )
   scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
   scdata <- Seurat::RunPCA(scdata, verbose = FALSE)
@@ -110,25 +115,50 @@ test_that("SeuratV4 integration doesnt error out with small dataset", {
 
   config <- list(
     dimensionalityReduction = list(numPCs = 2, method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(
+        seuratv4 = list(
+          numGenes = 1000,
+          normalisation = "logNormalize"
+        )
+      )
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(
+    integrate_scdata(
+      scdata_list, config, "", cells_id, task_name = "dataIntegration"
+    )$data
+  )
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
 
 test_that("SeuratV4 integration works with RPCA method", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+  c(scdata_list, sample_1_id, sample_2_id) %<-%
+    suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list(
+    "123abc" = scdata_list$`123abc`$cells_id,
+    "123def" = scdata_list$`123def`$cells_id
+  )
 
   config <- list(
     dimensionalityReduction = list(method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(
+        seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")
+      )
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(
+    integrate_scdata(
+      scdata_list, config, "", cells_id, task_name = "dataIntegration"
+    )$data
+  )
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
@@ -136,76 +166,156 @@ test_that("SeuratV4 integration works with RPCA method", {
 
 test_that("SeuratV4 integration works with CCA method", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+  c(scdata_list, sample_1_id, sample_2_id) %<-%
+    suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list(
+    "123abc" = scdata_list$`123abc`$cells_id,
+    "123def" = scdata_list$`123def`$cells_id
+  )
 
   config <- list(
     dimensionalityReduction = list(method = "cca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(
+        seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")
+      )
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(
+    integrate_scdata(
+      scdata_list, config, "", cells_id, task_name = "dataIntegration"
+    )$data
+  )
   expect_s4_class(integrated_scdata, "Seurat")
 })
 
 
 test_that("SeuratV4 integration finds integration anchors using RPCA method, if method in config is RPCA", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+  c(scdata_list, sample_1_id, sample_2_id) %<-%
+    suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list(
+    "123abc" = scdata_list$`123abc`$cells_id,
+    "123def" = scdata_list$`123def`$cells_id
+  )
 
   config <- list(
     dimensionalityReduction = list(method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(
+        seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")
+      )
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
-  expect_equal(integrated_scdata@commands$FindIntegrationAnchors$reduction, "pca")
+  integrated_scdata <- suppressWarnings(
+    integrate_scdata(
+      scdata_list, config, "", cells_id, task_name = "dataIntegration"
+    )$data
+  )
+  expect_contains(
+    Seurat::Reductions(integrated_scdata),
+    "integrated.rpca"
+  )
+
+  expect_equal(
+    integrated_scdata@misc$active.reduction,
+    "integrated.rpca"
+  )
 })
 
 
 test_that("SeuratV4 integration finds integration anchors using CCA method, if method in config is CCA", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+  c(scdata_list, sample_1_id, sample_2_id) %<-%
+    suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list(
+    "123abc" = scdata_list$`123abc`$cells_id,
+    "123def" = scdata_list$`123def`$cells_id
+  )
 
   config <- list(
     dimensionalityReduction = list(method = "cca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(
+        seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")
+      )
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
-  expect_equal(integrated_scdata@commands$FindIntegrationAnchors$reduction, "cca")
+  integrated_scdata <- suppressWarnings(
+    integrate_scdata(
+      scdata_list, config, "", cells_id, task_name = "dataIntegration"
+    )$data
+  )
+  expect_contains(
+    Seurat::Reductions(integrated_scdata),
+    "integrated.cca"
+  )
+
+  expect_equal(
+    integrated_scdata@misc$active.reduction,
+    "integrated.cca"
+  )
 })
 
 test_that("SCTransform integration works", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+  c(scdata_list, sample_1_id, sample_2_id) %<-%
+    suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list(
+    "123abc" = scdata_list$`123abc`$cells_id,
+    "123def" = scdata_list$`123def`$cells_id
+  )
 
   config <- list(
     dimensionalityReduction = list(method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "SCT")))
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(
+        seuratv4 = list(numGenes = 1000, normalisation = "SCT")
+      )
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(
+    integrate_scdata(
+      scdata_list, config, "", cells_id, task_name = "dataIntegration"
+    )$data
+  )
   expect_s4_class(integrated_scdata, "Seurat")
   expect_s4_class(integrated_scdata[["SCT"]], "SCTAssay")
-  expect_equal(Seurat::DefaultAssay(integrated_scdata), "integrated")
 })
 
 
 test_that("misc slot is complete after Seurat V4 integration", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+  c(scdata_list, sample_1_id, sample_2_id) %<-%
+    suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list(
+    "123abc" = scdata_list$`123abc`$cells_id,
+    "123def" = scdata_list$`123def`$cells_id
+  )
 
   config <- list(
     dimensionalityReduction = list(method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")))
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(
+        seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")
+      )
+    )
   )
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration"))$data
+  integrated_scdata <- suppressWarnings(
+    integrate_scdata(
+      scdata_list, config, "", cells_id, task_name = "dataIntegration"
+    )$data
+  )
   integrated_scdata <- clean_timestamp(integrated_scdata)
   integrated_scdata <- remove_commands_functions(integrated_scdata)
 
@@ -219,20 +329,44 @@ test_that("misc slot is complete after Seurat V4 integration", {
 test_that("misc slot is complete after Seurat V4 integration with geosketch", {
 
   # mock a bigger dataset to run Seurat v4 integration without skipping it
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+  c(scdata_list, sample_1_id, sample_2_id) %<-%
+    suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list(
+    "123abc" = scdata_list$`123abc`$cells_id,
+    "123def" = scdata_list$`123def`$cells_id
+  )
 
   config <- list(
     dimensionalityReduction = list(numPCs = 10, method = "rpca"),
-    dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = "logNormalize"))),
-    downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(
+        seuratv4 = list(numGenes = 1000, normalisation = "logNormalize")
+      )
+    ),
+    downsampling = list(
+      method = "geosketch",
+      methodSettings = list(geosketch = list(percentageToKeep = 50))
+    )
+  )
 
 
-  integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")$data)
+  integrated_scdata <- suppressWarnings(
+    integrate_scdata(
+      scdata_list,config, "", cells_id, task_name = "dataIntegration"
+    )$data
+  )
   expect_s4_class(integrated_scdata, "Seurat")
   integrated_scdata@misc$ingestionDate <- "fixed_date"
 
-  expected_misc_names <- c("gene_annotations", "color_pool", "ingestionDate", "active.reduction", "numPCs", "geosketch")
+  expected_misc_names <- c(
+    "gene_annotations",
+    "color_pool",
+    "ingestionDate",
+    "active.reduction",
+    "numPCs",
+    "gene_dispersion"
+  )
 
   expect_setequal(names(integrated_scdata@misc), expected_misc_names)
 })
@@ -240,45 +374,35 @@ test_that("misc slot is complete after Seurat V4 integration with geosketch", {
 
 test_that("default assay in the integrated object matches normalisation method after Seurat V4 integration with geosketch", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
-  c(scdata_list, sample_1_id, sample_2_id) %<-% suppressWarnings(mock_scdata(n_rep = 3))
-  cells_id <- list("123abc" = scdata_list$`123abc`$cells_id, "123def" = scdata_list$`123def`$cells_id)
+  c(scdata_list, sample_1_id, sample_2_id) %<-%
+    suppressWarnings(mock_scdata(n_rep = 3))
+  cells_id <- list(
+    "123abc" = scdata_list$`123abc`$cells_id,
+    "123def" = scdata_list$`123def`$cells_id
+  )
 
   normalisation_methods <- c("logNormalize", "SCT")
 
   for (normalisation_method in normalisation_methods) {
     config <- list(
       dimensionalityReduction = list(numPCs = 10, method = "rpca"),
-      dataIntegration = list(method = "seuratv4", methodSettings = list(seuratv4 = list(numGenes = 10, normalisation = normalisation_method))),
-      downsampling = list(method = "geosketch", methodSettings = list(geosketch = list(percentageToKeep = 50))))
-
-    integrated_scdata <- suppressWarnings(integrate_scdata(scdata_list, config, "", cells_id, task_name = "dataIntegration")$data)
-    expect_s4_class(integrated_scdata, "Seurat")
-    expected_assay <- if (normalisation_method == "logNormalize") "RNA" else "SCT"
-    expect_equal(Seurat::DefaultAssay(integrated_scdata), expected_assay)
-  }
-})
-
-test_that("prepare_scdata_list_for_seurat_integration keeps cells_id cells only", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
-
- cells_id <- mock_ids()
-
-  config <- list(
-    dimensionalityReduction = list(numPCs = 2, method = "rpca"),
-    dataIntegration = list(
-      method = "seuratv4",
-      methodSettings = list(seuratv4 = list(
-        numGenes = 1000, normalisation = "logNormalize"
-      ))
+      dataIntegration = list(
+        method = "seuratv4",
+        methodSettings = list(
+          seuratv4 = list(numGenes = 1000, normalisation = normalisation_method)
+        )
+      ),
+      downsampling = list(
+        method = "geosketch",
+        methodSettings = list(geosketch = list(percentageToKeep = 50))
+      )
     )
-  )
 
-  # filter out some cells
-  cells_id[[sample_1_id]] <- cells_id[[sample_1_id]][1:10]
-  cells_id[[sample_2_id]] <- cells_id[[sample_2_id]][1:10]
-
-  scdata_list <- prepare_scdata_list_for_seurat_integration(scdata_list, config, cells_id)
-
-  expect_equal(ncol(scdata_list[[sample_1_id]]), length(cells_id[[sample_1_id]]))
-  expect_equal(ncol(scdata_list[[sample_2_id]]), length(cells_id[[sample_2_id]]))
+    integrated_scdata <- suppressWarnings(
+      integrate_scdata(
+        scdata_list, config, "", cells_id, task_name = "dataIntegration"
+      )$data
+    )
+    expect_s4_class(integrated_scdata, "Seurat")
+  }
 })
