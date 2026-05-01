@@ -27,6 +27,15 @@ stub_s3_get_object <- function(Bucket, Key) {
 }
 
 
+stub_s3_download_file <- function(Bucket, Key, Filename) {
+  # Create the file with the mocked S3 content
+  fs::dir_create(dirname(Filename))
+  writeBin(readBin(file.path(Bucket, Key),
+                   what = "raw", n = 120000000L),
+           Filename)
+}
+
+
 stub_file.path <- function(...) {
   file.path(".", ...)
 }
@@ -46,7 +55,8 @@ stubbed_download_user_files <- function(input, pipeline_config, prev_out = list(
   # helper to simplify calls to the stubbed function
 
   mockedS3 <- list(list_objects = stub_s3_list_objects,
-                    get_object = stub_s3_get_object)
+                    get_object = stub_s3_get_object,
+                    download_file = stub_s3_download_file)
 
   # where makes sure where we are stubbing the what calls.
   mockery::stub(where = download_user_files,
@@ -57,7 +67,7 @@ stubbed_download_user_files <- function(input, pipeline_config, prev_out = list(
   mockery::stub(download_user_files, "file.path", stub_file.path)
   mockery::stub(download_s3_files, "file.path", stub_file.path)
 
-  mockery::stub(download_and_store, "s3$get_object", mockedS3$get_object)
+  mockery::stub(download_and_store, "s3$download_file", mockedS3$download_file)
 
   res <- download_user_files(input,
                               pipeline_config,
@@ -254,9 +264,13 @@ stubbed_embed_and_cluster <- function(
 #' @export
 #'
 stubbed_download_cl_metadata_file <- function(config) {
-  mockedS3 <- list(get_object = stub_s3_get_object)
+  mockedS3 <- list(
+    get_object = stub_s3_get_object,
+    download_file = stub_s3_download_file
+  )
   mockery::stub(download_cl_metadata_file, "paws::s3", mockedS3)
   mockery::stub(download_cl_metadata_file, "file.path", stub_file.path)
+  mockery::stub(download_and_store, "s3$download_file", mockedS3$download_file)
   download_cl_metadata_file(config)
 }
 
