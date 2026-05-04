@@ -227,7 +227,9 @@ test_that("filter_low_cell_samples removes samples with cells below the threshol
 test_that(
   "generate_subset_config works correctly",
   {
-    parent_sample_ids <- c("sample-id-1", "sample-id-2", "sample-id-3", "sample-id-4")
+    parent_sample_ids <- c(
+      "sample-id-1", "sample-id-2", "sample-id-3", "sample-id-4"
+    )
     scdata_list <- mock_scdata_list(samples = rep(parent_sample_ids, 20))
 
     parent_processing_config <- construct_qc_config(

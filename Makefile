@@ -51,11 +51,6 @@ snap-accept: build ## Accept updated snaps (usage: make snap-accept)
 		-v $(PWD)/pipeline-runner/tests/testthat/_snaps:/src/pipeline-runner/tests/testthat/_snaps \
 		biomage-pipeline-runner \
 		-c "R -e \"testthat::snapshot_accept()\""
-update-renv-lock: build ## Update renv lock file (usage: make update-renv-lock)
-	@docker run \
-		--entrypoint /bin/bash \
-		-v $(PWD)/pipeline-runner/renv.lock:/src/pipeline-runner/renv.lock \
-		biomage-pipeline-runner
 hooks: ## Configures path to git hooks
 	@git config core.hooksPath .githooks
 run: build run-only
