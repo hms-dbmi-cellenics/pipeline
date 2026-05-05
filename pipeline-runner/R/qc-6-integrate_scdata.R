@@ -410,7 +410,7 @@ remove_genes <- function(scdata, exclude_groups, exclude_custom = list()) {
   message("Excluding genes...")
   message("Number of genes before excluding: ", nrow(scdata))
 
-  all_genes <- scdata@misc$gene_annotations[,c("input", "name")]
+  all_genes <- scdata@misc$gene_annotations[, c("input", "name")]
 
   # build list of genes to exclude
   exclude_genes <- list_exclude_genes(all_genes, exclude_groups, exclude_custom)

@@ -1,14 +1,17 @@
 mock_source_data <- function(sample_ids, from_experiment_id) {
-  pbmc_raw <- read.table(
+  counts <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
-  pbmc_raw <- as(as.matrix(pbmc_raw), "dgCMatrix")
+  counts <- as(as.matrix(counts), "dgCMatrix")
+  counts <- maybe_bpcells(
+    counts, withr::local_tempfile(.local_envir = parent.frame())
+  )
 
   scdata_list <- list()
   for (i in seq_along(sample_ids)) {
     message(i)
-    scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
+    scdata <- Seurat::CreateSeuratObject(counts = counts)
     n_cells <- ncol(scdata)
     start_idx <- (i - 1) * n_cells
     end_idx <- ((i) * n_cells) - 1

@@ -46,65 +46,6 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   return(prev_out)
 }
 
-mock_scdata_list <- function(rename_genes = c(), n_rep = 1) {
-  pbmc_raw <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-
-  rownames(pbmc_raw)[grep("^RP[LS]", rownames(pbmc_raw))] <- "SOX1"
-  # replicate matrix columns n times to create a bigger mock dataset
-  pbmc_raw <- do.call("cbind", replicate(n_rep, pbmc_raw, simplify = FALSE))
-  colnames(pbmc_raw) <- make.unique(colnames(pbmc_raw))
-
-  if (length(rename_genes) > 0) {
-    # rename some genes to match cell cycle genes
-    some_genes <- sample(1:nrow(pbmc_raw), length(rename_genes))
-    rownames(pbmc_raw)[some_genes] <- rename_genes
-  }
-
-  sample_1_id <- "sample_1"
-  sample_2_id <- "sample_2"
-
-  pbmc_raw <- as(as.matrix(pbmc_raw), "dgCMatrix")
-  scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
-
-  # add samples
-  scdata$samples <- rep(
-    c(sample_1_id, sample_2_id),
-    each = ncol(scdata) / 2
-  )
-  scdata$cells_id <- 0:(ncol(scdata) - 1)
-  scdata@misc$gene_annotations <- data.frame(
-    input = rownames(scdata),
-    name = rownames(scdata)
-  )
-  rownames(scdata@misc$gene_annotations) <- rownames(scdata)
-
-  scdata_sample1 <- subset(scdata, samples == sample_1_id)
-  scdata_sample2 <- subset(scdata, samples == sample_2_id)
-
-
-  scdata_list <- list(scdata_sample1, scdata_sample2)
-  names(scdata_list) <- c(sample_1_id, sample_2_id)
-
-  return(scdata_list)
-}
-
-mock_ids <- function(scdata_list) {
-  sample1_ncells <- ncol(scdata_list$sample_1)
-  sample2_ncells <- ncol(scdata_list$sample_2)
-
-  sample1_ids <- seq(0, sample1_ncells - 1)
-  sample2_ids <- seq(sample1_ncells, sample1_ncells + sample2_ncells - 1)
-
-  list(
-    "sample_1" = sample1_ids,
-    "sample_2" = sample2_ids
-  )
-}
-
-
 scdata_preprocessing <- function(scdata) {
   # scale and PCA
   scdata <- Seurat::NormalizeData(
@@ -292,7 +233,9 @@ test_that("build_ribosomal_gene_list returns empty int vector when there aren't 
 
 test_that("build_mitochondrial_gene_list correctly makes the list of mitochondrial genes when there are matches", {
   some_mito_genes <- c("mt-ND1", "mt-ND2", "mt-CO1", "mt-CO2", "mt-ATP6")
-  scdata_list <- mock_scdata_list(rename_genes = some_mito_genes)
+  scdata_list <- mock_scdata_list(
+    rename_genes = some_mito_genes
+  )
 
   cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
@@ -344,19 +287,28 @@ test_that("remove_genes removes the correct genes when there are genes to remove
   some_cc_genes <- sample(human_cc_genes$symbol, n_rename)
   some_ribo_genes <- c("RPL23A", "RPL17", "RPS27A", "RPS14", "RPL13")
   some_mito_genes <- c("mt-ND1", "mt-ND2", "mt-CO1", "mt-CO2", "mt-ATP6")
-  scdata_list <- mock_scdata_list(rename_genes = c(some_cc_genes, some_ribo_genes, some_mito_genes))
+  scdata_list <- mock_scdata_list(
+    rename_genes = c(some_cc_genes, some_ribo_genes, some_mito_genes)
+  )
+
   cells_id <- mock_ids(scdata_list)
   merged_scdata <- create_scdata(scdata_list, cells_id)
   all_genes <- merged_scdata@misc$gene_annotations$input
 
-  res <- remove_genes(merged_scdata, exclude_groups = list("cellCycle", "ribosomal", "mitochondrial"))
+  res <- remove_genes(
+    merged_scdata,
+    exclude_groups = list("cellCycle", "ribosomal", "mitochondrial")
+  )
 
   # only cc genes
-  expect_equal(nrow(res), nrow(merged_scdata) - (n_rename + length(some_ribo_genes) + length(some_mito_genes)))
+  expect_equal(
+    nrow(res),
+    nrow(merged_scdata) -
+      (n_rename + length(some_ribo_genes) + length(some_mito_genes))
+  )
   expect_false(any(some_cc_genes %in% rownames(res)))
   expect_false(any(some_ribo_genes %in% rownames(res)))
   expect_false(any(some_mito_genes %in% rownames(res)))
-
 
   exclude_custom <- sample(setdiff(all_genes, some_cc_genes), 7)
 
@@ -544,6 +496,7 @@ test_that("run_geosketch generates the correct number of sketches", {
 
 test_that("integrate_scdata with geosketch adds the correct integration method to the Seurat object", {
   scdata_list <- mock_scdata_list(n_rep = 3)
+
   cells_id <- mock_ids(scdata_list)
   config <- list(
     dimensionalityReduction = list(

@@ -39,7 +39,9 @@ mock_counts <- function(ncells = 200, ngenes = 200) {
   counts <- SummarizedExperiment::assay(sce, "counts")
   rownames(counts) <- gsub("_", "-", rownames(counts))
   counts <- as(counts, "dgCMatrix")
-  maybe_bpcells(counts)
+  maybe_bpcells(
+    counts, withr::local_tempfile(.local_envir = parent.frame())
+  )
 }
 
 
@@ -406,32 +408,6 @@ test_that("get_nnzero returns sum of nFeature_RNA", {
   expect_true(is.numeric(result))
   expect_true(result > 0)
   expect_equal(as.integer(result), sum(scdata$nFeature_RNA))
-})
-
-test_that("get_nnzero with Seurat object backed by BPCells matrices", {
-  # Create a Seurat object using BPCells matrix storage
-  set.seed(RANDOM_SEED)
-  counts <- mock_counts()
-
-  # Ensure counts are integer
-  counts <- as(counts, "dgCMatrix")
-  mode(counts@x) <- "integer"
-
-  # Write counts to disk and load as BPCells matrix
-  matrix_dir <- file.path(withr::local_tempdir(),
-    paste0("nnzero_test_", sample(100000, 1))
-  )
-
-  bpcells_counts <- BPCells::write_matrix_dir(counts, dir = matrix_dir)
-
-  # Create Seurat object with BPCells-backed counts
-  scdata <- Seurat::CreateSeuratObject(counts = bpcells_counts)
-
-  # Call get_nnzero
-  result <- get_nnzero(scdata)
-
-  expect_type(result, "double")
-  expect_true(result > 0)
 })
 
 test_that("order_by_size orders scdata_list by size", {

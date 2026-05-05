@@ -1,10 +1,12 @@
 mock_counts <- function() {
-  pbmc_raw <- read.table(
+  counts <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
-  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
-  return(pbmc_raw)
+  counts <- as(as.matrix(counts), "dgCMatrix")
+  maybe_bpcells(
+    counts, withr::local_tempfile(.local_envir = parent.frame())
+  )
 }
 
 

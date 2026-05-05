@@ -1,7 +1,7 @@
 # required to correctly source SeuratObject dumped R files
 library(Seurat)
 
-mock_scdata_list <- function(samples = rep("mock_sample_1_id", 80)) {
+mock_scdata_list_subset <- function(samples = rep("mock_sample_1_id", 80)) {
   pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
@@ -38,7 +38,7 @@ mock_input <- function(
   sample_ids = c("mock_sample_1_id")
 ) {
   parentProcessingConfig <- construct_qc_config(
-    mock_scdata_list(samples),
+    mock_scdata_list_subset(samples),
     unfiltered_samples = sample_ids,
     technology = "10x"
   )
@@ -224,42 +224,43 @@ test_that("filter_low_cell_samples removes samples with cells below the threshol
   expect_true(all(table(res$samples) > min_cells))
 })
 
-test_that(
-  "generate_subset_config works correctly",
-  {
-    parent_sample_ids <- c(
-      "sample-id-1", "sample-id-2", "sample-id-3", "sample-id-4"
-    )
-    scdata_list <- mock_scdata_list(samples = rep(parent_sample_ids, 20))
+test_that("generate_subset_config works correctly", {
 
-    parent_processing_config <- construct_qc_config(
-      scdata_list,
-      unfiltered_samples = parent_sample_ids,
-      technology = "10x"
-    )
+  parent_sample_ids <- c(
+    "sample-id-1", "sample-id-2", "sample-id-3", "sample-id-4"
+  )
+  scdata_list <- mock_scdata_list_subset(samples = rep(parent_sample_ids, 20))
 
-    # Make some of the configs unique to each sample
-    # so we can check that the translation preserves the configs
-    # correctly assigned to each sample
-    parent_processing_config$cellSizeDistribution$`sample-id-2`$filterSettings$binStep <- 300
-    parent_processing_config$cellSizeDistribution$`sample-id-3`$filterSettings$binStep <- 400
-    parent_processing_config$mitochondrialContent$`sample-id-1`$filterSettings$absoluteThreshold$maxFraction <- 0.2
-    parent_processing_config$mitochondrialContent$`sample-id-3`$filterSettings$absoluteThreshold$maxFraction <- 0.5
+  parent_processing_config <- construct_qc_config(
+    scdata_list,
+    unfiltered_samples = parent_sample_ids,
+    technology = "10x"
+  )
 
-    subset_sample_ids <- c(
-      "sample-subset-id-1",
-      "sample-subset-id-2",
-      "sample-subset-id-3",
-      "sample-subset-id-4"
-    )
+  # Make some of the configs unique to each sample
+  # so we can check that the translation preserves the configs
+  # correctly assigned to each sample
+  cell_size_dist <- parent_processing_config$cellSizeDistribution
+  mito_content <- parent_processing_config$mitochondrialContent
 
-    sample_ids_map <- as.list(subset_sample_ids)
-    names(sample_ids_map) <- parent_sample_ids
+  parent_processing_config$cellSizeDistribution$`sample-id-2`$filterSettings$binStep <- 300
+  parent_processing_config$cellSizeDistribution$`sample-id-3`$filterSettings$binStep <- 400
+  parent_processing_config$mitochondrialContent$`sample-id-1`$filterSettings$absoluteThreshold$maxFraction <- 0.2
+  parent_processing_config$mitochondrialContent$`sample-id-3`$filterSettings$absoluteThreshold$maxFraction <- 0.5
 
-    subset_processing_config <- generate_subset_config(
-      parent_processing_config, sample_ids_map
-    )
+  subset_sample_ids <- c(
+    "sample-subset-id-1",
+    "sample-subset-id-2",
+    "sample-subset-id-3",
+    "sample-subset-id-4"
+  )
 
-    expect_snapshot(subset_processing_config)
-  }
-)
+  sample_ids_map <- as.list(subset_sample_ids)
+  names(sample_ids_map) <- parent_sample_ids
+
+  subset_processing_config <- generate_subset_config(
+    parent_processing_config, sample_ids_map
+  )
+
+  expect_snapshot(subset_processing_config)
+})

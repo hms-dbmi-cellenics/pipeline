@@ -35,6 +35,7 @@ test: build ## Executes unit tests (usage: make test [BPCELLS=true])
 	@docker run \
 		--entrypoint /bin/bash \
 		-e BPCELLS=$(BPCELLS) \
+		-v $(PWD)/pipeline-runner/tests/testthat/_snaps:/src/pipeline-runner/tests/testthat/_snaps \
 		biomage-pipeline-runner \
 		-c "R -e 'testthat::test_local(stop_on_failure = FALSE)'"
 test-file: build ## Tests a specific test file (usage: make test-file FILE=test-file.R [BPCELLS=true])

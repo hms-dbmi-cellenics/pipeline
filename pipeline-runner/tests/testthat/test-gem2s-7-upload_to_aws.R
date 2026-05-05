@@ -11,7 +11,7 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-mock_scdata_list <- function(config) {
+mock_upload_scdata_list <- function(config) {
   prev_out <- mock_prev_out(config)
   scdata_list <- prev_out$scdata_list
 
@@ -19,6 +19,7 @@ mock_scdata_list <- function(config) {
 
   task_out <- prepare_experiment(input, NULL, prev_out)$output
   scdata_list <- task_out$scdata_list
+  return(scdata_list)
 }
 
 mock_input <- function(metadata = NULL) {
@@ -181,7 +182,7 @@ test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
   input <- mock_input()
   config <- mock_config(input)
 
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   cell_sets <- get_cell_sets(scdata_list, input)
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
@@ -193,7 +194,7 @@ test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
 test_that("get_cell_sets adds correct cell ids for each sample", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   cell_sets <- get_cell_sets(scdata_list, input)
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
@@ -213,7 +214,7 @@ test_that("get_cell_sets adds a single metadata column", {
   metadata <- list(Group = list("Hello", "WT2", "WT2"))
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -230,7 +231,7 @@ test_that("get_cell_sets uses user-supplied syntactically invalid metadata colum
   metadata <- list("TRUE" = list("Hello", "WT2", "WT2"))
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -247,7 +248,7 @@ test_that("get_cell_sets adds two metadata columns", {
   metadata <- list(Group1 = list("Hello", "WT2", "WT2"), Group2 = list("WT", "WT", "WTA"))
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -270,7 +271,7 @@ test_that("get_cell_sets uses unique colors for each cell set", {
   )
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -285,7 +286,7 @@ test_that("get_cell_sets uses unique colors for each cell set", {
 test_that("get_cell_sets without metadata matches snapshot", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   cell_sets <- get_cell_sets(scdata_list, input)
   expect_snapshot(str(cell_sets))
@@ -299,7 +300,7 @@ test_that("get_cell_sets with two metadata groups matches snapshot", {
   )
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -313,7 +314,7 @@ test_that("get_cell_sets converts numeric metadata values to strings", {
   metadata <- list(Seq_Batch = list(1, 2, 2))
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -344,7 +345,7 @@ test_that("upload_to_aws tries to upload the correct files to aws", {
   )
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   paths <- setup_test_paths()
 
@@ -390,7 +391,7 @@ test_that("upload_to_aws tries to upload the correct files to aws", {
 test_that("get_subset_cell_sets filters out louvain clusters from parent cellset", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
@@ -418,7 +419,7 @@ test_that("get_subset_cell_sets filters out louvain clusters from parent cellset
 test_that("get_subset_cell_sets produces a cellset with correct cell_ids", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
@@ -457,7 +458,7 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids", {
 test_that("get_subset_cell_sets produces a cellset with correct new sample ids", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
@@ -497,7 +498,7 @@ test_that("get_subset_cell_sets produces a cellset with correct new sample ids",
 test_that("get_subset_cell_sets produces a cellset with correct cell_ids for each metadata group present in the parent experiment", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
@@ -538,7 +539,7 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
 test_that("get_subset_cell_sets produces a cellset with correct cell_ids for each scratchpad present in the parent experiment", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
@@ -578,7 +579,7 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
 test_that("filter_parent_cellsets only keeps cell_ids_to_keep", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
@@ -597,7 +598,7 @@ test_that("filter_parent_cellsets only keeps cell_ids_to_keep", {
 test_that("filter_parent_cellsets keeps all other variables equal to the parents' value", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
@@ -621,7 +622,7 @@ test_that("build_scratchpad_cellsets builds single cellset when subsetting remov
   input <- mock_input()
   config <- mock_config(input)
   color_pool <- get_color_pool()
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
@@ -661,7 +662,7 @@ test_that("build_scratchpad_cellsets builds multiple cellsets", {
   input <- mock_input()
   config <- mock_config(input)
   color_pool <- get_color_pool()
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42, 23019:23027)
 
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
@@ -700,7 +701,7 @@ test_that("extract_subset_user_metadata extracts subset cellsets correctly when 
   input <- mock_input()
   config <- mock_config(input)
   color_pool <- get_color_pool()
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_upload_scdata_list(config)
 
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
 

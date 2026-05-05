@@ -1,7 +1,11 @@
 mock_counts <- function() {
-  read.table(
+  counts <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
+  )
+  counts <- as(as.matrix(counts), "dgCMatrix")
+  maybe_bpcells(
+    counts, withr::local_tempfile(.local_envir = parent.frame())
   )
 }
 
@@ -185,9 +189,15 @@ test_that("create_seurat works with multiple samples", {
 
 
 test_that("create_seurat does not exclude genes without counts", {
-  counts <- mock_counts()
-  counts['NOT-EXPRESSED', ] = 0
-  counts <- as(as.matrix(counts), 'dgCMatrix')
+  counts <- read.table(
+    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
+    as.is = TRUE
+  )
+  counts["NOT-EXPRESSED", ] = 0
+  counts <- as(as.matrix(counts), "dgCMatrix")
+  counts <- maybe_bpcells(
+    counts, withr::local_tempfile(.local_envir = parent.frame())
+  )
 
   prev_out <- mock_prev_out(counts = counts)
 
@@ -200,5 +210,5 @@ test_that("create_seurat does not exclude genes without counts", {
   scdata <- out$scdata_list[[1]]
 
   # gene is still there
-  expect_true('NOT-EXPRESSED' %in% row.names(scdata))
+  expect_true("NOT-EXPRESSED" %in% row.names(scdata))
 })
