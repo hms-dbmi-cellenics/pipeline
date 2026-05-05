@@ -39,6 +39,17 @@ remove_commands_functions <- function(data) {
   return(data)
 }
 
+#' Check if BPCELLS testing mode is enabled
+#'
+#' Returns TRUE if the BPCELLS environment variable is set to "true".
+#' Used to conditionally enable BPCells matrix conversion in tests.
+#'
+#' @return logical TRUE if BPCELLS="true", FALSE otherwise
+#'
+is_bpcells <- function() {
+  Sys.getenv("BPCELLS") == "true"
+}
+
 #' Convert a matrix to disk-backed BPCells format if BPCELLS env var is set
 #'
 #' Simple wrapper that converts a single matrix to BPCells IterableMatrix
@@ -55,7 +66,7 @@ remove_commands_functions <- function(data) {
 #' }
 #'
 maybe_bpcells <- function(mat, bpcells_dir) {
-  if (Sys.getenv("BPCELLS") != "true") {
+  if (!is_bpcells()) {
     return(mat)
   }
 
@@ -103,9 +114,11 @@ mock_scdata_list <- function(
 
   counts <- as(as.matrix(counts), "dgCMatrix")
 
+  # Set seed once before generating all samples
+  set.seed(123)
+
   # create seurat objects and add metadata using loop
   scdata_list <- list()
-  set.seed(123)
 
   for (i in seq_along(sample_ids)) {
 

@@ -31,10 +31,10 @@ list(cellSizeDistribution = list(mock_sample_2_id = list(enabled = FALSE,
             harmony = list(numGenes = 2000, normalisation = "logNormalize"), 
             fastmnn = list(numGenes = 2000, normalisation = "logNormalize"))), 
         dimensionalityReduction = list(method = "rpca", numPCs = NULL, 
-            excludeGeneCategories = list())), configureEmbedding = list(
-        embeddingSettings = list(method = "umap", methodSettings = list(
-            umap = list(minimumDistance = 0.29999999999999999, 
-                distanceMetric = "cosine"), tsne = list(perplexity = 4.3600000000000003, 
-                learningRate = 200))), clusteringSettings = list(
-            method = "louvain", methodSettings = list(louvain = list(
-                resolution = 0.80000000000000004)))))
+            excludeGeneCategories = list()), downsampling = list(
+            method = "default")), configureEmbedding = list(embeddingSettings = list(
+        method = "umap", methodSettings = list(umap = list(minimumDistance = 0.29999999999999999, 
+            distanceMetric = "cosine"), tsne = list(perplexity = 4.3600000000000003, 
+            learningRate = 200))), clusteringSettings = list(
+        method = "louvain", methodSettings = list(louvain = list(
+            resolution = 0.80000000000000004)))))

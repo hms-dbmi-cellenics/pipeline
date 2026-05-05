@@ -87,6 +87,6 @@ test_that("harmony integration works", {
   integrated_scdata <- remove_commands_functions(integrated_scdata)
 
   expect_s4_class(integrated_scdata, "Seurat")
+  skip_if(is_bpcells())
   expect_snapshot(str(integrated_scdata))
-
 })
