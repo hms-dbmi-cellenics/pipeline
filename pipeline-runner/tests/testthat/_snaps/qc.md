@@ -465,7 +465,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "b9d62353de1d58b3466a51af542b8f2f"
+      [1] "748374ffd634bf1bc77d5336e98f56ba"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -504,8 +504,7 @@
         .. .. .. .. ..@ default   : int 1
         .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. ..@ key       : chr "rna_"
         .. ..@ meta.data   :'data.frame':	460 obs. of  14 variables:
         .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "GTCTCACAGTGTAGTA-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "CACAACAAGTTGGCTT-1" "CCGTAGGCATAGTCGT-1" "GCAGGCTCAAACTGCT-1" "AACCTGAGTAACTTCG-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" ...
@@ -537,7 +536,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 5 0 2
+        .. .. ..$ : int [1:3] 5 3 0
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -575,8 +574,7 @@
         .. .. .. .. ..@ default   : int 1
         .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. ..@ key       : chr "rna_"
         .. ..@ meta.data   :'data.frame':	436 obs. of  14 variables:
         .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" "TACCTCGTCGACCCAG-1" "GATGAGGCAGGCATTT-1" "CGTAATGTCATACGAC-1" "AGTGACTCAGGGTCTC-1" "TTCACCGAGCAAATCA-1" "TTACCATCACTGTTCC-1" "TCAGTGACAGGCTATT-1" "CATCGTCGTTTCGCTC-1" "CTCCCTCAGCACTGGA-1" "GTTCGCTAGGGACCAT-1" "TATCGCCAGTCCCAAT-1" "GGGCTCACAATGTCTG-1" "TATCTTGCAGGCGTTC-1" "TTGGGCGCATTGACCA-1" "TCATGGAAGAAGATCT-1" "GGGTTATAGAATTGTG-1" ...
@@ -608,7 +606,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 5 0 2
+        .. .. ..$ : int [1:3] 5 3 0
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -1065,7 +1063,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "b9d62353de1d58b3466a51af542b8f2f"
+      [1] "748374ffd634bf1bc77d5336e98f56ba"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -1104,8 +1102,7 @@
         .. .. .. .. ..@ default   : int 1
         .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. ..@ key       : chr "rna_"
         .. ..@ meta.data   :'data.frame':	460 obs. of  14 variables:
         .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "GTCTCACAGTGTAGTA-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "CACAACAAGTTGGCTT-1" "CCGTAGGCATAGTCGT-1" "GCAGGCTCAAACTGCT-1" "AACCTGAGTAACTTCG-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" ...
@@ -1137,7 +1134,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 5 0 2
+        .. .. ..$ : int [1:3] 5 3 0
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -1175,8 +1172,7 @@
         .. .. .. .. ..@ default   : int 1
         .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. ..@ key       : chr "rna_"
         .. ..@ meta.data   :'data.frame':	436 obs. of  14 variables:
         .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" "TACCTCGTCGACCCAG-1" "GATGAGGCAGGCATTT-1" "CGTAATGTCATACGAC-1" "AGTGACTCAGGGTCTC-1" "TTCACCGAGCAAATCA-1" "TTACCATCACTGTTCC-1" "TCAGTGACAGGCTATT-1" "CATCGTCGTTTCGCTC-1" "CTCCCTCAGCACTGGA-1" "GTTCGCTAGGGACCAT-1" "TATCGCCAGTCCCAAT-1" "GGGCTCACAATGTCTG-1" "TATCTTGCAGGCGTTC-1" "TTGGGCGCATTGACCA-1" "TCATGGAAGAAGATCT-1" "GGGTTATAGAATTGTG-1" ...
@@ -1208,7 +1204,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 5 0 2
+        .. .. ..$ : int [1:3] 5 3 0
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -1665,7 +1661,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "b9d62353de1d58b3466a51af542b8f2f"
+      [1] "748374ffd634bf1bc77d5336e98f56ba"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -1704,8 +1700,7 @@
         .. .. .. .. ..@ default   : int 1
         .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. ..@ key       : chr "rna_"
         .. ..@ meta.data   :'data.frame':	460 obs. of  14 variables:
         .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "GTCTCACAGTGTAGTA-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "CACAACAAGTTGGCTT-1" "CCGTAGGCATAGTCGT-1" "GCAGGCTCAAACTGCT-1" "AACCTGAGTAACTTCG-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" ...
@@ -1737,7 +1732,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 5 0 2
+        .. .. ..$ : int [1:3] 5 3 0
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -1775,8 +1770,7 @@
         .. .. .. .. ..@ default   : int 1
         .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. ..@ key       : chr "rna_"
         .. ..@ meta.data   :'data.frame':	436 obs. of  14 variables:
         .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" "TACCTCGTCGACCCAG-1" "GATGAGGCAGGCATTT-1" "CGTAATGTCATACGAC-1" "AGTGACTCAGGGTCTC-1" "TTCACCGAGCAAATCA-1" "TTACCATCACTGTTCC-1" "TCAGTGACAGGCTATT-1" "CATCGTCGTTTCGCTC-1" "CTCCCTCAGCACTGGA-1" "GTTCGCTAGGGACCAT-1" "TATCGCCAGTCCCAAT-1" "GGGCTCACAATGTCTG-1" "TATCTTGCAGGCGTTC-1" "TTGGGCGCATTGACCA-1" "TCATGGAAGAAGATCT-1" "GGGTTATAGAATTGTG-1" ...
@@ -1808,7 +1802,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 5 0 2
+        .. .. ..$ : int [1:3] 5 3 0
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -2265,7 +2259,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "b9d62353de1d58b3466a51af542b8f2f"
+      [1] "748374ffd634bf1bc77d5336e98f56ba"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -2304,8 +2298,7 @@
         .. .. .. .. ..@ default   : int 1
         .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. ..@ key       : chr "rna_"
         .. ..@ meta.data   :'data.frame':	460 obs. of  14 variables:
         .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "GTCTCACAGTGTAGTA-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "CACAACAAGTTGGCTT-1" "CCGTAGGCATAGTCGT-1" "GCAGGCTCAAACTGCT-1" "AACCTGAGTAACTTCG-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" ...
@@ -2337,7 +2330,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 5 0 2
+        .. .. ..$ : int [1:3] 5 3 0
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -2375,8 +2368,7 @@
         .. .. .. .. ..@ default   : int 1
         .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. ..@ key       : chr "rna_"
         .. ..@ meta.data   :'data.frame':	436 obs. of  14 variables:
         .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" "TACCTCGTCGACCCAG-1" "GATGAGGCAGGCATTT-1" "CGTAATGTCATACGAC-1" "AGTGACTCAGGGTCTC-1" "TTCACCGAGCAAATCA-1" "TTACCATCACTGTTCC-1" "TCAGTGACAGGCTATT-1" "CATCGTCGTTTCGCTC-1" "CTCCCTCAGCACTGGA-1" "GTTCGCTAGGGACCAT-1" "TATCGCCAGTCCCAAT-1" "GGGCTCACAATGTCTG-1" "TATCTTGCAGGCGTTC-1" "TTGGGCGCATTGACCA-1" "TCATGGAAGAAGATCT-1" "GGGTTATAGAATTGTG-1" ...
@@ -2408,7 +2400,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 5 0 2
+        .. .. ..$ : int [1:3] 5 3 0
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -6826,7 +6818,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "b9d62353de1d58b3466a51af542b8f2f"
+      [1] "748374ffd634bf1bc77d5336e98f56ba"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -6865,8 +6857,7 @@
         .. .. .. .. ..@ default   : int 1
         .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. ..@ key       : chr "rna_"
         .. ..@ meta.data   :'data.frame':	460 obs. of  14 variables:
         .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "GTCTCACAGTGTAGTA-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "CACAACAAGTTGGCTT-1" "CCGTAGGCATAGTCGT-1" "GCAGGCTCAAACTGCT-1" "AACCTGAGTAACTTCG-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "CAAGGGACAGAGCGTA-1" "TTTATGCAGAGGATCC-1" ...
@@ -6898,7 +6889,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 5 0 2
+        .. .. ..$ : int [1:3] 5 3 0
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE
@@ -6936,8 +6927,7 @@
         .. .. .. .. ..@ default   : int 1
         .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. ..@ key       : chr "rna_"
         .. ..@ meta.data   :'data.frame':	436 obs. of  14 variables:
         .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" "TACCTCGTCGACCCAG-1" "GATGAGGCAGGCATTT-1" "CGTAATGTCATACGAC-1" "AGTGACTCAGGGTCTC-1" "TTCACCGAGCAAATCA-1" "TTACCATCACTGTTCC-1" "TCAGTGACAGGCTATT-1" "CATCGTCGTTTCGCTC-1" "CTCCCTCAGCACTGGA-1" "GTTCGCTAGGGACCAT-1" "TATCGCCAGTCCCAAT-1" "GGGCTCACAATGTCTG-1" "TATCTTGCAGGCGTTC-1" "TTGGGCGCATTGACCA-1" "TCATGGAAGAAGATCT-1" "GGGTTATAGAATTGTG-1" ...
@@ -6969,7 +6959,7 @@
         .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
         .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. ..$ : int [1:3] 5 0 2
+        .. .. ..$ : int [1:3] 5 3 0
         .. ..@ commands    : list()
         .. ..@ tools       :List of 1
         .. .. ..$ flag_filtered: logi FALSE

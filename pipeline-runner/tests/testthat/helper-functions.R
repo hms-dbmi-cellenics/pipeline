@@ -166,3 +166,39 @@ mock_ids <- function(scdata_list) {
 
   return(cells_id)
 }
+
+materialize_scdata_list <- function(res) {
+  # materialize bpcells matrices for transmission to test-qc.R
+  res$output$scdata_list <- lapply(
+    res$output$scdata_list,
+    function(scdata) {
+      scdata[["RNA"]]$counts <- as(scdata[["RNA"]]$counts, "dgCMatrix")
+      return(scdata)
+    }
+  )
+  return(res)
+}
+
+materialize_counts_list <- function(res) {
+  res$output$counts_list <- lapply(
+    res$output$counts_list,
+    function(x) {
+      as(x, "dgCMatrix")
+    }
+  )
+  return(res)
+}
+
+materialize_res <- function(res) {
+  if (!is.null(res$output$counts_list)) {
+    res <- materialize_counts_list(res)
+  }
+  if (!is.null(res$output$scdata_list)) {
+    res <- materialize_scdata_list(res)
+  }
+
+  if (!is.null(res$output$matrix_dir_list)) {
+    res$output$matrix_dir_list <- list()
+  }
+  return(res)
+}

@@ -20,7 +20,7 @@ qc_setup <- function(experiment_id) {
     stop("experiment id does not match object sourced from gem2s test output")
   }
 
-  # materialize bpcells matrices for transmission to test-qc.R
+  # convert scdata_list to bpcells if requested
   res$output$scdata_list <- lapply(
     res$output$scdata_list,
     function(scdata) {
@@ -29,17 +29,6 @@ qc_setup <- function(experiment_id) {
         withr::local_tempfile(.local_envir = parent.frame())
       )
       return(scdata)
-    }
-  )
-
-  # 
-  res$counts_list <- lapply(
-    res$counts_list,
-    function(x) {
-      maybe_bpcells(
-        x,
-        withr::local_tempfile(.local_envir = parent.frame())
-      )
     }
   )
 

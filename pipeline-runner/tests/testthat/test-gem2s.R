@@ -8,24 +8,12 @@ load_experiment_input <- function(mock_data_path, experiment_id) {
 
 }
 
-
 make_snapshot_name <- function(step_n, experiment_id, output_name) {
   paste("gem2s", step_n, experiment_id, output_name, sep = "-")
 }
 
-
 snapshot_final_output <- function(res, experiment_id) {
-  # materialize bpcells matrices for transmission to test-qc.R
-  res$output$scdata_list <- lapply(
-    res$output$scdata_list,
-    function(scdata) {
-      scdata[["RNA"]]$counts <- as(scdata[["RNA"]]$counts, "dgCMatrix")
-      return(scdata)
-    }
-  )
-
   step_n <- 6
-
   qc_config <- res$output$qc_config
   snap_name <- make_snapshot_name(step_n, experiment_id, "qc_config.R")
   withr::with_tempfile("tf_qc_config", {
@@ -108,9 +96,9 @@ test_gem2s <- function(experiment_id) {
     snapshot_cellsets_file(experiment_id, pipeline_config)
 
     # snapshot tests of task results
-    skip_if(is_bpcells())
     for (task_name in names(task_res)) {
       res <- task_res[[task_name]]
+      res <- materialize_res(res)
 
       expect_snapshot({
         task_name

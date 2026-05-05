@@ -33,7 +33,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "08e8dc5864692fe6d96a19cb2f161ada"
+      [1] "d8708d808f47015ea2283ceb4d166dd5"
     Code
       str(res)
     Output
@@ -50,33 +50,29 @@
         .. .. ..$ type: chr "10x"
         .. ..$ sampleOptions: NULL
         ..$ counts_list    :List of 2
-        .. ..$ mock_sample_1_id:Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. .. .. ..@ compressed : logi TRUE
-        .. .. .. ..@ buffer_size: int 8192
-        .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. ..@ dim        : int [1:2] 2000 500
-        .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. ..@ dimnames   :List of 2
+        .. ..$ mock_sample_1_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. ..@ i       : int [1:36762] 66 454 1662 1694 1964 70 194 290 307 435 ...
+        .. .. .. ..@ p       : int [1:501] 0 5 41 179 201 204 270 421 503 699 ...
+        .. .. .. ..@ Dim     : int [1:2] 2000 500
+        .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
-        .. ..$ mock_sample_2_id:Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
-        .. .. .. ..@ compressed : logi TRUE
-        .. .. .. ..@ buffer_size: int 8192
-        .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. ..@ dim        : int [1:2] 2000 501
-        .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. ..@ dimnames   :List of 2
+        .. .. .. ..@ x       : num [1:36762] 1 1 2 10 1 1 2 1 1 1 ...
+        .. .. .. ..@ factors : list()
+        .. ..$ mock_sample_2_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. ..@ i       : int [1:33141] 23 177 207 341 451 470 663 834 838 952 ...
+        .. .. .. ..@ p       : int [1:502] 0 24 30 110 169 264 315 349 457 496 ...
+        .. .. .. ..@ Dim     : int [1:2] 2000 501
+        .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ : chr [1:501] "AATGGCTCAGTCCGTG-1" "GCAGCTGAGCTTAAGA-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" ...
+        .. .. .. ..@ x       : num [1:33141] 1 1 3 1 2 5 1 1 1 1 ...
+        .. .. .. ..@ factors : list()
         ..$ annot          :'data.frame':	2000 obs. of  3 variables:
         .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        ..$ matrix_dir_list:List of 2
-        .. ..$ mock_sample_1_id: chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. ..$ mock_sample_2_id: chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
+        ..$ matrix_dir_list: list()
 
 ---
 
@@ -87,7 +83,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "47d949451ea15e74c03f83c6cd09e4e4"
+      [1] "a5a151bd2d73592e391a07fa59f218a7"
     Code
       str(res)
     Output
@@ -104,33 +100,29 @@
         .. .. ..$ type: chr "10x"
         .. ..$ sampleOptions: NULL
         ..$ counts_list    :List of 2
-        .. ..$ mock_sample_1_id:Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. .. .. ..@ compressed : logi TRUE
-        .. .. .. ..@ buffer_size: int 8192
-        .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. ..@ dim        : int [1:2] 2000 500
-        .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. ..@ dimnames   :List of 2
+        .. ..$ mock_sample_1_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. ..@ i       : int [1:36762] 66 454 1662 1694 1964 70 194 290 307 435 ...
+        .. .. .. ..@ p       : int [1:501] 0 5 41 179 201 204 270 421 503 699 ...
+        .. .. .. ..@ Dim     : int [1:2] 2000 500
+        .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
-        .. ..$ mock_sample_2_id:Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
-        .. .. .. ..@ compressed : logi TRUE
-        .. .. .. ..@ buffer_size: int 8192
-        .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. ..@ dim        : int [1:2] 2000 501
-        .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. ..@ dimnames   :List of 2
+        .. .. .. ..@ x       : num [1:36762] 1 1 2 10 1 1 2 1 1 1 ...
+        .. .. .. ..@ factors : list()
+        .. ..$ mock_sample_2_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. ..@ i       : int [1:33141] 23 177 207 341 451 470 663 834 838 952 ...
+        .. .. .. ..@ p       : int [1:502] 0 24 30 110 169 264 315 349 457 496 ...
+        .. .. .. ..@ Dim     : int [1:2] 2000 501
+        .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ : chr [1:501] "AATGGCTCAGTCCGTG-1" "GCAGCTGAGCTTAAGA-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" ...
+        .. .. .. ..@ x       : num [1:33141] 1 1 3 1 2 5 1 1 1 1 ...
+        .. .. .. ..@ factors : list()
         ..$ annot          :'data.frame':	2000 obs. of  3 variables:
         .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        ..$ matrix_dir_list:List of 2
-        .. ..$ mock_sample_1_id: chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. ..$ mock_sample_2_id: chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
+        ..$ matrix_dir_list: list()
         ..$ edrops         :List of 2
         .. ..$ mock_sample_1_id:Formal class 'DFrame' [package "S4Vectors"] with 6 slots
         .. .. .. ..@ rownames       : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
@@ -182,7 +174,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "729445ed1ac39429dec1450ceeba7847"
+      [1] "756b6cba289e76916116fc7fc48c1115"
     Code
       str(res)
     Output
@@ -199,33 +191,29 @@
         .. .. ..$ type: chr "10x"
         .. ..$ sampleOptions: NULL
         ..$ counts_list    :List of 2
-        .. ..$ mock_sample_1_id:Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. .. .. ..@ compressed : logi TRUE
-        .. .. .. ..@ buffer_size: int 8192
-        .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. ..@ dim        : int [1:2] 2000 500
-        .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. ..@ dimnames   :List of 2
+        .. ..$ mock_sample_1_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. ..@ i       : int [1:36762] 66 454 1662 1694 1964 70 194 290 307 435 ...
+        .. .. .. ..@ p       : int [1:501] 0 5 41 179 201 204 270 421 503 699 ...
+        .. .. .. ..@ Dim     : int [1:2] 2000 500
+        .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
-        .. ..$ mock_sample_2_id:Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
-        .. .. .. ..@ compressed : logi TRUE
-        .. .. .. ..@ buffer_size: int 8192
-        .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. ..@ dim        : int [1:2] 2000 501
-        .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. ..@ dimnames   :List of 2
+        .. .. .. ..@ x       : num [1:36762] 1 1 2 10 1 1 2 1 1 1 ...
+        .. .. .. ..@ factors : list()
+        .. ..$ mock_sample_2_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. ..@ i       : int [1:33141] 23 177 207 341 451 470 663 834 838 952 ...
+        .. .. .. ..@ p       : int [1:502] 0 24 30 110 169 264 315 349 457 496 ...
+        .. .. .. ..@ Dim     : int [1:2] 2000 501
+        .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ : chr [1:501] "AATGGCTCAGTCCGTG-1" "GCAGCTGAGCTTAAGA-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" ...
+        .. .. .. ..@ x       : num [1:33141] 1 1 3 1 2 5 1 1 1 1 ...
+        .. .. .. ..@ factors : list()
         ..$ annot          :'data.frame':	2000 obs. of  3 variables:
         .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        ..$ matrix_dir_list:List of 2
-        .. ..$ mock_sample_1_id: chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. ..$ mock_sample_2_id: chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
+        ..$ matrix_dir_list: list()
         ..$ edrops         :List of 2
         .. ..$ mock_sample_1_id:Formal class 'DFrame' [package "S4Vectors"] with 6 slots
         .. .. .. ..@ rownames       : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
@@ -286,7 +274,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "8f56cc874b93af76d18eb8fbe65155b4"
+      [1] "7aa3677206d3d0733797d9ce07c56ff0"
     Code
       str(res)
     Output
@@ -303,33 +291,29 @@
         .. .. ..$ type: chr "10x"
         .. ..$ sampleOptions: NULL
         ..$ counts_list       :List of 2
-        .. ..$ mock_sample_1_id:Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. .. .. ..@ compressed : logi TRUE
-        .. .. .. ..@ buffer_size: int 8192
-        .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. ..@ dim        : int [1:2] 2000 500
-        .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. ..@ dimnames   :List of 2
+        .. ..$ mock_sample_1_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. ..@ i       : int [1:36762] 66 454 1662 1694 1964 70 194 290 307 435 ...
+        .. .. .. ..@ p       : int [1:501] 0 5 41 179 201 204 270 421 503 699 ...
+        .. .. .. ..@ Dim     : int [1:2] 2000 500
+        .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
-        .. ..$ mock_sample_2_id:Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
-        .. .. .. ..@ compressed : logi TRUE
-        .. .. .. ..@ buffer_size: int 8192
-        .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. ..@ dim        : int [1:2] 2000 501
-        .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. ..@ dimnames   :List of 2
+        .. .. .. ..@ x       : num [1:36762] 1 1 2 10 1 1 2 1 1 1 ...
+        .. .. .. ..@ factors : list()
+        .. ..$ mock_sample_2_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. ..@ i       : int [1:33141] 23 177 207 341 451 470 663 834 838 952 ...
+        .. .. .. ..@ p       : int [1:502] 0 24 30 110 169 264 315 349 457 496 ...
+        .. .. .. ..@ Dim     : int [1:2] 2000 501
+        .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ : chr [1:501] "AATGGCTCAGTCCGTG-1" "GCAGCTGAGCTTAAGA-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" ...
+        .. .. .. ..@ x       : num [1:33141] 1 1 3 1 2 5 1 1 1 1 ...
+        .. .. .. ..@ factors : list()
         ..$ annot             :'data.frame':	2000 obs. of  3 variables:
         .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        ..$ matrix_dir_list   :List of 2
-        .. ..$ mock_sample_1_id: chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. ..$ mock_sample_2_id: chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
+        ..$ matrix_dir_list   : list()
         ..$ edrops            :List of 2
         .. ..$ mock_sample_1_id:Formal class 'DFrame' [package "S4Vectors"] with 6 slots
         .. .. .. ..@ rownames       : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
@@ -385,33 +369,15 @@
         .. .. .. ..@ assays      :List of 1
         .. .. .. .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
         .. .. .. .. .. .. ..@ layers    :List of 1
-        .. .. .. .. .. .. .. ..$ counts:Formal class 'RenameDims' [package "BPCells"] with 4 slots
-        .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
-        .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ compressed : logi TRUE
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ buffer_size: int 8192
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 2000 500
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
-        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ row_selection: int [1:2000] 1 2 3 4 5 6 7 8 9 10 ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ col_selection: int [1:436] 2 3 4 6 7 8 9 10 13 14 ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
-        .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 2000 436
-        .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
-        .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
-        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
-        .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 2000 436
-        .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
-        .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. ..$ counts:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. .. .. .. ..@ i       : int [1:36426] 70 194 290 307 435 467 506 512 573 618 ...
+        .. .. .. .. .. .. .. .. .. ..@ p       : int [1:437] 0 36 174 196 262 413 495 691 821 877 ...
+        .. .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 436
+        .. .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. .. .. .. ..$ features: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. ..$ cells   : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
+        .. .. .. .. .. .. .. .. .. ..@ x       : num [1:36426] 1 2 1 1 1 1 3 1 1 1 ...
+        .. .. .. .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
         .. .. .. .. .. .. .. .. ..@ .Data: logi [1:436, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
         .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
@@ -433,14 +399,13 @@
         .. .. .. .. .. .. ..@ default   : int 1
         .. .. .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	436 obs. of  13 variables:
         .. .. .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
         .. .. .. .. ..$ nCount_RNA        : num [1:436] 208 422 49 520 578 329 637 442 229 521 ...
-        .. .. .. .. ..$ nFeature_RNA      : num [1:436] 36 138 22 66 151 82 196 130 56 57 ...
+        .. .. .. .. ..$ nFeature_RNA      : int [1:436] 36 138 22 66 151 82 196 130 56 57 ...
         .. .. .. .. ..$ samples           : chr [1:436] "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" ...
         .. .. .. .. ..$ percent.mt        : num [1:436] 76.4 25.4 53.1 64.2 11.2 ...
         .. .. .. .. ..$ doublet_scores    : num [1:436] NA 0.255 NA 0.445 0.292 ...
@@ -468,33 +433,15 @@
         .. .. .. ..@ assays      :List of 1
         .. .. .. .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
         .. .. .. .. .. .. ..@ layers    :List of 1
-        .. .. .. .. .. .. .. ..$ counts:Formal class 'RenameDims' [package "BPCells"] with 4 slots
-        .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
-        .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ compressed : logi TRUE
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ buffer_size: int 8192
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 2000 501
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
-        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:501] "AATGGCTCAGTCCGTG-1" "GCAGCTGAGCTTAAGA-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ row_selection: int [1:2000] 1 2 3 4 5 6 7 8 9 10 ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ col_selection: int [1:460] 1 3 4 5 6 7 8 9 10 11 ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
-        .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 2000 460
-        .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
-        .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
-        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
-        .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 2000 460
-        .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
-        .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. ..$ counts:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. .. .. .. ..@ i       : int [1:32918] 23 177 207 341 451 470 663 834 838 952 ...
+        .. .. .. .. .. .. .. .. .. ..@ p       : int [1:461] 0 24 104 163 258 309 343 451 490 532 ...
+        .. .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 460
+        .. .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. .. .. .. ..$ features: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. ..$ cells   : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
+        .. .. .. .. .. .. .. .. .. ..@ x       : num [1:32918] 1 1 3 1 2 5 1 1 1 1 ...
+        .. .. .. .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
         .. .. .. .. .. .. .. .. ..@ .Data: logi [1:460, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
         .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
@@ -516,14 +463,13 @@
         .. .. .. .. .. .. ..@ default   : int 1
         .. .. .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	460 obs. of  13 variables:
         .. .. .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
         .. .. .. .. ..$ nCount_RNA        : num [1:460] 46 289 249 263 193 93 472 101 112 41 ...
-        .. .. .. .. ..$ nFeature_RNA      : num [1:460] 24 80 59 95 51 34 108 39 42 14 ...
+        .. .. .. .. ..$ nFeature_RNA      : int [1:460] 24 80 59 95 51 34 108 39 42 14 ...
         .. .. .. .. ..$ samples           : chr [1:460] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
         .. .. .. .. ..$ percent.mt        : num [1:460] 19.57 12.8 25.3 30.8 7.77 ...
         .. .. .. .. ..$ doublet_scores    : num [1:460] NA 0.145 0.568 0.937 NA ...
@@ -558,7 +504,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "5a09b785878a5a8783e554f8d6bac099"
+      [1] "329d0ccb7add367fd2033708dd5e5df7"
     Code
       str(res)
     Output
@@ -575,33 +521,29 @@
         .. .. ..$ type: chr "10x"
         .. ..$ sampleOptions: NULL
         ..$ counts_list       :List of 2
-        .. ..$ mock_sample_1_id:Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. .. .. ..@ compressed : logi TRUE
-        .. .. .. ..@ buffer_size: int 8192
-        .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. ..@ dim        : int [1:2] 2000 500
-        .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. ..@ dimnames   :List of 2
+        .. ..$ mock_sample_1_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. ..@ i       : int [1:36762] 66 454 1662 1694 1964 70 194 290 307 435 ...
+        .. .. .. ..@ p       : int [1:501] 0 5 41 179 201 204 270 421 503 699 ...
+        .. .. .. ..@ Dim     : int [1:2] 2000 500
+        .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
-        .. ..$ mock_sample_2_id:Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
-        .. .. .. ..@ compressed : logi TRUE
-        .. .. .. ..@ buffer_size: int 8192
-        .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. ..@ dim        : int [1:2] 2000 501
-        .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. ..@ dimnames   :List of 2
+        .. .. .. ..@ x       : num [1:36762] 1 1 2 10 1 1 2 1 1 1 ...
+        .. .. .. ..@ factors : list()
+        .. ..$ mock_sample_2_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. ..@ i       : int [1:33141] 23 177 207 341 451 470 663 834 838 952 ...
+        .. .. .. ..@ p       : int [1:502] 0 24 30 110 169 264 315 349 457 496 ...
+        .. .. .. ..@ Dim     : int [1:2] 2000 501
+        .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ : chr [1:501] "AATGGCTCAGTCCGTG-1" "GCAGCTGAGCTTAAGA-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" ...
+        .. .. .. ..@ x       : num [1:33141] 1 1 3 1 2 5 1 1 1 1 ...
+        .. .. .. ..@ factors : list()
         ..$ annot             :'data.frame':	2000 obs. of  3 variables:
         .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        ..$ matrix_dir_list   :List of 2
-        .. ..$ mock_sample_1_id: chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. ..$ mock_sample_2_id: chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
+        ..$ matrix_dir_list   : list()
         ..$ edrops            :List of 2
         .. ..$ mock_sample_1_id:Formal class 'DFrame' [package "S4Vectors"] with 6 slots
         .. .. .. ..@ rownames       : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
@@ -657,33 +599,15 @@
         .. .. .. ..@ assays      :List of 1
         .. .. .. .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
         .. .. .. .. .. .. ..@ layers    :List of 1
-        .. .. .. .. .. .. .. ..$ counts:Formal class 'RenameDims' [package "BPCells"] with 4 slots
-        .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
-        .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_2_id_matrix_dir"
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ compressed : logi TRUE
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ buffer_size: int 8192
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 2000 501
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
-        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:501] "AATGGCTCAGTCCGTG-1" "GCAGCTGAGCTTAAGA-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ row_selection: int [1:2000] 1 2 3 4 5 6 7 8 9 10 ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ col_selection: int [1:460] 1 3 4 5 6 7 8 9 10 11 ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
-        .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 2000 460
-        .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
-        .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
-        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
-        .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 2000 460
-        .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
-        .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. ..$ counts:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. .. .. .. ..@ i       : int [1:32918] 23 177 207 341 451 470 663 834 838 952 ...
+        .. .. .. .. .. .. .. .. .. ..@ p       : int [1:461] 0 24 104 163 258 309 343 451 490 532 ...
+        .. .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 460
+        .. .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. .. .. .. ..$ features: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. ..$ cells   : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
+        .. .. .. .. .. .. .. .. .. ..@ x       : num [1:32918] 1 1 3 1 2 5 1 1 1 1 ...
+        .. .. .. .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
         .. .. .. .. .. .. .. .. ..@ .Data: logi [1:460, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
         .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
@@ -705,14 +629,13 @@
         .. .. .. .. .. .. ..@ default   : int 1
         .. .. .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	460 obs. of  14 variables:
         .. .. .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
         .. .. .. .. ..$ nCount_RNA        : num [1:460] 46 289 249 263 193 93 472 101 112 41 ...
-        .. .. .. .. ..$ nFeature_RNA      : num [1:460] 24 80 59 95 51 34 108 39 42 14 ...
+        .. .. .. .. ..$ nFeature_RNA      : int [1:460] 24 80 59 95 51 34 108 39 42 14 ...
         .. .. .. .. ..$ samples           : chr [1:460] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
         .. .. .. .. ..$ percent.mt        : num [1:460] 19.57 12.8 25.3 30.8 7.77 ...
         .. .. .. .. ..$ doublet_scores    : num [1:460] NA 0.145 0.568 0.937 NA ...
@@ -746,33 +669,15 @@
         .. .. .. ..@ assays      :List of 1
         .. .. .. .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
         .. .. .. .. .. .. ..@ layers    :List of 1
-        .. .. .. .. .. .. .. ..$ counts:Formal class 'RenameDims' [package "BPCells"] with 4 slots
-        .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
-        .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixDir' [package "BPCells"] with 7 slots
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dir        : chr "/tmp/RtmpUNCdYV/mock_sample_1_id_matrix_dir"
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ compressed : logi TRUE
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ buffer_size: int 8192
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ type       : chr "uint32_t"
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 2000 500
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
-        .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
-        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ row_selection: int [1:2000] 1 2 3 4 5 6 7 8 9 10 ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ col_selection: int [1:436] 2 3 4 6 7 8 9 10 13 14 ...
-        .. .. .. .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
-        .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 2000 436
-        .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
-        .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
-        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
-        .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 2000 436
-        .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
-        .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. ..$ counts:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
+        .. .. .. .. .. .. .. .. .. ..@ i       : int [1:36426] 70 194 290 307 435 467 506 512 573 618 ...
+        .. .. .. .. .. .. .. .. .. ..@ p       : int [1:437] 0 36 174 196 262 413 495 691 821 877 ...
+        .. .. .. .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 436
+        .. .. .. .. .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. .. .. .. ..$ features: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        .. .. .. .. .. .. .. .. .. ..$ cells   : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
+        .. .. .. .. .. .. .. .. .. ..@ x       : num [1:36426] 1 2 1 1 1 1 3 1 1 1 ...
+        .. .. .. .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
         .. .. .. .. .. .. .. .. ..@ .Data: logi [1:436, 1] TRUE TRUE TRUE TRUE TRUE TRUE ...
         .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
@@ -794,14 +699,13 @@
         .. .. .. .. .. .. ..@ default   : int 1
         .. .. .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	436 obs. of  14 variables:
         .. .. .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
         .. .. .. .. ..$ orig.ident        : Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 ...
         .. .. .. .. ..$ nCount_RNA        : num [1:436] 208 422 49 520 578 329 637 442 229 521 ...
-        .. .. .. .. ..$ nFeature_RNA      : num [1:436] 36 138 22 66 151 82 196 130 56 57 ...
+        .. .. .. .. ..$ nFeature_RNA      : int [1:436] 36 138 22 66 151 82 196 130 56 57 ...
         .. .. .. .. ..$ samples           : chr [1:436] "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" "mock_sample_1_id" ...
         .. .. .. .. ..$ percent.mt        : num [1:436] 76.4 25.4 53.1 64.2 11.2 ...
         .. .. .. .. ..$ doublet_scores    : num [1:436] NA 0.255 NA 0.445 0.292 ...
