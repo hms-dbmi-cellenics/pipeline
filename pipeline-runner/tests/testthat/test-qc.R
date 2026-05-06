@@ -21,16 +21,15 @@ qc_setup <- function(experiment_id) {
   }
 
   # convert scdata_list to bpcells if requested
-  res$output$scdata_list <- lapply(
-    res$output$scdata_list,
-    function(scdata) {
-      scdata[["RNA"]]$counts <- maybe_bpcells(
-        scdata[["RNA"]]$counts,
-        withr::local_tempfile(.local_envir = parent.frame())
-      )
-      return(scdata)
-    }
-  )
+  for (sample in names(res$output$scdata_list)) {
+    
+    scdata <- res$output$scdata_list[[sample]]
+    scdata[["RNA"]]$counts <- maybe_bpcells(
+      scdata[["RNA"]]$counts,
+      withr::local_tempfile(.local_envir = parent.frame())
+    )
+    res$output$scdata_list[[sample]] <- scdata
+  }
 
   return(list(
     prev_out = res,
@@ -93,7 +92,6 @@ test_qc <- function(experiment_id) {
     tasks <- lapply(QC_TASK_LIST, get)
     tasks$configureEmbedding <- stubbed_embed_and_cluster
 
-
     filtered_cells_id <- generate_first_step_ids(prev_out$output$scdata_list)
 
     # QC stores everything as global variables. This replicates it
@@ -152,9 +150,9 @@ test_qc <- function(experiment_id) {
 
     # run snapshot tests last so above not skipped
     # when run `make test-file FILE=test-qc.R`
-    skip_if(is_bpcells())
     expect_snapshot(filtered_cells_id)
 
+    skip_if(is_bpcells())
     for (task_name in names(global_vars_task)) {
       global_vars <- global_vars_task[[task_name]]
       snapshot_qc_output(

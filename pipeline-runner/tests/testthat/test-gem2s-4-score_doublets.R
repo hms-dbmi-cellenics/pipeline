@@ -173,9 +173,9 @@ test_that("scdblfinder_bpcells with disk-backed BPCells matrix", {
   }
 
   # Write the matrix to disk
-  bpcells_dir <- withr::local_tempfile()
+  matrix_dir <- withr::local_tempfile()
   bpcells_matrix <- BPCells::write_matrix_dir(
-    counts, dir = bpcells_dir
+    counts, dir = matrix_dir
   )
 
   # Run scdblfinder_bpcells with the disk-backed matrix

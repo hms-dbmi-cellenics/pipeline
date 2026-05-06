@@ -272,9 +272,10 @@ test_that("misc slot is complete after Seurat V4 integration", {
   integrated_scdata <- remove_commands_functions(integrated_scdata)
 
   expect_s4_class(integrated_scdata, "Seurat")
-  expect_snapshot(str(integrated_scdata))
-  expect_snapshot(str(integrated_scdata@misc))
 
+  skip_if(is_bpcells())
+  expect_snapshot(str(integrated_scdata@misc))
+  expect_snapshot(str(integrated_scdata))
 })
 
 

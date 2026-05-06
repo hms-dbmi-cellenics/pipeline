@@ -324,6 +324,7 @@ write_merged_matrix_dir <- function(scdata) {
 
     # re-write disk backing
     matrix_dir <- file.path(tempdir(), "matrix_dir")
+    unlink(matrix_dir, recursive = TRUE)
     message("Writing merged matrix dir to: ", matrix_dir)
     counts <- BPCells::write_matrix_dir(scdata[["RNA"]]$counts, matrix_dir)
 

@@ -203,8 +203,8 @@ read_10x_h5_file_bpcells <- function(config, input_dir) {
 
     # Write the matrix to a directory
     matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
-    BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
-    counts <- BPCells::open_matrix_dir(dir = matrix_dir)
+    unlink(matrix_dir, recursive = TRUE)
+    counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
 
     # use Gene Expression modality if multiple
     if (methods::is(gene_names, "list")) {
@@ -315,8 +315,8 @@ read_10x_files <- function(config, input_dir) {
 
     # Write the matrix to a directory
     matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
-    BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
-    counts <- BPCells::open_matrix_dir(dir = matrix_dir)
+    unlink(matrix_dir, recursive = TRUE)
+    counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
 
     if (methods::is(counts, "list")) {
       slot <- "Gene Expression"

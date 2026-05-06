@@ -65,13 +65,13 @@ is_bpcells <- function() {
 #'   counts <- maybe_bpcells(counts)
 #' }
 #'
-maybe_bpcells <- function(mat, bpcells_dir) {
+maybe_bpcells <- function(mat, matrix_dir) {
   if (!is_bpcells()) {
     return(mat)
   }
 
   # Convert to BPCells
-  BPCells::write_matrix_dir(mat, dir = bpcells_dir)
+  BPCells::write_matrix_dir(mat, dir = matrix_dir)
 }
 
 mock_scdata_list <- function(

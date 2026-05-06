@@ -27,6 +27,7 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
     colnames(counts) <- paste0("cell", seq_len(ncol(counts)))
   }
 
+  counts <- as(counts, "dgCMatrix")
   eout <- DropletUtils::emptyDrops(counts)
 
   counts_list <- list()
