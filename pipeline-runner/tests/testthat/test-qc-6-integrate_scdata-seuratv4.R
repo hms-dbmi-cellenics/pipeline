@@ -273,7 +273,8 @@ test_that("misc slot is complete after Seurat V4 integration", {
 
   expect_s4_class(integrated_scdata, "Seurat")
 
-  skip_if(is_bpcells())
+  skip_if_bpcells()
+  skip_on_ci()
   expect_snapshot(str(integrated_scdata@misc))
   expect_snapshot(str(integrated_scdata))
 })

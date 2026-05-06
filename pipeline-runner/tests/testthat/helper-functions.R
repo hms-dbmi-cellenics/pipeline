@@ -50,6 +50,12 @@ is_bpcells <- function() {
   Sys.getenv("BPCELLS") == "true"
 }
 
+skip_if_bpcells <- function() {
+  if (is_bpcells()) {
+    skip("Skipping test because BPCELLS=true")
+  }
+}
+
 #' Convert a matrix to disk-backed BPCells format if BPCELLS env var is set
 #'
 #' Simple wrapper that converts a single matrix to BPCells IterableMatrix

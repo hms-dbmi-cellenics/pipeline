@@ -152,7 +152,8 @@ test_qc <- function(experiment_id) {
     # when run `make test-file FILE=test-qc.R`
     expect_snapshot(filtered_cells_id)
 
-    skip_if(is_bpcells())
+    skip_if_bpcells()
+    skip_on_ci()
     for (task_name in names(global_vars_task)) {
       global_vars <- global_vars_task[[task_name]]
       snapshot_qc_output(

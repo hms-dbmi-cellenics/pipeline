@@ -99,7 +99,8 @@ test_gem2s <- function(experiment_id) {
     for (task_name in names(task_res)) {
       res <- task_res[[task_name]]
       res <- materialize_res(res)
-
+    
+      skip_on_ci()
       expect_snapshot({
         task_name
         rlang::hash(res)

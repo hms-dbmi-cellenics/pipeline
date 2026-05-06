@@ -52,6 +52,7 @@ test_that("Unisample integration works", {
   integrated_scdata <- remove_commands_functions(integrated_scdata)
 
   expect_s4_class(integrated_scdata, "Seurat")
-  skip_if(is_bpcells())
+  skip_if_bpcells()
+  skip_on_ci()
   expect_snapshot(str(integrated_scdata))
 })

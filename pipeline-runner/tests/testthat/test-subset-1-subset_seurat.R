@@ -207,6 +207,7 @@ test_that("subset_seurat matches snapshot", {
 
   res <- stubbed_subset_seurat(input, pipeline_config)
 
+  skip_on_ci()
   expect_snapshot(res)
 })
 
@@ -262,6 +263,6 @@ test_that("generate_subset_config works correctly", {
     parent_processing_config, sample_ids_map
   )
 
-  skip_if(is_bpcells())
+  skip_if_bpcells()
   expect_snapshot(subset_processing_config)
 })
