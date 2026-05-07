@@ -1,8 +1,24 @@
+test_that("construct_qc_config works with bpcells", {
+  scdata_list <- mock_scdata_list(use_bpcells = TRUE)
+  expect_no_error(
+    construct_qc_config(
+      scdata_list,
+      unfiltered_samples = names(scdata_list),
+      technology = "10X"
+    )
+  )
+})
+
+
 test_that("cellsize filter is disabled by default and classifier is pre-filtered", {
-    scdata_list <- mock_scdata_list()
+  scdata_list <- mock_scdata_list()
 
   unfiltered_samples <- c("123abc")
-  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, technology = "10X")
+  qc_config <- construct_qc_config(
+    scdata_list,
+    unfiltered_samples = unfiltered_samples,
+    technology = "10X"
+  )
 
   for (sample in names(scdata_list)) {
     if (sample %in% unfiltered_samples) {

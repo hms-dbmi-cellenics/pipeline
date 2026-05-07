@@ -263,6 +263,5 @@ test_that("generate_subset_config works correctly", {
     parent_processing_config, sample_ids_map
   )
 
-  skip_if_bpcells()
   expect_snapshot(subset_processing_config)
 })

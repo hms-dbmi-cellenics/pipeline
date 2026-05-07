@@ -1,18 +1,43 @@
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  # shuffle cell ids, as we do in the platform
-  set.seed(1)
-  pbmc_small$cells_id <- sample(0:(ncol(pbmc_small) - 1))
-  pbmc_small$samples <- rep_len(paste0("sample_", 1:4), ncol(pbmc_small))
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = paste0("ENSG", seq_len(nrow(pbmc_small))),
-    name = row.names(pbmc_small),
-    row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
+mock_scdata <- function(use_bpcells = FALSE) {
+  
+  counts <- read.table(
+    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
+    as.is = TRUE
   )
-  # we have ~500 colors in the color pool
-  pbmc_small@misc$color_pool <- mock_color_pool(500)
-  return(pbmc_small)
+
+  input_names <- paste0("ENSG", seq_len(nrow(counts)))
+  gene_annotations <- data.frame(
+    input = input_names,
+    name = row.names(counts),
+    original_name = row.names(counts),
+    row.names = input_names
+  )
+
+  row.names(counts) <- input_names
+  counts <- maybe_bpcells(
+    counts,
+    withr::local_tempfile(.local_envir = parent.frame()),
+    use_bpcells
+  )
+
+  scdata <- SeuratObject::CreateSeuratObject(counts = counts)
+
+  scdata$cells_id <- 0:(ncol(scdata) - 1)
+  scdata@misc$gene_annotations <- gene_annotations
+  scdata@misc$color_pool <- mock_color_pool(500)
+  scdata$samples <- rep_len(paste0("sample_", 1:4), ncol(scdata))
+
+  scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
+  scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
+  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
+
+  scdata <- Seurat::RunPCA(scdata, verbose = FALSE, npcs = 10)
+  scdata@misc[["active.reduction"]] <- "pca"
+  scdata@misc[["numPCs"]] <- 10
+
+  return(scdata)
 }
+
 
 mock_cellset_object <- function(n_cells, n_clusters) {
   if (n_clusters == 0) {
@@ -92,15 +117,17 @@ mock_config <- function() {
   return(config)
 }
 
-test_that("runClusters returns correct keys", {
+test_that("runClusters returns correct keys with or without bpcells", {
   algos <- c("louvain", "leiden")
-  data <- mock_scdata()
-  expected_keys <- c("cluster", "cell_ids")
-  resolution <- 0.8
+  for (use_bpcells in c(TRUE, FALSE)) {
+    data <- mock_scdata(use_bpcells = use_bpcells)
+    expected_keys <- c("cluster", "cell_ids")
+    resolution <- 0.8
 
-  for (algo in algos) {
-    res <- runClusters(algo, resolution, data)
-    expect_equal(names(res), expected_keys)
+    for (algo in algos) {
+      res <- runClusters(algo, resolution, data)
+      expect_equal(names(res), expected_keys)
+    }
   }
 })
 

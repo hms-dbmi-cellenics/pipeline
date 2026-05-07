@@ -34,14 +34,17 @@ get_mock_cell_sets <- function(flatten = TRUE) {
   return(cell_sets)
 }
 
-mock_counts <- function(ncells = 200, ngenes = 200) {
+mock_counts <- function(ncells = 200, ngenes = 200, use_bpcells = FALSE) {
   sce <- scuttle::mockSCE(ncells, ngenes)
   counts <- SummarizedExperiment::assay(sce, "counts")
   rownames(counts) <- gsub("_", "-", rownames(counts))
-  counts <- as(counts, "dgCMatrix")
-  maybe_bpcells(
-    counts, withr::local_tempfile(.local_envir = parent.frame())
+
+  counts <- maybe_bpcells(
+    counts,
+    withr::local_tempfile(.local_envir = parent.frame()),
+    use_bpcells
   )
+  return(counts)
 }
 
 
@@ -397,44 +400,47 @@ test_that("unflatten_cell_sets works", {
 test_that("get_nnzero returns sum of nFeature_RNA", {
   # Create a mock Seurat object
   set.seed(RANDOM_SEED)
-  counts <- mock_counts()
 
-  # Create a Seurat object
-  scdata <- Seurat::CreateSeuratObject(counts = counts)
+  for (use_bpcells in c(TRUE, FALSE)) {
+    counts <- mock_counts(use_bpcells = use_bpcells)
+    scdata <- Seurat::CreateSeuratObject(counts = counts)
 
-  # Call get_nnzero
-  result <- get_nnzero(scdata)
+    result <- get_nnzero(scdata)
 
-  expect_true(is.numeric(result))
-  expect_true(result > 0)
-  expect_equal(as.integer(result), sum(scdata$nFeature_RNA))
+    expect_true(is.numeric(result))
+    expect_true(result > 0)
+    expect_equal(as.integer(result), sum(scdata$nFeature_RNA))
+  }
 })
 
 test_that("order_by_size orders scdata_list by size", {
   # Create multiple mock Seurat objects of different sizes
   set.seed(RANDOM_SEED)
-  counts1 <- mock_counts(ncells = 100)
-  counts2 <- mock_counts(ncells = 200)
-  counts3 <- mock_counts(ncells = 150)
+  for (use_bpcells in c(TRUE, FALSE)) {
+    counts1 <- mock_counts(ncells = 100, use_bpcells = use_bpcells)
+    counts2 <- mock_counts(ncells = 200, use_bpcells = use_bpcells)
+    counts3 <- mock_counts(ncells = 150, use_bpcells = use_bpcells)
 
-  scdata1 <- Seurat::CreateSeuratObject(counts = counts1)
-  scdata2 <- Seurat::CreateSeuratObject(counts = counts2)
-  scdata3 <- Seurat::CreateSeuratObject(counts = counts3)
+    scdata1 <- Seurat::CreateSeuratObject(counts = counts1)
+    scdata2 <- Seurat::CreateSeuratObject(counts = counts2)
+    scdata3 <- Seurat::CreateSeuratObject(counts = counts3)
 
-  scdata_list <- list(
-    sample1 = scdata2,
-    sample2 = scdata1,
-    sample3 = scdata3
-  )
+    scdata_list <- list(
+      sample1 = scdata2,
+      sample2 = scdata1,
+      sample3 = scdata3
+    )
 
-  # Call order_by_size
-  ordered_list <- order_by_size(scdata_list)
+    # Call order_by_size
+    ordered_list <- order_by_size(scdata_list)
 
-  # Check that they are ordered by size
-  sizes <- sapply(ordered_list, get_nnzero)
-  expect_true(sizes[1] <= sizes[2])
-  expect_true(sizes[2] <= sizes[3])
+    # Check that they are ordered by size
+    sizes <- sapply(ordered_list, get_nnzero)
+    expect_true(sizes[1] <= sizes[2])
+    expect_true(sizes[2] <= sizes[3])
+  }
 })
+
 
 test_that("group_files_by_sample groups files correctly", {
   # Create mock experiment files

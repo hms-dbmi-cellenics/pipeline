@@ -1,10 +1,10 @@
-mock_counts <- function(...) {
+mock_counts_dbl <- function(...) {
   set.seed(RANDOM_SEED)
   sce <- scDblFinder::mockDoubletSCE(...)
   counts <- sce@assays@data$counts
   colnames(counts) <- paste0("barcode-", 1:ncol(counts))
   rownames(counts) <- paste0("gene-", 1:nrow(counts))
-  return(Matrix::Matrix(counts, sparse = T))
+  return(Matrix::Matrix(counts, sparse = TRUE))
 }
 
 mock_input <- function(technology) {
@@ -13,8 +13,28 @@ mock_input <- function(technology) {
   return(input)
 }
 
+test_that("score_doublets works with bpcells", {
+  counts <- mock_counts_dbl()
+  counts <- counts_to_bpcells(
+    counts,
+    withr::local_tempfile(.local_envir = parent.frame())
+  )
+  input <- mock_input("10x")
+
+  prev_out <- list(
+    counts_list = list(sample1 = counts),
+    config = list(),
+    annot = list()
+  )
+  out <- score_doublets(input, NULL, prev_out)$output
+
+  expect_named(out, c("counts_list", "config", "annot", "doublet_scores"))
+  expect_named(out$doublet_scores, c("sample1"))
+  expect_true(is.data.frame(out$doublet_scores$sample1))
+})
+
 test_that("score_doublets returns expected columns", {
-  counts <- mock_counts()
+  counts <- mock_counts_dbl()
   input <- mock_input("10x")
 
   prev_out <- list(
@@ -32,7 +52,7 @@ test_that("score_doublets returns expected columns", {
 
 
 test_that("score_doublets filters cells to avoid warning of extremely low read counts", {
-  counts <- mock_counts(ncells = c(200, 300, 400, 200, 500, 300))
+  counts <- mock_counts_dbl(ncells = c(200, 300, 400, 200, 500, 300))
   counts <- round(counts / 2)
 
   input <- mock_input("10x")
@@ -49,7 +69,7 @@ test_that("score_doublets filters cells to avoid warning of extremely low read c
 
 
 test_that("score_doublets fails if prev_out is missing 'config', 'counts_list', or 'annot'", {
-  counts <- mock_counts()
+  counts <- mock_counts_dbl()
   prev_out <- list(
     counts_list = list(sample1 = counts),
     config = list(),
@@ -71,7 +91,7 @@ test_that("score_doublets fails if prev_out is missing 'config', 'counts_list', 
 
 
 test_that("compute_sample_doublet_scores handles technology 'parse' correctly", {
-  counts <- mock_counts()
+  counts <- mock_counts_dbl()
   input <- mock_input("parse")
 
   prev_out <- list(
@@ -89,7 +109,7 @@ test_that("compute_sample_doublet_scores handles technology 'parse' correctly", 
 
 
 test_that("compute_sample_doublet_scores uses correct dbr for different Parse kits", {
-  counts <- mock_counts()
+  counts <- mock_counts_dbl()
 
   dbr_mini <- DOUBLET_RATE_PARSE[["mini"]]
   set.seed(RANDOM_SEED)
@@ -114,7 +134,7 @@ test_that("compute_sample_doublet_scores uses correct dbr for different Parse ki
 
 
 test_that("compute_sample_doublet_scores stops with an error for invalid parse_kit values", {
-  counts <- mock_counts()
+  counts <- mock_counts_dbl()
 
   expect_error(
     compute_sample_doublet_scores(counts, technology = "parse", parse_kit = "invalid_kit"),
@@ -124,7 +144,7 @@ test_that("compute_sample_doublet_scores stops with an error for invalid parse_k
 
 # Tests for scdblfinder_bpcells function
 test_that("scdblfinder_bpcells returns SingleCellExperiment object", {
-  counts <- mock_counts()
+  counts <- mock_counts_dbl()
 
   result <- suppressWarnings(scdblfinder_bpcells(counts, dbr = NULL))
 
@@ -138,7 +158,7 @@ test_that("scdblfinder_bpcells returns SingleCellExperiment object", {
 })
 
 test_that("scdblfinder_bpcells uses provided dbr parameter", {
-  counts <- mock_counts()
+  counts <- mock_counts_dbl()
   dbr <- 0.01
 
   result <- suppressWarnings(scdblfinder_bpcells(counts, dbr = dbr))
@@ -148,7 +168,7 @@ test_that("scdblfinder_bpcells uses provided dbr parameter", {
 })
 
 test_that("scdblfinder_bpcells handles counts matrix correctly", {
-  counts <- mock_counts()
+  counts <- mock_counts_dbl()
 
   result <- suppressWarnings(scdblfinder_bpcells(counts, dbr = NULL))
 
@@ -164,7 +184,7 @@ test_that("scdblfinder_bpcells handles counts matrix correctly", {
 
 test_that("scdblfinder_bpcells with disk-backed BPCells matrix", {
   # Create a count matrix and write it to disk using BPCells
-  counts <- mock_counts()
+  counts <- mock_counts_dbl()
 
   # Ensure matrix is integer (required by BPCells)
   counts <- as(counts, "dgCMatrix")
@@ -193,7 +213,7 @@ test_that("scdblfinder_bpcells with disk-backed BPCells matrix", {
 })
 
 test_that("scdblfinder_bpcells produces identical result to scDblFinder", {
-  counts <- mock_counts()
+  counts <- mock_counts_dbl()
 
   # Run scdblfinder_bpcells
   set.seed(RANDOM_SEED)

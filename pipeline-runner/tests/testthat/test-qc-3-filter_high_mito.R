@@ -17,33 +17,34 @@ get_threshold <- function(config) {
   config$filterSettings$methodSettings$absoluteThreshold$maxFraction
 }
 
+test_that("filter_high_mito filters based on threshold and works with bpcells", {
+  for (use_bpcells in c(FALSE, TRUE)) {
+    scdata_list <- mock_scdata_list(use_bpcells = use_bpcells)
+    sample1_id <- names(scdata_list)[1]
 
-test_that("filter_high_mito filters based on threshold", {
-  scdata_list <- mock_scdata_list()
-  sample1_id <- names(scdata_list)[1]
+    # set first 10 cells to have high percent.mt (>10) to be filtered
+    scdata_list[[sample1_id]]$percent.mt[1:10] <- 11
 
-  # set first 10 cells to have high percent.mt (>10) to be filtered
-  scdata_list[[sample1_id]]$percent.mt[1:10] <- 11
+    cells_id <- mock_ids(scdata_list)
 
-  cells_id <- mock_ids(scdata_list)
+    # should filter first 10 cells
+    config <- mock_config(0.1)
+    config$auto <- FALSE
+    out <- filter_high_mito(scdata_list, config, sample1_id, cells_id)
+    expect_equal(ncol(out$data[[sample1_id]]), 40)
+    expect_equal(length(out$new_ids[[sample1_id]]), 30)
 
-  # should filter first 10 cells
-  config <- mock_config(0.1)
-  config$auto <- FALSE
-  out <- filter_high_mito(scdata_list, config, sample1_id, cells_id)
-  expect_equal(ncol(out$data[[sample1_id]]), 40)
-  expect_equal(length(out$new_ids[[sample1_id]]), 30)
+    # should filter all cells in first sample
+    config <- mock_config(0.01)
+    config$auto <- FALSE
 
-  # should filter all cells in first sample
-  config <- mock_config(0.01)
-  config$auto <- FALSE
+    # set all cells to have high percent.mt to filter all out
+    scdata_list[[sample1_id]]$percent.mt <- 50
 
-  # set all cells to have high percent.mt to filter all out
-  scdata_list[[sample1_id]]$percent.mt <- 50
-
-  out <- filter_high_mito(scdata_list, config, sample1_id, cells_id)
-  expect_equal(ncol(out$data[[sample1_id]]), 40)
-  expect_equal(length(out$new_ids[[sample1_id]]), 0)
+    out <- filter_high_mito(scdata_list, config, sample1_id, cells_id)
+    expect_equal(ncol(out$data[[sample1_id]]), 40)
+    expect_equal(length(out$new_ids[[sample1_id]]), 0)
+  }
 })
 
 test_that("filter_high_mito can be disabled", {

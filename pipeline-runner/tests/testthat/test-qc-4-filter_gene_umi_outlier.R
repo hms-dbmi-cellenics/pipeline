@@ -53,19 +53,21 @@ test_that("filter_gene_umi_outlier is sample specific", {
   expect_true(all(cell_ids2 %in% out1$new_ids[[sample2_id]]))
 })
 
-test_that("filter_gene_umi_outlier can filter cells", {
-  # single outlier in single sample
-  scdata_list <- mock_scdata_list(with_outlier = TRUE)
-  sample1_id <- names(scdata_list)[1]
-  sample2_id <- names(scdata_list)[2]
+test_that("filter_gene_umi_outlier can filter cells and works with bpcells", {
+  for (use_bpcells in c(FALSE, TRUE)) {
+     # single outlier in single sample
+    scdata_list <- mock_scdata_list(with_outlier = TRUE, use_bpcells = use_bpcells)
+    sample1_id <- names(scdata_list)[1]
+    sample2_id <- names(scdata_list)[2]
 
-  config <- mock_config()
-  cells_id <- mock_ids(scdata_list)
-  nstart <- ncol(scdata_list[[sample1_id]])
+    config <- mock_config()
+    cells_id <- mock_ids(scdata_list)
+    nstart <- ncol(scdata_list[[sample1_id]])
 
-  out <-
-    filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
-  expect_lt(length(unlist(out$new_ids[[sample1_id]])), nstart)
+    out <-
+      filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
+    expect_lt(length(unlist(out$new_ids[[sample1_id]])), nstart)
+  }
 })
 
 
@@ -143,6 +145,21 @@ test_that("filter_gene_umi_outlier gives different results with spline fit", {
       out1$new_ids[[sample1_id]],
       out2$new_ids[[sample1_id]]
     )
+  )
+})
+
+test_that("filter_gene_umi_outlier spline fit works with bpcells", {
+  # single outlier in single sample
+  scdata_list <- mock_scdata_list(with_outlier = TRUE, use_bpcells = TRUE)
+  sample1_id <- names(scdata_list)[1]
+  sample2_id <- names(scdata_list)[2]
+
+  config <- mock_config()
+  cells_id <- mock_ids(scdata_list)
+  config$filterSettings$regressionType <- "spline"
+
+  expect_no_error(
+    filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
   )
 })
 

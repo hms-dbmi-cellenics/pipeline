@@ -1,7 +1,7 @@
 library(Seurat)
 human_cc_genes <- cc_genes[["human"]]
 
-mock_prev_out <- function(samples = "sample_a", counts = NULL) {
+mock_prev_out <- function(samples = "sample_a", counts = NULL, use_bpcells = FALSE) {
   if (is.null(counts)) {
     counts <- DropletUtils:::simCounts()
     colnames(counts) <- paste0("cell", seq_len(ncol(counts)))
@@ -14,7 +14,12 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   doublet_scores <- list()
 
   for (sample in samples) {
-    counts_list[[sample]] <- counts
+
+    counts_list[[sample]] <- maybe_bpcells(
+      counts,
+      withr::local_tempfile(.local_envir = parent.frame()),
+      use_bpcells
+    )
     edrops[[sample]] <- eout
     doublet_scores[[sample]] <- mock_doublet_scores(counts)
   }
@@ -52,7 +57,7 @@ test_that("Unisample integration works", {
   integrated_scdata <- remove_commands_functions(integrated_scdata)
 
   expect_s4_class(integrated_scdata, "Seurat")
-  skip_if_bpcells()
+
   skip_on_ci()
   expect_snapshot(str(integrated_scdata))
 })

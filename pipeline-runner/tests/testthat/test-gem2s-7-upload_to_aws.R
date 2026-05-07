@@ -11,8 +11,8 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-mock_upload_scdata_list <- function(config) {
-  prev_out <- mock_prev_out(config)
+mock_upload_scdata_list <- function(config, use_bpcells = FALSE) {
+  prev_out <- mock_prev_out(config, use_bpcells = use_bpcells)
   scdata_list <- prev_out$scdata_list
 
   input <- mock_input()
@@ -94,7 +94,7 @@ mock_parsed_cellsets <- function(scdata_list) {
 }
 
 
-mock_prev_out <- function(config, counts = NULL) {
+mock_prev_out <- function(config, counts = NULL, use_bpcells = FALSE) {
   samples <- config$samples
 
   if (is.null(counts)) {
@@ -110,7 +110,11 @@ mock_prev_out <- function(config, counts = NULL) {
   doublet_scores <- list()
 
   for (sampleId in samples) {
-    counts_list[[sampleId]] <- counts
+    counts_list[[sampleId]] <- maybe_bpcells(
+      counts,
+      withr::local_tempfile(.local_envir = parent.frame()),
+      use_bpcells
+    )
     edrops[[sampleId]] <- eout
     doublet_scores[[sampleId]] <- mock_doublet_scores(counts)
   }
@@ -377,6 +381,63 @@ test_that("upload_to_aws tries to upload the correct files to aws", {
         input$experimentId,
         sample_id,
         "r.rds"
+      ))
+    )
+  }
+
+  # cleanup
+  withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
+  withr::defer(unlink(pipeline_config$source_bucket, recursive = TRUE))
+  withr::defer(unlink(file.path(paths$mock_data, "temp"), recursive = TRUE))
+})
+
+test_that("upload_to_aws tries to upload the correct files to aws with bpcells", {
+  metadata <- list(
+    Group1 = list("Hello", "WT2", "WT2"),
+    Group2 = list("WT", "WT", "WT124")
+  )
+  input <- mock_input(metadata)
+  config <- mock_config(input)
+  scdata_list <- mock_upload_scdata_list(config, use_bpcells = TRUE)
+
+  paths <- setup_test_paths()
+
+  pipeline_config <- mock_pipeline_config()
+
+  prev_out <- list(
+    config = config,
+    counts_list = list(),
+    annot = list(),
+    doublet_scores = list(),
+    scdata_list = scdata_list,
+    qc_config = list("mock_qc_config"),
+    disable_qc_filters = FALSE
+  )
+
+  res <- stubbed_upload_to_aws(input, pipeline_config, prev_out)
+
+  # cellsets file
+  expect_snapshot_file(
+    file.path(pipeline_config$cell_sets_bucket, input$experimentId),
+    name = "cellsets.json"
+  )
+
+  # raw sample seurat objects, test that they exist where upload_to_aws puts them
+  for (sample_id in prev_out$config$samples) {
+    expect_true(
+      file.exists(file.path(
+        pipeline_config$source_bucket,
+        input$experimentId,
+        sample_id,
+        "r.rds"
+      ))
+    )
+    expect_true(
+      file.exists(file.path(
+        pipeline_config$source_bucket,
+        input$experimentId,
+        sample_id,
+        "matrix_dir.tar.zst"
       ))
     )
   }

@@ -10,6 +10,7 @@ mock_config <- function() {
   return(config)
 }
 
+
 test_that("Initial cells_id are correct", {
   scdata_list <- mock_scdata_list()
   cells_id <- generate_first_step_ids(scdata_list)
@@ -17,21 +18,22 @@ test_that("Initial cells_id are correct", {
   expect_equal(unique(cells_id[["123def"]]), 40:79)
 })
 
-test_that("filter_emptydrops removes NA with threshold < 1", {
-  scdata_list <- mock_scdata_list()
-  
-  # Set first 10 cells to have high FDR (>0.01) to be filtered
-  scdata_list[["123abc"]]$emptyDrops_FDR[1:10] <- NA
-  scdata_list[["123def"]]$emptyDrops_FDR[1:10] <- NA
-  
-  config <- mock_config()
-  cells_id <- generate_first_step_ids(scdata_list)
+test_that("filter_emptydrops removes NA with threshold < 1 and works with bpcells", {
+  for (use_bpcells in c(FALSE, TRUE)) {
+    scdata_list <- mock_scdata_list(use_bpcells = use_bpcells)
+    
+    # Set first 10 cells to have high FDR (>0.01) to be filtered
+    scdata_list[["123abc"]]$emptyDrops_FDR[1:10] <- NA
+    scdata_list[["123def"]]$emptyDrops_FDR[1:10] <- NA
+    
+    config <- mock_config()
+    cells_id <- generate_first_step_ids(scdata_list)
 
-
-  for (sample_id in c("123abc", "123def")){
-    out <- filter_emptydrops(scdata_list, config, sample_id, cells_id)
-    expect_equal(ncol(out$data[[sample_id]]), 40)
-    expect_equal(length(out$new_ids[[sample_id]]), 30)
+    for (sample_id in c("123abc", "123def")){
+      out <- filter_emptydrops(scdata_list, config, sample_id, cells_id)
+      expect_equal(ncol(out$data[[sample_id]]), 40)
+      expect_equal(length(out$new_ids[[sample_id]]), 30)
+    }
   }
 })
 

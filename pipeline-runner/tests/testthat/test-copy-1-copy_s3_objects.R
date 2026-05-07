@@ -1,11 +1,13 @@
-mock_source_data <- function(sample_ids, from_experiment_id) {
+mock_source_data <- function(sample_ids, from_experiment_id, use_bpcells = FALSE) {
   counts <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
-  counts <- as(as.matrix(counts), "dgCMatrix")
+
   counts <- maybe_bpcells(
-    counts, withr::local_tempfile(.local_envir = parent.frame())
+    counts,
+    withr::local_tempfile(.local_envir = parent.frame()),
+    use_bpcells
   )
 
   scdata_list <- list()
@@ -24,7 +26,7 @@ mock_source_data <- function(sample_ids, from_experiment_id) {
 
     # add samples
     scdata$samples <- rep(sample_ids[i], each = n_cells)
-    scdata_list[i] <- scdata
+    scdata_list[[i]] <- scdata
   }
   return(scdata_list)
 }

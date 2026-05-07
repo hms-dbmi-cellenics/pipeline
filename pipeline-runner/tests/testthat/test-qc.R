@@ -2,7 +2,7 @@
 # seurat in the setup.R file
 library(Seurat)
 
-qc_setup <- function(experiment_id) {
+qc_setup <- function(experiment_id, use_bpcells = FALSE) {
   paths <- setup_test_paths()
   gem2s_snaps_path <- file.path(paths$snaps, "gem2s")
 
@@ -22,11 +22,12 @@ qc_setup <- function(experiment_id) {
 
   # convert scdata_list to bpcells if requested
   for (sample in names(res$output$scdata_list)) {
-    
     scdata <- res$output$scdata_list[[sample]]
+
     scdata[["RNA"]]$counts <- maybe_bpcells(
       scdata[["RNA"]]$counts,
-      withr::local_tempfile(.local_envir = parent.frame())
+      withr::local_tempfile(.local_envir = parent.frame()),
+      use_bpcells
     )
     res$output$scdata_list[[sample]] <- scdata
   }
@@ -152,7 +153,6 @@ test_qc <- function(experiment_id) {
     # when run `make test-file FILE=test-qc.R`
     expect_snapshot(filtered_cells_id)
 
-    skip_if_bpcells()
     skip_on_ci()
     for (task_name in names(global_vars_task)) {
       global_vars <- global_vars_task[[task_name]]

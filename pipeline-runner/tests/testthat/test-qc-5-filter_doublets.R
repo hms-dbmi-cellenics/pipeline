@@ -17,22 +17,24 @@ mock_config <- function(
   return(config)
 }
 
-test_that("filter_doublets filters based on threshold", {
-  scdata_list <- mock_scdata_list()
-  sample1_id <- names(scdata_list)[1]
+test_that("filter_doublets filters based on threshold and bpcells works", {
+  for (use_bpcells in c(FALSE, TRUE)) {
+    # single outlier in single sample
+    scdata_list <- mock_scdata_list(use_bpcells = use_bpcells)
+    sample1_id <- names(scdata_list)[1]
 
-  # set first 10 cells to have high doublet scores and doublet class
-  scdata_list[[sample1_id]]$doublet_scores[1:10] <- 0.9
-  scdata_list[[sample1_id]]$doublet_class[1:10] <- "doublet"
+    # set first 10 cells to have high doublet scores and doublet class
+    scdata_list[[sample1_id]]$doublet_scores[1:10] <- 0.9
+    scdata_list[[sample1_id]]$doublet_class[1:10] <- "doublet"
 
-  cells_id <- mock_ids(scdata_list)
-  # should filter first 10 cells
-  config <- mock_config(0.5)
+    cells_id <- mock_ids(scdata_list)
+    # should filter first 10 cells
+    config <- mock_config(0.5)
+    out <- filter_doublets(scdata_list, config, sample1_id, cells_id)
 
-  out <- filter_doublets(scdata_list, config, sample1_id, cells_id)
-
-  expect_equal(ncol(out$data[[sample1_id]]), 40)
-  expect_equal(out$new_ids[[sample1_id]], 10:39)
+    expect_equal(ncol(out$data[[sample1_id]]), 40)
+    expect_equal(out$new_ids[[sample1_id]], 10:39)
+  }
 })
 
 test_that("filter_doublets is sample aware", {

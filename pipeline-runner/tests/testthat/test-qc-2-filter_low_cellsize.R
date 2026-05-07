@@ -9,24 +9,26 @@ mock_config <- function(mcs = 100, auto_settings = FALSE, enabled_on = TRUE) {
   return(config)
 }
 
+test_that("filter_low_cellsize removes cells and works with bpcells", {
 
-test_that("filter_low_cellsize removes cells", {
-  scdata_list <- mock_scdata_list()
-  sample1_id <- names(scdata_list)[1]
-  sample2_id <- names(scdata_list)[2]
+  for (use_bpcells in c(FALSE, TRUE)) {
+    scdata_list <- mock_scdata_list()
+    sample1_id <- names(scdata_list)[1]
+    sample2_id <- names(scdata_list)[2]
 
-  config <- mock_config(mcs = 10000)
-  cells_id <- mock_ids(scdata_list)
+    config <- mock_config(mcs = 10000)
+    cells_id <- mock_ids(scdata_list)
 
-  out <- filter_low_cellsize(scdata_list, config, sample1_id, cells_id)
+    out <- filter_low_cellsize(scdata_list, config, sample1_id, cells_id)
 
-  expect_equal(ncol(out$data[[sample1_id]]), ncol(scdata_list[[sample1_id]]))
-  expect_lt(length(out$new_ids[[sample1_id]]), length(cells_id[[sample1_id]]))
+    expect_equal(ncol(out$data[[sample1_id]]), ncol(scdata_list[[sample1_id]]))
+    expect_lt(length(out$new_ids[[sample1_id]]), length(cells_id[[sample1_id]]))
 
-  expect_equal(
-    length(out$new_ids[[sample2_id]]),
-    length(cells_id[[sample2_id]])
-  )
+    expect_equal(
+      length(out$new_ids[[sample2_id]]),
+      length(cells_id[[sample2_id]])
+    )
+  }
 })
 
 test_that("filter_low_cellsize filters only appropriate cells", {

@@ -64,30 +64,35 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-test_that("harmony integration works", {
-  scdata_list <- mock_scdata_list()
-  cells_id <- mock_ids(scdata_list)
-  config <- list(
-    dimensionalityReduction = list(numPCs = 2),
-    dataIntegration = list(
-      method = "harmony",
-      methodSettings = list(
-        harmony = list(
-          numGenes = 10,
-          normalisation = "logNormalize"
+test_that("harmony integration works with or without bpcells", {
+
+  # use_bpcells = FALSE last for snapshot
+  for (use_bpcells in c(TRUE, FALSE)) {
+    scdata_list <- mock_scdata_list(use_bpcells = use_bpcells)
+    cells_id <- mock_ids(scdata_list)
+    config <- list(
+      dimensionalityReduction = list(numPCs = 2),
+      dataIntegration = list(
+        method = "harmony",
+        methodSettings = list(
+          harmony = list(
+            numGenes = 10,
+            normalisation = "logNormalize"
+          )
         )
       )
     )
-  )
 
-  integrated_scdata <- suppressWarnings(
-    run_harmony(scdata_list, config, cells_id)
-  )
-  integrated_scdata <- clean_timestamp(integrated_scdata)
-  integrated_scdata <- remove_commands_functions(integrated_scdata)
+    integrated_scdata <- suppressWarnings(
+      run_harmony(scdata_list, config, cells_id)
+    )
+    integrated_scdata <- clean_timestamp(integrated_scdata)
+    integrated_scdata <- remove_commands_functions(integrated_scdata)
 
-  expect_s4_class(integrated_scdata, "Seurat")
-  skip_if_bpcells()
+    expect_s4_class(integrated_scdata, "Seurat")
+  }
+
+  # snapshot is on result without bpcells
   skip_on_ci()
   expect_snapshot(str(integrated_scdata))
 })

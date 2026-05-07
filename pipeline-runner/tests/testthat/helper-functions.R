@@ -38,24 +38,6 @@ remove_commands_functions <- function(data) {
   }
   return(data)
 }
-
-#' Check if BPCELLS testing mode is enabled
-#'
-#' Returns TRUE if the BPCELLS environment variable is set to "true".
-#' Used to conditionally enable BPCells matrix conversion in tests.
-#'
-#' @return logical TRUE if BPCELLS="true", FALSE otherwise
-#'
-is_bpcells <- function() {
-  Sys.getenv("BPCELLS") == "true"
-}
-
-skip_if_bpcells <- function() {
-  if (is_bpcells()) {
-    skip("Skipping test because BPCELLS=true")
-  }
-}
-
 #' Convert a matrix to disk-backed BPCells format if BPCELLS env var is set
 #'
 #' Simple wrapper that converts a single matrix to BPCells IterableMatrix
@@ -68,22 +50,47 @@ skip_if_bpcells <- function() {
 #' @examples
 #' \dontrun{
 #'   counts <- matrix(1:10, nrow = 2)
-#'   counts <- maybe_bpcells(counts)
+#'   counts <- counts_to_bpcells(counts, matrix_dir = tempdir())
 #' }
 #'
-maybe_bpcells <- function(mat, matrix_dir) {
-  if (!is_bpcells()) {
-    return(mat)
-  }
+counts_to_bpcells <- function(counts, matrix_dir) {
+  counts <- as(as.matrix(counts), "dgCMatrix")
+  counts <- BPCells::convert_matrix_type(counts)
 
   # Convert to BPCells
-  BPCells::write_matrix_dir(mat, dir = matrix_dir)
+  BPCells::write_matrix_dir(counts, dir = matrix_dir)
 }
+
+maybe_bpcells <- function(counts, matrix_dir, use_bpcells = FALSE) {
+  if (use_bpcells) {
+    return(counts_to_bpcells(counts, matrix_dir))
+  } else {
+    return(counts)
+  }
+}
+
+mock_counts <- function(use_bpcells = FALSE) {
+  counts <- read.table(
+    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
+    as.is = TRUE
+  )
+  counts <- as(as.matrix(counts), "dgCMatrix")
+  counts <- maybe_bpcells(
+    counts,
+    withr::local_tempfile(.local_envir = parent.frame()),
+    use_bpcells
+  )
+  
+  return(counts)
+}
+
+
 
 mock_scdata_list <- function(
   rename_genes = c(),
   n_rep = 1,
-  with_outlier = FALSE
+  with_outlier = FALSE,
+  use_bpcells = FALSE
 ) {
 
   counts <- read.table(
@@ -118,8 +125,6 @@ mock_scdata_list <- function(
     name = rownames(counts)
   )
 
-  counts <- as(as.matrix(counts), "dgCMatrix")
-
   # Set seed once before generating all samples
   set.seed(123)
 
@@ -133,7 +138,8 @@ mock_scdata_list <- function(
     end_col <- i * ncells_each
     counts_split <- maybe_bpcells(
       counts[, seq(start_col, end_col)],
-      withr::local_tempfile(.local_envir = parent.frame())
+      withr::local_tempfile(.local_envir = parent.frame()),
+      use_bpcells
     )
 
     scdata <- Seurat::CreateSeuratObject(counts = counts_split)

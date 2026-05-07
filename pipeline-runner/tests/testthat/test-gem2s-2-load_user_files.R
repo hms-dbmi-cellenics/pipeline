@@ -1,15 +1,5 @@
 source("mock-gem2s-input-files.R")
 
-mock_counts <- function() {
-  counts <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-
-  counts <- as.matrix(counts, rownames.force = TRUE)
-  counts <- as(counts, "dgCMatrix")
-  return(counts)
-}
 
 mock_annotations <- function(counts, multiome = "no") {
   # pbmc_raw dataset has gene names as rownames.
