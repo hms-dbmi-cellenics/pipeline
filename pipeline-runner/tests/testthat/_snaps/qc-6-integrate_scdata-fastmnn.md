@@ -1,4 +1,4 @@
-# FastMNN works
+# FastMNN works with or without bpcells
 
     Code
       str(integrated_scdata)

@@ -1,4 +1,4 @@
-# harmony integration works
+# harmony integration works with or without bpcells
 
     Code
       str(integrated_scdata)
