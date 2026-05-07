@@ -16,7 +16,7 @@ mock_features <- function(num_rows) {
   return(annotations)
 }
 
-mock_counts <- function(num_genes, num_cells) {
+mock_counts_parse <- function(num_genes, num_cells) {
   counts <-
     Matrix::Matrix(
       rnbinom(
@@ -28,13 +28,18 @@ mock_counts <- function(num_genes, num_cells) {
       byrow = TRUE
     )
 
-  colnames(counts) <- make.unique(paste0(sample(1:96, num_cells, replace = TRUE), sample(1:96, num_cells, replace = TRUE), "_", sample(1:96, num_cells, replace = TRUE)))
+  colnames(counts) <- make.unique(paste0(
+    sample(1:96, num_cells, replace = TRUE),
+    sample(1:96, num_cells, replace = TRUE),
+    "_",
+    sample(1:96, num_cells, replace = TRUE)
+  ))
 
   return(counts)
 }
 
 test_that("load_user_files loads a parse count matrix", {
-  counts <- mock_counts(100, 100)
+  counts <- mock_counts_parse(100, 100)
   features <- mock_features(100)
 
   experiment_dir <- "./experiment_1"
@@ -52,7 +57,7 @@ test_that("load_user_files loads a parse count matrix", {
 })
 
 test_that("load_user_files generates feature annotation for parse data", {
-  counts <- mock_counts(100, 100)
+  counts <- mock_counts_parse(100, 100)
   features <- mock_features(100)
 
   experiment_dir <- "./experiment_1"
@@ -70,7 +75,7 @@ test_that("load_user_files generates feature annotation for parse data", {
 })
 
 test_that("load_user_files uses appropriate feature columns for parse data", {
-  counts <- mock_counts(100, 100)
+  counts <- mock_counts_parse(100, 100)
   features <- mock_features(100)
 
   experiment_dir <- "./experiment_1"
@@ -101,8 +106,8 @@ test_that("load_user_files loads 10x multisample experiments", {
   experiment_dir <- "./experiment_1"
   samples <- c("sample_a", "sample_b")
 
-  local_experiment(mock_counts(100, 100), features, experiment_dir, samples[1], type = "parse")
-  local_experiment(mock_counts(100, 100), features, experiment_dir, samples[2], type = "parse")
+  local_experiment(mock_counts_parse(100, 100), features, experiment_dir, samples[1], type = "parse")
+  local_experiment(mock_counts_parse(100, 100), features, experiment_dir, samples[2], type = "parse")
 
 
   prev_out <- list(config = list(samples = samples, input = list(type = "parse")))
@@ -115,7 +120,7 @@ test_that("load_user_files loads 10x multisample experiments", {
 })
 
 test_that("read_parse_files returns error if files missing", {
-  counts <- mock_counts(100, 100)
+  counts <- mock_counts_parse(100, 100)
   features <- mock_features(100)
 
   experiment_dir <- "./experiment_1"
@@ -138,7 +143,7 @@ test_that("read_parse_files returns error if files missing", {
 })
 
 test_that("read_parse_annotations makes features unique", {
-  counts <- mock_counts(100, 100)
+  counts <- mock_counts_parse(100, 100)
   features <- mock_features(100)
 
   features$gene_id[[2]] <- features$gene_id[[1]]

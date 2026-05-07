@@ -2,7 +2,7 @@
 # seurat in the setup.R file
 library(Seurat)
 
-qc_setup <- function(experiment_id) {
+qc_setup <- function(experiment_id, use_bpcells = FALSE) {
   paths <- setup_test_paths()
   gem2s_snaps_path <- file.path(paths$snaps, "gem2s")
 
@@ -20,6 +20,18 @@ qc_setup <- function(experiment_id) {
     stop("experiment id does not match object sourced from gem2s test output")
   }
 
+  # convert scdata_list to bpcells if requested
+  for (sample in names(res$output$scdata_list)) {
+    scdata <- res$output$scdata_list[[sample]]
+
+    scdata[["RNA"]]$counts <- maybe_bpcells(
+      scdata[["RNA"]]$counts,
+      withr::local_tempfile(.local_envir = parent.frame()),
+      use_bpcells
+    )
+    res$output$scdata_list[[sample]] <- scdata
+  }
+
   return(list(
     prev_out = res,
     qc_config = qc_config
@@ -27,7 +39,8 @@ qc_setup <- function(experiment_id) {
 }
 
 snapshot_qc_output <- function(task_name, snap_list) {
-  # scdata_list is returned for every sample, so we'll have duplicated stuff here.
+  # scdata_list is returned for every sample,
+  # so we'll have duplicated stuff here.
   if (is.list(snap_list$data)) {
     snap_list$data <- lapply(snap_list$data, clean_timestamp)
     snap_list$data <- lapply(snap_list$data, remove_commands_functions)
@@ -73,14 +86,14 @@ test_qc <- function(experiment_id) {
     setup <- qc_setup(experiment_id)
     prev_out <- setup$prev_out
     pipeline_config <- mock_pipeline_config()
+    withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
+
 
     # load task functions, and use required stubs
     tasks <- lapply(QC_TASK_LIST, get)
     tasks$configureEmbedding <- stubbed_embed_and_cluster
 
-
     filtered_cells_id <- generate_first_step_ids(prev_out$output$scdata_list)
-    expect_snapshot(filtered_cells_id)
 
     # QC stores everything as global variables. This replicates it
     global_vars <- list(
@@ -90,41 +103,59 @@ test_qc <- function(experiment_id) {
       plotData = list()
     )
 
+    # store intermediate global_vars for snapshots
+    global_vars_task <- list()
 
     # this loop will have to be modified if the pipeline structure in
     # init-functions.R changes.
     for (task_name in names(QC_TASK_LIST)) {
       # config changes at the integration step (no more independent samples)
-      if (which(task_name == names(QC_TASK_LIST)) < which(names(QC_TASK_LIST) == "dataIntegration")) {
+      if (
+        which(task_name == names(QC_TASK_LIST)) <
+          which(names(QC_TASK_LIST) == "dataIntegration")
+      ) {
         for (sample_id in names(prev_out$output$scdata_list)) {
           config <- setup$qc_config[[task_name]][[sample_id]]
 
-          global_vars <- run_qc_step(
-            scdata = global_vars$data,
-            config = config,
-            tasks = tasks,
-            task_name = task_name,
-            cells_id = global_vars$new_ids,
-            sample_id = sample_id,
-            debug_config = pipeline_config$debug_config
+          global_vars <- expect_no_error(
+            run_qc_step(
+              scdata = global_vars$data,
+              config = config,
+              tasks = tasks,
+              task_name = task_name,
+              cells_id = global_vars$new_ids,
+              sample_id = sample_id,
+              debug_config = pipeline_config$debug_config
+            )
           )
         }
       } else {
         config <- setup$qc_config[[task_name]]
         config$clustering_should_run <- TRUE
 
-        global_vars <- run_qc_step(
-          scdata = global_vars$data,
-          config = config,
-          tasks = tasks,
-          task_name = task_name,
-          cells_id = global_vars$new_ids,
-          sample_id = "",
-          debug_config = pipeline_config$debug_config
+        global_vars <- expect_no_error(
+          run_qc_step(
+            scdata = global_vars$data,
+            config = config,
+            tasks = tasks,
+            task_name = task_name,
+            cells_id = global_vars$new_ids,
+            sample_id = "",
+            debug_config = pipeline_config$debug_config
+          )
         )
       }
+      # store global vars for snapshot
+      global_vars_task[[task_name]] <- global_vars
+    }
 
+    # run snapshot tests last so above not skipped
+    # when run `make test-file FILE=test-qc.R`
+    expect_snapshot(filtered_cells_id)
 
+    skip_on_ci()
+    for (task_name in names(global_vars_task)) {
+      global_vars <- global_vars_task[[task_name]]
       snapshot_qc_output(
         task_name,
         list(
@@ -134,6 +165,7 @@ test_qc <- function(experiment_id) {
         )
       )
     }
+
     # snapshot final cellsets file
     expect_snapshot_file(
       file.path(
@@ -142,9 +174,6 @@ test_qc <- function(experiment_id) {
       ),
       name = "cluster_cell_sets.json"
     )
-
-    # cleanup
-    withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
   })
 }
 

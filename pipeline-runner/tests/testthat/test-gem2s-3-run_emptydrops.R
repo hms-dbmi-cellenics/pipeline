@@ -1,8 +1,28 @@
-mock_counts <- function() {
+mock_counts <- function(use_bpcells = FALSE) {
   set.seed(RANDOM_SEED)
-  DropletUtils:::simCounts()
+  counts <- DropletUtils:::simCounts()
+  counts <- maybe_bpcells(
+    counts,
+    withr::local_tempfile(.local_envir = parent.frame()),
+    use_bpcells
+  )
+  return(counts)
 }
 
+test_that("run_emptydrops works with bpcells", {
+  counts <- mock_counts(use_bpcells = TRUE)
+
+  prev_out <- list(
+    counts_list = list(sample1 = counts),
+    config = list(),
+    annot = data.frame()
+  )
+  out <- run_emptydrops(NULL, NULL, prev_out)$output
+
+  expect_named(out, c("counts_list", "config", "annot", "edrops"))
+  expect_named(out$edrops, c("sample1"))
+  expect_s4_class(out$edrops$sample1, "DFrame")
+})
 
 test_that("run_emptydrops is skipped when dataset is pre-filtered", {
   counts <- mock_counts()

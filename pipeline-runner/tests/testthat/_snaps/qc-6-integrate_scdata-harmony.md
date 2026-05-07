@@ -1,4 +1,4 @@
-# harmony integration works
+# harmony integration works with or without bpcells
 
     Code
       str(integrated_scdata)
@@ -6,82 +6,439 @@
       Formal class 'Seurat' [package "SeuratObject"] with 13 slots
         ..@ assays      :List of 1
         .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
-        .. .. .. ..@ layers    :List of 3
-        .. .. .. .. ..$ counts    :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. ..@ i       : int [1:4456] 1 5 8 11 22 30 33 34 36 38 ...
-        .. .. .. .. .. .. ..@ p       : int [1:81] 0 47 99 149 205 258 306 342 387 423 ...
-        .. .. .. .. .. .. ..@ Dim     : int [1:2] 230 80
-        .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. ..@ layers    :List of 5
+        .. .. .. .. ..$ counts.123abc:Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixDir' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. ..@ dir        : chr "/tmp/RtmpNY4Wop/matrix_dir"
+        .. .. .. .. .. .. .. .. .. .. ..@ compressed : logi TRUE
+        .. .. .. .. .. .. .. .. .. .. ..@ buffer_size: int 8192
+        .. .. .. .. .. .. .. .. .. .. ..@ type       : chr "uint32_t"
+        .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 230 80
+        .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. ..@ row_selection: int [1:230] 1 2 3 4 5 6 7 8 9 10 ...
+        .. .. .. .. .. .. .. .. ..@ col_selection: int [1:40] 1 2 3 4 5 6 7 8 9 10 ...
+        .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
+        .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. ..@ dim      : int [1:2] 230 40
+        .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. ..@ dimnames :List of 2
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. ..@ x       : num [1:4456] 1 1 3 1 1 4 1 5 1 1 ...
-        .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. ..$ data      :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. ..@ i       : int [1:4456] 1 5 8 11 22 30 33 34 36 38 ...
-        .. .. .. .. .. .. ..@ p       : int [1:81] 0 47 99 149 205 258 306 342 387 423 ...
-        .. .. .. .. .. .. ..@ Dim     : int [1:2] 230 80
-        .. .. .. .. .. .. ..@ Dimnames:List of 2
+        .. .. .. .. .. .. ..$ features: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. ..$ cells   : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. ..$ counts.123def:Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixDir' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. ..@ dir        : chr "/tmp/RtmpNY4Wop/matrix_dir"
+        .. .. .. .. .. .. .. .. .. .. ..@ compressed : logi TRUE
+        .. .. .. .. .. .. .. .. .. .. ..@ buffer_size: int 8192
+        .. .. .. .. .. .. .. .. .. .. ..@ type       : chr "uint32_t"
+        .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 230 80
+        .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. ..@ row_selection: int [1:230] 1 2 3 4 5 6 7 8 9 10 ...
+        .. .. .. .. .. .. .. .. ..@ col_selection: int [1:40] 41 42 43 44 45 46 47 48 49 50 ...
+        .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
+        .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. .. .. ..@ dim      : int [1:2] 230 40
+        .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. ..@ dimnames :List of 2
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. ..@ x       : num [1:4456] 4.97 4.97 6.06 4.97 4.97 ...
-        .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. ..$ scale.data: num [1:10, 1:80] -0.193 -0.253 -0.423 -0.371 -0.329 ...
+        .. .. .. .. .. .. ..$ features: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. ..$ cells   : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. ..$ data.123abc  :Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. ..@ matrix   :Formal class 'TransformLog1p' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'TransformScaleShift' [package "BPCells"] with 8 slots
+        .. .. .. .. .. .. .. .. .. .. ..@ active_transforms: logi [1:3, 1:2] FALSE TRUE TRUE FALSE FALSE FALSE
+        .. .. .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:3] "row" "col" "global"
+        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2] "scale" "shift"
+        .. .. .. .. .. .. .. .. .. .. ..@ matrix           :Formal class 'ConvertMatrixType' [package "BPCells"] with 5 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixDir' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dir        : chr "/tmp/RtmpNY4Wop/matrix_dir"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ compressed : logi TRUE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ buffer_size: int 8192
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ type       : chr "uint32_t"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 230 80
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ row_selection: int [1:230] 1 2 3 4 5 6 7 8 9 10 ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ col_selection: int [1:40] 1 2 3 4 5 6 7 8 9 10 ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ features: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ cells   : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ type     : chr "double"
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. ..@ row_params       : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. .. .. ..@ col_params       : num [1:2, 1:40] 0.0143 0 0.0118 0 0.0115 ...
+        .. .. .. .. .. .. .. .. .. .. ..@ global_params    : num [1:2] 10000 0
+        .. .. .. .. .. .. .. .. .. .. ..@ dim              : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. .. .. ..@ transpose        : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. ..@ dimnames         :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. ..@ row_params   : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. ..@ col_params   : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. ..@ global_params: num(0) 
+        .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. ..@ dim      : int [1:2] 230 40
+        .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. ..$ features: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. ..$ cells   : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. ..$ data.123def  :Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. ..@ matrix   :Formal class 'TransformLog1p' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'TransformScaleShift' [package "BPCells"] with 8 slots
+        .. .. .. .. .. .. .. .. .. .. ..@ active_transforms: logi [1:3, 1:2] FALSE TRUE TRUE FALSE FALSE FALSE
+        .. .. .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:3] "row" "col" "global"
+        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2] "scale" "shift"
+        .. .. .. .. .. .. .. .. .. .. ..@ matrix           :Formal class 'ConvertMatrixType' [package "BPCells"] with 5 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixDir' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dir        : chr "/tmp/RtmpNY4Wop/matrix_dir"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ compressed : logi TRUE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ buffer_size: int 8192
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ type       : chr "uint32_t"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 230 80
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ row_selection: int [1:230] 1 2 3 4 5 6 7 8 9 10 ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ col_selection: int [1:40] 41 42 43 44 45 46 47 48 49 50 ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ features: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ cells   : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ type     : chr "double"
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. ..@ row_params       : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. .. .. ..@ col_params       : num [1:2, 1:40] 0.00641 0 0.00719 0 0.00926 ...
+        .. .. .. .. .. .. .. .. .. .. ..@ global_params    : num [1:2] 10000 0
+        .. .. .. .. .. .. .. .. .. .. ..@ dim              : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. .. .. ..@ transpose        : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. ..@ dimnames         :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. ..@ row_params   : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. ..@ col_params   : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. ..@ global_params: num(0) 
+        .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 230 40
+        .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. ..@ dim      : int [1:2] 230 40
+        .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. ..$ features: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. ..$ cells   : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. ..$ scale.data   :Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'TransformScaleShift' [package "BPCells"] with 8 slots
+        .. .. .. .. .. .. .. .. .. .. ..@ active_transforms: logi [1:3, 1:2] TRUE FALSE FALSE TRUE FALSE FALSE
+        .. .. .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:3] "row" "col" "global"
+        .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2] "scale" "shift"
+        .. .. .. .. .. .. .. .. .. .. ..@ matrix           :Formal class 'TransformMinByRow' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'ColBindMatrices' [package "BPCells"] with 5 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix_list:List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ :Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'TransformLog1p' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'TransformScaleShift' [package "BPCells"] with 8 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ active_transforms: logi [1:3, 1:2] FALSE TRUE TRUE FALSE FALSE FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:3] "row" "col" "global"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2] "scale" "shift"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix           :Formal class 'ConvertMatrixType' [package "BPCells"] with 5 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixDir' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dir        : chr "/tmp/RtmpNY4Wop/matrix_dir"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ compressed : logi TRUE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ buffer_size: int 8192
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ type       : chr "uint32_t"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 230 80
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ row_selection: int [1:10] 28 69 125 130 133 174 177 204 208 211
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ col_selection: int [1:40] 1 2 3 4 5 6 7 8 9 10 ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CCL5" "HLA-DQA1" "IL1B" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CCL5" "HLA-DQA1" "IL1B" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ features: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ cells   : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ type     : chr "double"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ row_params       : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ col_params       : num [1:2, 1:40] 0.0143 0 0.0118 0 0.0115 ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ global_params    : num [1:2] 10000 0
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim              : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose        : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames         :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ row_params   : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ col_params   : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ global_params: num(0) 
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CCL5" "HLA-DQA1" "IL1B" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ features: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ cells   : chr [1:40] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ :Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'TransformLog1p' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'TransformScaleShift' [package "BPCells"] with 8 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ active_transforms: logi [1:3, 1:2] FALSE TRUE TRUE FALSE FALSE FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:3] "row" "col" "global"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:2] "scale" "shift"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix           :Formal class 'ConvertMatrixType' [package "BPCells"] with 5 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'RenameDims' [package "BPCells"] with 4 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix   :Formal class 'MatrixSubset' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ matrix       :Formal class 'MatrixDir' [package "BPCells"] with 7 slots
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dir        : chr "/tmp/RtmpNY4Wop/matrix_dir"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ compressed : logi TRUE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ buffer_size: int 8192
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ type       : chr "uint32_t"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 230 80
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ row_selection: int [1:10] 28 69 125 130 133 174 177 204 208 211
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ col_selection: int [1:40] 41 42 43 44 45 46 47 48 49 50 ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CCL5" "HLA-DQA1" "IL1B" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CCL5" "HLA-DQA1" "IL1B" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ features: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ cells   : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ type     : chr "double"
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ row_params       : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ col_params       : num [1:2, 1:40] 0.00641 0 0.00719 0 0.00926 ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ global_params    : num [1:2] 10000 0
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim              : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose        : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames         :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ row_params   : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ col_params   : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ global_params: num(0) 
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim      : int [1:2] 10 40
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CCL5" "HLA-DQA1" "IL1B" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ features: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ cells   : chr [1:40] "123defTAGGGACTGAACTC" "123defGCTCCATGAGAAGT" "123defTACAATGATGCTAG" "123defCTTCATGACCGAAT" ...
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ threads    : int 0
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim        : int [1:2] 10 80
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose  : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames   :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ row_selection: int [1:10] 10 1 9 7 2 5 8 4 6 3
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ col_selection: int(0) 
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 10 80
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ row_params   : num [1, 1:10] 18.7 13.1 14.5 22 31.9 ...
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ col_params   : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ global_params: num(0) 
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 10 80
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. ..@ row_params       : num [1:2, 1:10] 0.556 -0.37 0.78 -0.193 0.711 ...
+        .. .. .. .. .. .. .. .. .. .. ..@ col_params       : num[0 , 0 ] 
+        .. .. .. .. .. .. .. .. .. .. ..@ global_params    : num(0) 
+        .. .. .. .. .. .. .. .. .. .. ..@ dim              : int [1:2] 10 80
+        .. .. .. .. .. .. .. .. .. .. ..@ transpose        : logi FALSE
+        .. .. .. .. .. .. .. .. .. .. ..@ dimnames         :List of 2
+        .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. ..@ row_selection: int [1:10] 2 5 10 8 6 9 4 7 3 1
+        .. .. .. .. .. .. .. .. ..@ col_selection: int(0) 
+        .. .. .. .. .. .. .. .. ..@ zero_dims    : logi [1:2] FALSE FALSE
+        .. .. .. .. .. .. .. .. ..@ dim          : int [1:2] 10 80
+        .. .. .. .. .. .. .. .. ..@ transpose    : logi FALSE
+        .. .. .. .. .. .. .. .. ..@ dimnames     :List of 2
+        .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. ..@ dim      : int [1:2] 10 80
+        .. .. .. .. .. .. ..@ transpose: logi FALSE
+        .. .. .. .. .. .. ..@ dimnames :List of 2
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. .. ..$ : NULL
+        .. .. .. .. .. .. ..$ features: chr [1:10] "IGLL5" "CCL5" "HLA-DQA1" "IL1B" ...
+        .. .. .. .. .. .. ..$ cells   : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
         .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
-        .. .. .. .. .. ..@ .Data: logi [1:80, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. ..@ .Data: logi [1:80, 1:5] TRUE TRUE TRUE TRUE TRUE TRUE ...
         .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
-        .. .. .. .. .. ..$ dim     : int [1:2] 80 3
+        .. .. .. .. .. .. .. ..$ : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. .. ..$ : chr [1:5] "counts.123abc" "counts.123def" "data.123abc" "data.123def" ...
+        .. .. .. .. .. ..$ dim     : int [1:2] 80 5
         .. .. .. .. .. ..$ dimnames:List of 2
-        .. .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
+        .. .. .. .. .. .. ..$ : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. .. ..$ : chr [1:5] "counts.123abc" "counts.123def" "data.123abc" "data.123def" ...
         .. .. .. ..@ features  :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
-        .. .. .. .. .. ..@ .Data: logi [1:230, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE ...
+        .. .. .. .. .. ..@ .Data: logi [1:230, 1:5] TRUE TRUE TRUE TRUE TRUE TRUE ...
         .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
         .. .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
-        .. .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
-        .. .. .. .. .. ..$ dim     : int [1:2] 230 3
+        .. .. .. .. .. .. .. ..$ : chr [1:5] "counts.123abc" "counts.123def" "data.123abc" "data.123def" ...
+        .. .. .. .. .. ..$ dim     : int [1:2] 230 5
         .. .. .. .. .. ..$ dimnames:List of 2
         .. .. .. .. .. .. ..$ : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
-        .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
-        .. .. .. ..@ default   : int 1
+        .. .. .. .. .. .. ..$ : chr [1:5] "counts.123abc" "counts.123def" "data.123abc" "data.123def" ...
+        .. .. .. ..@ default   : int 2
         .. .. .. ..@ assay.orig: chr(0) 
-        .. .. .. ..@ meta.data :'data.frame':	230 obs. of  8 variables:
-        .. .. .. .. ..$ vf_vst_counts_mean                 : num [1:230] 0.388 0.6 0.7 13.425 0.3 ...
-        .. .. .. .. ..$ vf_vst_counts_variance             : num [1:230] 1.025 1.281 4.365 725.463 0.871 ...
-        .. .. .. .. ..$ vf_vst_counts_variance.expected    : num [1:230] 1.141 2.708 4.018 745.526 0.642 ...
-        .. .. .. .. ..$ vf_vst_counts_variance.standardized: num [1:230] 0.898 0.473 1.086 0.973 1.356 ...
-        .. .. .. .. ..$ vf_vst_counts_variable             : logi [1:230] FALSE FALSE FALSE FALSE FALSE FALSE ...
-        .. .. .. .. ..$ vf_vst_counts_rank                 : int [1:230] NA NA NA NA NA NA NA NA NA NA ...
-        .. .. .. .. ..$ var.features                       : chr [1:230] NA NA NA NA ...
-        .. .. .. .. ..$ var.features.rank                  : int [1:230] NA NA NA NA NA NA NA NA NA NA ...
+        .. .. .. ..@ meta.data :'data.frame':	230 obs. of  14 variables:
+        .. .. .. .. ..$ vf_vst_counts.123abc_mean                 : num [1:230] 0.75 0.825 1.175 6.225 0.5 ...
+        .. .. .. .. ..$ vf_vst_counts.123abc_variance             : num [1:230] 1.78 1.69 6.76 72.13 1.28 ...
+        .. .. .. .. ..$ vf_vst_counts.123abc_variance.expected    : num [1:230] 2.04 2.951 6.299 126.599 0.984 ...
+        .. .. .. .. ..$ vf_vst_counts.123abc_variance.standardized: num [1:230] 0.874 0.572 1.074 0.57 1.303 ...
+        .. .. .. .. ..$ vf_vst_counts.123abc_variable             : logi [1:230] FALSE FALSE FALSE FALSE FALSE FALSE ...
+        .. .. .. .. ..$ vf_vst_counts.123abc_rank                 : int [1:230] NA NA NA NA NA NA NA NA NA NA ...
+        .. .. .. .. ..$ vf_vst_counts.123def_mean                 : num [1:230] 0.025 0.375 0.225 20.625 0.1 ...
+        .. .. .. .. ..$ vf_vst_counts.123def_variance             : num [1:230] 0.025 0.804 1.615 1291.061 0.4 ...
+        .. .. .. .. ..$ vf_vst_counts.123def_variance.expected    : num [1:230] 2.47e-02 6.88e-01 3.14e-01 1.40e+03 1.28e-01 ...
+        .. .. .. .. ..$ vf_vst_counts.123def_variance.standardized: num [1:230] 1.011 1.169 1.195 0.922 1.09 ...
+        .. .. .. .. ..$ vf_vst_counts.123def_variable             : logi [1:230] FALSE FALSE FALSE FALSE FALSE FALSE ...
+        .. .. .. .. ..$ vf_vst_counts.123def_rank                 : int [1:230] NA NA NA NA NA NA NA NA NA NA ...
+        .. .. .. .. ..$ var.features                              : chr [1:230] NA NA NA NA ...
+        .. .. .. .. ..$ var.features.rank                         : int [1:230] NA NA NA NA NA NA NA NA NA NA ...
         .. .. .. ..@ misc      : list()
         .. .. .. ..@ key       : chr "rna_"
-        ..@ meta.data   :'data.frame':	80 obs. of  5 variables:
-        .. ..$ orig.ident  : chr [1:80] "SeuratProject" "SeuratProject" "SeuratProject" "SeuratProject" ...
-        .. ..$ nCount_RNA  : num [1:80] 70 85 87 127 173 70 64 72 52 100 ...
-        .. ..$ nFeature_RNA: int [1:80] 47 52 50 56 53 48 36 45 36 41 ...
-        .. ..$ samples     : chr [1:80] "123abc" "123abc" "123abc" "123abc" ...
-        .. ..$ cells_id    : int [1:80] 0 1 2 3 4 5 6 7 8 9 ...
+        ..@ meta.data   :'data.frame':	80 obs. of  9 variables:
+        .. ..$ orig.ident    : chr [1:80] "SeuratProject" "SeuratProject" "SeuratProject" "SeuratProject" ...
+        .. ..$ nCount_RNA    : num [1:80] 70 85 87 127 173 70 64 72 52 100 ...
+        .. ..$ nFeature_RNA  : num [1:80] 47 52 50 56 53 48 36 45 36 41 ...
+        .. ..$ cells_id      : int [1:80] 0 1 2 3 4 5 6 7 8 9 ...
+        .. ..$ samples       : chr [1:80] "123abc" "123abc" "123abc" "123abc" ...
+        .. ..$ doublet_scores: num [1:80] 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 ...
+        .. ..$ doublet_class : chr [1:80] "singlet" "singlet" "singlet" "singlet" ...
+        .. ..$ percent.mt    : num [1:80] 5.44 5.77 7.56 6.07 6.13 ...
+        .. ..$ emptyDrops_FDR: num [1:80] 0.009 0.009 0.009 0.009 0.009 0.009 0.009 0.009 0.009 0.009 ...
         ..@ active.assay: chr "RNA"
         ..@ active.ident: Factor w/ 1 level "SeuratProject": 1 1 1 1 1 1 1 1 1 1 ...
-        .. ..- attr(*, "names")= chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
+        .. ..- attr(*, "names")= chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
         ..@ graphs      : list()
         ..@ neighbors   : list()
-        ..@ reductions  :List of 3
-        .. ..$ pca            :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:80, 1:9] -0.73 -0.73 0.122 -0.591 -0.73 ...
+        ..@ reductions  :List of 2
+        .. ..$ pca    :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
+        .. .. .. ..@ cell.embeddings           : num [1:80, 1:9] 0.424 0.424 0.353 0.543 0.424 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
+        .. .. .. .. .. ..$ : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
         .. .. .. .. .. ..$ : chr [1:9] "PC_1" "PC_2" "PC_3" "PC_4" ...
-        .. .. .. ..@ feature.loadings          : num [1:10, 1:9] 0.4587 -0.0432 0.1654 -0.0554 -0.1022 ...
+        .. .. .. ..@ feature.loadings          : num [1:10, 1:9] -0.4456 0.1228 -0.4294 -0.0471 -0.3333 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:10] "PPBP" "IGLL5" "VDAC3" "CD1C" ...
+        .. .. .. .. .. ..$ : chr [1:10] "GZMH" "IGLL5" "AKR1C3" "PF4" ...
         .. .. .. .. .. ..$ : chr [1:9] "PC_1" "PC_2" "PC_3" "PC_4" ...
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:9] 2.086 1.309 1.029 0.986 0.923 ...
+        .. .. .. ..@ stdev                     : num [1:9] 1.683 1.543 1.158 1.01 0.831 ...
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
@@ -90,43 +447,16 @@
         .. .. .. ..@ misc                      :List of 1
         .. .. .. .. ..$ total.variance: num 10
         .. .. .. ..@ key                       : chr "PC_"
-        .. ..$ pca_for_harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:80, 1:2] -0.73 -0.73 0.122 -0.591 -0.73 ...
+        .. ..$ harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
+        .. .. .. ..@ cell.embeddings           : num [1:80, 1:9] 0.409 0.409 0.338 0.663 0.409 ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. .. .. ..$ : chr [1:2] "PCh_1" "PCh_2"
-        .. .. .. ..@ feature.loadings          : num [1:10, 1:2] 0.4587 -0.0432 0.1654 -0.0554 -0.1022 ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:10] "PPBP" "IGLL5" "VDAC3" "CD1C" ...
-        .. .. .. .. .. ..$ : chr [1:2] "PCh_1" "PCh_2"
+        .. .. .. .. .. ..$ : chr [1:80] "123abcATGCCAGAACGACT" "123abcCATGGCCTGTGCAT" "123abcGAACCTGATGAACC" "123abcTGACTGGATTCTCA" ...
+        .. .. .. .. .. ..$ : chr [1:9] "harmony_1" "harmony_2" "harmony_3" "harmony_4" ...
+        .. .. .. ..@ feature.loadings          : num[0 , 0 ] 
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:2] 2.09 1.31
-        .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
-        .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
-        .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
-        .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
-        .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
-        .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 10
-        .. .. .. ..@ key                       : chr "PCh_"
-        .. ..$ harmony        :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:80, 1:2] -0.7623 -0.7623 0.0915 -0.3774 -0.7623 ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:80] "ATGCCAGAACGACT" "CATGGCCTGTGCAT" "GAACCTGATGAACC" "TGACTGGATTCTCA" ...
-        .. .. .. .. .. ..$ : chr [1:2] "harmony_1" "harmony_2"
-        .. .. .. ..@ feature.loadings          : num [1:10, 1:2] -12.7 -15 121.2 117.3 112.6 ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CD1C" "PPBP" "PF4" ...
-        .. .. .. .. .. ..$ : chr [1:2] "harmony_1" "harmony_2"
-        .. .. .. ..@ feature.loadings.projected: num [1:10, 1:2] -12.7 -15 121.2 117.3 112.6 ...
-        .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:10] "IGLL5" "CD1C" "PPBP" "PF4" ...
-        .. .. .. .. .. ..$ : chr [1:2] "harmony_1" "harmony_2"
-        .. .. .. ..@ assay.used                : chr "RNA"
-        .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:2] 1.62 1.17
+        .. .. .. ..@ stdev                     : num(0) 
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
@@ -139,38 +469,38 @@
         ..@ misc        :List of 6
         .. ..$ gene_annotations:'data.frame':	230 obs. of  3 variables:
         .. .. ..$ input        : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
-        .. .. ..$ name         : chr [1:230] "SYMBOL - MS4A1" "SYMBOL - CD79B" "SYMBOL - CD79A" "SYMBOL - HLA-DRA" ...
-        .. .. ..$ original_name: chr [1:230] "SYMBOL - MS4A1" "SYMBOL - CD79B" "SYMBOL - CD79A" "SYMBOL - HLA-DRA" ...
+        .. .. ..$ name         : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
+        .. .. ..$ original_name: chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
         .. ..$ color_pool      : chr [1:383] "#77aadd" "#ee8866" "#eedd88" "#ffaabb" ...
         .. ..$ ingestionDate   : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. ..$ gene_dispersion :'data.frame':	230 obs. of  6 variables:
-        .. .. ..$ mean                 : num [1:230] 0.388 0.6 0.7 13.425 0.3 ...
-        .. .. ..$ variance             : num [1:230] 1.025 1.281 4.365 725.463 0.871 ...
-        .. .. ..$ variance.standardized: num [1:230] 1.141 2.708 4.018 745.526 0.642 ...
-        .. .. ..$ NA                   : num [1:230] 0.898 0.473 1.086 0.973 1.356 ...
-        .. .. ..$ SYMBOL               : chr [1:230] "SYMBOL - MS4A1" "SYMBOL - CD79B" "SYMBOL - CD79A" "SYMBOL - HLA-DRA" ...
+        .. .. ..$ mean                 : num [1:230] 0.75 0.825 1.175 6.225 0.5 ...
+        .. .. ..$ variance             : num [1:230] 1.78 1.69 6.76 72.13 1.28 ...
+        .. .. ..$ variance.expected    : num [1:230] 2.04 2.951 6.299 126.599 0.984 ...
+        .. .. ..$ variance.standardized: num [1:230] 0.874 0.572 1.074 0.57 1.303 ...
+        .. .. ..$ SYMBOL               : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
         .. .. ..$ ENSEMBL              : chr [1:230] "MS4A1" "CD79B" "CD79A" "HLA-DRA" ...
         .. ..$ numPCs          : num 2
         .. ..$ active.reduction: chr "harmony"
         ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. ..$ : int [1:3] 5 0 2
-        ..@ commands    :List of 5
-        .. ..$ NormalizeData.RNA             :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ : int [1:3] 5 3 0
+        ..@ commands    :List of 4
+        .. ..$ NormalizeData.RNA       :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "NormalizeData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "NormalizeData(scdata, normalization.method = normalization, " "    verbose = FALSE)"
+        .. .. .. ..@ call.string: chr [1:2] "NormalizeData(scdata, normalization.method = \"LogNormalize\", " "    verbose = FALSE)"
         .. .. .. ..@ params     :List of 5
         .. .. .. .. ..$ assay               : chr "RNA"
         .. .. .. .. ..$ normalization.method: chr "LogNormalize"
         .. .. .. .. ..$ scale.factor        : num 10000
         .. .. .. .. ..$ margin              : num 1
         .. .. .. .. ..$ verbose             : logi FALSE
-        .. ..$ FindVariableFeatures.RNA      :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ FindVariableFeatures.RNA:Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "FindVariableFeatures.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(Seurat::NormalizeData(scdata, normalization.method = normalization, " "    verbose = FALSE), nfeatures = nfeatures, verbose = FALSE)"
+        .. .. .. ..@ call.string: chr [1:2] "FindVariableFeatures(Seurat::NormalizeData(scdata, normalization.method = \"LogNormalize\", " "    verbose = FALSE), nfeatures = nfeatures, verbose = FALSE)"
         .. .. .. ..@ params     :List of 10
         .. .. .. .. ..$ assay            : chr "RNA"
         .. .. .. .. ..$ selection.method : chr "vst"
@@ -182,11 +512,11 @@
         .. .. .. .. ..$ mean.cutoff      : num [1:2] 0.1 8
         .. .. .. .. ..$ dispersion.cutoff: num [1:2] 1 Inf
         .. .. .. .. ..$ verbose          : logi FALSE
-        .. ..$ ScaleData.RNA                 :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ ScaleData.RNA           :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "ScaleData.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:3] "ScaleData(Seurat::FindVariableFeatures(Seurat::NormalizeData(scdata, " "    normalization.method = normalization, verbose = FALSE), nfeatures = nfeatures, " "    verbose = FALSE), verbose = FALSE)"
+        .. .. .. ..@ call.string: chr [1:3] "ScaleData(run_preprocessing(scdata, normalization = normalization, " "    nfeatures = nfeatures, use_geosketch = use_geosketch, percent_keep = percent_keep), " "    verbose = FALSE)"
         .. .. .. ..@ params     :List of 9
         .. .. .. .. ..$ assay             : chr "RNA"
         .. .. .. .. ..$ model.use         : chr "linear"
@@ -197,34 +527,21 @@
         .. .. .. .. ..$ block.size        : num 1000
         .. .. .. .. ..$ min.cells.to.block: num 3000
         .. .. .. .. ..$ verbose           : logi FALSE
-        .. ..$ RunPCA.RNA                    :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
+        .. ..$ RunPCA.RNA              :Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
         .. .. .. ..@ name       : chr "RunPCA.RNA"
         .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
         .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "RunPCA(scdata, npcs = npcs, verbose = FALSE, reduction.name = \"pca_for_harmony\", " "    reduction.key = \"PCh_\")"
+        .. .. .. ..@ call.string: chr [1:2] "RunPCA(scdata, npcs = npcs, reduction.name = reduction_name, " "    verbose = FALSE)"
         .. .. .. ..@ params     :List of 10
         .. .. .. .. ..$ assay          : chr "RNA"
-        .. .. .. .. ..$ npcs           : num 2
+        .. .. .. .. ..$ npcs           : num 39
         .. .. .. .. ..$ rev.pca        : logi FALSE
         .. .. .. .. ..$ weight.by.var  : logi TRUE
         .. .. .. .. ..$ verbose        : logi FALSE
         .. .. .. .. ..$ ndims.print    : int [1:5] 1 2 3 4 5
         .. .. .. .. ..$ nfeatures.print: num 30
-        .. .. .. .. ..$ reduction.name : chr "pca_for_harmony"
-        .. .. .. .. ..$ reduction.key  : chr "PCh_"
+        .. .. .. .. ..$ reduction.name : chr "pca"
+        .. .. .. .. ..$ reduction.key  : chr "PC_"
         .. .. .. .. ..$ seed.use       : num 42
-        .. ..$ Seurat..ProjectDim.RNA.harmony:Formal class 'SeuratCommand' [package "SeuratObject"] with 5 slots
-        .. .. .. ..@ name       : chr "Seurat::ProjectDim.RNA.harmony"
-        .. .. .. ..@ time.stamp : POSIXct[1:1], format: "1991-12-19 05:23:00"
-        .. .. .. ..@ assay.used : chr "RNA"
-        .. .. .. ..@ call.string: chr [1:2] "Seurat::ProjectDim(object, reduction = reduction.save, overwrite = TRUE, " "    verbose = FALSE)"
-        .. .. .. ..@ params     :List of 7
-        .. .. .. .. ..$ reduction      : chr "harmony"
-        .. .. .. .. ..$ assay          : chr "RNA"
-        .. .. .. .. ..$ dims.print     : int [1:5] 1 2 3 4 5
-        .. .. .. .. ..$ nfeatures.print: num 20
-        .. .. .. .. ..$ overwrite      : logi TRUE
-        .. .. .. .. ..$ do.center      : logi FALSE
-        .. .. .. .. ..$ verbose        : logi FALSE
         ..@ tools       : list()
 

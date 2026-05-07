@@ -13,19 +13,25 @@
 #'   \item{"annot"}{data.frame with gene ids and/or symbols}
 #'   }
 #' @export
-load_user_files <- function(input, pipeline_config, prev_out, input_dir = INPUT_DIR) {
+load_user_files <- function(
+  input, pipeline_config, prev_out, input_dir = INPUT_DIR
+) {
   message("Loading user files...")
   check_prev_out(prev_out, "config")
 
   # destructure previous output
   config <- prev_out$config
 
-  technology <- ifelse(config$input$type %in% c("rhapsody", "10x_h5", "parse"), config$input$type, "10x")
+  technology <- ifelse(
+    config$input$type %in% c("rhapsody", "10x_h5", "parse"),
+    config$input$type,
+    "10x"
+  )
 
   read_fun <- switch(technology,
     "10x" = read_10x_files,
     "rhapsody" = read_rhapsody_files,
-    "10x_h5" = read_10x_h5_file,
+    "10x_h5" = read_10x_h5_file_bpcells,
     "parse" = read_parse_files
   )
 
@@ -81,7 +87,8 @@ read_parse_files <- function(config, input_dir) {
     features_path <- file.path(sample_dir, "all_genes.csv.gz")
 
 
-    # We use readMtx instead of Seurat::ReadParse because the feature.column needs to be 1 instead of 2.
+    # We use readMtx instead of Seurat::ReadParse because the feature.column
+    # needs to be 1 instead of 2.
     counts <- Seurat::ReadMtx(
       mtx = mtx_path, cells = barcodes_path, features = features_path,
       cell.column = 1, feature.column = 1, cell.sep = ",",
@@ -95,7 +102,8 @@ read_parse_files <- function(config, input_dir) {
       )
     )
 
-    c(counts, annotations) %<-% filter_unnamed_features(counts, annotations, sample)
+    c(counts, annotations) %<-% 
+      filter_unnamed_features(counts, annotations, sample)
 
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annotations
@@ -163,6 +171,103 @@ read_10x_h5_file <- function(config, input_dir) {
   return(list(counts_list = counts_list, annot = annot))
 }
 
+read_10x_h5_file_bpcells <- function(config, input_dir) {
+  annot_list <- list()
+  counts_list <- list()
+  matrix_dir_list <- list()
+
+
+  samples <- config$samples
+
+  for (sample in samples) {
+    sample_dir <- file.path(input_dir, sample)
+    sample_fpaths <- list.files(sample_dir)
+    sample_counts_path <- file.path(sample_dir, sample_fpaths[[1]])
+
+    message("\nSample --> ", sample)
+    message(
+      "Reading files from ",
+      sample_dir,
+      " --> ",
+      paste(sample_fpaths, collapse = " - ")
+    )
+
+    if (length(sample_fpaths) > 1) {
+      stop("Only one h5 expected. More files detected.")
+    }
+
+    ungzipped_counts_path <- R.utils::gunzip(sample_counts_path)
+
+    gene_names <- read_10x_h5_feature_names(ungzipped_counts_path)
+    counts_mat <- BPCells::open_matrix_10x_hdf5(ungzipped_counts_path)
+
+    # Write the matrix to a directory
+    matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
+    unlink(matrix_dir, recursive = TRUE)
+    counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
+
+    # use Gene Expression modality if multiple
+    if (methods::is(gene_names, "list")) {
+      gene_names <- gene_names$`Gene Expression`
+    }
+
+    annotations <- data.frame(input = rownames(counts), symbol = gene_names)
+    counts_list[[sample]] <- counts
+    annot_list[[sample]] <- annotations
+    matrix_dir_list[[sample]] <- matrix_dir
+  }
+
+  annot <- format_annot(annot_list)
+
+  return(list(
+    counts_list = counts_list,
+    annot = annot,
+    matrix_dir_list = matrix_dir_list
+  ))
+}
+
+read_10x_h5_feature_names <- function(
+  filename,
+  use.names = TRUE,
+  unique.features = TRUE
+) {
+  if (isFALSE(requireNamespace("hdf5r", quietly = TRUE))) {
+    stop("Please install hdf5r to read HDF5 files")
+  }
+  if (!file.exists(filename)) {
+    stop("File not found")
+  }
+
+  infile <- hdf5r::H5File$new(filename = filename, mode = "r")
+  genomes <- names(infile)
+
+  # Determine feature slot based on file structure and use.names argument
+  if (hdf5r::existsGroup(infile, "matrix")) {
+    feature_slot <- ifelse(use.names, "features/name", "features/id")
+  } else {
+    feature_slot <- ifelse(use.names, "gene_names", "genes")
+  }
+
+  output <- list()
+  for (genome in genomes) {
+    features <- infile[[paste0(genome, "/", feature_slot)]][]
+
+    if (unique.features) {
+      features <- make.unique(names = features)
+    }
+
+    output[[genome]] <- features
+  }
+
+  infile$close_all()
+
+  if (length(output) == 1) {
+    return(output[[genome]])
+  } else {
+    return(output)
+  }
+}
+
 #' Calls Read10X
 #'
 #' Cellranger outputs from V2 and V3 kits were renamed to look like V3
@@ -173,6 +278,7 @@ read_10x_h5_file <- function(config, input_dir) {
 read_10x_files <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
+  matrix_dir_list <- list()
   feature_types_list <- list()
 
   samples <- config$samples
@@ -191,9 +297,28 @@ read_10x_files <- function(config, input_dir) {
     )
 
     annotations <- read_10x_annotations(annot_fpath, sample)
-    counts <- Seurat::Read10X(sample_dir, gene.column = annotations[["gene_column"]], unique.features = TRUE)
 
-    if (is(counts, "list")) {
+    # previously used Seurat::Read10X
+    counts_mat <- read_10x_bpcells(
+      sample_dir,
+      gene.column = annotations[["gene_column"]],
+      unique.features = TRUE
+    )
+
+    # Handle case where read_10x_bpcells returns a list (multiple feature types)
+    if (is.list(counts_mat)) {
+      slot <- "Gene Expression"
+      # questionable: grab first slot if no slot named gene expression
+      if (!(slot %in% names(counts_mat))) slot <- names(counts_mat)[1]
+      counts_mat <- counts_mat[[slot]]
+    }
+
+    # Write the matrix to a directory
+    matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
+    unlink(matrix_dir, recursive = TRUE)
+    counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
+
+    if (methods::is(counts, "list")) {
       slot <- "Gene Expression"
       # questionable: grab first slot if no slot named gene expression
       if (!(slot %in% names(counts))) slot <- names(counts)[1]
@@ -207,17 +332,139 @@ read_10x_files <- function(config, input_dir) {
       )
     )
 
-    c(counts, annotations) %<-% filter_unnamed_features(counts, annotations, sample)
+    c(counts, annotations) %<-%
+      filter_unnamed_features(counts, annotations, sample)
 
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annotations[["annot"]]
     feature_types_list[[sample]] <- annotations[["feature_types"]]
+    matrix_dir_list[[sample]] <- matrix_dir
   }
 
-  c(counts_list, annot_list) %<-% normalize_annotation_types(annot_list, counts_list, feature_types_list, samples)
-  annot <- format_annot(annot_list)
+  c(counts_list, annot_list) %<-%
+    normalize_annotation_types(
+      annot_list,
+      counts_list,
+      feature_types_list,
+      samples
+    )
 
-  return(list(counts_list = counts_list, annot = annot))
+  annot <- format_annot(annot_list)
+  return(list(
+    counts_list = counts_list,
+    annot = annot,
+    matrix_dir_list = matrix_dir_list
+  ))
+}
+
+# mimics Seurat::Read10X
+read_10x_bpcells <- function(
+  data.dir,
+  gene.column = 2,
+  unique.features = TRUE
+) {
+
+  if (!dir.exists(data.dir)) {
+    stop("Directory provided does not exist: ", data.dir)
+  }
+
+  # Define file paths (only newer format with .gz files)
+  barcode.loc <- file.path(data.dir, "barcodes.tsv.gz")
+  features.loc <- file.path(data.dir, "features.tsv.gz")
+  matrix.loc <- file.path(data.dir, "matrix.mtx.gz")
+
+  # Check files exist
+  if (!file.exists(barcode.loc)) {
+    stop("Barcode file missing. Expecting ", basename(barcode.loc))
+  }
+  if (!file.exists(features.loc)) {
+    stop("Features file missing. Expecting ", basename(features.loc))
+  }
+  if (!file.exists(matrix.loc)) {
+    stop("Matrix file missing. Expecting ", basename(matrix.loc))
+  }
+
+  # Read barcodes and features using data.table::fread
+  cell.barcodes <- as.data.frame(
+    data.table::fread(barcode.loc, header = FALSE)
+  )
+  cell.names <- cell.barcodes[[1]]
+
+  feature.names <- as.data.frame(
+    data.table::fread(features.loc, header = FALSE)
+  )
+
+  # Validate gene.column (3)
+  fcols <- ncol(feature.names)
+  if (fcols < gene.column) {
+    stop(paste0(
+      "gene.column was set to ", gene.column,
+      " but features.tsv.gz only has ", fcols, " columns.",
+      " Try setting the gene.column argument to a value <= to ", fcols, "."
+    ))
+  }
+
+  row.names <- feature.names[[gene.column]]
+
+  # Handle NA feature names (2)
+  if (any(is.na(row.names))) {
+    warning(
+      "Some features names are NA. ",
+      "Replacing NA names with ID from the opposite column requested",
+      call. = FALSE, immediate. = TRUE
+    )
+    na.features <- which(is.na(row.names))
+    replacement.column <- ifelse(gene.column == 2, 1, 2)
+    row.names[na.features] <- feature.names[na.features, replacement.column]
+  }
+
+  # Read matrix using BPCells
+  data <- BPCells::import_matrix_market(
+    matrix.loc,
+    row_names = row.names,
+    col_names = cell.names
+  )
+
+  # Handle unique features
+  if (unique.features) {
+    rownames(data) <- make.unique(rownames(data))
+  }
+
+  # Handle multiple feature types (e.g., Gene Expression, Protein Expression)
+  if (ncol(feature.names) > 2) {
+    data_types <- factor(feature.names[[3]])
+    lvls <- levels(data_types)
+
+    # Protein Expression messaging
+    if ("Protein Expression" %in% lvls) {
+      message(
+        "Xenium protein expression detected, but no scaling factor",
+        " is supplied with the MEX matrices (vs HDF5). The loaded",
+        " matrix is scaled by a constant from the original values."
+      )
+    }
+
+    if (length(lvls) > 1) {
+      message(
+        "10X data contains more than one type and is being ",
+        "returned as a list containing matrices of each type."
+      )
+    }
+
+    # Reorder to prioritize Gene Expression
+    expr_name <- "Gene Expression"
+    if (expr_name %in% lvls) {
+      lvls <- c(expr_name, lvls[-which(lvls == expr_name)])
+    }
+
+    data <- lapply(lvls, function(l) {
+      data[data_types == l, , drop = FALSE]
+    })
+    names(data) <- lvls
+    return(data)
+  } else {
+    return(data)
+  }
 }
 
 #' Calls BD rhapsody data parsing functions
@@ -464,13 +711,14 @@ format_annot <- function(annot_list) {
 #'
 normalize_annotation_types <- function(annot_list, counts_list, feature_types_list, samples) {
   if (any(feature_types_list == IDS_IDS) &&
-    any(feature_types_list == SYM_SYM) &&
-    !any(feature_types_list == IDS_SYM)) {
+        any(feature_types_list == SYM_SYM) &&
+        !any(feature_types_list == IDS_SYM)) {
     stop("Incompatible features detected.")
   }
 
   if (any(feature_types_list == IDS_SYM) &&
-    any(feature_types_list == IDS_IDS) || any(feature_types_list == SYM_SYM)) {
+        any(feature_types_list == IDS_IDS) ||
+        any(feature_types_list == SYM_SYM)) {
     annot_with_ids <-
       make_annot_with_ids(annot_list, feature_types_list)
 
@@ -520,7 +768,8 @@ get_feature_types <- function(annot) {
   }
 
   # regular cases. sum of booleans returns ints. convert to char to string match
-  feature_type <- switch(as.character(sum(is_ens)),
+  feature_type <- switch(
+    as.character(sum(is_ens)),
     "0" = SYM_SYM,
     "1" = IDS_SYM,
     "2" = IDS_IDS

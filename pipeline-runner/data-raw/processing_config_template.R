@@ -57,9 +57,13 @@ processing_config_template <- list(
       method = "rpca",
       numPCs = NULL,
       excludeGeneCategories = list()
+    ),
+    # qc-6-integrate_scdata.R will treat below downsampling config
+    # as default and use geosketch if warrented + update config
+    downsampling = list(
+      method = "default"
     )
   ),
-
   "embedding_clustering" = list(
     embeddingSettings = list(
       method = "umap",

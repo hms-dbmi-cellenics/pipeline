@@ -1,12 +1,3 @@
-mock_counts <- function() {
-  pbmc_raw <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
-  return(pbmc_raw)
-}
-
 
 mock_doublet_scores <- function(counts) {
   set.seed(1)
@@ -21,7 +12,12 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-mock_prev_out <- function(samples = "sample_a", counts = NULL, prev_out_config = NULL) {
+mock_prev_out <- function(
+  samples = "sample_a",
+  counts = NULL,
+  prev_out_config = NULL,
+  use_bpcells = FALSE
+) {
   if (is.null(counts)) {
     set.seed(1)
     counts <- DropletUtils:::simCounts()
@@ -35,6 +31,11 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL, prev_out_config =
   doublet_scores <- list()
 
   for (sample in samples) {
+    counts <- maybe_bpcells(
+      counts,
+      withr::local_tempfile(.local_envir = parent.frame()),
+      use_bpcells
+    )
     counts_list[[sample]] <- counts
     edrops[[sample]] <- eout
     doublet_scores[[sample]] <- mock_doublet_scores(counts)
@@ -72,6 +73,21 @@ mock_subset_input <- function(){
     input = list(type="10X")
   )
 }
+
+test_that("prepare_experiment works with bpcells", {
+  samples <- c("a", "b", "c")
+  prev_out <- mock_prev_out(samples = samples, use_bpcells = TRUE)
+
+  input <- mock_gem2s_input()
+
+  # re-create seurat object
+  prev_out <- create_seurat(NULL, NULL, prev_out)$output
+  scdata_list <- prepare_experiment(input, NULL, prev_out)$output$scdata
+
+  for (sample in samples) {
+    expect_s4_class(scdata_list[[sample]], "Seurat")
+  }
+})
 
 test_that("prepare_experiment ensures gene_annotations are indexed correctly for each sample", {
 

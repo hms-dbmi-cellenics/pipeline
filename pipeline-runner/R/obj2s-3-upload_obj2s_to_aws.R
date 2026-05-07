@@ -26,7 +26,7 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
     col <- cluster_columns[i]
 
     # first cluster column used as 'louvain' (default) clusters
-    method <- ifelse(i == 1, 'louvain', col)
+    method <- ifelse(i == 1, "louvain", col)
 
     cluster_sets[[i]] <- data.frame(
       cluster = scdata@meta.data[[col]],
@@ -39,16 +39,18 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
   cell_sets$cellSets <- c(cluster_sets, cell_sets$cellSets)
   cell_sets_data <- RJSONIO::toJSON(cell_sets)
 
-  put_object_in_s3(pipeline_config,
-                   bucket = pipeline_config$cell_sets_bucket,
-                   object = charToRaw(cell_sets_data),
-                   key = experiment_id)
+  message("\nUploading cell sets data to S3:")
+  put_object_in_s3(
+    pipeline_config,
+    bucket = pipeline_config$cell_sets_bucket,
+    object = charToRaw(cell_sets_data),
+    key = experiment_id
+  )
 
   qc_config <- build_obj2s_qc_config(scdata)
 
   # seurat object to s3
   object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
-  message('Count matrix uploaded to ', pipeline_config$processed_bucket, ' with key ',object_key)
 
   # images for spatial to s3
   upload_images_to_s3(pipeline_config, input, experiment_id, scdata)
@@ -274,11 +276,11 @@ format_obj2s <- function(scdata, experiment_id) {
 
 # use 'samples' or 'sample' if present, otherwise assume one sample
 add_samples_col <- function(scdata) {
-  samples_cols <- c('samples', 'sample')
+  samples_cols <- c("samples", "sample")
   in.meta <- samples_cols %in% colnames(scdata@meta.data)
 
   if (!any(in.meta)) {
-    scdata$samples <- 'NA'
+    scdata$samples <- "NA"
   } else {
     sample_col <- samples_cols[which(in.meta)[1]]
     scdata$samples <- scdata@meta.data[[sample_col]]
