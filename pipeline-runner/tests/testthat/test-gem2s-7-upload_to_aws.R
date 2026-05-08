@@ -108,13 +108,17 @@ mock_prev_out <- function(config, counts = NULL, use_bpcells = FALSE) {
   counts_list <- list()
   edrops <- list()
   doublet_scores <- list()
+  matrix_dir_list <- list()
 
   for (sampleId in samples) {
-    counts_list[[sampleId]] <- maybe_bpcells(
-      counts,
-      withr::local_tempfile(.local_envir = parent.frame()),
-      use_bpcells
-    )
+    sample_counts <- counts
+
+    if (use_bpcells) {
+      matrix_dir <- withr::local_tempfile(.local_envir = parent.frame())
+      sample_counts <- counts_to_bpcells(sample_counts, matrix_dir)
+      matrix_dir_list[[sampleId]] <- matrix_dir
+    }
+    counts_list[[sampleId]] <- sample_counts
     edrops[[sampleId]] <- eout
     doublet_scores[[sampleId]] <- mock_doublet_scores(counts)
   }
@@ -122,6 +126,7 @@ mock_prev_out <- function(config, counts = NULL, use_bpcells = FALSE) {
   # as passed to create_seurat
   prev_out <- list(
     counts_list = counts_list,
+    matrix_dir_list = matrix_dir_list,
     edrops = edrops,
     doublet_scores = doublet_scores,
     annot = data.frame(name = row.names(counts), input = row.names(counts)),
