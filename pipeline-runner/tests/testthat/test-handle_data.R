@@ -39,9 +39,10 @@ mock_counts <- function(ncells = 200, ngenes = 200, use_bpcells = FALSE) {
   counts <- SummarizedExperiment::assay(sce, "counts")
   rownames(counts) <- gsub("_", "-", rownames(counts))
 
+  counts <- as(counts, "dgCMatrix")
   counts <- maybe_bpcells(
     counts,
-    withr::local_tempfile(.local_envir = parent.frame()),
+    withr::local_tempfile(.local_envir = parent.frame(), pattern = "matrix_dir"),
     use_bpcells
   )
   return(counts)
@@ -547,6 +548,70 @@ test_that("replace_matrix_dir_paths updates MatrixDir path", {
   expect_equal(length(feature_names), 3)
 })
 
+test_that("load_processed_scdata loads a rds file", {
+  # Create a test RDS object
+  test_obj <- list(data = data.frame(x = 1:5, y = 6:10))
+  rds_raw <- serialize(test_obj, NULL)
+
+  mock_s3_list <- mockery::mock(
+    list(Contents = list(list(Key = "r.rds")))
+  )
+
+  mock_s3_get <- mockery::mock(
+    list(
+      body = rds_raw,
+      Metadata = NULL
+    )
+  )
+  # Call function with mocked S3
+  result <- load_processed_scdata(
+    list(list_objects_v2 = mock_s3_list, get_object = mock_s3_get),
+    list(processed_bucket = "processed-bucket"),
+    "test_experiment"
+  )
+
+  # Verify result
+  expect_type(result, "list")
+  expect_equal(names(result), "data")
+  expect_equal(nrow(result$data), 5)
+  expect_equal(result$data$x, 1:5)
+
+  # Verify S3 was called correctly
+  expect_called(mock_s3_get, 1)
+})
+
+test_that("load_processed_scdata loads a qs file", {
+  # Create a test RDS object
+  test_obj <- list(data = data.frame(x = 1:5, y = 6:10))
+  raw_qs <- qs::qserialize(test_obj)
+
+  mock_s3_list <- mockery::mock(
+    list(Contents = list(list(Key = "r.qs")))
+  )
+
+  mock_s3_get <- mockery::mock(
+    list(
+      body = raw_qs,
+      Metadata = NULL
+    )
+  )
+  # Call function with mocked S3
+  result <- load_processed_scdata(
+    list(list_objects_v2 = mock_s3_list, get_object = mock_s3_get),
+    list(processed_bucket = "processed-bucket"),
+    "test_experiment"
+  )
+
+  # Verify result
+  expect_type(result, "list")
+  expect_equal(names(result), "data")
+  expect_equal(nrow(result$data), 5)
+  expect_equal(result$data$x, 1:5)
+
+  # Verify S3 was called correctly
+  expect_called(mock_s3_get, 1)
+})
+
 test_that("load_source_rds retrieves and deserializes RDS from S3", {
   # Create a test RDS object
   test_obj <- list(data = data.frame(x = 1:5, y = 6:10))
@@ -687,3 +752,44 @@ test_that(
     )
   }
 )
+
+test_that("download_processed_matrix_dir works", {
+  experiment_id <- "test_experiment"
+
+  expected_tarfile <- file.path(tempdir(), paste0(experiment_id, "_matrix_dir.tar.zst"))
+  withr::defer(unlink(expected_tarfile))
+  mock_s3_download <- mockery::mock(
+    file.create(expected_tarfile)
+  )
+  # Call function with mocked S3
+  tarfile <- download_processed_matrix_dir(
+    list(download_file = mock_s3_download),
+    list(processed_bucket = "processed-bucket"),
+    experiment_id
+  )
+
+  # Verify result
+  expect_equal(tarfile, expected_tarfile)
+  expect_true(file.exists(tarfile))
+})
+
+
+test_that("find_matrix_dir_paths finds matrix_dir paths in counts slot", {
+  counts <- mock_counts(use_bpcells = TRUE)
+  scdata <- SeuratObject::CreateSeuratObject(counts = counts)
+  matrix_dir_path <- expect_no_error(
+    find_matrix_dir_paths(scdata@assays$RNA$counts)
+  )
+
+  expect_match(matrix_dir_path, "matrix_dir")
+})
+
+test_that("get_matrix_dirs finds matrix_dir paths in Seurat object", {
+  counts <- mock_counts(use_bpcells = TRUE)
+  scdata <- SeuratObject::CreateSeuratObject(counts = counts)
+  matrix_dir_path <- expect_no_error(
+    get_matrix_dirs(scdata)
+  )
+
+  expect_match(matrix_dir_path, "matrix_dir")
+})

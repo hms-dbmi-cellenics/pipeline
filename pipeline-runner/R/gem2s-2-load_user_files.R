@@ -31,7 +31,7 @@ load_user_files <- function(
   read_fun <- switch(technology,
     "10x" = read_10x_files,
     "rhapsody" = read_rhapsody_files,
-    "10x_h5" = read_10x_h5_file_bpcells,
+    "10x_h5" = read_10x_h5_file,
     "parse" = read_parse_files
   )
 
@@ -114,64 +114,7 @@ read_parse_files <- function(config, input_dir) {
   return(list(counts_list = counts_list, annot = annot))
 }
 
-#' Read h5 file
-#'
-#' Calls read10x_h5
-#'
-#' @param config list of configuration parameters
-#' @param input_dir character input dir
-#'
-#' @return list with counts and annotations
-#' @export
-#'
 read_10x_h5_file <- function(config, input_dir) {
-  counts_list <- list()
-  annot_list <- list()
-
-  samples <- config$samples
-
-  for (sample in samples) {
-    sample_dir <- file.path(input_dir, sample)
-    sample_fpaths <- list.files(sample_dir)
-    sample_counts_path <- file.path(sample_dir, sample_fpaths[[1]])
-
-    message("\nSample --> ", sample)
-    message(
-      "Reading files from ",
-      sample_dir,
-      " --> ",
-      paste(sample_fpaths, collapse = " - ")
-    )
-
-    if (length(sample_fpaths) > 1) {
-      stop("Only one h5 expected. More files detected.")
-    }
-
-    ungzipped_counts_path <- R.utils::gunzip(sample_counts_path)
-
-    counts_names <- Seurat::Read10X_h5(ungzipped_counts_path)
-    counts <- Seurat::Read10X_h5(ungzipped_counts_path, use.names = FALSE)
-
-    # use Gene Expression modality if multiple
-    if (methods::is(counts, "list")) {
-      counts_names <- counts_names$`Gene Expression`
-      counts <- counts$`Gene Expression`
-    }
-
-    gene_names <- row.names(counts_names)
-
-    annotations <-
-      data.frame(input = rownames(counts), symbol = gene_names)
-    counts_list[[sample]] <- counts
-    annot_list[[sample]] <- annotations
-  }
-
-  annot <- format_annot(annot_list)
-
-  return(list(counts_list = counts_list, annot = annot))
-}
-
-read_10x_h5_file_bpcells <- function(config, input_dir) {
   annot_list <- list()
   counts_list <- list()
   matrix_dir_list <- list()
@@ -231,12 +174,6 @@ read_10x_h5_feature_names <- function(
   use.names = TRUE,
   unique.features = TRUE
 ) {
-  if (isFALSE(requireNamespace("hdf5r", quietly = TRUE))) {
-    stop("Please install hdf5r to read HDF5 files")
-  }
-  if (!file.exists(filename)) {
-    stop("File not found")
-  }
 
   infile <- hdf5r::H5File$new(filename = filename, mode = "r")
   genomes <- names(infile)
