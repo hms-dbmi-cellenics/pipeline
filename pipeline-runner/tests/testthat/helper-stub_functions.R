@@ -213,13 +213,17 @@ stub_tempdir <- function() {
 #'
 stubbed_upload_to_aws <- function(input, pipeline_config, prev_out) {
   mockery::stub(upload_to_aws, "put_object_in_s3", stub_put_object_in_s3)
-  mockery::stub(upload_to_aws,
-                "remove_bucket_folder",
-                stub_remove_bucket_folder)
+  mockery::stub(
+    upload_to_aws,
+    "remove_bucket_folder",
+    stub_remove_bucket_folder
+  )
   mockery::stub(upload_to_aws, "tempdir", stub_tempdir)
-  mockery::stub(upload_to_aws,
-                "put_object_in_s3_multipart",
-                stub_put_object_in_s3_multipart)
+  mockery::stub(
+    upload_to_aws,
+    "put_object_in_s3_multipart",
+    stub_put_object_in_s3_multipart
+  )
 
   upload_to_aws(input, pipeline_config, prev_out)
 }
