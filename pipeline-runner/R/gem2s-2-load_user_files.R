@@ -147,6 +147,8 @@ read_10x_h5_file <- function(config, input_dir) {
     # Write the matrix to a directory
     matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
     unlink(matrix_dir, recursive = TRUE)
+    
+    # hangs indefinitely in BPCells not attached (see init.R)
     counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
 
     # use Gene Expression modality if multiple

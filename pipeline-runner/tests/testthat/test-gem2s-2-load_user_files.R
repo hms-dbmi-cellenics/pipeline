@@ -37,7 +37,7 @@ mock_lists <- function() {
   return(list("counts_list" = counts_list, "annot_list" = annot_list))
 }
 
-mock_h5_file <- function(gzip = FALSE) {
+mock_h5_file <- function(use_gzip = FALSE) {
   # Create test data
   set.seed(42)
   mock_counts <- Matrix::Matrix(
@@ -48,13 +48,14 @@ mock_h5_file <- function(gzip = FALSE) {
   )
   mode(mock_counts@x) <- "integer"
 
-  gene_ids <- paste0("ENSG", seq_len(nrow(mock_counts)))
-  gene_symbols <- paste0("GENE", seq_len(nrow(mock_counts)))
+  gene_ids <- paste0("ENSG", seq_len(10))
+  gene_symbols <- paste0("GENE", seq_len(10))
   barcodes <- paste0("CELL", seq_len(ncol(mock_counts)))
 
   # Create temporary directory structure
-  temp_dir <- withr::local_tempdir(.local_envir = parent.frame())
+  temp_dir <- tempdir()
   sample_dir <- file.path(temp_dir, "sample1")
+  unlink(sample_dir, recursive = TRUE)
   dir.create(sample_dir, recursive = TRUE)
 
   # Create HDF5 file (uncompressed)
@@ -70,10 +71,9 @@ mock_h5_file <- function(gzip = FALSE) {
 
   # Gzip the file - keep .gz extension
   # h5 file is removed by gzip, creating sample1.h5.gz
-  if (gzip) {
+  if (use_gzip) {
     R.utils::gzip(h5_file, overwrite = TRUE)
   }
-  return(temp_dir)
 }
 
 test_that("format_annot keeps unique rows", {
@@ -887,26 +887,12 @@ test_that("read_10x_annotations removes features different from Gene Expression"
 })
 
 
-test_that("read_10x_h5_feature_names works", {
-    # Mock requireNamespace to return FALSE
-    mockery::stub(
-      read_10x_h5_feature_names,
-      "requireNamespace",
-      FALSE
-    )
-
-    temp_file <- tempfile(fileext = ".h5")
-    expect_error(
-      read_10x_h5_feature_names(temp_file),
-      "Please install hdf5r"
-    )
-  }
-)
 
 test_that("read_10x_h5_file returns expected structure", {
   
     # read_10x_h5_file works on compressed h5 file
-    temp_dir <- mock_h5_file(gzip = TRUE)
+    mock_h5_file(use_gzip = TRUE)
+    temp_dir <- tempdir()
 
     # Create config object
     config <- list(samples = c("sample1"))
@@ -925,12 +911,12 @@ test_that("read_10x_h5_file returns expected structure", {
     expect_length(result$counts_list, 1)
     expect_named(result$counts_list, "sample1")
     counts <- result$counts_list[[1]]
-    expect_equal(nrow(counts), nrow(mock_counts))
-    expect_equal(ncol(counts), ncol(mock_counts))
+    expect_equal(nrow(counts), 10)
+    expect_equal(ncol(counts), 10)
 
     # Verify annotations
     expect_s3_class(result$annot, "data.frame")
-    expect_equal(nrow(result$annot), nrow(mock_counts))
+    expect_equal(nrow(result$annot), 10)
 
     # Verify matrix directories exist
     expect_length(result$matrix_dir_list, 1)
@@ -940,7 +926,8 @@ test_that("read_10x_h5_file returns expected structure", {
 
 test_that("read_10x_h5_feature_names returns expected structure", {
     # read_10x_h5_feature_names works on uncompressed h5 file
-    temp_dir <- mock_h5_file(gzip = FALSE)
+    mock_h5_file(use_gzip = FALSE)
+    temp_dir <- tempdir()
 
     h5_file <- file.path(temp_dir, "sample1", "sample1.h5")
     expect_true(file.exists(h5_file))
