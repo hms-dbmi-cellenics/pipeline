@@ -135,11 +135,17 @@ tar_matrix_dir <- function(id, matrix_dir) {
 
 # TODO: newer R utils::tar supports zstd
 tar_zstd <- function(tarfile, files) {
-  system(paste("tar --zstd -cf", tarfile, files))
+   status <- system2("tar", c("--zstd", "-cf", tarfile, files))
+   if (!identical(status, 0L)) {
+     stop("Failed to create zstd tar archive: ", tarfile)
+   }
 }
 
 untar_zstd <- function(tarfile, exdir) {
-  system(paste("tar --zstd -xf", tarfile, "-C", exdir))
+  status <- system2("tar", c("--zstd", "-xf", tarfile, "-C", exdir))
+   if (!identical(status, 0L)) {
+     stop("Failed to extract zstd tar archive: ", tarfile)
+   }
 }
 
 #' Create initial cell sets object

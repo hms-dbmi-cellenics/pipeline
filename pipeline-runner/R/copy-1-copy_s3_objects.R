@@ -180,7 +180,7 @@ copy_source_matrix_dirs <- function(
     )
 
     message("Uploading matrix_dir to: ", copy_matrix_dir_key)
-    put_object_in_s3(
+    put_object_in_s3_multipart(
       pipeline_config,
       bucket,
       tarfile,
