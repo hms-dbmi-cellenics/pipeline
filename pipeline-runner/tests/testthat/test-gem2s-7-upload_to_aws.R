@@ -110,7 +110,8 @@ mock_create_seurat <- function(config, counts = NULL, use_bpcells = FALSE) {
     sample_counts <- counts
 
     if (use_bpcells) {
-      matrix_dir <- withr::local_tempfile(.local_envir = parent.frame())
+      matrix_dir <- file.path(tempdir(), paste0(sampleId, "_matrix_dir"))
+      unlink(matrix_dir, recursive = TRUE)
       sample_counts <- counts_to_bpcells(sample_counts, matrix_dir)
       matrix_dir_list[[sampleId]] <- matrix_dir
     }

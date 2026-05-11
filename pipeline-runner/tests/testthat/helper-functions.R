@@ -54,7 +54,6 @@ remove_commands_functions <- function(data) {
 #' }
 #'
 counts_to_bpcells <- function(counts, matrix_dir) {
-  counts <- as(as.matrix(counts), "dgCMatrix")
   counts <- BPCells::convert_matrix_type(counts)
 
   # Convert to BPCells
@@ -62,6 +61,7 @@ counts_to_bpcells <- function(counts, matrix_dir) {
 }
 
 maybe_bpcells <- function(counts, matrix_dir, use_bpcells = FALSE) {
+  counts <- as(as.matrix(counts), "dgCMatrix")
   if (use_bpcells) {
     return(counts_to_bpcells(counts, matrix_dir))
   } else {
@@ -74,7 +74,6 @@ mock_counts <- function(use_bpcells = FALSE) {
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
-  counts <- as(as.matrix(counts), "dgCMatrix")
   counts <- maybe_bpcells(
     counts,
     withr::local_tempfile(.local_envir = parent.frame()),

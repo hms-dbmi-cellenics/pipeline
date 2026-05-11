@@ -1,9 +1,5 @@
 mock_source_data <- function(sample_ids, from_experiment_id, use_bpcells = FALSE) {
-  counts <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-
+  counts <- mock_counts()
   counts <- maybe_bpcells(
     counts,
     withr::local_tempfile(.local_envir = parent.frame()),
@@ -32,6 +28,7 @@ mock_source_data <- function(sample_ids, from_experiment_id, use_bpcells = FALSE
 }
 
 get_mock_processed_scdata <- function(sample_ids) {
+  scdata_list <- mock_scdata_list()
   data("pbmc_small", package = "SeuratObject", envir = environment())
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
   pbmc_small@misc$gene_annotations <- data.frame(
@@ -236,7 +233,7 @@ test_that("copy_source_matrix_dirs works correctly", {
 
   mock_list_objects <- mock(mock_s3_objects)
   mock_download_file <- mock()
-  mock_put_object_in_s3 <- mock()
+  mock_put_object_in_s3_multipart <- mock()
   mock_unlink <- mock()
 
   mockery::stub(
@@ -250,7 +247,9 @@ test_that("copy_source_matrix_dirs works correctly", {
     }
   )
   mockery::stub(
-    copy_source_matrix_dirs, "put_object_in_s3", mock_put_object_in_s3
+    copy_source_matrix_dirs,
+    "put_object_in_s3_multipart",
+    mock_put_object_in_s3_multipart
   )
   mockery::stub(copy_source_matrix_dirs, "unlink", mock_unlink)
 
@@ -266,7 +265,7 @@ test_that("copy_source_matrix_dirs works correctly", {
   # expect 2 calls to download_file (1 per sample with matrix_dir)
   expect_called(mock_download_file, 2)
   # expect 2 calls to put_object_in_s3 (1 per sample with matrix_dir)
-  expect_called(mock_put_object_in_s3, 2)
+  expect_called(mock_put_object_in_s3_multipart, 2)
   # expect 2 calls to unlink (1 per downloaded tar file)
   expect_called(mock_unlink, 2)
 })

@@ -724,6 +724,9 @@ init <- function() {
       write.error.dump.file = FALSE
     )
 
+    # Give the success/failure message time to complete before killing heartbeat
+    Sys.sleep(2)
+    
     # kill heartbeat process
     heartbeat_proc$kill()
   }
