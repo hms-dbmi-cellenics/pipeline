@@ -58,9 +58,12 @@ test_that("load_user_files loads a parse count matrix", {
   )
   out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
-  expect_true("counts_list" %in% names(out))
+  expect_contains(
+    names(out),
+    c("counts_list", "annot", "matrix_dir_list")
+  )
+  
   expect_true(sample %in% names(out$counts_list))
-
   expect_s4_class(out$counts_list[[1]], "IterableMatrix")
 })
 

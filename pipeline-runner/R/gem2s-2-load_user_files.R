@@ -64,6 +64,7 @@ read_parse_files <- function(config, input_dir) {
   counts_list <- list()
   annot_list <- list()
   feature_types_list <- list()
+  matrix_dir_list <- list()
 
   samples <- config$samples
 
@@ -101,12 +102,19 @@ read_parse_files <- function(config, input_dir) {
 
     # import matrix from parse format (cell x gene orientation)
     # then transpose to get standard gene x cell format
-    counts_transposed <- BPCells::import_matrix_market(
+    counts_mat <- BPCells::import_matrix_market(
       mtx_path,
       row_names = cell_names,
       col_names = gene_names
     )
-    counts <- Matrix::t(counts_transposed)
+    counts_mat <- Matrix::t(counts_mat)
+
+    # Write the matrix to a directory
+    matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
+    unlink(matrix_dir, recursive = TRUE)
+    
+    # hangs indefinitely in BPCells not attached (see init.R)
+    counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
 
     message(
       sprintf(
@@ -120,11 +128,16 @@ read_parse_files <- function(config, input_dir) {
 
     counts_list[[sample]] <- counts
     annot_list[[sample]] <- annotations
+    matrix_dir_list[[sample]] <- matrix_dir
   }
 
   annot <- format_annot(annot_list)
 
-  return(list(counts_list = counts_list, annot = annot))
+  return(list(
+    counts_list = counts_list,
+    annot = annot,
+    matrix_dir_list = matrix_dir_list
+  ))
 }
 
 read_10x_h5_file <- function(config, input_dir) {
