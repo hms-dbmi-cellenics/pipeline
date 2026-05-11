@@ -86,14 +86,27 @@ read_parse_files <- function(config, input_dir) {
     barcodes_path <- file.path(sample_dir, "cell_metadata.csv.gz")
     features_path <- file.path(sample_dir, "all_genes.csv.gz")
 
-
-    # We use readMtx instead of Seurat::ReadParse because the feature.column
-    # needs to be 1 instead of 2.
-    counts <- Seurat::ReadMtx(
-      mtx = mtx_path, cells = barcodes_path, features = features_path,
-      cell.column = 1, feature.column = 1, cell.sep = ",",
-      feature.sep = ",", skip.cell = 1, skip.feature = 1, mtx.transpose = TRUE
+    # read barcodes (cells) from CSV
+    cell_barcodes <- as.data.frame(
+      data.table::fread(barcodes_path, header = FALSE, skip = 1)
     )
+    cell_names <- cell_barcodes[[1]]
+
+    # read features (genes) from CSV, using column 1 (parse format)
+    feature_names <- as.data.frame(
+      data.table::fread(features_path, header = FALSE, skip = 1)
+    )
+    gene_names <- feature_names[[1]]
+    gene_names <- make.unique(gene_names)
+
+    # import matrix from parse format (cell x gene orientation)
+    # then transpose to get standard gene x cell format
+    counts_transposed <- BPCells::import_matrix_market(
+      mtx_path,
+      row_names = cell_names,
+      col_names = gene_names
+    )
+    counts <- t(counts_transposed)
 
     message(
       sprintf(

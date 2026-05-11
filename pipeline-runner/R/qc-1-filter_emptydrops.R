@@ -22,7 +22,12 @@ filter_emptydrops <- function(scdata_list, config, sample_id, cells_id, task_nam
   message("Number of cells: ", ncol(scdata_list[[sample_id]]))
 
   if (length(sample_cell_ids) == 0) {
-    return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
+    return(list(
+      data = scdata_list[[sample_id]],
+      new_ids = cells_id,
+      config = config,
+      plotData = list()
+    ))
   }
 
   # TODO this is probably not needed because it's the first filter and it has not been yet applied

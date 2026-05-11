@@ -138,3 +138,21 @@ test_that("doublet scores are re-computed if the API says so", {
     )
   )
 })
+
+test_that("filter_doublets does not fail if doublet scores are not present and disables filter", {
+  scdata_list <- mock_scdata_list()
+  sample1_id <- names(scdata_list)[1]
+
+  cells_id <- mock_ids(scdata_list)
+  config <- mock_config()
+
+  # remove doublet scores
+  scdata_list[[sample1_id]]$doublet_scores <- NULL
+
+  out <- filter_doublets(scdata_list, config, sample1_id, cells_id)
+  
+  expect_setequal(names(out), c("data", "new_ids", "config", "plotData"))
+  expect_equal(out$new_ids[[sample1_id]], cells_id[[sample1_id]])
+
+  expect_equal(out$config$enabled, FALSE)
+})

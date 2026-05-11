@@ -120,8 +120,11 @@ customize_doublet_config <-
            sample_name,
            unfiltered_samples,
            technology) {
-    probabilityThreshold <- generate_default_values_doubletScores(scdata)
-    config$filterSettings$probabilityThreshold <- probabilityThreshold
+    config$enabled <- !is.null(scdata@meta.data$doublet_scores)
+    if (config$enabled) {
+      probabilityThreshold <- generate_default_values_doubletScores(scdata)
+      config$filterSettings$probabilityThreshold <- probabilityThreshold
+    }
 
     return(config)
   }
