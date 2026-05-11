@@ -45,15 +45,23 @@ test_that("load_user_files loads a parse count matrix", {
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
-  local_experiment(counts, features, experiment_dir, sample, type = "parse")
+  local_experiment(
+    counts,
+    features,
+    experiment_dir,
+    sample,
+    type = "parse"
+  )
 
-  prev_out <- list(config = list(samples = sample, input = list(type = "parse")))
+  prev_out <- list(
+    config = list(samples = sample, input = list(type = "parse"))
+  )
   out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   expect_true("counts_list" %in% names(out))
   expect_true(sample %in% names(out$counts_list))
 
-  expect_s4_class(out$counts_list[[1]], "dgCMatrix")
+  expect_s4_class(out$counts_list[[1]], "IterableMatrix")
 })
 
 test_that("load_user_files generates feature annotation for parse data", {
@@ -63,9 +71,16 @@ test_that("load_user_files generates feature annotation for parse data", {
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
-  local_experiment(counts, features, experiment_dir, sample, type = "parse")
+  local_experiment(counts,
+    features,
+    experiment_dir,
+    sample,
+    type = "parse"
+  )
 
-  prev_out <- list(config = list(samples = sample, input = list(type = "parse")))
+  prev_out <- list(
+    config = list(samples = sample, input = list(type = "parse"))
+  )
   out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   expect_true("annot" %in% names(out))
@@ -81,10 +96,18 @@ test_that("load_user_files uses appropriate feature columns for parse data", {
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
-  local_experiment(counts, features, experiment_dir, sample, type = "parse")
+  local_experiment(
+    counts,
+    features,
+    experiment_dir,
+    sample,
+    type = "parse"
+  )
 
 
-  prev_out <- list(config = list(samples = sample, input = list(type = "parse")))
+  prev_out <- list(
+    config = list(samples = sample, input = list(type = "parse"))
+  )
   out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   # ensembl ids are counts row names
@@ -106,11 +129,25 @@ test_that("load_user_files loads 10x multisample experiments", {
   experiment_dir <- "./experiment_1"
   samples <- c("sample_a", "sample_b")
 
-  local_experiment(mock_counts_parse(100, 100), features, experiment_dir, samples[1], type = "parse")
-  local_experiment(mock_counts_parse(100, 100), features, experiment_dir, samples[2], type = "parse")
+  local_experiment(
+    mock_counts_parse(100, 100),
+    features,
+    experiment_dir,
+    samples[1],
+    type = "parse"
+  )
+  local_experiment(
+    mock_counts_parse(100, 100),
+    features,
+    experiment_dir,
+    samples[2],
+    type = "parse"
+  )
 
 
-  prev_out <- list(config = list(samples = samples, input = list(type = "parse")))
+  prev_out <- list(
+    config = list(samples = samples, input = list(type = "parse"))
+  )
   out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
   # loaded both
@@ -128,7 +165,9 @@ test_that("read_parse_files returns error if files missing", {
 
   local_experiment(counts, features, experiment_dir, sample, type = "parse")
 
-  prev_out <- list(config = list(samples = sample, input = list(type = "parse")))
+  prev_out <- list(
+    config = list(samples = sample, input = list(type = "parse"))
+  )
 
   files <- c("cell_metadata.csv.gz", "DGE.mtx.gz", "all_genes.csv.gz")
 
@@ -137,7 +176,10 @@ test_that("read_parse_files returns error if files missing", {
   # remove files one by one renaming
   for (file in files) {
     file.rename(file.path(sample_dir, file), file.path(sample_dir, "blah"))
-    expect_error(supressWarnings(load_user_files(NULL, NULL, prev_out, experiment_dir), "Cannot find"))
+    expect_error(supressWarnings(
+      load_user_files(NULL, NULL, prev_out, experiment_dir),
+      "Cannot find"
+    ))
     file.rename(file.path(sample_dir, "blah"), file.path(sample_dir, file))
   }
 })
@@ -151,11 +193,24 @@ test_that("read_parse_annotations makes features unique", {
   experiment_dir <- "./experiment_1"
   sample <- "sample_a"
 
-  local_experiment(counts, features, experiment_dir, sample, type = "parse")
+  local_experiment(
+    counts,
+    features,
+    experiment_dir,
+    sample,
+    type = "parse"
+  )
 
-  prev_out <- list(config = list(samples = sample, input = list(type = "parse")))
+  prev_out <- list(
+    config = list(samples = sample, input = list(type = "parse"))
+  )
 
   out <- load_user_files(NULL, NULL, prev_out, experiment_dir)$output
 
-  expect_true(out$annot$input[[2]] != out$annot$input[[1]] & rownames(out$counts_list$sample_a)[[2]] != rownames(out$counts_list$sample_a)[[1]])
+  rownames2 <- rownames(out$counts_list$sample_a)[[2]]
+  rownames1 <- rownames(out$counts_list$sample_a)[[1]]
+  expect_true(
+    out$annot$input[[2]] != out$annot$input[[1]] &
+      rownames2 != rownames1
+  )
 })

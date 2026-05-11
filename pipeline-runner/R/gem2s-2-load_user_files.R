@@ -106,7 +106,7 @@ read_parse_files <- function(config, input_dir) {
       row_names = cell_names,
       col_names = gene_names
     )
-    counts <- t(counts_transposed)
+    counts <- Matrix::t(counts_transposed)
 
     message(
       sprintf(
