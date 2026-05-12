@@ -582,11 +582,9 @@ test_that("customize_downsampling_config adds geosketch parameters to config for
     )
   )
 
-  half_min_cells_geosketch <- ceiling(MIN_CELLS_GEOSKETCH / 2)
-
   scdata_list <- list(
-    sample1 = mock_scdata_geosketch(ncells = half_min_cells_geosketch),
-    sample2 = mock_scdata_geosketch(ncells = half_min_cells_geosketch)
+    sample1 = mock_scdata_geosketch(ncells = MIN_CELLS_GEOSKETCH / 2),
+    sample2 = mock_scdata_geosketch(ncells = MIN_CELLS_GEOSKETCH / 2)
   )
 
   config <- customize_downsampling_config(
