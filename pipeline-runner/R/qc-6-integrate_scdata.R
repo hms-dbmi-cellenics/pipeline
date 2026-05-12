@@ -236,6 +236,7 @@ customize_downsampling_config <- function(config, scdata_list) {
   }
 
   # if yes: add methodSettings and default to 50,000 cells
+  config$downsampling$method <- "geosketch"
   config$downsampling$methodSettings <- list(
     geosketch = list(
       percentageToKeep = DEFAULT_CELLS_GEOSKETCH / num_cells * 100

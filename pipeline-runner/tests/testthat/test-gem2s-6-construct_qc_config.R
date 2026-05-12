@@ -9,6 +9,19 @@ test_that("construct_qc_config works with bpcells", {
   )
 })
 
+test_that("construct_qc_config sets geosketch to default", {
+  scdata_list <- mock_scdata_list()
+  qc_config <- expect_no_error(
+    construct_qc_config(
+      scdata_list,
+      unfiltered_samples = names(scdata_list),
+      technology = "10X"
+    )
+  )
+
+  expect_equal(qc_config$dataIntegration$downsampling$method, "default")
+})
+
 
 test_that("cellsize filter is disabled by default and classifier is pre-filtered", {
   scdata_list <- mock_scdata_list()
@@ -70,7 +83,11 @@ test_that("classifier filter config is enabled for unfiltered samples and disabl
     scdata_list <- mock_scdata_list()
 
   unfiltered_samples <- c("123abc")
-  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, technology = "10X")
+  qc_config <- construct_qc_config(
+    scdata_list,
+    unfiltered_samples = unfiltered_samples,
+    technology = "10X"
+  )
 
   for (sample in names(scdata_list)) {
     if (sample %in% unfiltered_samples) {
@@ -87,10 +104,16 @@ test_that("NumGenesVsUmis filter config has spline as default for Parse Datasets
     scdata_list <- mock_scdata_list()
 
   unfiltered_samples <- c("123abc")
-  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, "parse")
+  qc_config <- construct_qc_config(
+    scdata_list,
+    unfiltered_samples = unfiltered_samples,
+    "parse"
+  )
 
   for (sample in names(scdata_list)) {
-    expect_true(qc_config$numGenesVsNumUmis[[sample]]$filterSettings$regressionType == "spline")
+    expect_true(
+      qc_config$numGenesVsNumUmis[[sample]]$filterSettings$regressionType == "spline"
+    )
   }
 })
 
@@ -98,9 +121,15 @@ test_that("NumGenesVsUmis filter config has linear as default for 10x datasets",
     scdata_list <- mock_scdata_list()
 
   unfiltered_samples <- c("123abc")
-  qc_config <- construct_qc_config(scdata_list, unfiltered_samples = unfiltered_samples, "10X")
+  qc_config <- construct_qc_config(
+    scdata_list,
+    unfiltered_samples = unfiltered_samples,
+    "10X"
+  )
 
   for (sample in names(scdata_list)) {
-    expect_true(qc_config$numGenesVsNumUmis[[sample]]$filterSettings$regressionType == "linear")
+    expect_true(
+      qc_config$numGenesVsNumUmis[[sample]]$filterSettings$regressionType == "linear"
+    )
   }
 })

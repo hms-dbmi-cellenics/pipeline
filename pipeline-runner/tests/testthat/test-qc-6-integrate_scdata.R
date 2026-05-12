@@ -531,3 +531,78 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
     "integrated.rpca.sketch"
   )
 })
+
+mock_scdata_geosketch <- function(ncells, ngenes = 5, use_bpcells = FALSE) {
+  sce <- scuttle::mockSCE(ncells, ngenes)
+  counts <- SummarizedExperiment::assay(sce, "counts")
+  rownames(counts) <- gsub("_", "-", rownames(counts))
+
+  counts <- as(counts, "dgCMatrix")
+  counts <- maybe_bpcells(
+    counts,
+    withr::local_tempfile(.local_envir = parent.frame(), pattern = "matrix_dir"),
+    use_bpcells
+  )
+
+  scdata <- Seurat::CreateSeuratObject(counts = counts)
+  return(scdata)
+}
+
+test_that("customize_downsampling_config adds geosketch parameters to config for large datasets", {
+  config <- list(
+    downsampling = list(
+      method = "default"
+    )
+  )
+
+  scdata_list <- list(sample1 = mock_scdata_geosketch(ncells = MIN_CELLS_GEOSKETCH))
+
+  config <- customize_downsampling_config(
+    config,
+    scdata_list
+  )
+
+  expected_percent_keep <- DEFAULT_CELLS_GEOSKETCH / MIN_CELLS_GEOSKETCH * 100
+
+  expect_equal(config$downsampling$method, "geosketch")
+  expect_equal(
+    names(config$downsampling$methodSettings),
+    "geosketch"
+  )
+  expect_equal(
+    config$downsampling$methodSettings$geosketch$percentageToKeep,
+    expected_percent_keep
+  )
+})
+
+test_that("customize_downsampling_config adds geosketch parameters to config for large multisample datasets", {
+  config <- list(
+    downsampling = list(
+      method = "default"
+    )
+  )
+
+  half_min_cells_geosketch <- ceiling(MIN_CELLS_GEOSKETCH / 2)
+
+  scdata_list <- list(
+    sample1 = mock_scdata_geosketch(ncells = half_min_cells_geosketch),
+    sample2 = mock_scdata_geosketch(ncells = half_min_cells_geosketch)
+  )
+
+  config <- customize_downsampling_config(
+    config,
+    scdata_list
+  )
+
+  expected_percent_keep <- DEFAULT_CELLS_GEOSKETCH / MIN_CELLS_GEOSKETCH * 100
+
+  expect_equal(config$downsampling$method, "geosketch")
+  expect_equal(
+    names(config$downsampling$methodSettings),
+    "geosketch"
+  )
+  expect_equal(
+    config$downsampling$methodSettings$geosketch$percentageToKeep,
+    expected_percent_keep
+  )
+})
