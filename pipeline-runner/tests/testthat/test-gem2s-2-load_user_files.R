@@ -114,6 +114,22 @@ test_that("format_annot removes duplicated input (Ensembl IDs) column", {
   )
 })
 
+test_that("format_annot uses input column for empty gene names", {
+  annot_list <- list(
+    sample1 = data.frame(
+      input = paste0("ENSG", 1:5),
+      name = c(paste0("GENE", 1:4), "")
+    )
+  )
+
+  annot <- format_annot(annot_list)
+
+  expect_equal(
+    annot$name,
+    c(paste0("GENE", 1:4), "ENSG5")
+  )
+})
+
 
 test_that("load_user_files loads a 10x count matrix", {
   counts <- mock_counts()

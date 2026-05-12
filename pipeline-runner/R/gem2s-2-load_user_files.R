@@ -634,10 +634,17 @@ format_annot <- function(annot_list) {
 
   message("Deduplicating gene annotations...")
 
-  # add ENSEMBL ID for genes that are duplicated (geneNameDuplicated-ENSEMBL)
-  # original name kept in 'original_name' column
+  # store original name before dedup
   gname <- annot$name
   annot$original_name <- gname
+
+  # if empty gene name, use input as name (e.g. ENSG123)
+  is_empty <- gname == ""
+  gname[is_empty] <- annot$input[is_empty]
+  annot$name[is_empty] <- gname[is_empty]
+
+  # add ENSEMBL ID for genes that are duplicated (geneNameDuplicated-ENSEMBL)
+  # original name kept in 'original_name' column
   is.dup <- duplicated(gname) | duplicated(gname, fromLast = TRUE)
 
   # We need to convert the gene inputs from _ to - bc when we create the Seurat
