@@ -39,7 +39,13 @@ integrate_scdata <- function(
   }
 
   # customize default geosketch config for first run
-  config <- customize_downsampling_config(config, scdata_list)
+   # for first run, downsampling method is "default"
+  is_first_run <- isTRUE(config$downsampling$method == "default")
+
+  # dont alter config if not first run
+  if (is_first_run) {
+    config <- customize_default_downsampling_config(config, scdata_list)
+  }
 
   # integrate
   integration_function <- get(paste0("run_", method))
@@ -71,7 +77,9 @@ integrate_scdata <- function(
   return(result)
 }
 
-run_preprocessing <- function(scdata, normalization, nfeatures, use_geosketch = FALSE, percent_keep = NULL) {
+run_preprocessing <- function(
+  scdata, normalization, nfeatures, use_geosketch = FALSE, percent_keep = NULL
+) {
 
   # for SCT we still:
   # - log-normalize: for gene expression plots
@@ -219,17 +227,12 @@ is_geosketch <- function(config) {
   "downsampling" %in% names(config) && config$downsampling$method == "geosketch"
 }
 
-customize_downsampling_config <- function(config, scdata_list) {
-  # for first run, downsampling method is "default"
-  is_first_run <- isTRUE(config$downsampling$method == "default")
+customize_default_downsampling_config <- function(config, scdata_list) {
 
-  # dont alter config if not first run
-  if (!is_first_run) return(config)
-
-  # its first run: do we need to geosketch?
+  # do we need to geosketch?
   num_cells <- sum(sapply(scdata_list, ncol))
 
-  # if not: remove downsampling config
+  # if not, remove downsampling config
   if (num_cells < MIN_CELLS_USE_GEOSKETCH) {
     config$downsampling <- NULL
     return(config)

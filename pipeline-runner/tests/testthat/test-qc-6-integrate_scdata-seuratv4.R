@@ -334,6 +334,8 @@ test_that("misc slot is complete after Seurat V4 integration with geosketch with
 test_that("default assay in the integrated object matches normalisation method after Seurat V4 integration with geosketch", {
   # mock a bigger dataset to run Seurat v4 integration without skipping it
   scdata_list <- mock_scdata_list(n_rep=3)
+  ncells <- sum(sapply(scdata_list, ncol))
+
   cells_id <- list(
     "123abc" = scdata_list$`123abc`$cells_id,
     "123def" = scdata_list$`123def`$cells_id
