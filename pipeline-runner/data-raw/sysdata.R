@@ -147,8 +147,9 @@ exclude_from_config <- c(
 )
 
 # for customizing geosketch config on first run
-MIN_CELLS_GEOSKETCH <- 100000
-DEFAULT_CELLS_GEOSKETCH <- 50000
+MIN_CELLS_USE_GEOSKETCH <- 100000
+CELLS_PER_SAMPLE_SKETCHDATA <- 5000
+MIN_CELLS_SKETCHDATA <- 50000
 
 usethis::use_data(
   processing_config_template,
@@ -177,8 +178,9 @@ usethis::use_data(
   DOUBLET_RATE_PARSE,
   errors,
   exclude_from_config,
-  MIN_CELLS_GEOSKETCH,
-  DEFAULT_CELLS_GEOSKETCH,
+  MIN_CELLS_USE_GEOSKETCH,
+  CELLS_PER_SAMPLE_SKETCHDATA,
+  MIN_CELLS_SKETCHDATA,
   internal = TRUE,
   overwrite = TRUE
 )

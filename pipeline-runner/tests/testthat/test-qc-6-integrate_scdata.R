@@ -532,7 +532,7 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
   )
 })
 
-mock_scdata_geosketch <- function(ncells, ngenes = 5, use_bpcells = FALSE) {
+mock_scdata_geosketch <- function(ncells, ngenes = 2, use_bpcells = FALSE) {
   sce <- scuttle::mockSCE(ncells, ngenes)
   counts <- SummarizedExperiment::assay(sce, "counts")
   rownames(counts) <- gsub("_", "-", rownames(counts))
@@ -555,14 +555,14 @@ test_that("customize_downsampling_config adds geosketch parameters to config for
     )
   )
 
-  scdata_list <- list(sample1 = mock_scdata_geosketch(ncells = MIN_CELLS_GEOSKETCH))
+  scdata_list <- list(sample1 = mock_scdata_geosketch(ncells = MIN_CELLS_USE_GEOSKETCH))
 
   config <- customize_downsampling_config(
     config,
     scdata_list
   )
 
-  expected_percent_keep <- DEFAULT_CELLS_GEOSKETCH / MIN_CELLS_GEOSKETCH * 100
+  expected_percent_keep <- MIN_CELLS_SKETCHDATA / MIN_CELLS_USE_GEOSKETCH * 100
 
   expect_equal(config$downsampling$method, "geosketch")
   expect_equal(
@@ -583,8 +583,8 @@ test_that("customize_downsampling_config adds geosketch parameters to config for
   )
 
   scdata_list <- list(
-    sample1 = mock_scdata_geosketch(ncells = MIN_CELLS_GEOSKETCH / 2),
-    sample2 = mock_scdata_geosketch(ncells = MIN_CELLS_GEOSKETCH / 2)
+    sample1 = mock_scdata_geosketch(ncells = MIN_CELLS_USE_GEOSKETCH / 2),
+    sample2 = mock_scdata_geosketch(ncells = MIN_CELLS_USE_GEOSKETCH / 2)
   )
 
   config <- customize_downsampling_config(
@@ -592,7 +592,82 @@ test_that("customize_downsampling_config adds geosketch parameters to config for
     scdata_list
   )
 
-  expected_percent_keep <- DEFAULT_CELLS_GEOSKETCH / MIN_CELLS_GEOSKETCH * 100
+  expected_percent_keep <- MIN_CELLS_SKETCHDATA / MIN_CELLS_USE_GEOSKETCH * 100
+
+  expect_equal(config$downsampling$method, "geosketch")
+  expect_equal(
+    names(config$downsampling$methodSettings),
+    "geosketch"
+  )
+  expect_equal(
+    config$downsampling$methodSettings$geosketch$percentageToKeep,
+    expected_percent_keep
+  )
+})
+
+test_that("customize_downsampling_config keeps CELLS_PER_SAMPLE_SKETCHDATA cells per sample if total is more than MIN_CELLS_SKETCHDATA", {
+  config <- list(
+    downsampling = list(
+      method = "default"
+    )
+  )
+
+  # scdata_list with 20 samples * 50,000 cells = 1,000,000 cells total
+  # should be 20 * 5000 cells/sample = 100,000 cells
+  # not 50,000 cells (MIN_CELLS_SKETCHDATA)
+  num_samples <- 20
+  cells_per_sample <- 50000
+  cells_total <- num_samples * cells_per_sample
+  scdata_list <- list()
+  for (i in seq_len(num_samples)) {
+    scdata_list[[paste0("sample", i)]] <- mock_scdata_geosketch(ncells = cells_per_sample)
+  }
+
+  config <- customize_downsampling_config(
+    config,
+    scdata_list
+  )
+
+  expected_cells_keep <- num_samples * CELLS_PER_SAMPLE_SKETCHDATA
+  expected_percent_keep <- expected_cells_keep / cells_total * 100
+
+  expect_equal(config$downsampling$method, "geosketch")
+  expect_equal(
+    names(config$downsampling$methodSettings),
+    "geosketch"
+  )
+  expect_equal(
+    config$downsampling$methodSettings$geosketch$percentageToKeep,
+    expected_percent_keep
+  )
+})
+
+test_that("customize_downsampling_config doesn't keep more than half the number of cells", {
+  config <- list(
+    downsampling = list(
+      method = "default"
+    )
+  )
+
+  # scdata_list with 200 samples * 5000 cells = 1,000,000 cells total
+  # should be 20 * 5000 cells/sample = 100,000 cells
+  # not 50,000 cells (MIN_CELLS_SKETCHDATA)
+  num_samples <- 200
+  cells_per_sample <- 5000
+  cells_total <- num_samples * cells_per_sample
+
+  scdata_list <- list()
+  for (i in seq_len(num_samples)) {
+    scdata_list[[paste0("sample", i)]] <- mock_scdata_geosketch(ncells = cells_per_sample)
+  }
+
+  config <- customize_downsampling_config(
+    config,
+    scdata_list
+  )
+
+  expected_cells_keep <- cells_total / 2
+  expected_percent_keep <- expected_cells_keep / cells_total * 100
 
   expect_equal(config$downsampling$method, "geosketch")
   expect_equal(

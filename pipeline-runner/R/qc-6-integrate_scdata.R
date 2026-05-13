@@ -230,16 +230,27 @@ customize_downsampling_config <- function(config, scdata_list) {
   num_cells <- sum(sapply(scdata_list, ncol))
 
   # if not: remove downsampling config
-  if (num_cells < MIN_CELLS_GEOSKETCH) {
+  if (num_cells < MIN_CELLS_USE_GEOSKETCH) {
     config$downsampling <- NULL
     return(config)
   }
 
-  # if yes: add methodSettings and default to 50,000 cells
+  # if yes, add methodSettings and default to:
+  # - 5000 cells / sample
+  # - minimum 50,000 cells total
+  nsamples <- length(scdata_list)
+  ncells_keep <- max(
+    CELLS_PER_SAMPLE_SKETCHDATA * nsamples,
+    MIN_CELLS_SKETCHDATA
+  )
+
+  # don't keep more cells that half of total
+  ncells_keep <- min(ncells_keep, floor(num_cells / 2))
+
   config$downsampling$method <- "geosketch"
   config$downsampling$methodSettings <- list(
     geosketch = list(
-      percentageToKeep = DEFAULT_CELLS_GEOSKETCH / num_cells * 100
+      percentageToKeep = ncells_keep / num_cells * 100
     )
   )
   return(config)
