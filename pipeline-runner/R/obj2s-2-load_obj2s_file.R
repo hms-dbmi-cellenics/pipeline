@@ -19,20 +19,20 @@ load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/inpu
 
   dataset_fname <- switch(
     obj2s_type,
-    'seurat_spatial_object' = 'r.rds',
-    'seurat_object' = 'r.rds',
-    'sce_object' = 'r.rds',
-    'anndata_object' = 'adata.h5ad'
+    "seurat_spatial_object" = "r.rds",
+    "seurat_object" = "r.rds",
+    "sce_object" = "r.rds",
+    "anndata_object" = "adata.h5ad"
   )
 
   dataset_fpath <- file.path(input_dir, dataset_dir, dataset_fname)
 
   reconstruct_fun <- switch(
     obj2s_type,
-    'seurat_object' = reconstruct_seurat,
-    'seurat_spatial_object' = reconstruct_seurat_spatial,
-    'sce_object' = reconstruct_sce,
-    'anndata_object' = reconstruct_anndata,
+    "seurat_object" = reconstruct_seurat,
+    "seurat_spatial_object" = reconstruct_seurat_spatial,
+    "sce_object" = reconstruct_sce,
+    "anndata_object" = reconstruct_anndata,
   )
 
   scdata <- reconstruct_fun(dataset_fpath)
@@ -51,7 +51,7 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
   # read it
   tryCatch({
     user_scdata <- readRDS(dataset_fpath)
-    stopifnot(methods::is(user_scdata, 'Seurat'))
+    stopifnot(methods::is(user_scdata, "Seurat"))
   },
   error = function(e) {
     message(e$message)
@@ -62,11 +62,11 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
   tryCatch({
 
     # if V5 object, ensure layers are rejoined
-    if (methods::is(user_scdata[['Spatial']], 'Assay5'))
-      user_scdata[['Spatial']] <- SeuratObject::JoinLayers(user_scdata[['Spatial']])
+    if (methods::is(user_scdata[["Spatial"]], "Assay5"))
+      user_scdata[["Spatial"]] <- SeuratObject::JoinLayers(user_scdata[["Spatial"]])
 
 
-    counts <- user_scdata[['Spatial']]$counts
+    counts <- user_scdata[["Spatial"]]$counts
     test_user_sparse_mat(counts)
     rns <- row.names(counts)
     check_type_is_safe(rns)
@@ -90,7 +90,7 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
 
   # reconstruct Seurat object
   scdata <- SeuratObject::CreateSeuratObject(
-    assay = 'RNA',
+    assay = "RNA",
     counts,
     meta.data = metadata,
   )
@@ -100,14 +100,14 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
   scdata$samples <- NA
   for (image_name in image_names) {
     image_cells <- Seurat:::CellsByImage(user_scdata, image_name, unlist = TRUE)
-    scdata@meta.data[image_cells, 'samples'] <- image_name
+    scdata@meta.data[image_cells, "samples"] <- image_name
   }
 
   # use library size factors for logcounts
   tryCatch({
     size_factors <- scuttle::librarySizeFactors(counts)
     logcounts <- scuttle::normalizeCounts(counts, size_factors = size_factors)
-    scdata[['RNA']]$data <- logcounts
+    scdata[["RNA"]]$data <- logcounts
   },
   error = function(e) {
     message(e$message)
@@ -148,13 +148,13 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
       message("Updated default reduction: ", red_name)
     }
 
-    stopifnot(red_name %in% c('umap', 'tsne'))
+    stopifnot(red_name %in% c("umap", "tsne"))
 
     red <- user_scdata@reductions[[red_name]]
     test_user_df(red@cell.embeddings)
     test_user_df(red@feature.loadings)
     test_user_df(red@feature.loadings.projected)
-    red@assay.used <- 'RNA'
+    red@assay.used <- "RNA"
 
     scdata@reductions[[red_name]] <- red
   },
@@ -165,15 +165,15 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
 
   # add pca dimensionality reduction
   tryCatch({
-    if ('pca' %in% red_names) {
+    if ("pca" %in% red_names) {
 
-      pca <- user_scdata@reductions[['pca']]@cell.embeddings
+      pca <- user_scdata@reductions[["pca"]]@cell.embeddings
       test_user_df(pca)
       red <- SeuratObject::CreateDimReducObject(
         embeddings = pca,
-        assay = 'RNA'
+        assay = "RNA"
       )
-      scdata@reductions[['pca']] <- red
+      scdata@reductions[["pca"]] <- red
     }
 
   },
@@ -190,7 +190,7 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
       image <- user_scdata@images[[image_name]]
 
       # ensure class of image can be handled
-      stopifnot(class(image) %in% c('VisiumV2', 'VisiumV1'))
+      stopifnot(class(image) %in% c("VisiumV2", "VisiumV1"))
 
       check_type_is_safe(image)
       scdata@images[[image_name]] <- image
@@ -204,12 +204,12 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
 get_h5ad_raw_rownames <- function(dataset_fpath) {
   h5_list <- rhdf5::h5ls(dataset_fpath)
   raw_name <- h5_list |>
-    dplyr::filter(group == '/raw/var') |>
-    dplyr::filter(name %in% c('_index', 'index')) |>
+    dplyr::filter(group == "/raw/var") |>
+    dplyr::filter(name %in% c("_index", "index")) |>
     dplyr::pull(name) |>
     dplyr::first()
 
-  rns <- rhdf5::h5read(dataset_fpath, file.path('/raw/var', raw_name))
+  rns <- rhdf5::h5read(dataset_fpath, file.path("/raw/var", raw_name))
   rns <- as.character(rns)
 }
 
@@ -219,31 +219,31 @@ reconstruct_anndata <- function(dataset_fpath) {
   tryCatch({
     # read using anndata via reticulate
     filename <- normalizePath(dataset_fpath, mustWork = FALSE)
-    anndata <- reticulate::import('anndata')
+    anndata <- reticulate::import("anndata")
     user_adata <- anndata$read_h5ad(filename)
 
     # convert to SingleCellExperiment
     user_scdata <- zellkonverter::AnnData2SCE(user_adata, raw = TRUE)
-    stopifnot(methods::is(user_scdata, 'SingleCellExperiment'))
+    stopifnot(methods::is(user_scdata, "SingleCellExperiment"))
   },
   error = function(e) {
     message(e$message)
     stop(errors$ERROR_OBJ2S_READ, call. = FALSE)
   })
 
-  has.raw <- 'raw' %in% SingleCellExperiment::altExpNames(user_scdata)
+  has.raw <- "raw" %in% SingleCellExperiment::altExpNames(user_scdata)
 
   # get X and X_raw matrices
   tryCatch({
 
-    # counts are in 'raw/X' if present, otherwise '/X'
+    # counts are in "raw/X" if present, otherwise "/X"
     if (has.raw) {
-      raw <- SingleCellExperiment::altExp(user_scdata, 'raw')
-      counts <- SummarizedExperiment::assay(raw, 'X')
+      raw <- SingleCellExperiment::altExp(user_scdata, "raw")
+      counts <- SummarizedExperiment::assay(raw, "X")
       row.names(counts) <- get_h5ad_raw_rownames(dataset_fpath)
 
     } else {
-      counts <- SummarizedExperiment::assay(user_scdata, 'X')
+      counts <- SummarizedExperiment::assay(user_scdata, "X")
 
     }
 
@@ -277,15 +277,15 @@ reconstruct_anndata <- function(dataset_fpath) {
   # add logcounts
   tryCatch({
 
-    # logcounts are in '/X' if '/raw/X' present, otherwise absent
+    # logcounts are in "/X" if "/raw/X" present, otherwise absent
     if (has.raw) {
-      logcounts <- SummarizedExperiment::assay(user_scdata, 'X')
+      logcounts <- SummarizedExperiment::assay(user_scdata, "X")
       test_user_sparse_mat(logcounts)
     } else {
       logcounts <- Seurat::NormalizeData(counts)
     }
 
-    scdata[['RNA']]$data <- logcounts
+    scdata[["RNA"]]$data <- logcounts
   },
   error = function(e) {
     message(e$message)
@@ -313,16 +313,16 @@ reconstruct_anndata <- function(dataset_fpath) {
 
     # use last reduction as default (most recent call)
     red.idx <- tail(red_match, 1)
-    red_name <- ifelse(grepl('umap', red_names[red.idx]), 'umap', 'tsne')
+    red_name <- ifelse(grepl("umap", red_names[red.idx]), "umap", "tsne")
 
     red <- SingleCellExperiment::reducedDims(user_scdata)[[red.idx]]
-    class(red) <- 'matrix'
+    class(red) <- "matrix"
     test_user_df(red)
 
     red <- Seurat::CreateDimReducObject(
       embeddings = red,
-      assay = 'RNA',
-      key = paste0(red_name, '_'))
+      assay = "RNA",
+      key = paste0(red_name, "_"))
 
     scdata@reductions[[red_name]] <- red
   },
@@ -333,18 +333,18 @@ reconstruct_anndata <- function(dataset_fpath) {
 
   # add pca dimensionality reduction
   tryCatch({
-    pca.idx <- which(red_names == 'x_pca')
+    pca.idx <- which(red_names == "x_pca")
     if (length(pca.idx) > 0) {
       pca <- SingleCellExperiment::reducedDims(user_scdata)[[pca.idx]]
-      class(pca) <- 'matrix'
+      class(pca) <- "matrix"
       test_user_df(pca)
 
       pca <- SeuratObject::CreateDimReducObject(
         embeddings = pca,
-        assay = 'RNA',
-        key = 'pca_'
+        assay = "RNA",
+        key = "pca_"
       )
-      scdata@reductions[['pca']] <- red
+      scdata@reductions[["pca"]] <- red
     }
   },
   error = function(e) {
@@ -360,7 +360,7 @@ reconstruct_sce <- function(dataset_fpath) {
   # read it
   tryCatch({
     user_scdata <- readRDS(dataset_fpath)
-    stopifnot(methods::is(user_scdata, 'SingleCellExperiment'))
+    stopifnot(methods::is(user_scdata, "SingleCellExperiment"))
   },
   error = function(e) {
     message(e$message)
@@ -400,14 +400,14 @@ reconstruct_sce <- function(dataset_fpath) {
   # add logcounts
   tryCatch({
 
-    if ('logcounts' %in% SummarizedExperiment::assayNames(user_scdata)) {
+    if ("logcounts" %in% SummarizedExperiment::assayNames(user_scdata)) {
       logcounts <- SingleCellExperiment::logcounts(user_scdata)
       test_user_sparse_mat(logcounts)
     } else {
       logcounts <- Seurat::NormalizeData(counts)
     }
 
-    scdata[['RNA']]$data <- logcounts
+    scdata[["RNA"]]$data <- logcounts
   },
   error = function(e) {
     message(e$message)
@@ -435,10 +435,10 @@ reconstruct_sce <- function(dataset_fpath) {
 
     # use last reduction as default (most recent call)
     red.idx <- tail(red_match, 1)
-    red_name <- ifelse(grepl('umap', red_names[red.idx]), 'umap', 'tsne')
+    red_name <- ifelse(grepl("umap", red_names[red.idx]), "umap", "tsne")
 
     red <- SingleCellExperiment::reducedDims(user_scdata)[[red.idx]]
-    class(red) <- 'matrix'
+    class(red) <- "matrix"
     test_user_df(red)
 
     # red needs to have rownames
@@ -446,8 +446,9 @@ reconstruct_sce <- function(dataset_fpath) {
 
     red <- Seurat::CreateDimReducObject(
       embeddings = red,
-      assay = 'RNA',
-      key = paste0(red_name, '_'))
+      assay = "RNA",
+      key = paste0(red_name, "_")
+    )
 
     scdata@reductions[[red_name]] <- red
   },
@@ -458,10 +459,10 @@ reconstruct_sce <- function(dataset_fpath) {
 
   # add pca dimensionality reduction
   tryCatch({
-    pca.idx <- which(red_names == 'pca')
+    pca.idx <- which(red_names == "pca")
     if (length(pca.idx) > 0) {
       pca <- SingleCellExperiment::reducedDims(user_scdata)[[pca.idx]]
-      class(pca) <- 'matrix'
+      class(pca) <- "matrix"
       test_user_df(pca)
 
       # pca needs to have rownames
@@ -469,10 +470,10 @@ reconstruct_sce <- function(dataset_fpath) {
 
       pca <- SeuratObject::CreateDimReducObject(
         embeddings = pca,
-        assay = 'RNA',
-        key = 'pca_'
+        assay = "RNA",
+        key = "pca_"
       )
-      scdata@reductions[['pca']] <- red
+      scdata@reductions[["pca"]] <- red
     }
   },
   error = function(e) {
@@ -499,7 +500,7 @@ reconstruct_seurat <- function(dataset_fpath) {
   # read it
   tryCatch({
     user_scdata <- readRDS(dataset_fpath)
-    stopifnot(methods::is(user_scdata, 'Seurat'))
+    stopifnot(methods::is(user_scdata, "Seurat"))
   },
   error = function(e) {
     message(e$message)
@@ -508,14 +509,14 @@ reconstruct_seurat <- function(dataset_fpath) {
 
   # get counts
   tryCatch({
-    SeuratObject::DefaultAssay(user_scdata) <- 'RNA'
+    SeuratObject::DefaultAssay(user_scdata) <- "RNA"
 
     # if V5 object, ensure layers are rejoined
-    if (methods::is(user_scdata[['RNA']], 'Assay5'))
-      user_scdata[['RNA']] <- SeuratObject::JoinLayers(user_scdata[['RNA']])
+    if (methods::is(user_scdata[["RNA"]], "Assay5"))
+      user_scdata[["RNA"]] <- SeuratObject::JoinLayers(user_scdata[["RNA"]])
 
 
-    counts <- user_scdata[['RNA']]$counts
+    counts <- user_scdata[["RNA"]]$counts
     test_user_sparse_mat(counts)
     rns <- row.names(counts)
     check_type_is_safe(rns)
@@ -546,19 +547,19 @@ reconstruct_seurat <- function(dataset_fpath) {
   # add logcounts
   tryCatch({
 
-    layers <- SeuratObject::Layers(user_scdata, assay = 'RNA')
-    if ('data' %in% layers) {
-      logcounts <- user_scdata[['RNA']]$data
+    layers <- SeuratObject::Layers(user_scdata, assay = "RNA")
+    if ("data" %in% layers) {
+      logcounts <- user_scdata[["RNA"]]$data
       test_user_sparse_mat(logcounts)
     } else {
-      logcounts <- Seurat::NormalizeData(user_scdata[['RNA']]$counts)
+      logcounts <- Seurat::NormalizeData(user_scdata[["RNA"]]$counts)
     }
 
     # shouldn't be raw counts
     suspect.counts <- max(logcounts) > 100
     if (suspect.counts) logcounts <- Seurat::NormalizeData(logcounts)
 
-    scdata[['RNA']]$data <- logcounts
+    scdata[["RNA"]]$data <- logcounts
   },
   error = function(e) {
     message(e$message)
@@ -592,19 +593,19 @@ reconstruct_seurat <- function(dataset_fpath) {
       is_umap <- grepl("umap", red_match)
       new_red_name <- ifelse(is_umap, "umap", "tsne")
 
-      message("Found reduction name ", red_match," containing ", new_red_name)
+      message("Found reduction name ", red_match, " containing ", new_red_name)
       user_scdata <- update_reduction_name(user_scdata, red_name, new_red_name)
       red_name <- SeuratObject::DefaultDimReduc(user_scdata)
       message("Updated default reduction: ", red_name)
     }
 
-    stopifnot(red_name %in% c('umap', 'tsne'))
+    stopifnot(red_name %in% c("umap", "tsne"))
 
     red <- user_scdata@reductions[[red_name]]
     test_user_df(red@cell.embeddings)
     test_user_df(red@feature.loadings)
     test_user_df(red@feature.loadings.projected)
-    red@assay.used <- 'RNA'
+    red@assay.used <- "RNA"
 
     scdata@reductions[[red_name]] <- red
   },
@@ -615,15 +616,15 @@ reconstruct_seurat <- function(dataset_fpath) {
 
   # add pca dimensionality reduction
   tryCatch({
-    if ('pca' %in% red_names) {
+    if ("pca" %in% red_names) {
 
-      pca <- user_scdata@reductions[['pca']]@cell.embeddings
+      pca <- user_scdata@reductions[["pca"]]@cell.embeddings
       test_user_df(pca)
       red <- SeuratObject::CreateDimReducObject(
         embeddings = pca,
-        assay = 'RNA'
+        assay = "RNA"
       )
-      scdata@reductions[['pca']] <- red
+      scdata@reductions[["pca"]] <- red
     }
 
   },
@@ -636,7 +637,7 @@ reconstruct_seurat <- function(dataset_fpath) {
 }
 
 
-add_obj2s_dispersions <- function(scdata, assay = 'RNA') {
+add_obj2s_dispersions <- function(scdata, assay = "RNA") {
 
   # add dispersions (need for gene list)
   tryCatch({
@@ -644,10 +645,10 @@ add_obj2s_dispersions <- function(scdata, assay = 'RNA') {
 
     dispersions <- Seurat::FindVariableFeatures(logcounts)
     test_user_df(dispersions)
-    colnames(dispersions) <- gsub('^vst[.]', '', colnames(dispersions))
+    colnames(dispersions) <- gsub("^vst[.]", "", colnames(dispersions))
 
     # keep columns that use: same as `HVFInfo(scdata)`
-    dispersions <- dispersions[, c('mean', 'variance', 'variance.standardized')]
+    dispersions <- dispersions[, c("mean", "variance", "variance.standardized")]
     dispersions$SYMBOL <- dispersions$ENSEMBL <- row.names(dispersions)
     scdata@misc$gene_dispersion <- dispersions
   },
@@ -682,12 +683,13 @@ check_slot <- function(object, slot_name) {
 check_type_is_safe <- function(x) {
 
   # typeof determines the R internal type or storage mode of any object
-  # whereas methods::is can be tricked by setting class inappropriately (e.g. disguising a function as a numeric)
-  safe.types <- c('character', 'double', 'integer', 'logical', 'NULL', 'array')
+  # whereas methods::is can be tricked by setting class 
+  # inappropriately (e.g. disguising a function as a numeric)
+  safe_types <- c("character", "double", "integer", "logical", "NULL", "array")
 
 
   # recurse into lists until reach node
-  if (typeof(x) == 'list') {
+  if (typeof(x) == "list") {
     lapply(x, check_type_is_safe)
 
   } else if (isS4(x)) {
@@ -695,8 +697,8 @@ check_type_is_safe <- function(x) {
     slot_names <- methods::slotNames(x)
     lapply(slot_names, check_slot, object = x)
 
-  } else if (!typeof(x) %in% safe.types) {
-    stop(sprintf('Unsafe data type: "%s".', typeof(x)))
+  } else if (!typeof(x) %in% safe_types) {
+    stop(sprintf("Unsafe data type: '%s'.", typeof(x)))
   }
 
   invisible(NULL)
@@ -706,11 +708,14 @@ check_type_is_safe <- function(x) {
 update_reduction_name <- function(scdata, red_name, new_name) {
   current_names <- names(scdata@reductions)
   if (new_name %in% current_names) {
-    message("Renaming existing reduction name ", names(scdata@reductions)[current_names == new_name], " to ", paste0(new_name, ".ori"))
+    message(
+      "Renaming existing reduction name ",
+      names(scdata@reductions)[current_names == new_name],
+      " to ", paste0(new_name, ".ori")
+    )
     names(scdata@reductions)[current_names == new_name] <- paste0(new_name, ".ori")
   }
   names(scdata@reductions)[current_names == red_name] <- new_name
 
   return(scdata)
 }
-

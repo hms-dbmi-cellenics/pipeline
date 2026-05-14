@@ -234,7 +234,7 @@ customize_default_downsampling_config <- function(config, scdata_list) {
 
   # if not, remove downsampling config
   if (num_cells < MIN_CELLS_USE_GEOSKETCH) {
-    config$downsampling <- NULL
+    config$downsampling$method <- "none"
     return(config)
   }
 

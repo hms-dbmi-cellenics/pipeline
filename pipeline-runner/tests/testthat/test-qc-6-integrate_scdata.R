@@ -532,7 +532,7 @@ test_that("integrate_scdata with geosketch adds the correct integration method t
   )
 })
 
-mock_scdata_geosketch <- function(ncells, ngenes = 2, use_bpcells = FALSE) {
+mock_scdata_ncells <- function(ncells, ngenes = 2, use_bpcells = FALSE) {
   sce <- scuttle::mockSCE(ncells, ngenes)
   counts <- SummarizedExperiment::assay(sce, "counts")
   rownames(counts) <- gsub("_", "-", rownames(counts))
@@ -555,7 +555,7 @@ test_that("customize_default_downsampling_config adds geosketch parameters to co
     )
   )
 
-  scdata_list <- list(sample1 = mock_scdata_geosketch(ncells = MIN_CELLS_USE_GEOSKETCH))
+  scdata_list <- list(sample1 = mock_scdata_ncells(MIN_CELLS_USE_GEOSKETCH))
 
   config <- customize_default_downsampling_config(
     config,
@@ -583,8 +583,8 @@ test_that("customize_default_downsampling_config adds geosketch parameters to co
   )
 
   scdata_list <- list(
-    sample1 = mock_scdata_geosketch(ncells = MIN_CELLS_USE_GEOSKETCH / 2),
-    sample2 = mock_scdata_geosketch(ncells = MIN_CELLS_USE_GEOSKETCH / 2)
+    sample1 = mock_scdata_ncells(MIN_CELLS_USE_GEOSKETCH / 2),
+    sample2 = mock_scdata_ncells(MIN_CELLS_USE_GEOSKETCH / 2)
   )
 
   config <- customize_default_downsampling_config(
@@ -620,7 +620,7 @@ test_that("customize_default_downsampling_config keeps CELLS_PER_SAMPLE_SKETCHDA
   cells_total <- num_samples * cells_per_sample
   scdata_list <- list()
   for (i in seq_len(num_samples)) {
-    scdata_list[[paste0("sample", i)]] <- mock_scdata_geosketch(ncells = cells_per_sample)
+    scdata_list[[paste0("sample", i)]] <- mock_scdata_ncells(cells_per_sample)
   }
 
   config <- customize_default_downsampling_config(
@@ -658,7 +658,7 @@ test_that("customize_default_downsampling_config doesn't keep more than half the
 
   scdata_list <- list()
   for (i in seq_len(num_samples)) {
-    scdata_list[[paste0("sample", i)]] <- mock_scdata_geosketch(ncells = cells_per_sample)
+    scdata_list[[paste0("sample", i)]] <- mock_scdata_ncells(cells_per_sample)
   }
 
   config <- customize_default_downsampling_config(
@@ -678,4 +678,23 @@ test_that("customize_default_downsampling_config doesn't keep more than half the
     config$downsampling$methodSettings$geosketch$percentageToKeep,
     expected_percent_keep
   )
+})
+
+test_that("customize_default_downsampling_config sets downsampling to 'none' for smaller datasets", {
+  config <- list(
+    downsampling = list(
+      method = "default"
+    )
+  )
+
+  scdata_list <- list(
+    "sample1" = mock_scdata_ncells(MIN_CELLS_USE_GEOSKETCH - 1)
+  )
+
+  config <- customize_default_downsampling_config(
+    config,
+    scdata_list
+  )
+
+  expect_equal(config$downsampling$method, "none")
 })
