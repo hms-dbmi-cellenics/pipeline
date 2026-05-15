@@ -447,7 +447,7 @@ test_that("upload_to_aws tries to upload the correct files to aws with bpcells",
     )
   }
 
-    # cellsets file
+  # cellsets file
   expect_snapshot_file(
     file.path(pipeline_config$cell_sets_bucket, input$experimentId),
     name = "cellsets.json"
