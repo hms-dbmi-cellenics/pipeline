@@ -1,10 +1,3 @@
-mock_counts <- function() {
-  read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-}
-
 mock_doublet_scores <- function(counts) {
   doublet_scores <- runif(ncol(counts))
   doublet_class <- ifelse(doublet_scores < 0.8, "singlet", "doublet")
@@ -17,12 +10,13 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-mock_prev_out <- function(samples = "sample_a", counts = NULL) {
+mock_prev_out <- function(samples = "sample_a", counts = NULL, use_bpcells = FALSE) {
   if (is.null(counts)) {
     counts <- DropletUtils:::simCounts()
     colnames(counts) <- paste0("cell", seq_len(ncol(counts)))
   }
 
+  counts <- as(counts, "dgCMatrix")
   eout <- DropletUtils::emptyDrops(counts)
 
   counts_list <- list()
@@ -30,7 +24,11 @@ mock_prev_out <- function(samples = "sample_a", counts = NULL) {
   doublet_scores <- list()
 
   for (sample in samples) {
-    counts_list[[sample]] <- counts
+    counts_list[[sample]] <- maybe_bpcells(
+      counts,
+      withr::local_tempfile(.local_envir = parent.frame()),
+      use_bpcells
+    )
     edrops[[sample]] <- eout
     doublet_scores[[sample]] <- mock_doublet_scores(counts)
   }
@@ -73,6 +71,16 @@ test_that("construct_metadata works with syntactically invalid column names", {
   expect_true(all(metadata$with.dash == "d"))
 })
 
+
+test_that("create_seurat works with bpcells", {
+  prev_out <- mock_prev_out(use_bpcells = TRUE)
+  out <- expect_no_error(
+    create_seurat(NULL, NULL, prev_out)$output
+  )
+  scdata <- out$scdata_list[[1]]
+
+  expect_s4_class(scdata, "Seurat")
+})
 
 
 test_that("create_seurat works without emptyDrops result", {
@@ -185,9 +193,12 @@ test_that("create_seurat works with multiple samples", {
 
 
 test_that("create_seurat does not exclude genes without counts", {
-  counts <- mock_counts()
-  counts['NOT-EXPRESSED', ] = 0
-  counts <- as(as.matrix(counts), 'dgCMatrix')
+  counts <- read.table(
+    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
+    as.is = TRUE
+  )
+  counts["NOT-EXPRESSED", ] = 0
+  counts <- as(as.matrix(counts), "dgCMatrix")
 
   prev_out <- mock_prev_out(counts = counts)
 
@@ -200,5 +211,5 @@ test_that("create_seurat does not exclude genes without counts", {
   scdata <- out$scdata_list[[1]]
 
   # gene is still there
-  expect_true('NOT-EXPRESSED' %in% row.names(scdata))
+  expect_true("NOT-EXPRESSED" %in% row.names(scdata))
 })

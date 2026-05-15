@@ -42,19 +42,28 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
 #'
 compute_sample_edrops <- function(sample_counts) {
   # check if filtered
-  num_empty_drops <- sum(Matrix::colSums(sample_counts) < gem2s$max.empty.counts)
+  num_empty_drops <- sum(
+    Matrix::colSums(sample_counts) < gem2s$max.empty.counts
+  )
 
   if (num_empty_drops < gem2s$max.empty.drops) {
     message("Detected sample as filtered --> Skipping emptyDrops.")
     return(NULL)
   }
 
+  if (methods::is(sample_counts, "IterableMatrix")) {
+    # emptyDrops doesn't support IterableMatrix (bpcells)
+    sample_counts <- as(sample_counts, "dgCMatrix")
+  }
+
   set.seed(RANDOM_SEED)
   tryCatch({
-      sample_edrops <- DropletUtils::emptyDrops(sample_counts)
-      return(sample_edrops)
+    sample_edrops <- DropletUtils::emptyDrops(sample_counts)
+    return(sample_edrops)
   }, error = function(e) {
-      message("Number of cells in sample too low for emptyDrops --> Skipping emptyDrops.")
-      return(NULL)
+    message(
+      "Number of cells in sample too low for emptyDrops --> skipping."
+    )
+    return(NULL)
   })
 }

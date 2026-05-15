@@ -2,14 +2,13 @@
 download_and_store <- function(bucket, key, file_path, s3) {
   fs::dir_create(dirname(file_path))
 
-  # Download the file and store the output in a variable
-  c(body, ...rest) %<-% s3$get_object(
+  # Download the file and store the output to file
+  s3$download_file(
     Bucket = bucket,
-    Key = key
+    Key = key,
+    Filename = file_path
   )
 
-  # Write output to file
-  writeBin(body, con = file_path)
 }
 
 #' Download user files from S3

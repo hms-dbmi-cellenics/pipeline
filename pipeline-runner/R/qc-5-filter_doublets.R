@@ -21,7 +21,12 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
   sample_cell_ids <- cells_id[[sample_id]]
 
   if (length(sample_cell_ids) == 0) {
-    return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
+    return(list(
+      data = scdata_list[[sample_id]],
+      new_ids = cells_id,
+      config = config,
+      plotData = list()
+    ))
   }
 
   sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
@@ -37,9 +42,14 @@ filter_doublets <- function(scdata_list, config, sample_id, cells_id, task_name 
 
   # Check if the experiment has doubletScores
   if (!"doublet_scores" %in% colnames(scdata_list[[sample_id]]@meta.data)) {
-    message("Warning! No doubletScores scores has been computed for this experiment!")
-    guidata <- list()
-    return(list(data = scdata_list[[sample_id]], config = config, plotData = guidata))
+    message("Warning! No doublet scores have been computed for this sample!")
+    config$enabled <- FALSE
+    return(list(
+      data = scdata_list[[sample_id]],
+      new_ids = cells_id,
+      config = config,
+      plotData = list()
+    ))
   }
 
   probability_threshold <- config$filterSettings[["probabilityThreshold"]]

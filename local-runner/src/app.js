@@ -1,7 +1,6 @@
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const Docker = require('dockerode');
-const DockerEvents = require('docker-events');
 const { pt } = require('prepend-transform');
 const chalk = require('chalk');
 
@@ -75,7 +74,8 @@ const attachToContainer = (docker, id, name, nameColorMap, isNew) => {
   const coloredName = generateRandomColor(nameColorMap, name.replace('/', ''));
   console.log(`Container with name ${coloredName} ${isNew ? 'started' : 'already running'}, attaching log...`);
 
-  docker.getContainer(id).attach(
+  const container = docker.getContainer(id);
+  container.attach(
     { stream: true, stdout: true, stderr: true },
     (err, stream) => {
       stream.pipe(pt(`${coloredName} | `)).pipe(process.stdout);
@@ -97,31 +97,41 @@ const attachToExistingContainers = (docker, nameColorMap) => {
   });
 };
 
-const attachToNewContainers = (docker, emitter, nameColorMap) => {
-  emitter.on('start', (message) => {
-    const { id, Actor: { Attributes: { name } } } = message;
-
-    if (!isPipelineContainer(name)) {
-      return;
-    }
-    attachToContainer(docker, id, name, nameColorMap, true);
+const attachToNewContainers = (docker, nameColorMap) => {
+  docker.getEvents({ filters: { type: ['container'] } }, (err, stream) => {
+    let buffer = '';
+    
+    stream.on('data', (chunk) => {
+      buffer += chunk.toString();
+      
+      const lines = buffer.split('\n');
+      buffer = lines[lines.length - 1];
+      
+      for (let i = 0; i < lines.length - 1; i++) {
+        if (!lines[i].trim()) continue;
+        
+        const message = JSON.parse(lines[i]);
+        
+        if (message.Type === 'container' && message.Action === 'start') {
+          const name = message.Actor.Attributes.name;
+          const id = message.Actor.ID;
+          
+          if (isPipelineContainer(name)) {
+            attachToContainer(docker, id, name, nameColorMap, true);
+          }
+        }
+        
+        if (message.Type === 'container' && (message.Action === 'stop' || message.Action === 'die' || message.Action === 'destroy')) {
+          const name = message.Actor.Attributes.name;
+          
+          if (isPipelineContainer(name)) {
+            const coloredName = nameColorMap[name] || name;
+            console.log('Container with name', coloredName, 'stopped.');
+          }
+        }
+      }
+    });
   });
-
-  const stopDieCallback = (message) => {
-    const { Actor: { Attributes: { name } } } = message;
-
-    if (isPipelineContainer(name)) {
-      return;
-    }
-
-    const coloredName = nameColorMap[name] || name;
-
-    console.log('Container with name', coloredName, 'stopped.');
-  };
-
-  emitter.on('stop', stopDieCallback);
-  emitter.on('die', stopDieCallback);
-  emitter.on('destroy', stopDieCallback);
 };
 
 const main = async () => {
@@ -139,9 +149,6 @@ const main = async () => {
 
   // Create hook into Docker API.
   const docker = new Docker();
-  const emitter = new DockerEvents({
-    docker,
-  });
 
   // Create a color map for easy visualization.
   const nameColorMap = {};
@@ -149,10 +156,9 @@ const main = async () => {
   // Attach to existing running containers and new containers, respectively.
   attachToExistingContainers(docker, nameColorMap);
 
-  attachToNewContainers(docker, emitter, nameColorMap);
+  attachToNewContainers(docker, nameColorMap);
 
   console.log('Waiting for Docker events...');
-  emitter.start();
 };
 
 main();

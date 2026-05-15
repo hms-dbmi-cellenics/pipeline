@@ -33,14 +33,14 @@
     Code
       rlang::hash(res)
     Output
-      [1] "234cece1f989e63edff7f55ab22bcff4"
+      [1] "d8708d808f47015ea2283ceb4d166dd5"
     Code
       str(res)
     Output
       List of 2
        $ data  : list()
-       $ output:List of 3
-        ..$ config     :List of 5
+       $ output:List of 4
+        ..$ config         :List of 5
         .. ..$ name         : chr "mock_experiment"
         .. ..$ samples      :List of 2
         .. .. ..$ : chr "mock_sample_1_id"
@@ -49,7 +49,7 @@
         .. ..$ input        :List of 1
         .. .. ..$ type: chr "10x"
         .. ..$ sampleOptions: NULL
-        ..$ counts_list:List of 2
+        ..$ counts_list    :List of 2
         .. ..$ mock_sample_1_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
         .. .. .. ..@ i       : int [1:36762] 66 454 1662 1694 1964 70 194 290 307 435 ...
         .. .. .. ..@ p       : int [1:501] 0 5 41 179 201 204 270 421 503 699 ...
@@ -68,10 +68,11 @@
         .. .. .. .. ..$ : chr [1:501] "AATGGCTCAGTCCGTG-1" "GCAGCTGAGCTTAAGA-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" ...
         .. .. .. ..@ x       : num [1:33141] 1 1 3 1 2 5 1 1 1 1 ...
         .. .. .. ..@ factors : list()
-        ..$ annot      :'data.frame':	2000 obs. of  3 variables:
+        ..$ annot          :'data.frame':	2000 obs. of  3 variables:
         .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        ..$ matrix_dir_list: list()
 
 ---
 
@@ -82,14 +83,14 @@
     Code
       rlang::hash(res)
     Output
-      [1] "fd2953b865060132d4330bf2db8828dd"
+      [1] "a5a151bd2d73592e391a07fa59f218a7"
     Code
       str(res)
     Output
       List of 2
        $ data  : list()
-       $ output:List of 4
-        ..$ config     :List of 5
+       $ output:List of 5
+        ..$ config         :List of 5
         .. ..$ name         : chr "mock_experiment"
         .. ..$ samples      :List of 2
         .. .. ..$ : chr "mock_sample_1_id"
@@ -98,7 +99,7 @@
         .. ..$ input        :List of 1
         .. .. ..$ type: chr "10x"
         .. ..$ sampleOptions: NULL
-        ..$ counts_list:List of 2
+        ..$ counts_list    :List of 2
         .. ..$ mock_sample_1_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
         .. .. .. ..@ i       : int [1:36762] 66 454 1662 1694 1964 70 194 290 307 435 ...
         .. .. .. ..@ p       : int [1:501] 0 5 41 179 201 204 270 421 503 699 ...
@@ -117,11 +118,12 @@
         .. .. .. .. ..$ : chr [1:501] "AATGGCTCAGTCCGTG-1" "GCAGCTGAGCTTAAGA-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" ...
         .. .. .. ..@ x       : num [1:33141] 1 1 3 1 2 5 1 1 1 1 ...
         .. .. .. ..@ factors : list()
-        ..$ annot      :'data.frame':	2000 obs. of  3 variables:
+        ..$ annot          :'data.frame':	2000 obs. of  3 variables:
         .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        ..$ edrops     :List of 2
+        ..$ matrix_dir_list: list()
+        ..$ edrops         :List of 2
         .. ..$ mock_sample_1_id:Formal class 'DFrame' [package "S4Vectors"] with 6 slots
         .. .. .. ..@ rownames       : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
         .. .. .. ..@ nrows          : int 500
@@ -172,14 +174,14 @@
     Code
       rlang::hash(res)
     Output
-      [1] "66f1959e20932ccd8d816bfffeb2916a"
+      [1] "756b6cba289e76916116fc7fc48c1115"
     Code
       str(res)
     Output
       List of 2
        $ data  : list()
-       $ output:List of 5
-        ..$ config        :List of 5
+       $ output:List of 6
+        ..$ config         :List of 5
         .. ..$ name         : chr "mock_experiment"
         .. ..$ samples      :List of 2
         .. .. ..$ : chr "mock_sample_1_id"
@@ -188,7 +190,7 @@
         .. ..$ input        :List of 1
         .. .. ..$ type: chr "10x"
         .. ..$ sampleOptions: NULL
-        ..$ counts_list   :List of 2
+        ..$ counts_list    :List of 2
         .. ..$ mock_sample_1_id:Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
         .. .. .. ..@ i       : int [1:36762] 66 454 1662 1694 1964 70 194 290 307 435 ...
         .. .. .. ..@ p       : int [1:501] 0 5 41 179 201 204 270 421 503 699 ...
@@ -207,11 +209,12 @@
         .. .. .. .. ..$ : chr [1:501] "AATGGCTCAGTCCGTG-1" "GCAGCTGAGCTTAAGA-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" ...
         .. .. .. ..@ x       : num [1:33141] 1 1 3 1 2 5 1 1 1 1 ...
         .. .. .. ..@ factors : list()
-        ..$ annot         :'data.frame':	2000 obs. of  3 variables:
+        ..$ annot          :'data.frame':	2000 obs. of  3 variables:
         .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
-        ..$ edrops        :List of 2
+        ..$ matrix_dir_list: list()
+        ..$ edrops         :List of 2
         .. ..$ mock_sample_1_id:Formal class 'DFrame' [package "S4Vectors"] with 6 slots
         .. .. .. ..@ rownames       : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
         .. .. .. ..@ nrows          : int 500
@@ -252,7 +255,7 @@
         .. .. .. .. ..$ PValue : num [1:501] NA NA 0.0001 0.0011 0.0001 ...
         .. .. .. .. ..$ Limited: logi [1:501] NA NA TRUE FALSE TRUE TRUE ...
         .. .. .. .. ..$ FDR    : num [1:501] NA NA 0 0 0 ...
-        ..$ doublet_scores:List of 2
+        ..$ doublet_scores :List of 2
         .. ..$ mock_sample_1_id:'data.frame':	216 obs. of  3 variables:
         .. .. ..$ barcodes      : chr [1:216] "GGTCACGAGTGAGCCA-1" "GGTTAACTCATATGGC-1" "TACCTCGTCGACCCAG-1" "GATGAGGCAGGCATTT-1" ...
         .. .. ..$ doublet_class : Factor w/ 2 levels "singlet","doublet": 1 1 1 1 1 1 1 1 1 1 ...
@@ -271,13 +274,13 @@
     Code
       rlang::hash(res)
     Output
-      [1] "07771803df8e2ac45b38184cbf2b2e4e"
+      [1] "7aa3677206d3d0733797d9ce07c56ff0"
     Code
       str(res)
     Output
       List of 2
        $ data  : list()
-       $ output:List of 7
+       $ output:List of 8
         ..$ config            :List of 5
         .. ..$ name         : chr "mock_experiment"
         .. ..$ samples      :List of 2
@@ -310,6 +313,7 @@
         .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        ..$ matrix_dir_list   : list()
         ..$ edrops            :List of 2
         .. ..$ mock_sample_1_id:Formal class 'DFrame' [package "S4Vectors"] with 6 slots
         .. .. .. ..@ rownames       : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
@@ -395,8 +399,7 @@
         .. .. .. .. .. .. ..@ default   : int 1
         .. .. .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	436 obs. of  13 variables:
         .. .. .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
@@ -422,7 +425,7 @@
         .. .. .. ..@ project.name: chr "mock_experiment"
         .. .. .. ..@ misc        : list()
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 5 0 2
+        .. .. .. .. ..$ : int [1:3] 5 3 0
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -460,8 +463,7 @@
         .. .. .. .. .. .. ..@ default   : int 1
         .. .. .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	460 obs. of  13 variables:
         .. .. .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
@@ -487,7 +489,7 @@
         .. .. .. ..@ project.name: chr "mock_experiment"
         .. .. .. ..@ misc        : list()
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 5 0 2
+        .. .. .. .. ..$ : int [1:3] 5 3 0
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -502,13 +504,13 @@
     Code
       rlang::hash(res)
     Output
-      [1] "dee70f683f334ef57c0114efd7dc738a"
+      [1] "329d0ccb7add367fd2033708dd5e5df7"
     Code
       str(res)
     Output
       List of 2
        $ data  : list()
-       $ output:List of 9
+       $ output:List of 10
         ..$ config            :List of 5
         .. ..$ name         : chr "mock_experiment"
         .. ..$ samples      :List of 2
@@ -541,6 +543,7 @@
         .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
+        ..$ matrix_dir_list   : list()
         ..$ edrops            :List of 2
         .. ..$ mock_sample_1_id:Formal class 'DFrame' [package "S4Vectors"] with 6 slots
         .. .. .. ..@ rownames       : chr [1:500] "GGGAGTAAGGCTAACG-1" "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" ...
@@ -626,8 +629,7 @@
         .. .. .. .. .. .. ..@ default   : int 1
         .. .. .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	460 obs. of  14 variables:
         .. .. .. .. ..$ barcode           : chr [1:460] "AATGGCTCAGTCCGTG-1" "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" ...
@@ -659,7 +661,7 @@
         .. .. .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 5 0 2
+        .. .. .. .. ..$ : int [1:3] 5 3 0
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -697,8 +699,7 @@
         .. .. .. .. .. .. ..@ default   : int 1
         .. .. .. .. .. .. ..@ assay.orig: chr(0) 
         .. .. .. .. .. .. ..@ meta.data :'data.frame':	2000 obs. of  0 variables
-        .. .. .. .. .. .. ..@ misc      :List of 1
-        .. .. .. .. .. .. .. ..$ calcN: logi TRUE
+        .. .. .. .. .. .. ..@ misc      : Named list()
         .. .. .. .. .. .. ..@ key       : chr "rna_"
         .. .. .. ..@ meta.data   :'data.frame':	436 obs. of  14 variables:
         .. .. .. .. ..$ barcode           : chr [1:436] "GGCAGTCAGGCCTTGC-1" "GGTCACGAGTGAGCCA-1" "ATCCCTGTCACCATGA-1" "GGTTAACTCATATGGC-1" ...
@@ -730,7 +731,7 @@
         .. .. .. .. .. ..$ original_name: chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. ..$ experimentId    : chr "mock_experiment_id"
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
-        .. .. .. .. ..$ : int [1:3] 5 0 2
+        .. .. .. .. ..$ : int [1:3] 5 3 0
         .. .. .. ..@ commands    : list()
         .. .. .. ..@ tools       :List of 1
         .. .. .. .. ..$ flag_filtered: logi FALSE
@@ -815,7 +816,7 @@
         .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. ..$ probabilityThreshold: num 0.842
         .. .. .. .. ..$ binStep             : num 0.02
-        .. ..$ dataIntegration     :List of 2
+        .. ..$ dataIntegration     :List of 3
         .. .. ..$ dataIntegration        :List of 2
         .. .. .. ..$ method        : chr "harmony"
         .. .. .. ..$ methodSettings:List of 4
@@ -835,6 +836,8 @@
         .. .. .. ..$ method               : chr "rpca"
         .. .. .. ..$ numPCs               : NULL
         .. .. .. ..$ excludeGeneCategories: list()
+        .. .. ..$ downsampling           :List of 1
+        .. .. .. ..$ method: chr "default"
         .. ..$ configureEmbedding  :List of 2
         .. .. ..$ embeddingSettings :List of 2
         .. .. .. ..$ method        : chr "umap"
@@ -930,7 +933,7 @@
         .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. ..$ probabilityThreshold: num 0.842
         .. .. .. .. ..$ binStep             : num 0.02
-        .. ..$ dataIntegration     :List of 2
+        .. ..$ dataIntegration     :List of 3
         .. .. ..$ dataIntegration        :List of 2
         .. .. .. ..$ method        : chr "harmony"
         .. .. .. ..$ methodSettings:List of 4
@@ -950,6 +953,8 @@
         .. .. .. ..$ method               : chr "rpca"
         .. .. .. ..$ numPCs               : NULL
         .. .. .. ..$ excludeGeneCategories: list()
+        .. .. ..$ downsampling           :List of 1
+        .. .. .. ..$ method: chr "default"
         .. ..$ configureEmbedding  :List of 2
         .. .. ..$ embeddingSettings :List of 2
         .. .. .. ..$ method        : chr "umap"
@@ -975,7 +980,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "f3259993f70346b3ded7b3cb8dc78033"
+      [1] "bcd3343ad25650526fb130017316d7fd"
     Code
       str(res)
     Output
@@ -1068,7 +1073,7 @@
         .. .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. .. ..$ probabilityThreshold: num 0.842
         .. .. .. .. .. ..$ binStep             : num 0.02
-        .. .. ..$ dataIntegration     :List of 2
+        .. .. ..$ dataIntegration     :List of 3
         .. .. .. ..$ dataIntegration        :List of 2
         .. .. .. .. ..$ method        : chr "harmony"
         .. .. .. .. ..$ methodSettings:List of 4
@@ -1088,6 +1093,8 @@
         .. .. .. .. ..$ method               : chr "rpca"
         .. .. .. .. ..$ numPCs               : NULL
         .. .. .. .. ..$ excludeGeneCategories: list()
+        .. .. .. ..$ downsampling           :List of 1
+        .. .. .. .. ..$ method: chr "default"
         .. .. ..$ configureEmbedding  :List of 2
         .. .. .. ..$ embeddingSettings :List of 2
         .. .. .. .. ..$ method        : chr "umap"
@@ -1183,7 +1190,7 @@
         .. .. .. .. ..$ filterSettings:List of 2
         .. .. .. .. .. ..$ probabilityThreshold: num 0.842
         .. .. .. .. .. ..$ binStep             : num 0.02
-        .. .. ..$ dataIntegration     :List of 2
+        .. .. ..$ dataIntegration     :List of 3
         .. .. .. ..$ dataIntegration        :List of 2
         .. .. .. .. ..$ method        : chr "harmony"
         .. .. .. .. ..$ methodSettings:List of 4
@@ -1203,6 +1210,8 @@
         .. .. .. .. ..$ method               : chr "rpca"
         .. .. .. .. ..$ numPCs               : NULL
         .. .. .. .. ..$ excludeGeneCategories: list()
+        .. .. .. ..$ downsampling           :List of 1
+        .. .. .. .. ..$ method: chr "default"
         .. .. ..$ configureEmbedding  :List of 2
         .. .. .. ..$ embeddingSettings :List of 2
         .. .. .. .. ..$ method        : chr "umap"

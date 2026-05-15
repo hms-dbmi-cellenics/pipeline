@@ -11,14 +11,11 @@ mock_doublet_scores <- function(counts) {
   )
 }
 
-mock_scdata_list <- function(config) {
-  prev_out <- mock_prev_out(config)
-  scdata_list <- prev_out$scdata_list
-
+mock_prepare_experiment <- function(config, use_bpcells = FALSE) {
+  prev_out <- mock_create_seurat(config, use_bpcells = use_bpcells)
   input <- mock_input()
 
-  task_out <- prepare_experiment(input, NULL, prev_out)$output
-  scdata_list <- task_out$scdata_list
+  prepare_experiment(input, NULL, prev_out)$output
 }
 
 mock_input <- function(metadata = NULL) {
@@ -29,7 +26,7 @@ mock_input <- function(metadata = NULL) {
     metadata = metadata,
     experimentId = "mock_experiment_id",
     projectId = "mock_experiment_id",
-    input = list( type= "10x")
+    input = list(type = "10x")
   )
 
   return(input)
@@ -93,7 +90,7 @@ mock_parsed_cellsets <- function(scdata_list) {
 }
 
 
-mock_prev_out <- function(config, counts = NULL) {
+mock_create_seurat <- function(config, counts = NULL, use_bpcells = FALSE) {
   samples <- config$samples
 
   if (is.null(counts)) {
@@ -107,9 +104,18 @@ mock_prev_out <- function(config, counts = NULL) {
   counts_list <- list()
   edrops <- list()
   doublet_scores <- list()
+  matrix_dir_list <- list()
 
   for (sampleId in samples) {
-    counts_list[[sampleId]] <- counts
+    sample_counts <- counts
+
+    if (use_bpcells) {
+      matrix_dir <- file.path(tempdir(), paste0(sampleId, "_matrix_dir"))
+      unlink(matrix_dir, recursive = TRUE)
+      sample_counts <- counts_to_bpcells(sample_counts, matrix_dir)
+      matrix_dir_list[[sampleId]] <- matrix_dir
+    }
+    counts_list[[sampleId]] <- sample_counts
     edrops[[sampleId]] <- eout
     doublet_scores[[sampleId]] <- mock_doublet_scores(counts)
   }
@@ -117,6 +123,7 @@ mock_prev_out <- function(config, counts = NULL) {
   # as passed to create_seurat
   prev_out <- list(
     counts_list = counts_list,
+    matrix_dir_list = matrix_dir_list,
     edrops = edrops,
     doublet_scores = doublet_scores,
     annot = data.frame(name = row.names(counts), input = row.names(counts)),
@@ -181,7 +188,7 @@ test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
   input <- mock_input()
   config <- mock_config(input)
 
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   cell_sets <- get_cell_sets(scdata_list, input)
   keys <- sapply(cell_sets$cellSets, `[[`, "key")
@@ -193,7 +200,7 @@ test_that("get_cell_sets creates scratchpad and sample sets if no metadata", {
 test_that("get_cell_sets adds correct cell ids for each sample", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   cell_sets <- get_cell_sets(scdata_list, input)
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
@@ -213,7 +220,7 @@ test_that("get_cell_sets adds a single metadata column", {
   metadata <- list(Group = list("Hello", "WT2", "WT2"))
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -230,7 +237,7 @@ test_that("get_cell_sets uses user-supplied syntactically invalid metadata colum
   metadata <- list("TRUE" = list("Hello", "WT2", "WT2"))
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -247,7 +254,7 @@ test_that("get_cell_sets adds two metadata columns", {
   metadata <- list(Group1 = list("Hello", "WT2", "WT2"), Group2 = list("WT", "WT", "WTA"))
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -264,10 +271,13 @@ test_that("get_cell_sets adds two metadata columns", {
 
 
 test_that("get_cell_sets uses unique colors for each cell set", {
-  metadata <- list(Group1 = list("Hello", "WT2", "WT2"), Group2 = list("WT", "WT", "WTA"))
+  metadata <- list(
+    Group1 = list("Hello", "WT2", "WT2"),
+    Group2 = list("WT", "WT", "WTA")
+  )
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -282,7 +292,7 @@ test_that("get_cell_sets uses unique colors for each cell set", {
 test_that("get_cell_sets without metadata matches snapshot", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   cell_sets <- get_cell_sets(scdata_list, input)
   expect_snapshot(str(cell_sets))
@@ -290,10 +300,13 @@ test_that("get_cell_sets without metadata matches snapshot", {
 
 
 test_that("get_cell_sets with two metadata groups matches snapshot", {
-  metadata <- list(Group1 = list("Hello", "WT2", "WT2"), Group2 = list("WT", "WT", "WT124"))
+  metadata <- list(
+    Group1 = list("Hello", "WT2", "WT2"),
+    Group2 = list("WT", "WT", "WT124")
+  )
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -307,7 +320,7 @@ test_that("get_cell_sets converts numeric metadata values to strings", {
   metadata <- list(Seq_Batch = list(1, 2, 2))
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   cell_sets <- get_cell_sets(scdata_list, input)
 
@@ -332,10 +345,13 @@ test_that("get_cell_sets converts numeric metadata values to strings", {
 
 
 test_that("upload_to_aws tries to upload the correct files to aws", {
-  metadata <- list(Group1 = list("Hello", "WT2", "WT2"), Group2 = list("WT", "WT", "WT124"))
+  metadata <- list(
+    Group1 = list("Hello", "WT2", "WT2"),
+    Group2 = list("WT", "WT", "WT124")
+  )
   input <- mock_input(metadata)
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   paths <- setup_test_paths()
 
@@ -377,22 +393,92 @@ test_that("upload_to_aws tries to upload the correct files to aws", {
   withr::defer(unlink(file.path(paths$mock_data, "temp"), recursive = TRUE))
 })
 
+test_that("upload_to_aws tries to upload the correct files to aws with bpcells", {
+  metadata <- list(
+    Group1 = list("Hello", "WT2", "WT2"),
+    Group2 = list("WT", "WT", "WT124")
+  )
+  input <- mock_input(metadata)
+  config <- mock_config(input)
+  prev_out <- mock_prepare_experiment(config, use_bpcells = TRUE)
+  paths <- setup_test_paths()
+  pipeline_config <- mock_pipeline_config()
+
+  # cleanup
+  withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
+  withr::defer(unlink(pipeline_config$source_bucket, recursive = TRUE))
+  withr::defer(unlink(file.path(paths$mock_data, "temp"), recursive = TRUE))
+
+  prev_out <- list(
+    config = config,
+    counts_list = list(),
+    annot = list(),
+    doublet_scores = list(),
+    scdata_list = prev_out$scdata_list,
+    matrix_dir_list = prev_out$matrix_dir_list,
+    qc_config = list("mock_qc_config"),
+    disable_qc_filters = FALSE
+  )
+
+  res <- stubbed_upload_to_aws(input, pipeline_config, prev_out)
+
+  # raw sample seurat objects, test that they exist where upload_to_aws puts them
+  for (sample_id in prev_out$config$samples) {
+    print(list.files(file.path(
+      pipeline_config$source_bucket,
+      input$experimentId,
+      sample_id
+    )))
+    expect_true(
+      file.exists(file.path(
+        pipeline_config$source_bucket,
+        input$experimentId,
+        sample_id,
+        "r.rds"
+      ))
+    )
+    expect_true(
+      file.exists(file.path(
+        pipeline_config$source_bucket,
+        input$experimentId,
+        sample_id,
+        "matrix_dir.tar.zst"
+      ))
+    )
+  }
+
+  # cellsets file
+  expect_snapshot_file(
+    file.path(pipeline_config$cell_sets_bucket, input$experimentId),
+    name = "cellsets.json"
+  )
+
+})
+
 
 test_that("get_subset_cell_sets filters out louvain clusters from parent cellset", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
   mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, mock_parsed_cellset)
+  subset_scdata <- mock_subset_data(
+    scdata_list, cell_ids_to_keep,
+    mock_parsed_cellset
+  )
 
-  prev_out <- mock_prev_out(config)
+  prev_out <- mock_create_seurat(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
   prev_out$sample_id_map <- sample_id_map
-  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
+  cell_sets <- get_subset_cell_sets(
+    subset_scdata,
+    input, 
+    prev_out,
+    disable_qc_filters
+  )
 
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
   expect_equal(integer(0), which(sets_key == "louvain"))
@@ -402,18 +488,27 @@ test_that("get_subset_cell_sets filters out louvain clusters from parent cellset
 test_that("get_subset_cell_sets produces a cellset with correct cell_ids", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
   mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, mock_parsed_cellset)
+  subset_scdata <- mock_subset_data(
+    scdata_list,
+    cell_ids_to_keep,
+    mock_parsed_cellset
+  )
 
-  prev_out <- mock_prev_out(config)
+  prev_out <- mock_create_seurat(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
   prev_out$sample_id_map <- sample_id_map
-  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
+  cell_sets <- get_subset_cell_sets(
+    subset_scdata,
+    input,
+    prev_out,
+    disable_qc_filters
+  )
 
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
   sample_sets <- cell_sets$cellSets[[which(sets_key == "sample")]]
@@ -432,25 +527,36 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids", {
 test_that("get_subset_cell_sets produces a cellset with correct new sample ids", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
   mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, mock_parsed_cellset)
+  subset_scdata <- mock_subset_data(
+    scdata_list,
+    cell_ids_to_keep,
+    mock_parsed_cellset
+  )
 
-  prev_out <- mock_prev_out(config)
+  prev_out <- mock_create_seurat(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
   prev_out$sample_id_map <- sample_id_map
-  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
+  cell_sets <- get_subset_cell_sets(
+    subset_scdata,
+    input,
+    prev_out,
+    disable_qc_filters
+  )
 
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
   sample_sets <- cell_sets$cellSets[[which(sets_key == "sample")]]
 
-  subset_sample_ids <- unique(as.character(unlist(lapply(subset_scdata, function(x) {
-    x$samples
-  }))))
+  subset_sample_ids <- unique(
+    as.character(unlist(lapply(subset_scdata, function(x) {
+      x$samples
+    })))
+  )
   cellset_sample_ids <- unlist(lapply(sample_sets$children, function(x) {
     x$key
   }))
@@ -461,28 +567,38 @@ test_that("get_subset_cell_sets produces a cellset with correct new sample ids",
 test_that("get_subset_cell_sets produces a cellset with correct cell_ids for each metadata group present in the parent experiment", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
   mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, mock_parsed_cellset)
+  subset_scdata <- mock_subset_data(
+    scdata_list,
+    cell_ids_to_keep,
+    mock_parsed_cellset
+  )
 
-  prev_out <- mock_prev_out(config)
+  prev_out <- mock_create_seurat(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
   prev_out$sample_id_map <- sample_id_map
 
-  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
+  cell_sets <- get_subset_cell_sets(
+    subset_scdata,
+    input,
+    prev_out,
+    disable_qc_filters
+  )
 
   metadata_sets <- cell_sets$cellSets[[2]]
   metadata_key <- sapply(metadata_sets$children, `[[`, "key")
 
-  for (i in 1:length(metadata_key)) {
+  for (i in seq_along(metadata_key)) {
     metadata_names <- metadata_sets$children[[i]]$name
-    for (j in 1:length(metadata_names)) {
+    for (j in seq_along(metadata_names)) {
       cellset_cell_ids <- unlist(metadata_sets$children[[j]]$cellIds)
-      parent_cellset_metadata <- mock_parsed_cellset[cell_id %in% cellset_cell_ids][type == "metadata"]
+      parent_cellset_metadata <-
+        mock_parsed_cellset[cell_id %in% cellset_cell_ids][type == "metadata"]
       expect_equal(unique(parent_cellset_metadata$name), metadata_names[[j]])
     }
   }
@@ -492,28 +608,38 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
 test_that("get_subset_cell_sets produces a cellset with correct cell_ids for each scratchpad present in the parent experiment", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
   disable_qc_filters <- TRUE
 
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
   mock_parsed_cellset <- mock_parsed_cellsets(scdata_list)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, mock_parsed_cellset)
+  subset_scdata <- mock_subset_data(
+    scdata_list,
+    cell_ids_to_keep,
+    mock_parsed_cellset
+  )
 
-  prev_out <- mock_prev_out(config)
+  prev_out <- mock_create_seurat(config)
   prev_out$parent_cellsets <- mock_parsed_cellset
   sample_id_map <- mock_sample_id_map()
   prev_out$sample_id_map <- sample_id_map
 
-  cell_sets <- get_subset_cell_sets(subset_scdata, input, prev_out, disable_qc_filters)
+  cell_sets <- get_subset_cell_sets(
+    subset_scdata,
+    input,
+    prev_out,
+    disable_qc_filters
+  )
 
   sets_key <- sapply(cell_sets$cellSets, `[[`, "key")
   scratchpad_sets <- cell_sets$cellSets[[which(sets_key == "scratchpad")]]
   scratchpad_key <- sapply(scratchpad_sets$children, `[[`, "key")
 
-  for (i in 1:length(scratchpad_key)) {
+  for (i in seq_along(scratchpad_key)) {
     cellset_cell_ids <- scratchpad_sets$children[[i]]$cellIds
     scratchpad_names <- sapply(scratchpad_sets$children, `[[`, "name")
-    parent_cellset_scratchpad <- mock_parsed_cellset[cell_id %in% cellset_cell_ids][type == "scratchpad"]
+    parent_cellset_scratchpad <-
+      mock_parsed_cellset[cell_id %in% cellset_cell_ids][type == "scratchpad"]
     expect_equal(unique(parent_cellset_scratchpad$key), scratchpad_key[[i]])
   }
 })
@@ -522,11 +648,15 @@ test_that("get_subset_cell_sets produces a cellset with correct cell_ids for eac
 test_that("filter_parent_cellsets only keeps cell_ids_to_keep", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, parent_cellsets)
+  subset_scdata <- mock_subset_data(
+    scdata_list,
+    cell_ids_to_keep,
+    parent_cellsets
+  )
 
   res <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 
@@ -537,13 +667,18 @@ test_that("filter_parent_cellsets only keeps cell_ids_to_keep", {
 test_that("filter_parent_cellsets keeps all other variables equal to the parents' value", {
   input <- mock_input()
   config <- mock_config(input)
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, parent_cellsets)
+  subset_scdata <- mock_subset_data(
+    scdata_list,
+    cell_ids_to_keep,
+    parent_cellsets
+  )
 
-  expected_parent_cellsets <- parent_cellsets[cell_id %in% cell_ids_to_keep & type != "cluster"]
+  expected_parent_cellsets <-
+    parent_cellsets[cell_id %in% cell_ids_to_keep & type != "cluster"]
 
   res <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 
@@ -556,11 +691,15 @@ test_that("build_scratchpad_cellsets builds single cellset when subsetting remov
   input <- mock_input()
   config <- mock_config(input)
   color_pool <- get_color_pool()
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42)
 
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, parent_cellsets)
+  subset_scdata <- mock_subset_data(
+    scdata_list,
+    cell_ids_to_keep,
+    parent_cellsets
+  )
   subset_cellsets <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 
   # remove one cell only from scratchpad cellsets to mimic real situation
@@ -573,9 +712,18 @@ test_that("build_scratchpad_cellsets builds single cellset when subsetting remov
   expect_named(res$children[[1]], c("key", "name", "color", "cellIds"))
 
   expect_equal(res$key, "scratchpad")
-  expect_equal(res$children[[1]]$key, unique(subset_cellsets[type == "scratchpad", key]))
-  expect_equal(res$children[[1]]$name, unique(subset_cellsets[type == "scratchpad", name]))
-  expect_setequal(res$children[[1]]$cellIds, subset_cellsets[type == "scratchpad", cell_id])
+  expect_equal(
+    res$children[[1]]$key,
+    unique(subset_cellsets[type == "scratchpad", key])
+  )
+  expect_equal(
+    res$children[[1]]$name,
+    unique(subset_cellsets[type == "scratchpad", name])
+  )
+  expect_setequal(
+    res$children[[1]]$cellIds,
+    subset_cellsets[type == "scratchpad", cell_id]
+  )
 })
 
 
@@ -583,45 +731,141 @@ test_that("build_scratchpad_cellsets builds multiple cellsets", {
   input <- mock_input()
   config <- mock_config(input)
   color_pool <- get_color_pool()
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
   cell_ids_to_keep <- c(4, 8, 15, 16, 23, 42, 23019:23027)
 
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
-  subset_scdata <- mock_subset_data(scdata_list, cell_ids_to_keep, parent_cellsets)
+  subset_scdata <- mock_subset_data(
+    scdata_list,
+    cell_ids_to_keep,
+    parent_cellsets
+  )
   subset_cellsets <- filter_parent_cellsets(parent_cellsets, cell_ids_to_keep)
 
   # remove a couple cells from scratchpad cellsets to mimic real situation
-  subset_cellsets <- subset_cellsets[!(type == "scratchpad" & cell_id %in% c(16, 23024))]
+  subset_cellsets <-
+    subset_cellsets[!(type == "scratchpad" & cell_id %in% c(16, 23024))]
 
 
   res <- build_scratchpad_cellsets(color_pool, subset_cellsets)
 
-  expect_equal(length(res$children), nrow(unique(subset_cellsets[type == "scratchpad"], by = "key")))
+  expect_equal(
+    length(res$children),
+    nrow(unique(subset_cellsets[type == "scratchpad"], by = "key"))
+  )
 
   for (cs in res$children) {
-    expect_setequal(cs$cellIds, subset_cellsets[(type == "scratchpad" & key == cs$key & name == cs$name), cell_id])
+    expect_setequal(
+      cs$cellIds,
+      subset_cellsets[
+        (type == "scratchpad" & key == cs$key & name == cs$name),
+        cell_id
+      ]
+    )
   }
 })
 
 
 test_that("extract_subset_user_metadata extracts subset cellsets correctly when regex characters present", {
-
   input <- mock_input()
   config <- mock_config(input)
   color_pool <- get_color_pool()
-  scdata_list <- mock_scdata_list(config)
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
 
   parent_cellsets <- mock_parsed_cellsets(scdata_list)
 
   # create new metadata cellsets with some annoying symbols
   new_parent_cellsets <- data.table::copy(parent_cellsets[type == "metadata"])
-  new_parent_cellsets[1:.N/2, `:=`(key = "metadata_var-2-value_A+", name = "value_A+")]
-  new_parent_cellsets[(.N/2):.N, `:=`(key = "metadata_var-2-value+_B-", name = "value+_B-")]
-  parent_cellsets <- data.table::rbindlist(list(parent_cellsets, new_parent_cellsets))
+  new_parent_cellsets[
+    1:.N / 2,
+    `:=`(key = "metadata_var-2-value_A+", name = "value_A+")
+  ]
+  new_parent_cellsets[
+    (.N / 2):.N,
+    `:=`(key = "metadata_var-2-value+_B-", name = "value+_B-")
+  ]
+  parent_cellsets <- data.table::rbindlist(
+    list(parent_cellsets, new_parent_cellsets)
+  )
 
   res <- extract_subset_user_metadata(parent_cellsets)
 
   expect_equal(names(res), c("metadata_var-1", "metadata_var-2"))
   expect_equal(res[[1]], c("value_A", "value_B"))
   expect_equal(res[[2]], c("value_A+", "value+_B-"))
+})
+
+# Tests for tar_matrix_dir function
+test_that("tar_matrix_dir creates tarfile with correct name", {
+  # Create a temporary directory with a test file
+  base_temp <- withr::local_tempdir()
+  sample_id <- paste0("sample_", sample(100000, 1))
+  matrix_dir <- file.path(base_temp, sample_id, "matrix_dir")
+  dir.create(matrix_dir, showWarnings = FALSE, recursive = TRUE)
+
+  # Create a test file in the directory
+  test_file <- file.path(matrix_dir, "test.txt")
+  writeLines("test content", test_file)
+
+  # Call tar_matrix_dir
+  tarfile <- tar_matrix_dir(sample_id, matrix_dir)
+
+  expect_true(file.exists(tarfile))
+  expect_match(tarfile, paste0(sample_id, "_matrix_dir\\.tar\\.zst$"))
+})
+
+test_that("tar_zstd creates compressed tarfile", {
+  # Create a temporary directory with test files
+  base_temp <- withr::local_tempdir()
+  test_id <- paste0("tar_test_", sample(100000, 1))
+  test_dir <- file.path(base_temp, test_id)
+  dir.create(test_dir, showWarnings = FALSE)
+
+  test_file <- file.path(test_dir, "test.txt")
+  writeLines("test content", test_file)
+
+  tarfile <- file.path(base_temp, paste0(test_id, ".tar.zst"))
+
+  # Change to base directory and create tar
+  current_dir <- getwd()
+  tryCatch({
+    setwd(base_temp)
+    tar_zstd(tarfile, files = test_id)
+  }, finally = {
+    setwd(current_dir)
+  })
+
+  expect_true(file.exists(tarfile))
+})
+
+test_that("untar_zstd extracts compressed tarfile", {
+  # Create a temporary directory with test files
+  base_temp <- withr::local_tempdir()
+  test_id <- paste0("untar_test_", sample(100000, 1))
+  test_dir <- file.path(base_temp, test_id)
+  dir.create(test_dir, showWarnings = FALSE)
+
+  test_file <- file.path(test_dir, "test.txt")
+  writeLines("test content", test_file)
+
+  # Create tarfile
+  tarfile <- file.path(base_temp, paste0(test_id, "_extract.tar.zst"))
+  current_dir <- getwd()
+  tryCatch({
+    setwd(base_temp)
+    tar_zstd(tarfile, files = test_id)
+  }, finally = {
+    setwd(current_dir)
+  })
+
+  # Create extraction directory
+  extract_dir <- file.path(base_temp, paste0(test_id, "_extracted"))
+  dir.create(extract_dir, showWarnings = FALSE)
+
+  # Extract tarfile
+  untar_zstd(tarfile, exdir = extract_dir)
+
+  # Verify extraction
+  extracted_file <- file.path(extract_dir, test_id, "test.txt")
+  expect_true(file.exists(extracted_file))
 })

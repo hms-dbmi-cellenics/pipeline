@@ -1,9 +1,13 @@
 # if Seurat not attached can cause errors when accessing metadata
-library(Seurat)
-library(zeallot)
-library(tryCatchLog)
-library(magrittr)
-library(uuid)
+# if BPCells not attached, write_matrix_dir hangs indefinitely in read_10x_h5_file
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(zeallot)
+  library(tryCatchLog)
+  library(magrittr)
+  library(uuid)
+  library(BPCells)
+})
 
 # v5 is the default but making explicit
 options(Seurat.object.assay.version = "v5")

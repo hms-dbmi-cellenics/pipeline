@@ -134,6 +134,23 @@ errors <- list(
   ERROR_OBJ2S_LOGCOUNTS = 'ERROR_OBJ2S_LOGCOUNTS'
 )
 
+# items stored in config are returned to the api
+# remove anything you don't want to end up in sql processing config
+# aws_config is only present in development and contains mock AWS credentials
+exclude_from_config <- c(
+  "auth_JWT",
+  "api_url",
+  "clustering_should_run",
+  "metadata_s3_path",
+  "cl_metadata_bucket",
+  "aws_config"
+)
+
+# for customizing geosketch config on first run
+MIN_CELLS_USE_GEOSKETCH <- 100000
+CELLS_PER_SAMPLE_SKETCHDATA <- 5000
+MIN_CELLS_SKETCHDATA <- 50000
+
 usethis::use_data(
   processing_config_template,
   bucket_list,
@@ -160,6 +177,10 @@ usethis::use_data(
   UNISAMPLE,
   DOUBLET_RATE_PARSE,
   errors,
+  exclude_from_config,
+  MIN_CELLS_USE_GEOSKETCH,
+  CELLS_PER_SAMPLE_SKETCHDATA,
+  MIN_CELLS_SKETCHDATA,
   internal = TRUE,
   overwrite = TRUE
 )

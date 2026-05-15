@@ -34,12 +34,13 @@ RUN Rscript restore_fast.R
 COPY setup/restore_renv.R .
 RUN Rscript restore_renv.R
 
-# deactivate so that .libPaths used (set above)
-RUN R -q -e "renv::deactivate()"
-
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
 RUN Rscript restore_renv.R
+
+# deactivate so that .libPaths used (set above)
+RUN R -q -e "renv::deactivate()"
+RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
@@ -65,7 +66,7 @@ COPY --from=builder /src /src
 # add renv library to .libPaths
 ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site && \
-    echo "python3-pip python3-venv python3-dev wget" >> sysdeps_run.txt && \
+    echo "python3-pip python3-venv python3-dev wget zstd" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 

@@ -60,9 +60,9 @@ construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, c
     min.features = min.features
   )
 
-  scdata <- scdata %>%
-    add_mito(annot) %>%
-    add_dblscore(doublet_score) %>%
+  scdata <- scdata |>
+    add_mito(annot) |>
+    add_dblscore(doublet_score) |>
     add_edrops(edrops_out)
 
   return(scdata)
@@ -120,15 +120,15 @@ add_edrops <- function(scdata, edout) {
   if (!scdata@tools$flag_filtered) {
     message("Adding emptyDrops scores...")
 
-    edout <- edout %>%
-      as.data.frame() %>%
-      rlang::set_names(~ paste0("emptyDrops_", .)) %>%
+    edout <- edout |>
+      as.data.frame() |>
+      rlang::set_names(~ paste0("emptyDrops_", .)) |>
       tibble::rownames_to_column("barcode")
 
     # adding emptydrops data to meta.data for later filtering (using left join)
-    meta.data <- scdata@meta.data %>%
-      tibble::rownames_to_column("barcode") %>%
-      dplyr::left_join(edout)
+    meta.data <- scdata@meta.data |>
+      tibble::rownames_to_column("barcode") |>
+      dplyr::left_join(edout, by = "barcode")
     rownames(meta.data) <- meta.data$barcode
 
     scdata@meta.data <- meta.data
@@ -142,10 +142,12 @@ add_edrops <- function(scdata, edout) {
 
 # add scDblFinder result to SeuratObject
 add_dblscore <- function(scdata, score) {
-  message("Adding doublet scores...")
+  if (!is.null(score)) {
+    message("Adding doublet scores...")
 
-  idt <- score$barcodes[score$barcodes %in% rownames(scdata@meta.data)]
-  scdata@meta.data[idt, "doublet_scores"] <- score[idt, "doublet_scores"]
-  scdata@meta.data[idt, "doublet_class"] <- score[idt, "doublet_class"]
+    idt <- score$barcodes[score$barcodes %in% rownames(scdata@meta.data)]
+    scdata@meta.data[idt, "doublet_scores"] <- score[idt, "doublet_scores"]
+    scdata@meta.data[idt, "doublet_class"] <- score[idt, "doublet_class"]
+  }
   return(scdata)
 }

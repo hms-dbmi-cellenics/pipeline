@@ -1,7 +1,3 @@
-mock_ids <- function() {
-  return(list("123abc" = 0:39, "123def" = 40:79))
-}
-
 mock_config <- function() {
   config <- list(
     auto = TRUE,
@@ -17,46 +13,16 @@ mock_config <- function() {
   return(config)
 }
 
-mock_scdata <- function(with_outlier = FALSE) {
-  pbmc_raw <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-
-  if (with_outlier) {
-    pbmc_raw[, 1] <- 0
-    pbmc_raw[1:10, 1] <- 100
-  }
-
-  sample_1_id <- "123abc"
-  sample_2_id <- "123def"
-
-  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
-  scdata <- Seurat::CreateSeuratObject(counts = pbmc_raw)
-  scdata$cells_id <- 0:(ncol(scdata) - 1)
-
-  # add samples
-  scdata$samples <- rep(c(sample_1_id, sample_2_id), each = 40)
-  scdata <- Seurat::RenameCells(scdata, paste(scdata$samples, colnames(scdata), sep = ""))
-  scdata$emptyDrops_FDR <- NA
-
-  scdata_sample1 <- subset(scdata, samples == sample_1_id)
-  scdata_sample2 <- subset(scdata, samples == sample_2_id)
-
-  scdata_list <- list(scdata_sample1, scdata_sample2)
-  names(scdata_list) <- c(sample_1_id, sample_2_id)
-
-  return(list(scdata_list, sample_1_id, sample_2_id))
-}
-
 
 test_that("filter_gene_umi_outlier updates linear p.level in config if auto", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  scdata_list <- mock_scdata_list()
+  sample2_id <- names(scdata_list)[2]
+
   config <- mock_config()
-  cells_id <- mock_ids()
+  cells_id <- mock_ids(scdata_list)
 
   config$filterSettings$regressionTypeSettings$linear$p.level <- 1
-  out <- filter_gene_umi_outlier(scdata_list, config, sample_2_id, cells_id)
+  out <- filter_gene_umi_outlier(scdata_list, config, sample2_id, cells_id)
   new <- out$config$filterSettings$regressionTypeSettings$linear$p.level
 
   expect_lt(new, 1)
@@ -66,62 +32,75 @@ test_that("filter_gene_umi_outlier updates linear p.level in config if auto", {
 test_that("filter_gene_umi_outlier is sample specific", {
 
   # one outlier in first sample
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(with_outlier = T)
-  config <- mock_config()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list(with_outlier = TRUE)
+  sample1_id <- names(scdata_list)[1]
+  sample2_id <- names(scdata_list)[2]
 
-  cell_ids1 <- scdata_list[[sample_1_id]]$cells_id
-  cell_ids2 <- scdata_list[[sample_2_id]]$cells_id
-  out1 <- filter_gene_umi_outlier(scdata_list, config, sample_1_id, cells_id)
-  out2 <- filter_gene_umi_outlier(scdata_list, config, sample_2_id, cells_id)
+  config <- mock_config()
+  cells_id <- mock_ids(scdata_list)
+
+  cell_ids1 <- scdata_list[[sample1_id]]$cells_id
+  cell_ids2 <- scdata_list[[sample2_id]]$cells_id
+  out1 <- filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
+  out2 <- filter_gene_umi_outlier(scdata_list, config, sample2_id, cells_id)
 
   # filtered something
-  expect_lt(length(out1$new_ids[[sample_1_id]]), length(cells_id[[sample_1_id]]))
-  expect_lt(length(out2$new_ids[[sample_2_id]]), length(cells_id[[sample_2_id]]))
+  expect_lt(length(out1$new_ids[[sample1_id]]), length(cells_id[[sample1_id]]))
+  expect_lt(length(out2$new_ids[[sample2_id]]), length(cells_id[[sample2_id]]))
 
   # didn't filter other sample
-  expect_true(all(cell_ids1 %in% out2$new_ids[[sample_1_id]]))
-  expect_true(all(cell_ids2 %in% out1$new_ids[[sample_2_id]]))
+  expect_true(all(cell_ids1 %in% out2$new_ids[[sample1_id]]))
+  expect_true(all(cell_ids2 %in% out1$new_ids[[sample2_id]]))
 })
 
-test_that("filter_gene_umi_outlier can filter cells", {
-  # single outlier in single sample
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(with_outlier = T)
-  config <- mock_config()
-  cells_id <- mock_ids()
-  nstart <- ncol(scdata_list[[sample_1_id]])
+test_that("filter_gene_umi_outlier can filter cells and works with bpcells", {
+  for (use_bpcells in c(FALSE, TRUE)) {
+     # single outlier in single sample
+    scdata_list <- mock_scdata_list(with_outlier = TRUE, use_bpcells = use_bpcells)
+    sample1_id <- names(scdata_list)[1]
+    sample2_id <- names(scdata_list)[2]
 
-  out <-
-    filter_gene_umi_outlier(scdata_list, config, sample_1_id, cells_id)
-  expect_lt(length(unlist(out$new_ids[[sample_1_id]])), nstart)
+    config <- mock_config()
+    cells_id <- mock_ids(scdata_list)
+    nstart <- ncol(scdata_list[[sample1_id]])
+
+    out <-
+      filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
+    expect_lt(length(unlist(out$new_ids[[sample1_id]])), nstart)
+  }
 })
 
 
 test_that("filter_gene_umi_outlier can be disabled", {
 
   # single outlier in single sample
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(with_outlier = T)
+  scdata_list <- mock_scdata_list(with_outlier = TRUE)
+  sample1_id <- names(scdata_list)[1]
+  sample2_id <- names(scdata_list)[2]
+
   config <- mock_config()
-  cells_id <- mock_ids()
-  nstart <- ncol(scdata_list[[sample_1_id]])
+  cells_id <- mock_ids(scdata_list)
+  nstart <- ncol(scdata_list[[sample1_id]])
 
   # disabled
   config$enabled <- FALSE
 
-  out <- filter_gene_umi_outlier(scdata_list, config, sample_1_id, cells_id)
-  expect_equal(ncol(out$data[[sample_1_id]]), nstart)
-  expect_equal(out$new_ids[[sample_1_id]], 0:39)
-  expect_equal(out$new_ids[[sample_2_id]], 40:79)
+  out <- filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
+  expect_equal(ncol(out$data[[sample1_id]]), nstart)
+  expect_equal(out$new_ids[[sample1_id]], 0:39)
+  expect_equal(out$new_ids[[sample2_id]], 40:79)
 })
 
 
 
 test_that("filter_gene_umi_outlier return the appropriate plot data", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
-  config <- mock_config()
-  cells_id <- mock_ids()
+  scdata_list <- mock_scdata_list()
+  sample2_id <- names(scdata_list)[2]
 
-  out <- filter_gene_umi_outlier(scdata_list, config, sample_2_id, cells_id)
+  config <- mock_config()
+  cells_id <- mock_ids(scdata_list)
+
+  out <- filter_gene_umi_outlier(scdata_list, config, sample2_id, cells_id)
   plot_data <- out$plotData[[1]]
 
   # points and lines data
@@ -130,74 +109,112 @@ test_that("filter_gene_umi_outlier return the appropriate plot data", {
   # one value per cell
   points_data <- plot_data$pointsData
   lines_data <- plot_data$linesData
-  expect_equal(length(points_data), ncol(scdata_list[[sample_2_id]]))
+  expect_equal(length(points_data), ncol(scdata_list[[sample2_id]]))
 
   # has the right names
   expect_equal(names(points_data[[1]]), c("log_molecules", "log_genes"))
-  expect_equal(names(lines_data[[1]][[1]]), c("log_molecules", "lower_cutoff", "upper_cutoff"))
+  expect_equal(
+    names(lines_data[[1]][[1]]),
+    c("log_molecules", "lower_cutoff", "upper_cutoff")
+  )
 })
 
 
 
 test_that("filter_gene_umi_outlier gives different results with spline fit", {
   # single outlier in single sample
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(with_outlier = T)
-  config <- mock_config()
-  cells_id <- mock_ids()
-  nstart <- ncol(scdata_list[[sample_1_id]])
+  scdata_list <- mock_scdata_list(with_outlier = TRUE)
+  sample1_id <- names(scdata_list)[1]
+  sample2_id <- names(scdata_list)[2]
 
-  out1 <- filter_gene_umi_outlier(scdata_list, config, sample_1_id, cells_id)
-  expect_equal(ncol(out1$data[[sample_1_id]]), nstart)
-  expect_lt(length(out1$new_ids[[sample_1_id]]), length(cells_id[[sample_1_id]]))
+  config <- mock_config()
+  cells_id <- mock_ids(scdata_list)
+  nstart <- ncol(scdata_list[[sample1_id]])
+
+  out1 <- filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
+  expect_equal(ncol(out1$data[[sample1_id]]), nstart)
+  expect_lt(length(out1$new_ids[[sample1_id]]), length(cells_id[[sample1_id]]))
 
   config$filterSettings$regressionType <- "spline"
 
-  out2 <- filter_gene_umi_outlier(scdata_list, config, sample_1_id, cells_id)
+  out2 <- filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
 
   expect_true(!identical(out1$plotData, out2$plotData))
-  expect_true(!identical(out1$new_ids[[sample_1_id]], out2$new_ids[[sample_1_id]]))
+  expect_true(
+    !identical(
+      out1$new_ids[[sample1_id]],
+      out2$new_ids[[sample1_id]]
+    )
+  )
+})
+
+test_that("filter_gene_umi_outlier spline fit works with bpcells", {
+  # single outlier in single sample
+  scdata_list <- mock_scdata_list(with_outlier = TRUE, use_bpcells = TRUE)
+  sample1_id <- names(scdata_list)[1]
+  sample2_id <- names(scdata_list)[2]
+
+  config <- mock_config()
+  cells_id <- mock_ids(scdata_list)
+  config$filterSettings$regressionType <- "spline"
+
+  expect_no_error(
+    filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
+  )
 })
 
 test_that("Gene UMI filter works if input is a a float-interpretable string", {
   # single outlier in single sample
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata(with_outlier = T)
+  scdata_list <- mock_scdata_list(with_outlier = TRUE)
+  sample1_id <- names(scdata_list)[1]
+  sample2_id <- names(scdata_list)[2]
+
   config <- mock_config()
-  cells_id <- mock_ids()
-  nstart <- ncol(scdata_list[[sample_2_id]])
+  cells_id <- mock_ids(scdata_list)
+  nstart <- ncol(scdata_list[[sample2_id]])
   config$auto <- FALSE
   config$filterSettings$predictionInterval <- "0.3"
 
-  out_number <- filter_gene_umi_outlier(scdata_list, config, sample_2_id, cells_id)
+  out_number <- filter_gene_umi_outlier(scdata_list, config, sample2_id, cells_id)
 
   config$filterSettings$regressionTypeSettings$linear$p.level <- "0.1"
-  out_string <- filter_gene_umi_outlier(scdata_list, config, sample_2_id, cells_id)
+  out_string <- filter_gene_umi_outlier(scdata_list, config, sample2_id, cells_id)
 
-  expect_equal(ncol(out_number$data[[sample_2_id]]), nstart)
-  expect_equal(out_string$new_ids[[sample_2_id]], out_number$new_ids[[sample_2_id]])
+  expect_equal(ncol(out_number$data[[sample2_id]]), nstart)
+  expect_equal(
+    out_string$new_ids[[sample2_id]],
+    out_number$new_ids[[sample2_id]]
+  )
 })
 
 test_that("Gene UMI filter throws error if input is a non float-interpretable string", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  scdata_list <- mock_scdata_list()
+  sample2_id <- names(scdata_list)[2]
+
   config <- mock_config()
   config$auto <- FALSE
   config$filterSettings$regressionTypeSettings$linear$p.level <-
     "asd"
 
-  expect_error(filter_gene_umi_outlier(scdata, config, sample_2_id, cells_id))
+  expect_error(
+    filter_gene_umi_outlier(scdata, config, sample2_id, cells_id)
+  )
 })
 
 test_that("Gene UMI filter works with manual settings and default prediction interval value", {
-  c(scdata_list, sample_1_id, sample_2_id) %<-% mock_scdata()
+  scdata_list <- mock_scdata_list()
+  sample1_id <- names(scdata_list)[1]
+
   config <- mock_config()
-  cells_id <- mock_ids()
+  cells_id <- mock_ids(scdata_list)
   type <- "spline"
   config$filterSettings$regressionType <- type
 
   config$auto <- TRUE
-  out_auto <- filter_gene_umi_outlier(scdata_list, config, sample_1_id, cells_id)
+  out_auto <- filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
 
   config$auto <- FALSE
-  out_manual <- filter_gene_umi_outlier(scdata_list, config, sample_1_id, cells_id)
+  out_manual <- filter_gene_umi_outlier(scdata_list, config, sample1_id, cells_id)
 
   expect_null(config$filterSettings$predictionInterval)
   expect_equal(
@@ -205,5 +222,3 @@ test_that("Gene UMI filter works with manual settings and default prediction int
     out_manual$config$filterSettings$regressionTypeSettings[[type]]$p.level
   )
 })
-
-
