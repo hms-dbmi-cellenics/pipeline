@@ -40,7 +40,6 @@ score_doublets <- function(input, pipeline_config, prev_out) {
   scores <- BiocParallel::bplapply(
     samples,
     function(sample) {
-      sink(NULL, type = "message")
       message("\nSample --> ", sample)
       sample_counts <- counts_list_filt[[sample]]
 
