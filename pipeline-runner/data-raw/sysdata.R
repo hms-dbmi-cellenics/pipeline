@@ -151,6 +151,11 @@ MIN_CELLS_USE_GEOSKETCH <- 100000
 CELLS_PER_SAMPLE_SKETCHDATA <- 5000
 MIN_CELLS_SKETCHDATA <- 50000
 
+# aws batch settings (defined in api getDomainSpecificContent.js)
+# convert from MiB to GB
+BATCH_POD_MEMORY <- 57344 / 953.7
+BATCH_POD_CPUS <- 8
+
 usethis::use_data(
   processing_config_template,
   bucket_list,
@@ -181,6 +186,8 @@ usethis::use_data(
   MIN_CELLS_USE_GEOSKETCH,
   CELLS_PER_SAMPLE_SKETCHDATA,
   MIN_CELLS_SKETCHDATA,
+  BATCH_POD_MEMORY,
+  BATCH_POD_CPUS,
   internal = TRUE,
   overwrite = TRUE
 )
