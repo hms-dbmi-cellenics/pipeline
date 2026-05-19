@@ -94,8 +94,13 @@ test_that("Integrate scdata works", {
     cells_id,
     task_name = "dataIntegration"
   ))$data
+
   expect_s4_class(integrated_scdata, "Seurat")
   expect_equal(ncol(integrated_scdata), 80)
+  expect_setequal(
+    SeuratObject::Layers(integrated_scdata, assay = "RNA"),
+    c("data", "counts", "scale.data")
+  )
 })
 
 test_that("Integrate scdata is not affected by sample order", {
@@ -662,4 +667,191 @@ test_that("customize_default_downsampling_config sets downsampling to 'none' for
   )
 
   expect_equal(config$downsampling$method, "none")
+})
+
+test_that("integrate_scdata with bpcells correctly merges matrix_dirs without geosketching", {
+  scdata_list <- mock_scdata_list(use_bpcells = TRUE)
+  cells_id <- mock_ids(scdata_list)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = 5),
+    dataIntegration = list(
+      method = "harmony",
+      methodSettings = list(
+        harmony = list(numGenes = 1000, normalisation = "logNormalize")
+      )
+    )
+  )
+
+  integrated_scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
+
+  expect_length(get_matrix_dirs(integrated_scdata), 1)
+  expect_s4_class(integrated_scdata, "Seurat")
+  expect_setequal(
+    SeuratObject::Layers(integrated_scdata, assay = "RNA"),
+    c("data", "counts", "scale.data")
+  )
+})
+
+test_that("integrate_scdata with bpcells correctly merges matrix_dirs with geosketching", {
+  scdata_list <- mock_scdata_list(use_bpcells = TRUE, n_rep = 3)
+  cells_id <- mock_ids(scdata_list)
+
+  config <- list(
+    dimensionalityReduction = list(numPCs = 5),
+    dataIntegration = list(
+      method = "harmony",
+      methodSettings = list(
+        harmony = list(numGenes = 1000, normalisation = "logNormalize")
+      )
+    ),
+    downsampling = list(
+      method = "geosketch",
+      methodSettings = list(geosketch = list(
+        percentageToKeep = 50
+      ))
+    )
+  )
+
+  integrated_scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
+
+  expect_length(get_matrix_dirs(integrated_scdata), 1)
+  expect_s4_class(integrated_scdata, "Seurat")
+
+  expect_setequal(
+    SeuratObject::Layers(integrated_scdata, assay = "RNA"),
+    c("data", "counts", "scale.data")
+  )
+})
+
+test_that("mock_scdata_list with bpcells uses bpcells", {
+  # test common mock function works correctly
+  scdata_list <- mock_scdata_list(use_bpcells = TRUE)
+  for (scdata in scdata_list) {
+    expect_s4_class(scdata[["RNA"]]$counts, "IterableMatrix")
+  }
+})
+
+
+test_that("integrate_scdata with bpcells correctly merges matrix_dirs with geosketching and SCT normalization", {
+  scdata_list <- mock_scdata_list(use_bpcells = TRUE, n_rep = 3)
+  cells_id <- mock_ids(scdata_list)
+
+  config <- list(
+    dimensionalityReduction = list(
+      numPCs = 5,
+      method = "rpca"
+    ),
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(
+        seuratv4 = list(numGenes = 1000, normalisation = "SCT")
+      )
+    ),
+    downsampling = list(
+      method = "geosketch",
+      methodSettings = list(geosketch = list(
+        percentageToKeep = 50
+      ))
+    )
+  )
+
+  integrated_scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
+
+  expect_length(get_matrix_dirs(integrated_scdata), 1)
+  expect_s4_class(integrated_scdata, "Seurat")
+
+  expect_setequal(
+    SeuratObject::Layers(integrated_scdata, assay = "RNA"),
+    c("data", "counts", "scale.data")
+  )
+})
+
+test_that("integrate_scdata with seuratv4 preserves scale.data.", {
+  scdata_list <- mock_scdata_list(n_rep = 3)
+  cells_id <- mock_ids(scdata_list)
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+  config <- list(
+    dimensionalityReduction = list(
+      numPCs = 5,
+      method = "rpca"
+    ),
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(seuratv4 = list(
+        numGenes = 100,
+        normalisation = "logNormalize"
+      ))
+    )
+  )
+
+  integrated_scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
+
+  expect_setequal(
+    SeuratObject::Layers(integrated_scdata, assay = "RNA"),
+    c("data", "counts", "scale.data")
+  )
+})
+
+test_that("integrate_scdata with seuratv4 and SCT doesn't run ScaleData", {
+  # NOTE: scale.data only needed by worker for ScType
+  # which will use SCT scale.data
+  scdata_list <- mock_scdata_list(n_rep = 3)
+  cells_id <- mock_ids(scdata_list)
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+  config <- list(
+    dimensionalityReduction = list(
+      numPCs = 5,
+      method = "rpca"
+    ),
+    dataIntegration = list(
+      method = "seuratv4",
+      methodSettings = list(seuratv4 = list(
+        numGenes = 100,
+        normalisation = "SCT"
+      ))
+    )
+  )
+
+  integrated_scdata <- suppressWarnings(integrate_scdata(
+    scdata_list,
+    config,
+    "",
+    cells_id,
+    task_name = "dataIntegration"
+  ))$data
+
+  expect_setequal(
+    SeuratObject::Layers(integrated_scdata, assay = "RNA"),
+    c("data", "counts")
+  )
+
+  expect_setequal(
+    SeuratObject::Layers(integrated_scdata, assay = "SCT"),
+    c("data", "counts", "scale.data")
+  )
 })

@@ -58,6 +58,8 @@ integrate_scdata <- function(
     scdata_integrated[["RNA"]] <- rna_assay
   }
 
+  scdata_integrated <- write_merged_matrix_dir(scdata_integrated)
+
   # Update config numPCs with estimated or user provided nPCs
   config$dimensionalityReduction$numPCs <- scdata_integrated@misc$numPCs
 
@@ -90,10 +92,12 @@ run_preprocessing <- function(
     Seurat::NormalizeData(
       scdata,
       normalization.method = "LogNormalize",
+      assay = "RNA",
       verbose = FALSE
     ) |>
     Seurat::FindVariableFeatures(
       nfeatures = nfeatures,
+      assay = "RNA",
       verbose = FALSE
     )
 
@@ -121,11 +125,18 @@ run_preprocessing <- function(
       num_cells, ifelse(is_sct, " cells.", " cells per sample.")
     )
 
+    tstart <- Sys.time()
     scdata <- Seurat::SketchData(
       object = scdata,
       ncells = num_cells,
       method = "LeverageScore",
       sketched.assay = "sketch"
+    )
+    tend <- Sys.time()
+    message(
+      "SketchData completed in ",
+      round(difftime(tend, tstart, units = "secs"), 2),
+      " seconds."
     )
 
     # run FindVariableFeatures again after SketchData
@@ -274,11 +285,6 @@ customize_default_downsampling_config <- function(config, scdata_list) {
 create_scdata <- function(scdata_list, cells_id, merge_data = FALSE) {
   scdata_list <- remove_filtered_cells(scdata_list, cells_id)
   merged_scdatas <- merge_scdata_list(scdata_list, merge_data)
-
-  # we re-write matrix dir before any preprocessing
-  # that would create dependencies on original matrix dirs
-  merged_scdatas <- write_merged_matrix_dir(merged_scdatas)
-
   merged_scdatas <- add_metadata(merged_scdatas, scdata_list)
   return(merged_scdatas)
 }
@@ -330,22 +336,34 @@ merge_scdata_list <- function(scdata_list, merge_data = FALSE) {
 }
 
 write_merged_matrix_dir <- function(scdata) {
-  layer_names <- SeuratObject::Layers(scdata)
-  first_layer <- SeuratObject::LayerData(scdata, layer_names[1])
 
-  if (methods::is(first_layer, "IterableMatrix")) {
-    # temporarily join layers to write out single matrix dir
-    scdata[["RNA"]] <- SeuratObject::JoinLayers(scdata[["RNA"]])
+  counts <- scdata[["RNA"]]$counts
+  if (methods::is(counts, "IterableMatrix")) {
 
     # re-write disk backing
     matrix_dir <- file.path(tempdir(), "matrix_dir")
     unlink(matrix_dir, recursive = TRUE)
     message("Writing merged matrix dir to: ", matrix_dir)
-    counts <- BPCells::write_matrix_dir(scdata[["RNA"]]$counts, matrix_dir)
+    scdata[["RNA"]]$counts <- BPCells::write_matrix_dir(counts, matrix_dir)
 
-    # restore consolidated counts then split
-    scdata[["RNA"]]$counts <- counts
-    scdata[["RNA"]] <- split(scdata[["RNA"]], f = scdata$samples)
+    # we re-run normalization and re-scale to ensure single matrix_dir
+    # alternative is to write merged matrix_dir before original normalization but
+    # that causes SketchData to be ~3x slower (adds ~45 mins for 1M cells)
+    # NOTE: SCT assay layers are always in-memory, so only run for RNA assay
+    scdata <- Seurat::NormalizeData(
+      scdata,
+      normalization.method = "LogNormalize",
+      assay = "RNA",
+      verbose = FALSE
+    )
+    # NOTE: scale.data only used by worker for ScType
+    # we dont use "split.by" to mimic sctype_score(counts, scaled = FALSE)
+    # which z-scores the full matrix, not by sample
+    scdata <- Seurat::ScaleData(
+      scdata,
+      assay = "RNA",
+      verbose = FALSE
+    )
   }
 
   return(scdata)
