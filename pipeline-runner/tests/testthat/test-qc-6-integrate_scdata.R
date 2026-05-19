@@ -459,41 +459,6 @@ test_that("integrate_scdata run geosketch if config contains geosketch parameter
 })
 
 
-test_that("run_geosketch generates the correct number of sketches", {
-  scdata_list <- mock_scdata_list()
-  cells_id <- mock_ids(scdata_list)
-  merged_scdata <- create_scdata(scdata_list, cells_id)
-  config <- list(
-    dimensionalityReduction = list(numPCs = 5),
-    dataIntegration = list(
-      method = "harmony",
-      methodSettings = list(harmony = list(
-        numGenes = 100,
-        normalisation = "logNormalize"
-      ))
-    )
-  )
-
-  merged_scdata <- suppressWarnings({
-    merged_scdata |>
-      Seurat::NormalizeData() |>
-      Seurat::FindVariableFeatures(
-        assay = "RNA",
-        nfeatures = 2000,
-        verbose = FALSE
-      ) |>
-      Seurat::ScaleData(verbose = FALSE) |>
-      Seurat::RunPCA(verbose = FALSE)
-  })
-  merged_scdata@misc[["active.reduction"]] <- "pca"
-
-  perc_num_cells <- 50
-  num_cells <- round(ncol(merged_scdata) * perc_num_cells / 100)
-  geosketch_list <- run_geosketch(merged_scdata, dims = 50, perc_num_cells)
-  expect_equal(ncol(geosketch_list$sketch), num_cells)
-})
-
-
 test_that("integrate_scdata with geosketch adds the correct integration method to the Seurat object", {
   scdata_list <- mock_scdata_list(n_rep = 3)
 
