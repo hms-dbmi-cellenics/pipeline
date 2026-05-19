@@ -141,7 +141,6 @@ mock_scdata_list <- function(
       use_bpcells
     )
 
-    counts_split <- as(as.matrix(counts_split), "dgCMatrix")
     scdata <- Seurat::CreateSeuratObject(counts = counts_split)
 
     scdata$cells_id <- seq((i - 1) * ncells_each, i * ncells_each - 1)
