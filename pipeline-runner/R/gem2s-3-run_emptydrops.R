@@ -32,6 +32,8 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
     BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
   )
 
+  names(edrops) <- samples
+
   prev_out$edrops <- edrops
   res <- list(
     data = list(),
