@@ -3,3 +3,5 @@
 ^renv\.lock$
 ^pipeline-runner\.Rproj$
 ^\.Rproj\.user$
+^\.positai$
+^\.claude$
