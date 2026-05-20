@@ -69,9 +69,7 @@ get_doublet_nworkers <- function(counts_list) {
   max_workers <- floor(0.85 * BATCH_POD_MEMORY / est_ram_per_worker)
 
   # use at most ncpus workers
-  nworkers <- min(nsamples, max_workers, BATCH_POD_CPUS)
-
-  return(nworkers)
+  min(nsamples, max_workers, BATCH_POD_CPUS)
 }
 
 

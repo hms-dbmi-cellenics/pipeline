@@ -237,7 +237,7 @@ test_that("scdblfinder_bpcells produces identical result to scDblFinder", {
 test_that("get_doublet_nworkers never uses more than number of CPUs", {
   counts_list <- list()
   for (i in 1:10) {
-    counts_list[[paste0("sample", i)]] <- mock_counts_dbl(ncells = 100)
+    counts_list[[paste0("sample", i)]] <- mock_counts_dbl()
   }
   nworkers <- get_doublet_nworkers(counts_list)
   expect_true(nworkers <= BATCH_POD_CPUS)
@@ -247,7 +247,7 @@ test_that("get_doublet_nworkers never uses more than number of samples", {
   counts_list <- list()
   nsamples <- 6
   for (i in seq_len(nsamples)) {
-    counts_list[[paste0("sample", i)]] <- mock_counts_dbl(ncells = 100)
+    counts_list[[paste0("sample", i)]] <- mock_counts_dbl()
   }
   nworkers <- get_doublet_nworkers(counts_list)
   expect_true(nworkers <= nsamples)
