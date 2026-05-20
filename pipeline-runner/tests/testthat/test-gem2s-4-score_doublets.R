@@ -2,9 +2,9 @@ mock_counts_dbl <- function(...) {
   set.seed(RANDOM_SEED)
   sce <- scDblFinder::mockDoubletSCE(...)
   counts <- sce@assays@data$counts
-  colnames(counts) <- paste0("barcode-", 1:ncol(counts))
-  rownames(counts) <- paste0("gene-", 1:nrow(counts))
-  return(Matrix::Matrix(counts, sparse = TRUE))
+  colnames(counts) <- paste0("barcode-", seq_len(ncol(counts)))
+  rownames(counts) <- paste0("gene-", seq_len(nrow(counts)))
+  Matrix::Matrix(counts, sparse = TRUE)
 }
 
 mock_input <- function(technology) {
@@ -232,4 +232,23 @@ test_that("scdblfinder_bpcells produces identical result to scDblFinder", {
     result_bpcells$scDblFinder.class,
     result_standard$scDblFinder.class
   )
+})
+
+test_that("get_doublet_nworkers never uses more than number of CPUs", {
+  counts_list <- list()
+  for (i in 1:10) {
+    counts_list[[paste0("sample", i)]] <- mock_counts_dbl()
+  }
+  nworkers <- get_doublet_nworkers(counts_list)
+  expect_true(nworkers <= BATCH_POD_CPUS)
+})
+
+test_that("get_doublet_nworkers never uses more than number of samples", {
+  counts_list <- list()
+  nsamples <- 6
+  for (i in seq_len(nsamples)) {
+    counts_list[[paste0("sample", i)]] <- mock_counts_dbl()
+  }
+  nworkers <- get_doublet_nworkers(counts_list)
+  expect_true(nworkers <= nsamples)
 })

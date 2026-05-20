@@ -16,11 +16,23 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
   counts_list <- prev_out$counts_list
   samples <- names(counts_list)
 
-  edrops <- list()
-  for (sample in samples) {
-    message("\nSample --> ", sample)
-    edrops[[sample]] <- compute_sample_edrops(counts_list[[sample]])
-  }
+
+  # ~3M droplets uses 15GB of RAM
+  # calculate nworkers from sample with most cells
+  # ensure will not exceed 85% of RAM on 60GB machine
+  nworkers <- get_edrops_nworkers(counts_list)
+  message("Number of workers: ", nworkers)
+
+  edrops <- BiocParallel::bplapply(
+    setNames(samples, samples),
+    function(sample) {
+      message("\nSample --> ", sample)
+      compute_sample_edrops(counts_list[[sample]])
+    },
+    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
+  )
+
+  edrops <- remove_null_list_elements(edrops)
 
   prev_out$edrops <- edrops
   res <- list(
@@ -31,6 +43,24 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
   message("\nRunning of emptydrops step complete.")
   return(res)
 }
+
+remove_null_list_elements <- function(lst) {
+  lst <- Filter(Negate(is.null), lst)
+  if (!length(lst)) names(lst) <- NULL
+  lst
+}
+
+get_edrops_nworkers <- function(counts_list) {
+  sample_ndrops <- sapply(counts_list, ncol)
+  nsamples <- length(counts_list)
+  max_ndrops <- max(sample_ndrops)
+  est_ram_per_worker <- (max_ndrops / 3e6) * 15
+  max_workers <- floor(0.85 * BATCH_POD_MEMORY / est_ram_per_worker)
+
+  # use at most ncpus workers
+  min(nsamples, max_workers, BATCH_POD_CPUS)
+}
+
 
 
 #' Calculate empty drops scores for sample

@@ -19,9 +19,8 @@ score_doublets <- function(input, pipeline_config, prev_out) {
   counts_list <- prev_out$counts_list
   samples <- names(counts_list)
 
-  scores <- list()
+  counts_list_filt <- list()
   for (sample in samples) {
-    message("\nSample --> ", sample)
     sample_counts <- counts_list[[sample]]
     sample_edrops <- edrops_list[[sample]]
 
@@ -30,11 +29,27 @@ score_doublets <- function(input, pipeline_config, prev_out) {
       keep <- which(sample_edrops$FDR <= gem2s$max.edrops.fdr)
       sample_counts <- sample_counts[, keep]
     }
-
-    # TODO: Pass also parse_kit when available from the UI
-    scores[[sample]] <- get_doublet_scores(sample_counts, technology = technology)
-
+    counts_list_filt[[sample]] <- sample_counts
   }
+  # ~200K cells uses 20GB of RAM
+  # calculate nworkers from sample with most cells
+  # ensure will not exceed 85% of RAM on 60GB machine
+  nworkers <- get_doublet_nworkers(counts_list_filt)
+  message("Number of workers: ", nworkers)
+
+  scores <- BiocParallel::bplapply(
+    setNames(samples, samples),
+    function(sample) {
+      message("\nSample --> ", sample)
+      sample_counts <- counts_list_filt[[sample]]
+
+      # TODO: Pass also parse_kit when available from the UI
+      get_doublet_scores(sample_counts, technology = technology)
+    },
+    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
+  )
+
+  scores <- remove_null_list_elements(scores)
 
   prev_out$doublet_scores <- scores
   res <- list(
@@ -44,6 +59,17 @@ score_doublets <- function(input, pipeline_config, prev_out) {
 
   message("\nScoring doublets step complete.")
   return(res)
+}
+
+get_doublet_nworkers <- function(counts_list) {
+  sample_ncells <- sapply(counts_list, ncol)
+  nsamples <- length(counts_list)
+  max_ncells <- max(sample_ncells)
+  est_ram_per_worker <- (max_ncells / 200000) * 20
+  max_workers <- floor(0.85 * BATCH_POD_MEMORY / est_ram_per_worker)
+
+  # use at most ncpus workers
+  min(nsamples, max_workers, BATCH_POD_CPUS)
 }
 
 

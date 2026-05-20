@@ -21,9 +21,9 @@ list(cellSizeDistribution = list(mock_sample_2_id = list(enabled = FALSE,
             regressionTypeSettings = list(linear = list(p.level = 0.001), 
                 spline = list(p.level = 0.001))))), doubletScores = list(
         mock_sample_2_id = list(enabled = TRUE, auto = TRUE, 
-            filterSettings = list(probabilityThreshold = 0.93708240985870361, 
+            filterSettings = list(probabilityThreshold = 0.97439789772033691, 
                 binStep = 0.02)), mock_sample_1_id = list(enabled = TRUE, 
-            auto = TRUE, filterSettings = list(probabilityThreshold = 0.84159499406814575, 
+            auto = TRUE, filterSettings = list(probabilityThreshold = 0.84521621465682983, 
                 binStep = 0.02))), dataIntegration = list(dataIntegration = list(
         method = "harmony", methodSettings = list(seuratv4 = list(
             numGenes = 2000, normalisation = "logNormalize"), 

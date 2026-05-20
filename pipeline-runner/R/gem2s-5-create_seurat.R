@@ -21,35 +21,41 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   doublet_scores <- prev_out$doublet_scores
   edrops <- prev_out$edrops
 
-  scdata_list <- list()
   samples <- names(counts_list)
-  for (sample in samples) {
-    message("\nCreating SeuratObject for sample --> ", sample)
+  nworkers <- min(length(samples), BATCH_POD_CPUS)
 
-    scdata_list[[sample]] <- construct_scdata(
-      counts = counts_list[[sample]],
-      doublet_score = doublet_scores[[sample]],
-      edrops_out = edrops[[sample]],
-      sample = sample,
-      annot = annot,
-      config = config
-    )
-  }
+  scdata_list <- BiocParallel::bplapply(
+    setNames(samples, samples),
+    function(sample) {
+      message("\nCreating SeuratObject for sample --> ", sample)
 
+      construct_scdata(
+        counts = counts_list[[sample]],
+        doublet_score = doublet_scores[[sample]],
+        edrops_out = edrops[[sample]],
+        sample = sample,
+        annot = annot,
+        config = config
+      )
+    },
+    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
+  )
 
   prev_out$scdata_list <- scdata_list
   prev_out$disable_qc_filters <- FALSE
-  res <- list(
+
+  message("\nCreation of Seurat objects step complete.")
+
+  list(
     data = list(),
     output = prev_out
   )
-
-  message("\nCreation of Seurat objects step complete.")
-  return(res)
 }
 
 # construct SeuratObject
-construct_scdata <- function(counts, doublet_score, edrops_out, sample, annot, config, min.cells = 0, min.features = 10) {
+construct_scdata <- function(
+  counts, doublet_score, edrops_out, sample, annot, config, min.cells = 0, min.features = 10
+) {
   metadata <- construct_metadata(counts, sample, config)
 
   scdata <- Seurat::CreateSeuratObject(

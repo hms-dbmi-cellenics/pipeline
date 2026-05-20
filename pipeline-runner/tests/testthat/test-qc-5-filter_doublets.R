@@ -150,7 +150,7 @@ test_that("filter_doublets does not fail if doublet scores are not present and d
   scdata_list[[sample1_id]]$doublet_scores <- NULL
 
   out <- filter_doublets(scdata_list, config, sample1_id, cells_id)
-  
+
   expect_setequal(names(out), c("data", "new_ids", "config", "plotData"))
   expect_equal(out$new_ids[[sample1_id]], cells_id[[sample1_id]])
 
