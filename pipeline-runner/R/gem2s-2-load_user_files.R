@@ -52,6 +52,131 @@ load_user_files <- function(
   return(res)
 }
 
+#' Combine and name results from parallel sample processing
+#'
+#' @param results list of results from bplapply, each with slots: counts,
+#'   annotations, matrix_dir
+#' @param samples character vector of sample names
+#' @param extract_nested logical. If TRUE, extracts nested annotations
+#'   (assumes annotations$annot and annotations$feature_types structure)
+#'
+#' @return list with named counts_list, annot_list, matrix_dir_list, and
+#'   optionally feature_types_list
+#'
+combine_parallel_results <- function(results, samples, extract_nested = FALSE) {
+  counts_list <- lapply(results, function(x) x$counts)
+  matrix_dir_list <- lapply(results, function(x) x$matrix_dir)
+
+  if (extract_nested) {
+    annot_list <- lapply(results, function(x) x$annotations$annot)
+    feature_types_list <- lapply(
+      results,
+      function(x) x$annotations$feature_types
+    )
+  } else {
+    annot_list <- lapply(results, function(x) x$annotations)
+    feature_types_list <- NULL
+  }
+
+  names(counts_list) <- samples
+  names(annot_list) <- samples
+  names(matrix_dir_list) <- samples
+
+  if (!is.null(feature_types_list)) {
+    names(feature_types_list) <- samples
+  }
+
+  result <- list(
+    counts_list = counts_list,
+    annot_list = annot_list,
+    matrix_dir_list = matrix_dir_list
+  )
+
+  if (!is.null(feature_types_list)) {
+    result$feature_types_list <- feature_types_list
+  }
+
+  return(result)
+}
+
+#' Read Parse data for a single sample
+#'
+#' @param sample character sample ID
+#' @param input_dir character path to input directory
+#'
+#' @return list with slots:
+#'   \item{counts}{count matrix}
+#'   \item{annotations}{data.frame with annotations}
+#'   \item{matrix_dir}{directory where matrix is stored}
+#'
+read_parse_sample <- function(sample, input_dir) {
+  sample_dir <- file.path(input_dir, sample)
+  sample_fpaths <- list.files(sample_dir)
+  annot_fpath <- file.path(sample_dir, "all_genes.csv.gz")
+
+  message("\nSample --> ", sample)
+  message(
+    "Reading files from ",
+    sample_dir,
+    " --> ",
+    paste(sample_fpaths, collapse = " - ")
+  )
+
+  annotations <- read_parse_annotations(annot_fpath, sample)
+
+  mtx_path <- file.path(sample_dir, "DGE.mtx.gz")
+  barcodes_path <- file.path(sample_dir, "cell_metadata.csv.gz")
+  features_path <- file.path(sample_dir, "all_genes.csv.gz")
+
+  # read barcodes (cells) from CSV
+  cell_barcodes <- as.data.frame(
+    data.table::fread(barcodes_path, header = FALSE, skip = 1)
+  )
+  cell_names <- cell_barcodes[[1]]
+
+  # read features (genes) from CSV, using column 1 (parse format)
+  feature_names <- as.data.frame(
+    data.table::fread(features_path, header = FALSE, skip = 1)
+  )
+  gene_names <- feature_names[[1]]
+  gene_names <- make.unique(gene_names)
+
+  # import matrix from parse format (cell x gene orientation)
+  # then transpose to get standard gene x cell format
+  counts_mat <- BPCells::import_matrix_market(
+    mtx_path,
+    row_names = cell_names,
+    col_names = gene_names
+  )
+  counts_mat <- Matrix::t(counts_mat)
+
+  # write the matrix to a directory
+  matrix_dir <- file.path(
+    tempdir(),
+    paste0(sample, "_matrix_dir")
+  )
+  unlink(matrix_dir, recursive = TRUE)
+
+  # hangs indefinitely in BPCells not attached (see init.R)
+  counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
+
+  message(
+    sprintf(
+      "Sample %s has %s genes and %s barcodes",
+      sample, nrow(counts), ncol(counts)
+    )
+  )
+
+  c(counts, annotations) %<-%
+    filter_unnamed_features(counts, annotations, sample)
+
+  list(
+    counts = counts,
+    annotations = annotations,
+    matrix_dir = matrix_dir
+  )
+}
+
 #' Read Parse files. Calls readMTX
 #'
 #' @param config experiment settings
@@ -61,140 +186,127 @@ load_user_files <- function(
 #' @export
 #'
 read_parse_files <- function(config, input_dir) {
-  counts_list <- list()
-  annot_list <- list()
-  feature_types_list <- list()
-  matrix_dir_list <- list()
-
   samples <- config$samples
 
-  for (sample in samples) {
-    sample_dir <- file.path(input_dir, sample)
-    sample_fpaths <- list.files(sample_dir)
-    annot_fpath <- file.path(sample_dir, "all_genes.csv.gz")
+  # set up parallel processing parameters
+  nworkers <- min(length(samples), BATCH_POD_CPUS)
+  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
 
-    message("\nSample --> ", sample)
-    message(
-      "Reading files from ",
-      sample_dir,
-      " --> ",
-      paste(sample_fpaths, collapse = " - ")
-    )
+  # use bplapply for parallel processing
+  results <- BiocParallel::bplapply(
+    samples,
+    read_parse_sample,
+    input_dir = input_dir,
+    BPPARAM = bpparam
+  )
 
-    annotations <- read_parse_annotations(annot_fpath, sample)
+  # combine and name results from parallel processing
+  combined <- combine_parallel_results(
+    results,
+    samples,
+    extract_nested = FALSE
+  )
 
-    mtx_path <- file.path(sample_dir, "DGE.mtx.gz")
-    barcodes_path <- file.path(sample_dir, "cell_metadata.csv.gz")
-    features_path <- file.path(sample_dir, "all_genes.csv.gz")
+  annot <- format_annot(combined$annot_list)
 
-    # read barcodes (cells) from CSV
-    cell_barcodes <- as.data.frame(
-      data.table::fread(barcodes_path, header = FALSE, skip = 1)
-    )
-    cell_names <- cell_barcodes[[1]]
+  list(
+    counts_list = combined$counts_list,
+    annot = annot,
+    matrix_dir_list = combined$matrix_dir_list
+  )
+}
 
-    # read features (genes) from CSV, using column 1 (parse format)
-    feature_names <- as.data.frame(
-      data.table::fread(features_path, header = FALSE, skip = 1)
-    )
-    gene_names <- feature_names[[1]]
-    gene_names <- make.unique(gene_names)
+#' Read 10X h5 data for a single sample
+#'
+#' @param sample character sample ID
+#' @param input_dir character path to input directory
+#'
+#' @return list with slots:
+#'   \item{counts}{count matrix}
+#'   \item{annotations}{data.frame with annotations}
+#'   \item{matrix_dir}{directory where matrix is stored}
+#'
+read_10x_h5_sample <- function(sample, input_dir) {
+  sample_dir <- file.path(input_dir, sample)
+  sample_fpaths <- list.files(sample_dir)
+  sample_counts_path <- file.path(
+    sample_dir,
+    sample_fpaths[[1]]
+  )
 
-    # import matrix from parse format (cell x gene orientation)
-    # then transpose to get standard gene x cell format
-    counts_mat <- BPCells::import_matrix_market(
-      mtx_path,
-      row_names = cell_names,
-      col_names = gene_names
-    )
-    counts_mat <- Matrix::t(counts_mat)
+  message("\nSample --> ", sample)
+  message(
+    "Reading files from ",
+    sample_dir,
+    " --> ",
+    paste(sample_fpaths, collapse = " - ")
+  )
 
-    # Write the matrix to a directory
-    matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
-    unlink(matrix_dir, recursive = TRUE)
-    
-    # hangs indefinitely in BPCells not attached (see init.R)
-    counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
-
-    message(
-      sprintf(
-        "Sample %s has %s genes and %s barcodes",
-        sample, nrow(counts), ncol(counts)
-      )
-    )
-
-    c(counts, annotations) %<-% 
-      filter_unnamed_features(counts, annotations, sample)
-
-    counts_list[[sample]] <- counts
-    annot_list[[sample]] <- annotations
-    matrix_dir_list[[sample]] <- matrix_dir
+  if (length(sample_fpaths) > 1) {
+    stop("Only one h5 expected. More files detected.")
   }
 
-  annot <- format_annot(annot_list)
+  ungzipped_counts_path <- R.utils::gunzip(sample_counts_path)
 
-  return(list(
-    counts_list = counts_list,
-    annot = annot,
-    matrix_dir_list = matrix_dir_list
-  ))
+  gene_names <- read_10x_h5_feature_names(ungzipped_counts_path)
+  counts_mat <- BPCells::open_matrix_10x_hdf5(ungzipped_counts_path)
+
+  # write the matrix to a directory
+  matrix_dir <- file.path(
+    tempdir(),
+    paste0(sample, "_matrix_dir")
+  )
+  unlink(matrix_dir, recursive = TRUE)
+
+  # hangs indefinitely in BPCells not attached (see init.R)
+  counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
+
+  # use Gene Expression modality if multiple
+  if (methods::is(gene_names, "list")) {
+    gene_names <- gene_names$`Gene Expression`
+  }
+
+  annotations <- data.frame(
+    input = rownames(counts),
+    symbol = gene_names
+  )
+
+  list(
+    counts = counts,
+    annotations = annotations,
+    matrix_dir = matrix_dir
+  )
 }
 
 read_10x_h5_file <- function(config, input_dir) {
-  annot_list <- list()
-  counts_list <- list()
-  matrix_dir_list <- list()
-
-
   samples <- config$samples
 
-  for (sample in samples) {
-    sample_dir <- file.path(input_dir, sample)
-    sample_fpaths <- list.files(sample_dir)
-    sample_counts_path <- file.path(sample_dir, sample_fpaths[[1]])
+  # set up parallel processing parameters
+  nworkers <- min(length(samples), BATCH_POD_CPUS)
+  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
 
-    message("\nSample --> ", sample)
-    message(
-      "Reading files from ",
-      sample_dir,
-      " --> ",
-      paste(sample_fpaths, collapse = " - ")
-    )
+  # use bplapply for parallel processing
+  results <- BiocParallel::bplapply(
+    samples,
+    read_10x_h5_sample,
+    input_dir = input_dir,
+    BPPARAM = bpparam
+  )
 
-    if (length(sample_fpaths) > 1) {
-      stop("Only one h5 expected. More files detected.")
-    }
+  # combine and name results from parallel processing
+  combined <- combine_parallel_results(
+    results,
+    samples,
+    extract_nested = FALSE
+  )
 
-    ungzipped_counts_path <- R.utils::gunzip(sample_counts_path)
+  annot <- format_annot(combined$annot_list)
 
-    gene_names <- read_10x_h5_feature_names(ungzipped_counts_path)
-    counts_mat <- BPCells::open_matrix_10x_hdf5(ungzipped_counts_path)
-
-    # Write the matrix to a directory
-    matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
-    unlink(matrix_dir, recursive = TRUE)
-    
-    # hangs indefinitely in BPCells not attached (see init.R)
-    counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
-
-    # use Gene Expression modality if multiple
-    if (methods::is(gene_names, "list")) {
-      gene_names <- gene_names$`Gene Expression`
-    }
-
-    annotations <- data.frame(input = rownames(counts), symbol = gene_names)
-    counts_list[[sample]] <- counts
-    annot_list[[sample]] <- annotations
-    matrix_dir_list[[sample]] <- matrix_dir
-  }
-
-  annot <- format_annot(annot_list)
-
-  return(list(
-    counts_list = counts_list,
+  list(
+    counts_list = combined$counts_list,
     annot = annot,
-    matrix_dir_list = matrix_dir_list
-  ))
+    matrix_dir_list = combined$matrix_dir_list
+  )
 }
 
 read_10x_h5_feature_names <- function(
@@ -202,7 +314,6 @@ read_10x_h5_feature_names <- function(
   use.names = TRUE,
   unique.features = TRUE
 ) {
-
   infile <- hdf5r::H5File$new(filename = filename, mode = "r")
   genomes <- names(infile)
 
@@ -240,86 +351,114 @@ read_10x_h5_feature_names <- function(
 #'
 #' @param config experiment settings.
 #'
-read_10x_files <- function(config, input_dir) {
-  counts_list <- list()
-  annot_list <- list()
-  matrix_dir_list <- list()
-  feature_types_list <- list()
+#' Read 10X data for a single sample
+#'
+#' @param sample character sample ID
+#' @param input_dir character path to input directory
+#'
+#' @return list with slots:
+#'   \item{counts}{count matrix}
+#'   \item{annotations}{list with annot and feature_types}
+#'   \item{matrix_dir}{directory where matrix is stored}
+#'
+read_10x_sample <- function(sample, input_dir) {
+  sample_dir <- file.path(input_dir, sample)
+  sample_fpaths <- list.files(sample_dir)
+  annot_fpath <- file.path(sample_dir, "features.tsv.gz")
 
-  samples <- config$samples
+  message("\nSample --> ", sample)
+  message(
+    "Reading files from ",
+    sample_dir,
+    " --> ",
+    paste(sample_fpaths, collapse = " - ")
+  )
 
-  for (sample in samples) {
-    sample_dir <- file.path(input_dir, sample)
-    sample_fpaths <- list.files(sample_dir)
-    annot_fpath <- file.path(sample_dir, "features.tsv.gz")
+  annotations <- read_10x_annotations(annot_fpath, sample)
 
-    message("\nSample --> ", sample)
-    message(
-      "Reading files from ",
-      sample_dir,
-      " --> ",
-      paste(sample_fpaths, collapse = " - ")
-    )
+  # previously used Seurat::Read10X
+  counts_mat <- read_10x_bpcells(
+    sample_dir,
+    gene.column = annotations[["gene_column"]],
+    unique.features = TRUE
+  )
 
-    annotations <- read_10x_annotations(annot_fpath, sample)
-
-    # previously used Seurat::Read10X
-    counts_mat <- read_10x_bpcells(
-      sample_dir,
-      gene.column = annotations[["gene_column"]],
-      unique.features = TRUE
-    )
-
-    # Handle case where read_10x_bpcells returns a list (multiple feature types)
-    if (is.list(counts_mat)) {
-      slot <- "Gene Expression"
-      # questionable: grab first slot if no slot named gene expression
-      if (!(slot %in% names(counts_mat))) slot <- names(counts_mat)[1]
-      counts_mat <- counts_mat[[slot]]
-    }
-
-    # Write the matrix to a directory
-    matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
-    unlink(matrix_dir, recursive = TRUE)
-    counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
-
-    if (methods::is(counts, "list")) {
-      slot <- "Gene Expression"
-      # questionable: grab first slot if no slot named gene expression
-      if (!(slot %in% names(counts))) slot <- names(counts)[1]
-      counts <- counts[[slot]]
-    }
-
-    message(
-      sprintf(
-        "Sample %s has %s genes and %s droplets.",
-        sample, nrow(counts), ncol(counts)
-      )
-    )
-
-    c(counts, annotations) %<-%
-      filter_unnamed_features(counts, annotations, sample)
-
-    counts_list[[sample]] <- counts
-    annot_list[[sample]] <- annotations[["annot"]]
-    feature_types_list[[sample]] <- annotations[["feature_types"]]
-    matrix_dir_list[[sample]] <- matrix_dir
+  # handle case where read_10x_bpcells returns a list (multiple feature types)
+  if (is.list(counts_mat)) {
+    slot <- "Gene Expression"
+    # questionable: grab first slot if no slot named gene expression
+    if (!(slot %in% names(counts_mat))) slot <- names(counts_mat)[1]
+    counts_mat <- counts_mat[[slot]]
   }
 
-  c(counts_list, annot_list) %<-%
+  # write the matrix to a directory
+  matrix_dir <- file.path(
+    tempdir(),
+    paste0(sample, "_matrix_dir")
+  )
+  unlink(matrix_dir, recursive = TRUE)
+  counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
+
+  if (methods::is(counts, "list")) {
+    slot <- "Gene Expression"
+    # questionable: grab first slot if no slot named gene expression
+    if (!(slot %in% names(counts))) slot <- names(counts)[1]
+    counts <- counts[[slot]]
+  }
+
+  message(
+    sprintf(
+      "Sample %s has %s genes and %s droplets.",
+      sample, nrow(counts), ncol(counts)
+    )
+  )
+
+  c(counts, annotations) %<-%
+    filter_unnamed_features(counts, annotations, sample)
+
+  list(
+    counts = counts,
+    annotations = annotations,
+    matrix_dir = matrix_dir
+  )
+}
+
+read_10x_files <- function(config, input_dir) {
+  samples <- config$samples
+
+  # set up parallel processing parameters
+  nworkers <- min(length(samples), BATCH_POD_CPUS)
+  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+
+  # use bplapply for parallel processing
+  results <- BiocParallel::bplapply(
+    samples,
+    read_10x_sample,
+    input_dir = input_dir,
+    BPPARAM = bpparam
+  )
+
+  # combine and name results from parallel processing
+  combined <- combine_parallel_results(
+    results,
+    samples,
+    extract_nested = TRUE
+  )
+
+  c(combined$counts_list, combined$annot_list) %<-%
     normalize_annotation_types(
-      annot_list,
-      counts_list,
-      feature_types_list,
+      combined$annot_list,
+      combined$counts_list,
+      combined$feature_types_list,
       samples
     )
 
-  annot <- format_annot(annot_list)
-  return(list(
-    counts_list = counts_list,
+  annot <- format_annot(combined$annot_list)
+  list(
+    counts_list = combined$counts_list,
     annot = annot,
-    matrix_dir_list = matrix_dir_list
-  ))
+    matrix_dir_list = combined$matrix_dir_list
+  )
 }
 
 # mimics Seurat::Read10X
@@ -328,7 +467,6 @@ read_10x_bpcells <- function(
   gene.column = 2,
   unique.features = TRUE
 ) {
-
   if (!dir.exists(data.dir)) {
     stop("Directory provided does not exist: ", data.dir)
   }
@@ -469,7 +607,6 @@ parse_rhapsody_matrix <- function(config, input_dir) {
   sample_options <- config$sampleOptions
 
 
-
   for (sample in samples) {
     sample_dir <- file.path(input_dir, sample)
     sample_fpaths <- file.path(sample_dir, file_names[["rhapsody"]])
@@ -546,7 +683,7 @@ parse_rhapsody_matrix <- function(config, input_dir) {
 
   annot <- format_annot(annot_list)
 
-  return(list(counts_list = counts_list, annot = annot))
+  list(counts_list = counts_list, annot = annot)
 }
 
 #' Loads annotations and formats the annotation file with the column names required by format_annot
@@ -593,7 +730,7 @@ read_10x_annotations <- function(annot_fpath, sample) {
 
   # Remove features that are not "Gene Expression"
   if (ncol(annot) > 2 && length(grep("Gene Expression", annot$V3)) > 0) {
-    annot <- annot %>% dplyr::filter(V3 == "Gene Expression")
+    annot <- annot |> dplyr::filter(V3 == "Gene Expression")
   }
 
   # Some feature files have less columns than expected.
@@ -625,7 +762,11 @@ read_10x_annotations <- function(annot_fpath, sample) {
   annot <- annot[, c(1, 2)]
   colnames(annot) <- c("input", "name")
 
-  return(list("annot" = annot, "feature_types" = feature_types, "gene_column" = gene_column))
+  list(
+    "annot" = annot,
+    "feature_types" = feature_types,
+    "gene_column" = gene_column
+  )
 }
 
 format_annot <- function(annot_list) {
@@ -683,14 +824,14 @@ format_annot <- function(annot_list) {
 #'
 normalize_annotation_types <- function(annot_list, counts_list, feature_types_list, samples) {
   if (any(feature_types_list == IDS_IDS) &&
-        any(feature_types_list == SYM_SYM) &&
-        !any(feature_types_list == IDS_SYM)) {
+    any(feature_types_list == SYM_SYM) &&
+    !any(feature_types_list == IDS_SYM)) {
     stop("Incompatible features detected.")
   }
 
   if (any(feature_types_list == IDS_SYM) &&
-        any(feature_types_list == IDS_IDS) ||
-        any(feature_types_list == SYM_SYM)) {
+    any(feature_types_list == IDS_IDS) ||
+    any(feature_types_list == SYM_SYM)) {
     annot_with_ids <-
       make_annot_with_ids(annot_list, feature_types_list)
 
@@ -714,7 +855,7 @@ normalize_annotation_types <- function(annot_list, counts_list, feature_types_li
       annot_list[[sample]] <- sample_annot
     }
   }
-  return(list(counts_list = counts_list, annot_list = annot_list))
+  list(counts_list = counts_list, annot_list = annot_list)
 }
 
 #' Determine the type of features in the annot data frame
@@ -740,8 +881,7 @@ get_feature_types <- function(annot) {
   }
 
   # regular cases. sum of booleans returns ints. convert to char to string match
-  feature_type <- switch(
-    as.character(sum(is_ens)),
+  feature_type <- switch(as.character(sum(is_ens)),
     "0" = SYM_SYM,
     "1" = IDS_SYM,
     "2" = IDS_IDS
@@ -880,5 +1020,5 @@ filter_unnamed_features <- function(counts, annotations, sample) {
     )
   }
 
-  return(list("counts" = counts, "annotations" = annotations))
+  list("counts" = counts, "annotations" = annotations)
 }
