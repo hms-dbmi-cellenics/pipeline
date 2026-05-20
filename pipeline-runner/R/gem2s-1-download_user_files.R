@@ -28,17 +28,22 @@ download_s3_files <- function(input, originals_bucket, input_dir, s3) {
   technology <- input$input$type
   unlink(input_dir, recursive = TRUE)
 
-  for (sample_id in sample_ids) {
-    for (file_type in file_types_by_technology[[technology]]) {
-      s3_path <- sample_s3_paths[[sample_id]][[file_type]]
+  nworkers <- min(length(sample_ids), BATCH_POD_CPUS)
 
-      local_fpath <- file.path(input_dir, sample_id, file_names[[file_type]])
+  BiocParallel::bplapply(
+    sample_ids,
+    function(sample_id) {
+      for (file_type in file_types_by_technology[[technology]]) {
+        s3_path <- sample_s3_paths[[sample_id]][[file_type]]
 
-      download_and_store(originals_bucket, s3_path, local_fpath, s3)
-    }
-  }
+        local_fpath <- file.path(input_dir, sample_id, file_names[[file_type]])
+
+        download_and_store(originals_bucket, s3_path, local_fpath, s3)
+      }
+    },
+    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
+  )
 }
-
 
 #' Download user files from S3
 #'
