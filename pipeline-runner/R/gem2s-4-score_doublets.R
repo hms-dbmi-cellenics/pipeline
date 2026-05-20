@@ -38,7 +38,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
   message("Number of workers: ", nworkers)
 
   scores <- BiocParallel::bplapply(
-    samples,
+    setNames(samples, samples),
     function(sample) {
       message("\nSample --> ", sample)
       sample_counts <- counts_list_filt[[sample]]
@@ -49,7 +49,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
     BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
   )
 
-  names(scores) <- samples
+  scores <- Filter(Negate(is.null), scores)
 
   prev_out$doublet_scores <- scores
   res <- list(

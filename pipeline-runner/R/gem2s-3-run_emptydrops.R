@@ -24,7 +24,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
   message("Number of workers: ", nworkers)
 
   edrops <- BiocParallel::bplapply(
-    samples,
+    setNames(samples, samples),
     function(sample) {
       message("\nSample --> ", sample)
       compute_sample_edrops(counts_list[[sample]])
@@ -32,7 +32,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
     BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
   )
 
-  names(edrops) <- samples
+  edrops <- Filter(Negate(is.null), edrops)
 
   prev_out$edrops <- edrops
   res <- list(
