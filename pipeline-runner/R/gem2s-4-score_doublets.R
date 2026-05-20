@@ -49,7 +49,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
     BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
   )
 
-  scores <- Filter(Negate(is.null), scores)
+  scores <- remove_null_list_elements(scores)
 
   prev_out$doublet_scores <- scores
   res <- list(

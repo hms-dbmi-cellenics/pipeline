@@ -32,7 +32,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
     BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
   )
 
-  edrops <- Filter(Negate(is.null), edrops)
+  edrops <- remove_null_list_elements(edrops)
 
   prev_out$edrops <- edrops
   res <- list(
@@ -42,6 +42,12 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
 
   message("\nRunning of emptydrops step complete.")
   return(res)
+}
+
+remove_null_list_elements <- function(lst) {
+  lst <- Filter(Negate(is.null), lst)
+  if (!length(lst)) names(lst) <- NULL
+  lst
 }
 
 get_edrops_nworkers <- function(counts_list) {
