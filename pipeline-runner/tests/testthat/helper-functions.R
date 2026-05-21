@@ -113,12 +113,13 @@ mock_scdata_list <- function(
     ngenes <- nrow(counts)
     ncells <- ncol(counts)
     set.seed(123)
+    # randomly add 1 count to genes that have at least 10 counts in a cell
     noise_matrix <- matrix(
-      rnorm(ngenes * ncells, mean = 0, sd = 0.01),
+      sample(c(0, 1), ngenes * ncells, replace = TRUE, prob = c(0.5, 0.5)),
       nrow = ngenes,
       ncol = ncells
     )
-
+    noise_matrix[counts < 10] <- 0
     counts <- counts + noise_matrix
   }
 
