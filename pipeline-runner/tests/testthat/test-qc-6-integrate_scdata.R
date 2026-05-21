@@ -867,5 +867,14 @@ test_that("sketch_data and SketchData produce similar results.", {
   res_orig <- Seurat::SketchData(merged_scdata, ncells = 60)
   res_mine <- sketch_data(merged_scdata, ncells = 60, nworkers = 2)
 
-  expect_true(cor(res_orig$leverage.score, res_mine$leverage.score) > 0.9999)
+  # leverage scores perfectly correlated (can be slight differences)
+  expect_equal(
+    cor(res_orig$leverage.score, res_mine$leverage.score),
+    1L,
+  )
+
+  # cells selected are the same
+  cells_orig <- Seurat::Cells(res_orig)
+  cells_mine <- Seurat::Cells(res_mine)
+  expect_setequal(cells_orig, cells_mine)
 })

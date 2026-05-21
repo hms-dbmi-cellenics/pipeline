@@ -108,6 +108,20 @@ mock_scdata_list <- function(
   colnames(counts) <- make.unique(colnames(counts))
   ncells_each <- ncol(counts) / 2
 
+  # add random noise to counts data.frame to avoid identical cells when replicating
+  if (n_rep > 1) {
+    nrow <- nrow(counts)
+    ncol <- ncol(counts)
+    set.seed(123)
+    noise_matrix <- matrix(
+      rnorm(nrow * ncol, mean = 0, sd = 0.01),
+      nrow = nrow,
+      ncol = ncol
+    )
+
+    counts <- counts + noise_matrix
+  }
+
   if (length(rename_genes) > 0) {
     # rename some genes to match cell cycle genes
     some_genes <- sample(nrow(counts), length(rename_genes))
