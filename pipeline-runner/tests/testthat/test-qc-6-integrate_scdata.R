@@ -855,3 +855,17 @@ test_that("integrate_scdata with seuratv4 and SCT doesn't run ScaleData", {
     c("data", "counts", "scale.data")
   )
 })
+
+test_that("sketch_data and SketchData produce similar results.", {
+  scdata_list <- mock_scdata_list(n_rep = 3, use_bpcells = TRUE)
+  scdata_list <- lapply(scdata_list, Seurat::NormalizeData)
+  scdata_list <- lapply(scdata_list, Seurat::FindVariableFeatures)
+  cells_id <- mock_ids(scdata_list)
+  merged_scdata <- create_scdata(scdata_list, cells_id)
+
+  # NOTE: even SketchData not deterministic between two repeat calls
+  res_orig <- Seurat::SketchData(merged_scdata, ncells = 60)
+  res_mine <- sketch_data(merged_scdata, ncells = 60, nworkers = 2)
+
+  expect_true(cor(res_orig$leverage.score, res_mine$leverage.score) > 0.9999)
+})
