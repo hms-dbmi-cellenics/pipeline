@@ -169,7 +169,7 @@ run_qc_step <- function(scdata,
 
   # print info
   task <- tasks[[task_name]]
-  
+
   message("\nConfig:")
   str(config[!names(config) %in% exclude_from_config])
   cat("\n")

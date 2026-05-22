@@ -37,6 +37,9 @@ score_doublets <- function(input, pipeline_config, prev_out) {
   nworkers <- get_doublet_nworkers(counts_list_filt)
   message("Number of workers: ", nworkers)
 
+  # Force HDF5Array to initialize its temp environment in the main process
+  HDF5Array::getHDF5DumpDir()
+
   scores <- BiocParallel::bplapply(
     setNames(samples, samples),
     function(sample) {

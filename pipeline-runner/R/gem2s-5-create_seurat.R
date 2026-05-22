@@ -24,6 +24,9 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   samples <- names(counts_list)
   nworkers <- min(length(samples), BATCH_POD_CPUS)
 
+  # Force HDF5Array to initialize its temp environment in the main process
+  HDF5Array::getHDF5DumpDir()
+
   scdata_list <- BiocParallel::bplapply(
     setNames(samples, samples),
     function(sample) {

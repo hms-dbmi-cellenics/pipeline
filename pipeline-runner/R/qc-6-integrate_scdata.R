@@ -30,7 +30,6 @@
 integrate_scdata <- function(
   scdata_list, config, sample_id, cells_id, task_name = "dataIntegration"
 ) {
-
   method <- config$dataIntegration$method
 
   if (length(scdata_list) == 1) {
@@ -39,7 +38,7 @@ integrate_scdata <- function(
   }
 
   # customize default geosketch config for first run
-   # for first run, downsampling method is "default"
+  # for first run, downsampling method is "default"
   is_first_run <- isTRUE(config$downsampling$method == "default")
 
   # dont alter config if not first run
@@ -51,7 +50,7 @@ integrate_scdata <- function(
   integration_function <- get(paste0("run_", method))
   scdata_integrated <- integration_function(scdata_list, config, cells_id)
 
-  # join layers for RNA assay for worker 
+  # join layers for RNA assay for worker
   rna_assay <- scdata_integrated[["RNA"]]
   if (methods::is(rna_assay, "Assay5")) {
     rna_assay <- SeuratObject::JoinLayers(rna_assay)
@@ -82,7 +81,6 @@ integrate_scdata <- function(
 run_preprocessing <- function(
   scdata, normalization, nfeatures, use_geosketch = FALSE, percent_keep = NULL
 ) {
-
   # for SCT we still:
   # - log-normalize: for gene expression plots
   # - find variable features: for gene list dispersions in Data Exploration
@@ -125,18 +123,13 @@ run_preprocessing <- function(
       num_cells, ifelse(is_sct, " cells.", " cells per sample.")
     )
 
-    tstart <- Sys.time()
-    scdata <- Seurat::SketchData(
+    nworkers <- min(BATCH_POD_CPUS, ifelse(is_sct, 1, num_samples))
+
+    scdata <- sketch_data(
       object = scdata,
       ncells = num_cells,
-      method = "LeverageScore",
-      sketched.assay = "sketch"
-    )
-    tend <- Sys.time()
-    message(
-      "SketchData completed in ",
-      round(difftime(tend, tstart, units = "secs"), 2),
-      " seconds."
+      sketched.assay = "sketch",
+      nworkers = nworkers
     )
 
     # run FindVariableFeatures again after SketchData
@@ -154,8 +147,186 @@ run_preprocessing <- function(
   return(scdata)
 }
 
-run_pca <- function(scdata, npcs, reduction_name = "pca") {
+sketch_data <- function(
+  object, ncells = 5000L, sketched.assay = "sketch",
+  var.name = "leverage.score", over.write = FALSE, seed = 123L,
+  cast = "dgCMatrix", verbose = TRUE, features = NULL, nworkers = 1L
+) {
+  assay <- SeuratObject::DefaultAssay(object = object)
 
+  if (!over.write) {
+    var.name <- Seurat:::CheckMetaVarName(
+      object = object,
+      var.name = var.name
+    )
+  }
+
+  if (verbose) message("Calculating Leverage Score")
+
+  scores_df <- parallel_leverage_score(
+    object[[assay]],
+    seed = seed,
+    verbose = verbose,
+    features = features,
+    nworkers = nworkers
+  )
+  object[[var.name]] <- scores_df[, 1L]
+
+  leverage.score <- object[[var.name]]
+  layer.names <- SeuratObject::Layers(
+    object = object[[assay]],
+    search = "data"
+  )
+
+  if (length(ncells) == 1L) ncells <- rep(ncells, length(layer.names))
+  if (is.null(names(ncells))) names(ncells) <- layer.names
+  ncells <- ncells[layer.names]
+
+  cells <- mapply(
+    function(layer.name, ncells.layer) {
+      if (!is.null(seed)) set.seed(seed)
+      cells.layer <- SeuratObject::Cells(object[[assay]], layer = layer.name)
+      if (length(cells.layer) < ncells.layer) {
+        cells.layer
+      } else {
+        sample(
+          x = cells.layer,
+          size = ncells.layer,
+          prob = leverage.score[cells.layer, ]
+        )
+      }
+    },
+    layer.names,
+    ncells
+  )
+
+  sketched <- suppressWarnings(
+    subset(
+      x = object[[assay]],
+      cells = unlist(cells),
+      layers = SeuratObject::Layers(
+        object = object[[assay]],
+        search = c("counts", "data")
+      )
+    )
+  )
+
+  if (!is.null(cast) && inherits(sketched, "Assay5")) {
+    sketched <- SeuratObject::CastAssay(object = sketched, to = cast)
+  }
+
+  SeuratObject::Key(object = sketched) <- SeuratObject::Key(object = sketched.assay, quiet = TRUE)
+  object[[sketched.assay]] <- sketched
+  SeuratObject::DefaultAssay(object = object) <- sketched.assay
+
+  return(object)
+}
+
+parallel_leverage_score <- function(
+  object, nsketch = 5000L, ndims = NULL, method = Seurat::CountSketch,
+  vf.method = NULL, layer = "data", eps = 0.5, seed = 123L, verbose = TRUE,
+  features = NULL, nworkers = 1L
+) {
+  `%||%` <- SeuratObject::`%||%`
+  layer <- unique(layer) %||% SeuratObject::DefaultLayer(object = object)
+  layer <- SeuratObject::Layers(object = object, search = layer)
+
+  # Force HDF5Array to initialize its temp environment in the main process
+  HDF5Array::getHDF5DumpDir()
+
+  results <- BiocParallel::bplapply(
+    layer,
+    function(l) {
+      if (verbose) message("Running LeverageScore for layer ", l)
+
+      features.use <- if (!is.null(features)) {
+        features
+      } else {
+        vf <- tryCatch(
+          SeuratObject::VariableFeatures(
+            object = object,
+            method = vf.method,
+            layer = l
+          ),
+          error = function(e) NULL
+        )
+        if (!is.null(vf) && length(vf) > 0L) {
+          vf
+        } else {
+          counts_layer <- sub("^data", "counts", l)
+          if (isTRUE(x = verbose)) {
+            message(
+              "No variable features were found in ",
+              l, ". Falling back to variable features from ",
+              counts_layer
+            )
+          }
+          tryCatch(
+            SeuratObject::VariableFeatures(
+              object = object,
+              method = vf.method,
+              layer = counts_layer
+            ),
+            error = function(e) {
+              stop(
+                "Unable to get variable features from `", l,
+                "` or fallback `", counts_layer, "`."
+              )
+            }
+          )
+        }
+      }
+
+      mat <- SeuratObject::LayerData(
+        object = object,
+        layer = l,
+        features = features.use,
+        fast = TRUE
+      )
+
+      score_try <- tryCatch(
+        {
+          Seurat::LeverageScore(
+            object = mat,
+            nsketch = nsketch,
+            ndims = ndims %||% ncol(object),
+            eps = eps,
+            seed = seed,
+            verbose = verbose
+          )
+        },
+        error = function(e) {
+          nonzero_var <- which(apply(mat, 1L, function(x) var(x) > 0))
+          Seurat::LeverageScore(
+            object = mat[nonzero_var, , drop = FALSE],
+            nsketch = nsketch,
+            ndims = ndims %||% ncol(object),
+            eps = eps,
+            seed = seed,
+            verbose = verbose
+          )
+        }
+      )
+
+      list(
+        cells = SeuratObject::Cells(x = object, layer = l),
+        scores = score_try
+      )
+    },
+    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers, RNGseed = seed)
+  )
+
+  scores <- SeuratObject::EmptyDF(n = ncol(object))
+  row.names(scores) <- colnames(object)
+  scores[, 1L] <- NA_real_
+  for (res in results) {
+    scores[res$cells, 1L] <- res$scores
+  }
+  scores
+}
+
+
+run_pca <- function(scdata, npcs, reduction_name = "pca") {
   # if BPCells write scale.data for default assay (RNA, SCT, or sketch)
   # default assay is used by RunPCA
   assay <- Seurat::DefaultAssay(scdata)
@@ -195,7 +366,8 @@ project_geosketch_integration <- function(
   is_unisample = FALSE,
   assay = "RNA"
 ) {
-  message("Projecting integration using:",
+  message(
+    "Projecting integration using:",
     "\n- sketched reduction: ", sketched_reduction,
     "\n- original assay: ", assay
   )
@@ -239,7 +411,6 @@ is_geosketch <- function(config) {
 }
 
 customize_default_downsampling_config <- function(config, scdata_list) {
-
   # do we need to geosketch?
   num_cells <- sum(sapply(scdata_list, ncol))
 
@@ -336,10 +507,8 @@ merge_scdata_list <- function(scdata_list, merge_data = FALSE) {
 }
 
 write_merged_matrix_dir <- function(scdata) {
-
   counts <- scdata[["RNA"]]$counts
   if (methods::is(counts, "IterableMatrix")) {
-
     # re-write disk backing
     matrix_dir <- file.path(tempdir(), "matrix_dir")
     unlink(matrix_dir, recursive = TRUE)
@@ -370,7 +539,6 @@ write_merged_matrix_dir <- function(scdata) {
 }
 
 add_dispersions <- function(scdata, method = "LogNormalize") {
-
   if (method == "default") {
     vars <- Seurat::HVFInfo(scdata)
   } else {
@@ -405,7 +573,6 @@ get_explained_variance <- function(scdata) {
     message("Extracting explained variance from RunFastMNN tool")
     var_explained <-
       scdata@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
-
   } else {
     is_geosketch <- "sketch" %in% names(scdata@assays)
     pca_reduction <- ifelse(is_geosketch, "pca.sketch", "pca")
@@ -589,8 +756,10 @@ build_mitochondrial_gene_list <- function(all_genes) {
 
   mito_gene_indices <- grep(MITOCHONDRIAL_REGEX, all_genes, ignore.case = TRUE)
 
-  message("Number of mitochondrial genes to exclude: ",
-          length(mito_gene_indices))
+  message(
+    "Number of mitochondrial genes to exclude: ",
+    length(mito_gene_indices)
+  )
 
   return(mito_gene_indices)
 }

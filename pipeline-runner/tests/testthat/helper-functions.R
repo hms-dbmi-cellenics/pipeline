@@ -74,16 +74,12 @@ mock_counts <- function(use_bpcells = FALSE) {
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
-  counts <- maybe_bpcells(
+  maybe_bpcells(
     counts,
     withr::local_tempfile(.local_envir = parent.frame()),
     use_bpcells
   )
-  
-  return(counts)
 }
-
-
 
 mock_scdata_list <- function(
   rename_genes = c(),
@@ -107,6 +103,9 @@ mock_scdata_list <- function(
   counts <- do.call("cbind", replicate(n_rep, counts, simplify = FALSE))
   colnames(counts) <- make.unique(colnames(counts))
   ncells_each <- ncol(counts) / 2
+
+  # add random noise to counts data.frame to avoid identical cells when replicating
+  if (n_rep > 1) counts <- add_noise(counts)
 
   if (length(rename_genes) > 0) {
     # rename some genes to match cell cycle genes
@@ -161,6 +160,25 @@ mock_scdata_list <- function(
   }
 
   return(scdata_list)
+}
+
+add_noise <- function(counts) {
+  ngenes <- nrow(counts)
+  ncells <- ncol(counts)
+  set.seed(123)
+  # randomly add 1 count to non-zero entries
+  noise_matrix <- matrix(
+    sample(
+      c(0, 1),
+      ngenes * ncells,
+      replace = TRUE,
+      prob = c(0.5, 0.5)
+    ),
+    nrow = ngenes,
+    ncol = ncells
+  )
+  noise_matrix[counts == 0] <- 0
+  counts + noise_matrix
 }
 
 mock_ids <- function(scdata_list) {
