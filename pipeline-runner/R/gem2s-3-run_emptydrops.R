@@ -23,6 +23,9 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
   nworkers <- get_edrops_nworkers(counts_list)
   message("Number of workers: ", nworkers)
 
+  # Force HDF5Array to initialize its temp environment in the main process
+  HDF5Array::getHDF5DumpDir()
+
   edrops <- BiocParallel::bplapply(
     setNames(samples, samples),
     function(sample) {
