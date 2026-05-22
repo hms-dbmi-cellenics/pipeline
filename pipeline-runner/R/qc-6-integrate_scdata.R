@@ -231,6 +231,9 @@ parallel_leverage_score <- function(
   layer <- unique(layer) %||% SeuratObject::DefaultLayer(object = object)
   layer <- SeuratObject::Layers(object = object, search = layer)
 
+  # Force HDF5Array to initialize its temp environment in the main process
+  HDF5Array::getHDF5DumpDir()
+
   results <- BiocParallel::bplapply(
     layer,
     function(l) {
