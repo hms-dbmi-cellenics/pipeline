@@ -870,7 +870,7 @@ test_that("sketch_data and SketchData produce similar results.", {
   # leverage scores perfectly correlated (can be slight differences)
   expect_equal(
     cor(res_orig$leverage.score, res_mine$leverage.score),
-    1L,
+    1L
   )
 
   # cells selected are the same

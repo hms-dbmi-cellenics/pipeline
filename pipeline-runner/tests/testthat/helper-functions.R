@@ -170,7 +170,7 @@ add_noise <- function(counts) {
   ngenes <- nrow(counts)
   ncells <- ncol(counts)
   set.seed(123)
-  # randomly add 1 count to genes that have at least 10 counts in a cell
+  # randomly add 1 count to non-zero entries
   noise_matrix <- matrix(
     sample(
       c(0, 1),
@@ -181,7 +181,7 @@ add_noise <- function(counts) {
     nrow = ngenes,
     ncol = ncells
   )
-  noise_matrix[counts < 10] <- 0
+  noise_matrix[counts == 0] <- 0
   counts + noise_matrix
 }
 
