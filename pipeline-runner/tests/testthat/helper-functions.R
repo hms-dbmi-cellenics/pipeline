@@ -74,16 +74,12 @@ mock_counts <- function(use_bpcells = FALSE) {
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
-  counts <- maybe_bpcells(
+  maybe_bpcells(
     counts,
     withr::local_tempfile(.local_envir = parent.frame()),
     use_bpcells
   )
-  
-  return(counts)
 }
-
-
 
 mock_scdata_list <- function(
   rename_genes = c(),
