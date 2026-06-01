@@ -82,7 +82,13 @@ file_types_by_technology <- list(
   "anndata_object" = list("anndataObject"),
   "rhapsody" = list("rhapsody"),
   "10x_h5" = list("10XH5"),
-  "parse" = list("barcodesParse", "featuresParse", "matrixParse")
+  "parse" = list("barcodesParse", "featuresParse", "matrixParse"),
+  "visium_hd" = list(
+    "visiumHdFilteredFeatureCellMatrix",
+    "visiumHdCellSegmentations",
+    "visiumHdTissueHiresImage",
+    "visiumHdScalefactorsJson"
+  )
 )
 
 file_names <- list(
@@ -97,7 +103,11 @@ file_names <- list(
   "10XH5" = "matrix.h5.gz",
   barcodesParse = "cell_metadata.csv.gz",
   featuresParse = "all_genes.csv.gz",
-  matrixParse = "DGE.mtx.gz"
+  matrixParse = "DGE.mtx.gz",
+  visiumHdFilteredFeatureCellMatrix = "filtered_feature_cell_matrix.h5",
+  visiumHdCellSegmentations = "cell_segmentations.geojson",
+  visiumHdTissueHiresImage = "tissue_hires_image.png",
+  visiumHdScalefactorsJson = "scalefactors_json.json"
 )
 
 MITOCHONDRIAL_REGEX <- "^mt[-:]"
@@ -125,13 +135,13 @@ DOUBLET_RATE_PARSE <- list(mini = 0.046, WT = 0.034, mega = 0.064)
 
 # pipeline error constants
 errors <- list(
-  ERROR_OBJ2S_READ = 'ERROR_OBJ2S_READ',
-  ERROR_OBJ2S_COUNTS = 'ERROR_OBJ2S_COUNTS',
-  ERROR_OBJ2S_HVFINFO = 'ERROR_OBJ2S_HVFINFO',
-  ERROR_OBJ2S_METADATA = 'ERROR_OBJ2S_METADATA',
-  ERROR_OBJ2S_CLUSTERS = 'ERROR_OBJ2S_CLUSTERS',
-  ERROR_OBJ2S_REDUCTION = 'ERROR_OBJ2S_REDUCTION',
-  ERROR_OBJ2S_LOGCOUNTS = 'ERROR_OBJ2S_LOGCOUNTS'
+  ERROR_OBJ2S_READ = "ERROR_OBJ2S_READ",
+  ERROR_OBJ2S_COUNTS = "ERROR_OBJ2S_COUNTS",
+  ERROR_OBJ2S_HVFINFO = "ERROR_OBJ2S_HVFINFO",
+  ERROR_OBJ2S_METADATA = "ERROR_OBJ2S_METADATA",
+  ERROR_OBJ2S_CLUSTERS = "ERROR_OBJ2S_CLUSTERS",
+  ERROR_OBJ2S_REDUCTION = "ERROR_OBJ2S_REDUCTION",
+  ERROR_OBJ2S_LOGCOUNTS = "ERROR_OBJ2S_LOGCOUNTS"
 )
 
 # items stored in config are returned to the api

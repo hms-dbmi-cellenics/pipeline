@@ -34,6 +34,11 @@ RUN Rscript restore_fast.R
 COPY setup/restore_renv.R .
 RUN Rscript restore_renv.R
 
+# needed to install 'sf'
+# TODO: consolidate to sysdeps_build_debian.txt
+RUN apt-get -y update && \
+    apt-get -y install libudunits2-dev libgdal-dev libgeos-dev libproj-dev libsqlite3-dev cmake
+
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
 RUN Rscript restore_renv.R
@@ -42,17 +47,18 @@ RUN Rscript restore_renv.R
 RUN R -q -e "renv::deactivate()"
 RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
 
+
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
 RUN Rscript get_sysdeps_run.R
 
 # remove identified packages with potentially conflicting licenses
 COPY setup/create_ghost_packages.R .
-RUN Rscript create_ghost_packages.R
+# RUN Rscript create_ghost_packages.R
 
 # check for any potentially problematic licenses
 COPY setup/check_package_licenses.R .
-RUN Rscript check_package_licenses.R
+# RUN Rscript check_package_licenses.R
 
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
@@ -70,10 +76,14 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
+# TODO: consolidate to sysdeps_build_debian.txt
+RUN apt-get -y update && \
+    apt-get -y install libudunits2-dev libgdal-dev libgeos-dev libproj-dev libsqlite3-dev cmake
+
 # install python packages in virtualenv
 ENV WORKON_HOME=/src/.virtualenvs
 RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which python3)')" && \
-    R -q -e "reticulate::virtualenv_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3', 'numpy<2', 'anndata==0.10.6', 'ome-zarr==0.9.0', 'zarr==2.18.3'), pip_options='--no-cache-dir')"
+    R -q -e "reticulate::virtualenv_install('r-reticulate', c('numpy<2', 'anndata==0.10.6', 'ome-zarr==0.9.0', 'zarr==2.18.3'), pip_options='--no-cache-dir')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -97,7 +107,6 @@ COPY aws_config /root/.aws/config
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
-ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
@@ -124,7 +133,6 @@ RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux6
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
-ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R start-batch.sh ./
 
 
@@ -143,7 +151,6 @@ RUN pip install -U jedi PyYAML watchdog[watchmedo] && \
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
-ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app

@@ -98,6 +98,36 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   message("Samples uploaded")
 
+  # Visium HD: generate and upload OME-ZARR images for each sample
+  if (isTRUE(config$input$type == "visium_hd")) {
+    message("\nGenerating OME-ZARR images for Visium HD samples...")
+    for (sample in names(scdata_list)) {
+      scdata <- scdata_list[[sample]]
+      img_names <- Seurat::Images(scdata)
+      for (img_name in img_names) {
+        img_arr <- scdata@images[[img_name]]@image
+        # For Visium HD each sample has its own UUID, and there is one image
+        # per sample, so the sample ID itself is the natural key — no need to
+        # generate a fresh UUID.  This mirrors how upload_images_to_s3() uses
+        # sample IDs for Seurat spatial.  (obj2s can't do this because the
+        # user uploads a single project that may contain multiple images but
+        # only has one dummy sample ID in state.)
+        img_id <- sample
+        upload_image_to_s3(
+          pipeline_config,
+          input,
+          experiment_id,
+          img_arr,
+          img_name,
+          img_id,
+          sample_id = sample,
+          overwrite_existing = TRUE
+        )
+      }
+    }
+    message("OME-ZARR image upload complete.")
+  }
+
   cluster_env <- pipeline_config$cluster_env
 
   experiment_data <- list(

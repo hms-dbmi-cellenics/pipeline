@@ -92,7 +92,12 @@ load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
 # get_nnzero will return how many non-zero counts the count matrix has
 # it is used to order samples according to their size
 get_nnzero <- function(x) {
-  return(sum(x$nFeature_RNA))
+  nfeat_colname <- paste0(
+    "nFeature_",
+    Seurat::DefaultAssay(x)
+  )
+  
+  return(sum(x@meta.data[[nfeat_colname]]))
 }
 
 order_by_size <- function(scdata_list) {

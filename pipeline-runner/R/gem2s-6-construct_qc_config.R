@@ -71,6 +71,18 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
     configureEmbedding = config_embedding_clustering
   )
 
+  # Visium HD: cells are defined by polygon segmentation.
+  # Classifier and doublet scores are not applicable; cell size distribution is also disabled.
+  if (isTRUE(technology == "visium_hd")) {
+    message("Applying Visium HD QC config overrides (disabling classifier, doubletScores, cellSizeDistribution).")
+    for (sample in samples) {
+      config$classifier[[sample]]$enabled <- FALSE
+      config$classifier[[sample]]$prefiltered <- TRUE
+      config$doubletScores[[sample]]$enabled <- FALSE
+      config$cellSizeDistribution[[sample]]$enabled <- FALSE
+    }
+  }
+
   return(config)
 }
 

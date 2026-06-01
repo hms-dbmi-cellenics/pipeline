@@ -776,6 +776,12 @@
       ],
       "Hash": "bac1c808a92d9c3f45d05e7a8c1b74f0"
     },
+    "sf": {
+      "Package": "sf",
+      "Version": "1.1-0",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
     "Seurat": {
       "Package": "Seurat",
       "Version": "5.4.0",

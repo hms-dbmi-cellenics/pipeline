@@ -22,6 +22,32 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   edrops <- prev_out$edrops
 
   samples <- names(counts_list)
+
+  # Visium HD: Seurat spatial objects were already created in load_user_files (step 2)
+  # by Load10X_Spatial. Use them directly rather than reconstructing from counts.
+  # TODO: disect Load10X_Spatial to make it similar to other techs
+  # this will make metadata etc work easily
+  if (config$input$type == "visium_hd") {
+    message("Visium HD: using Seurat spatial objects created in load step.")
+
+    # Attach mitochondrial gene metadata to existing spatial objects
+    prev_out$scdata_list <- lapply(
+      setNames(samples, samples),
+      function(sample) {
+        scdata <- prev_out$scdata_list[[sample]]
+        scdata$samples <- sample
+        scdata <- scdata |>
+          add_mito(annot) |>
+          add_edrops(NULL)
+        return(scdata)
+      }
+    )
+    prev_out$disable_qc_filters <- FALSE
+
+    message("\nCreation of Seurat objects (Visium HD) step complete.")
+    return(list(data = list(), output = prev_out))
+  }
+
   nworkers <- min(length(samples), BATCH_POD_CPUS)
 
   # Force HDF5Array to initialize its temp environment in the main process

@@ -48,7 +48,7 @@ snap-accept: build ## Accept updated snaps (usage: make snap-accept)
 		--entrypoint /bin/bash \
 		-v $(PWD)/pipeline-runner/tests/testthat/_snaps:/src/pipeline-runner/tests/testthat/_snaps \
 		biomage-pipeline-runner \
-		-c "R -e \"testthat::snapshot_accept()\""
+		-c "R -e \"library('sf');st_drivers()['GeoJSON',]\""
 hooks: ## Configures path to git hooks
 	@git config core.hooksPath .githooks
 run: build run-only

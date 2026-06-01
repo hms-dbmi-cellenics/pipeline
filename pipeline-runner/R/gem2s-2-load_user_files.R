@@ -23,7 +23,7 @@ load_user_files <- function(
   config <- prev_out$config
 
   technology <- ifelse(
-    config$input$type %in% c("rhapsody", "10x_h5", "parse"),
+    config$input$type %in% c("rhapsody", "10x_h5", "parse", "visium_hd"),
     config$input$type,
     "10x"
   )
@@ -32,7 +32,8 @@ load_user_files <- function(
     "10x" = read_10x_files,
     "rhapsody" = read_rhapsody_files,
     "10x_h5" = read_10x_h5_file,
-    "parse" = read_parse_files
+    "parse" = read_parse_files,
+    "visium_hd" = read_visium_hd_files
   )
 
   message(
@@ -228,7 +229,7 @@ read_parse_files <- function(config, input_dir) {
 #'
 read_10x_h5_sample <- function(sample, input_dir) {
   sample_dir <- file.path(input_dir, sample)
-  sample_fpaths <- list.files(sample_dir)
+  sample_fpaths <- list.files(sample_dir, pattern = "[.]h5(.gz)?$")
   sample_counts_path <- file.path(
     sample_dir,
     sample_fpaths[[1]]
@@ -246,10 +247,13 @@ read_10x_h5_sample <- function(sample, input_dir) {
     stop("Only one h5 expected. More files detected.")
   }
 
-  ungzipped_counts_path <- R.utils::gunzip(sample_counts_path)
+  if (R.utils::isGzipped(sample_counts_path)) {
+    message("Detected gzipped h5 file. Unzipping...")
+    sample_counts_path <- R.utils::gunzip(sample_counts_path)
+  }
 
-  gene_names <- read_10x_h5_feature_names(ungzipped_counts_path)
-  counts_mat <- BPCells::open_matrix_10x_hdf5(ungzipped_counts_path)
+  gene_names <- read_10x_h5_feature_names(sample_counts_path)
+  counts_mat <- BPCells::open_matrix_10x_hdf5(sample_counts_path)
 
   # write the matrix to a directory
   matrix_dir <- file.path(
@@ -258,7 +262,7 @@ read_10x_h5_sample <- function(sample, input_dir) {
   )
   unlink(matrix_dir, recursive = TRUE)
 
-  # hangs indefinitely in BPCells not attached (see init.R)
+  # hangs indefinitely if BPCells not attached (see init.R)
   counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
 
   # use Gene Expression modality if multiple
@@ -1021,4 +1025,111 @@ filter_unnamed_features <- function(counts, annotations, sample) {
   }
 
   list("counts" = counts, "annotations" = annotations)
+}
+
+#' Read a single Visium HD sample (SpaceRanger >= 4.0 with cell segmentations)
+#'
+#' Expects the following files in the sample directory:
+#'   - filtered_feature_cell_matrix.h5
+#'   - cell_segmentations.geojson
+#'   - spatial/tissue_hires_image.png
+#'   - spatial/scalefactors_json.json
+#'
+#' @param sample character sample ID
+#' @param input_dir character path to input directory
+#'
+#' @return list with:
+#'   \item{counts}{BPCells matrix}
+#'   \item{annotations}{data.frame with input and symbol columns}
+#'   \item{matrix_dir}{directory where BPCells matrix is stored}
+#'   \item{scdata}{Seurat spatial object created by Load10X_Spatial}
+#'
+read_visium_hd_sample <- function(sample, input_dir) {
+  sample_dir <- file.path(input_dir, sample)
+  h5_path <- file.path(sample_dir, "filtered_feature_cell_matrix.h5")
+
+  message("\nSample --> ", sample)
+  message("Reading Visium HD files from ", sample_dir)
+  list.files(sample_dir, recursive = TRUE) |> print()
+
+  # Load spatial Seurat object using polygon-based cell segmentations
+  # TODO: rewrite Load10X_Spatial to use BPCells
+  # and set assay to "RNA" from the start, instead of "Spatial.Polygons"
+  scdata <- Seurat::Load10X_Spatial(
+    data.dir = sample_dir,
+    filename = "filtered_feature_cell_matrix.h5",
+    bin.size = "polygons",
+    image.name = "tissue_hires_image.png"
+  )
+
+  # Extract count matrix via BPCells for downstream pipeline compatibility
+  scdata[["RNA"]] <- scdata[["Spatial.Polygons"]]
+  Seurat::DefaultAssay(scdata) <- "RNA"
+  scdata[["Spatial.Polygons"]] <- NULL
+  counts_mat <- scdata[["RNA"]]$counts
+
+  gene_names <- read_10x_h5_feature_names(h5_path)
+  if (methods::is(gene_names, "list")) {
+    gene_names <- gene_names[["Gene Expression"]]
+  }
+
+  matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
+  unlink(matrix_dir, recursive = TRUE)
+  counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
+
+  annotations <- data.frame(
+    input = rownames(counts),
+    symbol = gene_names[seq_len(nrow(counts))]
+  )
+
+  message(sprintf(
+    "Sample %s has %s genes and %s cells (polygons)",
+    sample, nrow(counts), ncol(counts)
+  ))
+
+  list(
+    counts = counts,
+    annotations = annotations,
+    matrix_dir = matrix_dir,
+    scdata = scdata
+  )
+}
+
+#' Read Visium HD files for all samples
+#'
+#' @param config experiment settings
+#' @param input_dir character path to input directory
+#'
+#' @return list with counts_list, annot, matrix_dir_list, scdata_list
+#' @export
+#'
+read_visium_hd_files <- function(config, input_dir) {
+  samples <- config$samples
+
+  nworkers <- min(length(samples), BATCH_POD_CPUS)
+  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+
+  results <- BiocParallel::bplapply(
+    samples,
+    read_visium_hd_sample,
+    input_dir = input_dir,
+    BPPARAM = bpparam
+  )
+  names(results) <- samples
+
+  counts_list <- lapply(results, function(x) x$counts)
+  annot_list <- lapply(results, function(x) x$annotations)
+  matrix_dir_list <- lapply(results, function(x) x$matrix_dir)
+  scdata_list <- lapply(results, function(x) x$scdata)
+
+  annot <- format_annot(annot_list)
+
+  list(
+    counts_list = counts_list,
+    annot = annot,
+    matrix_dir_list = matrix_dir_list,
+    scdata_list = scdata_list,
+    edrops = list(),
+    doublet_scores = list()
+  )
 }
