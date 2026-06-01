@@ -587,7 +587,9 @@ get_matrix_dirs <- function(scdata) {
 }
 
 # based off of vitessce-python demo
-rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.integer(c(1, 256, 256)), axes = "cyx") {
+rgb_img_to_ome_zarr <- function(
+  img_arr, output_path, img_name, chunks = as.integer(c(1, 256, 256)), axes = "cyx"
+) {
   # import python modules
   np <- reticulate::import("numpy")
   zarr <- reticulate::import("zarr")
@@ -645,10 +647,13 @@ rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.inte
   invisible()
 }
 
-upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, img_name, img_id, sample_id, overwrite_existing) {
+upload_image_to_s3 <- function(
+  pipeline_config, input, experiment_id, img_arr,
+  img_name, img_id, chunks, sample_id, overwrite_existing
+) {
   # things for api requests
   api_url <- pipeline_config$api_url
-  authJWT <- input$authJWT
+  auth_jwt <- input$authJWT
 
   # where to save zarr folder locally
   zarr_name <- paste0(img_name, ".ome.zarr")
@@ -657,7 +662,7 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
   message("Saving image data to: ", output_path, "...")
 
   # save as ome zarr folder
-  rgb_img_to_ome_zarr(img_arr, output_path, img_name)
+  rgb_img_to_ome_zarr(img_arr, output_path, img_name, chunks = chunks)
 
   # zip all files in zarr folder
   zip_name <- paste0(zarr_name, ".zip")
@@ -689,7 +694,7 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
     img_id,
     # FALSE for obj2s so that can have multiple ome_zarr_zip for single sample
     overwrite_existing,
-    authJWT
+    auth_jwt
   )
 
   invisible()
@@ -720,7 +725,7 @@ create_sample_file <- function(api_url, experiment_id, sample_id, file_type, fil
   }
 }
 
-upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
+upload_obj2s_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
   # use the
   img_ids <- input$sampleIds
   names(img_ids) <- input$sampleNames
@@ -730,7 +735,8 @@ upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
   img_names <- Seurat::Images(scdata)
 
   for (img_name in img_names) {
-    img_arr <- scdata@images[[img_name]]@image
+    img_arr <- scdata[[img_name]]@image
+    chunks <- get_chunk_size(img_arr)
     img_id <- img_ids[img_name]
 
     upload_image_to_s3(
@@ -740,6 +746,7 @@ upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
       img_arr,
       img_name,
       img_id,
+      chunks,
       sample_id,
       overwrite_existing = FALSE
     )

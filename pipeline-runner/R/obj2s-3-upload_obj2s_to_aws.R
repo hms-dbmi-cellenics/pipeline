@@ -53,7 +53,7 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
   object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
 
   # images for spatial to s3
-  upload_images_to_s3(pipeline_config, input, experiment_id, scdata)
+  upload_obj2s_images_to_s3(pipeline_config, input, experiment_id, scdata)
 
   experiment_data <- list(
     apiVersion = "2.0.0-data-ingest-seurat-rds-automated",

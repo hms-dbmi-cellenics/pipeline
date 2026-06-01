@@ -63,7 +63,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       fpath <- tempfile(pattern = sample, fileext = ".rds")
       message("\nSaving rds for sample: ", sample)
 
-      saveRDS(scdata_list[[sample]], fpath)
+      scdata <- scdata_list[[sample]]
+      saveRDS(scdata, fpath)
       message("rds file size: ", fs::file_size(fpath))
 
       # can only upload up to 50Gb because multipart uploads work by uploading
@@ -92,41 +93,34 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
           key = file.path(experiment_id, sample, "matrix_dir.tar.zst")
         )
       }
-    },
-    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
-  )
 
-  message("Samples uploaded")
+      # if this is spatial, upload image for sample to s3
+      image_name <- Seurat::Images(scdata)
+      if (!is.null(image_name)) {
+        message("\nUploading image to S3:")
+        img_arr <- scdata[[image_name]]@image
 
-  # Visium HD: generate and upload OME-ZARR images for each sample
-  if (isTRUE(config$input$type == "visium_hd")) {
-    message("\nGenerating OME-ZARR images for Visium HD samples...")
-    for (sample in names(scdata_list)) {
-      scdata <- scdata_list[[sample]]
-      img_names <- Seurat::Images(scdata)
-      for (img_name in img_names) {
-        img_arr <- scdata@images[[img_name]]@image
-        # For Visium HD each sample has its own UUID, and there is one image
-        # per sample, so the sample ID itself is the natural key — no need to
-        # generate a fresh UUID.  This mirrors how upload_images_to_s3() uses
-        # sample IDs for Seurat spatial.  (obj2s can't do this because the
-        # user uploads a single project that may contain multiple images but
-        # only has one dummy sample ID in state.)
+        # Use the sample ID as the image key.
         img_id <- sample
+        chunks <- get_chunk_size(img_arr)
+
         upload_image_to_s3(
           pipeline_config,
           input,
           experiment_id,
           img_arr,
-          img_name,
+          image_name,
           img_id,
-          sample_id = sample,
+          chunks,
+          sample,
           overwrite_existing = TRUE
         )
       }
-    }
-    message("OME-ZARR image upload complete.")
-  }
+    },
+    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
+  )
+
+  message("Samples uploaded")
 
   cluster_env <- pipeline_config$cluster_env
 
@@ -152,6 +146,15 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   message("\nUpload to AWS step complete.")
   return(res)
+}
+
+get_chunk_size <- function(img_arr) {
+  dims <- dim(img_arr)
+  if (nrow(img_arr) > 1024 || ncol(img_arr) > 1024) {
+    c(dims[3], 512L, 512L)
+  } else {
+    c(dims[3], dims[1], dims[2])
+  }
 }
 
 tar_matrix_dir <- function(id, matrix_dir) {

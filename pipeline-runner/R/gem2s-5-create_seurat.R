@@ -17,36 +17,11 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   # destructure previous output: config, counts_list, annot, and doublet_scores
   config <- prev_out$config
   counts_list <- prev_out$counts_list
+  segmentations_list <- prev_out$segmentations_list
   annot <- prev_out$annot
   doublet_scores <- prev_out$doublet_scores
   edrops <- prev_out$edrops
-
   samples <- names(counts_list)
-
-  # Visium HD: Seurat spatial objects were already created in load_user_files (step 2)
-  # by Load10X_Spatial. Use them directly rather than reconstructing from counts.
-  # TODO: disect Load10X_Spatial to make it similar to other techs
-  # this will make metadata etc work easily
-  if (config$input$type == "visium_hd") {
-    message("Visium HD: using Seurat spatial objects created in load step.")
-
-    # Attach mitochondrial gene metadata to existing spatial objects
-    prev_out$scdata_list <- lapply(
-      setNames(samples, samples),
-      function(sample) {
-        scdata <- prev_out$scdata_list[[sample]]
-        scdata$samples <- sample
-        scdata <- scdata |>
-          add_mito(annot) |>
-          add_edrops(NULL)
-        return(scdata)
-      }
-    )
-    prev_out$disable_qc_filters <- FALSE
-
-    message("\nCreation of Seurat objects (Visium HD) step complete.")
-    return(list(data = list(), output = prev_out))
-  }
 
   nworkers <- min(length(samples), BATCH_POD_CPUS)
 
@@ -60,6 +35,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 
       construct_scdata(
         counts = counts_list[[sample]],
+        segmentations = segmentations_list[[sample]],
         doublet_score = doublet_scores[[sample]],
         edrops_out = edrops[[sample]],
         sample = sample,
@@ -83,7 +59,8 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 
 # construct SeuratObject
 construct_scdata <- function(
-  counts, doublet_score, edrops_out, sample, annot, config, min.cells = 0, min.features = 10
+  counts, segmentations, doublet_score, edrops_out,
+  sample, annot, config, min.cells = 0, min.features = 10
 ) {
   metadata <- construct_metadata(counts, sample, config)
 
@@ -96,9 +73,25 @@ construct_scdata <- function(
   )
 
   scdata <- scdata |>
+    add_segmentations(segmentations) |>
     add_mito(annot) |>
     add_dblscore(doublet_score) |>
     add_edrops(edrops_out)
+
+  return(scdata)
+}
+
+# similar to Seurat::Load10X_Spatial
+add_segmentations <- function(scdata, segmentations) {
+  message("Adding segmentations...")
+  segmentation_cells <- Seurat::Cells(segmentations)
+  scdata_cells <- Seurat::Cells(scdata)
+  common_cells <- unique(
+    segmentation_cells[segmentation_cells %in% scdata_cells]
+  )
+  segmentations <- subset(segmentations, cells = common_cells)
+  SeuratObject::DefaultBoundary(segmentations) <- "centroids"
+  scdata[["slice1.polygons"]] <- segmentations
 
   return(scdata)
 }

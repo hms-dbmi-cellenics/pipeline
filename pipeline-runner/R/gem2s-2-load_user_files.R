@@ -1050,48 +1050,32 @@ read_visium_hd_sample <- function(sample, input_dir) {
 
   message("\nSample --> ", sample)
   message("Reading Visium HD files from ", sample_dir)
-  list.files(sample_dir, recursive = TRUE) |> print()
 
-  # Load spatial Seurat object using polygon-based cell segmentations
-  # TODO: rewrite Load10X_Spatial to use BPCells
-  # and set assay to "RNA" from the start, instead of "Spatial.Polygons"
-  scdata <- Seurat::Load10X_Spatial(
+  # Read10X_Segmentations expects segmentations
+  # to be in "segmented_outputs/" subdirectory
+  move_segmentations_to_subdir(sample_dir)
+
+  results <- read_10x_h5_sample(sample, input_dir)
+  results$segmentations <- Seurat::Read10X_Segmentations(
+    image.dir = sample_dir,
     data.dir = sample_dir,
-    filename = "filtered_feature_cell_matrix.h5",
-    bin.size = "polygons",
-    image.name = "tissue_hires_image.png"
+    image.name = "tissue_hires_image.png",
+    assay = "RNA"
   )
 
-  # Extract count matrix via BPCells for downstream pipeline compatibility
-  scdata[["RNA"]] <- scdata[["Spatial.Polygons"]]
-  Seurat::DefaultAssay(scdata) <- "RNA"
-  scdata[["Spatial.Polygons"]] <- NULL
-  counts_mat <- scdata[["RNA"]]$counts
+  # edrops and doublet scores not calculated for visium HD
+  # return empty lists for compatibility with downstream functions
+  results$edrops <- results$doublet_scores <- list()
+  return(results)
+}
 
-  gene_names <- read_10x_h5_feature_names(h5_path)
-  if (methods::is(gene_names, "list")) {
-    gene_names <- gene_names[["Gene Expression"]]
-  }
-
-  matrix_dir <- file.path(tempdir(), paste0(sample, "_matrix_dir"))
-  unlink(matrix_dir, recursive = TRUE)
-  counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
-
-  annotations <- data.frame(
-    input = rownames(counts),
-    symbol = gene_names[seq_len(nrow(counts))]
-  )
-
-  message(sprintf(
-    "Sample %s has %s genes and %s cells (polygons)",
-    sample, nrow(counts), ncol(counts)
-  ))
-
-  list(
-    counts = counts,
-    annotations = annotations,
-    matrix_dir = matrix_dir,
-    scdata = scdata
+move_segmentations_to_subdir <- function(sample_dir) {
+  seg_dir <- file.path(sample_dir, "segmented_outputs")
+  dir.create(seg_dir)
+  file.copy(
+    from = file.path(sample_dir, "cell_segmentations.geojson"),
+    to = file.path(seg_dir, "cell_segmentations.geojson"),
+    overwrite = TRUE
   )
 }
 
@@ -1120,7 +1104,7 @@ read_visium_hd_files <- function(config, input_dir) {
   counts_list <- lapply(results, function(x) x$counts)
   annot_list <- lapply(results, function(x) x$annotations)
   matrix_dir_list <- lapply(results, function(x) x$matrix_dir)
-  scdata_list <- lapply(results, function(x) x$scdata)
+  segmentations_list <- lapply(results, function(x) x$segmentations)
 
   annot <- format_annot(annot_list)
 
@@ -1128,7 +1112,7 @@ read_visium_hd_files <- function(config, input_dir) {
     counts_list = counts_list,
     annot = annot,
     matrix_dir_list = matrix_dir_list,
-    scdata_list = scdata_list,
+    segmentations_list = segmentations_list,
     edrops = list(),
     doublet_scores = list()
   )

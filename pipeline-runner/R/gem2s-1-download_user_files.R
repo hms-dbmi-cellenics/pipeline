@@ -40,26 +40,6 @@ download_s3_files <- function(input, originals_bucket, input_dir, s3) {
 
         download_and_store(originals_bucket, s3_path, local_fpath, s3)
       }
-
-      # Visium HD: Load10X_Spatial expects files under segmented_outputs/ and
-      # segmented_outputs/spatial/. Reorganize the flat download structure.
-      if (technology == "visium_hd") {
-        seg_dir <- file.path(input_dir, sample_id, "segmented_outputs")
-        spatial_dir <- file.path(seg_dir, "spatial")
-        fs::dir_create(spatial_dir)
-        for (fname in c("filtered_feature_cell_matrix.h5", "cell_segmentations.geojson")) {
-          src <- file.path(input_dir, sample_id, fname)
-          if (file.exists(src)) {
-            file.rename(src, file.path(seg_dir, fname))
-          }
-        }
-        for (fname in c("tissue_hires_image.png", "scalefactors_json.json")) {
-          src <- file.path(input_dir, sample_id, fname)
-          if (file.exists(src)) {
-            file.rename(src, file.path(spatial_dir, fname))
-          }
-        }
-      }
     },
     BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
   )
