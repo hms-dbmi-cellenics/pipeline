@@ -1056,12 +1056,16 @@ read_visium_hd_sample <- function(sample, input_dir) {
   move_segmentations_to_subdir(sample_dir)
 
   results <- read_10x_h5_sample(sample, input_dir)
-  results$segmentations <- Seurat::Read10X_Segmentations(
+  segmentations <- Seurat::Read10X_Segmentations(
     image.dir = sample_dir,
     data.dir = sample_dir,
     image.name = "tissue_hires_image.png",
-    assay = "RNA"
+    assay = "RNA",
+    compact = FALSE
   )
+
+  # simplify polygons
+  results$segmentations <- simplify_segmentations(segmentations)
 
   # edrops and doublet scores not calculated for visium HD
   # return empty lists for compatibility with downstream functions
@@ -1078,6 +1082,49 @@ move_segmentations_to_subdir <- function(sample_dir) {
     overwrite = TRUE
   )
 }
+
+simplify_segmentations <- function(segmentations) {
+  # tol determined empircally for visium hd
+  segmentations[["simplified.segmentations"]] <- SeuratObject::Simplify(
+    coords = segmentations[["segmentation"]],
+    tol = 5
+  )
+
+  # obtain compact coords
+  simplified_coords <- get_simplified_coords(segmentations)
+
+  # remove polygons to save memory
+  segmentations[["simplified.segmentations"]] <- CreateSegmentation(
+    coords = simplified_coords,
+    compact = TRUE
+  )
+  segmentations[["segmentations"]] <- CreateSegmentation(
+    coords = segmentations[["segmentation"]]@sf.data,
+    compact = TRUE
+  )
+
+  segmentations
+}
+
+get_simplified_coords <- function(segmentations) {
+  polygons <- segmentations[["simplified.segmentations"]]@polygons
+  coords_list <- lapply(
+    segmentations[["simplified.segmentations"]]@polygons,
+    function(x) {
+      x@Polygons[[1]]@coords
+    }
+  )
+
+  cells <- Seurat::Cells(segmentations)
+
+  ncoords <- sapply(coords_list, nrow)
+  coords <- do.call(rbind, coords_list)
+  colnames(coords) <- c("x", "y")
+  coords <- as.data.frame(coords)
+  coords$cell <- rep(cells, ncoords)
+  coords
+}
+
 
 #' Read Visium HD files for all samples
 #'
