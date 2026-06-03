@@ -9,7 +9,6 @@ bucket_list <- list(
   plot_data_bucket = "plots-tables",
   cell_sets_bucket = "cell-sets",
   spatial_image_bucket = "spatial-images",
-  spatial_segmentations_bucket = "spatial-segmentations",
   debug_bucket = "biomage-pipeline-debug",
   cl_metadata_bucket = "cellenics-cell-level-metadata"
 )
@@ -202,4 +201,3 @@ usethis::use_data(
   internal = TRUE,
   overwrite = TRUE
 )
-
