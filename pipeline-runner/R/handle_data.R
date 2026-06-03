@@ -588,7 +588,7 @@ get_matrix_dirs <- function(scdata) {
 
 # based off of vitessce-python demo
 rgb_img_to_ome_zarr <- function(
-  img_arr, output_path, img_name, chunks = as.integer(c(1, 256, 256)), axes = "cyx"
+  img_arr, output_path, img_name, chunks = c(1L, 256L, 256L), axes = "cyx"
 ) {
   # import python modules
   np <- reticulate::import("numpy")
@@ -618,7 +618,9 @@ rgb_img_to_ome_zarr <- function(
     image = img_arr,
     group = z_root,
     axes = axes,
-    storage_options = list(chunks = chunks)
+    storage_options = list(
+      chunks = chunks
+    )
   )
 
   omero <- list(
@@ -645,6 +647,77 @@ rgb_img_to_ome_zarr <- function(
   )
   reticulate::py_set_attr(z_root, "omero", omero)
   invisible()
+}
+
+polygons_to_bitmask_ome_zarr <- function(
+  polygons,                  # data.frame: columns x, y, cell
+  width,                   # pixel width  — must match slide image
+  height,                  # pixel height — must match slide image
+  output_path,             # e.g. "segmentations.ome.zarr"
+  chunks = c(1L, 256L, 256L),
+  max_pyramid_levels = 4L
+) {
+  np <- reticulate::import("numpy")
+  zarr <- reticulate::import("zarr")
+  ome_zarr <- reticulate::import("ome_zarr")
+  ome_zarr_scale <- reticulate::import("ome_zarr.scale")
+  pil <- reticulate::import("PIL")
+
+  # map each cell → integer label (1-indexed; 0 = background)
+  cell_ids <- unique(polygons$cells_id)
+
+  # rasterise polygons onto a 32-bit integer pil image 
+  # pil mode "I" = 32-bit signed int; size arg must be (width, height)
+  img  <- pil$Image$new(
+    "I",
+    reticulate::tuple(as.integer(width), as.integer(height)),
+    0L
+  )
+  draw <- pil$ImageDraw$Draw(img)
+
+  data.table::setDT(polygons)
+  polygons_list <- vector("list", max(cell_ids) + 1L)
+
+  pairs <- polygons[,
+    .(v = list(c(rbind(x, y)))),
+    by = cells_id
+  ]
+
+  polygons_list[pairs$cells_id + 1L] <- pairs$v
+
+  for (cid in cell_ids) {
+    # pil polygon wants flat: [x1, y1, x2, y2, ...]
+    # cell 0 → pixel 1, cell 1 → pixel 2, pixel 0 always = background
+    draw$polygon(polygons_list[[cid + 1]], fill = as.integer(cid) + 1L)
+  }
+
+  # numpy int32 (H, W) → add channel dim → (1, H, W) for "cyx" 
+  arr <- np$array(img, dtype = np$int32)
+  arr <- np$expand_dims(arr, axis = 0L)
+
+  # nearest-neighbour pyramid (critical! bilinear corrupts label values)
+  scaler <- ome_zarr_scale$Scaler(
+    method    = "nearest",
+    max_layer = as.integer(max_pyramid_levels)
+  )
+
+  # write OME-Zarr
+  z_root <- zarr$open_group(output_path, mode = "w")
+
+  ome_zarr$writer$write_image(
+    image           = arr,
+    group           = z_root,
+    axes            = "cyx",
+    scaler          = scaler,
+    storage_options = list(
+      chunks = as.list(as.integer(chunks))
+    )
+  )
+
+  message(sprintf("Written: %s  (%d cells, %d pyramid levels)",
+                  output_path, length(cell_ids), max_pyramid_levels))
+
+  invisible()   # return: cell_name → pixel_value
 }
 
 upload_image_to_s3 <- function(
@@ -700,8 +773,75 @@ upload_image_to_s3 <- function(
   invisible()
 }
 
-create_sample_file <- function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, overwrite_existing, authJWT) {
-  url <- paste0(api_url, "/v2/experiments/", experiment_id, "/samples/", sample_id, "/sampleFiles/", file_type)
+upload_polygons_to_s3 <- function(
+  pipeline_config, input, experiment_id, polygons, dims,
+  img_name, img_id, chunks, sample_id, overwrite_existing
+) {
+  # things for api requests
+  api_url <- pipeline_config$api_url
+  auth_jwt <- input$authJWT
+
+  # where to save zarr folder locally
+  zarr_name <- paste0(img_name, ".segmentations.ome.zarr")
+  output_path <- file.path(tempdir(), zarr_name)
+
+  message("Saving polygons data to: ", output_path, "...")
+
+  # save as ome zarr folder
+  polygons_to_bitmask_ome_zarr(
+    polygons,
+    dims[1],
+    dims[2],
+    output_path,
+    chunks = chunks
+  )
+
+  # zip all files in zarr folder
+  zip_name <- paste0(zarr_name, ".zip")
+  zip_path <- file.path(tempdir(), zip_name)
+
+  workdir <- getwd()
+  setwd(output_path)
+  utils::zip(zip_path, files = ".", flags = "-r0")
+  setwd(workdir)
+
+  # upload ome.zarr.zip to s3
+  message("\nUploading polygons data to S3:")
+  put_object_in_s3(
+    pipeline_config,
+    pipeline_config$spatial_segmentations_bucket,
+    object = zip_path,
+    key = img_id
+  )
+
+  # create sql entry in sample_file,
+  # (also creates entry in sample_to_sample_file_map)
+  create_sample_file(
+    api_url,
+    experiment_id,
+    sample_id,
+    "segmentations_ome_zarr_zip",
+    file.size(zip_path),
+    # gets used as s3_path by API
+    img_id,
+    # FALSE for obj2s so that can have multiple ome_zarr_zip for single sample
+    overwrite_existing,
+    auth_jwt
+  )
+
+  invisible()
+}
+
+create_sample_file <- function(
+  api_url, experiment_id, sample_id, file_type,
+  file_size, sample_file_id, overwrite_existing, auth_jwt
+) {
+  url <- paste0(
+    api_url,
+    "/v2/experiments/", experiment_id,
+    "/samples/", sample_id,
+    "/sampleFiles/", file_type
+  )
 
   body <- list(
     sampleFileId = sample_file_id,
@@ -716,12 +856,15 @@ create_sample_file <- function(api_url, experiment_id, sample_id, file_type, fil
     encode = "json",
     httr::add_headers(
       "Content-Type" = "application/json",
-      "Authorization" = authJWT
+      "Authorization" = auth_jwt
     )
   )
 
   if (httr::status_code(response) >= 400) {
-    stop("API post to create sample file failed with status code: ", httr::status_code(response))
+    stop(
+      "API post to create sample file failed with status code: ",
+      httr::status_code(response)
+    )
   }
 }
 

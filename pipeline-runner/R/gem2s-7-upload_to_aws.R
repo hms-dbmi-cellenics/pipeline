@@ -94,14 +94,12 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
         )
       }
 
-      # if this is spatial, upload image for sample to s3
+      # if this is spatial, upload image and polygons for sample to s3
       image_name <- Seurat::Images(scdata)
       if (!is.null(image_name)) {
         message("\nUploading image to S3:")
         img_arr <- scdata[[image_name]]@image
-
-        # Use the sample ID as the image key.
-        img_id <- sample
+        img_id <- uuid::UUIDgenerate()
         chunks <- get_chunk_size(img_arr)
 
         upload_image_to_s3(
@@ -111,6 +109,22 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
           img_arr,
           image_name,
           img_id,
+          chunks,
+          sample,
+          overwrite_existing = TRUE
+        )
+
+        polygons <- get_polygon_coords(image_name, scdata)
+        polygons_id <- uuid::UUIDgenerate()
+
+        upload_polygons_to_s3(
+          pipeline_config,
+          input,
+          experiment_id,
+          polygons,
+          dim(img_arr),
+          image_name,
+          polygons_id,
           chunks,
           sample,
           overwrite_existing = TRUE
@@ -148,9 +162,28 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
-get_chunk_size <- function(img_arr) {
+get_polygon_coords <- function(img_name, scdata) {
+  img <- scdata[[img_name]]
+  coords <- img$segmentations@sf.data
+  scale <- get_img_scale(img_name, scdata)
+  scale.factor <- Seurat::ScaleFactors(img)[[scale]]
+  coords[, c("x", "y")] <- coords[, c("x", "y")] * scale.factor
+
+  meta <- scdata@meta.data
+  coords$cells_id <- meta[coords$cell, "cells_id"]
+  dplyr::arrange(coords, cells_id)
+}
+
+get_img_scale <- function(img_name, scdata) {
+  dims <- dim(scdata[[img_name]]@image)
+  ifelse(any(dims[1:2] <= 600), "lowres", "hires")
+}
+
+get_chunk_size <- function(img_arr, fixed = TRUE) {
   dims <- dim(img_arr)
-  if (nrow(img_arr) > 1024 || ncol(img_arr) > 1024) {
+  if (fixed) {
+    c(1L, 256L, 256L)
+  } else if (dims[1] > 1024 || dimns[2] > 1024) {
     c(dims[3], 512L, 512L)
   } else {
     c(dims[3], dims[1], dims[2])
