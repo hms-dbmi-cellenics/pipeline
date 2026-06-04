@@ -55,46 +55,40 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     experiment_id
   )
 
-  nworkers <- min(length(scdata_list), BATCH_POD_CPUS)
+  for (sample in names(scdata_list)) {
+    fpath <- file.path(tempdir(), "experiment.rds")
+    message("\nSaving rds for sample: ", sample)
 
-  BiocParallel::bplapply(
-    names(scdata_list),
-    function(sample) {
-      fpath <- tempfile(pattern = sample, fileext = ".rds")
-      message("\nSaving rds for sample: ", sample)
+    saveRDS(scdata_list[[sample]], fpath)
+    message("rds file size: ", fs::file_size(fpath))
 
-      saveRDS(scdata_list[[sample]], fpath)
-      message("rds file size: ", fs::file_size(fpath))
+    # can only upload up to 50Gb because multipart uploads work by uploading
+    # smaller chunks (parts) and the max amount of parts is 10,000.
+    message("\nUploading rds to S3:")
+    put_object_in_s3_multipart(
+      pipeline_config,
+      bucket = pipeline_config$source_bucket,
+      object = fpath,
+      key = file.path(experiment_id, sample, "r.rds")
+    )
 
-      # can only upload up to 50Gb because multipart uploads work by uploading
-      # smaller chunks (parts) and the max amount of parts is 10,000.
-      message("\nUploading rds to S3:")
+    # if this is bpcells also upload matrix_dir
+    matrix_dir <- matrix_dir_list[[sample]]
+
+    if (!is.null(matrix_dir)) {
+      message("\nTarring sample matrix dir: ", matrix_dir)
+      tarfile <- tar_matrix_dir(sample, matrix_dir)
+      message("Tar file size: ", fs::file_size(tarfile))
+
+      message("\nUploading tarred matrix dir:")
       put_object_in_s3_multipart(
         pipeline_config,
         bucket = pipeline_config$source_bucket,
-        object = fpath,
-        key = file.path(experiment_id, sample, "r.rds")
+        object = tarfile,
+        key = file.path(experiment_id, sample, "matrix_dir.tar.zst")
       )
-
-      # if this is bpcells also upload matrix_dir
-      matrix_dir <- matrix_dir_list[[sample]]
-
-      if (!is.null(matrix_dir)) {
-        message("\nTarring sample matrix dir: ", matrix_dir)
-        tarfile <- tar_matrix_dir(sample, matrix_dir)
-        message("Tar file size: ", fs::file_size(tarfile))
-
-        message("\nUploading tarred matrix dir:")
-        put_object_in_s3_multipart(
-          pipeline_config,
-          bucket = pipeline_config$source_bucket,
-          object = tarfile,
-          key = file.path(experiment_id, sample, "matrix_dir.tar.zst")
-        )
-      }
-    },
-    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
-  )
+    }
+  }
 
   message("Samples uploaded")
 
