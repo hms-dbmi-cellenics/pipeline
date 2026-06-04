@@ -1113,8 +1113,8 @@ pivot_img_wide <- function(segmentations) {
   img <- segmentations@image
 
   # retrieve image dimensions
-  img_width <- dim(img)[1]
-  img_height <- dim(img)[2]
+  img_height <- dim(img)[1]
+  img_width <- dim(img)[2]
 
   if (img_width < img_height) {
     message(

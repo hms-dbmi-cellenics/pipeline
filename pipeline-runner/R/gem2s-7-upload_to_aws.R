@@ -160,7 +160,7 @@ get_image_max_height <- function(scdata_list) {
     image_name <- Seurat::Images(scdata)
     if (!is.null(image_name)) {
       img_arr <- scdata[[image_name]]@image
-      dim(img_arr)[2]
+      dim(img_arr)[1]
     } else {
       NULL
     }
@@ -463,7 +463,9 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
 
   if ("metadata" %in% unique(subset_cellsets$type)) {
     message("adding metadata cellsets to subset experiment")
-    metadata_cellsets <- build_metadata_cellsets(input, scdata_list, color_pool, disable_qc_filters, subset_cellsets)
+    metadata_cellsets <- build_metadata_cellsets(
+      input, scdata_list, color_pool, disable_qc_filters, subset_cellsets
+    )
     color_pool <- remove_used_colors(metadata_cellsets[[1]], color_pool)
     cell_sets <- c(cell_sets, metadata_cellsets)
   }
