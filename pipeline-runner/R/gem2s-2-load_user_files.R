@@ -1106,7 +1106,7 @@ simplify_segmentations <- function(segmentations) {
     compact = TRUE
   )
 
-  segmentations
+  return(segmentations)
 }
 
 pivot_img_wide <- function(segmentations) {
@@ -1123,6 +1123,7 @@ pivot_img_wide <- function(segmentations) {
     )
     segmentations <- rotate_visiumv2(segmentations)
   }
+  return(segmentations)
 }
 
 # adapted from satijalab/seurat#9344
