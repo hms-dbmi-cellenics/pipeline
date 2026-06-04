@@ -831,6 +831,8 @@ upload_multipart_parts <- function(s3, bucket, object, key, upload_id) {
   megabyte <- 2^20
   gigabyte <- 2^30
   part_size <- ifelse(file_size > gigabyte, 64 * megabyte, 8 * megabyte)
+  # don't go larger than file size or will fail
+  part_size <- min(file_size, part_size)
   num_parts <- ceiling(file_size / part_size)
 
   con <- base::file(object, open = "rb")
