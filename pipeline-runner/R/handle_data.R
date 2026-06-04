@@ -648,12 +648,15 @@ rgb_img_to_ome_zarr <- function(
 }
 
 upload_image_to_s3 <- function(
-  pipeline_config, input, experiment_id, img_arr,
-  img_name, img_id, chunks, sample_id, overwrite_existing
+  pipeline_config, input, experiment_id, img_arr, img_name, img_id, chunks, sample_id,
+  image_max_height = dim(img_arr)[2], overwrite_existing = TRUE
 ) {
   # things for api requests
   api_url <- pipeline_config$api_url
   auth_jwt <- input$authJWT
+
+  # pad images to have same fixed height
+  img_arr <- pad_image_height(img_arr, image_max_height)
 
   # where to save zarr folder locally
   zarr_name <- paste0(img_name, ".ome.zarr")
@@ -700,8 +703,47 @@ upload_image_to_s3 <- function(
   invisible()
 }
 
-create_sample_file <- function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, overwrite_existing, authJWT) {
-  url <- paste0(api_url, "/v2/experiments/", experiment_id, "/samples/", sample_id, "/sampleFiles/", file_type)
+
+
+pad_image_height <- function(img_arr, target_height) {
+  current_height <- dim(img_arr)[2]
+  if (current_height == target_height) return(img_arr)
+
+  # grab top row and repeat to pad top of image
+  top_row <- img_arr[, 1, , drop = FALSE]
+
+  # replace pixels where where green channel is below cutoff
+  # with average color of other pixels in row
+  # cutoff determined empirically looking at RGB values of slides
+  # goal is to not padd with pixels representing tissue (less green)
+  green_cutoff <- 190 / 255
+  mask <- top_row[, , 2] < green_cutoff
+  if (any(mask)) {
+    avg_color <- colMeans(top_row[!mask, , , drop = FALSE])
+    top_row[mask, , ] <- avg_color
+  }
+
+  padding <- top_row[, rep(1, target_height - current_height), ]
+  padded_img_arr <- abind::abind(padding, img_arr, along = 2)
+
+  message(
+    "Padded image from height ", current_height,
+    " to ", dim(padded_img_arr)[2]
+  )
+
+  return(padded_img_arr)
+}
+
+create_sample_file <- function(
+  api_url, experiment_id, sample_id, file_type,
+  file_size, sample_file_id, overwrite_existing, auth_jwt
+) {
+  url <- paste0(
+    api_url,
+    "/v2/experiments/", experiment_id,
+    "/samples/", sample_id,
+    "/sampleFiles/", file_type
+  )
 
   body <- list(
     sampleFileId = sample_file_id,
@@ -716,7 +758,7 @@ create_sample_file <- function(api_url, experiment_id, sample_id, file_type, fil
     encode = "json",
     httr::add_headers(
       "Content-Type" = "application/json",
-      "Authorization" = authJWT
+      "Authorization" = auth_jwt
     )
   )
 

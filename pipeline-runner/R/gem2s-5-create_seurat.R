@@ -73,7 +73,7 @@ construct_scdata <- function(
   )
 
   scdata <- scdata |>
-    add_segmentations(segmentations) |>
+    add_segmentations(segmentations, sample) |>
     add_mito(annot) |>
     add_dblscore(doublet_score) |>
     add_edrops(edrops_out)
@@ -82,7 +82,7 @@ construct_scdata <- function(
 }
 
 # similar to Seurat::Load10X_Spatial
-add_segmentations <- function(scdata, segmentations) {
+add_segmentations <- function(scdata, segmentations, sample) {
   message("Adding segmentations...")
   segmentation_cells <- Seurat::Cells(segmentations)
   scdata_cells <- Seurat::Cells(scdata)
@@ -91,7 +91,7 @@ add_segmentations <- function(scdata, segmentations) {
   )
   segmentations <- subset(segmentations, cells = common_cells)
   SeuratObject::DefaultBoundary(segmentations) <- "centroids"
-  scdata[["slice1.polygons"]] <- segmentations
+  scdata[[paste0(sample, ".polygons")]] <- segmentations
 
   return(scdata)
 }

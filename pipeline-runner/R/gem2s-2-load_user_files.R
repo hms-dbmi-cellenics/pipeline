@@ -1061,11 +1061,14 @@ read_visium_hd_sample <- function(sample, input_dir) {
     data.dir = sample_dir,
     image.name = "tissue_hires_image.png",
     assay = "RNA",
+    slice = paste0(sample, ".polygons"),
     compact = FALSE
   )
 
-  # simplify polygons
-  results$segmentations <- simplify_segmentations(segmentations)
+  # simplify polygons and rotate if width is less than height
+  results$segmentations <- segmentations |>
+    simplify_segmentations() |>
+    pivot_img_wide()
 
   # edrops and doublet scores not calculated for visium HD
   # return empty lists for compatibility with downstream functions
@@ -1104,6 +1107,89 @@ simplify_segmentations <- function(segmentations) {
   )
 
   segmentations
+}
+
+pivot_img_wide <- function(segmentations) {
+  img <- segmentations@image
+
+  # retrieve image dimensions
+  img_width <- dim(img)[1]
+  img_height <- dim(img)[2]
+
+  if (img_width < img_height) {
+    message(
+      "Image width is smaller than height.",
+      "Rotating image and coordinates to match expected orientation."
+    )
+    segmentations <- rotate_visiumv2(segmentations)
+  }
+}
+
+# adapted from satijalab/seurat#9344
+rotate_visiumv2 <- function(segmentations) {
+
+  # extract cell coordinates and image RGB array
+  bounds <- segmentations@boundaries
+  coords_list <- list(
+    centroids = bounds[["centroids"]]@coords,
+    polygons = bounds[["segmentations"]]@sf.data,
+    polygons_simple = bounds[["simplified.segmentations"]]@sf.data
+  )
+
+  img <- segmentations@image
+  scale_factor <- segmentations@scale.factors$hires
+
+  # retrieve image dimensions
+  img_width <- dim(img)[1]
+  img_height <- dim(img)[2]
+
+  # retrieve cell coordinates dimensions
+  coord_width <- img_width / scale_factor
+  coord_height <- img_height / scale_factor
+
+  # define center in coordinate space
+  center_x <- coord_width / 2
+  center_y <- coord_height / 2
+
+  # Rotate image: transpose then flip vertically
+  rotated_img <- aperm(img, c(2, 1, 3))
+  rotated_img <- rotated_img[dim(rotated_img)[1]:1, , ]
+
+  # new coordinate width/height
+  new_coord_width <- coord_height
+  new_coord_height <- coord_width
+
+  # define center in new coordinate space
+  new_center_x <- new_coord_width / 2
+  new_center_y <- new_coord_height / 2
+
+  coords_rot_list <- lapply(
+    coords_list,
+    function(coords) {
+      # center cell coordinates at the origin
+      coords_centered <- coords
+      coords_centered[, "x"] <- coords[, "x"] - center_x
+      coords_centered[, "y"] <- coords[, "y"] - center_y
+
+      # 90-degree counterclockwise: (x, y) -> (-y, x)
+      coords_rot <- coords_centered
+      coords_rot[, "x"] <- -coords_centered[, "y"]
+      coords_rot[, "y"] <- coords_centered[, "x"]
+
+      # shift according to coordinates origin
+      coords_rot[, "x"] <- coords_rot[, "x"] + new_center_x
+      coords_rot[, "y"] <- coords_rot[, "y"] + new_center_y
+      return(coords_rot)
+    }
+  )
+
+  # update segmentations object
+  bounds[["centroids"]]@coords <- coords_rot_list$centroids
+  bounds[["segmentations"]]@sf.data <- coords_rot_list$polygons
+  bounds[["simplified.segmentations"]]@sf.data <- coords_rot_list$polygons_simple
+  segmentations@boundaries <- bounds
+
+  return(segmentations)
 }
 
 get_simplified_coords <- function(segmentations) {

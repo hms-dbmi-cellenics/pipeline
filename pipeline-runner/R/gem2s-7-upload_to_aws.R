@@ -49,6 +49,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   )
 
   # remove previous existing data
+  # TODO: remove previous existing images
   remove_bucket_folder(
     pipeline_config,
     pipeline_config$source_bucket,
@@ -98,12 +99,15 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       image_name <- Seurat::Images(scdata)
       if (!is.null(image_name)) {
         message("\nUploading image to S3:")
+        # need image dimensions to pad images to common dimension before upload
+        image_max_height <- get_image_max_height(scdata_list)
         img_arr <- scdata[[image_name]]@image
 
         # Use the sample ID as the image key.
         img_id <- sample
         chunks <- get_chunk_size(img_arr)
 
+        # TODO: change key to be experiment_id/sample/image_name
         upload_image_to_s3(
           pipeline_config,
           input,
@@ -113,6 +117,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
           img_id,
           chunks,
           sample,
+          image_max_height,
           overwrite_existing = TRUE
         )
       }
@@ -146,6 +151,26 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   message("\nUpload to AWS step complete.")
   return(res)
+}
+
+# image is rotated such that longest dimension is width (always 6000)
+# need max height to pad images to common dimension before upload
+get_image_max_height <- function(scdata_list) {
+  image_heights <- lapply(scdata_list, function(scdata) {
+    image_name <- Seurat::Images(scdata)
+    if (!is.null(image_name)) {
+      img_arr <- scdata[[image_name]]@image
+      dim(img_arr)[2]
+    } else {
+      NULL
+    }
+  })
+
+  image_heights <- unlist(image_heights)
+  if (is.null(image_heights)) return(NULL)
+
+  max_height <- max(image_heights)
+  return(max_height)
 }
 
 get_chunk_size <- function(img_arr) {
