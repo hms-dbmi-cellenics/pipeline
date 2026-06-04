@@ -58,7 +58,6 @@ download_s3_files <- function(input, pipeline_config, input_dir) {
 #' @export
 #'
 download_user_files <- function(input, pipeline_config, prev_out = list(), input_dir = "/input") {
-  s3 <- paws::s3(config = pipeline_config$aws_config)
 
   download_s3_files(input, pipeline_config, input_dir)
 
