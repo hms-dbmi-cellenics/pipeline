@@ -83,6 +83,7 @@ construct_scdata <- function(
 
 # similar to Seurat::Load10X_Spatial
 add_segmentations <- function(scdata, segmentations, sample) {
+  requireNamespace("SeuratObject")
   message("Adding segmentations...")
   segmentation_cells <- Seurat::Cells(segmentations)
   scdata_cells <- Seurat::Cells(scdata)
