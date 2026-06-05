@@ -105,7 +105,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
         # Use the sample ID as the image key.
         img_id <- sample
-        chunks <- get_chunk_size(img_arr)
 
         # TODO: change key to be experiment_id/sample/image_name
         upload_image_to_s3(
@@ -115,7 +114,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
           img_arr,
           image_name,
           img_id,
-          chunks,
           sample,
           image_max_height,
           overwrite_existing = TRUE
@@ -171,15 +169,6 @@ get_image_max_height <- function(scdata_list) {
 
   max_height <- max(image_heights)
   return(max_height)
-}
-
-get_chunk_size <- function(img_arr) {
-  dims <- dim(img_arr)
-  if (nrow(img_arr) > 1024 || ncol(img_arr) > 1024) {
-    c(dims[3], 512L, 512L)
-  } else {
-    c(dims[3], dims[1], dims[2])
-  }
 }
 
 tar_matrix_dir <- function(id, matrix_dir) {

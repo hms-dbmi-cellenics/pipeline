@@ -587,23 +587,15 @@ get_matrix_dirs <- function(scdata) {
 }
 
 # based off of vitessce-python demo
-rgb_img_to_ome_zarr <- function(
-  img_arr, output_path, img_name, chunks = as.integer(c(1, 256, 256)), axes = "cyx"
-) {
+rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name) {
   # import python modules
   np <- reticulate::import("numpy")
   zarr <- reticulate::import("zarr")
   ome_zarr <- reticulate::import("ome_zarr")
 
-  # Convert values from [0, 1] to [0, 255]
-  img_arr <- img_arr * 255.0
-
-  # convert img array to uint8
-  img_arr <- np$array(img_arr, dtype = "uint8")
-
-  # Need to convert images from interleaved to non-interleaved (color axis should be first).
-  img_arr <- np$transpose(img_arr, as.integer(c(2, 0, 1)))
-
+  # convert values from [0, 1] to [0, 255] and to uint8
+  img_arr <- np$array(img_arr * 255.0, dtype = "uint8")
+  img_arr <- np$transpose(img_arr, c(2L, 0L, 1L))
 
   default_window <- list(
     start = 0,
@@ -617,8 +609,8 @@ rgb_img_to_ome_zarr <- function(
   ome_zarr$writer$write_image(
     image = img_arr,
     group = z_root,
-    axes = axes,
-    storage_options = list(chunks = chunks)
+    axes = "yxc",
+    storage_options = list(chunks = c(256L, 256L, 3L))
   )
 
   omero <- list(
@@ -648,7 +640,7 @@ rgb_img_to_ome_zarr <- function(
 }
 
 upload_image_to_s3 <- function(
-  pipeline_config, input, experiment_id, img_arr, img_name, img_id, chunks, sample_id,
+  pipeline_config, input, experiment_id, img_arr, img_name, img_id, sample_id,
   image_max_height = dim(img_arr)[1], overwrite_existing = TRUE
 ) {
   # things for api requests
@@ -665,7 +657,7 @@ upload_image_to_s3 <- function(
   message("Saving image data to: ", output_path, "...")
 
   # save as ome zarr folder
-  rgb_img_to_ome_zarr(img_arr, output_path, img_name, chunks = chunks)
+  rgb_img_to_ome_zarr(img_arr, output_path, img_name)
 
   # zip all files in zarr folder
   zip_name <- paste0(zarr_name, ".zip")
@@ -794,7 +786,6 @@ upload_obj2s_images_to_s3 <- function(pipeline_config, input, experiment_id, scd
 
   for (img_name in img_names) {
     img_arr <- scdata[[img_name]]@image
-    chunks <- get_chunk_size(img_arr)
     img_id <- img_ids[img_name]
 
     upload_image_to_s3(
@@ -804,7 +795,6 @@ upload_obj2s_images_to_s3 <- function(pipeline_config, input, experiment_id, scd
       img_arr,
       img_name,
       img_id,
-      chunks,
       sample_id,
       overwrite_existing = FALSE
     )
