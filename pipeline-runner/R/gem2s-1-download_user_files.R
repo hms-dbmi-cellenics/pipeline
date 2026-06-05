@@ -21,10 +21,11 @@ download_and_store <- function(bucket, key, file_path, s3) {
 #'
 #' @export
 #'
-download_s3_files <- function(input, originals_bucket, input_dir, s3) {
+download_s3_files <- function(input, pipeline_config, input_dir) {
   project_id <- input$projectId
   sample_ids <- input$sampleIds
   sample_s3_paths <- input$sampleS3Paths
+  originals_bucket <- pipeline_config$originals_bucket
   technology <- input$input$type
   unlink(input_dir, recursive = TRUE)
 
@@ -33,6 +34,7 @@ download_s3_files <- function(input, originals_bucket, input_dir, s3) {
   BiocParallel::bplapply(
     sample_ids,
     function(sample_id) {
+      s3 <- paws::s3(config = pipeline_config$aws_config)
       for (file_type in file_types_by_technology[[technology]]) {
         s3_path <- sample_s3_paths[[sample_id]][[file_type]]
 
@@ -56,9 +58,8 @@ download_s3_files <- function(input, originals_bucket, input_dir, s3) {
 #' @export
 #'
 download_user_files <- function(input, pipeline_config, prev_out = list(), input_dir = "/input") {
-  s3 <- paws::s3(config = pipeline_config$aws_config)
 
-  download_s3_files(input, pipeline_config$originals_bucket, input_dir, s3)
+  download_s3_files(input, pipeline_config, input_dir)
 
   config <- list(
     name = input$experimentName,

@@ -73,7 +73,7 @@ stubbed_download_user_files <- function(
   )
 
   # where makes sure where we are stubbing the what calls.
-  mockery::stub(where = download_user_files, what = "paws::s3", how = mockedS3)
+  mockery::stub(download_s3_files, "paws::s3", mockedS3)
   mockery::stub(download_s3_files, "s3$list_objects", mockedS3$list_objects)
 
   mockery::stub(download_user_files, "file.path", stub_file.path)
