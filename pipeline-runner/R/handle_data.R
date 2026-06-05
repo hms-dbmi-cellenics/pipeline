@@ -667,16 +667,20 @@ upload_image_to_s3 <- function(
 
   workdir <- getwd()
   setwd(output_path)
-  utils::zip(zip_path, files = ".", flags = "-r0")
+  utils::zip(zip_path, files = ".", flags = "-rq0")
   setwd(workdir)
 
+  # log file size before upload
+  message("Image zip file size: ", fs::file_size(zip_path))
+
   # upload ome.zarr.zip to s3
+  # use multipart upload for files larger than 100MB to handle large images
   message("\nUploading image data to S3:")
-  put_object_in_s3(
+  put_object_in_s3_multipart(
     pipeline_config,
-    pipeline_config$spatial_image_bucket,
+    bucket = pipeline_config$spatial_image_bucket,
     object = zip_path,
-    key = img_id
+    key = paste0(experiment_id, "/", img_id)
   )
 
   # create sql entry in sample_file,
@@ -845,6 +849,7 @@ put_object_in_s3 <- function(
   }
   stop("Failed to upload object to S3 after maximum number of retries.")
 }
+
 #' Upload a file to S3 using multipart upload
 #'
 #' @param pipeline_config A Paws S3 config object, e.g. from `paws::s3()`.

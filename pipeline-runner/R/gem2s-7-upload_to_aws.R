@@ -49,7 +49,6 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   )
 
   # remove previous existing data
-  # TODO: remove previous existing images
   for (bucket in c(pipeline_config$source_bucket, pipeline_config$spatial_image_bucket)) {
     remove_bucket_folder(
       pipeline_config,
@@ -58,13 +57,11 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     )
   }
 
-  # nworkers <- min(length(scdata_list), BATCH_POD_CPUS)
-
   for (sample in names(scdata_list)) {
     fpath <- tempfile(pattern = sample, fileext = ".rds")
     message("\nSaving rds for sample: ", sample)
-
     scdata <- scdata_list[[sample]]
+
     saveRDS(scdata, fpath)
     message("rds file size: ", fs::file_size(fpath))
 
@@ -104,9 +101,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       img_arr <- scdata[[image_name]]@image
 
       # Use the sample ID as the image key.
-      img_id <- paste0(experiment_id, "/", sample)
+      img_id <- sample
 
-      # TODO: change key to be experiment_id/sample/image_name
       upload_image_to_s3(
         pipeline_config,
         input,
