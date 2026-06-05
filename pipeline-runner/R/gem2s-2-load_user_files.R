@@ -1141,8 +1141,8 @@ rotate_visiumv2 <- function(segmentations) {
   scale_factor <- segmentations@scale.factors$hires
 
   # retrieve image dimensions
-  img_width <- dim(img)[1]
-  img_height <- dim(img)[2]
+  img_height <- dim(img)[1]
+  img_width <- dim(img)[2]
 
   # retrieve cell coordinates dimensions
   coord_width <- img_width / scale_factor
@@ -1174,8 +1174,8 @@ rotate_visiumv2 <- function(segmentations) {
 
       # 90-degree counterclockwise: (x, y) -> (-y, x)
       coords_rot <- coords_centered
-      coords_rot[, "x"] <- -coords_centered[, "y"]
-      coords_rot[, "y"] <- coords_centered[, "x"]
+      coords_rot[, "x"] <- coords_centered[, "y"]
+      coords_rot[, "y"] <- -coords_centered[, "x"]
 
       # shift according to coordinates origin
       coords_rot[, "x"] <- coords_rot[, "x"] + new_center_x
@@ -1189,6 +1189,7 @@ rotate_visiumv2 <- function(segmentations) {
   bounds[["segmentations"]]@sf.data <- coords_rot_list$polygons
   bounds[["simplified.segmentations"]]@sf.data <- coords_rot_list$polygons_simple
   segmentations@boundaries <- bounds
+  segmentations@image <- rotated_img
 
   return(segmentations)
 }
