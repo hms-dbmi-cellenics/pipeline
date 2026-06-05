@@ -50,78 +50,76 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   # remove previous existing data
   # TODO: remove previous existing images
-  remove_bucket_folder(
-    pipeline_config,
-    pipeline_config$source_bucket,
-    experiment_id
-  )
+  for (bucket in c(pipeline_config$source_bucket, pipeline_config$spatial_image_bucket)) {
+    remove_bucket_folder(
+      pipeline_config,
+      bucket = bucket,
+      folder = experiment_id
+    )
+  }
 
-  nworkers <- min(length(scdata_list), BATCH_POD_CPUS)
+  # nworkers <- min(length(scdata_list), BATCH_POD_CPUS)
 
-  BiocParallel::bplapply(
-    names(scdata_list),
-    function(sample) {
-      fpath <- tempfile(pattern = sample, fileext = ".rds")
-      message("\nSaving rds for sample: ", sample)
+  for (sample in names(scdata_list)) {
+    fpath <- tempfile(pattern = sample, fileext = ".rds")
+    message("\nSaving rds for sample: ", sample)
 
-      scdata <- scdata_list[[sample]]
-      saveRDS(scdata, fpath)
-      message("rds file size: ", fs::file_size(fpath))
+    scdata <- scdata_list[[sample]]
+    saveRDS(scdata, fpath)
+    message("rds file size: ", fs::file_size(fpath))
 
-      # can only upload up to 50Gb because multipart uploads work by uploading
-      # smaller chunks (parts) and the max amount of parts is 10,000.
-      message("\nUploading rds to S3:")
+    # can only upload up to 50Gb because multipart uploads work by uploading
+    # smaller chunks (parts) and the max amount of parts is 10,000.
+    message("\nUploading rds to S3:")
+    put_object_in_s3_multipart(
+      pipeline_config,
+      bucket = pipeline_config$source_bucket,
+      object = fpath,
+      key = file.path(experiment_id, sample, "r.rds")
+    )
+
+    # if this is bpcells also upload matrix_dir
+    matrix_dir <- matrix_dir_list[[sample]]
+
+    if (!is.null(matrix_dir)) {
+      message("\nTarring sample matrix dir: ", matrix_dir)
+      tarfile <- tar_matrix_dir(sample, matrix_dir)
+      message("Tar file size: ", fs::file_size(tarfile))
+
+      message("\nUploading tarred matrix dir:")
       put_object_in_s3_multipart(
         pipeline_config,
         bucket = pipeline_config$source_bucket,
-        object = fpath,
-        key = file.path(experiment_id, sample, "r.rds")
+        object = tarfile,
+        key = file.path(experiment_id, sample, "matrix_dir.tar.zst")
       )
+    }
 
-      # if this is bpcells also upload matrix_dir
-      matrix_dir <- matrix_dir_list[[sample]]
+    # if this is spatial, upload image for sample to s3
+    image_name <- Seurat::Images(scdata)
+    if (!is.null(image_name)) {
+      message("\nUploading image to S3:")
+      # need image dimensions to pad images to common dimension before upload
+      image_max_height <- get_image_max_height(scdata_list)
+      img_arr <- scdata[[image_name]]@image
 
-      if (!is.null(matrix_dir)) {
-        message("\nTarring sample matrix dir: ", matrix_dir)
-        tarfile <- tar_matrix_dir(sample, matrix_dir)
-        message("Tar file size: ", fs::file_size(tarfile))
+      # Use the sample ID as the image key.
+      img_id <- paste0(experiment_id, "/", sample)
 
-        message("\nUploading tarred matrix dir:")
-        put_object_in_s3_multipart(
-          pipeline_config,
-          bucket = pipeline_config$source_bucket,
-          object = tarfile,
-          key = file.path(experiment_id, sample, "matrix_dir.tar.zst")
-        )
-      }
-
-      # if this is spatial, upload image for sample to s3
-      image_name <- Seurat::Images(scdata)
-      if (!is.null(image_name)) {
-        message("\nUploading image to S3:")
-        # need image dimensions to pad images to common dimension before upload
-        image_max_height <- get_image_max_height(scdata_list)
-        img_arr <- scdata[[image_name]]@image
-
-        # Use the sample ID as the image key.
-        img_id <- sample
-
-        # TODO: change key to be experiment_id/sample/image_name
-        upload_image_to_s3(
-          pipeline_config,
-          input,
-          experiment_id,
-          img_arr,
-          image_name,
-          img_id,
-          sample,
-          image_max_height,
-          overwrite_existing = TRUE
-        )
-      }
-    },
-    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
-  )
+      # TODO: change key to be experiment_id/sample/image_name
+      upload_image_to_s3(
+        pipeline_config,
+        input,
+        experiment_id,
+        img_arr,
+        image_name,
+        img_id,
+        sample,
+        image_max_height,
+        overwrite_existing = TRUE
+      )
+    }
+  }
 
   message("Samples uploaded")
 

@@ -11,10 +11,12 @@ remove_bucket_folder <- function(pipeline_config, bucket, folder) {
     )
   }
 
-  message(
-    "\nRemoved files from ", bucket, ":",
-    "\n- ", paste0(keys_to_remove, sep = "\n- ")
-  )
+  if (length(keys_to_remove)) {
+    message(
+      "\nRemoved files from ", bucket, ":",
+      "\n- ", paste0(keys_to_remove, sep = "\n- ")
+    )
+  }
 }
 
 remove_cell_ids <- function(pipeline_config, experiment_id) {
@@ -96,7 +98,7 @@ get_nnzero <- function(x) {
     "nFeature_",
     Seurat::DefaultAssay(x)
   )
-  
+
   return(sum(x@meta.data[[nfeat_colname]]))
 }
 
@@ -609,7 +611,7 @@ rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name) {
   ome_zarr$writer$write_image(
     image = img_arr,
     group = z_root,
-    axes = "yxc",
+    axes = "cyx",
     storage_options = list(chunks = c(256L, 256L, 3L))
   )
 
@@ -723,7 +725,6 @@ pad_image_height <- function(img_arr, target_height) {
     pad_color <- colMeans(pixel_matrix)
 
   }
-
 
   # set RGB channels
   bottom_row[1, , 1] <- pad_color[1]
