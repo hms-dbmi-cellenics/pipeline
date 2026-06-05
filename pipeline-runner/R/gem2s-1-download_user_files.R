@@ -1,3 +1,10 @@
+# internal helper to get S3 client (allows test injection via options)
+get_s3_client <- function(aws_config) {
+  test_mock <- getOption("test_s3_client_for_download", default = NULL)
+  if (!is.null(test_mock)) return(test_mock)
+  paws::s3(config = aws_config)
+}
+
 # Download the file and stores the output in a file
 download_and_store <- function(bucket, key, file_path, s3) {
   fs::dir_create(dirname(file_path))
@@ -34,7 +41,7 @@ download_s3_files <- function(input, pipeline_config, input_dir) {
   BiocParallel::bplapply(
     sample_ids,
     function(sample_id) {
-      s3 <- paws::s3(config = pipeline_config$aws_config)
+      s3 <- get_s3_client(pipeline_config$aws_config)
       for (file_type in file_types_by_technology[[technology]]) {
         s3_path <- sample_s3_paths[[sample_id]][[file_type]]
 

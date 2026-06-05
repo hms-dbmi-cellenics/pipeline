@@ -62,7 +62,7 @@ stub_file.path <- function(...) {
 #' @export
 #'
 stubbed_download_user_files <- function(
-  input, pipeline_config, prev_out = list()
+  input, pipeline_config, prev_out = list(), input_dir = "./input"
 ) {
   # helper to simplify calls to the stubbed function
 
@@ -72,14 +72,11 @@ stubbed_download_user_files <- function(
     download_file = stub_s3_download_file
   )
 
-  # where makes sure where we are stubbing the what calls.
-  mockery::stub(download_s3_files, "paws::s3", mockedS3)
-  mockery::stub(download_s3_files, "s3$list_objects", mockedS3$list_objects)
+  # Inject mock via option (serializes to worker processes)
+  withr::local_options(list(test_s3_client_for_download = mockedS3))
 
   mockery::stub(download_user_files, "file.path", stub_file.path)
   mockery::stub(download_s3_files, "file.path", stub_file.path)
-
-  mockery::stub(download_and_store, "s3$download_file", mockedS3$download_file)
 
   res <- download_user_files(
     input,
