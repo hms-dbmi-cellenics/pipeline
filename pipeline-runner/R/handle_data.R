@@ -709,17 +709,43 @@ pad_image_height <- function(img_arr, target_height) {
   current_height <- dim(img_arr)[1]
   if (current_height == target_height) return(img_arr)
 
-  pad_color <- c(245, 247, 249) / 255
+  # grab bottom row and repeat to pad bottom of image
+  bottom_row <- img_arr[nrow(img_arr), , , drop = FALSE]
 
-  pad_rows <- target_height - current_height
-  padding  <- array(
-    data = rep(pad_color, each = pad_rows * dim(img_arr)[2]),
-    dim  = c(pad_rows, dim(img_arr)[2], 3)
-  )
+  # replace pixels where where green channel is below cutoff
+  # with average color of other pixels in row
+  # cutoff determined empirically looking at RGB values of slides
+  # goal is to not padd with pixels representing tissue (less green)
+  green_cutoff <- 210 / 255
+  maybe_tissue <- bottom_row[, , 2] < green_cutoff
 
+  if (all(maybe_tissue)) {
+    # use pale lavender for padding
+    pad_color <- c(241, 234, 241) / 255
+
+  } else {
+    # reshape to a 2D matrix (pixels as rows, 3 channels as columns)
+    pixel_matrix <- matrix(bottom_row[, !maybe_tissue, ], ncol = 3)
+
+    # use average color of non-tissue pixels for padding
+    pad_color <- colMeans(pixel_matrix)
+
+  }
+
+
+  # set RGB channels
+  bottom_row[1, , 1] <- pad_color[1]
+  bottom_row[1, , 2] <- pad_color[2]
+  bottom_row[1, , 3] <- pad_color[3]
+
+
+  padding <- bottom_row[rep(1, target_height - current_height), , ]
   padded_img_arr <- abind::abind(img_arr, padding, along = 1)
 
-  message("Padded image from height ", current_height, " to ", target_height)
+  message(
+    "Padded image from height ", current_height,
+    " to ", dim(padded_img_arr)[1]
+  )
 
   return(padded_img_arr)
 }
