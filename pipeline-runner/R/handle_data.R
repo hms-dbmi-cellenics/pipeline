@@ -588,16 +588,84 @@ get_matrix_dirs <- function(scdata) {
   return(matrix_dirs)
 }
 
+
+upload_image_to_s3 <- function(
+  pipeline_config, input, experiment_id, image_arr, image_name, image_id, sample_id,
+  image_max_height = dim(image_arr)[1], overwrite_existing = TRUE
+) {
+  # things for api requests
+  api_url <- pipeline_config$api_url
+  auth_jwt <- input$authJWT
+
+  # pad images to have same fixed height
+  image_arr <- pad_image_height(image_arr, image_max_height)
+
+  # where to save zarr folder locally
+  zarr_name <- paste0(image_name, ".ome.zarr")
+  output_path <- file.path(tempdir(), zarr_name)
+
+  message("Saving image data to: ", output_path, "...")
+
+  # save as ome zarr folder
+  rgb_image_to_ome_zarr(image_arr, output_path, image_name)
+
+  # zip all files in zarr folder
+  zip_name <- paste0(zarr_name, ".zip")
+  zip_path <- file.path(tempdir(), zip_name)
+
+  workdir <- getwd()
+  setwd(output_path)
+  utils::zip(zip_path, files = ".", flags = "-rq0")
+  setwd(workdir)
+
+  # log file size before upload
+  message("Image zip file size: ", fs::file_size(zip_path))
+
+  # upload ome.zarr.zip to s3
+  # use multipart upload for files larger than 100MB to handle large images
+  message("\nUploading image data to S3:")
+  put_object_in_s3_multipart(
+    pipeline_config,
+    bucket = pipeline_config$spatial_image_bucket,
+    object = zip_path,
+    key = image_id
+  )
+
+  # create sql entry in sample_file,
+  # (also creates entry in sample_to_sample_file_map)
+  create_sample_file(
+    api_url,
+    experiment_id,
+    sample_id,
+    "ome_zarr_zip",
+    file.size(zip_path),
+    # gets used as s3_path by API
+    image_id,
+    # FALSE for obj2s so that can have multiple ome_zarr_zip for single "sample"
+    overwrite_existing,
+    auth_jwt
+  )
+
+  invisible()
+}
+
 # based off of vitessce-python demo
-rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name) {
+rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name) {
   # import python modules
   np <- reticulate::import("numpy")
   zarr <- reticulate::import("zarr")
   ome_zarr <- reticulate::import("ome_zarr")
 
   # convert values from [0, 1] to [0, 255] and to uint8
-  img_arr <- np$array(img_arr * 255.0, dtype = "uint8")
-  img_arr <- np$transpose(img_arr, c(2L, 0L, 1L))
+  image_arr <- np$array(image_arr * 255.0, dtype = "uint8")
+  image_arr <- np$transpose(image_arr, c(2L, 0L, 1L))
+
+  # 2. build the Multi-scale Pyramid Scaler (CRITICAL for S3/Viv performance)
+  scaler <- ome_zarr$scale$Scaler(
+    downscale = 2L,     # Downsample by half at each level
+    max_layer = 4L,     # Generates 5 resolution levels (0 to 4)
+    method = "nearest"  # Fastest method for standard RGB images
+  )
 
   default_window <- list(
     start = 0,
@@ -609,14 +677,18 @@ rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name) {
   z_root <- zarr$open_group(output_path, mode = "w")
 
   ome_zarr$writer$write_image(
-    image = img_arr,
+    image = image_arr,
     group = z_root,
     axes = "cyx",
-    storage_options = list(chunks = c(256L, 256L, 3L))
+    scaler = scaler,
+    storage_options = list(
+      chunks = reticulate::tuple(1L, 512L, 512L),
+      dimension_separator = "/"
+    )
   )
 
   omero <- list(
-    "name" = img_name,
+    "name" = image_name,
     "version" = "0.3",
     "rdefs" = list(),
     "channels" = list(
@@ -641,25 +713,27 @@ rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name) {
   invisible()
 }
 
-upload_image_to_s3 <- function(
-  pipeline_config, input, experiment_id, img_arr, img_name, img_id, sample_id,
-  image_max_height = dim(img_arr)[1], overwrite_existing = TRUE
+upload_polygons_to_s3 <- function(
+  pipeline_config, input, experiment_id, polygons, height, width,
+  image_name, polygons_id, sample_id, overwrite_existing
 ) {
   # things for api requests
   api_url <- pipeline_config$api_url
   auth_jwt <- input$authJWT
 
-  # pad images to have same fixed height
-  img_arr <- pad_image_height(img_arr, image_max_height)
-
   # where to save zarr folder locally
-  zarr_name <- paste0(img_name, ".ome.zarr")
+  zarr_name <- paste0(image_name, ".segmentations.ome.zarr")
   output_path <- file.path(tempdir(), zarr_name)
 
-  message("Saving image data to: ", output_path, "...")
+  message("\nSaving polygons data: ", output_path)
 
   # save as ome zarr folder
-  rgb_img_to_ome_zarr(img_arr, output_path, img_name)
+  polygons_to_bitmask_ome_zarr(
+    polygons,
+    height,
+    width,
+    output_path
+  )
 
   # zip all files in zarr folder
   zip_name <- paste0(zarr_name, ".zip")
@@ -671,16 +745,15 @@ upload_image_to_s3 <- function(
   setwd(workdir)
 
   # log file size before upload
-  message("Image zip file size: ", fs::file_size(zip_path))
+  message("Segmentations zip file size: ", fs::file_size(zip_path))
 
   # upload ome.zarr.zip to s3
-  # use multipart upload for files larger than 100MB to handle large images
-  message("\nUploading image data to S3:")
+  message("\nUploading polygons data to S3:")
   put_object_in_s3_multipart(
     pipeline_config,
-    bucket = pipeline_config$spatial_image_bucket,
+    bucket = pipeline_config$spatial_segmentations_bucket,
     object = zip_path,
-    key = paste0(experiment_id, "/", img_id)
+    key = polygons_id
   )
 
   # create sql entry in sample_file,
@@ -689,11 +762,10 @@ upload_image_to_s3 <- function(
     api_url,
     experiment_id,
     sample_id,
-    "ome_zarr_zip",
+    "segmentations_ome_zarr_zip",
     file.size(zip_path),
     # gets used as s3_path by API
-    img_id,
-    # FALSE for obj2s so that can have multiple ome_zarr_zip for single sample
+    polygons_id,
     overwrite_existing,
     auth_jwt
   )
@@ -701,14 +773,77 @@ upload_image_to_s3 <- function(
   invisible()
 }
 
+polygons_to_bitmask_ome_zarr <- function(
+  polygons,
+  height,
+  width,
+  output_path,
+  label_name = "cells",
+  max_pyramid_levels = 4L
+) {
+  np <- reticulate::import("numpy")
+  zarr <- reticulate::import("zarr")
+  ome_zarr <- reticulate::import("ome_zarr")
+  pil <- reticulate::import("PIL")
 
+  # map each cell → integer label (1-indexed; 0 = background)
+  polygons$cells_id <- as.integer(polygons$cells_id) + 1L
+  cell_ids <- unique(polygons$cells_id)
 
-pad_image_height <- function(img_arr, target_height) {
-  current_height <- dim(img_arr)[1]
-  if (current_height == target_height) return(img_arr)
+  # rasterise polygons onto a 32-bit integer PIL image
+  image <- pil$Image$new(
+    "I",
+    reticulate::tuple(as.integer(width), as.integer(height)),
+    0L
+  )
+  draw <- pil$ImageDraw$Draw(image)
+
+  data.table::setDT(polygons)
+  polygons_list <- vector("list", max(cell_ids))
+  pairs <- polygons[, .(v = list(c(rbind(x, y)))), by = cells_id]
+  polygons_list[pairs$cells_id] <- pairs$v
+
+  for (cid in cell_ids) {
+    draw$polygon(polygons_list[[cid]], fill = as.integer(cid))
+  }
+
+  # convert to numpy (H, W) -> add channel dimension -> (1, H, W) for "cyx"
+  arr <- np$array(image, dtype = np$int32)
+  arr <- np$expand_dims(arr, axis = 0L)
+
+  # open the main root group
+  # open in append mode
+  z_root <- zarr$open_group(output_path, mode = "a")
+
+  # configure storage parameters for high performance over AWS S3
+  storage_options <- list(
+    chunks = reticulate::tuple(1L, 512L, 512L),
+    # fixes cloud multi-stream index throttling
+    dimension_separator = "/"
+  )
+
+  # write via standard OME-NGFF write_labels function
+  # This creates: output_path/labels/cells/
+  # It automatically forces nearest-neighbor downsampling to protect IDs
+  ome_zarr$writer$write_labels(
+    labels = arr,
+    group = z_root,
+    name = label_name,
+    axes = "cyx",
+    # Array of step downs [2, 2, 2, 2]
+    scale_factors = rep(2L, max_pyramid_levels),
+    storage_options = storage_options
+  )
+
+  invisible()
+}
+
+pad_image_height <- function(image_arr, target_height) {
+  current_height <- dim(image_arr)[1]
+  if (current_height == target_height) return(image_arr)
 
   # grab bottom row and repeat to pad bottom of image
-  bottom_row <- img_arr[nrow(img_arr), , , drop = FALSE]
+  bottom_row <- image_arr[nrow(image_arr), , , drop = FALSE]
 
   # replace pixels where where green channel is below cutoff
   # with average color of other pixels in row
@@ -737,14 +872,14 @@ pad_image_height <- function(img_arr, target_height) {
 
 
   padding <- bottom_row[rep(1, target_height - current_height), , ]
-  padded_img_arr <- abind::abind(img_arr, padding, along = 1)
+  padded_image_arr <- abind::abind(image_arr, padding, along = 1)
 
   message(
     "Padded image from height ", current_height,
-    " to ", dim(padded_img_arr)[1]
+    " to ", dim(padded_image_arr)[1]
   )
 
-  return(padded_img_arr)
+  return(padded_image_arr)
 }
 
 create_sample_file <- function(
@@ -782,24 +917,24 @@ create_sample_file <- function(
 
 upload_obj2s_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
   # use the
-  img_ids <- input$sampleIds
-  names(img_ids) <- input$sampleNames
+  image_ids <- input$sampleIds
+  names(image_ids) <- input$sampleNames
 
   # associate obj2s images with single sample id for experiment
   sample_id <- input$obj2sSampleId
-  img_names <- Seurat::Images(scdata)
+  image_names <- Seurat::Images(scdata)
 
-  for (img_name in img_names) {
-    img_arr <- scdata[[img_name]]@image
-    img_id <- img_ids[img_name]
+  for (image_name in image_names) {
+    image_arr <- scdata[[image_name]]@image
+    image_id <- image_ids[image_name]
 
     upload_image_to_s3(
       pipeline_config,
       input,
       experiment_id,
-      img_arr,
-      img_name,
-      img_id,
+      image_arr,
+      image_name,
+      image_id,
       sample_id,
       overwrite_existing = FALSE
     )

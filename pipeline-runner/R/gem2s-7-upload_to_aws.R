@@ -98,20 +98,37 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       message("\nUploading image to S3:")
       # need image dimensions to pad images to common dimension before upload
       image_max_height <- get_image_max_height(scdata_list)
-      img_arr <- scdata[[image_name]]@image
+      image_arr <- scdata[[image_name]]@image
 
-      # Use the sample ID as the image key.
-      img_id <- sample
+      # need distinct UUIDs for image and polygons ids
+      # required by sampleFile schema
+      # UUIDs also used as S3 keys
+      image_id <- uuid::UUIDgenerate()
+      polygons_id <- uuid::UUIDgenerate()
+      polygons <- get_polygon_coords(image_name, scdata)
 
       upload_image_to_s3(
         pipeline_config,
         input,
         experiment_id,
-        img_arr,
+        image_arr,
         image_name,
-        img_id,
+        image_id,
         sample,
         image_max_height,
+        overwrite_existing = TRUE
+      )
+
+      upload_polygons_to_s3(
+        pipeline_config,
+        input,
+        experiment_id,
+        polygons,
+        image_max_height,
+        dim(image_arr)[2],
+        image_name,
+        polygons_id,
+        sample,
         overwrite_existing = TRUE
       )
     }
@@ -145,14 +162,31 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
+get_polygon_coords <- function(image_name, scdata) {
+  image <- scdata[[image_name]]
+  coords <- image$segmentations@sf.data
+  scale <- get_image_scale(image_name, scdata)
+  scale.factor <- Seurat::ScaleFactors(image)[[scale]]
+  coords[, c("x", "y")] <- coords[, c("x", "y")] * scale.factor
+
+  meta <- scdata@meta.data
+  coords$cells_id <- meta[coords$cell, "cells_id"]
+  dplyr::arrange(coords, cells_id)
+}
+
+get_image_scale <- function(image_name, scdata) {
+  dims <- dim(scdata[[image_name]]@image)
+  ifelse(any(dims[1:2] <= 600), "lowres", "hires")
+}
+
 # image is rotated such that longest dimension is width (always 6000)
 # need max height to pad images to common dimension before upload
 get_image_max_height <- function(scdata_list) {
   image_heights <- lapply(scdata_list, function(scdata) {
     image_name <- Seurat::Images(scdata)
     if (!is.null(image_name)) {
-      img_arr <- scdata[[image_name]]@image
-      dim(img_arr)[1]
+      image_arr <- scdata[[image_name]]@image
+      dim(image_arr)[1]
     } else {
       NULL
     }

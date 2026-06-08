@@ -1068,7 +1068,7 @@ read_visium_hd_sample <- function(sample, input_dir) {
   # simplify polygons and rotate if width is less than height
   results$segmentations <- segmentations |>
     simplify_segmentations() |>
-    pivot_img_wide()
+    pivot_image_wide()
 
   # edrops and doublet scores not calculated for visium HD
   # return empty lists for compatibility with downstream functions
@@ -1109,14 +1109,14 @@ simplify_segmentations <- function(segmentations) {
   return(segmentations)
 }
 
-pivot_img_wide <- function(segmentations) {
-  img <- segmentations@image
+pivot_image_wide <- function(segmentations) {
+  image <- segmentations@image
 
   # retrieve image dimensions
-  img_height <- dim(img)[1]
-  img_width <- dim(img)[2]
+  image_height <- dim(image)[1]
+  image_width <- dim(image)[2]
 
-  if (img_width < img_height) {
+  if (image_width < image_height) {
     message(
       "Image width is smaller than height.",
       "Rotating image and coordinates to match expected orientation."
@@ -1137,24 +1137,24 @@ rotate_visiumv2 <- function(segmentations) {
     polygons_simple = bounds[["simplified.segmentations"]]@sf.data
   )
 
-  img <- segmentations@image
+  image <- segmentations@image
   scale_factor <- segmentations@scale.factors$hires
 
   # retrieve image dimensions
-  img_height <- dim(img)[1]
-  img_width <- dim(img)[2]
+  image_height <- dim(image)[1]
+  image_width <- dim(image)[2]
 
   # retrieve cell coordinates dimensions
-  coord_width <- img_width / scale_factor
-  coord_height <- img_height / scale_factor
+  coord_width <- image_width / scale_factor
+  coord_height <- image_height / scale_factor
 
   # define center in coordinate space
   center_x <- coord_width / 2
   center_y <- coord_height / 2
 
   # Rotate image: transpose then flip vertically
-  rotated_img <- aperm(img, c(2, 1, 3))
-  rotated_img <- rotated_img[dim(rotated_img)[1]:1, , ]
+  rotated_image <- aperm(image, c(2, 1, 3))
+  rotated_image <- rotated_image[dim(rotated_image)[1]:1, , ]
 
   # new coordinate width/height
   new_coord_width <- coord_height
@@ -1189,7 +1189,7 @@ rotate_visiumv2 <- function(segmentations) {
   bounds[["segmentations"]]@sf.data <- coords_rot_list$polygons
   bounds[["simplified.segmentations"]]@sf.data <- coords_rot_list$polygons_simple
   segmentations@boundaries <- bounds
-  segmentations@image <- rotated_img
+  segmentations@image <- rotated_image
 
   return(segmentations)
 }

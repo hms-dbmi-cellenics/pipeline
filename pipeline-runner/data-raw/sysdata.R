@@ -9,6 +9,7 @@ bucket_list <- list(
   plot_data_bucket = "plots-tables",
   cell_sets_bucket = "cell-sets",
   spatial_image_bucket = "spatial-images",
+  spatial_segmentations_bucket = "spatial-segmentations",
   debug_bucket = "biomage-pipeline-debug",
   cl_metadata_bucket = "cellenics-cell-level-metadata"
 )
@@ -61,10 +62,8 @@ gem2s <- list(
   max.empty.drops = 100
 )
 
-
 # minimum number of cells required in a sample to have the pipeline not break.
 MIN_CELLS_IN_SAMPLE <- 15
-
 
 RANDOM_SEED <- 42
 
