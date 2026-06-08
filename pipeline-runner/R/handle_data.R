@@ -778,7 +778,6 @@ polygons_to_bitmask_ome_zarr <- function(
   height,
   width,
   output_path,
-  label_name = "cells",
   max_pyramid_levels = 4L
 ) {
   np <- reticulate::import("numpy")
@@ -786,11 +785,10 @@ polygons_to_bitmask_ome_zarr <- function(
   ome_zarr <- reticulate::import("ome_zarr")
   pil <- reticulate::import("PIL")
 
-  # map each cell → integer label (1-indexed; 0 = background)
+  # 1-indexed so that 0 is reserved for background
   polygons$cells_id <- as.integer(polygons$cells_id) + 1L
   cell_ids <- unique(polygons$cells_id)
 
-  # rasterise polygons onto a 32-bit integer PIL image
   image <- pil$Image$new(
     "I",
     reticulate::tuple(as.integer(width), as.integer(height)),
@@ -802,37 +800,26 @@ polygons_to_bitmask_ome_zarr <- function(
   polygons_list <- vector("list", max(cell_ids))
   pairs <- polygons[, .(v = list(c(rbind(x, y)))), by = cells_id]
   polygons_list[pairs$cells_id] <- pairs$v
-
   for (cid in cell_ids) {
     draw$polygon(polygons_list[[cid]], fill = as.integer(cid))
   }
 
-  # convert to numpy (H, W) -> add channel dimension -> (1, H, W) for "cyx"
-  arr <- np$array(image, dtype = np$int32)
-  arr <- np$expand_dims(arr, axis = 0L)
+  # float32: precise up to 2^24 ≈ 16.7 M cells, universally supported by WebGL
+  arr <- np$array(image, dtype = np$float32)
+  arr <- np$expand_dims(arr, axis = 0L)   # (H, W) → (1, H, W)  "cyx"
 
-  # open the main root group
-  # open in append mode
   z_root <- zarr$open_group(output_path, mode = "a")
 
-  # configure storage parameters for high performance over AWS S3
-  storage_options <- list(
-    chunks = reticulate::tuple(1L, 512L, 512L),
-    # fixes cloud multi-stream index throttling
-    dimension_separator = "/"
-  )
-
-  # write via standard OME-NGFF write_labels function
-  # This creates: output_path/labels/cells/
-  # It automatically forces nearest-neighbor downsampling to protect IDs
-  ome_zarr$writer$write_labels(
-    labels = arr,
-    group = z_root,
-    name = label_name,
-    axes = "cyx",
-    # Array of step downs [2, 2, 2, 2]
+  # Write multiscale arrays directly at the group root (no labels/ sub-path)
+  # so ZipFileStore can load them without .resolve('labels/cells')
+  ome_zarr$writer$write_multiscale(
+    pyramid   = list(arr),
+    group     = z_root,
+    axes      = "cyx",
     scale_factors = rep(2L, max_pyramid_levels),
-    storage_options = storage_options
+    storage_options = list(
+      chunks = reticulate::tuple(1L, 512L, 512L)
+    )
   )
 
   invisible()
