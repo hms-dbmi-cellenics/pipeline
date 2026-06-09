@@ -651,21 +651,13 @@ upload_image_to_s3 <- function(
 
 # based off of vitessce-python demo
 rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name) {
-  # import python modules
   np <- reticulate::import("numpy")
   zarr <- reticulate::import("zarr")
   ome_zarr <- reticulate::import("ome_zarr")
 
-  # convert values from [0, 1] to [0, 255] and to uint8
+  # Convert [0, 1] → [0, 255] uint8, then transpose to (C, H, W) "cyx"
   image_arr <- np$array(image_arr * 255.0, dtype = "uint8")
   image_arr <- np$transpose(image_arr, c(2L, 0L, 1L))
-
-  # 2. build the Multi-scale Pyramid Scaler (CRITICAL for S3/Viv performance)
-  scaler <- ome_zarr$scale$Scaler(
-    downscale = 2L,     # Downsample by half at each level
-    max_layer = 4L,     # Generates 5 resolution levels (0 to 4)
-    method = "nearest"  # Fastest method for standard RGB images
-  )
 
   default_window <- list(
     start = 0,
@@ -676,11 +668,17 @@ rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name) {
 
   z_root <- zarr$open_group(output_path, mode = "w")
 
+  # scale_factors [2, 4, 8, 16] → 5 levels (0 = full res, 1–4 = coarse)
+  # method NEAREST matches skimage order=0 resize — correct for uint8 RGB
+  # (no fractional pixel values can appear so any method is safe here,
+  # but NEAREST is the fastest and avoids any anti-aliasing artefacts)
+  scale_factors <- 2L ^ seq_len(4L)
+
   ome_zarr$writer$write_image(
     image = image_arr,
     group = z_root,
     axes = "cyx",
-    scaler = scaler,
+    scale_factors = scale_factors,
     storage_options = list(
       chunks = reticulate::tuple(1L, 512L, 512L),
       dimension_separator = "/"
@@ -692,24 +690,13 @@ rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name) {
     "version" = "0.3",
     "rdefs" = list(),
     "channels" = list(
-      list(
-        "label" = "R",
-        "color" = "FF0000",
-        "window" = default_window
-      ),
-      list(
-        "label" = "G",
-        "color" = "00FF00",
-        "window" = default_window
-      ),
-      list(
-        "label" = "B",
-        "color" = "0000FF",
-        "window" = default_window
-      )
+      list("label" = "R", "color" = "FF0000", "window" = default_window),
+      list("label" = "G", "color" = "00FF00", "window" = default_window),
+      list("label" = "B", "color" = "0000FF", "window" = default_window)
     )
   )
   reticulate::py_set_attr(z_root, "omero", omero)
+
   invisible()
 }
 
@@ -785,10 +772,12 @@ polygons_to_bitmask_ome_zarr <- function(
   ome_zarr <- reticulate::import("ome_zarr")
   pil <- reticulate::import("PIL")
 
-  # 1-indexed so that 0 is reserved for background
+  # 1-indexed: pixel value 0 reserved for background (transparent in shader)
   polygons$cells_id <- as.integer(polygons$cells_id) + 1L
   cell_ids <- unique(polygons$cells_id)
 
+  # ── Rasterise polygons into a 32-bit label image ──────────────────────────
+  # PIL mode "I" = 32-bit signed int; fill values are the 1-indexed cell IDs.
   image <- pil$Image$new(
     "I",
     reticulate::tuple(as.integer(width), as.integer(height)),
@@ -804,21 +793,42 @@ polygons_to_bitmask_ome_zarr <- function(
     draw$polygon(polygons_list[[cid]], fill = as.integer(cid))
   }
 
-  # float32: precise up to 2^24 ≈ 16.7 M cells, universally supported by WebGL
+  # float32: integer-exact up to 2^24 ≈ 16.7 M cells.
+  # XRLayer uploads this as R32F so the BitmaskLayer shader reads raw cell IDs.
   arr <- np$array(image, dtype = np$float32)
   arr <- np$expand_dims(arr, axis = 0L)   # (H, W) → (1, H, W)  "cyx"
 
-  z_root <- zarr$open_group(output_path, mode = "a")
+  z_root <- zarr$open_group(output_path, mode = "w")
 
-  # Write multiscale arrays directly at the group root (no labels/ sub-path)
-  # so ZipFileStore can load them without .resolve('labels/cells')
-  ome_zarr$writer$write_multiscale(
-    pyramid   = list(arr),
-    group     = z_root,
-    axes      = "cyx",
-    scale_factors = rep(2L, max_pyramid_levels),
+  # ── Pyramid via write_image ───────────────────────────────────────────────
+  # write_image generates the pyramid automatically from scale_factors.
+  # write_multiscale does NOT have a scale_factors parameter and only stores
+  # whatever arrays you pass; using it with a single array was the bug.
+  #
+  # scale_factors as cumulative integers [2, 4, 8, 16]:
+  #   level 0 = original full resolution
+  #   level 1 = 1/2  (2×  downsample in y, x)
+  #   level 2 = 1/4  (4×  downsample in y, x)
+  #   level 3 = 1/8  (8×  downsample in y, x)
+  #   level 4 = 1/16 (16× downsample in y, x)
+  #   → 5 levels total, matching the RGB image writer
+  #
+  # method = Methods.NEAREST (nearest-neighbour, skimage order=0):
+  #   Selects an existing pixel value at each downsampled position.
+  #   Cell IDs (integers stored as float32) are preserved exactly at every level.
+  #   Methods.RESIZE (the default) uses anti-aliased bicubic interpolation which
+  #   blends adjacent IDs producing fractional values the LUT cannot look up.
+  scale_factors <- 2L ^ seq_len(max_pyramid_levels)
+
+  ome_zarr$writer$write_image(
+    image = arr,
+    group = z_root,
+    axes = "cyx",
+    scale_factors = scale_factors,
+    method = "nearest",
     storage_options = list(
-      chunks = reticulate::tuple(1L, 512L, 512L)
+      chunks = reticulate::tuple(1L, 512L, 512L),
+      dimension_separator = "/"
     )
   )
 
