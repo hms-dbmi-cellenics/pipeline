@@ -19,11 +19,19 @@
 #' @export
 #' @return a list with the filtered seurat object by mitochondrial content, the config and the plot values
 #'
-filter_high_mito <- function(scdata_list, config, sample_id, cells_id, task_name = "mitochondrialContent", num_cells_to_downsample = 6000) {
+filter_high_mito <- function(
+  scdata_list, config, sample_id, cells_id,
+  task_name = "mitochondrialContent", num_cells_to_downsample = 6000
+) {
   sample_cell_ids <- cells_id[[sample_id]]
 
   if (length(sample_cell_ids) == 0) {
-    return(list(data = scdata_list[[sample_id]], new_ids = cells_id, config = config, plotData = list()))
+    return(list(
+      data = scdata_list[[sample_id]],
+      new_ids = cells_id,
+      config = config,
+      plotData = list()
+    ))
   }
 
   sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
@@ -45,9 +53,8 @@ filter_high_mito <- function(scdata_list, config, sample_id, cells_id, task_name
     }
   }
 
-
   config$filterSettings$methodSettings[[config$filterSettings$method]]$maxFraction <- max_fraction
-  
+
   # Assign updated config to global env so that it can be accessed if there is an error
   config_key <- paste0("config-", task_name, "-", sample_id)
   assign(config_key, config, envir = globalenv())

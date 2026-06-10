@@ -130,10 +130,15 @@ construct_metadata <- function(counts, sample, config) {
 add_mito <- function(scdata, annot) {
   if (any(grepl(MITOCHONDRIAL_REGEX, annot$name, ignore.case = TRUE))) {
     message("Adding MT information...")
-    mt.features <- annot$input[grep(MITOCHONDRIAL_REGEX, annot$name, ignore.case = TRUE)]
-    mt.features <- mt.features[mt.features %in% rownames(scdata)]
-    if (length(mt.features)) {
-      scdata <- Seurat::PercentageFeatureSet(scdata, features = mt.features, col.name = "percent.mt")
+    mt_features <- annot$input[grep(MITOCHONDRIAL_REGEX, annot$name, ignore.case = TRUE)]
+    mt_features <- mt_features[mt_features %in% rownames(scdata)]
+
+    if (length(mt_features)) {
+      scdata <- Seurat::PercentageFeatureSet(
+        scdata,
+        features = mt_features,
+        col.name = "percent.mt"
+      )
     }
   }
 
