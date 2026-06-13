@@ -76,13 +76,19 @@ construct_scdata <- function(
     add_segmentations(segmentations, sample) |>
     add_mito(annot) |>
     add_dblscore(doublet_score) |>
-    add_edrops(edrops_out)
+    add_edrops(edrops_out) |>
+    add_spatial_local_outliers()
 
   return(scdata)
 }
 
 # similar to Seurat::Load10X_Spatial
 add_segmentations <- function(scdata, segmentations, sample) {
+  # non-spatial samples have no segmentations: nothing to add
+  if (is.null(segmentations)) {
+    return(scdata)
+  }
+
   message("Adding segmentations...")
   segmentation_cells <- Seurat::Cells(segmentations)
   scdata_cells <- Seurat::Cells(scdata)
@@ -92,6 +98,46 @@ add_segmentations <- function(scdata, segmentations, sample) {
   segmentations <- subset(segmentations, cells = common_cells)
   SeuratObject::DefaultBoundary(segmentations) <- "centroids"
   scdata[[paste0(sample, ".polygons")]] <- segmentations
+
+  return(scdata)
+}
+
+#' Add spatial local-outlier z-scores to a SeuratObject
+#'
+#' For spatial datasets, computes a modified z-score per cell describing how much
+#' each metric deviates from its spatial neighborhood (see \code{local_outliers}).
+#' The spatial KNN graph is computed once and shared across all metrics. Stores a
+#' \code{<metric>_z} column (and \code{<metric>_log} for log-scaled metrics) in
+#' \code{meta.data}. These columns are later thresholded by the spatial QC filters.
+#'
+#' Returns \code{scdata} unchanged for non-spatial datasets (no tissue coordinates).
+add_spatial_local_outliers <- function(scdata) {
+  coords <- tryCatch(
+    Seurat::GetTissueCoordinates(scdata),
+    error = function(e) NULL
+  )
+  if (is.null(coords) || !nrow(coords)) {
+    return(scdata)
+  }
+
+  message("Computing spatial local-outlier z-scores...")
+  # workers = 1: already running inside bplapply over samples
+  spatial_knn <- find_spatial_knn(scdata, workers = 1)
+
+  metric_specs <- list(
+    list(metric = "nCount_RNA", log = TRUE),
+    list(metric = "nFeature_RNA", log = TRUE),
+    list(metric = "percent.mt", log = FALSE)
+  )
+
+  for (spec in metric_specs) {
+    outlier_cols <- local_outliers(
+      scdata, spatial_knn,
+      metric = spec$metric, log = spec$log
+    )
+    # outlier_cols is row-aligned to scdata@meta.data
+    scdata@meta.data[, colnames(outlier_cols)] <- outlier_cols
+  }
 
   return(scdata)
 }

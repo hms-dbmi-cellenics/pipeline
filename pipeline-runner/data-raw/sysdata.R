@@ -42,6 +42,9 @@ QC_TASK_LIST <- list(
   "mitochondrialContent" = "filter_high_mito",
   "numGenesVsNumUmis" = "filter_gene_umi_outlier",
   "doubletScores" = "filter_doublets",
+  "spatialUmiOutlier" = "filter_spatial_umi_outlier",
+  "spatialNumGenesOutlier" = "filter_spatial_num_genes_outlier",
+  "spatialMitoOutlier" = "filter_spatial_mito_outlier",
   "dataIntegration" = "integrate_scdata",
   "configureEmbedding" = "embed_and_cluster"
 )

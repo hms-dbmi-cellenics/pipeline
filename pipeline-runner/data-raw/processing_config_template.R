@@ -43,6 +43,26 @@ processing_config_template <- list(
                           binStep = 0.02)
   ),
 
+  # Spatial (Visium HD) local-outlier filters. cutoff is the user-editable
+  # z-score threshold; direction is fixed per filter.
+  "spatial_umi_outlier" = list(
+    enabled = TRUE,
+    auto = TRUE,
+    filterSettings = list(cutoff = 3, direction = "lower", binStep = 0.2)
+  ),
+
+  "spatial_num_genes_outlier" = list(
+    enabled = TRUE,
+    auto = TRUE,
+    filterSettings = list(cutoff = 3, direction = "lower", binStep = 0.2)
+  ),
+
+  "spatial_mito_outlier" = list(
+    enabled = TRUE,
+    auto = TRUE,
+    filterSettings = list(cutoff = 3, direction = "upper", binStep = 0.2)
+  ),
+
   "data_integration" = list(
     dataIntegration = list(
       method = "harmony",
