@@ -7,11 +7,13 @@ run_clustering <- function(scdata, config, ignore_ssl_cert) {
   cell_sets <-
     runClusters(clustering_method, method_settings$resolution, scdata)
 
+  color_pool <- cluster_color_pool(scdata, cell_sets, scdata@misc$color_pool)
+
   formated_cell_sets <-
     format_cluster_cellsets(
       cell_sets,
       clustering_method,
-      scdata@misc$color_pool
+      color_pool
     )
 
   replace_cell_class_through_api(
@@ -238,9 +240,13 @@ make_cl_metadata_cellsets <- function(scdata, config) {
   str(var_types)
 
 
-  # creates cell-level metadata cellsets, setting the correct type
+  # creates cell-level metadata cellsets, setting the correct type.
+  # scdata is passed so cell-level (CLM) tracks can be coloured by spatial
+  # coherence (Spaco) for spatial data.
   cl_metadata_cellsets <-
-    format_cl_metadata_cellsets(cl_metadata, var_types, scdata@misc$color_pool)
+    format_cl_metadata_cellsets(
+      cl_metadata, var_types, scdata@misc$color_pool, scdata = scdata
+    )
 
   message("cell-level metadata cellsets created:\n")
   str(cl_metadata_cellsets)
@@ -423,21 +429,13 @@ make_cl_metadata_cellclass <- function(
     children = list()
   )
 
-  values <- unique(cl_metadata[[variable]])
+  # only non-empty values get a cellset (and so consume a color), in the order
+  # they appear. This must match the category order used to build a Spaco
+  # palette in format_cl_metadata_cellsets (see cl_metadata_nonempty_values).
+  values <- cl_metadata_nonempty_values(variable, cl_metadata)
 
   for (i in seq_along(values)) {
-    cell_ids <- cl_metadata[
-      get(variable) == values[i] & cl_metadata$duplicate_barcode == "no",
-      cells_id
-    ]
-
-    # do not add duplicate barcodes, except for the duplicate_barcode cellset
-    if (variable == "duplicate_barcode") {
-      cell_ids <- cl_metadata[get(variable) == values[i], cells_id]
-    }
-
-    # Empty cell sets shouldn't be created based on cell level metadata
-    if (length(cell_ids) == 0) next
+    cell_ids <- cl_metadata_value_cell_ids(variable, values[i], cl_metadata)
 
     cl_metadata_cellset$children <- append(
       cl_metadata_cellset$children,
@@ -447,16 +445,58 @@ make_cl_metadata_cellclass <- function(
           name = as.character(values[i]),
           rootNode = FALSE,
           type = type,
-          color = color_pool[1],
+          color = color_pool[i],
           cellIds = ensure_is_list_in_json(cell_ids)
         )
       )
     )
-
-    color_pool <- color_pool[-1]
   }
 
   return(cl_metadata_cellset)
+}
+
+
+#' cell_ids belonging to one value of a cell-level metadata variable
+#'
+#' Duplicate barcodes are excluded, except for the dedicated
+#' \code{duplicate_barcode} variable itself.
+#'
+#' @param variable character - name of the variable
+#' @param value value of the variable
+#' @param cl_metadata data.table
+#'
+#' @return vector of cells_id
+#'
+cl_metadata_value_cell_ids <- function(variable, value, cl_metadata) {
+  if (variable == "duplicate_barcode") {
+    cl_metadata[get(variable) == value, cells_id]
+  } else {
+    cl_metadata[
+      get(variable) == value & cl_metadata$duplicate_barcode == "no",
+      cells_id
+    ]
+  }
+}
+
+
+#' Values of a cell-level metadata variable that have at least one cell
+#'
+#' Returns the values in the same order \code{make_cl_metadata_cellclass}
+#' consumes them, so a Spaco palette can be aligned to it.
+#'
+#' @param variable character - name of the variable
+#' @param cl_metadata data.table
+#'
+#' @return vector of non-empty values
+#'
+cl_metadata_nonempty_values <- function(variable, cl_metadata) {
+  values <- unique(cl_metadata[[variable]])
+  has_cells <- vapply(
+    values,
+    function(v) length(cl_metadata_value_cell_ids(variable, v, cl_metadata)) > 0,
+    logical(1)
+  )
+  values[has_cells]
 }
 
 
@@ -465,6 +505,9 @@ make_cl_metadata_cellclass <- function(
 #' @param cl_metadata data.table
 #' @param var_types list of variable types
 #' @param color_pool list
+#' @param scdata optional SeuratObject. When supplied and spatial, cell-level
+#'  (CLM) tracks are coloured by spatial coherence using Spaco; per-sample
+#'  (CLMPerSample) tracks always keep the color pool.
 #'
 #' @return list of cell-level metadata cell classes
 #' @export
@@ -472,7 +515,8 @@ make_cl_metadata_cellclass <- function(
 format_cl_metadata_cellsets <-
   function(cl_metadata,
            var_types,
-           color_pool) {
+           color_pool,
+           scdata = NULL) {
     # explicitly exclude cells_id var from cellset creation
     vars_to_cellset <-
       setdiff(names(cl_metadata), c("barcode", "cells_id"))
@@ -481,14 +525,23 @@ format_cl_metadata_cellsets <-
 
     cl_metadata_cellsets <- list()
     for (i in seq_along(vars_to_cellset)) {
-      cellsets <-
-        lapply(
-          vars_to_cellset[[i]],
-          make_cl_metadata_cellclass,
-          names(vars_to_cellset)[i],
-          cl_metadata,
-          color_pool
-        )
+      type <- names(vars_to_cellset)[i]
+      cellsets <- lapply(vars_to_cellset[[i]], function(variable) {
+        # per-sample (CLMPerSample) tracks have one value per slice, so only
+        # cell-level (CLM) tracks are candidates for spatial colouring
+        pool <- color_pool
+        if (type == "CLM") {
+          pool <- resolve_color_pool(
+            scdata,
+            cl_metadata$cells_id,
+            cl_metadata[[variable]],
+            cl_metadata_nonempty_values(variable, cl_metadata),
+            color_pool
+          )
+        }
+
+        make_cl_metadata_cellclass(variable, type, cl_metadata, pool)
+      })
       cl_metadata_cellsets <- append(cl_metadata_cellsets, cellsets)
     }
 
