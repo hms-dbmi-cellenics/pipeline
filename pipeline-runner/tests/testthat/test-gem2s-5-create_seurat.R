@@ -192,6 +192,42 @@ test_that("create_seurat works with multiple samples", {
 })
 
 
+test_that("add_segmentations returns scdata unchanged when segmentations is NULL", {
+  scdata <- mock_spatial_scdata(ncells = 36, sample_id = "s1")
+  out <- add_segmentations(scdata, NULL, "s1")
+  expect_identical(out, scdata)
+})
+
+test_that("add_spatial_local_outliers writes <metric>_z and <metric>_log columns", {
+  scdata <- mock_spatial_scdata(ncells = 64, sample_id = "s1")
+  out <- add_spatial_local_outliers(scdata)
+
+  md_cols <- colnames(out@meta.data)
+  # z-score columns for all three spatial metrics
+  expect_true(all(c("nCount_RNA_z", "nFeature_RNA_z", "percent.mt_z") %in% md_cols))
+  # log columns only for the log-scaled metrics (UMI, num genes), not percent.mt
+  expect_true(all(c("nCount_RNA_log", "nFeature_RNA_log") %in% md_cols))
+  expect_false("percent.mt_log" %in% md_cols)
+
+  # one z-score per cell, all finite, row-aligned
+  expect_equal(nrow(out@meta.data), ncol(out))
+  expect_true(all(is.finite(out@meta.data$nCount_RNA_z)))
+  # log column matches log1p of the metric
+  expect_equal(out@meta.data$nCount_RNA_log, log1p(out@meta.data$nCount_RNA))
+})
+
+test_that("add_spatial_local_outliers returns non-spatial scdata unchanged", {
+  prev_out <- mock_prev_out()
+  scdata <- create_seurat(NULL, NULL, prev_out)$output$scdata_list[[1]]
+  before <- colnames(scdata@meta.data)
+
+  out <- add_spatial_local_outliers(scdata)
+  # no tissue coordinates -> no z columns added
+  expect_identical(out, scdata)
+  expect_false(any(grepl("_z$", colnames(out@meta.data))))
+  expect_equal(colnames(out@meta.data), before)
+})
+
 test_that("create_seurat does not exclude genes without counts", {
   counts <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),

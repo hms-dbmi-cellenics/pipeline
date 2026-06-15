@@ -117,6 +117,71 @@ test_that("NumGenesVsUmis filter config has spline as default for Parse Datasets
   }
 })
 
+test_that("visium_hd config builds the three spatial filters with correct defaults", {
+  scdata_list <- mock_scdata_list()
+
+  qc_config <- construct_qc_config(
+    scdata_list,
+    unfiltered_samples = names(scdata_list),
+    technology = "visium_hd"
+  )
+
+  spatial_steps <- list(
+    spatialUmiOutlier = "lower",
+    spatialNumGenesOutlier = "lower",
+    spatialMitoOutlier = "upper"
+  )
+
+  for (step in names(spatial_steps)) {
+    expect_true(step %in% names(qc_config))
+    for (sample in names(scdata_list)) {
+      cfg <- qc_config[[step]][[sample]]
+      expect_true(cfg$enabled)
+      expect_true(cfg$auto)
+      expect_equal(cfg$filterSettings$cutoff, 3)
+      expect_equal(cfg$filterSettings$direction, spatial_steps[[step]])
+    }
+  }
+
+  # integration + embedding still present
+  expect_true(all(c("dataIntegration", "configureEmbedding") %in% names(qc_config)))
+})
+
+test_that("visium_hd config disables the single-cell-only steps", {
+  scdata_list <- mock_scdata_list()
+
+  qc_config <- construct_qc_config(
+    scdata_list,
+    unfiltered_samples = names(scdata_list),
+    technology = "visium_hd"
+  )
+
+  single_cell_steps <- c(
+    "cellSizeDistribution", "mitochondrialContent", "classifier",
+    "numGenesVsNumUmis", "doubletScores"
+  )
+  # the single-cell filter steps are not part of the spatial config at all
+  expect_false(any(single_cell_steps %in% names(qc_config)))
+})
+
+test_that("non-spatial (10X) config shape is unchanged (no spatial keys)", {
+  scdata_list <- mock_scdata_list()
+
+  qc_config <- construct_qc_config(
+    scdata_list,
+    unfiltered_samples = names(scdata_list),
+    technology = "10X"
+  )
+
+  expect_setequal(
+    names(qc_config),
+    c("cellSizeDistribution", "mitochondrialContent", "classifier",
+      "numGenesVsNumUmis", "doubletScores", "dataIntegration", "configureEmbedding")
+  )
+  spatial_steps <- c("spatialUmiOutlier", "spatialNumGenesOutlier", "spatialMitoOutlier")
+  expect_false(any(spatial_steps %in% names(qc_config)))
+})
+
 test_that("NumGenesVsUmis filter config has linear as default for 10x datasets", {
     scdata_list <- mock_scdata_list()
 
