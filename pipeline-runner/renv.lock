@@ -667,6 +667,12 @@
       ],
       "Hash": "26b5d104b2d27d7aa3725c4e3aa1b3b9"
     },
+    "Rfast": {
+      "Package": "Rfast",
+      "Version": "2.1.5.2",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
     "Rhdf5lib": {
       "Package": "Rhdf5lib",
       "Version": "1.26.0",
@@ -775,12 +781,6 @@
         "methods"
       ],
       "Hash": "bac1c808a92d9c3f45d05e7a8c1b74f0"
-    },
-    "sf": {
-      "Package": "sf",
-      "Version": "1.1-0",
-      "Source": "Repository",
-      "Repository": "CRAN"
     },
     "Seurat": {
       "Package": "Seurat",
@@ -3318,6 +3318,12 @@
         "utils"
       ],
       "Hash": "6d94b72071aefd6e8b041c34ee83ebd0"
+    },
+    "sf": {
+      "Package": "sf",
+      "Version": "1.1-0",
+      "Source": "Repository",
+      "Repository": "CRAN"
     },
     "shiny": {
       "Package": "shiny",
