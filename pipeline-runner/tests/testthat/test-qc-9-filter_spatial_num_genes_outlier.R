@@ -1,7 +1,7 @@
 # Helpers mock_spatial_config() / add_zscores() live in helper-spatial.R
 
 test_that("filter_spatial_num_genes_outlier removes low local outliers (lower direction)", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
 
@@ -19,7 +19,7 @@ test_that("filter_spatial_num_genes_outlier removes low local outliers (lower di
 })
 
 test_that("filter_spatial_num_genes_outlier auto uses default cutoff of 3", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
 
@@ -38,7 +38,7 @@ test_that("filter_spatial_num_genes_outlier auto uses default cutoff of 3", {
 })
 
 test_that("filter_spatial_num_genes_outlier can be disabled (no-op)", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
 
@@ -54,7 +54,7 @@ test_that("filter_spatial_num_genes_outlier can be disabled (no-op)", {
 })
 
 test_that("filter_spatial_num_genes_outlier emits the three plotData entries", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
 

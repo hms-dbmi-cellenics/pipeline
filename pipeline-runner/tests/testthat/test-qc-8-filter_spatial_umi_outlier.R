@@ -1,7 +1,7 @@
 # mock_spatial_config() and add_zscores() live in helper-spatial.R
 
 test_that("filter_spatial_umi_outlier removes cells below -cutoff (lower direction)", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
 
@@ -22,7 +22,7 @@ test_that("filter_spatial_umi_outlier removes cells below -cutoff (lower directi
 })
 
 test_that("filter_spatial_umi_outlier can be disabled", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
 
@@ -38,7 +38,7 @@ test_that("filter_spatial_umi_outlier can be disabled", {
 })
 
 test_that("filter_spatial_umi_outlier auto uses the default cutoff of 3", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
 
@@ -56,7 +56,7 @@ test_that("filter_spatial_umi_outlier auto uses the default cutoff of 3", {
 })
 
 test_that("filter_spatial_umi_outlier emits the expected plotData", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
 
@@ -72,9 +72,9 @@ test_that("filter_spatial_umi_outlier emits the expected plotData", {
   plot1 <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 1)]]
   stats <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 2)]]
 
-  # plot0: one full per-cell record with cellId, value and zscore (not downsampled)
+  # plot0: one full per-cell record with cellId, value, zscore and coords (not downsampled)
   expect_equal(length(plot0), ncells)
-  expect_setequal(names(plot0[[1]]), c("cellId", "value", "zscore"))
+  expect_setequal(names(plot0[[1]]), c("cellId", "value", "zscore", "x", "y"))
 
   # plot1: z-score values for the histogram
   expect_true(length(plot1) > 0)
@@ -85,7 +85,7 @@ test_that("filter_spatial_umi_outlier emits the expected plotData", {
 })
 
 test_that("filter_spatial_mito_outlier removes cells above the cutoff (upper direction)", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
 
@@ -102,7 +102,7 @@ test_that("filter_spatial_mito_outlier removes cells above the cutoff (upper dir
 })
 
 test_that("manual (non-auto) cutoff is persisted to config and used for filtering", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
 
@@ -122,7 +122,7 @@ test_that("manual (non-auto) cutoff is persisted to config and used for filterin
 })
 
 test_that("upper keeps z < cutoff and lower keeps z > -cutoff at the boundary", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
   cells_id <- mock_ids(scdata_list)
@@ -155,7 +155,7 @@ test_that("upper keeps z < cutoff and lower keeps z > -cutoff at the boundary", 
 })
 
 test_that("missing z-score column is a no-op with a warning message", {
-  scdata_list <- mock_scdata_list()
+  scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
   cells_id <- mock_ids(scdata_list)

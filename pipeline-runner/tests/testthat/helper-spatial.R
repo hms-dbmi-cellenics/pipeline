@@ -1,5 +1,30 @@
 # Helpers for spatial (Visium HD) tests.
 
+# Attach a grid-centroid tissue-coordinate FOV to each Seurat object in the list.
+# The spatial QC filters only ever run on spatial objects, so the code paths
+# (e.g. generate_spatial_outlier_plot_data) assume Seurat::GetTissueCoordinates
+# succeeds. This gives the non-spatial mocks the coordinates they need.
+add_tissue_coords <- function(scdata_list) {
+  for (sample_id in names(scdata_list)) {
+    scdata <- scdata_list[[sample_id]]
+    ncells <- ncol(scdata)
+
+    side <- ceiling(sqrt(ncells))
+    grid <- expand.grid(x = seq_len(side), y = seq_len(side))[seq_len(ncells), ]
+    coords <- data.frame(x = grid$x, y = grid$y, cell = colnames(scdata))
+
+    centroids <- SeuratObject::CreateCentroids(coords)
+    fov <- SeuratObject::CreateFOV(
+      coords = centroids,
+      type = "centroids",
+      assay = "RNA"
+    )
+    scdata[["fov"]] <- fov
+    scdata_list[[sample_id]] <- scdata
+  }
+  scdata_list
+}
+
 # adds the <metric>_z column that add_spatial_local_outliers would have computed
 add_zscores <- function(scdata_list, metric, zscores_by_sample) {
   for (sample_id in names(zscores_by_sample)) {
