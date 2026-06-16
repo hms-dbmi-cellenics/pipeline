@@ -5,3 +5,5 @@
 .DS_Store
 venv
 .positai
+# hunkwise
+.vscode/hunkwise/
