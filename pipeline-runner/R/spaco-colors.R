@@ -274,9 +274,13 @@ merge_cluster_distances <- function(per_slice, clusters) {
 #' Native R port of \code{spaco.mapping.embed_graph}. Embeds the cluster
 #' distance graph into 3D with UMAP (\code{uwot::umap2}, precomputed distances),
 #' rescales the axes into CIE-Lab ranges (L in \code{l_range}, a/b in
-#' [-100, 100]) via quantile trimming, then converts Lab to hex. Uses a
-#' deterministic classical-MDS init so the embedding is stable for the small
-#' number of clusters (UMAP's default spectral init is ill-posed there).
+#' [-100, 100]) via quantile trimming, then converts Lab to hex.
+#'
+#' Mirrors Spaco's \code{UMAP(metric="precomputed")} call: spectral init and
+#' per-edge SGD (\code{batch = FALSE}). For very few clusters (k = 2,
+#' \code{n_neighbors} collapses to 1) \code{uwot} errors; the caller
+#' (\code{\link{get_spaco_color_map}}) catches it and falls back to the default
+#' color pool.
 #'
 #' @param cluster_distance symmetric cluster x cluster matrix
 #' @param l_range numeric length-2, value range for the Lab L channel
@@ -291,15 +295,6 @@ embed_graph_r <- function(
   k_clusters <- length(clusters)
   d <- stats::as.dist(cluster_distance)
 
-  set.seed(RANDOM_SEED)
-  # classical-MDS init (deterministic, distance-respecting); UMAP's spectral
-  # init uses irlba which is ill-posed for so few points
-  init <- suppressWarnings(stats::cmdscale(d, k = 3))
-  if (ncol(init) < 3) {
-    init <- cbind(init, matrix(0, k_clusters, 3 - ncol(init)))
-  }
-  init <- init + matrix(stats::rnorm(length(init), 0, 1e-4), nrow(init))
-
   # suppressMessages: umap2's S4 dispatch on the "dist" object emits repeated
   # "Found more than one class 'dist'" messages when spam and BiocGenerics
   # (both loaded via Seurat/BPCells) each register a "dist" class
@@ -307,7 +302,8 @@ embed_graph_r <- function(
     d,
     n_components = 3,
     n_neighbors = min(15L, k_clusters - 1L),
-    init = init,
+    init = "spectral",
+    batch = FALSE,
     seed = RANDOM_SEED
   ))
 

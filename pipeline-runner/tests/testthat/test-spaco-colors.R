@@ -78,6 +78,23 @@ test_that("cluster_color_pool colors a cell_sets frame for spatial data", {
 })
 
 
+test_that("colouring falls back to the pool when too few clusters to embed", {
+  # with 2 clusters n_neighbors collapses to 1 and uwot's spectral init errors;
+  # get_spaco_color_map should swallow it and return NULL, and the public entry
+  # points should hand back the unchanged colour pool.
+  scdata <- mock_spatial_scdata(ncells = 64)
+  labels <- mock_cluster_labels(scdata, n_clusters = 2)
+
+  expect_null(get_spaco_color_map(scdata, labels))
+
+  pool <- get_color_pool()
+  cell_sets <- data.frame(
+    cluster = unname(labels), cell_ids = as.integer(names(labels))
+  )
+  expect_identical(cluster_color_pool(scdata, cell_sets, pool), pool)
+})
+
+
 test_that("cluster_color_pool returns the pool unchanged for non-spatial data", {
   scdata <- mock_spatial_scdata(ncells = 16)
   scdata[[Seurat::Images(scdata)]] <- NULL
