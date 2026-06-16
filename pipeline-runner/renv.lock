@@ -667,12 +667,6 @@
       ],
       "Hash": "26b5d104b2d27d7aa3725c4e3aa1b3b9"
     },
-    "Rfast": {
-      "Package": "Rfast",
-      "Version": "2.1.5.2",
-      "Source": "Repository",
-      "Repository": "CRAN"
-    },
     "Rhdf5lib": {
       "Package": "Rhdf5lib",
       "Version": "1.26.0",

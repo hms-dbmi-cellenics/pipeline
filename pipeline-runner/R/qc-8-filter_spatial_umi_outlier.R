@@ -13,13 +13,6 @@ find_spatial_knn <- function(scdata, workers = 1, n_neighbors = 36) {
   )$index
 }
 
-# ~10x faster than spatialEco::outliers
-outliers_rfast <- function(x, s = 1.4826) {
-  med_x <- Rfast::med(x)
-  mad_x <- s * Rfast::med(abs(x - med_x))
-  0.6745 * (x - med_x) / mad_x
-}
-
 #' Compute spatial local-outlier modified z-scores for a metric
 #'
 #' For each cell, computes a modified z-score describing how much \code{metric}
@@ -39,28 +32,29 @@ local_outliers <- function(
     metric_to_use <- metric
   }
 
-  mask <- spatial_knn != 0
-  row_idx <- row(spatial_knn)[mask]
-  col_vals <- spatial_knn[mask]
+  metric_vals <- metadata[[metric_to_use]]
+  n <- nrow(spatial_knn)
 
-  values <- metadata[col_vals, metric_to_use]
+  # SpotSweeper::localOutliers computes each spot's modified z-score over the
+  # neighbourhood = the focal spot prepended to its spatial kNN, i.e.
+  # outliers(metric[c(i, knn_i)])[1]. findKNN excludes the spot itself and
+  # returns a 0 index for any missing neighbour (fewer than k available); map
+  # those to NA so they drop out of the row-wise median/MAD. The whole thing is
+  # vectorised with matrixStats for Visium HD scale.
+  idx <- cbind(seq_len(n), spatial_knn) # focal spot is column 1
+  idx[idx == 0] <- NA
+  neighbourhood <- matrix(metric_vals[idx], nrow = n)
 
-  neighborhoods <- split(
-    values,
-    factor(row_idx, levels = seq_len(nrow(spatial_knn)))
-  )
+  med <- matrixStats::rowMedians(neighbourhood, na.rm = TRUE)
+  mad <- 1.4826 * matrixStats::rowMedians(abs(neighbourhood - med), na.rm = TRUE)
+  mod_z <- 0.6745 * (metric_vals - med) / mad # metric_vals == neighbourhood[, 1]
 
-  mod_z_matrix <- vapply(neighborhoods, function(x) {
-    outliers_rfast(x)[1]
-  }, numeric(1))
-
-  mod_z_matrix[!is.finite(mod_z_matrix)] <- 0
+  # zero-MAD (uniform) neighbourhoods produce non-finite scores
+  mod_z[!is.finite(mod_z)] <- 0
 
   metric_z <- paste0(metric, "_z")
-  metadata[[metric_z]] <- mod_z_matrix
-  metadata_cols <- c(metric_to_use, metric_z)
-
-  metadata[, metadata_cols]
+  metadata[[metric_z]] <- mod_z
+  metadata[, c(metric_to_use, metric_z)]
 }
 
 # ── Spatial local-outlier filters (Visium HD) ────────────────────────────────
@@ -115,7 +109,12 @@ filter_spatial_local_outlier <- function(
   # spatial z-scores are computed in gem2s (add_spatial_local_outliers)
   if (!metric_z %in% colnames(sample_data@meta.data)) {
     message("Warning! No spatial z-scores (", metric_z, ") computed for this experiment!")
-    return(list(data = scdata_list[[sample_id]], config = config, plotData = list()))
+    return(list(
+      data = scdata_list,
+      new_ids = cells_id,
+      config = config,
+      plotData = list()
+    ))
   }
 
   # cutoff: automatic uses the default of 3, manual uses the user-provided value
@@ -191,13 +190,11 @@ generate_spatial_outlier_plot_data <- function(scdata, value_metric, metric_z) {
     zscore = unname(md[[metric_z]])
   )
 
-  coords <- tryCatch(Seurat::GetTissueCoordinates(scdata), error = function(e) NULL)
-  if (!is.null(coords) && nrow(coords) == nrow(md)) {
-    rownames(coords) <- coords$cell
-    coords <- coords[rownames(md), , drop = FALSE]
-    cols$x <- unname(coords$x)
-    cols$y <- unname(coords$y)
-  }
+  coords <- Seurat::GetTissueCoordinates(scdata)
+  rownames(coords) <- coords$cell
+  coords <- coords[rownames(md), , drop = FALSE]
+  cols$x <- unname(coords$x)
+  cols$y <- unname(coords$y)
 
   purrr::transpose(cols)
 }
