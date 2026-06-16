@@ -134,3 +134,140 @@ test_that("embed_graph_r returns one distinct hex color per cluster", {
   expect_true(is_hex(cols))
   expect_equal(length(unique(cols)), length(cols))
 })
+
+
+# ── Faithfulness to Spaco colorize_mutiple_slices ─────────────────────────────
+#
+# Our colouring is a native R port of Spaco (BrainStOrmics/Spaco,
+# spaco/colorization.py::colorize_mutiple_slices). That function computes a
+# per-slice "degree of interlacement" graph (distance.spatial_distance), merges
+# them across slices by summing per (cluster_i, cluster_j) pair aligned to the
+# union of clusters with missing pairs = 0 (pandas
+# stack -> concat -> groupby(["v1","v2"]).sum -> unstack -> fillna(0)), then
+# embeds the merged graph into Lab colour space (mapping.embed_graph) to auto-
+# pick colours.
+#
+# spatial_distance and the cross-slice merge are fully deterministic, so we pin
+# them exactly with an independent, loop-based re-implementation of the Spaco
+# algorithm. The embed_graph stage runs a UMAP, and we use uwot::umap2 rather
+# than Spaco's numba UMAP, so the final colours differ numerically by design (we
+# only assert colour-level properties for that stage).
+
+# Independent (loop-based) re-implementation of spaco/distance.py::spatial_distance.
+# For each cell, take its within-radius kNN (self included, as KDTree/nn2 return
+# it first); banish cells with fewer than n_cells same-cluster neighbours by
+# keeping only self, so they contribute nothing; otherwise add an inverse-distance
+# weight, normalised by the neighbourhood size, to the (cluster_i, cluster_j)
+# entry for each non-self neighbour; then symmetrise by max with a zero diagonal.
+# (Spaco's spatial_distance also accepts a neighbor_weight arg but never uses it.)
+ref_spatial_distance <- function(
+  coords, labels, radius = 90, n_neighbors = 16L, n_cells = 3L
+) {
+  clusters <- sort(unique(labels))
+  k <- length(clusters)
+  n <- nrow(coords)
+  score <- matrix(0, k, k, dimnames = list(clusters, clusters))
+
+  knn <- RANN::nn2(coords, coords, k = min(n_neighbors, n))
+
+  for (i in seq_len(n)) {
+    nb <- knn$nn.idx[i, ]
+    dd <- knn$nn.dists[i, ]
+    keep <- dd <= radius
+    nb <- nb[keep]
+    dd <- dd[keep]
+
+    if (sum(labels[nb] == labels[i]) < n_cells) next # banished
+    size <- length(nb) # neighbourhood size, self included
+
+    ci <- match(labels[i], clusters)
+    for (t in seq_along(nb)) {
+      if (nb[t] == i) next # skip self
+      cj <- match(labels[nb[t]], clusters)
+      score[ci, cj] <- score[ci, cj] + (1 / dd[t]) / size
+    }
+  }
+
+  score <- pmax(score, t(score))
+  diag(score) <- 0
+  score
+}
+
+# colorize_multiple_slices accumulates per-slice graphs aligned to the union of
+# clusters across slices.
+ref_multi_slice_distance <- function(coords_list, labels_list, clusters) {
+  merged <- matrix(0, length(clusters), length(clusters),
+    dimnames = list(clusters, clusters)
+  )
+  for (s in seq_along(coords_list)) {
+    m <- ref_spatial_distance(coords_list[[s]], labels_list[[s]])
+    rn <- rownames(m)
+    merged[rn, rn] <- merged[rn, rn] + m
+  }
+  merged
+}
+
+# random-ish point cloud with cluster labels, spread so the radius actually bites
+mock_slice <- function(n, k, seed) {
+  set.seed(seed)
+  coords <- cbind(x = runif(n, 0, 200), y = runif(n, 0, 200))
+  labels <- as.character(sample(seq_len(k) - 1, n, replace = TRUE))
+  list(coords = coords, labels = labels)
+}
+
+
+test_that("spatial_distance_r reproduces Spaco distance.spatial_distance", {
+  s <- mock_slice(n = 150, k = 4, seed = 11)
+  expect_equal(
+    spatial_distance_r(s$coords, s$labels),
+    ref_spatial_distance(s$coords, s$labels)
+  )
+})
+
+test_that("spatial_distance_r reproduces Spaco banishing at a tight radius", {
+  # a smaller radius and larger n_cells banishes more cells; the vectorised and
+  # reference paths must drop exactly the same cells
+  s <- mock_slice(n = 200, k = 5, seed = 23)
+  expect_equal(
+    spatial_distance_r(s$coords, s$labels, radius = 30, n_cells = 4L),
+    ref_spatial_distance(s$coords, s$labels, radius = 30, n_cells = 4L)
+  )
+})
+
+test_that("multi-slice graph matches Spaco colorize_mutiple_slices accumulation", {
+  s1 <- mock_slice(n = 120, k = 4, seed = 31)
+  s2 <- mock_slice(n = 90, k = 3, seed = 47) # fewer clusters -> exercises alignment
+  clusters <- sort(unique(c(s1$labels, s2$labels)))
+
+  ours <- merge_cluster_distances(
+    list(
+      spatial_distance_r(s1$coords, s1$labels),
+      spatial_distance_r(s2$coords, s2$labels)
+    ),
+    clusters
+  )
+  expect_equal(
+    ours,
+    ref_multi_slice_distance(
+      list(s1$coords, s2$coords), list(s1$labels, s2$labels), clusters
+    )
+  )
+})
+
+test_that("get_spaco_color_map colours across multiple slices", {
+  # two spatial slices with disjoint cells_id, sharing a global cluster set
+  s1 <- mock_spatial_scdata(ncells = 80, sample_id = "slice1")
+  s2 <- mock_spatial_scdata(ncells = 80, sample_id = "slice2")
+  s2$cells_id <- s2$cells_id + ncol(s1) # disjoint ids across slices
+
+  l1 <- mock_cluster_labels(s1, n_clusters = 5)
+  l2 <- mock_cluster_labels(s2, n_clusters = 5)
+  labels <- c(l1, l2)
+
+  color_map <- get_spaco_color_map(list(s1, s2), labels)
+
+  # one distinct, valid colour per category seen across both slices
+  expect_setequal(names(color_map), unique(unname(labels)))
+  expect_true(is_hex(color_map))
+  expect_equal(length(unique(color_map)), length(color_map))
+})
