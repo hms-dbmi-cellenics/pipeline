@@ -30,6 +30,10 @@ COPY ./renv.lock.init ./renv.lock
 COPY setup/restore_fast.R .
 RUN Rscript restore_fast.R
 
+# build arrow with full codec for zstd; Xenium .parquet files are
+# zstd-compressed and the default minimal libarrow build cannot read them
+ENV ARROW_WITH_ZSTD=ON
+
 # restore anything pkgbuild missed
 COPY setup/restore_renv.R .
 RUN Rscript restore_renv.R
