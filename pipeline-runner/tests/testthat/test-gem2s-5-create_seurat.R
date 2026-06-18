@@ -82,6 +82,17 @@ test_that("create_seurat works with bpcells", {
   expect_s4_class(scdata, "Seurat")
 })
 
+test_that("create_seurat persists the declared technology onto the object", {
+  # lets the worker (which has no pipeline config) dispatch on technology
+  prev_out <- mock_prev_out()
+  prev_out$config$input <- list(type = "xenium")
+
+  out <- create_seurat(NULL, NULL, prev_out)$output
+  scdata <- out$scdata_list[[1]]
+
+  expect_equal(scdata@misc$technology, "xenium")
+})
+
 
 test_that("create_seurat works without emptyDrops result", {
   prev_out <- mock_prev_out()

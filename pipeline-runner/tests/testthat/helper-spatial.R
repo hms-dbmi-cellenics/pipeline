@@ -45,7 +45,11 @@ mock_spatial_config <- function(cutoff = 3, direction = "lower", auto = FALSE) {
 # Build a SeuratObject with a tissue-coordinate FOV (centroids), as the spatial
 # code paths require (Seurat::GetTissueCoordinates must succeed). Cells are laid
 # out on a grid so each cell has well-defined spatial neighbours.
-mock_spatial_scdata <- function(ncells = 64, sample_id = "spatial1") {
+#
+# A centroids FOV with no @image is the Xenium-shaped spatial object, so the
+# technology defaults to "xenium": get_image_scale then takes its scaleless
+# branch (returns NULL) instead of reading the non-existent @image slot.
+mock_spatial_scdata <- function(ncells = 64, sample_id = "spatial1", technology = "xenium") {
   set.seed(42)
   ngenes <- 30
   counts <- matrix(
@@ -78,6 +82,10 @@ mock_spatial_scdata <- function(ncells = 64, sample_id = "spatial1") {
     assay = "RNA"
   )
   scdata[[paste0(sample_id, ".fov")]] <- fov
+
+  # persisted by construct_scdata in the real pipeline; lets technology-based
+  # dispatch (e.g. get_image_scale's scaleless branch) work on the fixture
+  scdata@misc$technology <- technology
 
   scdata
 }

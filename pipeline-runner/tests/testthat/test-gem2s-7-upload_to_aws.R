@@ -869,3 +869,95 @@ test_that("untar_zstd extracts compressed tarfile", {
   extracted_file <- file.path(extract_dir, test_id, "test.txt")
   expect_true(file.exists(extracted_file))
 })
+
+
+# ─── Xenium spatial upload (gem2s-7) ────────────────────────────────────────
+
+test_that("get_image_scale bypasses the scale lookup for Xenium (returns NULL)", {
+  # a Xenium FOV has no @image; the scaleless branch must return before reading it
+  scdata <- mock_spatial_scdata(ncells = 16, technology = "xenium")
+  expect_null(get_image_scale(Seurat::Images(scdata), scdata))
+})
+
+
+test_that("get_polygon_coords reads segmentation coords with no ScaleFactors multiply", {
+  scdata <- mock_spatial_scdata(ncells = 9, sample_id = "s1")
+  cells <- colnames(scdata)[1:3]
+
+  fake_coords <- data.frame(
+    x = c(1, 2, 3), y = c(4, 5, 6), cell = cells, stringsAsFactors = FALSE
+  )
+  gtc <- mockery::mock(fake_coords)
+  scalefactors_called <- FALSE
+
+  mockery::stub(get_polygon_coords, "Seurat::GetTissueCoordinates", gtc)
+  mockery::stub(
+    get_polygon_coords, "Seurat::ScaleFactors",
+    function(...) {
+      scalefactors_called <<- TRUE
+      stop("ScaleFactors must not be used for FOV polygon coords")
+    }
+  )
+
+  res <- get_polygon_coords(Seurat::Images(scdata), scdata, scale = NULL)
+
+  # the boundary is selected via which = "segmentations", scale passed through
+  args <- mockery::mock_args(gtc)[[1]]
+  expect_equal(args$which, "segmentations")
+  expect_null(args$scale)
+
+  # no pixel->coord scaling (coords are already microns)
+  expect_false(scalefactors_called)
+
+  # cells_id attached + arranged for the polygon upload
+  expect_true("cells_id" %in% colnames(res))
+})
+
+
+test_that("upload_to_aws (xenium) skips the image upload, uploads polygons, cleans the segmentations bucket", {
+  input <- mock_input()
+  input$input <- list(type = "xenium")
+  config <- mock_config(input)
+  config$input <- list(type = "xenium")
+
+  scdata_list <- mock_prepare_experiment(config)$scdata_list
+  scdata_list <- add_tissue_coords(scdata_list) # attach an FOV per sample
+
+  pipeline_config <- mock_pipeline_config()
+
+  prev_out <- list(
+    config = config,
+    counts_list = list(),
+    annot = list(),
+    doublet_scores = list(),
+    scdata_list = scdata_list,
+    qc_config = list("mock_qc_config"),
+    disable_qc_filters = FALSE
+  )
+
+  removed_buckets <- c()
+  image_uploads <- 0
+  polygon_uploads <- 0
+
+  mockery::stub(upload_to_aws, "put_object_in_s3", stub_put_object_in_s3)
+  mockery::stub(upload_to_aws, "put_object_in_s3_multipart", stub_put_object_in_s3_multipart)
+  mockery::stub(upload_to_aws, "tempdir", stub_tempdir)
+  mockery::stub(upload_to_aws, "remove_bucket_folder", function(pipeline_config, bucket, ...) {
+    removed_buckets <<- c(removed_buckets, bucket)
+  })
+  mockery::stub(upload_to_aws, "upload_image_to_s3", function(...) image_uploads <<- image_uploads + 1)
+  mockery::stub(upload_to_aws, "upload_polygons_to_s3", function(...) polygon_uploads <<- polygon_uploads + 1)
+  mockery::stub(upload_to_aws, "get_polygon_coords", function(...) data.frame(x = c(1, 2, 3), y = c(1, 2, 3)))
+
+  upload_to_aws(input, pipeline_config, prev_out)
+
+  # no tissue image for Xenium; one polygon upload per sample
+  expect_equal(image_uploads, 0)
+  expect_equal(polygon_uploads, length(scdata_list))
+
+  # the segmentation OME-Zarr bucket is included in the re-run cleanup (leak fix)
+  expect_true(pipeline_config$spatial_segmentations_bucket %in% removed_buckets)
+
+  withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
+  withr::defer(unlink(pipeline_config$source_bucket, recursive = TRUE))
+})

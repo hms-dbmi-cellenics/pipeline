@@ -61,6 +61,57 @@ test_that("get_spaco_color_map auto-generates a color per cluster", {
 })
 
 
+# Xenium and Visium HD call GetTissueCoordinates slightly differently: Xenium is
+# scaleless (scale = NULL), Visium HD passes the hires/lowres factor. Neither
+# should error. get_spaco_color_map swallows errors and returns NULL, so a
+# non-NULL colour map is the proof that the slice was coloured without erroring.
+
+test_that("get_spaco_color_map colours Xenium slices without error (scale = NULL)", {
+  scdata <- mock_spatial_scdata(ncells = 100, technology = "xenium")
+  labels <- mock_cluster_labels(scdata, n_clusters = 5)
+
+  captured_scale <- "unset"
+  mockery::stub(
+    get_spaco_color_map, "Seurat::GetTissueCoordinates",
+    function(object, image, scale, ...) {
+      captured_scale <<- scale
+      SeuratObject::GetTissueCoordinates(object, image)
+    }
+  )
+
+  color_map <- get_spaco_color_map(scdata, labels)
+
+  expect_null(captured_scale) # xenium is scaleless
+  expect_false(is.null(color_map))
+  expect_true(is_hex(color_map))
+})
+
+
+test_that("get_spaco_color_map colours Visium HD slices without error (scale via get_image_scale)", {
+  scdata <- mock_spatial_scdata(ncells = 100, technology = "visium_hd")
+  labels <- mock_cluster_labels(scdata, n_clusters = 5)
+
+  # the FOV fixture has no @image, so stub get_image_scale to the factor a real
+  # VisiumV2 image would yield; GetTissueCoordinates(scale = "lowres") must work.
+  mockery::stub(get_spaco_color_map, "get_image_scale", function(...) "lowres")
+
+  captured_scale <- "unset"
+  mockery::stub(
+    get_spaco_color_map, "Seurat::GetTissueCoordinates",
+    function(object, image, scale, ...) {
+      captured_scale <<- scale
+      SeuratObject::GetTissueCoordinates(object, image)
+    }
+  )
+
+  color_map <- get_spaco_color_map(scdata, labels)
+
+  expect_equal(captured_scale, "lowres")
+  expect_false(is.null(color_map))
+  expect_true(is_hex(color_map))
+})
+
+
 test_that("cluster_color_pool colors a cell_sets frame for spatial data", {
   scdata <- mock_spatial_scdata(ncells = 100)
   labels <- mock_cluster_labels(scdata, n_clusters = 6)
