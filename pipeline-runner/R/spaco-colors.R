@@ -139,9 +139,16 @@ get_spaco_color_map <- function(scdata_list, cells_id_labels) {
       # per-slice cluster interlacement distance graphs
       per_slice <- list()
       for (scdata in scdata_list) {
-        if (length(Seurat::Images(scdata)) == 0) next
+        img_names <- Seurat::Images(scdata)
+        if (length(img_names) == 0) next
 
-        coords <- Seurat::GetTissueCoordinates(scdata)
+        # match the worker (cluster.R): select the slice's image and apply the
+        # same scale rule via get_image_scale (NULL for scaleless techs like
+        # Xenium, "hires"/"lowres" for Visium HD), passing it to
+        # GetTissueCoordinates so the coords frame matches the upload/worker paths.
+        img <- img_names[[1]]
+        scale <- get_image_scale(img, scdata)
+        coords <- Seurat::GetTissueCoordinates(scdata, img, scale = scale)
         if (is.null(coords) || nrow(coords) == 0) next
 
         # map slice cells (barcodes) -> cells_id -> category label
