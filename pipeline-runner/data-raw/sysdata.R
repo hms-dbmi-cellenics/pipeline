@@ -90,6 +90,11 @@ file_types_by_technology <- list(
     "visiumHdCellSegmentations",
     "visiumHdTissueHiresImage",
     "visiumHdScalefactorsJson"
+  ),
+  "xenium" = list(
+    "xeniumCellFeatureMatrix",
+    "xeniumCells",
+    "xeniumCellBoundaries"
   )
 )
 
@@ -109,7 +114,10 @@ file_names <- list(
   visiumHdFilteredFeatureCellMatrix = "filtered_feature_cell_matrix.h5",
   visiumHdCellSegmentations = "cell_segmentations.geojson",
   visiumHdTissueHiresImage = "tissue_hires_image.png",
-  visiumHdScalefactorsJson = "scalefactors_json.json"
+  visiumHdScalefactorsJson = "scalefactors_json.json",
+  xeniumCellFeatureMatrix = "cell_feature_matrix.h5",
+  xeniumCells = "cells.parquet",
+  xeniumCellBoundaries = "cell_boundaries.parquet"
 )
 
 MITOCHONDRIAL_REGEX <- "^mt[-:]"

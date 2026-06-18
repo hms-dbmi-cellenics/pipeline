@@ -23,7 +23,7 @@ load_user_files <- function(
   config <- prev_out$config
 
   technology <- ifelse(
-    config$input$type %in% c("rhapsody", "10x_h5", "parse", "visium_hd"),
+    config$input$type %in% c("rhapsody", "10x_h5", "parse", "visium_hd", "xenium"),
     config$input$type,
     "10x"
   )
@@ -33,7 +33,8 @@ load_user_files <- function(
     "rhapsody" = read_rhapsody_files,
     "10x_h5" = read_10x_h5_file,
     "parse" = read_parse_files,
-    "visium_hd" = read_visium_hd_files
+    "visium_hd" = read_visium_hd_files,
+    "xenium" = read_xenium_files
   )
 
   message(
@@ -1231,6 +1232,122 @@ read_visium_hd_files <- function(config, input_dir) {
   results <- BiocParallel::bplapply(
     samples,
     read_visium_hd_sample,
+    input_dir = input_dir,
+    BPPARAM = bpparam
+  )
+  names(results) <- samples
+
+  counts_list <- lapply(results, function(x) x$counts)
+  annot_list <- lapply(results, function(x) x$annotations)
+  matrix_dir_list <- lapply(results, function(x) x$matrix_dir)
+  segmentations_list <- lapply(results, function(x) x$segmentations)
+
+  annot <- format_annot(annot_list)
+
+  list(
+    counts_list = counts_list,
+    annot = annot,
+    matrix_dir_list = matrix_dir_list,
+    segmentations_list = segmentations_list,
+    edrops = list(),
+    doublet_scores = list()
+  )
+}
+
+
+#' Read a single Xenium sample
+#'
+#' Expects the following files in the sample directory:
+#'   - cell_feature_matrix.h5
+#'   - cells.parquet
+#'   - cell_boundaries.parquet
+#'
+#' Phase 1 uses \code{Seurat::LoadXenium} as a deliberate shortcut to get the
+#' end-to-end slice working. \code{LoadXenium} reads the full count matrix into
+#' memory; this is refactored away in a later phase to read the h5 directly with
+#' BPCells (disk-backed) and assemble the FOV in create_seurat.
+#'
+#' @param sample character sample ID
+#' @param input_dir character path to input directory
+#'
+#' @return list with:
+#'   \item{counts}{BPCells matrix (Gene Expression assay only)}
+#'   \item{annotations}{data.frame with input and symbol columns}
+#'   \item{matrix_dir}{directory where BPCells matrix is stored}
+#'   \item{segmentations}{FOV with centroids and cell-boundary segmentations}
+#'
+read_xenium_sample <- function(sample, input_dir) {
+  sample_dir <- file.path(input_dir, sample)
+
+  message("\nSample --> ", sample)
+  message("Reading Xenium files from ", sample_dir)
+
+  # Phase 1 shortcut: LoadXenium reads the full cell_feature_matrix.h5 into an
+  # in-memory sparse matrix. Only cell boundaries and centroids are loaded;
+  # molecule (transcript) coordinates are skipped.
+  data <- Seurat::LoadXenium(
+    sample_dir,
+    segmentations = "cell",
+    cell.centroids = TRUE,
+    molecule.coordinates = FALSE
+  )
+
+  # only the Gene Expression assay becomes the count matrix; control/codeword
+  # assays are dropped for v1
+  counts_mat <- SeuratObject::LayerData(data, assay = "Xenium", layer = "counts")
+
+  # write the matrix to a directory
+  matrix_dir <- file.path(
+    tempdir(),
+    paste0(sample, "_matrix_dir")
+  )
+  unlink(matrix_dir, recursive = TRUE)
+
+  # hangs indefinitely if BPCells not attached (see init.R)
+  counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
+
+  # Xenium count matrix is keyed by gene symbol; there is no separate ENSEMBL ID
+  annotations <- data.frame(
+    input = rownames(counts),
+    symbol = rownames(counts)
+  )
+
+  # FOV holding centroids + cell-boundary segmentations (no image, microns)
+  segmentations <- data[[Seurat::Images(data)]]
+
+  message(
+    sprintf(
+      "Sample %s has %s genes and %s cells",
+      sample, nrow(counts), ncol(counts)
+    )
+  )
+
+  list(
+    counts = counts,
+    annotations = annotations,
+    matrix_dir = matrix_dir,
+    segmentations = segmentations
+  )
+}
+
+
+#' Read Xenium files for all samples
+#'
+#' @param config experiment settings
+#' @param input_dir character path to input directory
+#'
+#' @return list with counts_list, annot, matrix_dir_list, segmentations_list
+#' @export
+#'
+read_xenium_files <- function(config, input_dir) {
+  samples <- config$samples
+
+  nworkers <- min(length(samples), BATCH_POD_CPUS)
+  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+
+  results <- BiocParallel::bplapply(
+    samples,
+    read_xenium_sample,
     input_dir = input_dir,
     BPPARAM = bpparam
   )
