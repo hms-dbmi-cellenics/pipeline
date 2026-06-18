@@ -22,12 +22,12 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
       processing_config_template[["embedding_clustering"]]
     )
 
-  # Spatial technologies (e.g. Visium HD): cells are defined by polygon
+  # Spatial technologies (e.g. Visium HD, Xenium): cells are defined by polygon
   # segmentation, so the single-cell filters do not apply. Only the spatial
   # local-outlier filters (keyed off the z-scores computed in
   # add_spatial_local_outliers) are constructed, followed by integration +
   # embedding. We only build config for the steps the technology actually runs.
-  if (isTRUE(technology == "visium_hd")) {
+  if (isTRUE(technology %in% c("visium_hd", "xenium"))) {
     return(list(
       spatialUmiOutlier = add_custom_config_per_sample(
         customize_spatial_outlier_config,

@@ -24,6 +24,11 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   default_qc_config <- prev_out$default_qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
 
+  # branch spatial upload behaviour on the declared technology, not on object
+  # introspection: a Xenium FOV and a Visium HD image object both answer
+  # Seurat::Images(), but only Visium HD has a tissue image to upload
+  technology <- config$input$type
+
   # TODO: replace with subset_experiment flag when available
   if (disable_qc_filters == FALSE) {
     message("Constructing cell sets ...")
@@ -49,7 +54,11 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   )
 
   # remove previous existing data
-  for (bucket in c(pipeline_config$source_bucket, pipeline_config$spatial_image_bucket)) {
+  for (bucket in c(
+    pipeline_config$source_bucket,
+    pipeline_config$spatial_image_bucket,
+    pipeline_config$spatial_segmentations_bucket
+  )) {
     remove_bucket_folder(
       pipeline_config,
       bucket = bucket,
@@ -92,45 +101,79 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       )
     }
 
-    # if this is spatial, upload image for sample to s3
-    image_name <- Seurat::Images(scdata)
-    if (!is.null(image_name)) {
-      message("\nUploading image to S3:")
-      # need image dimensions to pad images to common dimension before upload
-      image_max_height <- get_image_max_height(scdata_list)
-      image_arr <- scdata[[image_name]]@image
+    # Xenium: a FOV has no tissue image and no scale factors. Skip the image
+    # upload (no ome_zarr_zip) and upload segmentation polygons only, reading
+    # boundary coords directly in microns (no ScaleFactors multiply).
+    if (isTRUE(technology == "xenium")) {
+      image_name <- Seurat::Images(scdata)
 
-      # need distinct UUIDs for image and polygons ids
-      # required by sampleFile schema
-      # UUIDs also used as S3 keys
-      image_id <- uuid::UUIDgenerate()
+      message("\nUploading Xenium segmentation polygons to S3:")
+      # polygons_id required by sampleFile schema; also used as the S3 key
       polygons_id <- uuid::UUIDgenerate()
       polygons <- get_polygon_coords(image_name, scdata)
 
-      upload_image_to_s3(
-        pipeline_config,
-        input,
-        experiment_id,
-        image_arr,
-        image_name,
-        image_id,
-        sample,
-        image_max_height,
-        overwrite_existing = TRUE
-      )
+      # no image: size the bitmask canvas to the polygon coordinate extent
+      polygons_width <- ceiling(max(polygons$x))
+      polygons_height <- ceiling(max(polygons$y))
 
       upload_polygons_to_s3(
         pipeline_config,
         input,
         experiment_id,
         polygons,
-        image_max_height,
-        dim(image_arr)[2],
+        polygons_height,
+        polygons_width,
         image_name,
         polygons_id,
         sample,
         overwrite_existing = TRUE
       )
+
+    } else if (isTRUE(technology == "visium_hd")) {
+      # upload tissue image + segmentation polygons for sample to s3
+      image_name <- Seurat::Images(scdata)
+      if (!is.null(image_name)) {
+        message("\nUploading image to S3:")
+        # need image dimensions to pad images to common dimension before upload
+        image_max_height <- get_image_max_height(scdata_list)
+        image_arr <- scdata[[image_name]]@image
+
+        # need distinct UUIDs for image and polygons ids
+        # required by sampleFile schema
+        # UUIDs also used as S3 keys
+        image_id <- uuid::UUIDgenerate()
+        polygons_id <- uuid::UUIDgenerate()
+        polygons <- get_polygon_coords(
+          image_name,
+          scdata,
+          scale = get_image_scale(image_name, scdata)
+        )
+
+        upload_image_to_s3(
+          pipeline_config,
+          input,
+          experiment_id,
+          image_arr,
+          image_name,
+          image_id,
+          sample,
+          image_max_height,
+          overwrite_existing = TRUE
+        )
+
+        upload_polygons_to_s3(
+          pipeline_config,
+          input,
+          experiment_id,
+          polygons,
+          image_max_height,
+          dim(image_arr)[2],
+          image_name,
+          polygons_id,
+          sample,
+          overwrite_existing = TRUE
+        )
+      }
     }
   }
 
@@ -162,19 +205,40 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   return(res)
 }
 
-get_polygon_coords <- function(image_name, scdata) {
-  image <- scdata[[image_name]]
-  coords <- image$segmentations@sf.data
-  scale <- get_image_scale(image_name, scdata)
-  scale.factor <- Seurat::ScaleFactors(image)[[scale]]
-  coords[, c("x", "y")] <- coords[, c("x", "y")] * scale.factor
+# Segmentation polygon coordinates. GetTissueCoordinates is the generic accessor
+# that works on both a Visium HD spatial image and a Xenium FOV, selecting the
+# boundary via which (the internal name differs: LoadXenium names it
+# "segmentation"). It returns a data.frame with x/y/cell columns. For Visium HD
+# pass scale = "hires"/"lowres" to apply the pixel->spot scale factor; for Xenium
+# leave scale = NULL — a FOV has no scale factor and its coords are already in
+# microns.
+get_polygon_coords <- function(image_name, scdata, scale = NULL) {
+  coords <- Seurat::GetTissueCoordinates(
+    scdata[[image_name]],
+    which = "segmentations",
+    scale = scale
+  )
 
   meta <- scdata@meta.data
   coords$cells_id <- meta[coords$cell, "cells_id"]
   dplyr::arrange(coords, cells_id)
 }
 
+# Spatial technologies whose coordinates have no pixel->coord scale step (the
+# accessors return micron coords directly). Mirrors the worker's
+# is_scaleless_spatial: dispatch on the technology persisted onto the object in
+# create-seurat (scdata@misc$technology), not on object introspection.
+SCALELESS_SPATIAL_TECHNOLOGIES <- c("xenium")
+
+is_scaleless_spatial <- function(scdata) {
+  technology <- scdata@misc$technology
+  !is.null(technology) && technology %in% SCALELESS_SPATIAL_TECHNOLOGIES
+}
+
 get_image_scale <- function(image_name, scdata) {
+  # Xenium FOVs have no scale step; Visium HD applies the hires/lowres factor.
+  if (is_scaleless_spatial(scdata)) return(NULL)
+
   dims <- dim(scdata[[image_name]]@image)
   ifelse(any(dims[1:2] <= 600), "lowres", "hires")
 }

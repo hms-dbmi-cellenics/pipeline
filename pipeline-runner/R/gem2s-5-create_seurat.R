@@ -79,6 +79,11 @@ construct_scdata <- function(
     add_edrops(edrops_out) |>
     add_spatial_local_outliers()
 
+  # persist the declared technology on the object so downstream consumers
+  # (e.g. the worker, which has no pipeline config) can dispatch on it instead
+  # of introspecting the object's slots
+  scdata@misc$technology <- config$input$type
+
   return(scdata)
 }
 
