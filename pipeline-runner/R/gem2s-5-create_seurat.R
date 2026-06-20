@@ -72,17 +72,69 @@ construct_scdata <- function(
     min.features = min.features
   )
 
+  # Xenium: the loader returns raw centroid/boundary frames; assemble the FOV
+  # here (object assembly lives in create_seurat, not the loader). The
+  # per-cell segmentation_method is attached as metadata after the pipe.
+  segmentation_method <- NULL
+  if (isTRUE(config$input$type == "xenium") && !is.null(segmentations)) {
+    segmentation_method <- segmentations$segmentation_method
+    segmentations <- build_xenium_fov(segmentations)
+  }
+
   scdata <- scdata |>
     add_segmentations(segmentations, sample) |>
     add_mito(annot) |>
     add_dblscore(doublet_score) |>
     add_edrops(edrops_out) |>
-    add_spatial_local_outliers()
+    add_spatial_local_outliers() |>
+    add_segmentation_method(segmentation_method)
 
   # persist the declared technology on the object so downstream consumers
   # (e.g. the worker, which has no pipeline config) can dispatch on it instead
   # of introspecting the object's slots
   scdata@misc$technology <- config$input$type
+
+  return(scdata)
+}
+
+#' Assemble a Xenium FOV from raw centroid and boundary frames
+#'
+#' Mirrors the internals of \code{Seurat::LoadXenium}: builds \code{Centroids}
+#' and \code{Segmentation} objects from the plain data frames produced by the
+#' loader and wraps them in a FOV. Boundaries are named \code{centroids} and
+#' \code{segmentations} so downstream accessors (gem2s-7, worker) keep working.
+#' The FOV is tied to the \code{RNA} assay (the object's default, as for Visium
+#' HD) rather than \code{LoadXenium}'s \code{Xenium} default, so it associates
+#' with the count assay instead of warning about an unassociated image.
+#'
+#' @param segmentations list with \code{centroids} and \code{segmentations} frames
+#'
+#' @return a \code{FOV} object
+build_xenium_fov <- function(segmentations) {
+  boundaries <- Filter(Negate(is.null), list(
+    centroids = SeuratObject::CreateCentroids(segmentations$centroids),
+    segmentations = SeuratObject::CreateSegmentation(segmentations$segmentations)
+  ))
+
+  SeuratObject::CreateFOV(boundaries, assay = "RNA")
+}
+
+#' Attach the per-cell Xenium segmentation method as metadata
+#'
+#' No-op when \code{segmentation_method} is NULL (non-Xenium, or the column was
+#' absent in cells.parquet). Values are aligned to the object's cells; cells with
+#' no entry (e.g. dropped by min.features) get NA.
+#'
+#' @param scdata SeuratObject
+#' @param segmentation_method data.frame keyed by cell, or NULL
+add_segmentation_method <- function(scdata, segmentation_method) {
+  if (is.null(segmentation_method)) {
+    return(scdata)
+  }
+
+  message("Adding segmentation method metadata...")
+  scdata$segmentation_method <-
+    segmentation_method[colnames(scdata), "segmentation_method"]
 
   return(scdata)
 }

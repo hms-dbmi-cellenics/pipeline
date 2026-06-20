@@ -228,7 +228,7 @@ read_parse_files <- function(config, input_dir) {
 #'   \item{annotations}{data.frame with annotations}
 #'   \item{matrix_dir}{directory where matrix is stored}
 #'
-read_10x_h5_sample <- function(sample, input_dir) {
+read_10x_h5_sample <- function(sample, input_dir, feature_type = NULL) {
   sample_dir <- file.path(input_dir, sample)
   sample_fpaths <- list.files(sample_dir, pattern = "[.]h5(.gz)?$")
   sample_counts_path <- file.path(
@@ -253,8 +253,16 @@ read_10x_h5_sample <- function(sample, input_dir) {
     sample_counts_path <- R.utils::gunzip(sample_counts_path)
   }
 
-  gene_names <- read_10x_h5_feature_names(sample_counts_path)
-  counts_mat <- BPCells::open_matrix_10x_hdf5(sample_counts_path)
+  # feature_type (e.g. "Gene Expression") subsets multi-modal h5s to a single
+  # feature type, dropping the others; NULL keeps every feature (default).
+  gene_names <- read_10x_h5_feature_names(
+    sample_counts_path,
+    feature_type = feature_type
+  )
+  counts_mat <- BPCells::open_matrix_10x_hdf5(
+    sample_counts_path,
+    feature_type = feature_type
+  )
 
   # write the matrix to a directory
   matrix_dir <- file.path(
@@ -317,21 +325,33 @@ read_10x_h5_file <- function(config, input_dir) {
 read_10x_h5_feature_names <- function(
   filename,
   use.names = TRUE,
-  unique.features = TRUE
+  unique.features = TRUE,
+  feature_type = NULL
 ) {
   infile <- hdf5r::H5File$new(filename = filename, mode = "r")
   genomes <- names(infile)
 
-  # Determine feature slot based on file structure and use.names argument
+  # Determine feature slot based on file structure and use.names argument.
+  # feature_type filtering relies on the CellRanger >= 3 "features/feature_type"
+  # dataset, which the old-style ("gene_names"/"genes") format lacks.
   if (hdf5r::existsGroup(infile, "matrix")) {
     feature_slot <- ifelse(use.names, "features/name", "features/id")
+    type_slot <- "features/feature_type"
   } else {
     feature_slot <- ifelse(use.names, "gene_names", "genes")
+    type_slot <- NULL
   }
 
   output <- list()
   for (genome in genomes) {
     features <- infile[[paste0(genome, "/", feature_slot)]][]
+
+    # keep only the requested feature type(s), matching the row subset
+    # BPCells::open_matrix_10x_hdf5 applies for the same feature_type
+    if (!is.null(feature_type) && !is.null(type_slot)) {
+      feature_types <- infile[[paste0(genome, "/", type_slot)]][]
+      features <- features[feature_types %in% feature_type]
+    }
 
     if (unique.features) {
       features <- make.unique(names = features)
@@ -1262,19 +1282,22 @@ read_visium_hd_files <- function(config, input_dir) {
 #'   - cells.parquet
 #'   - cell_boundaries.parquet
 #'
-#' Phase 1 uses \code{Seurat::LoadXenium} as a deliberate shortcut to get the
-#' end-to-end slice working. \code{LoadXenium} reads the full count matrix into
-#' memory; this is refactored away in a later phase to read the h5 directly with
-#' BPCells (disk-backed) and assemble the FOV in create_seurat.
+#' Counts are read directly from \code{cell_feature_matrix.h5} into a disk-backed
+#' BPCells matrix (reusing the 10X H5 reader), keeping only the Gene Expression
+#' feature type. The count matrix is therefore never fully held in memory, unlike
+#' the \code{LoadXenium} shortcut this replaces. Cell centroids and boundaries are
+#' read as plain data frames from the parquet files; FOV assembly is deferred to
+#' \code{create_seurat} (gem2s-5), matching the load-vs-assemble separation the
+#' other technologies follow.
 #'
 #' @param sample character sample ID
 #' @param input_dir character path to input directory
 #'
 #' @return list with:
-#'   \item{counts}{BPCells matrix (Gene Expression assay only)}
+#'   \item{counts}{BPCells matrix (Gene Expression feature type only)}
 #'   \item{annotations}{data.frame with input and symbol columns}
 #'   \item{matrix_dir}{directory where BPCells matrix is stored}
-#'   \item{segmentations}{FOV with centroids and cell-boundary segmentations}
+#'   \item{segmentations}{list of raw centroid/boundary/segmentation_method frames}
 #'
 read_xenium_sample <- function(sample, input_dir) {
   sample_dir <- file.path(input_dir, sample)
@@ -1282,52 +1305,99 @@ read_xenium_sample <- function(sample, input_dir) {
   message("\nSample --> ", sample)
   message("Reading Xenium files from ", sample_dir)
 
-  # Phase 1 shortcut: LoadXenium reads the full cell_feature_matrix.h5 into an
-  # in-memory sparse matrix. Only cell boundaries and centroids are loaded;
-  # molecule (transcript) coordinates are skipped.
-  data <- Seurat::LoadXenium(
-    sample_dir,
-    segmentations = "cell",
-    cell.centroids = TRUE,
-    molecule.coordinates = FALSE
+  # Counts: disk-backed BPCells matrix, Gene Expression feature type only.
+  # Control/codeword feature types (Negative Control Probe/Codeword, Unassigned
+  # Codeword, Genomic Control, ...) are intentionally dropped for v1 — including
+  # them would corrupt QC/normalization.
+  results <- read_10x_h5_sample(
+    sample,
+    input_dir,
+    feature_type = "Gene Expression"
   )
 
-  # only the Gene Expression assay becomes the count matrix; control/codeword
-  # assays are dropped for v1
-  counts_mat <- SeuratObject::LayerData(data, assay = "Xenium", layer = "counts")
+  # Centroids + cell boundaries as raw data frames; assembled into a FOV later.
+  results$segmentations <- read_xenium_segmentations(sample_dir)
 
-  # write the matrix to a directory
-  matrix_dir <- file.path(
-    tempdir(),
-    paste0(sample, "_matrix_dir")
-  )
-  unlink(matrix_dir, recursive = TRUE)
-
-  # hangs indefinitely if BPCells not attached (see init.R)
-  counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
-
-  # Xenium count matrix is keyed by gene symbol; there is no separate ENSEMBL ID
-  annotations <- data.frame(
-    input = rownames(counts),
-    symbol = rownames(counts)
-  )
-
-  # FOV holding centroids + cell-boundary segmentations (no image, microns)
-  segmentations <- data[[Seurat::Images(data)]]
+  # edrops and doublet scores are not calculated for spatial technologies;
+  # return empty lists for compatibility with downstream functions
+  results$edrops <- results$doublet_scores <- list()
 
   message(
     sprintf(
       "Sample %s has %s genes and %s cells",
-      sample, nrow(counts), ncol(counts)
+      sample, nrow(results$counts), ncol(results$counts)
     )
   )
 
-  list(
-    counts = counts,
-    annotations = annotations,
-    matrix_dir = matrix_dir,
-    segmentations = segmentations
+  return(results)
+}
+
+#' Read Xenium centroids and cell boundaries from the raw parquet files
+#'
+#' Replicates the cell-level parts of \code{Seurat::ReadXenium} we support,
+#' reading the parquet files directly via \code{arrow} and returning plain data
+#' frames (no Seurat object). \code{cells.parquet} is read once for both the
+#' centroids and the per-cell segmentation method.
+#'
+#' @param sample_dir character path to the sample directory
+#'
+#' @return list with:
+#'   \item{centroids}{data.frame with columns x, y, cell}
+#'   \item{segmentations}{data.frame of polygon vertices, columns cell, x, y}
+#'   \item{segmentation_method}{data.frame keyed by cell, or NULL if absent}
+#'
+read_xenium_segmentations <- function(sample_dir) {
+  cells_path <- file.path(sample_dir, "cells.parquet")
+  boundaries_path <- file.path(sample_dir, "cell_boundaries.parquet")
+
+  # cells.parquet: one row per cell (x_centroid/y_centroid/cell_id, and
+  # optionally segmentation_method)
+  cells <- as.data.frame(arrow::read_parquet(cells_path))
+  cells$cell_id <- binary_to_string(cells$cell_id)
+
+  centroids <- data.frame(
+    x = cells$x_centroid,
+    y = cells$y_centroid,
+    cell = cells$cell_id
   )
+
+  # per-cell segmentation method, indexed by cell id (attached as metadata in
+  # create_seurat). ReadXenium defaults this to "cell" when the column is absent.
+  segmentation_method <- NULL
+  if ("segmentation_method" %in% colnames(cells)) {
+    segmentation_method <- data.frame(
+      segmentation_method = cells$segmentation_method,
+      row.names = cells$cell_id
+    )
+  }
+
+  # cell_boundaries.parquet: long-format polygon vertices (cell, vertex_x,
+  # vertex_y) -> columns cell, x, y
+  boundaries <- as.data.frame(arrow::read_parquet(boundaries_path))
+  colnames(boundaries) <- c("cell", "x", "y")
+  boundaries$cell <- binary_to_string(boundaries$cell)
+
+  list(
+    centroids = centroids,
+    segmentations = boundaries,
+    segmentation_method = segmentation_method
+  )
+}
+
+#' Decode Xenium hex-encoded binary cell ids
+#'
+#' Xenium cell ids may be stored as a list of hex-encoded bytes; pass them
+#' through unchanged when they are already character (the common parquet case).
+#' Mirrors the helper inside \code{Seurat::ReadXenium}.
+binary_to_string <- function(arrow_binary) {
+  if (typeof(arrow_binary) == "list") {
+    unlist(lapply(
+      arrow_binary,
+      function(x) rawToChar(as.raw(strtoi(x, 16L)))
+    ))
+  } else {
+    arrow_binary
+  }
 }
 
 

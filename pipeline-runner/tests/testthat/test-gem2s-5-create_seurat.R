@@ -203,6 +203,103 @@ test_that("create_seurat works with multiple samples", {
 })
 
 
+# raw centroid/boundary frames as read_xenium_segmentations returns them
+mock_xenium_segmentations <- function(cells, nverts = 4) {
+  centroids <- data.frame(
+    x = seq_along(cells),
+    y = seq_along(cells),
+    cell = cells
+  )
+  segmentations <- do.call(rbind, lapply(seq_along(cells), function(i) {
+    data.frame(
+      cell = rep(cells[i], nverts),
+      x = i + cos(seq_len(nverts)),
+      y = i + sin(seq_len(nverts))
+    )
+  }))
+  segmentation_method <- data.frame(
+    segmentation_method = rep("cell", length(cells)),
+    row.names = cells
+  )
+  list(
+    centroids = centroids,
+    segmentations = segmentations,
+    segmentation_method = segmentation_method
+  )
+}
+
+test_that("build_xenium_fov assembles a FOV with centroids and segmentations boundaries", {
+  cells <- paste0("cell", 1:6)
+  segs <- mock_xenium_segmentations(cells)
+
+  fov <- build_xenium_fov(segs)
+
+  expect_s4_class(fov, "FOV")
+  # boundaries named so downstream accessors (which = "segmentations") work
+  expect_setequal(SeuratObject::Boundaries(fov), c("centroids", "segmentations"))
+  # GetTissueCoordinates returns centroids in microns, no image needed
+  coords <- Seurat::GetTissueCoordinates(fov, which = "centroids")
+  expect_setequal(coords$cell, cells)
+})
+
+test_that("construct_scdata assembles the FOV and attaches segmentation_method for Xenium", {
+  # >36 cells so add_spatial_local_outliers' spatial KNN (n_neighbors = 36) runs
+  ncells <- 40
+  cells <- paste0("cell", seq_len(ncells))
+  counts <- matrix(
+    rpois(30 * ncells, lambda = 5),
+    nrow = 30,
+    dimnames = list(paste0("Gene", 1:30), cells)
+  )
+  counts <- as(counts, "dgCMatrix")
+  segs <- mock_xenium_segmentations(cells)
+
+  scdata <- construct_scdata(
+    counts = counts,
+    segmentations = segs,
+    doublet_score = NULL,
+    edrops_out = NULL,
+    sample = "sample_a",
+    annot = data.frame(name = rownames(counts), input = rownames(counts)),
+    config = list(name = "p", input = list(type = "xenium"))
+  )
+
+  # FOV attached and queryable
+  expect_length(Seurat::Images(scdata), 1)
+  expect_no_error(Seurat::GetTissueCoordinates(scdata))
+
+  # segmentation_method attached as metadata, aligned to cells
+  expect_true("segmentation_method" %in% colnames(scdata@meta.data))
+  expect_true(all(scdata$segmentation_method == "cell"))
+
+  # technology persisted
+  expect_equal(scdata@misc$technology, "xenium")
+})
+
+test_that("add_segmentation_method is a no-op when segmentation_method is NULL", {
+  scdata <- mock_spatial_scdata(ncells = 16, sample_id = "s1")
+  out <- add_segmentation_method(scdata, NULL)
+  expect_identical(out, scdata)
+})
+
+test_that("add_segmentation_method aligns values to cells and fills NA for missing", {
+  scdata <- mock_spatial_scdata(ncells = 16, sample_id = "s1")
+  cells <- colnames(scdata)
+
+  # method known for all but the last cell
+  method <- data.frame(
+    segmentation_method = rep("nucleus expansion", length(cells) - 1),
+    row.names = cells[-length(cells)]
+  )
+  out <- add_segmentation_method(scdata, method)
+
+  expect_equal(
+    unname(out$segmentation_method[-length(cells)]),
+    rep("nucleus expansion", length(cells) - 1)
+  )
+  expect_true(is.na(out$segmentation_method[length(cells)]))
+})
+
 test_that("add_segmentations returns scdata unchanged when segmentations is NULL", {
   scdata <- mock_spatial_scdata(ncells = 36, sample_id = "s1")
   out <- add_segmentations(scdata, NULL, "s1")
