@@ -43,6 +43,19 @@ mock_boundaries_parquet <- function(ncells = 30, nverts = 4) {
   }))
 }
 
+# transcripts.parquet: one row per molecule (x_location/y_location/feature_name,
+# optionally qv)
+mock_transcripts_parquet <- function(nmols = 50, with_qv = TRUE) {
+  set.seed(2)
+  df <- data.frame(
+    x_location = runif(nmols, 0, 100),
+    y_location = runif(nmols, 0, 100),
+    feature_name = sample(c("Gad1", "Sst", "Vip"), nmols, replace = TRUE)
+  )
+  if (with_qv) df$qv <- runif(nmols, 10, 40)
+  df
+}
+
 
 test_that("read_xenium_sample returns the gem2s list contract", {
   counts <- mock_bpcells_counts()
@@ -58,7 +71,8 @@ test_that("read_xenium_sample returns the gem2s list contract", {
   mockery::stub(read_xenium_sample, "read_xenium_segmentations", list(
     centroids = mock_cells_parquet()[, c("x_centroid", "y_centroid", "cell_id")],
     segmentations = mock_boundaries_parquet(),
-    segmentation_method = NULL
+    segmentation_method = NULL,
+    transcripts = NULL
   ))
 
   out <- read_xenium_sample("sample_a", tempdir())
@@ -77,7 +91,7 @@ test_that("read_xenium_sample returns the gem2s list contract", {
   # segmentations is the raw-frame list, FOV assembly deferred to create_seurat
   expect_setequal(
     names(out$segmentations),
-    c("centroids", "segmentations", "segmentation_method")
+    c("centroids", "segmentations", "segmentation_method", "transcripts")
   )
 
   # no EmptyDrops / Doublets for spatial
@@ -113,6 +127,8 @@ test_that("read_xenium_segmentations parses the parquet frames", {
   # arrow::read_parquet returns cells then boundaries (call order in the reader)
   reader <- mockery::mock(cells, boundaries)
   mockery::stub(read_xenium_segmentations, "arrow::read_parquet", reader)
+  # transcripts are optional and read by a helper; exercised separately
+  mockery::stub(read_xenium_segmentations, "read_xenium_transcripts", NULL)
 
   out <- read_xenium_segmentations("/some/sample_dir")
 
@@ -128,6 +144,10 @@ test_that("read_xenium_segmentations parses the parquet frames", {
   # segmentation_method keyed by cell id
   expect_equal(rownames(out$segmentation_method), cells$cell_id)
   expect_true(all(out$segmentation_method$segmentation_method == "cell"))
+
+  # optional transcripts threaded through (NULL here)
+  expect_true("transcripts" %in% names(out))
+  expect_null(out$transcripts)
 })
 
 
@@ -137,9 +157,46 @@ test_that("read_xenium_segmentations tolerates a missing segmentation_method col
 
   reader <- mockery::mock(cells, boundaries)
   mockery::stub(read_xenium_segmentations, "arrow::read_parquet", reader)
+  mockery::stub(read_xenium_segmentations, "read_xenium_transcripts", NULL)
 
   out <- read_xenium_segmentations("/some/sample_dir")
   expect_null(out$segmentation_method)
+})
+
+
+test_that("read_xenium_transcripts parses molecules and keeps qv when present", {
+  tx <- mock_transcripts_parquet(nmols = 40, with_qv = TRUE)
+
+  mockery::stub(read_xenium_transcripts, "file.exists", TRUE)
+  mockery::stub(read_xenium_transcripts, "arrow::read_parquet", tx)
+
+  out <- read_xenium_transcripts("/some/sample_dir")
+
+  # x_location/y_location/feature_name -> x/y/gene, qv carried through
+  expect_equal(colnames(out), c("x", "y", "gene", "qv"))
+  expect_equal(out$x, tx$x_location)
+  expect_equal(out$gene, tx$feature_name)
+  expect_equal(out$qv, tx$qv)
+})
+
+
+test_that("read_xenium_transcripts omits qv when the column is absent", {
+  tx <- mock_transcripts_parquet(nmols = 20, with_qv = FALSE)
+
+  mockery::stub(read_xenium_transcripts, "file.exists", TRUE)
+  mockery::stub(read_xenium_transcripts, "arrow::read_parquet", tx)
+
+  out <- read_xenium_transcripts("/some/sample_dir")
+  expect_equal(colnames(out), c("x", "y", "gene"))
+})
+
+
+test_that("read_xenium_transcripts returns NULL when the file is absent", {
+  # transcripts.parquet is an optional input
+  mockery::stub(read_xenium_transcripts, "file.exists", FALSE)
+
+  out <- read_xenium_transcripts("/some/sample_dir")
+  expect_null(out)
 })
 
 

@@ -10,6 +10,7 @@ bucket_list <- list(
   cell_sets_bucket = "cell-sets",
   spatial_image_bucket = "spatial-images",
   spatial_segmentations_bucket = "spatial-segmentations",
+  spatial_molecules_bucket = "spatial-molecules",
   debug_bucket = "biomage-pipeline-debug",
   cl_metadata_bucket = "cellenics-cell-level-metadata"
 )
@@ -94,7 +95,8 @@ file_types_by_technology <- list(
   "xenium" = list(
     "xeniumCellFeatureMatrix",
     "xeniumCells",
-    "xeniumCellBoundaries"
+    "xeniumCellBoundaries",
+    "xeniumTranscripts"
   )
 )
 
@@ -117,7 +119,8 @@ file_names <- list(
   visiumHdScalefactorsJson = "scalefactors_json.json",
   xeniumCellFeatureMatrix = "cell_feature_matrix.h5",
   xeniumCells = "cells.parquet",
-  xeniumCellBoundaries = "cell_boundaries.parquet"
+  xeniumCellBoundaries = "cell_boundaries.parquet",
+  xeniumTranscripts = "transcripts.parquet"
 )
 
 MITOCHONDRIAL_REGEX <- "^mt[-:]"

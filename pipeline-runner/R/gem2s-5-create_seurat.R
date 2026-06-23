@@ -76,8 +76,13 @@ construct_scdata <- function(
   # here (object assembly lives in create_seurat, not the loader). The
   # per-cell segmentation_method is attached as metadata after the pipe.
   segmentation_method <- NULL
+  transcripts <- NULL
   if (isTRUE(config$input$type == "xenium") && !is.null(segmentations)) {
     segmentation_method <- segmentations$segmentation_method
+    # optional molecules frame: carry it on the object so gem2s-7 can build the
+    # molecule pyramid straight from it (mirrors the @misc$technology pattern).
+    # Not added as CreateMolecules to the FOV — the pyramid needs only the frame.
+    transcripts <- segmentations$transcripts
     segmentations <- build_xenium_fov(segmentations)
   }
 
@@ -93,6 +98,11 @@ construct_scdata <- function(
   # (e.g. the worker, which has no pipeline config) can dispatch on it instead
   # of introspecting the object's slots
   scdata@misc$technology <- config$input$type
+
+  # carry the optional Xenium molecules frame to gem2s-7 for pyramid building
+  if (!is.null(transcripts)) {
+    scdata@misc$transcripts <- transcripts
+  }
 
   return(scdata)
 }
