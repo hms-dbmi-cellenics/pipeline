@@ -87,7 +87,7 @@ RUN apt-get -y update && \
 # install python packages in virtualenv
 ENV WORKON_HOME=/src/.virtualenvs
 RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which python3)')" && \
-    R -q -e "reticulate::virtualenv_install('r-reticulate', c('numpy<2', 'anndata==0.10.6', 'ome-zarr==0.9.0', 'zarr==2.18.3'), pip_options='--no-cache-dir')"
+    R -q -e "reticulate::virtualenv_install('r-reticulate', c('numpy<2', 'anndata==0.10.6', 'ome-zarr==0.9.0', 'zarr==2.18.3', 'quadfeather==2.3.0rc1'), pip_options='--no-cache-dir')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD

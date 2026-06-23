@@ -760,6 +760,191 @@ upload_polygons_to_s3 <- function(
   invisible()
 }
 
+#' Default Xenium transcript quality-value threshold (Q20).
+#'
+#' The installed \code{ReadXenium} does not apply \code{mols.qv.threshold}; we
+#' filter explicitly here (per the format contract) when a qv column is present.
+XENIUM_QV_THRESHOLD <- 20
+
+#' Build and upload a molecule pyramid for a single Xenium sample
+#'
+#' Modeled on \code{upload_polygons_to_s3}. Reads the raw transcripts frame
+#' (x/y/gene, optionally qv), applies the QV filter, maps gene -> dense 0-based
+#' feature_code with a stable palette color, tiles the points into a quadfeather
+#' Arrow quadtree, writes our meta.json (the feature dictionary + build metadata,
+#' per the format contract) into the tile dir, zips it stored (range-readable),
+#' uploads to the spatial_molecules_bucket and registers a molecules_pyramid
+#' sample file. The pyramid is built straight from the frame (no Seurat object).
+#'
+#' @param transcripts data.frame with columns x, y, gene (+ qv if present)
+upload_molecule_pyramid_to_s3 <- function(
+  pipeline_config, input, experiment_id, transcripts, sample_id,
+  overwrite_existing
+) {
+  api_url <- pipeline_config$api_url
+  auth_jwt <- input$authJWT
+
+  # QV filter (contract risk #6): drop sub-threshold molecules when qv present.
+  qv_threshold <- NULL
+  if ("qv" %in% colnames(transcripts)) {
+    qv_threshold <- XENIUM_QV_THRESHOLD
+    before <- nrow(transcripts)
+    transcripts <- transcripts[transcripts$qv >= qv_threshold, , drop = FALSE]
+    message(
+      "QV filter (Q", qv_threshold, "): kept ", nrow(transcripts),
+      " of ", before, " molecules"
+    )
+  }
+
+  # Dense 0-based feature dictionary: gene -> feature_code, each code a stable
+  # palette color (assigned once at build so deck.gl and Vega render identically).
+  genes <- sort(unique(transcripts$gene))
+  color_pool <- get_color_pool()
+  feature_dict <- data.frame(
+    code = seq_along(genes) - 1L,
+    gene = genes,
+    # cycle the categorical palette by code (1-based index into the pool)
+    color = color_pool[(seq_along(genes) - 1L) %% length(color_pool) + 1L],
+    stringsAsFactors = FALSE
+  )
+  code_by_gene <- stats::setNames(feature_dict$code, feature_dict$gene)
+
+  # Feather input for quadfeather: x/y double, feature_code int16.
+  x <- as.numeric(transcripts$x)
+  y <- as.numeric(transcripts$y)
+  feature_code <- as.integer(code_by_gene[transcripts$gene])
+
+  # Shuffle rows before tiling. quadfeather samples each tile (and the coarse
+  # overview/root) in INPUT ORDER, not by a spatial sample. Xenium writes
+  # transcripts in scan order, so an unshuffled input makes the overview tiles a
+  # spatial slice of one corner — a zoomed-out / budget-limited read then shows
+  # molecules only there. A random row order makes every tile a uniform spatial
+  # sample. (No global set.seed() — that would pollute the pipeline RNG; an exact
+  # reproducible sample isn't needed, only a uniform one.)
+  shuffle <- sample.int(length(x))
+  x <- x[shuffle]
+  y <- y[shuffle]
+  feature_code <- feature_code[shuffle]
+
+  tile_table <- arrow::arrow_table(
+    x = arrow::Array$create(x, type = arrow::float64()),
+    y = arrow::Array$create(y, type = arrow::float64()),
+    feature_code = arrow::Array$create(feature_code, type = arrow::int16())
+  )
+
+  feather_path <- tempfile(pattern = "molecules", fileext = ".feather")
+  arrow::write_feather(tile_table, feather_path)
+
+  # Tile into a quadtree with quadfeather. --limits from the data bbox avoids a
+  # recompute pass. tile_size / first_tile_size cap points per node (~65k).
+  tile_size <- 65536L
+  first_tile_size <- 65536L
+  x_range <- range(x)
+  y_range <- range(y)
+
+  pyramid_dir <- file.path(tempdir(), paste0(sample_id, ".molecules.pyramid"))
+  unlink(pyramid_dir, recursive = TRUE)
+  dir.create(pyramid_dir, recursive = TRUE)
+
+  message("\nTiling molecule pyramid with quadfeather: ", pyramid_dir)
+  run_quadfeather(
+    feather_path, pyramid_dir, tile_size, first_tile_size, x_range, y_range
+  )
+
+  # Read quadfeather's manifest to compute maxDepth (max z in the tile keys) and
+  # rootExtent (full micron bbox).
+  manifest <- as.data.frame(
+    arrow::read_feather(file.path(pyramid_dir, "manifest.feather"))
+  )
+  key_depth <- as.integer(sub("/.*$", "", manifest$key))
+  max_depth <- max(key_depth)
+
+  meta <- list(
+    version = 1L,
+    qvThreshold = qv_threshold,
+    rootExtent = list(x = x_range, y = y_range),
+    maxDepth = max_depth,
+    tileSize = tile_size,
+    firstTileSize = first_tile_size,
+    pointColumns = c("x", "y", "feature_code"),
+    genes = lapply(seq_len(nrow(feature_dict)), function(i) {
+      list(
+        code = feature_dict$code[i],
+        gene = feature_dict$gene[i],
+        color = feature_dict$color[i]
+      )
+    })
+  )
+  jsonlite::write_json(
+    meta,
+    file.path(pyramid_dir, "meta.json"),
+    auto_unbox = TRUE,
+    null = "null"
+  )
+
+  # zip stored (-rq0) so the UI's ZipFileStore can range-read tile entries.
+  zip_name <- paste0(sample_id, ".molecules.pyramid.zip")
+  zip_path <- file.path(tempdir(), zip_name)
+
+  workdir <- getwd()
+  setwd(pyramid_dir)
+  utils::zip(zip_path, files = ".", flags = "-rq0")
+  setwd(workdir)
+
+  message("Molecule pyramid zip file size: ", fs::file_size(zip_path))
+
+  pyramid_id <- uuid::UUIDgenerate()
+
+  message("\nUploading molecule pyramid to S3:")
+  put_object_in_s3_multipart(
+    pipeline_config,
+    bucket = pipeline_config$spatial_molecules_bucket,
+    object = zip_path,
+    key = pyramid_id
+  )
+
+  create_sample_file(
+    api_url,
+    experiment_id,
+    sample_id,
+    "molecules_pyramid",
+    file.size(zip_path),
+    pyramid_id,
+    overwrite_existing,
+    auth_jwt
+  )
+
+  invisible()
+}
+
+#' Run the quadfeather tiler over the reticulate virtualenv
+#'
+#' Invokes the \code{quadfeather} console script installed in the pipeline's
+#' reticulate virtualenv (Dockerfile). The CLI form is the verified-working
+#' invocation from the format contract.
+run_quadfeather <- function(
+  feather_path, destination, tile_size, first_tile_size, x_range, y_range
+) {
+  quadfeather_bin <- file.path(
+    reticulate::virtualenv_root(), "r-reticulate", "bin", "quadfeather"
+  )
+
+  args <- c(
+    "--files", feather_path,
+    "--destination", destination,
+    "--tile_size", tile_size,
+    "--first_tile_size", first_tile_size,
+    "--limits", x_range[1], y_range[1], x_range[2], y_range[2]
+  )
+
+  status <- system2(quadfeather_bin, args = as.character(args))
+  if (!identical(status, 0L)) {
+    stop("quadfeather tiling failed with status ", status)
+  }
+
+  invisible()
+}
+
 polygons_to_bitmask_ome_zarr <- function(
   polygons,
   height,

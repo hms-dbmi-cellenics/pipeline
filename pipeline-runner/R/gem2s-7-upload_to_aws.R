@@ -57,7 +57,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   for (bucket in c(
     pipeline_config$source_bucket,
     pipeline_config$spatial_image_bucket,
-    pipeline_config$spatial_segmentations_bucket
+    pipeline_config$spatial_segmentations_bucket,
+    pipeline_config$spatial_molecules_bucket
   )) {
     remove_bucket_folder(
       pipeline_config,
@@ -128,6 +129,21 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
         sample,
         overwrite_existing = TRUE
       )
+
+      # transcripts.parquet is optional: build + upload the molecule pyramid
+      # only when the frame was carried onto the object in create_seurat.
+      transcripts <- scdata@misc$transcripts
+      if (!is.null(transcripts)) {
+        message("\nBuilding and uploading Xenium molecule pyramid to S3:")
+        upload_molecule_pyramid_to_s3(
+          pipeline_config,
+          input,
+          experiment_id,
+          transcripts,
+          sample,
+          overwrite_existing = TRUE
+        )
+      }
 
     } else if (isTRUE(technology == "visium_hd")) {
       # upload tissue image + segmentation polygons for sample to s3
