@@ -958,7 +958,7 @@ test_that("upload_to_aws (xenium) skips the image upload, uploads polygons, clea
   # the segmentation OME-Zarr bucket is included in the re-run cleanup (leak fix)
   expect_true(pipeline_config$spatial_segmentations_bucket %in% removed_buckets)
 
-  # the molecule pyramid bucket is also cleaned on re-run (same leak class)
+  # the molecule artifact bucket is also cleaned on re-run (same leak class)
   expect_true(pipeline_config$spatial_molecules_bucket %in% removed_buckets)
 
   withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
@@ -966,7 +966,7 @@ test_that("upload_to_aws (xenium) skips the image upload, uploads polygons, clea
 })
 
 
-test_that("upload_to_aws (xenium) builds the molecule pyramid only when transcripts are present", {
+test_that("upload_to_aws (xenium) builds the molecule artifact only when transcripts are present", {
   input <- mock_input()
   input$input <- list(type = "xenium")
   config <- mock_config(input)
@@ -993,7 +993,7 @@ test_that("upload_to_aws (xenium) builds the molecule pyramid only when transcri
     disable_qc_filters = FALSE
   )
 
-  pyramid_samples <- c()
+  molecule_samples <- c()
 
   mockery::stub(upload_to_aws, "put_object_in_s3", stub_put_object_in_s3)
   mockery::stub(upload_to_aws, "put_object_in_s3_multipart", stub_put_object_in_s3_multipart)
@@ -1002,23 +1002,23 @@ test_that("upload_to_aws (xenium) builds the molecule pyramid only when transcri
   mockery::stub(upload_to_aws, "upload_polygons_to_s3", function(...) NULL)
   mockery::stub(upload_to_aws, "get_polygon_coords", function(...) data.frame(x = c(1, 2, 3), y = c(1, 2, 3)))
   mockery::stub(
-    upload_to_aws, "upload_molecule_pyramid_to_s3",
+    upload_to_aws, "upload_molecules_to_s3",
     function(pipeline_config, input, experiment_id, transcripts, sample_id, ...) {
-      pyramid_samples <<- c(pyramid_samples, sample_id)
+      molecule_samples <<- c(molecule_samples, sample_id)
     }
   )
 
   upload_to_aws(input, pipeline_config, prev_out)
 
   # built for exactly the one sample carrying transcripts
-  expect_equal(pyramid_samples, with_tx)
+  expect_equal(molecule_samples, with_tx)
 
   withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
   withr::defer(unlink(pipeline_config$source_bucket, recursive = TRUE))
 })
 
 
-test_that("upload_molecule_pyramid_to_s3 filters QV, builds a dense feature dict, writes meta.json, uploads + registers", {
+test_that("upload_molecules_to_s3 filters QV, writes one Feather per gene + meta.json, uploads + registers", {
   set.seed(7)
   # 6 distinct genes; qv spans the Q20 threshold so the filter drops rows
   transcripts <- data.frame(
@@ -1033,31 +1033,16 @@ test_that("upload_molecule_pyramid_to_s3 filters QV, builds a dense feature dict
 
   uploaded <- list()
   registered <- list()
-  tiled_frame <- NULL
-  meta_written <- NULL
 
-  # stand in for quadfeather: read the input feather, emit a 2-level manifest +
-  # the tile files, so the manifest read + zip work without the Python tiler
-  fake_quadfeather <- function(feather_path, destination, tile_size, first_tile_size, x_range, y_range) {
-    tiled_frame <<- as.data.frame(arrow::read_feather(feather_path))
-    dir.create(file.path(destination, "0", "0"), recursive = TRUE, showWarnings = FALSE)
-    arrow::write_feather(
-      arrow::arrow_table(key = c("0/0/0", "1/0/0"), nPoints = c(10L, 5L)),
-      file.path(destination, "manifest.feather")
-    )
-    writeLines("tile", file.path(destination, "0", "0", "0.feather"))
-  }
-
-  mockery::stub(upload_molecule_pyramid_to_s3, "run_quadfeather", fake_quadfeather)
-  mockery::stub(upload_molecule_pyramid_to_s3, "tempdir", stub_tempdir)
+  mockery::stub(upload_molecules_to_s3, "tempdir", stub_tempdir)
   mockery::stub(
-    upload_molecule_pyramid_to_s3, "put_object_in_s3_multipart",
+    upload_molecules_to_s3, "put_object_in_s3_multipart",
     function(pipeline_config, bucket, object, key) {
       uploaded <<- list(bucket = bucket, object = object, key = key)
     }
   )
   mockery::stub(
-    upload_molecule_pyramid_to_s3, "create_sample_file",
+    upload_molecules_to_s3, "create_sample_file",
     function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, overwrite_existing, auth_jwt) {
       registered <<- list(
         file_type = file_type, sample_file_id = sample_file_id,
@@ -1066,46 +1051,58 @@ test_that("upload_molecule_pyramid_to_s3 filters QV, builds a dense feature dict
     }
   )
 
-  expected_kept <- sum(transcripts$qv >= 20)
+  kept <- transcripts[transcripts$qv >= 20, ]
+  expected_kept <- nrow(kept)
+  ngenes <- length(unique(kept$gene))
 
-  upload_molecule_pyramid_to_s3(
+  upload_molecules_to_s3(
     pipeline_config, input, "mock_experiment_id", transcripts, "s1",
     overwrite_existing = TRUE
   )
 
-  # QV filter dropped sub-Q20 rows before tiling
-  expect_equal(nrow(tiled_frame), expected_kept)
+  molecules_dir <- file.path(stub_tempdir(), "s1.molecules.bygene")
 
-  # tile frame schema: x/y/feature_code, codes dense and within [0, ngenes)
-  expect_equal(colnames(tiled_frame), c("x", "y", "feature_code"))
-  codes <- sort(unique(tiled_frame$feature_code))
-  ngenes <- length(unique(transcripts$gene[transcripts$qv >= 20]))
-  expect_equal(codes, 0:(ngenes - 1))
-
-  # meta.json: shape + the dense dictionary covering every kept gene
-  meta_path <- file.path(stub_tempdir(), "s1.molecules.pyramid", "meta.json")
-  meta <- jsonlite::read_json(meta_path, simplifyVector = FALSE)
-  expect_equal(meta$version, 1)
+  # meta.json: gene-partitioned shape + the dense dictionary covering every kept gene
+  meta <- jsonlite::read_json(file.path(molecules_dir, "meta.json"), simplifyVector = FALSE)
+  expect_equal(meta$version, 2)
   expect_equal(meta$qvThreshold, 20)
-  expect_equal(meta$maxDepth, 1)
-  expect_equal(meta$tileSize, 65536)
-  expect_equal(unlist(meta$pointColumns), c("x", "y", "feature_code"))
+  # no quadtree fields any more
+  expect_null(meta$maxDepth)
+  expect_null(meta$tileSize)
+  expect_null(meta$pointColumns)
+  expect_false(is.null(meta$rootExtent))
   expect_length(meta$genes, ngenes)
+
+  # dense 0-based codes, each with a palette colour, an entry and a point count
   meta_codes <- vapply(meta$genes, function(g) g$code, numeric(1))
   expect_equal(sort(meta_codes), 0:(ngenes - 1))
-  # every gene entry has a palette color
   expect_true(all(vapply(meta$genes, function(g) grepl("^#", g$color), logical(1))))
 
-  # uploaded to the molecules bucket + registered as molecules_pyramid
+  # QV filter applied before partitioning: per-gene nPoints sum to the kept total
+  expect_equal(sum(vapply(meta$genes, function(g) g$nPoints, numeric(1))), expected_kept)
+
+  # each gene's entry is a Feather with x/y only (float32), nrow == nPoints, in the
+  # kept frame. float32 rounding => compare with a tolerance, not exact equality.
+  for (g in meta$genes) {
+    entry_path <- file.path(molecules_dir, g$entry)
+    expect_equal(g$entry, paste0(g$code, ".feather"))
+    expect_true(file.exists(entry_path))
+    frame <- as.data.frame(arrow::read_feather(entry_path))
+    expect_equal(colnames(frame), c("x", "y"))
+    expect_equal(nrow(frame), g$nPoints)
+    expect_equal(sort(frame$x), sort(kept$x[kept$gene == g$gene]), tolerance = 1e-4)
+  }
+
+  # uploaded to the molecules bucket + registered as molecules_by_gene
   expect_equal(uploaded$bucket, pipeline_config$spatial_molecules_bucket)
   expect_equal(uploaded$key, registered$sample_file_id)
-  expect_equal(registered$file_type, "molecules_pyramid")
+  expect_equal(registered$file_type, "molecules_by_gene")
   expect_equal(registered$sample_id, "s1")
   expect_true(registered$overwrite_existing)
 })
 
 
-test_that("upload_molecule_pyramid_to_s3 records qvThreshold null when no qv column", {
+test_that("upload_molecules_to_s3 records qvThreshold null when no qv column", {
   set.seed(8)
   transcripts <- data.frame(
     x = runif(50, 0, 10),
@@ -1116,26 +1113,20 @@ test_that("upload_molecule_pyramid_to_s3 records qvThreshold null when no qv col
   pipeline_config <- mock_pipeline_config()
   input <- list(authJWT = "mock_jwt")
 
-  fake_quadfeather <- function(feather_path, destination, ...) {
-    arrow::write_feather(
-      arrow::arrow_table(key = "0/0/0", nPoints = 50L),
-      file.path(destination, "manifest.feather")
-    )
-  }
+  mockery::stub(upload_molecules_to_s3, "tempdir", stub_tempdir)
+  mockery::stub(upload_molecules_to_s3, "put_object_in_s3_multipart", function(...) NULL)
+  mockery::stub(upload_molecules_to_s3, "create_sample_file", function(...) NULL)
 
-  mockery::stub(upload_molecule_pyramid_to_s3, "run_quadfeather", fake_quadfeather)
-  mockery::stub(upload_molecule_pyramid_to_s3, "tempdir", stub_tempdir)
-  mockery::stub(upload_molecule_pyramid_to_s3, "put_object_in_s3_multipart", function(...) NULL)
-  mockery::stub(upload_molecule_pyramid_to_s3, "create_sample_file", function(...) NULL)
-
-  upload_molecule_pyramid_to_s3(
+  upload_molecules_to_s3(
     pipeline_config, input, "mock_experiment_id", transcripts, "s2",
     overwrite_existing = TRUE
   )
 
-  meta_path <- file.path(stub_tempdir(), "s2.molecules.pyramid", "meta.json")
+  meta_path <- file.path(stub_tempdir(), "s2.molecules.bygene", "meta.json")
   meta <- jsonlite::read_json(meta_path, simplifyVector = FALSE)
   # no qv column -> threshold recorded as null (not silently applied)
   expect_null(meta$qvThreshold)
-  expect_equal(meta$maxDepth, 0)
+  # both genes present, all 50 molecules partitioned across them
+  expect_length(meta$genes, 2)
+  expect_equal(sum(vapply(meta$genes, function(g) g$nPoints, numeric(1))), 50)
 })

@@ -1381,7 +1381,7 @@ read_xenium_segmentations <- function(sample_dir) {
 
   # transcripts.parquet is an OPTIONAL Xenium input: one row per molecule
   # (x_location/y_location/feature_name, and optionally qv). Read it as a plain
-  # frame here; the molecule pyramid is built straight from it in gem2s-7. Don't
+  # frame here; the molecule artifact is built straight from it in gem2s-7. Don't
   # build a Seurat object / CreateMolecules here (loader stays assembly-free).
   transcripts <- read_xenium_transcripts(sample_dir)
 
@@ -1399,7 +1399,7 @@ read_xenium_segmentations <- function(sample_dir) {
 #' Columns \code{x_location}/\code{y_location}/\code{feature_name} (+ \code{qv}
 #' if present) -> \code{x}/\code{y}/\code{gene} (+ \code{qv}). \code{feature_name}
 #' is decoded the same way as cell ids. The installed \code{ReadXenium} does not
-#' apply a QV threshold; the filter is applied at pyramid-build time (gem2s-7).
+#' apply a QV threshold; the filter is applied at artifact-build time (gem2s-7).
 #'
 #' @param sample_dir character path to the sample directory
 #'
@@ -1407,7 +1407,7 @@ read_xenium_segmentations <- function(sample_dir) {
 read_xenium_transcripts <- function(sample_dir) {
   transcripts_path <- file.path(sample_dir, "transcripts.parquet")
   if (!file.exists(transcripts_path)) {
-    message("No transcripts.parquet found; skipping molecule pyramid.")
+    message("No transcripts.parquet found; skipping molecule artifact.")
     return(NULL)
   }
 

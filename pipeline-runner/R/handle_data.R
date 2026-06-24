@@ -766,18 +766,22 @@ upload_polygons_to_s3 <- function(
 #' filter explicitly here (per the format contract) when a qv column is present.
 XENIUM_QV_THRESHOLD <- 20
 
-#' Build and upload a molecule pyramid for a single Xenium sample
+#' Build and upload the gene-partitioned molecule artifact for a Xenium sample
 #'
 #' Modeled on \code{upload_polygons_to_s3}. Reads the raw transcripts frame
 #' (x/y/gene, optionally qv), applies the QV filter, maps gene -> dense 0-based
-#' feature_code with a stable palette color, tiles the points into a quadfeather
-#' Arrow quadtree, writes our meta.json (the feature dictionary + build metadata,
-#' per the format contract) into the tile dir, zips it stored (range-readable),
-#' uploads to the spatial_molecules_bucket and registers a molecules_pyramid
-#' sample file. The pyramid is built straight from the frame (no Seurat object).
+#' feature_code with a stable palette color, then writes ONE Feather file PER GENE
+#' (\code{{code}.feather}, columns x/y) plus our meta.json (the feature dictionary
+#' + build metadata, per the format contract). The directory is zipped stored
+#' (range-readable), uploaded to the spatial_molecules_bucket and registered as a
+#' molecules_by_gene sample file. Built straight from the frame (no Seurat object).
+#'
+#' Gene-partitioned (not a spatial quadtree): the UI only ever renders a few genes
+#' at a time and deck.gl renders that point count directly, so a gene's molecules
+#' are range-read from its own entry with no level-of-detail / spatial tiling.
 #'
 #' @param transcripts data.frame with columns x, y, gene (+ qv if present)
-upload_molecule_pyramid_to_s3 <- function(
+upload_molecules_to_s3 <- function(
   pipeline_config, input, experiment_id, transcripts, sample_id,
   overwrite_existing
 ) {
@@ -807,140 +811,96 @@ upload_molecule_pyramid_to_s3 <- function(
     color = color_pool[(seq_along(genes) - 1L) %% length(color_pool) + 1L],
     stringsAsFactors = FALSE
   )
-  code_by_gene <- stats::setNames(feature_dict$code, feature_dict$gene)
 
-  # Feather input for quadfeather: x/y double, feature_code int16.
   x <- as.numeric(transcripts$x)
   y <- as.numeric(transcripts$y)
-  feature_code <- as.integer(code_by_gene[transcripts$gene])
-
-  # Shuffle rows before tiling. quadfeather samples each tile (and the coarse
-  # overview/root) in INPUT ORDER, not by a spatial sample. Xenium writes
-  # transcripts in scan order, so an unshuffled input makes the overview tiles a
-  # spatial slice of one corner — a zoomed-out / budget-limited read then shows
-  # molecules only there. A random row order makes every tile a uniform spatial
-  # sample. (No global set.seed() — that would pollute the pipeline RNG; an exact
-  # reproducible sample isn't needed, only a uniform one.)
-  shuffle <- sample.int(length(x))
-  x <- x[shuffle]
-  y <- y[shuffle]
-  feature_code <- feature_code[shuffle]
-
-  tile_table <- arrow::arrow_table(
-    x = arrow::Array$create(x, type = arrow::float64()),
-    y = arrow::Array$create(y, type = arrow::float64()),
-    feature_code = arrow::Array$create(feature_code, type = arrow::int16())
-  )
-
-  feather_path <- tempfile(pattern = "molecules", fileext = ".feather")
-  arrow::write_feather(tile_table, feather_path)
-
-  # Tile into a quadtree with quadfeather. --limits from the data bbox avoids a
-  # recompute pass. tile_size / first_tile_size cap points per node (~65k).
-  tile_size <- 65536L
-  first_tile_size <- 65536L
+  # full micron bbox over the kept molecules (drives the UI's zoomed-out fit).
   x_range <- range(x)
   y_range <- range(y)
 
-  pyramid_dir <- file.path(tempdir(), paste0(sample_id, ".molecules.pyramid"))
-  unlink(pyramid_dir, recursive = TRUE)
-  dir.create(pyramid_dir, recursive = TRUE)
+  molecules_dir <- file.path(tempdir(), paste0(sample_id, ".molecules.bygene"))
+  unlink(molecules_dir, recursive = TRUE)
+  dir.create(molecules_dir, recursive = TRUE)
 
-  message("\nTiling molecule pyramid with quadfeather: ", pyramid_dir)
-  run_quadfeather(
-    feather_path, pyramid_dir, tile_size, first_tile_size, x_range, y_range
-  )
-
-  # Read quadfeather's manifest to compute maxDepth (max z in the tile keys) and
-  # rootExtent (full micron bbox).
-  manifest <- as.data.frame(
-    arrow::read_feather(file.path(pyramid_dir, "manifest.feather"))
-  )
-  key_depth <- as.integer(sub("/.*$", "", manifest$key))
-  max_depth <- max(key_depth)
+  # One Feather entry per gene: x/y as float32. The entry IS the gene, so no
+  # feature_code column is stored inside; the code<->gene<->color map is meta.json.
+  # float32 (not float64): halves the bytes and the UI downcasts to Float32Array on
+  # read anyway; at Xenium's micron scale (~1e4) float32 ULP is ~nm, far below any
+  # visible scale. compression = "zstd": the Arrow IPC body is ZSTD-compressed, which
+  # apache-arrow JS decompresses on read (>= v21.1.0). So the zip below stays stored.
+  message("\nWriting per-gene molecule Feather entries: ", molecules_dir)
+  rows_by_gene <- split(seq_along(x), transcripts$gene)
+  gene_entries <- vapply(feature_dict$gene, function(gene) {
+    rows <- rows_by_gene[[gene]]
+    entry <- paste0(feature_dict$code[feature_dict$gene == gene], ".feather")
+    gene_table <- arrow::arrow_table(
+      x = arrow::Array$create(x[rows], type = arrow::float32()),
+      y = arrow::Array$create(y[rows], type = arrow::float32())
+    )
+    arrow::write_feather(
+      gene_table, file.path(molecules_dir, entry),
+      compression = "zstd"
+    )
+    entry
+  }, character(1))
+  n_points <- vapply(feature_dict$gene, function(gene) {
+    length(rows_by_gene[[gene]])
+  }, integer(1))
 
   meta <- list(
-    version = 1L,
+    version = 2L,
     qvThreshold = qv_threshold,
     rootExtent = list(x = x_range, y = y_range),
-    maxDepth = max_depth,
-    tileSize = tile_size,
-    firstTileSize = first_tile_size,
-    pointColumns = c("x", "y", "feature_code"),
     genes = lapply(seq_len(nrow(feature_dict)), function(i) {
       list(
         code = feature_dict$code[i],
         gene = feature_dict$gene[i],
-        color = feature_dict$color[i]
+        color = feature_dict$color[i],
+        entry = unname(gene_entries[i]),
+        nPoints = unname(n_points[i])
       )
     })
   )
   jsonlite::write_json(
     meta,
-    file.path(pyramid_dir, "meta.json"),
+    file.path(molecules_dir, "meta.json"),
     auto_unbox = TRUE,
     null = "null"
   )
 
-  # zip stored (-rq0) so the UI's ZipFileStore can range-read tile entries.
-  zip_name <- paste0(sample_id, ".molecules.pyramid.zip")
+  # zip stored (-rq0): each Feather entry is already ZSTD-compressed, so deflating
+  # the zip on top would be wasted work. Stored entries let the UI's ZipFileStore
+  # range-read exactly the selected genes' bytes (same pattern as the OME-Zarr zips).
+  zip_name <- paste0(sample_id, ".molecules.bygene.zip")
   zip_path <- file.path(tempdir(), zip_name)
 
   workdir <- getwd()
-  setwd(pyramid_dir)
+  setwd(molecules_dir)
   utils::zip(zip_path, files = ".", flags = "-rq0")
   setwd(workdir)
 
-  message("Molecule pyramid zip file size: ", fs::file_size(zip_path))
+  message("Molecule artifact zip file size: ", fs::file_size(zip_path))
 
-  pyramid_id <- uuid::UUIDgenerate()
+  molecules_id <- uuid::UUIDgenerate()
 
-  message("\nUploading molecule pyramid to S3:")
+  message("\nUploading molecule artifact to S3:")
   put_object_in_s3_multipart(
     pipeline_config,
     bucket = pipeline_config$spatial_molecules_bucket,
     object = zip_path,
-    key = pyramid_id
+    key = molecules_id
   )
 
   create_sample_file(
     api_url,
     experiment_id,
     sample_id,
-    "molecules_pyramid",
+    "molecules_by_gene",
     file.size(zip_path),
-    pyramid_id,
+    molecules_id,
     overwrite_existing,
     auth_jwt
   )
-
-  invisible()
-}
-
-#' Run the quadfeather tiler over the reticulate virtualenv
-#'
-#' Invokes the \code{quadfeather} console script installed in the pipeline's
-#' reticulate virtualenv (Dockerfile). The CLI form is the verified-working
-#' invocation from the format contract.
-run_quadfeather <- function(
-  feather_path, destination, tile_size, first_tile_size, x_range, y_range
-) {
-  quadfeather_bin <- file.path(
-    reticulate::virtualenv_root(), "r-reticulate", "bin", "quadfeather"
-  )
-
-  args <- c(
-    "--files", feather_path,
-    "--destination", destination,
-    "--tile_size", tile_size,
-    "--first_tile_size", first_tile_size,
-    "--limits", x_range[1], y_range[1], x_range[2], y_range[2]
-  )
-
-  status <- system2(quadfeather_bin, args = as.character(args))
-  if (!identical(status, 0L)) {
-    stop("quadfeather tiling failed with status ", status)
-  }
 
   invisible()
 }

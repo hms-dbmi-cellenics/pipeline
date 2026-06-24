@@ -130,12 +130,12 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
         overwrite_existing = TRUE
       )
 
-      # transcripts.parquet is optional: build + upload the molecule pyramid
+      # transcripts.parquet is optional: build + upload the molecule artifact
       # only when the frame was carried onto the object in create_seurat.
       transcripts <- scdata@misc$transcripts
       if (!is.null(transcripts)) {
-        message("\nBuilding and uploading Xenium molecule pyramid to S3:")
-        upload_molecule_pyramid_to_s3(
+        message("\nBuilding and uploading Xenium molecule artifact to S3:")
+        upload_molecules_to_s3(
           pipeline_config,
           input,
           experiment_id,
