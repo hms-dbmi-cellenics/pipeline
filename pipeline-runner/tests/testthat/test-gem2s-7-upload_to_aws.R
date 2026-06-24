@@ -947,6 +947,7 @@ test_that("upload_to_aws (xenium) skips the image upload, uploads polygons, clea
   })
   mockery::stub(upload_to_aws, "upload_image_to_s3", function(...) image_uploads <<- image_uploads + 1)
   mockery::stub(upload_to_aws, "upload_polygons_to_s3", function(...) polygon_uploads <<- polygon_uploads + 1)
+  mockery::stub(upload_to_aws, "upload_molecules_to_s3", function(...) NULL)
   mockery::stub(upload_to_aws, "get_polygon_coords", function(...) data.frame(x = c(1, 2, 3), y = c(1, 2, 3)))
 
   upload_to_aws(input, pipeline_config, prev_out)
@@ -966,7 +967,7 @@ test_that("upload_to_aws (xenium) skips the image upload, uploads polygons, clea
 })
 
 
-test_that("upload_to_aws (xenium) builds the molecule artifact only when transcripts are present", {
+test_that("upload_to_aws (xenium) builds the molecule artifact for every sample", {
   input <- mock_input()
   input$input <- list(type = "xenium")
   config <- mock_config(input)
@@ -975,11 +976,13 @@ test_that("upload_to_aws (xenium) builds the molecule artifact only when transcr
   scdata_list <- mock_prepare_experiment(config)$scdata_list
   scdata_list <- add_tissue_coords(scdata_list)
 
-  # attach a molecules frame to one sample only
-  with_tx <- names(scdata_list)[1]
-  scdata_list[[with_tx]]@misc$transcripts <- data.frame(
-    x = runif(20), y = runif(20), gene = sample(c("Gad1", "Sst"), 20, TRUE)
-  )
+  # transcripts.parquet is a required Xenium input, so every sample carries a
+  # molecules frame onto the object
+  for (sample_name in names(scdata_list)) {
+    scdata_list[[sample_name]]@misc$transcripts <- data.frame(
+      x = runif(20), y = runif(20), gene = sample(c("Gad1", "Sst"), 20, TRUE)
+    )
+  }
 
   pipeline_config <- mock_pipeline_config()
 
@@ -1010,8 +1013,8 @@ test_that("upload_to_aws (xenium) builds the molecule artifact only when transcr
 
   upload_to_aws(input, pipeline_config, prev_out)
 
-  # built for exactly the one sample carrying transcripts
-  expect_equal(molecule_samples, with_tx)
+  # built for every xenium sample
+  expect_setequal(molecule_samples, names(scdata_list))
 
   withr::defer(unlink(pipeline_config$cell_sets_bucket, recursive = TRUE))
   withr::defer(unlink(pipeline_config$source_bucket, recursive = TRUE))

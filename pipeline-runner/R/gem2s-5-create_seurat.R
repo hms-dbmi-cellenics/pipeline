@@ -79,9 +79,9 @@ construct_scdata <- function(
   transcripts <- NULL
   if (isTRUE(config$input$type == "xenium") && !is.null(segmentations)) {
     segmentation_method <- segmentations$segmentation_method
-    # optional molecules frame: carry it on the object so gem2s-7 can build the
-    # molecule artifact straight from it (mirrors the @misc$technology pattern).
-    # Not added as CreateMolecules to the FOV — the artifact needs only the frame.
+    # molecules frame: carry it on the object so gem2s-7 can build the molecule
+    # artifact straight from it (mirrors the @misc$technology pattern). Not added
+    # as CreateMolecules to the FOV — the artifact needs only the frame.
     transcripts <- segmentations$transcripts
     segmentations <- build_xenium_fov(segmentations)
   }
@@ -99,7 +99,8 @@ construct_scdata <- function(
   # of introspecting the object's slots
   scdata@misc$technology <- config$input$type
 
-  # carry the optional Xenium molecules frame to gem2s-7 for artifact building
+  # carry the Xenium molecules frame to gem2s-7 for artifact building (NULL for
+  # non-Xenium technologies)
   if (!is.null(transcripts)) {
     scdata@misc$transcripts <- transcripts
   }

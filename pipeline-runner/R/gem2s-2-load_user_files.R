@@ -1345,8 +1345,7 @@ read_xenium_sample <- function(sample, input_dir) {
 #'   \item{centroids}{data.frame with columns x, y, cell}
 #'   \item{segmentations}{data.frame of polygon vertices, columns cell, x, y}
 #'   \item{segmentation_method}{data.frame keyed by cell, or NULL if absent}
-#'   \item{transcripts}{data.frame of molecules (x, y, gene, and qv if present),
-#'     or NULL when the optional transcripts.parquet is absent}
+#'   \item{transcripts}{data.frame of molecules (x, y, gene, and qv if present)}
 #'
 read_xenium_segmentations <- function(sample_dir) {
   cells_path <- file.path(sample_dir, "cells.parquet")
@@ -1379,10 +1378,10 @@ read_xenium_segmentations <- function(sample_dir) {
   colnames(boundaries) <- c("cell", "x", "y")
   boundaries$cell <- binary_to_string(boundaries$cell)
 
-  # transcripts.parquet is an OPTIONAL Xenium input: one row per molecule
-  # (x_location/y_location/feature_name, and optionally qv). Read it as a plain
-  # frame here; the molecule artifact is built straight from it in gem2s-7. Don't
-  # build a Seurat object / CreateMolecules here (loader stays assembly-free).
+  # transcripts.parquet: one row per molecule (x_location/y_location/feature_name,
+  # and optionally qv). Read it as a plain frame here; the molecule artifact is
+  # built straight from it in gem2s-7. Don't build a Seurat object /
+  # CreateMolecules here (loader stays assembly-free).
   transcripts <- read_xenium_transcripts(sample_dir)
 
   list(
@@ -1393,23 +1392,19 @@ read_xenium_segmentations <- function(sample_dir) {
   )
 }
 
-#' Read the optional Xenium transcripts (molecules) parquet
+#' Read the Xenium transcripts (molecules) parquet
 #'
-#' \code{transcripts.parquet} is not a required input; returns NULL when absent.
-#' Columns \code{x_location}/\code{y_location}/\code{feature_name} (+ \code{qv}
-#' if present) -> \code{x}/\code{y}/\code{gene} (+ \code{qv}). \code{feature_name}
+#' \code{transcripts.parquet} is a required Xenium input. Columns
+#' \code{x_location}/\code{y_location}/\code{feature_name} (+ \code{qv} if
+#' present) -> \code{x}/\code{y}/\code{gene} (+ \code{qv}). \code{feature_name}
 #' is decoded the same way as cell ids. The installed \code{ReadXenium} does not
 #' apply a QV threshold; the filter is applied at artifact-build time (gem2s-7).
 #'
 #' @param sample_dir character path to the sample directory
 #'
-#' @return data.frame with columns x, y, gene (+ qv), or NULL if the file absent
+#' @return data.frame with columns x, y, gene (+ qv)
 read_xenium_transcripts <- function(sample_dir) {
   transcripts_path <- file.path(sample_dir, "transcripts.parquet")
-  if (!file.exists(transcripts_path)) {
-    message("No transcripts.parquet found; skipping molecule artifact.")
-    return(NULL)
-  }
 
   message("Reading Xenium transcripts from ", transcripts_path)
   tx <- as.data.frame(arrow::read_parquet(transcripts_path))

@@ -127,7 +127,7 @@ test_that("read_xenium_segmentations parses the parquet frames", {
   # arrow::read_parquet returns cells then boundaries (call order in the reader)
   reader <- mockery::mock(cells, boundaries)
   mockery::stub(read_xenium_segmentations, "arrow::read_parquet", reader)
-  # transcripts are optional and read by a helper; exercised separately
+  # transcripts are read by a helper exercised separately; stub it out here
   mockery::stub(read_xenium_segmentations, "read_xenium_transcripts", NULL)
 
   out <- read_xenium_segmentations("/some/sample_dir")
@@ -145,7 +145,7 @@ test_that("read_xenium_segmentations parses the parquet frames", {
   expect_equal(rownames(out$segmentation_method), cells$cell_id)
   expect_true(all(out$segmentation_method$segmentation_method == "cell"))
 
-  # optional transcripts threaded through (NULL here)
+  # transcripts threaded through from the helper (NULL because stubbed here)
   expect_true("transcripts" %in% names(out))
   expect_null(out$transcripts)
 })
@@ -167,7 +167,6 @@ test_that("read_xenium_segmentations tolerates a missing segmentation_method col
 test_that("read_xenium_transcripts parses molecules and keeps qv when present", {
   tx <- mock_transcripts_parquet(nmols = 40, with_qv = TRUE)
 
-  mockery::stub(read_xenium_transcripts, "file.exists", TRUE)
   mockery::stub(read_xenium_transcripts, "arrow::read_parquet", tx)
 
   out <- read_xenium_transcripts("/some/sample_dir")
@@ -183,20 +182,10 @@ test_that("read_xenium_transcripts parses molecules and keeps qv when present", 
 test_that("read_xenium_transcripts omits qv when the column is absent", {
   tx <- mock_transcripts_parquet(nmols = 20, with_qv = FALSE)
 
-  mockery::stub(read_xenium_transcripts, "file.exists", TRUE)
   mockery::stub(read_xenium_transcripts, "arrow::read_parquet", tx)
 
   out <- read_xenium_transcripts("/some/sample_dir")
   expect_equal(colnames(out), c("x", "y", "gene"))
-})
-
-
-test_that("read_xenium_transcripts returns NULL when the file is absent", {
-  # transcripts.parquet is an optional input
-  mockery::stub(read_xenium_transcripts, "file.exists", FALSE)
-
-  out <- read_xenium_transcripts("/some/sample_dir")
-  expect_null(out)
 })
 
 
