@@ -770,9 +770,9 @@ XENIUM_QV_THRESHOLD <- 20
 #'
 #' Modeled on \code{upload_polygons_to_s3}. Reads the raw transcripts frame
 #' (x/y/gene, optionally qv), applies the QV filter, maps gene -> dense 0-based
-#' feature_code with a stable palette color, then writes ONE Feather file PER GENE
-#' (\code{{code}.feather}, columns x/y) plus our meta.json (the feature dictionary
-#' + build metadata, per the format contract). The directory is zipped stored
+#' feature_code, then writes ONE Feather file PER GENE (\code{{code}.feather},
+#' columns x/y) plus our meta.json (the feature dictionary + build metadata, per
+#' the format contract; the UI derives gene colours from the code). Zipped stored
 #' (range-readable), uploaded to the spatial_molecules_bucket and registered as a
 #' molecules_by_gene sample file. Built straight from the frame (no Seurat object).
 #'
@@ -800,15 +800,14 @@ upload_molecules_to_s3 <- function(
     )
   }
 
-  # Dense 0-based feature dictionary: gene -> feature_code, each code a stable
-  # palette color (assigned once at build so deck.gl and Vega render identically).
+  # Dense 0-based feature dictionary: gene -> feature_code. The code is a stable,
+  # panel-wide index (genes sorted, so it doesn't shift with the selection); the UI
+  # derives a colour from it (Polychrome palette, utils/spatial/moleculeColors) so
+  # colour assignment isn't baked here.
   genes <- sort(unique(transcripts$gene))
-  color_pool <- get_color_pool()
   feature_dict <- data.frame(
     code = seq_along(genes) - 1L,
     gene = genes,
-    # cycle the categorical palette by code (1-based index into the pool)
-    color = color_pool[(seq_along(genes) - 1L) %% length(color_pool) + 1L],
     stringsAsFactors = FALSE
   )
 
@@ -823,7 +822,7 @@ upload_molecules_to_s3 <- function(
   dir.create(molecules_dir, recursive = TRUE)
 
   # One Feather entry per gene: x/y as float32. The entry IS the gene, so no
-  # feature_code column is stored inside; the code<->gene<->color map is meta.json.
+  # feature_code column is stored inside; the code<->gene map is meta.json.
   # float32 (not float64): halves the bytes and the UI downcasts to Float32Array on
   # read anyway; at Xenium's micron scale (~1e4) float32 ULP is ~nm, far below any
   # visible scale. compression = "zstd": the Arrow IPC body is ZSTD-compressed, which
@@ -855,7 +854,6 @@ upload_molecules_to_s3 <- function(
       list(
         code = feature_dict$code[i],
         gene = feature_dict$gene[i],
-        color = feature_dict$color[i],
         entry = unname(gene_entries[i]),
         nPoints = unname(n_points[i])
       )

@@ -1073,10 +1073,10 @@ test_that("upload_molecules_to_s3 filters QV, writes one Feather per gene + meta
   expect_false(is.null(meta$rootExtent))
   expect_length(meta$genes, ngenes)
 
-  # dense 0-based codes, each with a palette colour, an entry and a point count
+  # dense 0-based codes (colour is assigned in the UI from the code, not baked here)
   meta_codes <- vapply(meta$genes, function(g) g$code, numeric(1))
   expect_equal(sort(meta_codes), 0:(ngenes - 1))
-  expect_true(all(vapply(meta$genes, function(g) grepl("^#", g$color), logical(1))))
+  expect_true(all(vapply(meta$genes, function(g) is.null(g$color), logical(1))))
 
   # QV filter applied before partitioning: per-gene nPoints sum to the kept total
   expect_equal(sum(vapply(meta$genes, function(g) g$nPoints, numeric(1))), expected_kept)
