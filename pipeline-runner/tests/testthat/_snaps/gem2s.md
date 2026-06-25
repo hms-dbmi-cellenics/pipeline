@@ -274,7 +274,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "86d615f68fc86b9db138619761b5dc8a"
+      [1] "552d132d379949a67daa368687ebad52"
     Code
       str(res)
     Output
@@ -423,7 +423,8 @@
         .. .. .. ..@ reductions  : list()
         .. .. .. ..@ images      : list()
         .. .. .. ..@ project.name: chr "mock_experiment"
-        .. .. .. ..@ misc        : list()
+        .. .. .. ..@ misc        :List of 1
+        .. .. .. .. ..$ technology: chr "10x"
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
         .. .. .. .. ..$ : int [1:3] 5 3 0
         .. .. .. ..@ commands    : list()
@@ -487,7 +488,8 @@
         .. .. .. ..@ reductions  : list()
         .. .. .. ..@ images      : list()
         .. .. .. ..@ project.name: chr "mock_experiment"
-        .. .. .. ..@ misc        : list()
+        .. .. .. ..@ misc        :List of 1
+        .. .. .. .. ..$ technology: chr "10x"
         .. .. .. ..@ version     :Classes 'package_version', 'numeric_version'  hidden list of 1
         .. .. .. .. ..$ : int [1:3] 5 3 0
         .. .. .. ..@ commands    : list()
@@ -504,7 +506,7 @@
     Code
       rlang::hash(res)
     Output
-      [1] "f669592bd1cd2544ca78d06af9105497"
+      [1] "aa175fc70f32b75749ef6b30f3c3399c"
     Code
       str(res)
     Output
@@ -654,7 +656,8 @@
         .. .. .. ..@ reductions  : list()
         .. .. .. ..@ images      : list()
         .. .. .. ..@ project.name: chr "mock_experiment"
-        .. .. .. ..@ misc        :List of 2
+        .. .. .. ..@ misc        :List of 3
+        .. .. .. .. ..$ technology      : chr "10x"
         .. .. .. .. ..$ gene_annotations:'data.frame':	2000 obs. of  3 variables:
         .. .. .. .. .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
@@ -724,7 +727,8 @@
         .. .. .. ..@ reductions  : list()
         .. .. .. ..@ images      : list()
         .. .. .. ..@ project.name: chr "mock_experiment"
-        .. .. .. ..@ misc        :List of 2
+        .. .. .. ..@ misc        :List of 3
+        .. .. .. .. ..$ technology      : chr "10x"
         .. .. .. .. ..$ gene_annotations:'data.frame':	2000 obs. of  3 variables:
         .. .. .. .. .. ..$ input        : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
         .. .. .. .. .. ..$ name         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" ...
