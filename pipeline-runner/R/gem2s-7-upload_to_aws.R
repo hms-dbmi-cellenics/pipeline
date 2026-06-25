@@ -220,8 +220,8 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
 # Segmentation polygon coordinates. GetTissueCoordinates is the generic accessor
 # that works on both a Visium HD spatial image and a Xenium FOV, selecting the
-# boundary via which (the internal name differs: LoadXenium names it
-# "segmentation"). It returns a data.frame with x/y/cell columns. For Visium HD
+# boundary via which = "segmentations" (the name build_xenium_fov gives the cell
+# boundary set). It returns a data.frame with x/y/cell columns. For Visium HD
 # pass scale = "hires"/"lowres" to apply the pixel->spot scale factor; for Xenium
 # leave scale = NULL — a FOV has no scale factor and its coords are already in
 # microns.
