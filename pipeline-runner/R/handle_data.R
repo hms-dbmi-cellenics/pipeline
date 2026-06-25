@@ -802,7 +802,7 @@ upload_molecules_to_s3 <- function(
 
   # Dense 0-based feature dictionary: gene -> feature_code. The code is a stable,
   # panel-wide index (genes sorted, so it doesn't shift with the selection); the UI
-  # derives a colour from it (Polychrome palette, utils/spatial/moleculeColors) so
+  # derives a colour from it (utils/spatial/moleculeColors) so
   # colour assignment isn't baked here.
   genes <- sort(unique(transcripts$gene))
   feature_dict <- data.frame(
