@@ -407,6 +407,37 @@ test_that("load_obj2s_file works when default reducion for seurat_object is diff
   expect_equal("tsne", SeuratObject::DefaultDimReduc(scdata))
 })
 
+test_that("reconstruct_sce loads an sce_object serialized with a newer Bioconductor (rowRanges Seqinfo)", {
+  # sce_seqinfo.rds was saved with Bioconductor >= 3.21, where the Seqinfo S4
+  # class lives in a standalone 'Seqinfo' package not installed in this image.
+  # Its rowRanges reference that package, so touching them via updateObject()
+  # errored with "unable to find required package 'Seqinfo'". reconstruct_sce
+  # must drop rowRanges before any accessor runs. See mock_data/obj2s_newer_bioc.
+  # Skipped on CI: CI runs under covr::package_coverage(), which itself executes
+  # the suite in a subprocess. Nesting the callr process below inside it leaves a
+  # child that covr can't reap at shutdown ("unable to terminate some child
+  # processes"). This still runs in local `make test`, like the snapshot tests.
+  skip_on_ci()
+
+  fixture <- testthat::test_path(
+    "mock_data", "obj2s_newer_bioc", "sce_seqinfo.rds"
+  )
+
+  # Run in a fresh R process: the failure only reproduces with a cold S4 method
+  # dispatch cache, as in production. Within the shared test session earlier
+  # tests warm dispatch for the Seqinfo/GRanges hierarchy and mask the error.
+  reductions <- callr::r(
+    function(pkg, fpath) {
+      pkgload::load_all(pkg, quiet = TRUE)
+      scdata <- reconstruct_sce(fpath)
+      names(scdata@reductions)
+    },
+    args = list(pkg = pkgload::pkg_path(), fpath = normalizePath(fixture))
+  )
+
+  expect_true("tsne" %in% reductions)
+})
+
 test_that("load_obj2s_file works when reduction for sce_object is a string match for umap or tsne", {
   # setup
   input_dir <- withr::local_tempdir()

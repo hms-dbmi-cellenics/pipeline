@@ -361,6 +361,18 @@ reconstruct_sce <- function(dataset_fpath) {
   tryCatch({
     user_scdata <- readRDS(dataset_fpath)
     stopifnot(methods::is(user_scdata, "SingleCellExperiment"))
+    colnames(user_scdata) <- make.unique(colnames(user_scdata))
+
+    # Objects serialized with a newer Bioconductor reference the standalone
+    # `Seqinfo` package (the class was moved out of GenomeInfoDb), which isn't
+    # installed here. `rowRanges` is unused downstream, but accessing it via
+    # updateObject() errors with "unable to find required package 'Seqinfo'".
+    # Rebuild the object without rowRanges to avoid touching that class.
+    user_scdata <- SingleCellExperiment::SingleCellExperiment(
+      assays = as.list(SummarizedExperiment::assays(user_scdata)),
+      colData = SummarizedExperiment::colData(user_scdata),
+      reducedDims = SingleCellExperiment::reducedDims(user_scdata)
+    )
   },
   error = function(e) {
     message(e$message)
