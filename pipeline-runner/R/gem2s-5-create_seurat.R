@@ -43,7 +43,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
         config = config
       )
     },
-    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
+    BPPARAM = get_bpparam(nworkers)
   )
 
   prev_out$scdata_list <- scdata_list

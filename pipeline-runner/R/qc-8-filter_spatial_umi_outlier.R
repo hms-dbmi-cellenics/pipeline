@@ -9,7 +9,7 @@ find_spatial_knn <- function(scdata, workers = 1, n_neighbors = 36) {
     neighborhood_coords,
     k = n_neighbors,
     warn.ties = FALSE,
-    BPPARAM = BiocParallel::MulticoreParam(workers = workers)
+    BPPARAM = get_bpparam(workers)
   )$index
 }
 

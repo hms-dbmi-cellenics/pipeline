@@ -50,7 +50,7 @@ download_s3_files <- function(input, pipeline_config, input_dir) {
         download_and_store(originals_bucket, s3_path, local_fpath, s3)
       }
     },
-    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
+    BPPARAM = get_bpparam(nworkers)
   )
 }
 

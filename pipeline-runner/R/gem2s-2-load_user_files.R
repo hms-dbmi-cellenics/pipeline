@@ -192,7 +192,7 @@ read_parse_files <- function(config, input_dir) {
 
   # set up parallel processing parameters
   nworkers <- min(length(samples), BATCH_POD_CPUS)
-  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+  bpparam <- get_bpparam(nworkers)
 
   # use bplapply for parallel processing
   results <- BiocParallel::bplapply(
@@ -296,7 +296,7 @@ read_10x_h5_file <- function(config, input_dir) {
 
   # set up parallel processing parameters
   nworkers <- min(length(samples), BATCH_POD_CPUS)
-  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+  bpparam <- get_bpparam(nworkers)
 
   # use bplapply for parallel processing
   results <- BiocParallel::bplapply(
@@ -453,7 +453,7 @@ read_10x_files <- function(config, input_dir) {
 
   # set up parallel processing parameters
   nworkers <- min(length(samples), BATCH_POD_CPUS)
-  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+  bpparam <- get_bpparam(nworkers)
 
   # use bplapply for parallel processing
   results <- BiocParallel::bplapply(
@@ -1247,7 +1247,7 @@ read_visium_hd_files <- function(config, input_dir) {
   samples <- config$samples
 
   nworkers <- min(length(samples), BATCH_POD_CPUS)
-  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+  bpparam <- get_bpparam(nworkers)
 
   results <- BiocParallel::bplapply(
     samples,
@@ -1450,7 +1450,7 @@ read_xenium_files <- function(config, input_dir) {
   samples <- config$samples
 
   nworkers <- min(length(samples), BATCH_POD_CPUS)
-  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+  bpparam <- get_bpparam(nworkers)
 
   results <- BiocParallel::bplapply(
     samples,

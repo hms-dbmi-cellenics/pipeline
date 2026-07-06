@@ -49,7 +49,7 @@ score_doublets <- function(input, pipeline_config, prev_out) {
       # TODO: Pass also parse_kit when available from the UI
       get_doublet_scores(sample_counts, technology = technology)
     },
-    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
+    BPPARAM = get_bpparam(nworkers)
   )
 
   scores <- remove_null_list_elements(scores)
