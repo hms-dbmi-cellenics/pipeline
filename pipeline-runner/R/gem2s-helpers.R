@@ -8,11 +8,15 @@
 # single worker is requested. Production runs (CI unset) keep multicore.
 # Extra args (e.g. RNGseed) are forwarded to whichever backend is used.
 get_bpparam <- function(nworkers, ...) {
-  if (nworkers <= 1 || nzchar(Sys.getenv("CI"))) {
+  if (nworkers <= 1 || on_ci()) {
     return(BiocParallel::SerialParam(...))
   }
 
   BiocParallel::MulticoreParam(workers = nworkers, ...)
+}
+
+on_ci <- function() {
+  isTRUE(as.logical(Sys.getenv("CI", "false")))
 }
 
 check_prev_out <- function(prev_out, check_names) {
