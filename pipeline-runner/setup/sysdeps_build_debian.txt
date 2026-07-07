@@ -15,3 +15,8 @@ libgeos-dev
 libhdf5-dev
 libtiff-dev
 patch
+libudunits2-dev
+libgdal-dev
+libproj-dev
+libsqlite3-dev
+cmake

@@ -38,11 +38,6 @@ ENV ARROW_WITH_ZSTD=ON
 COPY setup/restore_renv.R .
 RUN Rscript restore_renv.R
 
-# needed to install 'sf'
-# TODO: consolidate to sysdeps_build_debian.txt
-RUN apt-get -y update && \
-    apt-get -y install libudunits2-dev libgdal-dev libgeos-dev libproj-dev libsqlite3-dev cmake
-
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
 RUN Rscript restore_renv.R
@@ -58,11 +53,11 @@ RUN Rscript get_sysdeps_run.R
 
 # remove identified packages with potentially conflicting licenses
 COPY setup/create_ghost_packages.R .
-# RUN Rscript create_ghost_packages.R
+RUN Rscript create_ghost_packages.R
 
 # check for any potentially problematic licenses
 COPY setup/check_package_licenses.R .
-# RUN Rscript check_package_licenses.R
+RUN Rscript check_package_licenses.R
 
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
@@ -79,10 +74,6 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
     echo "python3-pip python3-venv python3-dev wget zstd" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
-
-# TODO: consolidate to sysdeps_build_debian.txt
-RUN apt-get -y update && \
-    apt-get -y install libudunits2-dev libgdal-dev libgeos-dev libproj-dev libsqlite3-dev cmake
 
 # install python packages in virtualenv
 ENV WORKON_HOME=/src/.virtualenvs
