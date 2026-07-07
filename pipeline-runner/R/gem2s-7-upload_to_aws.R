@@ -72,6 +72,14 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
     message("\nSaving rds for sample: ", sample)
     scdata <- scdata_list[[sample]]
 
+    # keep the Xenium molecules frame out of the uploaded object: it can be
+    # hundreds of millions of rows and is uploaded separately as the molecule
+    # artifact below. The worker only loads the FOV, not the raw transcripts, so
+    # carrying it in r.rds just bloats the download and defeats the disk-backed
+    # (BPCells) memory strategy.
+    transcripts <- scdata@misc$transcripts
+    scdata@misc$transcripts <- NULL
+
     saveRDS(scdata, fpath)
     message("rds file size: ", fs::file_size(fpath))
 
@@ -131,13 +139,14 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       )
 
       # build + upload the molecule artifact from the transcripts frame carried
-      # onto the object in create_seurat
+      # onto the object in create_seurat (extracted above, before the object was
+      # stripped and uploaded)
       message("\nBuilding and uploading Xenium molecule artifact to S3:")
       upload_molecules_to_s3(
         pipeline_config,
         input,
         experiment_id,
-        scdata@misc$transcripts,
+        transcripts,
         sample,
         overwrite_existing = TRUE
       )
