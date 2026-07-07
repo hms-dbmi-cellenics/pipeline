@@ -18,6 +18,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
   config <- prev_out$config
   counts_list <- prev_out$counts_list
   segmentations_list <- prev_out$segmentations_list
+  microns_per_pixel_list <- prev_out$microns_per_pixel_list
   annot <- prev_out$annot
   doublet_scores <- prev_out$doublet_scores
   edrops <- prev_out$edrops
@@ -40,7 +41,8 @@ create_seurat <- function(input, pipeline_config, prev_out) {
         edrops_out = edrops[[sample]],
         sample = sample,
         annot = annot,
-        config = config
+        config = config,
+        microns_per_pixel = microns_per_pixel_list[[sample]]
       )
     },
     BPPARAM = get_bpparam(nworkers)
@@ -60,7 +62,8 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 # construct SeuratObject
 construct_scdata <- function(
   counts, segmentations, doublet_score, edrops_out,
-  sample, annot, config, min.cells = 0, min.features = 10
+  sample, annot, config, microns_per_pixel = NULL,
+  min.cells = 0, min.features = 10
 ) {
   metadata <- construct_metadata(counts, sample, config)
 
@@ -98,6 +101,13 @@ construct_scdata <- function(
   # (e.g. the worker, which has no pipeline config) can dispatch on it instead
   # of introspecting the object's slots
   scdata@misc$technology <- config$input$type
+
+  # persist the physical micron scale for Visium HD (NULL otherwise) so the
+  # Spaco colouring can convert its micron radius into this sample's image-pixel
+  # coordinates without re-reading scalefactors_json.json
+  if (!is.null(microns_per_pixel)) {
+    scdata@misc$microns_per_pixel <- microns_per_pixel
+  }
 
   # carry the Xenium molecules frame to gem2s-7 for artifact building (NULL for
   # non-Xenium technologies)

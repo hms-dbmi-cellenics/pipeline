@@ -106,6 +106,45 @@ spaco_palette <- function(scdata_list, cells_id_labels, categories) {
 }
 
 
+# Spaco neighbourhood radius, in microns (the Spaco paper's default). Applied
+# directly to Xenium (micron coords); converted to image pixels for Visium HD.
+SPACO_RADIUS_MICRONS <- 50
+
+#' Neighbourhood radius for \code{spatial_distance_r}, in the coordinate units
+#' returned by \code{GetTissueCoordinates(scdata, image_name, scale = scale)}.
+#'
+#' The Spaco radius is defined in microns. Xenium coords are already microns
+#' (\code{scale} is NULL) so the radius is used as-is. Visium HD coords are image
+#' pixels at the hires/lowres scale, so convert microns -> fullres pixels (via
+#' \code{microns_per_pixel}, persisted onto \code{@misc} at load) -> scaled
+#' pixels (via the image's hires/lowres scale factor). Returns \code{NULL} when
+#' the conversion factor is unavailable so the caller skips spatial colouring
+#' rather than running the neighbourhood graph at the wrong scale.
+#'
+#' @param scdata a Seurat object
+#' @param image_name name of the image/FOV slice
+#' @param scale the scale passed to \code{GetTissueCoordinates} (NULL, "hires"
+#'  or "lowres")
+#'
+#' @return radius in coordinate units, or \code{NULL} if it can't be derived
+get_spaco_radius <- function(scdata, image_name, scale) {
+  if (is.null(scale)) {
+    return(SPACO_RADIUS_MICRONS)
+  }
+
+  microns_per_pixel <- scdata@misc$microns_per_pixel
+  scale_factor <- switch(scale,
+    hires = scdata[[image_name]]@scale.factors$hires,
+    lowres = scdata[[image_name]]@scale.factors$lowres,
+    NULL
+  )
+  if (is.null(microns_per_pixel) || is.null(scale_factor)) {
+    return(NULL)
+  }
+
+  SPACO_RADIUS_MICRONS / microns_per_pixel * scale_factor
+}
+
 #' Compute spatially-coherent category colors (Spaco algorithm, in R)
 #'
 #' Native R reimplementation of the Spaco colouring, treating each image in the
@@ -151,6 +190,11 @@ get_spaco_color_map <- function(scdata_list, cells_id_labels) {
         coords <- Seurat::GetTissueCoordinates(scdata, img, scale = scale)
         if (is.null(coords) || nrow(coords) == 0) next
 
+        # 50um neighbourhood in this slice's coordinate units; skip the slice if
+        # the micron->pixel factor is missing rather than colour at a wrong scale
+        radius <- get_spaco_radius(scdata, img, scale)
+        if (is.null(radius)) next
+
         # map slice cells (barcodes) -> cells_id -> category label
         cell_ids <- scdata@meta.data[coords$cell, "cells_id"]
         labels <- cells_id_labels[as.character(cell_ids)]
@@ -163,7 +207,8 @@ get_spaco_color_map <- function(scdata_list, cells_id_labels) {
         if (sum(keep) < 4) next
 
         per_slice <- append(per_slice, list(spatial_distance_r(
-          as.matrix(coords[keep, c("x", "y")]), as.character(labels[keep])
+          as.matrix(coords[keep, c("x", "y")]), as.character(labels[keep]),
+          radius = radius
         )))
       }
 
@@ -206,12 +251,14 @@ get_spaco_color_map <- function(scdata_list, cells_id_labels) {
 #'
 #' @param coords numeric matrix of spatial coordinates (n cells x 2)
 #' @param labels character vector of cluster labels (length n)
-#' @param radius,n_neighbors,n_cells Spaco neighbourhood parameters
+#' @param radius,n_neighbors,n_cells Spaco neighbourhood parameters. \code{radius}
+#'  is in the same units as \code{coords}; real callers pass a value derived from
+#'  \code{\link{get_spaco_radius}} (50um converted to the coords' scale).
 #'
 #' @return symmetric cluster x cluster matrix with cluster labels as dimnames
 #'
 spatial_distance_r <- function(
-  coords, labels, radius = 90, n_neighbors = 16L, n_cells = 3L
+  coords, labels, radius = SPACO_RADIUS_MICRONS, n_neighbors = 16L, n_cells = 3L
 ) {
   clusters <- sort(unique(labels))
   k_clusters <- length(clusters)

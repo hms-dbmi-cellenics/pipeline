@@ -1102,6 +1102,17 @@ read_visium_hd_sample <- function(sample, input_dir) {
     simplify_segmentations() |>
     pivot_image_wide()
 
+  # Seurat keeps only the hires/lowres scale factors on the image; the physical
+  # micron scale (microns_per_pixel) lives in scalefactors_json.json. Read it
+  # explicitly so the Spaco colouring can convert its 50um neighbourhood radius
+  # into this sample's image-pixel coordinates. NULL when absent -> Spaco skips.
+  scalefactors_path <- file.path(sample_dir, "scalefactors_json.json")
+  results$microns_per_pixel <- if (file.exists(scalefactors_path)) {
+    jsonlite::fromJSON(scalefactors_path)$microns_per_pixel
+  } else {
+    NULL
+  }
+
   # edrops and doublet scores not calculated for visium HD
   # return empty lists for compatibility with downstream functions
   results$edrops <- results$doublet_scores <- list()
@@ -1272,6 +1283,7 @@ read_visium_hd_files <- function(config, input_dir) {
   annot_list <- lapply(results, function(x) x$annotations)
   matrix_dir_list <- lapply(results, function(x) x$matrix_dir)
   segmentations_list <- lapply(results, function(x) x$segmentations)
+  microns_per_pixel_list <- lapply(results, function(x) x$microns_per_pixel)
 
   annot <- format_annot(annot_list)
 
@@ -1280,6 +1292,7 @@ read_visium_hd_files <- function(config, input_dir) {
     annot = annot,
     matrix_dir_list = matrix_dir_list,
     segmentations_list = segmentations_list,
+    microns_per_pixel_list = microns_per_pixel_list,
     edrops = list(),
     doublet_scores = list()
   )
