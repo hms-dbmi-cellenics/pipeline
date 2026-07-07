@@ -929,12 +929,25 @@ polygons_to_bitmask_ome_zarr <- function(
   draw <- pil$ImageDraw$Draw(image)
 
   data.table::setDT(polygons)
-  polygons_list <- vector("list", max(cell_ids))
+  # one row per cell: the flat [x0, y0, x1, y1, ...] vertex sequence PIL wants,
+  # ordered by each cell id's first appearance (the original per-cell draw order)
   pairs <- polygons[, .(v = list(c(rbind(x, y)))), by = cells_id]
-  polygons_list[pairs$cells_id] <- pairs$v
-  for (cid in cell_ids) {
-    draw$polygon(polygons_list[[cid]], fill = as.integer(cid))
-  }
+  pairs <- pairs[match(cell_ids, cells_id)]
+
+  # Draw every polygon inside a single Python call instead of one reticulate
+  # round-trip per cell: Xenium samples have 1e5-1e6 cells and the per-cell
+  # crossing dominated runtime. The PIL ImageDraw.polygon calls, per-cell fill
+  # value and draw order are all unchanged, so the rasterised label image is
+  # identical to the previous per-cell R loop.
+  py <- reticulate::py_run_string(
+    paste(
+      "def _draw_label_polygons(draw, ids, coords):",
+      "    for i, c in zip(ids, coords):",
+      "        draw.polygon(c, fill=int(i))",
+      sep = "\n"
+    )
+  )
+  py$`_draw_label_polygons`(draw, as.integer(pairs$cells_id), pairs$v)
 
   # float32: integer-exact up to 2^24 ≈ 16.7 M cells.
   # XRLayer uploads this as R32F so the BitmaskLayer shader reads raw cell IDs.
