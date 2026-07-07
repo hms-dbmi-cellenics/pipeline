@@ -95,6 +95,11 @@ test_that("get_spaco_color_map colours Visium HD slices without error (scale via
   # VisiumV2 image would yield; GetTissueCoordinates(scale = "lowres") must work.
   mockery::stub(get_spaco_color_map, "get_image_scale", function(...) "lowres")
 
+  # the mock FOV likewise has no @scale.factors, so stub the radius helper to the
+  # value a real lowres Visium slice would resolve to (get_spaco_radius is
+  # covered directly by its own unit tests below)
+  mockery::stub(get_spaco_color_map, "get_spaco_radius", function(...) 50)
+
   captured_scale <- "unset"
   mockery::stub(
     get_spaco_color_map, "Seurat::GetTissueCoordinates",
@@ -126,6 +131,49 @@ test_that("cluster_color_pool colors a cell_sets frame for spatial data", {
   categories <- sort_cluster_names(unique(cell_sets$cluster))
   expect_length(palette, length(categories))
   expect_true(is_hex(palette))
+})
+
+
+# Minimal S4 mocks for the Visium HD radius branch: get_spaco_radius reads
+# scdata@misc$microns_per_pixel and scdata[[image]]@scale.factors$<scale>.
+setClass("MockScaleImg", representation(scale.factors = "list"))
+setClass("MockRadiusScdata", representation(misc = "list", imgs = "list"))
+setMethod("[[", "MockRadiusScdata", function(x, i, ...) x@imgs[[i]])
+
+mock_radius_scdata <- function(misc, hires = NULL, lowres = NULL) {
+  img <- new("MockScaleImg", scale.factors = list(hires = hires, lowres = lowres))
+  new("MockRadiusScdata", misc = misc, imgs = list(fov = img))
+}
+
+
+test_that("get_spaco_radius returns the micron radius when scale is NULL", {
+  # scaleless (Xenium) coords are already microns; the radius is used as-is and
+  # no @misc/scale.factors are needed
+  expect_equal(get_spaco_radius(mock_radius_scdata(list()), "fov", NULL), 50)
+  expect_equal(
+    get_spaco_radius(mock_radius_scdata(list()), "fov", NULL),
+    SPACO_RADIUS_MICRONS
+  )
+})
+
+
+test_that("get_spaco_radius converts microns to hires pixels for Visium HD", {
+  microns_per_pixel <- 0.2125
+  hires_factor <- 0.15
+  scdata <- mock_radius_scdata(
+    misc = list(microns_per_pixel = microns_per_pixel), hires = hires_factor
+  )
+
+  expected <- 50 / microns_per_pixel * hires_factor
+  expect_equal(get_spaco_radius(scdata, "fov", "hires"), expected)
+})
+
+
+test_that("get_spaco_radius returns NULL when microns_per_pixel is unavailable", {
+  # missing the conversion factor -> caller skips the slice rather than colouring
+  # at the wrong scale
+  scdata <- mock_radius_scdata(misc = list(), hires = 0.15)
+  expect_null(get_spaco_radius(scdata, "fov", "hires"))
 })
 
 

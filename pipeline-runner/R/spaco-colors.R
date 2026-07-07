@@ -252,13 +252,14 @@ get_spaco_color_map <- function(scdata_list, cells_id_labels) {
 #' @param coords numeric matrix of spatial coordinates (n cells x 2)
 #' @param labels character vector of cluster labels (length n)
 #' @param radius,n_neighbors,n_cells Spaco neighbourhood parameters. \code{radius}
-#'  is in the same units as \code{coords}; real callers pass a value derived from
-#'  \code{\link{get_spaco_radius}} (50um converted to the coords' scale).
+#'  is in the same units as \code{coords}; production callers always pass a value
+#'  derived from \code{\link{get_spaco_radius}} (50um converted to the coords'
+#'  scale). The default is only a fallback for direct/unit-test calls.
 #'
 #' @return symmetric cluster x cluster matrix with cluster labels as dimnames
 #'
 spatial_distance_r <- function(
-  coords, labels, radius = SPACO_RADIUS_MICRONS, n_neighbors = 16L, n_cells = 3L
+  coords, labels, radius = 90, n_neighbors = 16L, n_cells = 3L
 ) {
   clusters <- sort(unique(labels))
   k_clusters <- length(clusters)
