@@ -5,9 +5,13 @@ find_spatial_knn <- function(scdata, workers = 1, n_neighbors = 36) {
   neighborhood_coords <- Seurat::GetTissueCoordinates(scdata)
   neighborhood_coords <- as.matrix(neighborhood_coords[, c("x", "y")])
 
+  # BiocNeighbors::findKNN errors if k exceeds the number of other points; cap it
+  # so tiny spatial samples degrade gracefully rather than crash the whole run
+  k <- min(n_neighbors, nrow(neighborhood_coords) - 1L)
+
   BiocNeighbors::findKNN(
     neighborhood_coords,
-    k = n_neighbors,
+    k = k,
     warn.ties = FALSE,
     BPPARAM = get_bpparam(workers)
   )$index
