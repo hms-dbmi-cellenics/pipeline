@@ -279,6 +279,17 @@ read_10x_h5_sample <- function(sample, input_dir, feature_type = NULL) {
     gene_names <- gene_names$`Gene Expression`
   }
 
+  # counts (feature_type-filtered by feature id) and gene_names (feature_type-
+  # filtered by feature name) are read via separate paths but must select the
+  # same rows in the same order; assert before pairing so any divergence fails
+  # loudly instead of silently misannotating genes
+  if (length(gene_names) != nrow(counts)) {
+    stop(
+      "Gene name count (", length(gene_names), ") does not match the counts ",
+      "matrix row count (", nrow(counts), ") for sample ", sample
+    )
+  }
+
   annotations <- data.frame(
     input = rownames(counts),
     symbol = gene_names
