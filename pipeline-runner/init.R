@@ -7,6 +7,7 @@ suppressPackageStartupMessages({
   library(magrittr)
   library(uuid)
   library(BPCells)
+  library(sf)
 })
 
 # v5 is the default but making explicit

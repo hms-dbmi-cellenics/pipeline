@@ -24,6 +24,11 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   default_qc_config <- prev_out$default_qc_config
   disable_qc_filters <- prev_out$disable_qc_filters
 
+  # branch spatial upload behaviour on the declared technology, not on object
+  # introspection: a Xenium FOV and a Visium HD image object both answer
+  # Seurat::Images(), but only Visium HD has a tissue image to upload
+  technology <- config$input$type
+
   # TODO: replace with subset_experiment flag when available
   if (disable_qc_filters == FALSE) {
     message("Constructing cell sets ...")
@@ -49,17 +54,33 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
   )
 
   # remove previous existing data
-  remove_bucket_folder(
-    pipeline_config,
+  for (bucket in c(
     pipeline_config$source_bucket,
-    experiment_id
-  )
+    pipeline_config$spatial_image_bucket,
+    pipeline_config$spatial_segmentations_bucket,
+    pipeline_config$spatial_molecules_bucket
+  )) {
+    remove_bucket_folder(
+      pipeline_config,
+      bucket = bucket,
+      folder = experiment_id
+    )
+  }
 
   for (sample in names(scdata_list)) {
-    fpath <- file.path(tempdir(), "experiment.rds")
+    fpath <- tempfile(pattern = sample, fileext = ".rds")
     message("\nSaving rds for sample: ", sample)
+    scdata <- scdata_list[[sample]]
 
-    saveRDS(scdata_list[[sample]], fpath)
+    # keep the Xenium molecules frame out of the uploaded object: it can be
+    # hundreds of millions of rows and is uploaded separately as the molecule
+    # artifact below. The worker only loads the FOV, not the raw transcripts, so
+    # carrying it in r.rds just bloats the download and defeats the disk-backed
+    # (BPCells) memory strategy.
+    transcripts <- scdata@misc$transcripts
+    scdata@misc$transcripts <- NULL
+
+    saveRDS(scdata, fpath)
     message("rds file size: ", fs::file_size(fpath))
 
     # can only upload up to 50Gb because multipart uploads work by uploading
@@ -87,6 +108,94 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
         object = tarfile,
         key = file.path(experiment_id, sample, "matrix_dir.tar.zst")
       )
+    }
+
+    # Xenium: a FOV has no tissue image and no scale factors. Skip the image
+    # upload (no ome_zarr_zip) and upload segmentation polygons only, reading
+    # boundary coords directly in microns (no ScaleFactors multiply).
+    if (isTRUE(technology == "xenium")) {
+      image_name <- Seurat::Images(scdata)
+
+      message("\nUploading Xenium segmentation polygons to S3:")
+      # polygons_id required by sampleFile schema; also used as the S3 key
+      polygons_id <- uuid::UUIDgenerate()
+      polygons <- get_polygon_coords(image_name, scdata)
+
+      # no image: size the bitmask canvas to the polygon coordinate extent
+      polygons_width <- ceiling(max(polygons$x))
+      polygons_height <- ceiling(max(polygons$y))
+
+      upload_polygons_to_s3(
+        pipeline_config,
+        input,
+        experiment_id,
+        polygons,
+        polygons_height,
+        polygons_width,
+        image_name,
+        polygons_id,
+        sample,
+        overwrite_existing = TRUE
+      )
+
+      # build + upload the molecule artifact from the transcripts frame carried
+      # onto the object in create_seurat (extracted above, before the object was
+      # stripped and uploaded)
+      message("\nBuilding and uploading Xenium molecule artifact to S3:")
+      upload_molecules_to_s3(
+        pipeline_config,
+        input,
+        experiment_id,
+        transcripts,
+        sample,
+        overwrite_existing = TRUE
+      )
+
+    } else if (isTRUE(technology == "visium_hd")) {
+      # upload tissue image + segmentation polygons for sample to s3
+      image_name <- Seurat::Images(scdata)
+      if (!is.null(image_name)) {
+        message("\nUploading image to S3:")
+        # need image dimensions to pad images to common dimension before upload
+        image_max_height <- get_image_max_height(scdata_list)
+        image_arr <- scdata[[image_name]]@image
+
+        # need distinct UUIDs for image and polygons ids
+        # required by sampleFile schema
+        # UUIDs also used as S3 keys
+        image_id <- uuid::UUIDgenerate()
+        polygons_id <- uuid::UUIDgenerate()
+        polygons <- get_polygon_coords(
+          image_name,
+          scdata,
+          scale = get_image_scale(image_name, scdata)
+        )
+
+        upload_image_to_s3(
+          pipeline_config,
+          input,
+          experiment_id,
+          image_arr,
+          image_name,
+          image_id,
+          sample,
+          image_max_height,
+          overwrite_existing = TRUE
+        )
+
+        upload_polygons_to_s3(
+          pipeline_config,
+          input,
+          experiment_id,
+          polygons,
+          image_max_height,
+          dim(image_arr)[2],
+          image_name,
+          polygons_id,
+          sample,
+          overwrite_existing = TRUE
+        )
+      }
     }
   }
 
@@ -116,6 +225,64 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
 
   message("\nUpload to AWS step complete.")
   return(res)
+}
+
+# Segmentation polygon coordinates. GetTissueCoordinates is the generic accessor
+# that works on both a Visium HD spatial image and a Xenium FOV, selecting the
+# boundary via which = "segmentations" (the name build_xenium_fov gives the cell
+# boundary set). It returns a data.frame with x/y/cell columns. For Visium HD
+# pass scale = "hires"/"lowres" to apply the pixel->spot scale factor; for Xenium
+# leave scale = NULL — a FOV has no scale factor and its coords are already in
+# microns.
+get_polygon_coords <- function(image_name, scdata, scale = NULL) {
+  coords <- Seurat::GetTissueCoordinates(
+    scdata[[image_name]],
+    which = "segmentations",
+    scale = scale
+  )
+
+  meta <- scdata@meta.data
+  coords$cells_id <- meta[coords$cell, "cells_id"]
+  dplyr::arrange(coords, cells_id)
+}
+
+# Spatial technologies whose coordinates have no pixel->coord scale step (the
+# accessors return micron coords directly). Mirrors the worker's
+# is_scaleless_spatial: dispatch on the technology persisted onto the object in
+# create-seurat (scdata@misc$technology), not on object introspection.
+SCALELESS_SPATIAL_TECHNOLOGIES <- c("xenium")
+
+is_scaleless_spatial <- function(scdata) {
+  technology <- scdata@misc$technology
+  !is.null(technology) && technology %in% SCALELESS_SPATIAL_TECHNOLOGIES
+}
+
+get_image_scale <- function(image_name, scdata) {
+  # Xenium FOVs have no scale step; Visium HD applies the hires/lowres factor.
+  if (is_scaleless_spatial(scdata)) return(NULL)
+
+  dims <- dim(scdata[[image_name]]@image)
+  ifelse(any(dims[1:2] <= 600), "lowres", "hires")
+}
+
+# image is rotated such that longest dimension is width (always 6000)
+# need max height to pad images to common dimension before upload
+get_image_max_height <- function(scdata_list) {
+  image_heights <- lapply(scdata_list, function(scdata) {
+    image_name <- Seurat::Images(scdata)
+    if (!is.null(image_name)) {
+      image_arr <- scdata[[image_name]]@image
+      dim(image_arr)[1]
+    } else {
+      NULL
+    }
+  })
+
+  image_heights <- unlist(image_heights)
+  if (is.null(image_heights)) return(NULL)
+
+  max_height <- max(image_heights)
+  return(max_height)
 }
 
 tar_matrix_dir <- function(id, matrix_dir) {
@@ -399,7 +566,9 @@ get_subset_cell_sets <- function(scdata_list, input, prev_out, disable_qc_filter
 
   if ("metadata" %in% unique(subset_cellsets$type)) {
     message("adding metadata cellsets to subset experiment")
-    metadata_cellsets <- build_metadata_cellsets(input, scdata_list, color_pool, disable_qc_filters, subset_cellsets)
+    metadata_cellsets <- build_metadata_cellsets(
+      input, scdata_list, color_pool, disable_qc_filters, subset_cellsets
+    )
     color_pool <- remove_used_colors(metadata_cellsets[[1]], color_pool)
     cell_sets <- c(cell_sets, metadata_cellsets)
   }

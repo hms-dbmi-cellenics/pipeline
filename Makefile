@@ -21,10 +21,12 @@ install:
 	@(cd ./local-runner && npm install)
 	@echo "Installing renv packages"
 	@(cd ./pipeline-runner && R -e "renv::restore()")
-update-sysdata: 
+update-sysdata: ## Updates sysdata.rda
     # regenerate sysdata.rda env file
     # this step depends on your local R installation to run 
-	@(cd ./pipeline-runner && Rscript data-raw/sysdata.R)	
+	@(cd ./pipeline-runner && Rscript data-raw/sysdata.R)
+record-renv-pkg: build ## Tests a specific test file (usage: make record-renv-pkg PKG=Rfast)
+	@(cd ./pipeline-runner && R -e "renv::record('$PKG')"")	
 build: 
 	@(cd ./local-runner && npm run build)
 build-batch-staging: 

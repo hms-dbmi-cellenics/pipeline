@@ -11,10 +11,12 @@ remove_bucket_folder <- function(pipeline_config, bucket, folder) {
     )
   }
 
-  message(
-    "\nRemoved files from ", bucket, ":",
-    "\n- ", paste0(keys_to_remove, sep = "\n- ")
-  )
+  if (length(keys_to_remove)) {
+    message(
+      "\nRemoved files from ", bucket, ":",
+      "\n- ", paste0(keys_to_remove, sep = "\n- ")
+    )
+  }
 }
 
 remove_cell_ids <- function(pipeline_config, experiment_id) {
@@ -92,7 +94,12 @@ load_processed_scdata <- function(s3, pipeline_config, experiment_id) {
 # get_nnzero will return how many non-zero counts the count matrix has
 # it is used to order samples according to their size
 get_nnzero <- function(x) {
-  return(sum(x$nFeature_RNA))
+  nfeat_colname <- paste0(
+    "nFeature_",
+    Seurat::DefaultAssay(x)
+  )
+
+  return(sum(x@meta.data[[nfeat_colname]]))
 }
 
 order_by_size <- function(scdata_list) {
@@ -581,78 +588,26 @@ get_matrix_dirs <- function(scdata) {
   return(matrix_dirs)
 }
 
-# based off of vitessce-python demo
-rgb_img_to_ome_zarr <- function(img_arr, output_path, img_name, chunks = as.integer(c(1, 256, 256)), axes = "cyx") {
-  # import python modules
-  np <- reticulate::import("numpy")
-  zarr <- reticulate::import("zarr")
-  ome_zarr <- reticulate::import("ome_zarr")
 
-  # Convert values from [0, 1] to [0, 255]
-  img_arr <- img_arr * 255.0
-
-  # convert img array to uint8
-  img_arr <- np$array(img_arr, dtype = "uint8")
-
-  # Need to convert images from interleaved to non-interleaved (color axis should be first).
-  img_arr <- np$transpose(img_arr, as.integer(c(2, 0, 1)))
-
-
-  default_window <- list(
-    start = 0,
-    min = 0,
-    max = 255,
-    end = 255
-  )
-
-  z_root <- zarr$open_group(output_path, mode = "w")
-
-  ome_zarr$writer$write_image(
-    image = img_arr,
-    group = z_root,
-    axes = axes,
-    storage_options = list(chunks = chunks)
-  )
-
-  omero <- list(
-    "name" = img_name,
-    "version" = "0.3",
-    "rdefs" = list(),
-    "channels" = list(
-      list(
-        "label" = "R",
-        "color" = "FF0000",
-        "window" = default_window
-      ),
-      list(
-        "label" = "G",
-        "color" = "00FF00",
-        "window" = default_window
-      ),
-      list(
-        "label" = "B",
-        "color" = "0000FF",
-        "window" = default_window
-      )
-    )
-  )
-  reticulate::py_set_attr(z_root, "omero", omero)
-  invisible()
-}
-
-upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, img_name, img_id, sample_id, overwrite_existing) {
+upload_image_to_s3 <- function(
+  pipeline_config, input, experiment_id, image_arr, image_name, image_id, sample_id,
+  image_max_height = dim(image_arr)[1], overwrite_existing = TRUE
+) {
   # things for api requests
   api_url <- pipeline_config$api_url
-  authJWT <- input$authJWT
+  auth_jwt <- input$authJWT
+
+  # pad images to have same fixed height
+  image_arr <- pad_image_height(image_arr, image_max_height)
 
   # where to save zarr folder locally
-  zarr_name <- paste0(img_name, ".ome.zarr")
+  zarr_name <- paste0(image_name, ".ome.zarr")
   output_path <- file.path(tempdir(), zarr_name)
 
   message("Saving image data to: ", output_path, "...")
 
   # save as ome zarr folder
-  rgb_img_to_ome_zarr(img_arr, output_path, img_name)
+  rgb_image_to_ome_zarr(image_arr, output_path, image_name)
 
   # zip all files in zarr folder
   zip_name <- paste0(zarr_name, ".zip")
@@ -660,16 +615,20 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
 
   workdir <- getwd()
   setwd(output_path)
-  utils::zip(zip_path, files = ".", flags = "-r0")
+  utils::zip(zip_path, files = ".", flags = "-rq0")
   setwd(workdir)
 
+  # log file size before upload
+  message("Image zip file size: ", fs::file_size(zip_path))
+
   # upload ome.zarr.zip to s3
+  # use multipart upload for files larger than 100MB to handle large images
   message("\nUploading image data to S3:")
-  put_object_in_s3(
+  put_object_in_s3_multipart(
     pipeline_config,
-    pipeline_config$spatial_image_bucket,
+    bucket = pipeline_config$spatial_image_bucket,
     object = zip_path,
-    key = img_id
+    key = image_id
   )
 
   # create sql entry in sample_file,
@@ -681,17 +640,411 @@ upload_image_to_s3 <- function(pipeline_config, input, experiment_id, img_arr, i
     "ome_zarr_zip",
     file.size(zip_path),
     # gets used as s3_path by API
-    img_id,
-    # FALSE for obj2s so that can have multiple ome_zarr_zip for single sample
+    image_id,
+    # FALSE for obj2s so that can have multiple ome_zarr_zip for single "sample"
     overwrite_existing,
-    authJWT
+    auth_jwt
   )
 
   invisible()
 }
 
-create_sample_file <- function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, overwrite_existing, authJWT) {
-  url <- paste0(api_url, "/v2/experiments/", experiment_id, "/samples/", sample_id, "/sampleFiles/", file_type)
+# based off of vitessce-python demo
+rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name) {
+  np <- reticulate::import("numpy")
+  zarr <- reticulate::import("zarr")
+  ome_zarr <- reticulate::import("ome_zarr")
+
+  # Convert [0, 1] → [0, 255] uint8, then transpose to (C, H, W) "cyx"
+  image_arr <- np$array(image_arr * 255.0, dtype = "uint8")
+  image_arr <- np$transpose(image_arr, c(2L, 0L, 1L))
+
+  default_window <- list(
+    start = 0,
+    min = 0,
+    max = 255,
+    end = 255
+  )
+
+  z_root <- zarr$open_group(output_path, mode = "w")
+
+  # scale_factors [2, 4, 8, 16] → 5 levels (0 = full res, 1–4 = coarse)
+  # method NEAREST matches skimage order=0 resize — correct for uint8 RGB
+  # (no fractional pixel values can appear so any method is safe here,
+  # but NEAREST is the fastest and avoids any anti-aliasing artefacts)
+  scale_factors <- 2L ^ seq_len(4L)
+
+  ome_zarr$writer$write_image(
+    image = image_arr,
+    group = z_root,
+    axes = "cyx",
+    scale_factors = scale_factors,
+    storage_options = list(
+      chunks = reticulate::tuple(1L, 512L, 512L),
+      dimension_separator = "/"
+    )
+  )
+
+  omero <- list(
+    "name" = image_name,
+    "version" = "0.3",
+    "rdefs" = list(),
+    "channels" = list(
+      list("label" = "R", "color" = "FF0000", "window" = default_window),
+      list("label" = "G", "color" = "00FF00", "window" = default_window),
+      list("label" = "B", "color" = "0000FF", "window" = default_window)
+    )
+  )
+  reticulate::py_set_attr(z_root, "omero", omero)
+
+  invisible()
+}
+
+upload_polygons_to_s3 <- function(
+  pipeline_config, input, experiment_id, polygons, height, width,
+  image_name, polygons_id, sample_id, overwrite_existing
+) {
+  # things for api requests
+  api_url <- pipeline_config$api_url
+  auth_jwt <- input$authJWT
+
+  # where to save zarr folder locally
+  zarr_name <- paste0(image_name, ".segmentations.ome.zarr")
+  output_path <- file.path(tempdir(), zarr_name)
+
+  message("\nSaving polygons data: ", output_path)
+
+  # save as ome zarr folder
+  polygons_to_bitmask_ome_zarr(
+    polygons,
+    height,
+    width,
+    output_path
+  )
+
+  # zip all files in zarr folder
+  zip_name <- paste0(zarr_name, ".zip")
+  zip_path <- file.path(tempdir(), zip_name)
+
+  workdir <- getwd()
+  setwd(output_path)
+  utils::zip(zip_path, files = ".", flags = "-rq0")
+  setwd(workdir)
+
+  # log file size before upload
+  message("Segmentations zip file size: ", fs::file_size(zip_path))
+
+  # upload ome.zarr.zip to s3
+  message("\nUploading polygons data to S3:")
+  put_object_in_s3_multipart(
+    pipeline_config,
+    bucket = pipeline_config$spatial_segmentations_bucket,
+    object = zip_path,
+    key = polygons_id
+  )
+
+  # create sql entry in sample_file,
+  # (also creates entry in sample_to_sample_file_map)
+  create_sample_file(
+    api_url,
+    experiment_id,
+    sample_id,
+    "segmentations_ome_zarr_zip",
+    file.size(zip_path),
+    # gets used as s3_path by API
+    polygons_id,
+    overwrite_existing,
+    auth_jwt
+  )
+
+  invisible()
+}
+
+#' Default Xenium transcript quality-value threshold (Q20).
+#'
+#' The installed \code{ReadXenium} does not apply \code{mols.qv.threshold}; we
+#' filter explicitly here (per the format contract) when a qv column is present.
+XENIUM_QV_THRESHOLD <- 20
+
+#' Build and upload the gene-partitioned molecule artifact for a Xenium sample
+#'
+#' Modeled on \code{upload_polygons_to_s3}. Reads the raw transcripts frame
+#' (x/y/gene, optionally qv), applies the QV filter, maps gene -> dense 0-based
+#' feature_code, then writes ONE Feather file PER GENE (\code{{code}.feather},
+#' columns x/y) plus our meta.json (the feature dictionary + build metadata, per
+#' the format contract; the UI derives gene colours from the code). Zipped stored
+#' (range-readable), uploaded to the spatial_molecules_bucket and registered as a
+#' molecules_by_gene sample file. Built straight from the frame (no Seurat object).
+#'
+#' Gene-partitioned (not a spatial quadtree): the UI only ever renders a few genes
+#' at a time and deck.gl renders that point count directly, so a gene's molecules
+#' are range-read from its own entry with no level-of-detail / spatial tiling.
+#'
+#' @param transcripts data.frame with columns x, y, gene (+ qv if present)
+upload_molecules_to_s3 <- function(
+  pipeline_config, input, experiment_id, transcripts, sample_id,
+  overwrite_existing
+) {
+  api_url <- pipeline_config$api_url
+  auth_jwt <- input$authJWT
+
+  # QV filter (contract risk #6): drop sub-threshold molecules when qv present.
+  qv_threshold <- NULL
+  if ("qv" %in% colnames(transcripts)) {
+    qv_threshold <- XENIUM_QV_THRESHOLD
+    before <- nrow(transcripts)
+    transcripts <- transcripts[transcripts$qv >= qv_threshold, , drop = FALSE]
+    message(
+      "QV filter (Q", qv_threshold, "): kept ", nrow(transcripts),
+      " of ", before, " molecules"
+    )
+  }
+
+  # Dense 0-based feature dictionary: gene -> feature_code. The code is a stable,
+  # panel-wide index (genes sorted, so it doesn't shift with the selection); the UI
+  # derives a colour from it (utils/spatial/moleculeColors) so
+  # colour assignment isn't baked here.
+  genes <- sort(unique(transcripts$gene))
+  feature_dict <- data.frame(
+    code = seq_along(genes) - 1L,
+    gene = genes,
+    stringsAsFactors = FALSE
+  )
+
+  x <- as.numeric(transcripts$x)
+  y <- as.numeric(transcripts$y)
+  # full micron bbox over the kept molecules (drives the UI's zoomed-out fit).
+  x_range <- range(x)
+  y_range <- range(y)
+
+  molecules_dir <- file.path(tempdir(), paste0(sample_id, ".molecules.bygene"))
+  unlink(molecules_dir, recursive = TRUE)
+  dir.create(molecules_dir, recursive = TRUE)
+
+  # One Feather entry per gene: x/y as float32. The entry IS the gene, so no
+  # feature_code column is stored inside; the code<->gene map is meta.json.
+  # float32 (not float64): halves the bytes and the UI downcasts to Float32Array on
+  # read anyway; at Xenium's micron scale (~1e4) float32 ULP is ~nm, far below any
+  # visible scale. compression = "zstd": the Arrow IPC body is ZSTD-compressed, which
+  # apache-arrow JS decompresses on read (>= v21.1.0). So the zip below stays stored.
+  message("\nWriting per-gene molecule Feather entries: ", molecules_dir)
+  rows_by_gene <- split(seq_along(x), transcripts$gene)
+  gene_entries <- vapply(feature_dict$gene, function(gene) {
+    rows <- rows_by_gene[[gene]]
+    entry <- paste0(feature_dict$code[feature_dict$gene == gene], ".feather")
+    gene_table <- arrow::arrow_table(
+      x = arrow::Array$create(x[rows], type = arrow::float32()),
+      y = arrow::Array$create(y[rows], type = arrow::float32())
+    )
+    arrow::write_feather(
+      gene_table, file.path(molecules_dir, entry),
+      compression = "zstd"
+    )
+    entry
+  }, character(1))
+  n_points <- vapply(feature_dict$gene, function(gene) {
+    length(rows_by_gene[[gene]])
+  }, integer(1))
+
+  meta <- list(
+    version = 2L,
+    qvThreshold = qv_threshold,
+    rootExtent = list(x = x_range, y = y_range),
+    genes = lapply(seq_len(nrow(feature_dict)), function(i) {
+      list(
+        code = feature_dict$code[i],
+        gene = feature_dict$gene[i],
+        entry = unname(gene_entries[i]),
+        nPoints = unname(n_points[i])
+      )
+    })
+  )
+  jsonlite::write_json(
+    meta,
+    file.path(molecules_dir, "meta.json"),
+    auto_unbox = TRUE,
+    null = "null"
+  )
+
+  # zip stored (-rq0): each Feather entry is already ZSTD-compressed, so deflating
+  # the zip on top would be wasted work. Stored entries let the UI's ZipFileStore
+  # range-read exactly the selected genes' bytes (same pattern as the OME-Zarr zips).
+  zip_name <- paste0(sample_id, ".molecules.bygene.zip")
+  zip_path <- file.path(tempdir(), zip_name)
+
+  workdir <- getwd()
+  setwd(molecules_dir)
+  utils::zip(zip_path, files = ".", flags = "-rq0")
+  setwd(workdir)
+
+  message("Molecule artifact zip file size: ", fs::file_size(zip_path))
+
+  molecules_id <- uuid::UUIDgenerate()
+
+  message("\nUploading molecule artifact to S3:")
+  put_object_in_s3_multipart(
+    pipeline_config,
+    bucket = pipeline_config$spatial_molecules_bucket,
+    object = zip_path,
+    key = molecules_id
+  )
+
+  create_sample_file(
+    api_url,
+    experiment_id,
+    sample_id,
+    "molecules_by_gene",
+    file.size(zip_path),
+    molecules_id,
+    overwrite_existing,
+    auth_jwt
+  )
+
+  invisible()
+}
+
+polygons_to_bitmask_ome_zarr <- function(
+  polygons,
+  height,
+  width,
+  output_path,
+  max_pyramid_levels = 4L
+) {
+  np <- reticulate::import("numpy")
+  zarr <- reticulate::import("zarr")
+  ome_zarr <- reticulate::import("ome_zarr")
+  pil <- reticulate::import("PIL")
+
+  # 1-indexed: pixel value 0 reserved for background (transparent in shader)
+  polygons$cells_id <- as.integer(polygons$cells_id) + 1L
+  cell_ids <- unique(polygons$cells_id)
+
+  # ── Rasterise polygons into a 32-bit label image ──────────────────────────
+  # PIL mode "I" = 32-bit signed int; fill values are the 1-indexed cell IDs.
+  image <- pil$Image$new(
+    "I",
+    reticulate::tuple(as.integer(width), as.integer(height)),
+    0L
+  )
+  draw <- pil$ImageDraw$Draw(image)
+
+  data.table::setDT(polygons)
+  # one row per cell: the flat [x0, y0, x1, y1, ...] vertex sequence PIL wants,
+  # ordered by each cell id's first appearance (the original per-cell draw order)
+  pairs <- polygons[, .(v = list(c(rbind(x, y)))), by = cells_id]
+  pairs <- pairs[match(cell_ids, cells_id)]
+
+  # Draw every polygon inside a single Python call instead of one reticulate
+  # round-trip per cell: Xenium samples have 1e5-1e6 cells and the per-cell
+  # crossing dominated runtime. The PIL ImageDraw.polygon calls, per-cell fill
+  # value and draw order are all unchanged, so the rasterised label image is
+  # identical to the previous per-cell R loop.
+  py <- reticulate::py_run_string(
+    paste(
+      "def _draw_label_polygons(draw, ids, coords):",
+      "    for i, c in zip(ids, coords):",
+      "        draw.polygon(c, fill=int(i))",
+      sep = "\n"
+    )
+  )
+  py$`_draw_label_polygons`(draw, as.integer(pairs$cells_id), pairs$v)
+
+  # float32: integer-exact up to 2^24 ≈ 16.7 M cells.
+  # XRLayer uploads this as R32F so the BitmaskLayer shader reads raw cell IDs.
+  arr <- np$array(image, dtype = np$float32)
+  arr <- np$expand_dims(arr, axis = 0L)   # (H, W) → (1, H, W)  "cyx"
+
+  z_root <- zarr$open_group(output_path, mode = "w")
+
+  # ── Pyramid via write_image ───────────────────────────────────────────────
+  # write_image generates the pyramid automatically from scale_factors.
+  # write_multiscale does NOT have a scale_factors parameter and only stores
+  # whatever arrays you pass; using it with a single array was the bug.
+  #
+  # scale_factors as cumulative integers [2, 4, 8, 16]:
+  #   level 0 = original full resolution
+  #   level 1 = 1/2  (2×  downsample in y, x)
+  #   level 2 = 1/4  (4×  downsample in y, x)
+  #   level 3 = 1/8  (8×  downsample in y, x)
+  #   level 4 = 1/16 (16× downsample in y, x)
+  #   → 5 levels total, matching the RGB image writer
+  #
+  # method = Methods.NEAREST (nearest-neighbour, skimage order=0):
+  #   Selects an existing pixel value at each downsampled position.
+  #   Cell IDs (integers stored as float32) are preserved exactly at every level.
+  #   Methods.RESIZE (the default) uses anti-aliased bicubic interpolation which
+  #   blends adjacent IDs producing fractional values the LUT cannot look up.
+  scale_factors <- 2L ^ seq_len(max_pyramid_levels)
+
+  ome_zarr$writer$write_image(
+    image = arr,
+    group = z_root,
+    axes = "cyx",
+    scale_factors = scale_factors,
+    method = "nearest",
+    storage_options = list(
+      chunks = reticulate::tuple(1L, 512L, 512L),
+      dimension_separator = "/"
+    )
+  )
+
+  invisible()
+}
+
+pad_image_height <- function(image_arr, target_height) {
+  current_height <- dim(image_arr)[1]
+  if (current_height == target_height) return(image_arr)
+
+  # grab bottom row and repeat to pad bottom of image
+  bottom_row <- image_arr[nrow(image_arr), , , drop = FALSE]
+
+  # replace pixels where where green channel is below cutoff
+  # with average color of other pixels in row
+  # cutoff determined empirically looking at RGB values of slides
+  # goal is to not padd with pixels representing tissue (less green)
+  green_cutoff <- 210 / 255
+  maybe_tissue <- bottom_row[, , 2] < green_cutoff
+
+  if (all(maybe_tissue)) {
+    # use pale lavender for padding
+    pad_color <- c(241, 234, 241) / 255
+
+  } else {
+    # reshape to a 2D matrix (pixels as rows, 3 channels as columns)
+    pixel_matrix <- matrix(bottom_row[, !maybe_tissue, ], ncol = 3)
+
+    # use average color of non-tissue pixels for padding
+    pad_color <- colMeans(pixel_matrix)
+
+  }
+
+  # set RGB channels
+  bottom_row[1, , 1] <- pad_color[1]
+  bottom_row[1, , 2] <- pad_color[2]
+  bottom_row[1, , 3] <- pad_color[3]
+
+
+  padding <- bottom_row[rep(1, target_height - current_height), , ]
+  padded_image_arr <- abind::abind(image_arr, padding, along = 1)
+
+  message(
+    "Padded image from height ", current_height,
+    " to ", dim(padded_image_arr)[1]
+  )
+
+  return(padded_image_arr)
+}
+
+create_sample_file <- function(
+  api_url, experiment_id, sample_id, file_type,
+  file_size, sample_file_id, overwrite_existing, auth_jwt
+) {
+  url <- paste0(
+    api_url,
+    "/v2/experiments/", experiment_id,
+    "/samples/", sample_id,
+    "/sampleFiles/", file_type
+  )
 
   body <- list(
     sampleFileId = sample_file_id,
@@ -706,7 +1059,7 @@ create_sample_file <- function(api_url, experiment_id, sample_id, file_type, fil
     encode = "json",
     httr::add_headers(
       "Content-Type" = "application/json",
-      "Authorization" = authJWT
+      "Authorization" = auth_jwt
     )
   )
 
@@ -715,26 +1068,26 @@ create_sample_file <- function(api_url, experiment_id, sample_id, file_type, fil
   }
 }
 
-upload_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
+upload_obj2s_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
   # use the
-  img_ids <- input$sampleIds
-  names(img_ids) <- input$sampleNames
+  image_ids <- input$sampleIds
+  names(image_ids) <- input$sampleNames
 
   # associate obj2s images with single sample id for experiment
   sample_id <- input$obj2sSampleId
-  img_names <- Seurat::Images(scdata)
+  image_names <- Seurat::Images(scdata)
 
-  for (img_name in img_names) {
-    img_arr <- scdata@images[[img_name]]@image
-    img_id <- img_ids[img_name]
+  for (image_name in image_names) {
+    image_arr <- scdata[[image_name]]@image
+    image_id <- image_ids[image_name]
 
     upload_image_to_s3(
       pipeline_config,
       input,
       experiment_id,
-      img_arr,
-      img_name,
-      img_id,
+      image_arr,
+      image_name,
+      image_id,
       sample_id,
       overwrite_existing = FALSE
     )
@@ -784,6 +1137,7 @@ put_object_in_s3 <- function(
   }
   stop("Failed to upload object to S3 after maximum number of retries.")
 }
+
 #' Upload a file to S3 using multipart upload
 #'
 #' @param pipeline_config A Paws S3 config object, e.g. from `paws::s3()`.

@@ -9,6 +9,8 @@ bucket_list <- list(
   plot_data_bucket = "plots-tables",
   cell_sets_bucket = "cell-sets",
   spatial_image_bucket = "spatial-images",
+  spatial_segmentations_bucket = "spatial-segmentations",
+  spatial_molecules_bucket = "spatial-molecules",
   debug_bucket = "biomage-pipeline-debug",
   cl_metadata_bucket = "cellenics-cell-level-metadata"
 )
@@ -41,6 +43,9 @@ QC_TASK_LIST <- list(
   "mitochondrialContent" = "filter_high_mito",
   "numGenesVsNumUmis" = "filter_gene_umi_outlier",
   "doubletScores" = "filter_doublets",
+  "spatialUmiOutlier" = "filter_spatial_umi_outlier",
+  "spatialNumGenesOutlier" = "filter_spatial_num_genes_outlier",
+  "spatialMitoOutlier" = "filter_spatial_mito_outlier",
   "dataIntegration" = "integrate_scdata",
   "configureEmbedding" = "embed_and_cluster"
 )
@@ -61,10 +66,8 @@ gem2s <- list(
   max.empty.drops = 100
 )
 
-
 # minimum number of cells required in a sample to have the pipeline not break.
 MIN_CELLS_IN_SAMPLE <- 15
-
 
 RANDOM_SEED <- 42
 
@@ -82,7 +85,19 @@ file_types_by_technology <- list(
   "anndata_object" = list("anndataObject"),
   "rhapsody" = list("rhapsody"),
   "10x_h5" = list("10XH5"),
-  "parse" = list("barcodesParse", "featuresParse", "matrixParse")
+  "parse" = list("barcodesParse", "featuresParse", "matrixParse"),
+  "visium_hd" = list(
+    "visiumHdFilteredFeatureCellMatrix",
+    "visiumHdCellSegmentations",
+    "visiumHdTissueHiresImage",
+    "visiumHdScalefactorsJson"
+  ),
+  "xenium" = list(
+    "xeniumCellFeatureMatrix",
+    "xeniumCells",
+    "xeniumCellBoundaries",
+    "xeniumTranscripts"
+  )
 )
 
 file_names <- list(
@@ -97,7 +112,15 @@ file_names <- list(
   "10XH5" = "matrix.h5.gz",
   barcodesParse = "cell_metadata.csv.gz",
   featuresParse = "all_genes.csv.gz",
-  matrixParse = "DGE.mtx.gz"
+  matrixParse = "DGE.mtx.gz",
+  visiumHdFilteredFeatureCellMatrix = "filtered_feature_cell_matrix.h5",
+  visiumHdCellSegmentations = "cell_segmentations.geojson",
+  visiumHdTissueHiresImage = "tissue_hires_image.png",
+  visiumHdScalefactorsJson = "scalefactors_json.json",
+  xeniumCellFeatureMatrix = "cell_feature_matrix.h5",
+  xeniumCells = "cells.parquet",
+  xeniumCellBoundaries = "cell_boundaries.parquet",
+  xeniumTranscripts = "transcripts.parquet"
 )
 
 MITOCHONDRIAL_REGEX <- "^mt[-:]"
@@ -125,13 +148,13 @@ DOUBLET_RATE_PARSE <- list(mini = 0.046, WT = 0.034, mega = 0.064)
 
 # pipeline error constants
 errors <- list(
-  ERROR_OBJ2S_READ = 'ERROR_OBJ2S_READ',
-  ERROR_OBJ2S_COUNTS = 'ERROR_OBJ2S_COUNTS',
-  ERROR_OBJ2S_HVFINFO = 'ERROR_OBJ2S_HVFINFO',
-  ERROR_OBJ2S_METADATA = 'ERROR_OBJ2S_METADATA',
-  ERROR_OBJ2S_CLUSTERS = 'ERROR_OBJ2S_CLUSTERS',
-  ERROR_OBJ2S_REDUCTION = 'ERROR_OBJ2S_REDUCTION',
-  ERROR_OBJ2S_LOGCOUNTS = 'ERROR_OBJ2S_LOGCOUNTS'
+  ERROR_OBJ2S_READ = "ERROR_OBJ2S_READ",
+  ERROR_OBJ2S_COUNTS = "ERROR_OBJ2S_COUNTS",
+  ERROR_OBJ2S_HVFINFO = "ERROR_OBJ2S_HVFINFO",
+  ERROR_OBJ2S_METADATA = "ERROR_OBJ2S_METADATA",
+  ERROR_OBJ2S_CLUSTERS = "ERROR_OBJ2S_CLUSTERS",
+  ERROR_OBJ2S_REDUCTION = "ERROR_OBJ2S_REDUCTION",
+  ERROR_OBJ2S_LOGCOUNTS = "ERROR_OBJ2S_LOGCOUNTS"
 )
 
 # items stored in config are returned to the api

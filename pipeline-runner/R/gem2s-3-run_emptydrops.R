@@ -16,7 +16,6 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
   counts_list <- prev_out$counts_list
   samples <- names(counts_list)
 
-
   # ~3M droplets uses 15GB of RAM
   # calculate nworkers from sample with most cells
   # ensure will not exceed 85% of RAM on 60GB machine
@@ -32,7 +31,7 @@ run_emptydrops <- function(input, pipeline_config, prev_out) {
       message("\nSample --> ", sample)
       compute_sample_edrops(counts_list[[sample]])
     },
-    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers)
+    BPPARAM = get_bpparam(nworkers)
   )
 
   edrops <- remove_null_list_elements(edrops)

@@ -13,7 +13,43 @@
 #' @return list of QC configuration parameters
 #'
 construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
-  samples <- names(scdata_list)
+  config_data_integration <-
+    processing_config_template[["data_integration"]]
+
+  config_embedding_clustering <-
+    get_embedding_config(
+      scdata_list,
+      processing_config_template[["embedding_clustering"]]
+    )
+
+  # Spatial technologies (e.g. Visium HD, Xenium): cells are defined by polygon
+  # segmentation, so the single-cell filters do not apply. Only the spatial
+  # local-outlier filters (keyed off the z-scores computed in
+  # add_spatial_local_outliers) are constructed, followed by integration +
+  # embedding. We only build config for the steps the technology actually runs.
+  if (isTRUE(technology %in% c("visium_hd", "xenium"))) {
+    return(list(
+      spatialUmiOutlier = add_custom_config_per_sample(
+        customize_spatial_outlier_config,
+        processing_config_template[["spatial_umi_outlier"]],
+        scdata_list
+      ),
+      spatialNumGenesOutlier = add_custom_config_per_sample(
+        customize_spatial_outlier_config,
+        processing_config_template[["spatial_num_genes_outlier"]],
+        scdata_list
+      ),
+      spatialMitoOutlier = add_custom_config_per_sample(
+        customize_spatial_outlier_config,
+        processing_config_template[["spatial_mito_outlier"]],
+        scdata_list
+      ),
+      dataIntegration = config_data_integration,
+      configureEmbedding = config_embedding_clustering
+    ))
+  }
+
+  # Single-cell (default) filters
   config_classifier <-
     add_custom_config_per_sample(
       customize_classifier_config,
@@ -44,7 +80,6 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
       technology = technology
     )
 
-
   config_doublet <-
     add_custom_config_per_sample(
       customize_doublet_config,
@@ -52,16 +87,7 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
       scdata_list,
     )
 
-  config_data_integration <-
-    processing_config_template[["data_integration"]]
-
-  config_embedding_clustering <-
-    get_embedding_config(
-      scdata_list,
-      processing_config_template[["embedding_clustering"]])
-
-  # combine config for all steps
-  config <- list(
+  list(
     cellSizeDistribution = config_cell_size,
     mitochondrialContent = config_mitochondrial,
     classifier = config_classifier,
@@ -70,9 +96,19 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
     dataIntegration = config_data_integration,
     configureEmbedding = config_embedding_clustering
   )
-
-  return(config)
 }
+
+
+# Spatial local-outlier filters use static defaults (cutoff = 3, fixed direction),
+# so no per-sample customization is required.
+customize_spatial_outlier_config <-
+  function(scdata,
+           config,
+           sample_name,
+           unfiltered_samples,
+           technology) {
+    return(config)
+  }
 
 
 customize_classifier_config <-

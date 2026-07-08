@@ -23,7 +23,7 @@ load_user_files <- function(
   config <- prev_out$config
 
   technology <- ifelse(
-    config$input$type %in% c("rhapsody", "10x_h5", "parse"),
+    config$input$type %in% c("rhapsody", "10x_h5", "parse", "visium_hd", "xenium"),
     config$input$type,
     "10x"
   )
@@ -32,7 +32,9 @@ load_user_files <- function(
     "10x" = read_10x_files,
     "rhapsody" = read_rhapsody_files,
     "10x_h5" = read_10x_h5_file,
-    "parse" = read_parse_files
+    "parse" = read_parse_files,
+    "visium_hd" = read_visium_hd_files,
+    "xenium" = read_xenium_files
   )
 
   message(
@@ -190,7 +192,7 @@ read_parse_files <- function(config, input_dir) {
 
   # set up parallel processing parameters
   nworkers <- min(length(samples), BATCH_POD_CPUS)
-  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+  bpparam <- get_bpparam(nworkers)
 
   # use bplapply for parallel processing
   results <- BiocParallel::bplapply(
@@ -226,9 +228,9 @@ read_parse_files <- function(config, input_dir) {
 #'   \item{annotations}{data.frame with annotations}
 #'   \item{matrix_dir}{directory where matrix is stored}
 #'
-read_10x_h5_sample <- function(sample, input_dir) {
+read_10x_h5_sample <- function(sample, input_dir, feature_type = NULL) {
   sample_dir <- file.path(input_dir, sample)
-  sample_fpaths <- list.files(sample_dir)
+  sample_fpaths <- list.files(sample_dir, pattern = "[.]h5(.gz)?$")
   sample_counts_path <- file.path(
     sample_dir,
     sample_fpaths[[1]]
@@ -246,10 +248,21 @@ read_10x_h5_sample <- function(sample, input_dir) {
     stop("Only one h5 expected. More files detected.")
   }
 
-  ungzipped_counts_path <- R.utils::gunzip(sample_counts_path)
+  if (R.utils::isGzipped(sample_counts_path)) {
+    message("Detected gzipped h5 file. Unzipping...")
+    sample_counts_path <- R.utils::gunzip(sample_counts_path)
+  }
 
-  gene_names <- read_10x_h5_feature_names(ungzipped_counts_path)
-  counts_mat <- BPCells::open_matrix_10x_hdf5(ungzipped_counts_path)
+  # feature_type (e.g. "Gene Expression") subsets multi-modal h5s to a single
+  # feature type, dropping the others; NULL keeps every feature (default).
+  gene_names <- read_10x_h5_feature_names(
+    sample_counts_path,
+    feature_type = feature_type
+  )
+  counts_mat <- BPCells::open_matrix_10x_hdf5(
+    sample_counts_path,
+    feature_type = feature_type
+  )
 
   # write the matrix to a directory
   matrix_dir <- file.path(
@@ -258,12 +271,23 @@ read_10x_h5_sample <- function(sample, input_dir) {
   )
   unlink(matrix_dir, recursive = TRUE)
 
-  # hangs indefinitely in BPCells not attached (see init.R)
+  # hangs indefinitely if BPCells not attached (see init.R)
   counts <- BPCells::write_matrix_dir(counts_mat, dir = matrix_dir)
 
   # use Gene Expression modality if multiple
   if (methods::is(gene_names, "list")) {
     gene_names <- gene_names$`Gene Expression`
+  }
+
+  # counts (feature_type-filtered by feature id) and gene_names (feature_type-
+  # filtered by feature name) are read via separate paths but must select the
+  # same rows in the same order; assert before pairing so any divergence fails
+  # loudly instead of silently misannotating genes
+  if (length(gene_names) != nrow(counts)) {
+    stop(
+      "Gene name count (", length(gene_names), ") does not match the counts ",
+      "matrix row count (", nrow(counts), ") for sample ", sample
+    )
   }
 
   annotations <- data.frame(
@@ -283,7 +307,7 @@ read_10x_h5_file <- function(config, input_dir) {
 
   # set up parallel processing parameters
   nworkers <- min(length(samples), BATCH_POD_CPUS)
-  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+  bpparam <- get_bpparam(nworkers)
 
   # use bplapply for parallel processing
   results <- BiocParallel::bplapply(
@@ -312,21 +336,33 @@ read_10x_h5_file <- function(config, input_dir) {
 read_10x_h5_feature_names <- function(
   filename,
   use.names = TRUE,
-  unique.features = TRUE
+  unique.features = TRUE,
+  feature_type = NULL
 ) {
   infile <- hdf5r::H5File$new(filename = filename, mode = "r")
   genomes <- names(infile)
 
-  # Determine feature slot based on file structure and use.names argument
+  # Determine feature slot based on file structure and use.names argument.
+  # feature_type filtering relies on the CellRanger >= 3 "features/feature_type"
+  # dataset, which the old-style ("gene_names"/"genes") format lacks.
   if (hdf5r::existsGroup(infile, "matrix")) {
     feature_slot <- ifelse(use.names, "features/name", "features/id")
+    type_slot <- "features/feature_type"
   } else {
     feature_slot <- ifelse(use.names, "gene_names", "genes")
+    type_slot <- NULL
   }
 
   output <- list()
   for (genome in genomes) {
     features <- infile[[paste0(genome, "/", feature_slot)]][]
+
+    # keep only the requested feature type(s), matching the row subset
+    # BPCells::open_matrix_10x_hdf5 applies for the same feature_type
+    if (!is.null(feature_type) && !is.null(type_slot)) {
+      feature_types <- infile[[paste0(genome, "/", type_slot)]][]
+      features <- features[feature_types %in% feature_type]
+    }
 
     if (unique.features) {
       features <- make.unique(names = features)
@@ -428,7 +464,7 @@ read_10x_files <- function(config, input_dir) {
 
   # set up parallel processing parameters
   nworkers <- min(length(samples), BATCH_POD_CPUS)
-  bpparam <- BiocParallel::MulticoreParam(workers = nworkers)
+  bpparam <- get_bpparam(nworkers)
 
   # use bplapply for parallel processing
   results <- BiocParallel::bplapply(
@@ -1021,4 +1057,446 @@ filter_unnamed_features <- function(counts, annotations, sample) {
   }
 
   list("counts" = counts, "annotations" = annotations)
+}
+
+#' Read a single Visium HD sample (SpaceRanger >= 4.0 with cell segmentations)
+#'
+#' Expects the following files in the sample directory:
+#'   - filtered_feature_cell_matrix.h5
+#'   - cell_segmentations.geojson
+#'   - spatial/tissue_hires_image.png
+#'   - spatial/scalefactors_json.json
+#'
+#' @param sample character sample ID
+#' @param input_dir character path to input directory
+#'
+#' @return list with:
+#'   \item{counts}{BPCells matrix}
+#'   \item{annotations}{data.frame with input and symbol columns}
+#'   \item{matrix_dir}{directory where BPCells matrix is stored}
+#'   \item{scdata}{Seurat spatial object created by Load10X_Spatial}
+#'
+read_visium_hd_sample <- function(sample, input_dir) {
+  sample_dir <- file.path(input_dir, sample)
+  h5_path <- file.path(sample_dir, "filtered_feature_cell_matrix.h5")
+
+  message("\nSample --> ", sample)
+  message("Reading Visium HD files from ", sample_dir)
+
+  # Read10X_Segmentations expects segmentations
+  # to be in "segmented_outputs/" subdirectory
+  move_segmentations_to_subdir(sample_dir)
+
+  results <- read_10x_h5_sample(sample, input_dir)
+  segmentations <- Seurat::Read10X_Segmentations(
+    image.dir = sample_dir,
+    data.dir = sample_dir,
+    image.name = "tissue_hires_image.png",
+    assay = "RNA",
+    slice = paste0(sample, ".polygons"),
+    compact = FALSE
+  )
+
+  # simplify polygons and rotate if width is less than height
+  results$segmentations <- segmentations |>
+    simplify_segmentations() |>
+    pivot_image_wide()
+
+  # Seurat keeps only the hires/lowres scale factors on the image; the physical
+  # micron scale (microns_per_pixel) lives in scalefactors_json.json. Read it
+  # explicitly so the Spaco colouring can convert its 50um neighbourhood radius
+  # into this sample's image-pixel coordinates. NULL when absent -> Spaco skips.
+  scalefactors_path <- file.path(sample_dir, "scalefactors_json.json")
+  results$microns_per_pixel <- if (file.exists(scalefactors_path)) {
+    jsonlite::fromJSON(scalefactors_path)$microns_per_pixel
+  } else {
+    NULL
+  }
+
+  # edrops and doublet scores not calculated for visium HD
+  # return empty lists for compatibility with downstream functions
+  results$edrops <- results$doublet_scores <- list()
+  return(results)
+}
+
+move_segmentations_to_subdir <- function(sample_dir) {
+  seg_dir <- file.path(sample_dir, "segmented_outputs")
+  dir.create(seg_dir)
+  file.copy(
+    from = file.path(sample_dir, "cell_segmentations.geojson"),
+    to = file.path(seg_dir, "cell_segmentations.geojson"),
+    overwrite = TRUE
+  )
+}
+
+simplify_segmentations <- function(segmentations) {
+  # tol determined empircally for visium hd
+  segmentations[["simplified.segmentations"]] <- SeuratObject::Simplify(
+    coords = segmentations[["segmentation"]],
+    tol = 5
+  )
+
+  # obtain compact coords
+  simplified_coords <- get_simplified_coords(segmentations)
+
+  # remove polygons to save memory
+  segmentations[["simplified.segmentations"]] <- CreateSegmentation(
+    coords = simplified_coords,
+    compact = TRUE
+  )
+  segmentations[["segmentations"]] <- CreateSegmentation(
+    coords = segmentations[["segmentation"]]@sf.data,
+    compact = TRUE
+  )
+
+  return(segmentations)
+}
+
+pivot_image_wide <- function(segmentations) {
+  image <- segmentations@image
+
+  # retrieve image dimensions
+  image_height <- dim(image)[1]
+  image_width <- dim(image)[2]
+
+  if (image_width < image_height) {
+    message(
+      "Image width is smaller than height.",
+      "Rotating image and coordinates to match expected orientation."
+    )
+    segmentations <- rotate_visiumv2(segmentations)
+  }
+  return(segmentations)
+}
+
+# adapted from satijalab/seurat#9344
+rotate_visiumv2 <- function(segmentations) {
+
+  # extract cell coordinates and image RGB array
+  bounds <- segmentations@boundaries
+  coords_list <- list(
+    centroids = bounds[["centroids"]]@coords,
+    polygons = bounds[["segmentations"]]@sf.data,
+    polygons_simple = bounds[["simplified.segmentations"]]@sf.data
+  )
+
+  image <- segmentations@image
+  scale_factor <- segmentations@scale.factors$hires
+
+  # retrieve image dimensions
+  image_height <- dim(image)[1]
+  image_width <- dim(image)[2]
+
+  # retrieve cell coordinates dimensions
+  coord_width <- image_width / scale_factor
+  coord_height <- image_height / scale_factor
+
+  # define center in coordinate space
+  center_x <- coord_width / 2
+  center_y <- coord_height / 2
+
+  # Rotate image: transpose then flip vertically
+  rotated_image <- aperm(image, c(2, 1, 3))
+  rotated_image <- rotated_image[dim(rotated_image)[1]:1, , ]
+
+  # new coordinate width/height
+  new_coord_width <- coord_height
+  new_coord_height <- coord_width
+
+  # define center in new coordinate space
+  new_center_x <- new_coord_width / 2
+  new_center_y <- new_coord_height / 2
+
+  coords_rot_list <- lapply(
+    coords_list,
+    function(coords) {
+      # center cell coordinates at the origin
+      coords_centered <- coords
+      coords_centered[, "x"] <- coords[, "x"] - center_x
+      coords_centered[, "y"] <- coords[, "y"] - center_y
+
+      # 90-degree counterclockwise: (x, y) -> (-y, x)
+      coords_rot <- coords_centered
+      coords_rot[, "x"] <- coords_centered[, "y"]
+      coords_rot[, "y"] <- -coords_centered[, "x"]
+
+      # shift according to coordinates origin
+      coords_rot[, "x"] <- coords_rot[, "x"] + new_center_x
+      coords_rot[, "y"] <- coords_rot[, "y"] + new_center_y
+      return(coords_rot)
+    }
+  )
+
+  # update segmentations object
+  bounds[["centroids"]]@coords <- coords_rot_list$centroids
+  bounds[["segmentations"]]@sf.data <- coords_rot_list$polygons
+  bounds[["simplified.segmentations"]]@sf.data <- coords_rot_list$polygons_simple
+  segmentations@boundaries <- bounds
+  segmentations@image <- rotated_image
+
+  return(segmentations)
+}
+
+get_simplified_coords <- function(segmentations) {
+  polygons <- segmentations[["simplified.segmentations"]]@polygons
+  coords_list <- lapply(
+    segmentations[["simplified.segmentations"]]@polygons,
+    function(x) {
+      x@Polygons[[1]]@coords
+    }
+  )
+
+  cells <- Seurat::Cells(segmentations)
+
+  ncoords <- sapply(coords_list, nrow)
+  coords <- do.call(rbind, coords_list)
+  colnames(coords) <- c("x", "y")
+  coords <- as.data.frame(coords)
+  coords$cell <- rep(cells, ncoords)
+  coords
+}
+
+
+#' Read Visium HD files for all samples
+#'
+#' @param config experiment settings
+#' @param input_dir character path to input directory
+#'
+#' @return list with counts_list, annot, matrix_dir_list, scdata_list
+#' @export
+#'
+read_visium_hd_files <- function(config, input_dir) {
+  samples <- config$samples
+
+  nworkers <- min(length(samples), BATCH_POD_CPUS)
+  bpparam <- get_bpparam(nworkers)
+
+  results <- BiocParallel::bplapply(
+    samples,
+    read_visium_hd_sample,
+    input_dir = input_dir,
+    BPPARAM = bpparam
+  )
+  names(results) <- samples
+
+  counts_list <- lapply(results, function(x) x$counts)
+  annot_list <- lapply(results, function(x) x$annotations)
+  matrix_dir_list <- lapply(results, function(x) x$matrix_dir)
+  segmentations_list <- lapply(results, function(x) x$segmentations)
+  microns_per_pixel_list <- lapply(results, function(x) x$microns_per_pixel)
+
+  annot <- format_annot(annot_list)
+
+  list(
+    counts_list = counts_list,
+    annot = annot,
+    matrix_dir_list = matrix_dir_list,
+    segmentations_list = segmentations_list,
+    microns_per_pixel_list = microns_per_pixel_list,
+    edrops = list(),
+    doublet_scores = list()
+  )
+}
+
+
+#' Read a single Xenium sample
+#'
+#' Expects the following files in the sample directory:
+#'   - cell_feature_matrix.h5
+#'   - cells.parquet
+#'   - cell_boundaries.parquet
+#'
+#' Counts are read directly from \code{cell_feature_matrix.h5} into a disk-backed
+#' BPCells matrix (reusing the 10X H5 reader), keeping only the Gene Expression
+#' feature type. The count matrix is therefore never fully held in memory, unlike
+#' the \code{LoadXenium} shortcut this replaces. Cell centroids and boundaries are
+#' read as plain data frames from the parquet files; FOV assembly is deferred to
+#' \code{create_seurat} (gem2s-5), matching the load-vs-assemble separation the
+#' other technologies follow.
+#'
+#' @param sample character sample ID
+#' @param input_dir character path to input directory
+#'
+#' @return list with:
+#'   \item{counts}{BPCells matrix (Gene Expression feature type only)}
+#'   \item{annotations}{data.frame with input and symbol columns}
+#'   \item{matrix_dir}{directory where BPCells matrix is stored}
+#'   \item{segmentations}{list of raw centroid/boundary/segmentation_method frames}
+#'
+read_xenium_sample <- function(sample, input_dir) {
+  sample_dir <- file.path(input_dir, sample)
+
+  message("\nSample --> ", sample)
+  message("Reading Xenium files from ", sample_dir)
+
+  # Counts: disk-backed BPCells matrix, Gene Expression feature type only.
+  # Control/codeword feature types (Negative Control Probe/Codeword, Unassigned
+  # Codeword, Genomic Control, ...) are intentionally dropped for v1 — including
+  # them would corrupt QC/normalization.
+  results <- read_10x_h5_sample(
+    sample,
+    input_dir,
+    feature_type = "Gene Expression"
+  )
+
+  # Centroids + cell boundaries as raw data frames; assembled into a FOV later.
+  results$segmentations <- read_xenium_segmentations(sample_dir)
+
+  # edrops and doublet scores are not calculated for spatial technologies;
+  # return empty lists for compatibility with downstream functions
+  results$edrops <- results$doublet_scores <- list()
+
+  message(
+    sprintf(
+      "Sample %s has %s genes and %s cells",
+      sample, nrow(results$counts), ncol(results$counts)
+    )
+  )
+
+  return(results)
+}
+
+#' Read Xenium centroids and cell boundaries from the raw parquet files
+#'
+#' Replicates the cell-level parts of \code{Seurat::ReadXenium} we support,
+#' reading the parquet files directly via \code{arrow} and returning plain data
+#' frames (no Seurat object). \code{cells.parquet} is read once for both the
+#' centroids and the per-cell segmentation method.
+#'
+#' @param sample_dir character path to the sample directory
+#'
+#' @return list with:
+#'   \item{centroids}{data.frame with columns x, y, cell}
+#'   \item{segmentations}{data.frame of polygon vertices, columns cell, x, y}
+#'   \item{segmentation_method}{data.frame keyed by cell, or NULL if absent}
+#'   \item{transcripts}{data.frame of molecules (x, y, gene, and qv if present)}
+#'
+read_xenium_segmentations <- function(sample_dir) {
+  cells_path <- file.path(sample_dir, "cells.parquet")
+  boundaries_path <- file.path(sample_dir, "cell_boundaries.parquet")
+
+  # cells.parquet: one row per cell (x_centroid/y_centroid/cell_id, and
+  # optionally segmentation_method)
+  cells <- as.data.frame(arrow::read_parquet(cells_path))
+  cells$cell_id <- binary_to_string(cells$cell_id)
+
+  centroids <- data.frame(
+    x = cells$x_centroid,
+    y = cells$y_centroid,
+    cell = cells$cell_id
+  )
+
+  # per-cell segmentation method, indexed by cell id (attached as metadata in
+  # create_seurat). ReadXenium defaults this to "cell" when the column is absent.
+  segmentation_method <- NULL
+  if ("segmentation_method" %in% colnames(cells)) {
+    segmentation_method <- data.frame(
+      segmentation_method = cells$segmentation_method,
+      row.names = cells$cell_id
+    )
+  }
+
+  # cell_boundaries.parquet: long-format polygon vertices (cell, vertex_x,
+  # vertex_y) -> columns cell, x, y
+  boundaries <- as.data.frame(arrow::read_parquet(boundaries_path))
+  colnames(boundaries) <- c("cell", "x", "y")
+  boundaries$cell <- binary_to_string(boundaries$cell)
+
+  # transcripts.parquet: one row per molecule (x_location/y_location/feature_name,
+  # and optionally qv). Read it as a plain frame here; the molecule artifact is
+  # built straight from it in gem2s-7. Don't build a Seurat object /
+  # CreateMolecules here (loader stays assembly-free).
+  transcripts <- read_xenium_transcripts(sample_dir)
+
+  list(
+    centroids = centroids,
+    segmentations = boundaries,
+    segmentation_method = segmentation_method,
+    transcripts = transcripts
+  )
+}
+
+#' Read the Xenium transcripts (molecules) parquet
+#'
+#' \code{transcripts.parquet} is a required Xenium input. Columns
+#' \code{x_location}/\code{y_location}/\code{feature_name} (+ \code{qv} if
+#' present) -> \code{x}/\code{y}/\code{gene} (+ \code{qv}). \code{feature_name}
+#' is decoded the same way as cell ids. The installed \code{ReadXenium} does not
+#' apply a QV threshold; the filter is applied at artifact-build time (gem2s-7).
+#'
+#' @param sample_dir character path to the sample directory
+#'
+#' @return data.frame with columns x, y, gene (+ qv)
+read_xenium_transcripts <- function(sample_dir) {
+  transcripts_path <- file.path(sample_dir, "transcripts.parquet")
+
+  message("Reading Xenium transcripts from ", transcripts_path)
+  tx <- as.data.frame(arrow::read_parquet(transcripts_path))
+
+  transcripts <- data.frame(
+    x = tx$x_location,
+    y = tx$y_location,
+    gene = binary_to_string(tx$feature_name)
+  )
+  if ("qv" %in% colnames(tx)) {
+    transcripts$qv <- tx$qv
+  }
+
+  transcripts
+}
+
+#' Decode Xenium hex-encoded binary cell ids
+#'
+#' Xenium cell ids may be stored as a list of hex-encoded bytes; pass them
+#' through unchanged when they are already character (the common parquet case).
+#' Mirrors the helper inside \code{Seurat::ReadXenium}.
+binary_to_string <- function(arrow_binary) {
+  if (typeof(arrow_binary) == "list") {
+    unlist(lapply(
+      arrow_binary,
+      function(x) rawToChar(as.raw(strtoi(x, 16L)))
+    ))
+  } else {
+    arrow_binary
+  }
+}
+
+
+#' Read Xenium files for all samples
+#'
+#' @param config experiment settings
+#' @param input_dir character path to input directory
+#'
+#' @return list with counts_list, annot, matrix_dir_list, segmentations_list
+#' @export
+#'
+read_xenium_files <- function(config, input_dir) {
+  samples <- config$samples
+
+  nworkers <- min(length(samples), BATCH_POD_CPUS)
+  bpparam <- get_bpparam(nworkers)
+
+  results <- BiocParallel::bplapply(
+    samples,
+    read_xenium_sample,
+    input_dir = input_dir,
+    BPPARAM = bpparam
+  )
+  names(results) <- samples
+
+  counts_list <- lapply(results, function(x) x$counts)
+  annot_list <- lapply(results, function(x) x$annotations)
+  matrix_dir_list <- lapply(results, function(x) x$matrix_dir)
+  segmentations_list <- lapply(results, function(x) x$segmentations)
+
+  annot <- format_annot(annot_list)
+
+  list(
+    counts_list = counts_list,
+    annot = annot,
+    matrix_dir_list = matrix_dir_list,
+    segmentations_list = segmentations_list,
+    edrops = list(),
+    doublet_scores = list()
+  )
 }

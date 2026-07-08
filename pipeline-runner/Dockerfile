@@ -30,6 +30,10 @@ COPY ./renv.lock.init ./renv.lock
 COPY setup/restore_fast.R .
 RUN Rscript restore_fast.R
 
+# build arrow with full codec for zstd; Xenium .parquet files are
+# zstd-compressed and the default minimal libarrow build cannot read them
+ENV ARROW_WITH_ZSTD=ON
+
 # restore anything pkgbuild missed
 COPY setup/restore_renv.R .
 RUN Rscript restore_renv.R
@@ -41,6 +45,7 @@ RUN Rscript restore_renv.R
 # deactivate so that .libPaths used (set above)
 RUN R -q -e "renv::deactivate()"
 RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
+
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
@@ -73,7 +78,7 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 # install python packages in virtualenv
 ENV WORKON_HOME=/src/.virtualenvs
 RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which python3)')" && \
-    R -q -e "reticulate::virtualenv_install('r-reticulate', c('geosketch==1.2', 'scanorama==1.7.3', 'numpy<2', 'anndata==0.10.6', 'ome-zarr==0.9.0', 'zarr==2.18.3'), pip_options='--no-cache-dir')"
+    R -q -e "reticulate::virtualenv_install('r-reticulate', c('numpy<2', 'anndata==0.10.6', 'ome-zarr==0.9.0', 'zarr==2.18.3'), pip_options='--no-cache-dir')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -97,7 +102,6 @@ COPY aws_config /root/.aws/config
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
-ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app
@@ -124,7 +128,6 @@ RUN wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux6
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
-ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R start-batch.sh ./
 
 
@@ -143,7 +146,6 @@ RUN pip install -U jedi PyYAML watchdog[watchmedo] && \
 # add R package files and runner
 ADD R ./R
 ADD tests ./tests
-ADD inst ./inst
 COPY DESCRIPTION NAMESPACE init.R ./
 
 # start app

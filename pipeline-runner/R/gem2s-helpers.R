@@ -1,3 +1,24 @@
+# BiocParallel backend for the pipeline's bplapply calls.
+#
+# Returns a serial backend under CI so covr's coverage subprocess can shut down
+# cleanly. Forked MulticoreParam workers that touch disk-backed matrices
+# (BPCells/HDF5) or spatial data can outlive the run and block termination
+# ("Error while shutting down parallel: unable to terminate some child
+# processes"), which fails CI even though every test passes. Also serial when a
+# single worker is requested. Production runs (CI unset) keep multicore.
+# Extra args (e.g. RNGseed) are forwarded to whichever backend is used.
+get_bpparam <- function(nworkers, ...) {
+  if (nworkers <= 1 || on_ci()) {
+    return(BiocParallel::SerialParam(...))
+  }
+
+  BiocParallel::MulticoreParam(workers = nworkers, ...)
+}
+
+on_ci <- function() {
+  isTRUE(as.logical(Sys.getenv("CI", "false")))
+}
+
 check_prev_out <- function(prev_out, check_names) {
   for (check_name in check_names) {
     if (check_name %in% names(prev_out)) next()

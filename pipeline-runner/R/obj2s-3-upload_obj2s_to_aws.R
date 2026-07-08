@@ -28,11 +28,15 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
     # first cluster column used as 'louvain' (default) clusters
     method <- ifelse(i == 1, "louvain", col)
 
-    cluster_sets[[i]] <- data.frame(
+    cluster_set <- data.frame(
       cluster = scdata@meta.data[[col]],
       cell_ids = scdata$cells_id
-    ) |>
-      format_cluster_cellsets(method, scdata@misc$color_pool, name = col)
+    )
+
+    color_pool <- cluster_color_pool(scdata, cluster_set, scdata@misc$color_pool)
+
+    cluster_sets[[i]] <-
+      format_cluster_cellsets(cluster_set, method, color_pool, name = col)
   }
 
   # cell sets file to s3
@@ -53,7 +57,7 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
   object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
 
   # images for spatial to s3
-  upload_images_to_s3(pipeline_config, input, experiment_id, scdata)
+  upload_obj2s_images_to_s3(pipeline_config, input, experiment_id, scdata)
 
   experiment_data <- list(
     apiVersion = "2.0.0-data-ingest-seurat-rds-automated",

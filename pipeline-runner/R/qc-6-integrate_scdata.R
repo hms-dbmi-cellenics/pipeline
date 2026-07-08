@@ -313,7 +313,7 @@ parallel_leverage_score <- function(
         scores = score_try
       )
     },
-    BPPARAM = BiocParallel::MulticoreParam(workers = nworkers, RNGseed = seed)
+    BPPARAM = get_bpparam(nworkers, RNGseed = seed)
   )
 
   scores <- SeuratObject::EmptyDF(n = ncol(object))

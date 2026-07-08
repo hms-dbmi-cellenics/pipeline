@@ -122,7 +122,6 @@ ghost_list <- c(
   'slam',
   'spdep',
   'units',
-  'sf',
   'stringi'
 )
 
