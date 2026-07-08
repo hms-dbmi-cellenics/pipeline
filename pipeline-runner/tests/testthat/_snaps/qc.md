@@ -465,7 +465,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "bc4ca6b251b8970b21710ba8ed4eead0"
+      [1] "4867f367266fa1a96459c71505556db0"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -517,9 +517,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 1 NA NA NA NA 1 NA 1 1 NA 1 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
-        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0005 0.0001 0.0001 NA 0.0001 0.0014 0.0001 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
-        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE TRUE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001561 0.000118 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
+        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0012 0.0001 0.0001 NA 0.0001 0.0012 0.0003 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
+        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE FALSE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TR| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001349 0.000352 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
         .. .. ..$ cells_id          : int [1:460] 560 320 152 73 227 145 633 48 127 302 23 838 355 600 164 621 531 409 296 882 282 620 516 211 859 258 313 480 297 | __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -588,9 +588,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
-        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9139 0.0001 NA 0.1214 0.0001 0.0001 0.0001 0.0001 0.0015 0.6978 0.0009 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
+        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9181 0.0001 NA 0.1219 0.0001 0.0001 0.0001 0.0001 0.0028 0.701 0.0016 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0.| __truncated__ ...
         .. .. ..$ emptyDrops_Limited: logi [1:436] FALSE TRUE NA FALSE TRUE TRUE TRUE TRUE FALSE FALSE FALSE NA NA TRUE TRUE NA NA NA TRUE NA TRUE TRUE TRUE TRUE TR| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.977799 0.000128 NA 0 0 0.000128 0 0.000128 0.001808 0 0.001119 NA NA 0 0.000128 NA NA NA 0.000128 NA 0.000128 0| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.982292 0.000132 NA 0 0 0.000132 0 0.000132 0.003363 0 0.001942 NA NA 0 0.000132 NA NA NA 0.000132 NA 0.000132 0| __truncated__ ...
         .. .. ..$ cells_id          : int [1:436] 216 894 758 202 851 518 475 14 761 399 671 822 341 446 542 141 631 218 294 423 455 718 370 176 391 259 380 10 710| __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -622,13 +622,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "b0b252d1bb764bc9d9b751260e613744"
+      [1] "2545009b44d0cf55bf6f7f94984e57d9"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:360] 320 152 73 227 633 48 127 838 600 164 621 531 409 296 882 620 516 211 859 258 313 297 885 157 405 869 835 890 874| __truncated__ ...
-       $ mock_sample_1_id: int [1:303] 894 202 851 518 475 14 761 399 671 446 542 294 455 718 370 176 391 259 10 710 220 156 304 727 54 616 33 438 814 4| __truncated__ ...
+       $ mock_sample_1_id: int [1:302] 894 202 851 518 475 14 761 399 671 446 542 294 455 718 370 176 391 259 10 710 220 156 304 727 54 616 33 438 814 4| __truncated__ ...
 
 ---
 
@@ -639,15 +639,15 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "95e5f3fb57e10141228c91aadc869954"
+      [1] "8196816ff1e34f39d26343f4325d8ac3"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
       List of 3
        $ mock_sample_1_id-classifier-0:List of 436
-        ..$ : Named num [1:2] 0.978 2.318
+        ..$ : Named num [1:2] 0.982 2.318
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.625312
+        ..$ : Named num [1:2] 0.000132 2.625312
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.69
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
@@ -655,17 +655,17 @@
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.76
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.517196
+        ..$ : Named num [1:2] 0.000132 2.517196
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.8
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.645422
+        ..$ : Named num [1:2] 0.000132 2.645422
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.00181 2.35984
+        ..$ : Named num [1:2] 0.00336 2.35984
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.72
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.00112 2.07555
+        ..$ : Named num [1:2] 0.00194 2.07555
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.77
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
@@ -673,7 +673,7 @@
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.77
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.644439
+        ..$ : Named num [1:2] 0.000132 2.644439
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.9
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
@@ -681,109 +681,109 @@
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.76
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.348305
+        ..$ : Named num [1:2] 0.000132 2.348305
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.72
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.418301
+        ..$ : Named num [1:2] 0.000132 2.418301
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.173186
+        ..$ : Named num [1:2] 0.000132 2.173186
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.123852
+        ..$ : Named num [1:2] 0.000132 2.123852
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.214844
+        ..$ : Named num [1:2] 0.000132 2.214844
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.49693
+        ..$ : Named num [1:2] 0.000132 2.49693
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.87
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.83
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.537819
+        ..$ : Named num [1:2] 0.000132 2.537819
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.77
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.92
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.545307
+        ..$ : Named num [1:2] 0.000132 2.545307
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.88
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000377 2.220108
+        ..$ : Named num [1:2] 0.000889 2.220108
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.00123 2.34044
+        ..$ : Named num [1:2] 0.00172 2.34044
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.11
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.7
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.662758
+        ..$ : Named num [1:2] 0.000132 2.662758
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.4 2.39
+        ..$ : Named num [1:2] 0.398 2.393
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.76
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.450249
+        ..$ : Named num [1:2] 0.000132 2.450249
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.113943
+        ..$ : Named num [1:2] 0.000132 2.113943
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.383815
+        ..$ : Named num [1:2] 0.000132 2.383815
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.81
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.705008
+        ..$ : Named num [1:2] 0.000132 2.705008
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.447158
+        ..$ : Named num [1:2] 0.000132 2.447158
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.682145
+        ..$ : Named num [1:2] 0.000132 2.682145
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.91
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.28
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.281033
+        ..$ : Named num [1:2] 0.000132 2.281033
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.92
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.392697
+        ..$ : Named num [1:2] 0.000132 2.392697
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.469822
+        ..$ : Named num [1:2] 0.000132 2.469822
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.369216
+        ..$ : Named num [1:2] 0.000385 2.369216
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.74
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.546543
+        ..$ : Named num [1:2] 0.000132 2.546543
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.65
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.76
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.342423
+        ..$ : Named num [1:2] 0.000132 2.342423
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.558709
+        ..$ : Named num [1:2] 0.000132 2.558709
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.4843
+        ..$ : Named num [1:2] 0.000132 2.4843
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.658011
+        ..$ : Named num [1:2] 0.000132 2.658011
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.152288
+        ..$ : Named num [1:2] 0.000132 2.152288
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.332438
+        ..$ : Named num [1:2] 0.000132 2.332438
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.96
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.49276
+        ..$ : Named num [1:2] 0.000132 2.49276
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 2.22
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.262451
+        ..$ : Named num [1:2] 0.000132 2.262451
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.00123 2.12385
+        ..$ : Named num [1:2] 0.00172 2.12385
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.281033
+        ..$ : Named num [1:2] 0.000132 2.281033
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.227887
+        ..$ : Named num [1:2] 0.000132 2.227887
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.8
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
@@ -793,58 +793,58 @@
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.8
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.557507
+        ..$ : Named num [1:2] 0.000132 2.557507
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.638489
+        ..$ : Named num [1:2] 0.000132 2.638489
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.68
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.507856
+        ..$ : Named num [1:2] 0.000132 2.507856
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.608526
+        ..$ : Named num [1:2] 0.000132 2.608526
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.88
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.70927
+        ..$ : Named num [1:2] 0.000132 2.70927
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.88
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.81
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.49276
+        ..$ : Named num [1:2] 0.000132 2.49276
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.380211
+        ..$ : Named num [1:2] 0.000132 2.380211
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.522444
+        ..$ : Named num [1:2] 0.000132 2.522444
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.71
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.176 2.079
+        ..$ : Named num [1:2] 0.175 2.079
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.318063
+        ..$ : Named num [1:2] 0.000132 2.318063
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 0 2.86
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.959 2.083
+        ..$ : Named num [1:2] 0.957 2.083
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.540329
+        ..$ : Named num [1:2] 0.000132 2.540329
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.075547
+        ..$ : Named num [1:2] 0.000132 2.075547
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.703291
+        ..$ : Named num [1:2] 0.000132 2.703291
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.564666
+        ..$ : Named num [1:2] 0.000132 2.564666
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.354108
+        ..$ : Named num [1:2] 0.000132 2.354108
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.209515
+        ..$ : Named num [1:2] 0.000132 2.209515
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         ..$ : Named num [1:2] 1 1.64
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
-        ..$ : Named num [1:2] 0.000128 2.534026
+        ..$ : Named num [1:2] 0.000132 2.534026
         .. ..- attr(*, "names")= chr [1:2] "FDR" "log_u"
         .. [list output truncated]
-       $ mock_sample_1_id-classifier-1:List of 349
+       $ mock_sample_1_id-classifier-1:List of 354
         ..$ : Named num [1:4] 1 0 1 3740
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
         ..$ : Named num [1:4] 2 0 1 1258
@@ -989,59 +989,59 @@
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
         ..$ : Named num [1:4] 77 1 1 515
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 7.80e+01 1.28e-04 1.00 5.12e+02
+        ..$ : Named num [1:4] 7.80e+01 1.32e-04 1.00 5.12e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 7.90e+01 1.28e-04 1.00 5.07e+02
+        ..$ : Named num [1:4] 7.90e+01 1.32e-04 1.00 5.07e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 80 0.229 1 506
+        ..$ : Named num [1:4] 80 0.23 1 506
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 8.10e+01 1.28e-04 1.00 5.05e+02
+        ..$ : Named num [1:4] 8.10e+01 1.32e-04 1.00 5.05e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 8.20e+01 1.28e-04 1.00 4.81e+02
+        ..$ : Named num [1:4] 8.20e+01 1.32e-04 1.00 4.81e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 8.30e+01 1.28e-04 1.00 4.74e+02
+        ..$ : Named num [1:4] 8.30e+01 1.32e-04 1.00 4.74e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 8.40e+01 1.28e-04 1.00 4.72e+02
+        ..$ : Named num [1:4] 8.40e+01 1.32e-04 1.00 4.72e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 8.50e+01 1.28e-04 1.00 4.61e+02
+        ..$ : Named num [1:4] 8.50e+01 1.32e-04 1.00 4.61e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 8.60e+01 1.28e-04 1.00 4.60e+02
+        ..$ : Named num [1:4] 8.60e+01 1.32e-04 1.00 4.60e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 87 0.4 1 459
+        ..$ : Named num [1:4] 87 0.398 1 459
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 8.80e+01 1.28e-04 1.00 4.58e+02
+        ..$ : Named num [1:4] 8.80e+01 1.32e-04 1.00 4.58e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 8.90e+01 1.28e-04 1.00 4.55e+02
+        ..$ : Named num [1:4] 8.90e+01 1.32e-04 1.00 4.55e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 9.05e+01 1.28e-04 2.00 4.54e+02
+        ..$ : Named num [1:4] 9.05e+01 1.32e-04 2.00 4.54e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 9.20e+01 1.28e-04 1.00 4.52e+02
+        ..$ : Named num [1:4] 9.20e+01 1.32e-04 1.00 4.52e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 9.30e+01 1.28e-04 1.00 4.45e+02
+        ..$ : Named num [1:4] 9.30e+01 1.32e-04 1.00 4.45e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 9.40e+01 1.28e-04 1.00 4.42e+02
+        ..$ : Named num [1:4] 9.40e+01 1.32e-04 1.00 4.42e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 9.50e+01 1.28e-04 1.00 4.41e+02
+        ..$ : Named num [1:4] 9.50e+01 1.32e-04 1.00 4.41e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 9.60e+01 1.28e-04 1.00 4.39e+02
+        ..$ : Named num [1:4] 9.60e+01 1.32e-04 1.00 4.39e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 9.70e+01 1.28e-04 1.00 4.38e+02
+        ..$ : Named num [1:4] 9.70e+01 1.32e-04 1.00 4.38e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 9.85e+01 1.28e-04 2.00 4.37e+02
+        ..$ : Named num [1:4] 9.85e+01 1.32e-04 2.00 4.37e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 1.00e+02 1.28e-04 1.00 4.35e+02
+        ..$ : Named num [1:4] 1.00e+02 1.32e-04 1.00 4.35e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 1.01e+02 1.28e-04 1.00 4.29e+02
+        ..$ : Named num [1:4] 1.01e+02 1.32e-04 1.00 4.29e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 1.02e+02 1.28e-04 1.00 4.22e+02
+        ..$ : Named num [1:4] 1.02e+02 1.32e-04 1.00 4.22e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
         ..$ : Named num [1:4] 103 1 1 421
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 1.04e+02 1.28e-04 1.00 4.18e+02
+        ..$ : Named num [1:4] 1.04e+02 1.32e-04 1.00 4.18e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 105 0.0352 1 417
+        ..$ : Named num [1:4] 105 0.0345 1 417
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
-        ..$ : Named num [1:4] 1.06e+02 1.28e-04 1.00 4.08e+02
+        ..$ : Named num [1:4] 1.06e+02 1.32e-04 1.00 4.08e+02
         .. ..- attr(*, "names")= chr [1:4] "rank" "fdr" "ndrops" "u"
         .. [list output truncated]
        $ mock_sample_1_id-classifier-2:List of 2
@@ -1051,9 +1051,9 @@
         .. ..$ median_genes: num 68.5
         .. ..$ median_umis : num 220
         ..$ after :List of 4
-        .. ..$ num_cells   : num 303
-        .. ..$ total_genes : int 940
-        .. ..$ median_genes: int 93
+        .. ..$ num_cells   : num 302
+        .. ..$ total_genes : int 939
+        .. ..$ median_genes: num 93
         .. ..$ median_umis : num 309
 
 ---
@@ -1065,7 +1065,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "bc4ca6b251b8970b21710ba8ed4eead0"
+      [1] "4867f367266fa1a96459c71505556db0"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -1117,9 +1117,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 1 NA NA NA NA 1 NA 1 1 NA 1 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
-        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0005 0.0001 0.0001 NA 0.0001 0.0014 0.0001 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
-        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE TRUE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001561 0.000118 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
+        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0012 0.0001 0.0001 NA 0.0001 0.0012 0.0003 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
+        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE FALSE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TR| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001349 0.000352 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
         .. .. ..$ cells_id          : int [1:460] 560 320 152 73 227 145 633 48 127 302 23 838 355 600 164 621 531 409 296 882 282 620 516 211 859 258 313 480 297 | __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -1188,9 +1188,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
-        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9139 0.0001 NA 0.1214 0.0001 0.0001 0.0001 0.0001 0.0015 0.6978 0.0009 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
+        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9181 0.0001 NA 0.1219 0.0001 0.0001 0.0001 0.0001 0.0028 0.701 0.0016 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0.| __truncated__ ...
         .. .. ..$ emptyDrops_Limited: logi [1:436] FALSE TRUE NA FALSE TRUE TRUE TRUE TRUE FALSE FALSE FALSE NA NA TRUE TRUE NA NA NA TRUE NA TRUE TRUE TRUE TRUE TR| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.977799 0.000128 NA 0 0 0.000128 0 0.000128 0.001808 0 0.001119 NA NA 0 0.000128 NA NA NA 0.000128 NA 0.000128 0| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.982292 0.000132 NA 0 0 0.000132 0 0.000132 0.003363 0 0.001942 NA NA 0 0.000132 NA NA NA 0.000132 NA 0.000132 0| __truncated__ ...
         .. .. ..$ cells_id          : int [1:436] 216 894 758 202 851 518 475 14 761 399 671 822 341 446 542 141 631 218 294 423 455 718 370 176 391 259 380 10 710| __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -1222,13 +1222,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "b0b252d1bb764bc9d9b751260e613744"
+      [1] "2545009b44d0cf55bf6f7f94984e57d9"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:360] 320 152 73 227 633 48 127 838 600 164 621 531 409 296 882 620 516 211 859 258 313 297 885 157 405 869 835 890 874| __truncated__ ...
-       $ mock_sample_1_id: int [1:303] 894 202 851 518 475 14 761 399 671 446 542 294 455 718 370 176 391 259 10 710 220 156 304 727 54 616 33 438 814 4| __truncated__ ...
+       $ mock_sample_1_id: int [1:302] 894 202 851 518 475 14 761 399 671 446 542 294 455 718 370 176 391 259 10 710 220 156 304 727 54 616 33 438 814 4| __truncated__ ...
 
 ---
 
@@ -1239,12 +1239,12 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "24ae100fbc70b7e2c7c8ef72f8f321f9"
+      [1] "2f94de22ad6208f20d3a18e1382d3ea3"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
       List of 3
-       $ mock_sample_1_id-cellSizeDistribution-0:List of 255
+       $ mock_sample_1_id-cellSizeDistribution-0:List of 259
         ..$ : Named num [1:2] 1 3740
         .. ..- attr(*, "names")= chr [1:2] "rank" "u"
         ..$ : Named num [1:2] 2 1258
@@ -1444,7 +1444,7 @@
         ..$ : Named num [1:2] 108 383
         .. ..- attr(*, "names")= chr [1:2] "rank" "u"
         .. [list output truncated]
-       $ mock_sample_1_id-cellSizeDistribution-1:List of 303
+       $ mock_sample_1_id-cellSizeDistribution-1:List of 302
         ..$ : Named num 3740
         .. ..- attr(*, "names")= chr "u"
         ..$ : Named num 1258
@@ -1646,14 +1646,14 @@
         .. [list output truncated]
        $ mock_sample_1_id-cellSizeDistribution-3:List of 2
         ..$ before:List of 4
-        .. ..$ num_cells   : num 303
-        .. ..$ total_genes : int 940
-        .. ..$ median_genes: int 93
+        .. ..$ num_cells   : num 302
+        .. ..$ total_genes : int 939
+        .. ..$ median_genes: num 93
         .. ..$ median_umis : num 309
         ..$ after :List of 4
-        .. ..$ num_cells   : num 303
-        .. ..$ total_genes : int 940
-        .. ..$ median_genes: int 93
+        .. ..$ num_cells   : num 302
+        .. ..$ total_genes : int 939
+        .. ..$ median_genes: num 93
         .. ..$ median_umis : num 309
 
 ---
@@ -1665,7 +1665,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "bc4ca6b251b8970b21710ba8ed4eead0"
+      [1] "4867f367266fa1a96459c71505556db0"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -1717,9 +1717,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 1 NA NA NA NA 1 NA 1 1 NA 1 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
-        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0005 0.0001 0.0001 NA 0.0001 0.0014 0.0001 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
-        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE TRUE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001561 0.000118 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
+        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0012 0.0001 0.0001 NA 0.0001 0.0012 0.0003 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
+        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE FALSE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TR| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001349 0.000352 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
         .. .. ..$ cells_id          : int [1:460] 560 320 152 73 227 145 633 48 127 302 23 838 355 600 164 621 531 409 296 882 282 620 516 211 859 258 313 480 297 | __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -1788,9 +1788,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
-        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9139 0.0001 NA 0.1214 0.0001 0.0001 0.0001 0.0001 0.0015 0.6978 0.0009 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
+        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9181 0.0001 NA 0.1219 0.0001 0.0001 0.0001 0.0001 0.0028 0.701 0.0016 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0.| __truncated__ ...
         .. .. ..$ emptyDrops_Limited: logi [1:436] FALSE TRUE NA FALSE TRUE TRUE TRUE TRUE FALSE FALSE FALSE NA NA TRUE TRUE NA NA NA TRUE NA TRUE TRUE TRUE TRUE TR| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.977799 0.000128 NA 0 0 0.000128 0 0.000128 0.001808 0 0.001119 NA NA 0 0.000128 NA NA NA 0.000128 NA 0.000128 0| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.982292 0.000132 NA 0 0 0.000132 0 0.000132 0.003363 0 0.001942 NA NA 0 0.000132 NA NA NA 0.000132 NA 0.000132 0| __truncated__ ...
         .. .. ..$ cells_id          : int [1:436] 216 894 758 202 851 518 475 14 761 399 671 822 341 446 542 141 631 218 294 423 455 718 370 176 391 259 380 10 710| __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -1822,13 +1822,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "e44062bbc857cd8364c419ac1e323715"
+      [1] "f4de3f4e04760c81f71e401dd3ab6bb6"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:351] 320 152 73 227 633 48 127 838 600 164 621 531 409 296 882 620 516 211 859 258 313 297 885 157 405 869 835 890 874| __truncated__ ...
-       $ mock_sample_1_id: int [1:287] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
+       $ mock_sample_1_id: int [1:286] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
 
 ---
 
@@ -1839,12 +1839,12 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "335224df5f47d3fcca09287b46c83e5a"
+      [1] "b0937a404eac15b7f62da450a9b238b4"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
       List of 3
-       $ mock_sample_1_id-mitochondrialContent-0:List of 303
+       $ mock_sample_1_id-mitochondrialContent-0:List of 302
         ..$ : Named num 25.4
         .. ..- attr(*, "names")= chr "fracMito"
         ..$ : Named num 64.2
@@ -2044,7 +2044,7 @@
         ..$ : Named num 53.6
         .. ..- attr(*, "names")= chr "fracMito"
         .. [list output truncated]
-       $ mock_sample_1_id-mitochondrialContent-1:List of 303
+       $ mock_sample_1_id-mitochondrialContent-1:List of 302
         ..$ : Named num [1:2] 422 25.4
         .. ..- attr(*, "names")= chr [1:2] "cellSize" "fracMito"
         ..$ : Named num [1:2] 520 64.2
@@ -2246,15 +2246,15 @@
         .. [list output truncated]
        $ mock_sample_1_id-mitochondrialContent-2:List of 2
         ..$ before:List of 4
-        .. ..$ num_cells   : num 303
-        .. ..$ total_genes : int 940
-        .. ..$ median_genes: int 93
+        .. ..$ num_cells   : num 302
+        .. ..$ total_genes : int 939
+        .. ..$ median_genes: num 93
         .. ..$ median_umis : num 309
         ..$ after :List of 4
-        .. ..$ num_cells   : num 287
-        .. ..$ total_genes : int 933
-        .. ..$ median_genes: int 98
-        .. ..$ median_umis : num 311
+        .. ..$ num_cells   : num 286
+        .. ..$ total_genes : int 932
+        .. ..$ median_genes: num 98
+        .. ..$ median_umis : num 312
 
 ---
 
@@ -2265,7 +2265,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "bc4ca6b251b8970b21710ba8ed4eead0"
+      [1] "4867f367266fa1a96459c71505556db0"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -2317,9 +2317,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 1 NA NA NA NA 1 NA 1 1 NA 1 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
-        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0005 0.0001 0.0001 NA 0.0001 0.0014 0.0001 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
-        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE TRUE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001561 0.000118 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
+        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0012 0.0001 0.0001 NA 0.0001 0.0012 0.0003 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
+        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE FALSE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TR| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001349 0.000352 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
         .. .. ..$ cells_id          : int [1:460] 560 320 152 73 227 145 633 48 127 302 23 838 355 600 164 621 531 409 296 882 282 620 516 211 859 258 313 480 297 | __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -2388,9 +2388,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
-        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9139 0.0001 NA 0.1214 0.0001 0.0001 0.0001 0.0001 0.0015 0.6978 0.0009 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
+        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9181 0.0001 NA 0.1219 0.0001 0.0001 0.0001 0.0001 0.0028 0.701 0.0016 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0.| __truncated__ ...
         .. .. ..$ emptyDrops_Limited: logi [1:436] FALSE TRUE NA FALSE TRUE TRUE TRUE TRUE FALSE FALSE FALSE NA NA TRUE TRUE NA NA NA TRUE NA TRUE TRUE TRUE TRUE TR| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.977799 0.000128 NA 0 0 0.000128 0 0.000128 0.001808 0 0.001119 NA NA 0 0.000128 NA NA NA 0.000128 NA 0.000128 0| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.982292 0.000132 NA 0 0 0.000132 0 0.000132 0.003363 0 0.001942 NA NA 0 0.000132 NA NA NA 0.000132 NA 0.000132 0| __truncated__ ...
         .. .. ..$ cells_id          : int [1:436] 216 894 758 202 851 518 475 14 761 399 671 822 341 446 542 141 631 218 294 423 455 718 370 176 391 259 380 10 710| __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -2422,13 +2422,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "941b59f9db7a0e67a072b76b04472141"
+      [1] "74c4ab62405988613b66a8625f71544b"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: num [1:351] 1 9 11 13 15 19 21 22 25 26 32 34 36 39 40 41 44 45 48 52 53 58 59 62 72 73 75 77 79 81 85 86 90 93 96 97 99 104 | __truncated__ ...
-       $ mock_sample_1_id: num [1:286] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 38 42 50 51 54 55 63 65 68 70 71 74 76 78 80 82 91 94 95 98 100 105 117 11| __truncated__ ...
+       $ mock_sample_1_id: num [1:285] 0 3 5 10 12 14 16 20 27 28 29 31 33 37 38 42 50 51 54 55 63 65 68 70 71 74 76 78 80 82 91 94 95 98 100 105 117 11| __truncated__ ...
 
 ---
 
@@ -2439,13 +2439,13 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "0a24c797715c20270494719f6ebf0e76"
+      [1] "430aba9ed5d191fe075e520d5791855e"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
       List of 2
        $ mock_sample_1_id-numGenesVsNumUmis-0:List of 2
-        ..$ pointsData:List of 287
+        ..$ pointsData:List of 286
         .. ..$ :List of 2
         .. .. ..$ log_molecules: num 2.03
         .. .. ..$ log_genes    : num 1.66
@@ -2700,9 +2700,6 @@
         .. .. ..$ log_genes    : num 1.88
         .. ..$ :List of 2
         .. .. ..$ log_molecules: num 2.34
-        .. .. ..$ log_genes    : num 1.77
-        .. ..$ :List of 2
-        .. .. ..$ log_molecules: num 2.34
         .. .. ..$ log_genes    : num 1.76
         .. ..$ :List of 2
         .. .. ..$ log_molecules: num 2.34
@@ -2743,6 +2740,9 @@
         .. ..$ :List of 2
         .. .. ..$ log_molecules: num 2.37
         .. .. ..$ log_genes    : num 1.81
+        .. ..$ :List of 2
+        .. .. ..$ log_molecules: num 2.37
+        .. .. ..$ log_genes    : num 1.91
         .. .. [list output truncated]
         ..$ linesData :List of 105
         .. ..$ :List of 10
@@ -2760,12 +2760,53 @@
         .. .. .. ..$ upper_cutoff : num 1.91
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
-        .. .. .. ..$ lower_cutoff : num 2.03
-        .. .. .. ..$ upper_cutoff : num 2.03
+        .. .. .. ..$ lower_cutoff : num 2.04
+        .. .. .. ..$ upper_cutoff : num 2.04
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.72
         .. .. .. ..$ lower_cutoff : num 2.16
         .. .. .. ..$ upper_cutoff : num 2.16
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.89
+        .. .. .. ..$ lower_cutoff : num 2.29
+        .. .. .. ..$ upper_cutoff : num 2.29
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.06
+        .. .. .. ..$ lower_cutoff : num 2.42
+        .. .. .. ..$ upper_cutoff : num 2.42
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.23
+        .. .. .. ..$ lower_cutoff : num 2.55
+        .. .. .. ..$ upper_cutoff : num 2.55
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.4
+        .. .. .. ..$ lower_cutoff : num 2.68
+        .. .. .. ..$ upper_cutoff : num 2.68
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.57
+        .. .. .. ..$ lower_cutoff : num 2.81
+        .. .. .. ..$ upper_cutoff : num 2.81
+        .. ..$ :List of 10
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.03
+        .. .. .. ..$ lower_cutoff : num 1.65
+        .. .. .. ..$ upper_cutoff : num 1.65
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.2
+        .. .. .. ..$ lower_cutoff : num 1.78
+        .. .. .. ..$ upper_cutoff : num 1.78
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.37
+        .. .. .. ..$ lower_cutoff : num 1.91
+        .. .. .. ..$ upper_cutoff : num 1.91
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.54
+        .. .. .. ..$ lower_cutoff : num 2.03
+        .. .. .. ..$ upper_cutoff : num 2.04
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.72
+        .. .. .. ..$ lower_cutoff : num 2.16
+        .. .. .. ..$ upper_cutoff : num 2.17
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.89
         .. .. .. ..$ lower_cutoff : num 2.29
@@ -2806,7 +2847,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.72
         .. .. .. ..$ lower_cutoff : num 2.16
-        .. .. .. ..$ upper_cutoff : num 2.16
+        .. .. .. ..$ upper_cutoff : num 2.17
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.89
         .. .. .. ..$ lower_cutoff : num 2.29
@@ -2851,7 +2892,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.89
         .. .. .. ..$ lower_cutoff : num 2.29
-        .. .. .. ..$ upper_cutoff : num 2.29
+        .. .. .. ..$ upper_cutoff : num 2.3
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.06
         .. .. .. ..$ lower_cutoff : num 2.42
@@ -3112,7 +3153,7 @@
         .. .. .. ..$ upper_cutoff : num 2.69
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.81
+        .. .. .. ..$ lower_cutoff : num 2.8
         .. .. .. ..$ upper_cutoff : num 2.82
         .. ..$ :List of 10
         .. .. ..$ :List of 3
@@ -3149,48 +3190,7 @@
         .. .. .. ..$ upper_cutoff : num 2.56
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
-        .. .. .. ..$ lower_cutoff : num 2.68
-        .. .. .. ..$ upper_cutoff : num 2.69
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.81
-        .. .. .. ..$ upper_cutoff : num 2.82
-        .. ..$ :List of 10
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.64
-        .. .. .. ..$ upper_cutoff : num 1.65
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.77
-        .. .. .. ..$ upper_cutoff : num 1.78
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.9
-        .. .. .. ..$ upper_cutoff : num 1.91
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.54
-        .. .. .. ..$ lower_cutoff : num 2.03
-        .. .. .. ..$ upper_cutoff : num 2.04
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.72
-        .. .. .. ..$ lower_cutoff : num 2.16
-        .. .. .. ..$ upper_cutoff : num 2.17
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.89
-        .. .. .. ..$ lower_cutoff : num 2.29
-        .. .. .. ..$ upper_cutoff : num 2.3
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.06
-        .. .. .. ..$ lower_cutoff : num 2.42
-        .. .. .. ..$ upper_cutoff : num 2.43
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.23
-        .. .. .. ..$ lower_cutoff : num 2.55
-        .. .. .. ..$ upper_cutoff : num 2.56
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.4
-        .. .. .. ..$ lower_cutoff : num 2.68
+        .. .. .. ..$ lower_cutoff : num 2.67
         .. .. .. ..$ upper_cutoff : num 2.69
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
@@ -3241,7 +3241,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
         .. .. .. ..$ lower_cutoff : num 1.64
-        .. .. .. ..$ upper_cutoff : num 1.65
+        .. .. .. ..$ upper_cutoff : num 1.66
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.77
@@ -3286,7 +3286,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.77
-        .. .. .. ..$ upper_cutoff : num 1.78
+        .. .. .. ..$ upper_cutoff : num 1.79
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
         .. .. .. ..$ lower_cutoff : num 1.9
@@ -3331,7 +3331,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
         .. .. .. ..$ lower_cutoff : num 1.9
-        .. .. .. ..$ upper_cutoff : num 1.91
+        .. .. .. ..$ upper_cutoff : num 1.92
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
         .. .. .. ..$ lower_cutoff : num 2.03
@@ -3376,11 +3376,52 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
         .. .. .. ..$ lower_cutoff : num 2.02
-        .. .. .. ..$ upper_cutoff : num 2.04
+        .. .. .. ..$ upper_cutoff : num 2.05
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.72
         .. .. .. ..$ lower_cutoff : num 2.15
         .. .. .. ..$ upper_cutoff : num 2.17
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.89
+        .. .. .. ..$ lower_cutoff : num 2.28
+        .. .. .. ..$ upper_cutoff : num 2.3
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.06
+        .. .. .. ..$ lower_cutoff : num 2.41
+        .. .. .. ..$ upper_cutoff : num 2.43
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.23
+        .. .. .. ..$ lower_cutoff : num 2.54
+        .. .. .. ..$ upper_cutoff : num 2.56
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.4
+        .. .. .. ..$ lower_cutoff : num 2.67
+        .. .. .. ..$ upper_cutoff : num 2.69
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.57
+        .. .. .. ..$ lower_cutoff : num 2.8
+        .. .. .. ..$ upper_cutoff : num 2.82
+        .. ..$ :List of 10
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.03
+        .. .. .. ..$ lower_cutoff : num 1.64
+        .. .. .. ..$ upper_cutoff : num 1.66
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.2
+        .. .. .. ..$ lower_cutoff : num 1.77
+        .. .. .. ..$ upper_cutoff : num 1.79
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.37
+        .. .. .. ..$ lower_cutoff : num 1.89
+        .. .. .. ..$ upper_cutoff : num 1.92
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.54
+        .. .. .. ..$ lower_cutoff : num 2.02
+        .. .. .. ..$ upper_cutoff : num 2.05
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.72
+        .. .. .. ..$ lower_cutoff : num 2.15
+        .. .. .. ..$ upper_cutoff : num 2.18
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.89
         .. .. .. ..$ lower_cutoff : num 2.28
@@ -3425,47 +3466,6 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.89
         .. .. .. ..$ lower_cutoff : num 2.28
-        .. .. .. ..$ upper_cutoff : num 2.3
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.06
-        .. .. .. ..$ lower_cutoff : num 2.41
-        .. .. .. ..$ upper_cutoff : num 2.43
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.23
-        .. .. .. ..$ lower_cutoff : num 2.54
-        .. .. .. ..$ upper_cutoff : num 2.56
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.4
-        .. .. .. ..$ lower_cutoff : num 2.67
-        .. .. .. ..$ upper_cutoff : num 2.69
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.8
-        .. .. .. ..$ upper_cutoff : num 2.82
-        .. ..$ :List of 10
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.63
-        .. .. .. ..$ upper_cutoff : num 1.66
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.76
-        .. .. .. ..$ upper_cutoff : num 1.79
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.89
-        .. .. .. ..$ upper_cutoff : num 1.92
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.54
-        .. .. .. ..$ lower_cutoff : num 2.02
-        .. .. .. ..$ upper_cutoff : num 2.05
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.72
-        .. .. .. ..$ lower_cutoff : num 2.15
-        .. .. .. ..$ upper_cutoff : num 2.18
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.89
-        .. .. .. ..$ lower_cutoff : num 2.28
         .. .. .. ..$ upper_cutoff : num 2.31
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.06
@@ -3560,6 +3560,47 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
         .. .. .. ..$ lower_cutoff : num 2.67
+        .. .. .. ..$ upper_cutoff : num 2.69
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.57
+        .. .. .. ..$ lower_cutoff : num 2.8
+        .. .. .. ..$ upper_cutoff : num 2.82
+        .. ..$ :List of 10
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.03
+        .. .. .. ..$ lower_cutoff : num 1.63
+        .. .. .. ..$ upper_cutoff : num 1.66
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.2
+        .. .. .. ..$ lower_cutoff : num 1.76
+        .. .. .. ..$ upper_cutoff : num 1.79
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.37
+        .. .. .. ..$ lower_cutoff : num 1.89
+        .. .. .. ..$ upper_cutoff : num 1.92
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.54
+        .. .. .. ..$ lower_cutoff : num 2.02
+        .. .. .. ..$ upper_cutoff : num 2.05
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.72
+        .. .. .. ..$ lower_cutoff : num 2.15
+        .. .. .. ..$ upper_cutoff : num 2.18
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.89
+        .. .. .. ..$ lower_cutoff : num 2.28
+        .. .. .. ..$ upper_cutoff : num 2.31
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.06
+        .. .. .. ..$ lower_cutoff : num 2.41
+        .. .. .. ..$ upper_cutoff : num 2.44
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.23
+        .. .. .. ..$ lower_cutoff : num 2.54
+        .. .. .. ..$ upper_cutoff : num 2.57
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.4
+        .. .. .. ..$ lower_cutoff : num 2.67
         .. .. .. ..$ upper_cutoff : num 2.7
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
@@ -3686,88 +3727,6 @@
         .. .. .. ..$ upper_cutoff : num 2.7
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.8
-        .. .. .. ..$ upper_cutoff : num 2.83
-        .. ..$ :List of 10
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.63
-        .. .. .. ..$ upper_cutoff : num 1.66
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.76
-        .. .. .. ..$ upper_cutoff : num 1.79
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.89
-        .. .. .. ..$ upper_cutoff : num 1.92
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.54
-        .. .. .. ..$ lower_cutoff : num 2.02
-        .. .. .. ..$ upper_cutoff : num 2.05
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.72
-        .. .. .. ..$ lower_cutoff : num 2.15
-        .. .. .. ..$ upper_cutoff : num 2.18
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.89
-        .. .. .. ..$ lower_cutoff : num 2.28
-        .. .. .. ..$ upper_cutoff : num 2.31
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.06
-        .. .. .. ..$ lower_cutoff : num 2.41
-        .. .. .. ..$ upper_cutoff : num 2.44
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.23
-        .. .. .. ..$ lower_cutoff : num 2.54
-        .. .. .. ..$ upper_cutoff : num 2.57
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.4
-        .. .. .. ..$ lower_cutoff : num 2.67
-        .. .. .. ..$ upper_cutoff : num 2.7
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.8
-        .. .. .. ..$ upper_cutoff : num 2.83
-        .. ..$ :List of 10
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.63
-        .. .. .. ..$ upper_cutoff : num 1.66
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.76
-        .. .. .. ..$ upper_cutoff : num 1.79
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.89
-        .. .. .. ..$ upper_cutoff : num 1.92
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.54
-        .. .. .. ..$ lower_cutoff : num 2.02
-        .. .. .. ..$ upper_cutoff : num 2.05
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.72
-        .. .. .. ..$ lower_cutoff : num 2.15
-        .. .. .. ..$ upper_cutoff : num 2.18
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.89
-        .. .. .. ..$ lower_cutoff : num 2.28
-        .. .. .. ..$ upper_cutoff : num 2.31
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.06
-        .. .. .. ..$ lower_cutoff : num 2.41
-        .. .. .. ..$ upper_cutoff : num 2.44
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.23
-        .. .. .. ..$ lower_cutoff : num 2.54
-        .. .. .. ..$ upper_cutoff : num 2.57
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.4
-        .. .. .. ..$ lower_cutoff : num 2.67
-        .. .. .. ..$ upper_cutoff : num 2.7
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.57
         .. .. .. ..$ lower_cutoff : num 2.79
         .. .. .. ..$ upper_cutoff : num 2.83
         .. ..$ :List of 10
@@ -3912,6 +3871,88 @@
         .. .. .. ..$ upper_cutoff : num 2.05
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.72
+        .. .. .. ..$ lower_cutoff : num 2.15
+        .. .. .. ..$ upper_cutoff : num 2.18
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.89
+        .. .. .. ..$ lower_cutoff : num 2.27
+        .. .. .. ..$ upper_cutoff : num 2.31
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.06
+        .. .. .. ..$ lower_cutoff : num 2.4
+        .. .. .. ..$ upper_cutoff : num 2.44
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.23
+        .. .. .. ..$ lower_cutoff : num 2.53
+        .. .. .. ..$ upper_cutoff : num 2.57
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.4
+        .. .. .. ..$ lower_cutoff : num 2.66
+        .. .. .. ..$ upper_cutoff : num 2.7
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.57
+        .. .. .. ..$ lower_cutoff : num 2.79
+        .. .. .. ..$ upper_cutoff : num 2.83
+        .. ..$ :List of 10
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.03
+        .. .. .. ..$ lower_cutoff : num 1.63
+        .. .. .. ..$ upper_cutoff : num 1.67
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.2
+        .. .. .. ..$ lower_cutoff : num 1.76
+        .. .. .. ..$ upper_cutoff : num 1.8
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.37
+        .. .. .. ..$ lower_cutoff : num 1.89
+        .. .. .. ..$ upper_cutoff : num 1.93
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.54
+        .. .. .. ..$ lower_cutoff : num 2.02
+        .. .. .. ..$ upper_cutoff : num 2.05
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.72
+        .. .. .. ..$ lower_cutoff : num 2.15
+        .. .. .. ..$ upper_cutoff : num 2.18
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.89
+        .. .. .. ..$ lower_cutoff : num 2.27
+        .. .. .. ..$ upper_cutoff : num 2.31
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.06
+        .. .. .. ..$ lower_cutoff : num 2.4
+        .. .. .. ..$ upper_cutoff : num 2.44
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.23
+        .. .. .. ..$ lower_cutoff : num 2.53
+        .. .. .. ..$ upper_cutoff : num 2.57
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.4
+        .. .. .. ..$ lower_cutoff : num 2.66
+        .. .. .. ..$ upper_cutoff : num 2.7
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.57
+        .. .. .. ..$ lower_cutoff : num 2.79
+        .. .. .. ..$ upper_cutoff : num 2.83
+        .. ..$ :List of 10
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.03
+        .. .. .. ..$ lower_cutoff : num 1.63
+        .. .. .. ..$ upper_cutoff : num 1.67
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.2
+        .. .. .. ..$ lower_cutoff : num 1.76
+        .. .. .. ..$ upper_cutoff : num 1.8
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.37
+        .. .. .. ..$ lower_cutoff : num 1.89
+        .. .. .. ..$ upper_cutoff : num 1.93
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.54
+        .. .. .. ..$ lower_cutoff : num 2.02
+        .. .. .. ..$ upper_cutoff : num 2.06
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.72
         .. .. .. ..$ lower_cutoff : num 2.14
         .. .. .. ..$ upper_cutoff : num 2.18
         .. .. ..$ :List of 3
@@ -3950,11 +3991,11 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
         .. .. .. ..$ lower_cutoff : num 2.01
-        .. .. .. ..$ upper_cutoff : num 2.05
+        .. .. .. ..$ upper_cutoff : num 2.06
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.72
         .. .. .. ..$ lower_cutoff : num 2.14
-        .. .. .. ..$ upper_cutoff : num 2.18
+        .. .. .. ..$ upper_cutoff : num 2.19
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.89
         .. .. .. ..$ lower_cutoff : num 2.27
@@ -3982,47 +4023,6 @@
         .. .. .. ..$ upper_cutoff : num 1.67
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.76
-        .. .. .. ..$ upper_cutoff : num 1.8
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.88
-        .. .. .. ..$ upper_cutoff : num 1.93
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.54
-        .. .. .. ..$ lower_cutoff : num 2.01
-        .. .. .. ..$ upper_cutoff : num 2.06
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.72
-        .. .. .. ..$ lower_cutoff : num 2.14
-        .. .. .. ..$ upper_cutoff : num 2.18
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.89
-        .. .. .. ..$ lower_cutoff : num 2.27
-        .. .. .. ..$ upper_cutoff : num 2.31
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.06
-        .. .. .. ..$ lower_cutoff : num 2.4
-        .. .. .. ..$ upper_cutoff : num 2.44
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.23
-        .. .. .. ..$ lower_cutoff : num 2.53
-        .. .. .. ..$ upper_cutoff : num 2.57
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.4
-        .. .. .. ..$ lower_cutoff : num 2.66
-        .. .. .. ..$ upper_cutoff : num 2.7
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.79
-        .. .. .. ..$ upper_cutoff : num 2.83
-        .. ..$ :List of 10
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.62
-        .. .. .. ..$ upper_cutoff : num 1.67
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.75
         .. .. .. ..$ upper_cutoff : num 1.8
         .. .. ..$ :List of 3
@@ -4089,6 +4089,47 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.23
         .. .. .. ..$ lower_cutoff : num 2.53
+        .. .. .. ..$ upper_cutoff : num 2.57
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.4
+        .. .. .. ..$ lower_cutoff : num 2.66
+        .. .. .. ..$ upper_cutoff : num 2.7
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.57
+        .. .. .. ..$ lower_cutoff : num 2.79
+        .. .. .. ..$ upper_cutoff : num 2.83
+        .. ..$ :List of 10
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.03
+        .. .. .. ..$ lower_cutoff : num 1.62
+        .. .. .. ..$ upper_cutoff : num 1.67
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.2
+        .. .. .. ..$ lower_cutoff : num 1.75
+        .. .. .. ..$ upper_cutoff : num 1.8
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.37
+        .. .. .. ..$ lower_cutoff : num 1.88
+        .. .. .. ..$ upper_cutoff : num 1.93
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.54
+        .. .. .. ..$ lower_cutoff : num 2.01
+        .. .. .. ..$ upper_cutoff : num 2.06
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.72
+        .. .. .. ..$ lower_cutoff : num 2.14
+        .. .. .. ..$ upper_cutoff : num 2.19
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.89
+        .. .. .. ..$ lower_cutoff : num 2.27
+        .. .. .. ..$ upper_cutoff : num 2.32
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.06
+        .. .. .. ..$ lower_cutoff : num 2.4
+        .. .. .. ..$ upper_cutoff : num 2.45
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.23
+        .. .. .. ..$ lower_cutoff : num 2.53
         .. .. .. ..$ upper_cutoff : num 2.58
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
@@ -4219,7 +4260,7 @@
         .. .. .. ..$ upper_cutoff : num 2.71
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.79
+        .. .. .. ..$ lower_cutoff : num 2.78
         .. .. .. ..$ upper_cutoff : num 2.84
         .. ..$ :List of 10
         .. .. ..$ :List of 3
@@ -4256,48 +4297,7 @@
         .. .. .. ..$ upper_cutoff : num 2.58
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
-        .. .. .. ..$ lower_cutoff : num 2.66
-        .. .. .. ..$ upper_cutoff : num 2.71
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.79
-        .. .. .. ..$ upper_cutoff : num 2.84
-        .. ..$ :List of 10
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.62
-        .. .. .. ..$ upper_cutoff : num 1.67
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.75
-        .. .. .. ..$ upper_cutoff : num 1.8
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.88
-        .. .. .. ..$ upper_cutoff : num 1.93
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.54
-        .. .. .. ..$ lower_cutoff : num 2.01
-        .. .. .. ..$ upper_cutoff : num 2.06
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.72
-        .. .. .. ..$ lower_cutoff : num 2.14
-        .. .. .. ..$ upper_cutoff : num 2.19
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.89
-        .. .. .. ..$ lower_cutoff : num 2.27
-        .. .. .. ..$ upper_cutoff : num 2.32
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.06
-        .. .. .. ..$ lower_cutoff : num 2.4
-        .. .. .. ..$ upper_cutoff : num 2.45
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.23
-        .. .. .. ..$ lower_cutoff : num 2.53
-        .. .. .. ..$ upper_cutoff : num 2.58
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.4
-        .. .. .. ..$ lower_cutoff : num 2.66
+        .. .. .. ..$ lower_cutoff : num 2.65
         .. .. .. ..$ upper_cutoff : num 2.71
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
@@ -4389,7 +4389,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
         .. .. .. ..$ lower_cutoff : num 1.62
-        .. .. .. ..$ upper_cutoff : num 1.67
+        .. .. .. ..$ upper_cutoff : num 1.68
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.75
@@ -4434,7 +4434,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.75
-        .. .. .. ..$ upper_cutoff : num 1.8
+        .. .. .. ..$ upper_cutoff : num 1.81
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
         .. .. .. ..$ lower_cutoff : num 1.88
@@ -4482,7 +4482,7 @@
         .. .. .. ..$ upper_cutoff : num 1.94
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
-        .. .. .. ..$ lower_cutoff : num 2
+        .. .. .. ..$ lower_cutoff : num 2.01
         .. .. .. ..$ upper_cutoff : num 2.06
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.72
@@ -4519,7 +4519,7 @@
         .. .. .. ..$ upper_cutoff : num 1.81
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.87
+        .. .. .. ..$ lower_cutoff : num 1.88
         .. .. .. ..$ upper_cutoff : num 1.94
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
@@ -4552,11 +4552,11 @@
         .. ..$ :List of 10
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.61
+        .. .. .. ..$ lower_cutoff : num 1.62
         .. .. .. ..$ upper_cutoff : num 1.68
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.74
+        .. .. .. ..$ lower_cutoff : num 1.75
         .. .. .. ..$ upper_cutoff : num 1.81
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
@@ -4622,7 +4622,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.23
         .. .. .. ..$ lower_cutoff : num 2.52
-        .. .. .. ..$ upper_cutoff : num 2.59
+        .. .. .. ..$ upper_cutoff : num 2.58
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
         .. .. .. ..$ lower_cutoff : num 2.65
@@ -4671,7 +4671,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
         .. .. .. ..$ lower_cutoff : num 2.78
-        .. .. .. ..$ upper_cutoff : num 2.85
+        .. .. .. ..$ upper_cutoff : num 2.84
         .. ..$ :List of 10
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
@@ -4881,7 +4881,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
         .. .. .. ..$ lower_cutoff : num 1.61
-        .. .. .. ..$ upper_cutoff : num 1.68
+        .. .. .. ..$ upper_cutoff : num 1.69
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.74
@@ -4926,7 +4926,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.74
-        .. .. .. ..$ upper_cutoff : num 1.81
+        .. .. .. ..$ upper_cutoff : num 1.82
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
         .. .. .. ..$ lower_cutoff : num 1.87
@@ -5011,7 +5011,7 @@
         .. .. .. ..$ upper_cutoff : num 1.82
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.86
+        .. .. .. ..$ lower_cutoff : num 1.87
         .. .. .. ..$ upper_cutoff : num 1.95
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
@@ -5020,7 +5020,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.72
         .. .. .. ..$ lower_cutoff : num 2.12
-        .. .. .. ..$ upper_cutoff : num 2.2
+        .. .. .. ..$ upper_cutoff : num 2.21
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.89
         .. .. .. ..$ lower_cutoff : num 2.25
@@ -5044,7 +5044,7 @@
         .. ..$ :List of 10
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.6
+        .. .. .. ..$ lower_cutoff : num 1.61
         .. .. .. ..$ upper_cutoff : num 1.69
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
@@ -5118,11 +5118,11 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
         .. .. .. ..$ lower_cutoff : num 2.64
-        .. .. .. ..$ upper_cutoff : num 2.73
+        .. .. .. ..$ upper_cutoff : num 2.72
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
         .. .. .. ..$ lower_cutoff : num 2.77
-        .. .. .. ..$ upper_cutoff : num 2.86
+        .. .. .. ..$ upper_cutoff : num 2.85
         .. ..$ :List of 10
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
@@ -5332,7 +5332,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
         .. .. .. ..$ lower_cutoff : num 1.6
-        .. .. .. ..$ upper_cutoff : num 1.69
+        .. .. .. ..$ upper_cutoff : num 1.7
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.73
@@ -5381,14 +5381,14 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
         .. .. .. ..$ lower_cutoff : num 1.86
-        .. .. .. ..$ upper_cutoff : num 1.95
+        .. .. .. ..$ upper_cutoff : num 1.96
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
         .. .. .. ..$ lower_cutoff : num 1.99
         .. .. .. ..$ upper_cutoff : num 2.08
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.72
-        .. .. .. ..$ lower_cutoff : num 2.11
+        .. .. .. ..$ lower_cutoff : num 2.12
         .. .. .. ..$ upper_cutoff : num 2.21
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.89
@@ -5435,6 +5435,47 @@
         .. .. .. ..$ log_molecules: num 2.89
         .. .. .. ..$ lower_cutoff : num 2.24
         .. .. .. ..$ upper_cutoff : num 2.34
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.06
+        .. .. .. ..$ lower_cutoff : num 2.37
+        .. .. .. ..$ upper_cutoff : num 2.47
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.23
+        .. .. .. ..$ lower_cutoff : num 2.5
+        .. .. .. ..$ upper_cutoff : num 2.6
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.4
+        .. .. .. ..$ lower_cutoff : num 2.63
+        .. .. .. ..$ upper_cutoff : num 2.73
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.57
+        .. .. .. ..$ lower_cutoff : num 2.76
+        .. .. .. ..$ upper_cutoff : num 2.86
+        .. ..$ :List of 10
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.03
+        .. .. .. ..$ lower_cutoff : num 1.6
+        .. .. .. ..$ upper_cutoff : num 1.7
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.2
+        .. .. .. ..$ lower_cutoff : num 1.73
+        .. .. .. ..$ upper_cutoff : num 1.83
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.37
+        .. .. .. ..$ lower_cutoff : num 1.85
+        .. .. .. ..$ upper_cutoff : num 1.96
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.54
+        .. .. .. ..$ lower_cutoff : num 1.98
+        .. .. .. ..$ upper_cutoff : num 2.09
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.72
+        .. .. .. ..$ lower_cutoff : num 2.11
+        .. .. .. ..$ upper_cutoff : num 2.22
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.89
+        .. .. .. ..$ lower_cutoff : num 2.24
+        .. .. .. ..$ upper_cutoff : num 2.35
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.06
         .. .. .. ..$ lower_cutoff : num 2.37
@@ -5479,15 +5520,15 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.06
         .. .. .. ..$ lower_cutoff : num 2.37
-        .. .. .. ..$ upper_cutoff : num 2.47
+        .. .. .. ..$ upper_cutoff : num 2.48
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.23
         .. .. .. ..$ lower_cutoff : num 2.5
-        .. .. .. ..$ upper_cutoff : num 2.6
+        .. .. .. ..$ upper_cutoff : num 2.61
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
         .. .. .. ..$ lower_cutoff : num 2.63
-        .. .. .. ..$ upper_cutoff : num 2.73
+        .. .. .. ..$ upper_cutoff : num 2.74
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
         .. .. .. ..$ lower_cutoff : num 2.76
@@ -5572,48 +5613,7 @@
         .. .. .. ..$ upper_cutoff : num 2.74
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.76
-        .. .. .. ..$ upper_cutoff : num 2.87
-        .. ..$ :List of 10
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.59
-        .. .. .. ..$ upper_cutoff : num 1.7
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.72
-        .. .. .. ..$ upper_cutoff : num 1.83
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.85
-        .. .. .. ..$ upper_cutoff : num 1.96
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.54
-        .. .. .. ..$ lower_cutoff : num 1.98
-        .. .. .. ..$ upper_cutoff : num 2.09
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.72
-        .. .. .. ..$ lower_cutoff : num 2.11
-        .. .. .. ..$ upper_cutoff : num 2.22
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.89
-        .. .. .. ..$ lower_cutoff : num 2.24
-        .. .. .. ..$ upper_cutoff : num 2.35
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.06
-        .. .. .. ..$ lower_cutoff : num 2.37
-        .. .. .. ..$ upper_cutoff : num 2.48
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.23
-        .. .. .. ..$ lower_cutoff : num 2.5
-        .. .. .. ..$ upper_cutoff : num 2.61
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.4
-        .. .. .. ..$ lower_cutoff : num 2.63
-        .. .. .. ..$ upper_cutoff : num 2.74
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.76
+        .. .. .. ..$ lower_cutoff : num 2.75
         .. .. .. ..$ upper_cutoff : num 2.87
         .. ..$ :List of 10
         .. .. ..$ :List of 3
@@ -5701,7 +5701,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
         .. .. .. ..$ lower_cutoff : num 1.59
-        .. .. .. ..$ upper_cutoff : num 1.7
+        .. .. .. ..$ upper_cutoff : num 1.71
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.72
@@ -5750,7 +5750,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
         .. .. .. ..$ lower_cutoff : num 1.85
-        .. .. .. ..$ upper_cutoff : num 1.96
+        .. .. .. ..$ upper_cutoff : num 1.97
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
         .. .. .. ..$ lower_cutoff : num 1.98
@@ -5790,7 +5790,7 @@
         .. .. .. ..$ upper_cutoff : num 1.84
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.84
+        .. .. .. ..$ lower_cutoff : num 1.85
         .. .. .. ..$ upper_cutoff : num 1.97
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
@@ -5852,15 +5852,15 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.23
         .. .. .. ..$ lower_cutoff : num 2.49
-        .. .. .. ..$ upper_cutoff : num 2.62
+        .. .. .. ..$ upper_cutoff : num 2.61
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
         .. .. .. ..$ lower_cutoff : num 2.62
-        .. .. .. ..$ upper_cutoff : num 2.75
+        .. .. .. ..$ upper_cutoff : num 2.74
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
         .. .. .. ..$ lower_cutoff : num 2.75
-        .. .. .. ..$ upper_cutoff : num 2.88
+        .. .. .. ..$ upper_cutoff : num 2.87
         .. ..$ :List of 10
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
@@ -5988,7 +5988,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
         .. .. .. ..$ lower_cutoff : num 1.58
-        .. .. .. ..$ upper_cutoff : num 1.71
+        .. .. .. ..$ upper_cutoff : num 1.72
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.71
@@ -6011,7 +6011,7 @@
         .. .. .. ..$ upper_cutoff : num 2.36
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.06
-        .. .. .. ..$ lower_cutoff : num 2.36
+        .. .. .. ..$ lower_cutoff : num 2.35
         .. .. .. ..$ upper_cutoff : num 2.49
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.23
@@ -6033,7 +6033,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.71
-        .. .. .. ..$ upper_cutoff : num 1.84
+        .. .. .. ..$ upper_cutoff : num 1.85
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
         .. .. .. ..$ lower_cutoff : num 1.84
@@ -6077,7 +6077,7 @@
         .. .. .. ..$ upper_cutoff : num 1.85
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.83
+        .. .. .. ..$ lower_cutoff : num 1.84
         .. .. .. ..$ upper_cutoff : num 1.98
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
@@ -6187,7 +6187,7 @@
         .. .. .. ..$ upper_cutoff : num 2.76
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.74
+        .. .. .. ..$ lower_cutoff : num 2.73
         .. .. .. ..$ upper_cutoff : num 2.89
         .. ..$ :List of 10
         .. .. ..$ :List of 3
@@ -6234,7 +6234,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
         .. .. .. ..$ lower_cutoff : num 1.57
-        .. .. .. ..$ upper_cutoff : num 1.72
+        .. .. .. ..$ upper_cutoff : num 1.73
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.7
@@ -6257,7 +6257,7 @@
         .. .. .. ..$ upper_cutoff : num 2.37
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.06
-        .. .. .. ..$ lower_cutoff : num 2.35
+        .. .. .. ..$ lower_cutoff : num 2.34
         .. .. .. ..$ upper_cutoff : num 2.5
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.23
@@ -6283,7 +6283,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
         .. .. .. ..$ lower_cutoff : num 1.83
-        .. .. .. ..$ upper_cutoff : num 1.98
+        .. .. .. ..$ upper_cutoff : num 1.99
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
         .. .. .. ..$ lower_cutoff : num 1.96
@@ -6300,6 +6300,47 @@
         .. .. .. ..$ log_molecules: num 3.06
         .. .. .. ..$ lower_cutoff : num 2.34
         .. .. .. ..$ upper_cutoff : num 2.5
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.23
+        .. .. .. ..$ lower_cutoff : num 2.47
+        .. .. .. ..$ upper_cutoff : num 2.63
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.4
+        .. .. .. ..$ lower_cutoff : num 2.6
+        .. .. .. ..$ upper_cutoff : num 2.76
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.57
+        .. .. .. ..$ lower_cutoff : num 2.73
+        .. .. .. ..$ upper_cutoff : num 2.89
+        .. ..$ :List of 10
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.03
+        .. .. .. ..$ lower_cutoff : num 1.57
+        .. .. .. ..$ upper_cutoff : num 1.73
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.2
+        .. .. .. ..$ lower_cutoff : num 1.69
+        .. .. .. ..$ upper_cutoff : num 1.86
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.37
+        .. .. .. ..$ lower_cutoff : num 1.82
+        .. .. .. ..$ upper_cutoff : num 1.99
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.54
+        .. .. .. ..$ lower_cutoff : num 1.95
+        .. .. .. ..$ upper_cutoff : num 2.12
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.72
+        .. .. .. ..$ lower_cutoff : num 2.08
+        .. .. .. ..$ upper_cutoff : num 2.25
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 2.89
+        .. .. .. ..$ lower_cutoff : num 2.21
+        .. .. .. ..$ upper_cutoff : num 2.38
+        .. .. ..$ :List of 3
+        .. .. .. ..$ log_molecules: num 3.06
+        .. .. .. ..$ lower_cutoff : num 2.34
+        .. .. .. ..$ upper_cutoff : num 2.51
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.23
         .. .. .. ..$ lower_cutoff : num 2.47
@@ -6351,7 +6392,7 @@
         .. .. .. ..$ upper_cutoff : num 2.77
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.73
+        .. .. .. ..$ lower_cutoff : num 2.72
         .. .. .. ..$ upper_cutoff : num 2.9
         .. ..$ :List of 10
         .. .. ..$ :List of 3
@@ -6384,48 +6425,7 @@
         .. .. .. ..$ upper_cutoff : num 2.51
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.23
-        .. .. .. ..$ lower_cutoff : num 2.47
-        .. .. .. ..$ upper_cutoff : num 2.64
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.4
-        .. .. .. ..$ lower_cutoff : num 2.6
-        .. .. .. ..$ upper_cutoff : num 2.77
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.57
-        .. .. .. ..$ lower_cutoff : num 2.73
-        .. .. .. ..$ upper_cutoff : num 2.9
-        .. ..$ :List of 10
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.56
-        .. .. .. ..$ upper_cutoff : num 1.73
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.69
-        .. .. .. ..$ upper_cutoff : num 1.86
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.82
-        .. .. .. ..$ upper_cutoff : num 1.99
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.54
-        .. .. .. ..$ lower_cutoff : num 1.95
-        .. .. .. ..$ upper_cutoff : num 2.12
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.72
-        .. .. .. ..$ lower_cutoff : num 2.08
-        .. .. .. ..$ upper_cutoff : num 2.25
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 2.89
-        .. .. .. ..$ lower_cutoff : num 2.21
-        .. .. .. ..$ upper_cutoff : num 2.38
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.06
-        .. .. .. ..$ lower_cutoff : num 2.34
-        .. .. .. ..$ upper_cutoff : num 2.51
-        .. .. ..$ :List of 3
-        .. .. .. ..$ log_molecules: num 3.23
-        .. .. .. ..$ lower_cutoff : num 2.47
+        .. .. .. ..$ lower_cutoff : num 2.46
         .. .. .. ..$ upper_cutoff : num 2.64
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
@@ -6443,7 +6443,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.69
-        .. .. .. ..$ upper_cutoff : num 1.86
+        .. .. .. ..$ upper_cutoff : num 1.87
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
         .. .. .. ..$ lower_cutoff : num 1.82
@@ -6479,11 +6479,11 @@
         .. ..$ :List of 10
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.55
+        .. .. .. ..$ lower_cutoff : num 1.56
         .. .. .. ..$ upper_cutoff : num 1.74
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.68
+        .. .. .. ..$ lower_cutoff : num 1.69
         .. .. .. ..$ upper_cutoff : num 1.87
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
@@ -6504,19 +6504,19 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.06
         .. .. .. ..$ lower_cutoff : num 2.33
-        .. .. .. ..$ upper_cutoff : num 2.52
+        .. .. .. ..$ upper_cutoff : num 2.51
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.23
         .. .. .. ..$ lower_cutoff : num 2.46
-        .. .. .. ..$ upper_cutoff : num 2.65
+        .. .. .. ..$ upper_cutoff : num 2.64
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
         .. .. .. ..$ lower_cutoff : num 2.59
-        .. .. .. ..$ upper_cutoff : num 2.78
+        .. .. .. ..$ upper_cutoff : num 2.77
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
         .. .. .. ..$ lower_cutoff : num 2.72
-        .. .. .. ..$ upper_cutoff : num 2.91
+        .. .. .. ..$ upper_cutoff : num 2.9
         .. ..$ :List of 10
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
@@ -6562,7 +6562,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
         .. .. .. ..$ lower_cutoff : num 1.55
-        .. .. .. ..$ upper_cutoff : num 1.74
+        .. .. .. ..$ upper_cutoff : num 1.75
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
         .. .. .. ..$ lower_cutoff : num 1.68
@@ -6602,11 +6602,11 @@
         .. ..$ :List of 10
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
-        .. .. .. ..$ lower_cutoff : num 1.54
+        .. .. .. ..$ lower_cutoff : num 1.55
         .. .. .. ..$ upper_cutoff : num 1.75
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.2
-        .. .. .. ..$ lower_cutoff : num 1.67
+        .. .. .. ..$ lower_cutoff : num 1.68
         .. .. .. ..$ upper_cutoff : num 1.88
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
@@ -6627,15 +6627,15 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.06
         .. .. .. ..$ lower_cutoff : num 2.32
-        .. .. .. ..$ upper_cutoff : num 2.53
+        .. .. .. ..$ upper_cutoff : num 2.52
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.23
         .. .. .. ..$ lower_cutoff : num 2.45
-        .. .. .. ..$ upper_cutoff : num 2.66
+        .. .. .. ..$ upper_cutoff : num 2.65
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.4
         .. .. .. ..$ lower_cutoff : num 2.58
-        .. .. .. ..$ upper_cutoff : num 2.79
+        .. .. .. ..$ upper_cutoff : num 2.78
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
         .. .. .. ..$ lower_cutoff : num 2.71
@@ -6692,7 +6692,7 @@
         .. .. .. ..$ upper_cutoff : num 1.89
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.37
-        .. .. .. ..$ lower_cutoff : num 1.79
+        .. .. .. ..$ lower_cutoff : num 1.8
         .. .. .. ..$ upper_cutoff : num 2.02
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.54
@@ -6721,7 +6721,7 @@
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 3.57
         .. .. .. ..$ lower_cutoff : num 2.7
-        .. .. .. ..$ upper_cutoff : num 2.93
+        .. .. .. ..$ upper_cutoff : num 2.92
         .. ..$ :List of 10
         .. .. ..$ :List of 3
         .. .. .. ..$ log_molecules: num 2.03
@@ -6807,14 +6807,14 @@
         .. .. [list output truncated]
        $ mock_sample_1_id-numGenesVsNumUmis-1:List of 2
         ..$ before:List of 4
-        .. ..$ num_cells   : num 287
-        .. ..$ total_genes : int 933
-        .. ..$ median_genes: int 98
-        .. ..$ median_umis : num 311
-        ..$ after :List of 4
         .. ..$ num_cells   : num 286
-        .. ..$ total_genes : int 930
-        .. ..$ median_genes: num 97.5
+        .. ..$ total_genes : int 932
+        .. ..$ median_genes: num 98
+        .. ..$ median_umis : num 312
+        ..$ after :List of 4
+        .. ..$ num_cells   : num 285
+        .. ..$ total_genes : int 929
+        .. ..$ median_genes: int 98
         .. ..$ median_umis : num 311
 
 ---
@@ -6826,7 +6826,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "bc4ca6b251b8970b21710ba8ed4eead0"
+      [1] "4867f367266fa1a96459c71505556db0"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -6878,9 +6878,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 1 NA NA NA NA 1 NA 1 1 NA 1 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
-        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0005 0.0001 0.0001 NA 0.0001 0.0014 0.0001 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
-        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE TRUE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001561 0.000118 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
+        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0012 0.0001 0.0001 NA 0.0001 0.0012 0.0003 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
+        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE FALSE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TR| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001349 0.000352 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
         .. .. ..$ cells_id          : int [1:460] 560 320 152 73 227 145 633 48 127 302 23 838 355 600 164 621 531 409 296 882 282 620 516 211 859 258 313 480 297 | __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -6949,9 +6949,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
-        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9139 0.0001 NA 0.1214 0.0001 0.0001 0.0001 0.0001 0.0015 0.6978 0.0009 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
+        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9181 0.0001 NA 0.1219 0.0001 0.0001 0.0001 0.0001 0.0028 0.701 0.0016 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0.| __truncated__ ...
         .. .. ..$ emptyDrops_Limited: logi [1:436] FALSE TRUE NA FALSE TRUE TRUE TRUE TRUE FALSE FALSE FALSE NA NA TRUE TRUE NA NA NA TRUE NA TRUE TRUE TRUE TRUE TR| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.977799 0.000128 NA 0 0 0.000128 0 0.000128 0.001808 0 0.001119 NA NA 0 0.000128 NA NA NA 0.000128 NA 0.000128 0| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.982292 0.000132 NA 0 0 0.000132 0 0.000132 0.003363 0 0.001942 NA NA 0 0.000132 NA NA NA 0.000132 NA 0.000132 0| __truncated__ ...
         .. .. ..$ cells_id          : int [1:436] 216 894 758 202 851 518 475 14 761 399 671 822 341 446 542 141 631 218 294 423 455 718 370 176 391 259 380 10 710| __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -6983,13 +6983,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "21ded069f39295494fec930ea2042f44"
+      [1] "5571aed3648725980ad9fa14d69d101f"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:337] 320 152 73 227 633 48 127 838 600 164 621 531 409 882 620 516 211 859 258 297 157 405 869 835 890 874 347 225 503| __truncated__ ...
-       $ mock_sample_1_id: int [1:276] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
+       $ mock_sample_1_id: int [1:275] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
 
 ---
 
@@ -7000,12 +7000,12 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "591fcde3bdd2c98f98db85cf49a7127a"
+      [1] "49517c4421b54fc0a4538287a922e531"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
       List of 2
-       $ mock_sample_1_id-doubletScores-0:List of 286
+       $ mock_sample_1_id-doubletScores-0:List of 285
         ..$ : Named num 0.293
         .. ..- attr(*, "names")= chr "doubletP"
         ..$ : Named num 0.164
@@ -7207,15 +7207,15 @@
         .. [list output truncated]
        $ mock_sample_1_id-doubletScores-1:List of 2
         ..$ before:List of 4
-        .. ..$ num_cells   : num 286
-        .. ..$ total_genes : int 930
-        .. ..$ median_genes: num 97.5
+        .. ..$ num_cells   : num 285
+        .. ..$ total_genes : int 929
+        .. ..$ median_genes: int 98
         .. ..$ median_umis : num 311
         ..$ after :List of 4
-        .. ..$ num_cells   : num 276
-        .. ..$ total_genes : int 922
-        .. ..$ median_genes: num 93
-        .. ..$ median_umis : num 304
+        .. ..$ num_cells   : num 275
+        .. ..$ total_genes : int 921
+        .. ..$ median_genes: int 93
+        .. ..$ median_umis : num 305
 
 ---
 
@@ -7226,7 +7226,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "bc4ca6b251b8970b21710ba8ed4eead0"
+      [1] "4867f367266fa1a96459c71505556db0"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7278,9 +7278,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 1 NA NA NA NA 1 NA 1 1 NA 1 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
-        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0005 0.0001 0.0001 NA 0.0001 0.0014 0.0001 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
-        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE TRUE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001561 0.000118 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
+        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0012 0.0001 0.0001 NA 0.0001 0.0012 0.0003 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
+        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE FALSE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TR| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001349 0.000352 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
         .. .. ..$ cells_id          : int [1:460] 560 320 152 73 227 145 633 48 127 302 23 838 355 600 164 621 531 409 296 882 282 620 516 211 859 258 313 480 297 | __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -7349,9 +7349,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
-        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9139 0.0001 NA 0.1214 0.0001 0.0001 0.0001 0.0001 0.0015 0.6978 0.0009 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
+        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9181 0.0001 NA 0.1219 0.0001 0.0001 0.0001 0.0001 0.0028 0.701 0.0016 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0.| __truncated__ ...
         .. .. ..$ emptyDrops_Limited: logi [1:436] FALSE TRUE NA FALSE TRUE TRUE TRUE TRUE FALSE FALSE FALSE NA NA TRUE TRUE NA NA NA TRUE NA TRUE TRUE TRUE TRUE TR| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.977799 0.000128 NA 0 0 0.000128 0 0.000128 0.001808 0 0.001119 NA NA 0 0.000128 NA NA NA 0.000128 NA 0.000128 0| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.982292 0.000132 NA 0 0 0.000132 0 0.000132 0.003363 0 0.001942 NA NA 0 0.000132 NA NA NA 0.000132 NA 0.000132 0| __truncated__ ...
         .. .. ..$ cells_id          : int [1:436] 216 894 758 202 851 518 475 14 761 399 671 822 341 446 542 141 631 218 294 423 455 718 370 176 391 259 380 10 710| __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -7383,13 +7383,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "21ded069f39295494fec930ea2042f44"
+      [1] "5571aed3648725980ad9fa14d69d101f"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:337] 320 152 73 227 633 48 127 838 600 164 621 531 409 882 620 516 211 859 258 297 157 405 869 835 890 874 347 225 503| __truncated__ ...
-       $ mock_sample_1_id: int [1:276] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
+       $ mock_sample_1_id: int [1:275] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
 
 ---
 
@@ -7415,7 +7415,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "bc4ca6b251b8970b21710ba8ed4eead0"
+      [1] "4867f367266fa1a96459c71505556db0"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7467,9 +7467,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 1 NA NA NA NA 1 NA 1 1 NA 1 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
-        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0005 0.0001 0.0001 NA 0.0001 0.0014 0.0001 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
-        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE TRUE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001561 0.000118 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
+        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0012 0.0001 0.0001 NA 0.0001 0.0012 0.0003 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
+        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE FALSE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TR| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001349 0.000352 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
         .. .. ..$ cells_id          : int [1:460] 560 320 152 73 227 145 633 48 127 302 23 838 355 600 164 621 531 409 296 882 282 620 516 211 859 258 313 480 297 | __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -7538,9 +7538,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
-        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9139 0.0001 NA 0.1214 0.0001 0.0001 0.0001 0.0001 0.0015 0.6978 0.0009 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
+        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9181 0.0001 NA 0.1219 0.0001 0.0001 0.0001 0.0001 0.0028 0.701 0.0016 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0.| __truncated__ ...
         .. .. ..$ emptyDrops_Limited: logi [1:436] FALSE TRUE NA FALSE TRUE TRUE TRUE TRUE FALSE FALSE FALSE NA NA TRUE TRUE NA NA NA TRUE NA TRUE TRUE TRUE TRUE TR| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.977799 0.000128 NA 0 0 0.000128 0 0.000128 0.001808 0 0.001119 NA NA 0 0.000128 NA NA NA 0.000128 NA 0.000128 0| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.982292 0.000132 NA 0 0 0.000132 0 0.000132 0.003363 0 0.001942 NA NA 0 0.000132 NA NA NA 0.000132 NA 0.000132 0| __truncated__ ...
         .. .. ..$ cells_id          : int [1:436] 216 894 758 202 851 518 475 14 761 399 671 822 341 446 542 141 631 218 294 423 455 718 370 176 391 259 380 10 710| __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -7572,13 +7572,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "21ded069f39295494fec930ea2042f44"
+      [1] "5571aed3648725980ad9fa14d69d101f"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:337] 320 152 73 227 633 48 127 838 600 164 621 531 409 882 620 516 211 859 258 297 157 405 869 835 890 874 347 225 503| __truncated__ ...
-       $ mock_sample_1_id: int [1:276] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
+       $ mock_sample_1_id: int [1:275] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
 
 ---
 
@@ -7604,7 +7604,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "bc4ca6b251b8970b21710ba8ed4eead0"
+      [1] "4867f367266fa1a96459c71505556db0"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7656,9 +7656,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 1 1 NA NA 1 NA NA NA NA 1 NA 1 1 NA 1 NA 2 1 NA 1 NA 1 1 1 2 NA 1 2 NA NA 1 1 NA NA 1 1 NA 1 2 NA 1 1 1 NA 1 NA 1 NA ...
         .. .. ..$ emptyDrops_Total  : int [1:460] 46 289 249 263 193 93 472 101 112 41 38 297 81 372 272 174 406 107 529 238 93 232 165 300 411 373 533 155 310 553| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:460] NA -367 -268 -404 -268 NA -490 -172 -198 NA NA -336 NA -500 -312 -381 -365 -274 -640 -372 NA -325 -311 -403 -476 ...
-        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0005 0.0001 0.0001 NA 0.0001 0.0014 0.0001 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
-        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE TRUE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001561 0.000118 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
+        .. .. ..$ emptyDrops_PValue : num [1:460] NA 0.0001 0.0012 0.0001 0.0001 NA 0.0001 0.0012 0.0003 NA NA 0.0001 NA 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 | __truncated__ ...
+        .. .. ..$ emptyDrops_Limited: logi [1:460] NA TRUE FALSE TRUE TRUE NA TRUE FALSE FALSE NA NA TRUE NA TRUE TRUE TRUE TRUE TRUE TRUE TRUE NA TRUE TRUE TRUE TR| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:460] NA 0 0 0 0.000118 NA 0 0.001349 0.000352 NA NA 0 NA 0 0 0.000118 0 0.000118 0 0 NA 0 0.000118 0 0 ...
         .. .. ..$ cells_id          : int [1:460] 560 320 152 73 227 145 633 48 127 302 23 838 355 600 164 621 531 409 296 882 282 620 516 211 859 258 313 480 297 | __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -7727,9 +7727,9 @@
         .. .. ..$ doublet_class     : Factor w/ 2 levels "singlet","doublet": NA 1 NA 1 1 1 1 1 NA 1 NA NA NA 1 1 NA NA NA 1 NA 1 NA NA NA 1 1 NA 1 1 NA 1 NA NA NA NA NA 1 NA NA 1 NA 1 1 1 1 1 NA NA NA NA ...
         .. .. ..$ emptyDrops_Total  : int [1:436] 208 422 49 520 578 329 637 442 229 521 119 59 42 594 441 80 26 58 223 52 262 149 133 164 314 743 68 345 593 83 35| __truncated__ ...
         .. .. ..$ emptyDrops_LogProb: num [1:436] -173 -587 NA -333 -667 -376 -843 -548 -269 -289 -204 NA NA -842 -609 NA NA NA -351 NA -348 -300 -237 -275 -409 ...
-        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9139 0.0001 NA 0.1214 0.0001 0.0001 0.0001 0.0001 0.0015 0.6978 0.0009 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0| __truncated__ ...
+        .. .. ..$ emptyDrops_PValue : num [1:436] 0.9181 0.0001 NA 0.1219 0.0001 0.0001 0.0001 0.0001 0.0028 0.701 0.0016 NA NA 0.0001 0.0001 NA NA NA 0.0001 NA 0.| __truncated__ ...
         .. .. ..$ emptyDrops_Limited: logi [1:436] FALSE TRUE NA FALSE TRUE TRUE TRUE TRUE FALSE FALSE FALSE NA NA TRUE TRUE NA NA NA TRUE NA TRUE TRUE TRUE TRUE TR| __truncated__ ...
-        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.977799 0.000128 NA 0 0 0.000128 0 0.000128 0.001808 0 0.001119 NA NA 0 0.000128 NA NA NA 0.000128 NA 0.000128 0| __truncated__ ...
+        .. .. ..$ emptyDrops_FDR    : num [1:436] 0.982292 0.000132 NA 0 0 0.000132 0 0.000132 0.003363 0 0.001942 NA NA 0 0.000132 NA NA NA 0.000132 NA 0.000132 0| __truncated__ ...
         .. .. ..$ cells_id          : int [1:436] 216 894 758 202 851 518 475 14 761 399 671 822 341 446 542 141 631 218 294 423 455 718 370 176 391 259 380 10 710| __truncated__ ...
         .. ..@ active.assay: chr "RNA"
         .. ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
@@ -7761,13 +7761,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "21ded069f39295494fec930ea2042f44"
+      [1] "5571aed3648725980ad9fa14d69d101f"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:337] 320 152 73 227 633 48 127 838 600 164 621 531 409 882 620 516 211 859 258 297 157 405 869 835 890 874 347 225 503| __truncated__ ...
-       $ mock_sample_1_id: int [1:276] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
+       $ mock_sample_1_id: int [1:275] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
 
 ---
 
@@ -7793,7 +7793,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "ffb2531010bb466515a7cfc702296127"
+      [1] "7ec6c5fd4f1cf625f9d8760760085254"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -7802,32 +7802,32 @@
         .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
         .. .. .. ..@ layers    :List of 3
         .. .. .. .. ..$ data      :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. ..@ i       : int [1:56908] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
-        .. .. .. .. .. .. ..@ p       : int [1:614] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1072 1153 1229 1323 1437 1545 1630 1676 1744 1841 1952 2034 | __truncated__ ...
-        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 613
+        .. .. .. .. .. .. ..@ i       : int [1:56849] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
+        .. .. .. .. .. .. ..@ p       : int [1:613] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1072 1153 1229 1323 1437 1545 1630 1676 1744 1841 1952 2034 | __truncated__ ...
+        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 612
         .. .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. ..@ x       : num [1:56908] 4.25 4.25 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 ...
+        .. .. .. .. .. .. ..@ x       : num [1:56849] 4.25 4.25 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 ...
         .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. ..$ counts    :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. ..@ i       : int [1:56908] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
-        .. .. .. .. .. .. ..@ p       : int [1:614] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1072 1153 1229 1323 1437 1545 1630 1676 1744 1841 1952 2034 | __truncated__ ...
-        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 613
+        .. .. .. .. .. .. ..@ i       : int [1:56849] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
+        .. .. .. .. .. .. ..@ p       : int [1:613] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1072 1153 1229 1323 1437 1545 1630 1676 1744 1841 1952 2034 | __truncated__ ...
+        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 612
         .. .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. ..@ x       : num [1:56908] 2 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 4 3 1 1 1 1 1 1 2 1 1 1 1 1 2 4 1 1 1 ...
+        .. .. .. .. .. .. ..@ x       : num [1:56849] 2 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 4 3 1 1 1 1 1 1 2 1 1 1 1 1 2 4 1 1 1 ...
         .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. ..$ scale.data: num [1:2000, 1:613] -0.1406 0 0 0 0 -0.1516 -0.0404 0 0 -0.0808 0 0 0 0 -0.2688 0 -0.311 0 0 0.8764 -0.2086 0 -0.0404 -0.0895 -0.0561 ...
+        .. .. .. .. ..$ scale.data: num [1:2000, 1:612] -0.1407 0 0 0 0 -0.1517 -0.0404 0 0 -0.0809 0 0 0 0 -0.269 0 -0.3112 0 0 0.8748 -0.2088 0 -0.0404 -0.0896 -0.0562 ...
         .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
-        .. .. .. .. .. ..@ .Data: logi [1:613, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
+        .. .. .. .. .. ..@ .Data: logi [1:612, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
         .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. .. .. ..$ : chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. .. .. .. .. .. .. ..$ : chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
         .. .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
-        .. .. .. .. .. ..$ dim     : int [1:2] 613 3
+        .. .. .. .. .. ..$ dim     : int [1:2] 612 3
         .. .. .. .. .. ..$ dimnames:List of 2
-        .. .. .. .. .. .. ..$ : chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. .. .. .. .. .. ..$ : chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
         .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
         .. .. .. ..@ features  :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
         .. .. .. .. .. ..@ .Data: logi [1:2000, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
@@ -7847,62 +7847,62 @@
         .. .. .. .. ..$ vf_vst_counts.1_variance.standardized: num [1:2000] 0.901 0 0 0 0 1.106 0 0 0 0.938 0 0 0 0 1.108 0 0.937 0 0 0.581 0.9 0 1 1 0 ...
         .. .. .. .. ..$ vf_vst_counts.1_variable             : logi [1:2000] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
         .. .. .. .. ..$ vf_vst_counts.1_rank                 : int [1:2000] 673 855 856 857 858 141 859 860 861 456 862 863 864 865 137 866 486 867 868 852 686 869 256 257 870 162 258 492 7| __truncated__ ...
-        .. .. .. .. ..$ vf_vst_counts.2_mean                 : num [1:2000] 0.01087 0 0 0 0 0.02536 0.00362 0 0 0.00362 0 0 0 0 0.05072 0 0.09783 0 0 1.25725 0.07971 0 0 0.01449 0.00725 ...
-        .. .. .. .. ..$ vf_vst_counts.2_variance             : num [1:2000] 0.01079 0 0 0 0 0.03208 0.00362 0 0 0.00362 0 0 0 0 0.07742 0 0.08858 0 0 1.71177 0.18999 0 0 0.01433 0.00722 ...
-        .. .. .. .. ..$ vf_vst_counts.2_variance.expected    : num [1:2000] 0.01241 0 0 0 0 0.0289 0.00362 0 0 0.00362 0 0 0 0 0.05803 0 0.11692 0 0 2.68065 0.09215 0 0 0.01636 0.008 ...
-        .. .. .. .. ..$ vf_vst_counts.2_variance.standardized: num [1:2000] 0.87 0 0 0 0 1.11 1 0 0 1 0 0 0 0 1.334 0 0.758 0 0 0.639 2.062 0 0 0.876 0.903 ...
+        .. .. .. .. ..$ vf_vst_counts.2_mean                 : num [1:2000] 0.01091 0 0 0 0 0.02545 0.00364 0 0 0.00364 0 0 0 0 0.05091 0 0.09818 0 0 1.26182 0.08 0 0 0.01455 0.00727 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance             : num [1:2000] 0.01083 0 0 0 0 0.0322 0.00364 0 0 0.00364 0 0 0 0 0.07769 0 0.08887 0 0 1.71222 0.19066 0 0 0.01439 0.00725 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance.expected    : num [1:2000] 0.01245 0 0 0 0 0.029 0.00364 0 0 0.00364 0 0 0 0 0.05836 0 0.11711 0 0 2.69257 0.09237 0 0 0.01642 0.00803 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance.standardized: num [1:2000] 0.87 0 0 0 0 1.11 1 0 0 1 0 0 0 0 1.331 0 0.759 0 0 0.636 2.064 0 0 0.876 0.903 ...
         .. .. .. .. ..$ vf_vst_counts.2_variable             : logi [1:2000] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. .. .. ..$ vf_vst_counts.2_rank                 : int [1:2000] 696 923 924 925 926 156 254 927 928 255 929 930 931 932 67 933 890 934 935 917 11 936 937 646 552 165 553 256 910| __truncated__ ...
+        .. .. .. .. ..$ vf_vst_counts.2_rank                 : int [1:2000] 694 922 923 924 925 156 251 926 927 252 928 929 930 931 69 932 890 933 934 916 11 935 936 646 549 165 550 253 909| __truncated__ ...
         .. .. .. .. ..$ var.features                         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. ..$ var.features.rank                    : int [1:2000] 699 892 893 894 895 91 504 896 897 265 898 899 901 902 58 903 705 904 905 887 262 906 557 383 727 106 316 291 830| __truncated__ ...
+        .. .. .. .. ..$ var.features.rank                    : int [1:2000] 698 892 893 894 895 91 501 896 897 263 898 899 900 902 59 903 705 904 905 888 260 907 557 382 726 104 314 289 830| __truncated__ ...
         .. .. .. ..@ misc      : list()
         .. .. .. ..@ key       : chr "rna_"
-        ..@ meta.data   :'data.frame':	613 obs. of  14 variables:
-        .. ..$ barcode           : chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
-        .. ..$ orig.ident        : chr [1:613] "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" ...
-        .. ..$ nCount_RNA        : num [1:613] 289 249 263 193 472 101 112 297 372 272 174 406 107 238 232 165 300 411 373 310 179 295 294 252 343 135 306 254 2| __truncated__ ...
-        .. ..$ nFeature_RNA      : int [1:613] 80 59 95 51 108 39 42 75 119 75 94 82 63 90 81 76 94 114 108 85 46 68 97 111 82 53 115 57 79 74 48 89 65 139 56 1| __truncated__ ...
-        .. ..$ samples           : chr [1:613] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
-        .. ..$ percent.mt        : num [1:613] 12.8 25.3 30.8 7.77 18.22 20.79 14.29 9.09 19.09 18.01 18.39 22.91 14.02 28.15 25 30.3 20 40.63 42.63 21.29 22.91| __truncated__ ...
-        .. ..$ doublet_scores    : num [1:613] 0.1515 0.3543 0.9576 NA 0.9732 NA NA 0.6202 0.685 0.1205 NA 0.4499 NA 0.3196 0.0578 NA 0.1901 0.34 0.4353 0.2743 | __truncated__ ...
-        .. ..$ doublet_class     : chr [1:613] "singlet" "singlet" "singlet" NA "singlet" NA NA "singlet" "singlet" "singlet" NA "singlet" NA "singlet" "singlet" NA "singlet" "singlet" "singlet" "singlet" ...
-        .. ..$ emptyDrops_Total  : int [1:613] 289 249 263 193 472 101 112 297 372 272 174 406 107 238 232 165 300 411 373 310 179 295 294 252 343 135 306 254 2| __truncated__ ...
-        .. ..$ emptyDrops_LogProb: num [1:613] -367 -268 -404 -268 -490 -172 -198 -336 -500 -312 -381 -365 -274 -372 -325 -311 -403 -476 -452 -364 -215 -308 -416 -446 -362 ...
-        .. ..$ emptyDrops_PValue : num [1:613] 0.0001 0.0005 0.0001 0.0001 0.0001 0.0014 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0| __truncated__ ...
-        .. ..$ emptyDrops_Limited: logi [1:613] TRUE FALSE TRUE TRUE TRUE FALSE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE FALSE TRUE | __truncated__ ...
-        .. ..$ emptyDrops_FDR    : num [1:613] 0 0 0 0.000118 0 0.001561 0.000118 0 0 0 0.000118 0 0.000118 0 0 0.000118 0 0 0 0 0.007349 0 0 0 0 ...
-        .. ..$ cells_id          : int [1:613] 320 152 73 227 633 48 127 838 600 164 621 531 409 882 620 516 211 859 258 297 157 405 869 835 890 874 347 225 503| __truncated__ ...
+        ..@ meta.data   :'data.frame':	612 obs. of  14 variables:
+        .. ..$ barcode           : chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. ..$ orig.ident        : chr [1:612] "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" ...
+        .. ..$ nCount_RNA        : num [1:612] 289 249 263 193 472 101 112 297 372 272 174 406 107 238 232 165 300 411 373 310 179 295 294 252 343 135 306 254 2| __truncated__ ...
+        .. ..$ nFeature_RNA      : int [1:612] 80 59 95 51 108 39 42 75 119 75 94 82 63 90 81 76 94 114 108 85 46 68 97 111 82 53 115 57 79 74 48 89 65 139 56 1| __truncated__ ...
+        .. ..$ samples           : chr [1:612] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
+        .. ..$ percent.mt        : num [1:612] 12.8 25.3 30.8 7.77 18.22 20.79 14.29 9.09 19.09 18.01 18.39 22.91 14.02 28.15 25 30.3 20 40.63 42.63 21.29 22.91| __truncated__ ...
+        .. ..$ doublet_scores    : num [1:612] 0.1515 0.3543 0.9576 NA 0.9732 NA NA 0.6202 0.685 0.1205 NA 0.4499 NA 0.3196 0.0578 NA 0.1901 0.34 0.4353 0.2743 | __truncated__ ...
+        .. ..$ doublet_class     : chr [1:612] "singlet" "singlet" "singlet" NA "singlet" NA NA "singlet" "singlet" "singlet" NA "singlet" NA "singlet" "singlet" NA "singlet" "singlet" "singlet" "singlet" ...
+        .. ..$ emptyDrops_Total  : int [1:612] 289 249 263 193 472 101 112 297 372 272 174 406 107 238 232 165 300 411 373 310 179 295 294 252 343 135 306 254 2| __truncated__ ...
+        .. ..$ emptyDrops_LogProb: num [1:612] -367 -268 -404 -268 -490 -172 -198 -336 -500 -312 -381 -365 -274 -372 -325 -311 -403 -476 -452 -364 -215 -308 -416 -446 -362 ...
+        .. ..$ emptyDrops_PValue : num [1:612] 0.0001 0.0012 0.0001 0.0001 0.0001 0.0012 0.0003 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0| __truncated__ ...
+        .. ..$ emptyDrops_Limited: logi [1:612] TRUE FALSE TRUE TRUE TRUE FALSE FALSE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE FALSE FALS| __truncated__ ...
+        .. ..$ emptyDrops_FDR    : num [1:612] 0 0 0 0.000118 0 0.001349 0.000352 0 0 0 0.000118 0 0.000118 0 0 0.000118 0 0 0 0 0.00897 0 0 0 0 ...
+        .. ..$ cells_id          : int [1:612] 320 152 73 227 633 48 127 838 600 164 621 531 409 882 620 516 211 859 258 297 157 405 869 835 890 874 347 225 503| __truncated__ ...
         ..@ active.assay: chr "RNA"
         ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
-        .. ..- attr(*, "names")= chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. ..- attr(*, "names")= chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
         ..@ graphs      : list()
         ..@ neighbors   : list()
         ..@ reductions  :List of 2
         .. ..$ pca    :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:613, 1:50] -3.537 -3.879 1.748 -4.672 -1.437 -4.971 -3.131 -3.147 3.226 -2.141 3.985 -3.021 -0.278 4.349 -2.343 0.64 -2.7 2.| __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:612, 1:50] -4.257 -4.151 1.727 -4.87 -1.279 -4.276 -2.966 -3.793 3.285 -2.232 5.335 -3.079 -0.724 3.26 -1.885 1.275 -2.48 2.| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. .. .. .. .. ..$ : chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:983, 1:50] 0.19243 0.18354 0.06551 0.15314 0.10201 -0.16011 -0.02351 0.06275 0.16976 -0.04251 0.06681 -0.01732 0.15876 -0.00| __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:983, 1:50] 0.18975 0.18102 0.0619 0.15438 0.10568 -0.16031 -0.02193 0.06073 -0.04285 0.16937 0.06778 -0.01846 0.15765 -0.007| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:983] "S100A12" "BRI3" "CRIP1" "FKBP5" "TMEM176B" "ETS1" "SLC38A11" "RPH3A" "ANXA5" "LINC01857" "PTX3" "DSP" "GLIPR2" "XCL1" "CAVIN2" "CCR2" "RNF130" "C3AR1" "HIST1H2AL" "CD247" ...
+        .. .. .. .. .. ..$ : chr [1:983] "S100A12" "BRI3" "CRIP1" "FKBP5" "TMEM176B" "ETS1" "SLC38A11" "RPH3A" "LINC01857" "ANXA5" "PTX3" "DSP" "GLIPR2" "XCL1" "CAVIN2" "CCR2" "RNF130" "C3AR1" "HIST1H2AL" "LINC02432" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:50] 3.93 2.13 1.97 1.9 1.83 1.77 1.76 1.71 1.71 1.69 1.68 1.67 1.66 1.65 1.64 1.63 1.62 1.61 1.61 1.59 1.58 1.58 1.58 1.56 1.56 ...
+        .. .. .. ..@ stdev                     : num [1:50] 3.93 2.21 2.07 1.96 1.88 1.84 1.75 1.73 1.7 1.69 1.67 1.66 1.65 1.65 1.64 1.63 1.62 1.61 1.6 1.6 1.59 1.58 1.58 1.57 1.56 ...
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
         .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 389
+        .. .. .. .. ..$ total.variance: num 394
         .. .. .. ..@ key                       : chr "PC_"
         .. ..$ harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:613, 1:50] -3.4998 -3.7398 2.6804 -4.4395 -1.2375 -4.6323 -2.9605 -2.6833 4.1838 -1.8205 4.4731 -2.9859 -0.8812 5.9924 -2.17| __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:612, 1:50] -4.141 -3.959 2.464 -4.712 -1.172 -4.098 -2.81 -3.634 4.419 -2.06 6.474 -2.992 -0.511 3.805 -1.585 2.207 -2.374 3| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. .. .. .. .. ..$ : chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
         .. .. .. .. .. ..$ : chr [1:50] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
         .. .. .. ..@ feature.loadings          : num[0 , 0 ] 
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
@@ -8009,13 +8009,13 @@
     Code
       rlang::hash(snap_list$new_ids)
     Output
-      [1] "21ded069f39295494fec930ea2042f44"
+      [1] "5571aed3648725980ad9fa14d69d101f"
     Code
       str(snap_list$new_ids, vec.len = 20)
     Output
       List of 2
        $ mock_sample_2_id: int [1:337] 320 152 73 227 633 48 127 838 600 164 621 531 409 882 620 516 211 859 258 297 157 405 869 835 890 874 347 225 503| __truncated__ ...
-       $ mock_sample_1_id: int [1:276] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
+       $ mock_sample_1_id: int [1:275] 894 851 518 475 14 671 446 542 294 455 718 370 176 391 259 10 710 220 304 727 54 616 33 438 814 486 415 551 532 4| __truncated__ ...
 
 ---
 
@@ -8026,60 +8026,60 @@
     Code
       rlang::hash(snap_list$guidata)
     Output
-      [1] "d653fdf9ee119e4f73c22c38137ab7e0"
+      [1] "9ea43f2ebaac7a0eaf4ad90e8e9d6f41"
     Code
       str(snap_list$guidata, vec.len = 20)
     Output
       List of 2
        $ dataIntegration-0: list()
        $ dataIntegration-1:List of 50
-        ..$ : Named num [1:2] 1 0.111
+        ..$ : Named num [1:2] 1 0.109
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 2 0.0325
+        ..$ : Named num [1:2] 2 0.0346
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 3 0.0277
+        ..$ : Named num [1:2] 3 0.0303
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 4 0.026
+        ..$ : Named num [1:2] 4 0.0271
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 5 0.024
+        ..$ : Named num [1:2] 5 0.0251
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 6 0.0224
+        ..$ : Named num [1:2] 6 0.024
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 7 0.0221
+        ..$ : Named num [1:2] 7 0.0218
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 8 0.0211
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 9 0.0209
+        ..$ : Named num [1:2] 9 0.0205
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 10 0.0205
+        ..$ : Named num [1:2] 10 0.0201
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 11 0.0203
+        ..$ : Named num [1:2] 11 0.0198
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 12 0.02
+        ..$ : Named num [1:2] 12 0.0195
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 13 0.0197
+        ..$ : Named num [1:2] 13 0.0193
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 14 0.0195
+        ..$ : Named num [1:2] 14 0.0192
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 15 0.0192
+        ..$ : Named num [1:2] 15 0.019
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 16 0.019
+        ..$ : Named num [1:2] 16 0.0188
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 17 0.0188
+        ..$ : Named num [1:2] 17 0.0187
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 18 0.0186
+        ..$ : Named num [1:2] 18 0.0184
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 19 0.0185
+        ..$ : Named num [1:2] 19 0.018
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 20 0.0182
+        ..$ : Named num [1:2] 20 0.018
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 21 0.018
+        ..$ : Named num [1:2] 21 0.0178
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 22 0.0179
+        ..$ : Named num [1:2] 22 0.0177
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 23 0.0178
+        ..$ : Named num [1:2] 23 0.0177
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 24 0.0175
+        ..$ : Named num [1:2] 24 0.0173
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 25 0.0173
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
@@ -8087,51 +8087,51 @@
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 27 0.017
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 28 0.0169
+        ..$ : Named num [1:2] 28 0.0168
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 29 0.0167
+        ..$ : Named num [1:2] 29 0.0166
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 30 0.0166
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 31 0.0165
+        ..$ : Named num [1:2] 31 0.0164
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 32 0.0164
+        ..$ : Named num [1:2] 32 0.0163
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 33 0.0162
+        ..$ : Named num [1:2] 33 0.0161
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 34 0.0161
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 35 0.016
+        ..$ : Named num [1:2] 35 0.0158
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 36 0.0159
+        ..$ : Named num [1:2] 36 0.0158
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 37 0.0158
+        ..$ : Named num [1:2] 37 0.0157
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 38 0.0157
+        ..$ : Named num [1:2] 38 0.0155
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 39 0.0155
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 40 0.0154
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 41 0.0153
+        ..$ : Named num [1:2] 41 0.0152
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 42 0.0151
+        ..$ : Named num [1:2] 42 0.015
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 43 0.015
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 44 0.0149
+        ..$ : Named num [1:2] 44 0.0148
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
         ..$ : Named num [1:2] 45 0.0148
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 46 0.0147
+        ..$ : Named num [1:2] 46 0.0146
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 47 0.0146
+        ..$ : Named num [1:2] 47 0.0145
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 48 0.0146
+        ..$ : Named num [1:2] 48 0.0145
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 49 0.0145
+        ..$ : Named num [1:2] 49 0.0142
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
-        ..$ : Named num [1:2] 50 0.0143
+        ..$ : Named num [1:2] 50 0.0142
         .. ..- attr(*, "names")= chr [1:2] "PC" "percentVariance"
 
 ---
@@ -8143,7 +8143,7 @@
     Code
       rlang::hash(snap_list$data)
     Output
-      [1] "ffb2531010bb466515a7cfc702296127"
+      [1] "7ec6c5fd4f1cf625f9d8760760085254"
     Code
       str(snap_list$data, vec.len = 20)
     Output
@@ -8152,32 +8152,32 @@
         .. ..$ RNA:Formal class 'Assay5' [package "SeuratObject"] with 8 slots
         .. .. .. ..@ layers    :List of 3
         .. .. .. .. ..$ data      :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. ..@ i       : int [1:56908] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
-        .. .. .. .. .. .. ..@ p       : int [1:614] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1072 1153 1229 1323 1437 1545 1630 1676 1744 1841 1952 2034 | __truncated__ ...
-        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 613
+        .. .. .. .. .. .. ..@ i       : int [1:56849] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
+        .. .. .. .. .. .. ..@ p       : int [1:613] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1072 1153 1229 1323 1437 1545 1630 1676 1744 1841 1952 2034 | __truncated__ ...
+        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 612
         .. .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. ..@ x       : num [1:56908] 4.25 4.25 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 ...
+        .. .. .. .. .. .. ..@ x       : num [1:56849] 4.25 4.25 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 3.57 4.25 3.57 3.57 3.57 3.57 ...
         .. .. .. .. .. .. ..@ factors : list()
         .. .. .. .. ..$ counts    :Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-        .. .. .. .. .. .. ..@ i       : int [1:56908] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
-        .. .. .. .. .. .. ..@ p       : int [1:614] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1072 1153 1229 1323 1437 1545 1630 1676 1744 1841 1952 2034 | __truncated__ ...
-        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 613
+        .. .. .. .. .. .. ..@ i       : int [1:56849] 19 28 117 121 132 136 148 151 155 215 255 277 306 307 318 401 407 451 468 469 512 554 556 581 583 593 609 618 643| __truncated__ ...
+        .. .. .. .. .. .. ..@ p       : int [1:613] 0 80 139 234 285 393 432 474 549 668 743 837 919 982 1072 1153 1229 1323 1437 1545 1630 1676 1744 1841 1952 2034 | __truncated__ ...
+        .. .. .. .. .. .. ..@ Dim     : int [1:2] 2000 612
         .. .. .. .. .. .. ..@ Dimnames:List of 2
         .. .. .. .. .. .. .. ..$ : NULL
         .. .. .. .. .. .. .. ..$ : NULL
-        .. .. .. .. .. .. ..@ x       : num [1:56908] 2 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 4 3 1 1 1 1 1 1 2 1 1 1 1 1 2 4 1 1 1 ...
+        .. .. .. .. .. .. ..@ x       : num [1:56849] 2 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 4 3 1 1 1 1 1 1 2 1 1 1 1 1 2 4 1 1 1 ...
         .. .. .. .. .. .. ..@ factors : list()
-        .. .. .. .. ..$ scale.data: num [1:2000, 1:613] -0.1406 0 0 0 0 -0.1516 -0.0404 0 0 -0.0808 0 0 0 0 -0.2688 0 -0.311 0 0 0.8764 -0.2086 0 -0.0404 -0.0895 -0.0561 ...
+        .. .. .. .. ..$ scale.data: num [1:2000, 1:612] -0.1407 0 0 0 0 -0.1517 -0.0404 0 0 -0.0809 0 0 0 0 -0.269 0 -0.3112 0 0 0.8748 -0.2088 0 -0.0404 -0.0896 -0.0562 ...
         .. .. .. ..@ cells     :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
-        .. .. .. .. .. ..@ .Data: logi [1:613, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
+        .. .. .. .. .. ..@ .Data: logi [1:612, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
         .. .. .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. .. .. ..$ : chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. .. .. .. .. .. .. ..$ : chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
         .. .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
-        .. .. .. .. .. ..$ dim     : int [1:2] 613 3
+        .. .. .. .. .. ..$ dim     : int [1:2] 612 3
         .. .. .. .. .. ..$ dimnames:List of 2
-        .. .. .. .. .. .. ..$ : chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. .. .. .. .. .. ..$ : chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
         .. .. .. .. .. .. ..$ : chr [1:3] "counts" "data" "scale.data"
         .. .. .. ..@ features  :Formal class 'LogMap' [package "SeuratObject"] with 1 slot
         .. .. .. .. .. ..@ .Data: logi [1:2000, 1:3] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
@@ -8197,62 +8197,62 @@
         .. .. .. .. ..$ vf_vst_counts.1_variance.standardized: num [1:2000] 0.901 0 0 0 0 1.106 0 0 0 0.938 0 0 0 0 1.108 0 0.937 0 0 0.581 0.9 0 1 1 0 ...
         .. .. .. .. ..$ vf_vst_counts.1_variable             : logi [1:2000] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
         .. .. .. .. ..$ vf_vst_counts.1_rank                 : int [1:2000] 673 855 856 857 858 141 859 860 861 456 862 863 864 865 137 866 486 867 868 852 686 869 256 257 870 162 258 492 7| __truncated__ ...
-        .. .. .. .. ..$ vf_vst_counts.2_mean                 : num [1:2000] 0.01087 0 0 0 0 0.02536 0.00362 0 0 0.00362 0 0 0 0 0.05072 0 0.09783 0 0 1.25725 0.07971 0 0 0.01449 0.00725 ...
-        .. .. .. .. ..$ vf_vst_counts.2_variance             : num [1:2000] 0.01079 0 0 0 0 0.03208 0.00362 0 0 0.00362 0 0 0 0 0.07742 0 0.08858 0 0 1.71177 0.18999 0 0 0.01433 0.00722 ...
-        .. .. .. .. ..$ vf_vst_counts.2_variance.expected    : num [1:2000] 0.01241 0 0 0 0 0.0289 0.00362 0 0 0.00362 0 0 0 0 0.05803 0 0.11692 0 0 2.68065 0.09215 0 0 0.01636 0.008 ...
-        .. .. .. .. ..$ vf_vst_counts.2_variance.standardized: num [1:2000] 0.87 0 0 0 0 1.11 1 0 0 1 0 0 0 0 1.334 0 0.758 0 0 0.639 2.062 0 0 0.876 0.903 ...
+        .. .. .. .. ..$ vf_vst_counts.2_mean                 : num [1:2000] 0.01091 0 0 0 0 0.02545 0.00364 0 0 0.00364 0 0 0 0 0.05091 0 0.09818 0 0 1.26182 0.08 0 0 0.01455 0.00727 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance             : num [1:2000] 0.01083 0 0 0 0 0.0322 0.00364 0 0 0.00364 0 0 0 0 0.07769 0 0.08887 0 0 1.71222 0.19066 0 0 0.01439 0.00725 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance.expected    : num [1:2000] 0.01245 0 0 0 0 0.029 0.00364 0 0 0.00364 0 0 0 0 0.05836 0 0.11711 0 0 2.69257 0.09237 0 0 0.01642 0.00803 ...
+        .. .. .. .. ..$ vf_vst_counts.2_variance.standardized: num [1:2000] 0.87 0 0 0 0 1.11 1 0 0 1 0 0 0 0 1.331 0 0.759 0 0 0.636 2.064 0 0 0.876 0.903 ...
         .. .. .. .. ..$ vf_vst_counts.2_variable             : logi [1:2000] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRU| __truncated__ ...
-        .. .. .. .. ..$ vf_vst_counts.2_rank                 : int [1:2000] 696 923 924 925 926 156 254 927 928 255 929 930 931 932 67 933 890 934 935 917 11 936 937 646 552 165 553 256 910| __truncated__ ...
+        .. .. .. .. ..$ vf_vst_counts.2_rank                 : int [1:2000] 694 922 923 924 925 156 251 926 927 252 928 929 930 931 69 932 890 933 934 916 11 935 936 646 549 165 550 253 909| __truncated__ ...
         .. .. .. .. ..$ var.features                         : chr [1:2000] "CERNA1" "IGKV2-18" "LUADT1" "AL133297.2" "AL021937.1" "GPR174" "DCLK2" "C16orf90" "PCSK6-AS1" "AC001226.2" "POU6F2" "AC080129.2" "AC015908.3" "CYP2A6" "PAX5" "COL6A5" "SMG6" "AL645634.1" "LINC02372" "EDF1" ...
-        .. .. .. .. ..$ var.features.rank                    : int [1:2000] 699 892 893 894 895 91 504 896 897 265 898 899 901 902 58 903 705 904 905 887 262 906 557 383 727 106 316 291 830| __truncated__ ...
+        .. .. .. .. ..$ var.features.rank                    : int [1:2000] 698 892 893 894 895 91 501 896 897 263 898 899 900 902 59 903 705 904 905 888 260 907 557 382 726 104 314 289 830| __truncated__ ...
         .. .. .. ..@ misc      : list()
         .. .. .. ..@ key       : chr "rna_"
-        ..@ meta.data   :'data.frame':	613 obs. of  14 variables:
-        .. ..$ barcode           : chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
-        .. ..$ orig.ident        : chr [1:613] "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" ...
-        .. ..$ nCount_RNA        : num [1:613] 289 249 263 193 472 101 112 297 372 272 174 406 107 238 232 165 300 411 373 310 179 295 294 252 343 135 306 254 2| __truncated__ ...
-        .. ..$ nFeature_RNA      : int [1:613] 80 59 95 51 108 39 42 75 119 75 94 82 63 90 81 76 94 114 108 85 46 68 97 111 82 53 115 57 79 74 48 89 65 139 56 1| __truncated__ ...
-        .. ..$ samples           : chr [1:613] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
-        .. ..$ percent.mt        : num [1:613] 12.8 25.3 30.8 7.77 18.22 20.79 14.29 9.09 19.09 18.01 18.39 22.91 14.02 28.15 25 30.3 20 40.63 42.63 21.29 22.91| __truncated__ ...
-        .. ..$ doublet_scores    : num [1:613] 0.1515 0.3543 0.9576 NA 0.9732 NA NA 0.6202 0.685 0.1205 NA 0.4499 NA 0.3196 0.0578 NA 0.1901 0.34 0.4353 0.2743 | __truncated__ ...
-        .. ..$ doublet_class     : chr [1:613] "singlet" "singlet" "singlet" NA "singlet" NA NA "singlet" "singlet" "singlet" NA "singlet" NA "singlet" "singlet" NA "singlet" "singlet" "singlet" "singlet" ...
-        .. ..$ emptyDrops_Total  : int [1:613] 289 249 263 193 472 101 112 297 372 272 174 406 107 238 232 165 300 411 373 310 179 295 294 252 343 135 306 254 2| __truncated__ ...
-        .. ..$ emptyDrops_LogProb: num [1:613] -367 -268 -404 -268 -490 -172 -198 -336 -500 -312 -381 -365 -274 -372 -325 -311 -403 -476 -452 -364 -215 -308 -416 -446 -362 ...
-        .. ..$ emptyDrops_PValue : num [1:613] 0.0001 0.0005 0.0001 0.0001 0.0001 0.0014 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0| __truncated__ ...
-        .. ..$ emptyDrops_Limited: logi [1:613] TRUE FALSE TRUE TRUE TRUE FALSE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE FALSE TRUE | __truncated__ ...
-        .. ..$ emptyDrops_FDR    : num [1:613] 0 0 0 0.000118 0 0.001561 0.000118 0 0 0 0.000118 0 0.000118 0 0 0.000118 0 0 0 0 0.007349 0 0 0 0 ...
-        .. ..$ cells_id          : int [1:613] 320 152 73 227 633 48 127 838 600 164 621 531 409 882 620 516 211 859 258 297 157 405 869 835 890 874 347 225 503| __truncated__ ...
+        ..@ meta.data   :'data.frame':	612 obs. of  14 variables:
+        .. ..$ barcode           : chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. ..$ orig.ident        : chr [1:612] "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" "mock_experiment" ...
+        .. ..$ nCount_RNA        : num [1:612] 289 249 263 193 472 101 112 297 372 272 174 406 107 238 232 165 300 411 373 310 179 295 294 252 343 135 306 254 2| __truncated__ ...
+        .. ..$ nFeature_RNA      : int [1:612] 80 59 95 51 108 39 42 75 119 75 94 82 63 90 81 76 94 114 108 85 46 68 97 111 82 53 115 57 79 74 48 89 65 139 56 1| __truncated__ ...
+        .. ..$ samples           : chr [1:612] "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" "mock_sample_2_id" ...
+        .. ..$ percent.mt        : num [1:612] 12.8 25.3 30.8 7.77 18.22 20.79 14.29 9.09 19.09 18.01 18.39 22.91 14.02 28.15 25 30.3 20 40.63 42.63 21.29 22.91| __truncated__ ...
+        .. ..$ doublet_scores    : num [1:612] 0.1515 0.3543 0.9576 NA 0.9732 NA NA 0.6202 0.685 0.1205 NA 0.4499 NA 0.3196 0.0578 NA 0.1901 0.34 0.4353 0.2743 | __truncated__ ...
+        .. ..$ doublet_class     : chr [1:612] "singlet" "singlet" "singlet" NA "singlet" NA NA "singlet" "singlet" "singlet" NA "singlet" NA "singlet" "singlet" NA "singlet" "singlet" "singlet" "singlet" ...
+        .. ..$ emptyDrops_Total  : int [1:612] 289 249 263 193 472 101 112 297 372 272 174 406 107 238 232 165 300 411 373 310 179 295 294 252 343 135 306 254 2| __truncated__ ...
+        .. ..$ emptyDrops_LogProb: num [1:612] -367 -268 -404 -268 -490 -172 -198 -336 -500 -312 -381 -365 -274 -372 -325 -311 -403 -476 -452 -364 -215 -308 -416 -446 -362 ...
+        .. ..$ emptyDrops_PValue : num [1:612] 0.0001 0.0012 0.0001 0.0001 0.0001 0.0012 0.0003 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0.0001 0| __truncated__ ...
+        .. ..$ emptyDrops_Limited: logi [1:612] TRUE FALSE TRUE TRUE TRUE FALSE FALSE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE FALSE FALS| __truncated__ ...
+        .. ..$ emptyDrops_FDR    : num [1:612] 0 0 0 0.000118 0 0.001349 0.000352 0 0 0 0.000118 0 0.000118 0 0 0.000118 0 0 0 0 0.00897 0 0 0 0 ...
+        .. ..$ cells_id          : int [1:612] 320 152 73 227 633 48 127 838 600 164 621 531 409 882 620 516 211 859 258 297 157 405 869 835 890 874 347 225 503| __truncated__ ...
         ..@ active.assay: chr "RNA"
         ..@ active.ident: Factor w/ 1 level "mock_experiment": 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ...
-        .. ..- attr(*, "names")= chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. ..- attr(*, "names")= chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
         ..@ graphs      : list()
         ..@ neighbors   : list()
         ..@ reductions  :List of 2
         .. ..$ pca    :Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:613, 1:50] -3.537 -3.879 1.748 -4.672 -1.437 -4.971 -3.131 -3.147 3.226 -2.141 3.985 -3.021 -0.278 4.349 -2.343 0.64 -2.7 2.| __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:612, 1:50] -4.257 -4.151 1.727 -4.87 -1.279 -4.276 -2.966 -3.793 3.285 -2.232 5.335 -3.079 -0.724 3.26 -1.885 1.275 -2.48 2.| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. .. .. .. .. ..$ : chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
-        .. .. .. ..@ feature.loadings          : num [1:983, 1:50] 0.19243 0.18354 0.06551 0.15314 0.10201 -0.16011 -0.02351 0.06275 0.16976 -0.04251 0.06681 -0.01732 0.15876 -0.00| __truncated__ ...
+        .. .. .. ..@ feature.loadings          : num [1:983, 1:50] 0.18975 0.18102 0.0619 0.15438 0.10568 -0.16031 -0.02193 0.06073 -0.04285 0.16937 0.06778 -0.01846 0.15765 -0.007| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:983] "S100A12" "BRI3" "CRIP1" "FKBP5" "TMEM176B" "ETS1" "SLC38A11" "RPH3A" "ANXA5" "LINC01857" "PTX3" "DSP" "GLIPR2" "XCL1" "CAVIN2" "CCR2" "RNF130" "C3AR1" "HIST1H2AL" "CD247" ...
+        .. .. .. .. .. ..$ : chr [1:983] "S100A12" "BRI3" "CRIP1" "FKBP5" "TMEM176B" "ETS1" "SLC38A11" "RPH3A" "LINC01857" "ANXA5" "PTX3" "DSP" "GLIPR2" "XCL1" "CAVIN2" "CCR2" "RNF130" "C3AR1" "HIST1H2AL" "LINC02432" ...
         .. .. .. .. .. ..$ : chr [1:50] "PC_1" "PC_2" "PC_3" "PC_4" "PC_5" "PC_6" "PC_7" "PC_8" "PC_9" "PC_10" "PC_11" "PC_12" "PC_13" "PC_14" "PC_15" "PC_16" "PC_17" "PC_18" "PC_19" "PC_20" ...
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
         .. .. .. ..@ assay.used                : chr "RNA"
         .. .. .. ..@ global                    : logi FALSE
-        .. .. .. ..@ stdev                     : num [1:50] 3.93 2.13 1.97 1.9 1.83 1.77 1.76 1.71 1.71 1.69 1.68 1.67 1.66 1.65 1.64 1.63 1.62 1.61 1.61 1.59 1.58 1.58 1.58 1.56 1.56 ...
+        .. .. .. ..@ stdev                     : num [1:50] 3.93 2.21 2.07 1.96 1.88 1.84 1.75 1.73 1.7 1.69 1.67 1.66 1.65 1.65 1.64 1.63 1.62 1.61 1.6 1.6 1.59 1.58 1.58 1.57 1.56 ...
         .. .. .. ..@ jackstraw                 :Formal class 'JackStrawData' [package "SeuratObject"] with 4 slots
         .. .. .. .. .. ..@ empirical.p.values     : num[0 , 0 ] 
         .. .. .. .. .. ..@ fake.reduction.scores  : num[0 , 0 ] 
         .. .. .. .. .. ..@ empirical.p.values.full: num[0 , 0 ] 
         .. .. .. .. .. ..@ overall.p.values       : num[0 , 0 ] 
         .. .. .. ..@ misc                      :List of 1
-        .. .. .. .. ..$ total.variance: num 389
+        .. .. .. .. ..$ total.variance: num 394
         .. .. .. ..@ key                       : chr "PC_"
         .. ..$ harmony:Formal class 'DimReduc' [package "SeuratObject"] with 9 slots
-        .. .. .. ..@ cell.embeddings           : num [1:613, 1:50] -3.4998 -3.7398 2.6804 -4.4395 -1.2375 -4.6323 -2.9605 -2.6833 4.1838 -1.8205 4.4731 -2.9859 -0.8812 5.9924 -2.17| __truncated__ ...
+        .. .. .. ..@ cell.embeddings           : num [1:612, 1:50] -4.141 -3.959 2.464 -4.712 -1.172 -4.098 -2.81 -3.634 4.419 -2.06 6.474 -2.992 -0.511 3.805 -1.585 2.207 -2.374 3| __truncated__ ...
         .. .. .. .. ..- attr(*, "dimnames")=List of 2
-        .. .. .. .. .. ..$ : chr [1:613] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
+        .. .. .. .. .. ..$ : chr [1:612] "TACGGGCGTTATAGCC-1" "AAGACAACATCAACCA-1" "GGACGTCCACTGCTTC-1" "GTAAGTCCACGAGAAC-1" "CAGCGTGGTACGATCT-1" "TCGTGGGTCGTGTCAA-1" "AGAAGCGAGTGGCAGT-1" "GCAGGCTCAAACTGCT-1" "GGTGGCTAGAAGCCTG-1" "AGGCCACTCATGAGTC-1" "GTCGAATCACAGACGA-1" "TGACAGTAGGCATGCA-1" "ATTCTACGTGTCCAAT-1" "TTTATGCAGAGGATCC-1" "AGCTCAAAGGCCCGTT-1" "AACCACAAGTTGAAGT-1" "TCGGGACGTAACATGA-1" "AATGACCCAGAGTCAG-1" "TCGTAGAGTGAGTCAG-1" "ATCCTATCAAGACCTT-1" ...
         .. .. .. .. .. ..$ : chr [1:50] "harmony_1" "harmony_2" "harmony_3" "harmony_4" "harmony_5" "harmony_6" "harmony_7" "harmony_8" "harmony_9" "harmony_10" "harmony_11" "harmony_12" "harmony_13" "harmony_14" "harmony_15" "harmony_16" "harmony_17" "harmony_18" "harmony_19" "harmony_20" ...
         .. .. .. ..@ feature.loadings          : num[0 , 0 ] 
         .. .. .. ..@ feature.loadings.projected: num[0 , 0 ] 
