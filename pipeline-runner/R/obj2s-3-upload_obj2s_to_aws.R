@@ -114,19 +114,22 @@ find_cluster_columns <- function(scdata) {
 
   # exclude all group columns, including duplicates
   group_cols <- find_group_columns(meta, remove.dups = FALSE)
-  group_cols <- c(group_cols, 'samples')
-  scdblfinder_cols <- grep('^scDblFinder', colnames(meta), value = TRUE)
+  group_cols <- c(group_cols, "samples")
+  scdblfinder_cols <- grep("^scDblFinder", colnames(meta), value = TRUE)
 
   # order meta to indicate preference for default clusters
-  louvain_cols <- c('louvain', 'active.ident', 'cell_type', 'seurat_clusters')
+  louvain_cols <- c("louvain", "active.ident", "cell_type", "seurat_clusters")
   meta <- meta |> dplyr::relocate(dplyr::any_of(louvain_cols))
 
   # use user supplied name for active.ident if possible
   # unless active.ident is a group column
-  if ('active.ident' %in% setdiff(colnames(meta), group_cols))
+  if ("active.ident" %in% setdiff(colnames(meta), group_cols))
     meta <- rename_active_ident(meta)
 
-  check_cols <- setdiff(colnames(meta), c(scdblfinder_cols, group_cols))
+  check_cols <- setdiff(
+    colnames(meta),
+    c(scdblfinder_cols, group_cols, "nCount_RNA", "nFeature_RNA")
+  )
 
   cluster_cols <- c()
   for (check_col in check_cols) {
