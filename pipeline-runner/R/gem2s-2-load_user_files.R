@@ -1097,9 +1097,11 @@ read_visium_hd_sample <- function(sample, input_dir) {
     compact = FALSE
   )
 
-  # simplify polygons and rotate if width is less than height
+  # simplify polygons, crop the image to the capture area, and rotate if width
+  # is less than height
   results$segmentations <- segmentations |>
     simplify_segmentations() |>
+    crop_to_capture_area() |>
     pivot_image_wide()
 
   # Seurat keeps only the hires/lowres scale factors on the image; the physical
@@ -1140,14 +1142,94 @@ simplify_segmentations <- function(segmentations) {
   simplified_coords <- get_simplified_coords(segmentations)
 
   # remove polygons to save memory
-  segmentations[["simplified.segmentations"]] <- CreateSegmentation(
+  segmentations[["simplified.segmentations"]] <- SeuratObject::CreateSegmentation(
     coords = simplified_coords,
     compact = TRUE
   )
-  segmentations[["segmentations"]] <- CreateSegmentation(
+  segmentations[["segmentations"]] <- SeuratObject::CreateSegmentation(
     coords = segmentations[["segmentation"]]@sf.data,
     compact = TRUE
   )
+
+  return(segmentations)
+}
+
+#' Crop the tissue image and coordinates to the capture area
+#'
+#' Space Ranger's \code{tissue_hires_image.png} is a downsample of the full
+#' microscope H&E supplied via \code{--image}, which is often much larger than
+#' the CytAssist capture window. Cells (and all spatial data) only exist within
+#' the capture window, so the segmentations otherwise occupy a small sub-region
+#' of a mostly-empty image. This crops the image to the bounding box of the cell
+#' polygons and shifts every coordinate to the new origin, so the captured area
+#' fills the frame. The hires scale factor is unchanged (it is the full-res ->
+#' hires ratio, unaffected by cropping), so \code{coord * scale.factor} still
+#' lands correctly in the cropped image.
+#'
+#' Runs after \code{simplify_segmentations()} (all three boundaries present) and
+#' before \code{pivot_image_wide()} (rotation), transforming the image and all
+#' coordinate sets together, exactly as \code{rotate_visiumv2()} does.
+#'
+#' @param segmentations VisiumV2 object with centroids/segmentations/
+#'   simplified.segmentations boundaries and a tissue image
+#' @param margin_frac numeric fractional padding kept around the bounding box
+#'
+#' @return segmentations with the image cropped and coordinates re-offset
+crop_to_capture_area <- function(segmentations, margin_frac = 0.02) {
+  bounds <- segmentations@boundaries
+  coords_list <- list(
+    centroids = bounds[["centroids"]]@coords,
+    polygons = bounds[["segmentations"]]@sf.data,
+    polygons_simple = bounds[["simplified.segmentations"]]@sf.data
+  )
+
+  image <- segmentations@image
+  scale_factor <- segmentations@scale.factors$hires
+  image_height <- dim(image)[1]
+  image_width <- dim(image)[2]
+
+  # bounding box of the captured cells (full polygon extent) in full-resolution
+  # coordinates, padded by a small margin
+  all_x <- coords_list$polygons[, "x"]
+  all_y <- coords_list$polygons[, "y"]
+  pad_x <- (max(all_x) - min(all_x)) * margin_frac
+  pad_y <- (max(all_y) - min(all_y)) * margin_frac
+
+  # convert to hires pixel indices (rows = y / height, cols = x / width),
+  # clamped to the image bounds
+  col_lo <- max(1L, floor((min(all_x) - pad_x) * scale_factor))
+  col_hi <- min(image_width, ceiling((max(all_x) + pad_x) * scale_factor))
+  row_lo <- max(1L, floor((min(all_y) - pad_y) * scale_factor))
+  row_hi <- min(image_height, ceiling((max(all_y) + pad_y) * scale_factor))
+
+  # nothing to do when the cells already fill (essentially) the whole image
+  if (col_lo <= 1L && col_hi >= image_width &&
+      row_lo <= 1L && row_hi >= image_height) {
+    return(segmentations)
+  }
+
+  message(
+    "Cropping image to capture area: ",
+    image_width, "x", image_height, " -> ",
+    col_hi - col_lo + 1L, "x", row_hi - row_lo + 1L
+  )
+
+  # crop origin expressed back in full-resolution coordinates, so shifted
+  # coordinates satisfy coord * scale_factor == position in cropped image
+  offset_x <- (col_lo - 1L) / scale_factor
+  offset_y <- (row_lo - 1L) / scale_factor
+
+  coords_shifted_list <- lapply(coords_list, function(coords) {
+    coords[, "x"] <- coords[, "x"] - offset_x
+    coords[, "y"] <- coords[, "y"] - offset_y
+    coords
+  })
+
+  bounds[["centroids"]]@coords <- coords_shifted_list$centroids
+  bounds[["segmentations"]]@sf.data <- coords_shifted_list$polygons
+  bounds[["simplified.segmentations"]]@sf.data <- coords_shifted_list$polygons_simple
+  segmentations@boundaries <- bounds
+  segmentations@image <- image[row_lo:row_hi, col_lo:col_hi, , drop = FALSE]
 
   return(segmentations)
 }
