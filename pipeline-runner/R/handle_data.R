@@ -591,14 +591,23 @@ get_matrix_dirs <- function(scdata) {
 
 upload_image_to_s3 <- function(
   pipeline_config, input, experiment_id, image_arr, image_name, image_id, sample_id,
-  image_max_height = dim(image_arr)[1], overwrite_existing = TRUE
+  image_max_height = dim(image_arr)[1], image_max_width = dim(image_arr)[2],
+  overwrite_existing = TRUE
 ) {
   # things for api requests
   api_url <- pipeline_config$api_url
   auth_jwt <- input$authJWT
 
-  # pad images to have same fixed height
+  # original (pre-pad) dimensions, persisted into the OME-Zarr so single-sample
+  # plots can cap their max zoom-out to the tissue extent (padding is blank)
+  orig_height <- dim(image_arr)[1]
+  orig_width <- dim(image_arr)[2]
+
+  # pad images to common fixed dimensions (the multi-sample grid assumes a
+  # uniform tile size across samples). Defaults are the image's own dims, so
+  # non-spatial callers pad nothing.
   image_arr <- pad_image_height(image_arr, image_max_height)
+  image_arr <- pad_image_width(image_arr, image_max_width)
 
   # where to save zarr folder locally
   zarr_name <- paste0(image_name, ".ome.zarr")
@@ -607,7 +616,10 @@ upload_image_to_s3 <- function(
   message("Saving image data to: ", output_path, "...")
 
   # save as ome zarr folder
-  rgb_image_to_ome_zarr(image_arr, output_path, image_name)
+  rgb_image_to_ome_zarr(
+    image_arr, output_path, image_name,
+    orig_width = orig_width, orig_height = orig_height
+  )
 
   # zip all files in zarr folder
   zip_name <- paste0(zarr_name, ".zip")
@@ -650,7 +662,8 @@ upload_image_to_s3 <- function(
 }
 
 # based off of vitessce-python demo
-rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name) {
+rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name,
+                                  orig_width = NULL, orig_height = NULL) {
   np <- reticulate::import("numpy")
   zarr <- reticulate::import("zarr")
   ome_zarr <- reticulate::import("ome_zarr")
@@ -696,6 +709,18 @@ rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name) {
     )
   )
   reticulate::py_set_attr(z_root, "omero", omero)
+
+  # Persist the original (pre-pad) tissue extent into the OME-Zarr root .zattrs.
+  # Single-sample plots read this to cap max zoom-out at the tissue, so the
+  # cross-sample padding (blank margin on the right/bottom) isn't shown.
+  # py_set_item writes to the zarr Attributes mapping (merges into .zattrs),
+  # unlike py_set_attr which only sets a Python object attribute.
+  if (!is.null(orig_width) && !is.null(orig_height)) {
+    reticulate::py_set_item(
+      z_root$attrs, "originalSize",
+      list(width = as.integer(orig_width), height = as.integer(orig_height))
+    )
+  }
 
   invisible()
 }
@@ -1030,6 +1055,47 @@ pad_image_height <- function(image_arr, target_height) {
   message(
     "Padded image from height ", current_height,
     " to ", dim(padded_image_arr)[1]
+  )
+
+  return(padded_image_arr)
+}
+
+pad_image_width <- function(image_arr, target_width) {
+  current_width <- dim(image_arr)[2]
+  if (current_width == target_width) return(image_arr)
+
+  # grab right column and repeat to pad right side of image (mirrors
+  # pad_image_height, which pads the bottom)
+  right_col <- image_arr[, current_width, , drop = FALSE]
+
+  # replace pixels where the green channel is below cutoff (tissue) with the
+  # average colour of the other pixels in the column; cutoff determined
+  # empirically to avoid padding with tissue-coloured pixels
+  green_cutoff <- 210 / 255
+  maybe_tissue <- right_col[, 1, 2] < green_cutoff
+
+  if (all(maybe_tissue)) {
+    # use pale lavender for padding
+    pad_color <- c(241, 234, 241) / 255
+  } else {
+    # reshape to a 2D matrix (pixels as rows, 3 channels as columns)
+    pixel_matrix <- matrix(right_col[!maybe_tissue, 1, ], ncol = 3)
+
+    # use average color of non-tissue pixels for padding
+    pad_color <- colMeans(pixel_matrix)
+  }
+
+  # set RGB channels
+  right_col[, 1, 1] <- pad_color[1]
+  right_col[, 1, 2] <- pad_color[2]
+  right_col[, 1, 3] <- pad_color[3]
+
+  padding <- right_col[, rep(1, target_width - current_width), , drop = FALSE]
+  padded_image_arr <- abind::abind(image_arr, padding, along = 2)
+
+  message(
+    "Padded image from width ", current_width,
+    " to ", dim(padded_image_arr)[2]
   )
 
   return(padded_image_arr)
