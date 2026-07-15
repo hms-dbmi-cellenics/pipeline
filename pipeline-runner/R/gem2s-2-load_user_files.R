@@ -1097,10 +1097,9 @@ read_visium_hd_sample <- function(sample, input_dir) {
     compact = FALSE
   )
 
-  # simplify polygons, crop the image to the capture area, and rotate if width
+  # crop the image to the capture area, and rotate if width
   # is less than height
   results$segmentations <- segmentations |>
-    simplify_segmentations() |>
     crop_to_capture_area() |>
     pivot_image_wide()
 
