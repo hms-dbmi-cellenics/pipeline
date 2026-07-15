@@ -793,3 +793,27 @@ test_that("get_matrix_dirs finds matrix_dir paths in Seurat object", {
 
   expect_match(matrix_dir_path, "matrix_dir")
 })
+test_that("pad_image_width pads the right side to the target width", {
+  # 3 rows x 2 cols x 3 channels, non-tissue (high green) so pad = column mean
+  image_arr <- array(0.9, dim = c(3, 2, 3))
+  padded <- pad_image_width(image_arr, target_width = 5)
+
+  expect_equal(dim(padded), c(3, 5, 3))
+  # original content preserved on the left (abind adds dimnames, so ignore attrs)
+  expect_equal(padded[, 1:2, ], image_arr, ignore_attr = TRUE)
+  # padded columns exist on the right
+  expect_equal(dim(padded[, 3:5, , drop = FALSE]), c(3, 3, 3))
+})
+
+test_that("pad_image_width is a no-op when width already matches", {
+  image_arr <- array(0.5, dim = c(4, 6, 3))
+  expect_identical(pad_image_width(image_arr, target_width = 6), image_arr)
+})
+
+test_that("pad_image_width leaves height and channels unchanged", {
+  image_arr <- array(runif(5 * 3 * 3), dim = c(5, 3, 3))
+  padded <- pad_image_width(image_arr, target_width = 10)
+  expect_equal(dim(padded)[1], 5)
+  expect_equal(dim(padded)[3], 3)
+  expect_equal(dim(padded)[2], 10)
+})

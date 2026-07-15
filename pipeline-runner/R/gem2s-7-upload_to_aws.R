@@ -156,8 +156,14 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
       image_name <- Seurat::Images(scdata)
       if (!is.null(image_name)) {
         message("\nUploading image to S3:")
-        # need image dimensions to pad images to common dimension before upload
+        # Pad images to common dimensions before upload. The Data Exploration
+        # multi-sample grid assumes every sample's image has identical dims (it
+        # lays samples out as a uniform grid keyed off the first sample's size),
+        # so both height AND width must match across samples. Per-sample cropping
+        # (crop_to_capture_area) makes widths differ, so pad width too, not just
+        # height.
         image_max_height <- get_image_max_height(scdata_list)
+        image_max_width <- get_image_max_width(scdata_list)
         image_arr <- scdata[[image_name]]@image
 
         # need distinct UUIDs for image and polygons ids
@@ -180,6 +186,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
           image_id,
           sample,
           image_max_height,
+          image_max_width,
           overwrite_existing = TRUE
         )
 
@@ -189,7 +196,7 @@ upload_to_aws <- function(input, pipeline_config, prev_out) {
           experiment_id,
           polygons,
           image_max_height,
-          dim(image_arr)[2],
+          image_max_width,
           image_name,
           polygons_id,
           sample,
@@ -265,8 +272,11 @@ get_image_scale <- function(image_name, scdata) {
   ifelse(any(dims[1:2] <= 600), "lowres", "hires")
 }
 
-# image is rotated such that longest dimension is width (always 6000)
-# need max height to pad images to common dimension before upload
+# Max image height/width across samples, used to pad every sample's image to
+# common dimensions before upload (the Data Exploration grid assumes a uniform
+# tile size). Both are needed because crop_to_capture_area gives each sample its
+# own dimensions; historically width was constant (~6000 after rotation) so only
+# height needed padding.
 get_image_max_height <- function(scdata_list) {
   image_heights <- lapply(scdata_list, function(scdata) {
     image_name <- Seurat::Images(scdata)
@@ -283,6 +293,24 @@ get_image_max_height <- function(scdata_list) {
 
   max_height <- max(image_heights)
   return(max_height)
+}
+
+get_image_max_width <- function(scdata_list) {
+  image_widths <- lapply(scdata_list, function(scdata) {
+    image_name <- Seurat::Images(scdata)
+    if (!is.null(image_name)) {
+      image_arr <- scdata[[image_name]]@image
+      dim(image_arr)[2]
+    } else {
+      NULL
+    }
+  })
+
+  image_widths <- unlist(image_widths)
+  if (is.null(image_widths)) return(NULL)
+
+  max_width <- max(image_widths)
+  return(max_width)
 }
 
 tar_matrix_dir <- function(id, matrix_dir) {
