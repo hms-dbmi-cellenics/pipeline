@@ -1097,9 +1097,11 @@ read_visium_hd_sample <- function(sample, input_dir) {
     compact = FALSE
   )
 
-  # crop the image to the capture area, and rotate if width
-  # is less than height
+  # add the compact polygon boundary the crop/rotate transforms and the
+  # downstream GetTissueCoordinates(which = "segmentations") accessor read,
+  # crop the image to the capture area, and rotate if width is less than height
   results$segmentations <- segmentations |>
+    compact_segmentations() |>
     crop_to_capture_area() |>
     pivot_image_wide()
 
@@ -1130,21 +1132,17 @@ move_segmentations_to_subdir <- function(sample_dir) {
   )
 }
 
-simplify_segmentations <- function(segmentations) {
-  # tol determined empircally for visium hd
-  segmentations[["simplified.segmentations"]] <- SeuratObject::Simplify(
-    coords = segmentations[["segmentation"]],
-    tol = 5
-  )
-
-  # obtain compact coords
-  simplified_coords <- get_simplified_coords(segmentations)
-
-  # remove polygons to save memory
-  segmentations[["simplified.segmentations"]] <- SeuratObject::CreateSegmentation(
-    coords = simplified_coords,
-    compact = TRUE
-  )
+#' Add the compact polygon boundary set used downstream
+#'
+#' \code{Read10X_Segmentations} returns the cell polygons under the boundary
+#' name \code{segmentation} in expanded (sf) form. Store a compact copy
+#' (x/y/cell in \code{@sf.data}) under \code{segmentations} — the name both the
+#' crop/rotate transforms below and \code{GetTissueCoordinates(which =
+#' "segmentations")} in gem2s-7 read.
+#'
+#' @param segmentations VisiumV2 object with a \code{segmentation} boundary
+#' @return the object with an added compact \code{segmentations} boundary
+compact_segmentations <- function(segmentations) {
   segmentations[["segmentations"]] <- SeuratObject::CreateSegmentation(
     coords = segmentations[["segmentation"]]@sf.data,
     compact = TRUE
@@ -1165,12 +1163,12 @@ simplify_segmentations <- function(segmentations) {
 #' hires ratio, unaffected by cropping), so \code{coord * scale.factor} still
 #' lands correctly in the cropped image.
 #'
-#' Runs after \code{simplify_segmentations()} (all three boundaries present) and
-#' before \code{pivot_image_wide()} (rotation), transforming the image and all
-#' coordinate sets together, exactly as \code{rotate_visiumv2()} does.
+#' Runs after \code{compact_segmentations()} (centroids + segmentations present)
+#' and before \code{pivot_image_wide()} (rotation), transforming the image and
+#' all coordinate sets together, exactly as \code{rotate_visiumv2()} does.
 #'
-#' @param segmentations VisiumV2 object with centroids/segmentations/
-#'   simplified.segmentations boundaries and a tissue image
+#' @param segmentations VisiumV2 object with centroids/segmentations boundaries
+#'   and a tissue image
 #' @param margin_frac numeric fractional padding kept around the bounding box
 #'
 #' @return segmentations with the image cropped and coordinates re-offset
@@ -1178,8 +1176,7 @@ crop_to_capture_area <- function(segmentations, margin_frac = 0.02) {
   bounds <- segmentations@boundaries
   coords_list <- list(
     centroids = bounds[["centroids"]]@coords,
-    polygons = bounds[["segmentations"]]@sf.data,
-    polygons_simple = bounds[["simplified.segmentations"]]@sf.data
+    polygons = bounds[["segmentations"]]@sf.data
   )
 
   image <- segmentations@image
@@ -1226,7 +1223,6 @@ crop_to_capture_area <- function(segmentations, margin_frac = 0.02) {
 
   bounds[["centroids"]]@coords <- coords_shifted_list$centroids
   bounds[["segmentations"]]@sf.data <- coords_shifted_list$polygons
-  bounds[["simplified.segmentations"]]@sf.data <- coords_shifted_list$polygons_simple
   segmentations@boundaries <- bounds
   segmentations@image <- image[row_lo:row_hi, col_lo:col_hi, , drop = FALSE]
 
@@ -1257,8 +1253,7 @@ rotate_visiumv2 <- function(segmentations) {
   bounds <- segmentations@boundaries
   coords_list <- list(
     centroids = bounds[["centroids"]]@coords,
-    polygons = bounds[["segmentations"]]@sf.data,
-    polygons_simple = bounds[["simplified.segmentations"]]@sf.data
+    polygons = bounds[["segmentations"]]@sf.data
   )
 
   image <- segmentations@image
@@ -1311,30 +1306,10 @@ rotate_visiumv2 <- function(segmentations) {
   # update segmentations object
   bounds[["centroids"]]@coords <- coords_rot_list$centroids
   bounds[["segmentations"]]@sf.data <- coords_rot_list$polygons
-  bounds[["simplified.segmentations"]]@sf.data <- coords_rot_list$polygons_simple
   segmentations@boundaries <- bounds
   segmentations@image <- rotated_image
 
   return(segmentations)
-}
-
-get_simplified_coords <- function(segmentations) {
-  polygons <- segmentations[["simplified.segmentations"]]@polygons
-  coords_list <- lapply(
-    segmentations[["simplified.segmentations"]]@polygons,
-    function(x) {
-      x@Polygons[[1]]@coords
-    }
-  )
-
-  cells <- Seurat::Cells(segmentations)
-
-  ncoords <- sapply(coords_list, nrow)
-  coords <- do.call(rbind, coords_list)
-  colnames(coords) <- c("x", "y")
-  coords <- as.data.frame(coords)
-  coords$cell <- rep(cells, ncoords)
-  coords
 }
 
 
