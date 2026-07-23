@@ -47,10 +47,8 @@ make_test_segmentations <- function(image_width = 600, image_height = 500,
   )
 
   # add the polygon boundaries as compact segmentations (x/y/cell in @sf.data),
-  # matching the form simplify_segmentations() produces
+  # matching the form compact_segmentations() produces
   vis[["segmentations"]] <- SeuratObject::CreateSegmentation(seg_df, compact = TRUE)
-  vis[["simplified.segmentations"]] <-
-    SeuratObject::CreateSegmentation(seg_df, compact = TRUE)
   vis
 }
 
