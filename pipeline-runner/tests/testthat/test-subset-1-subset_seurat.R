@@ -265,3 +265,40 @@ test_that("generate_subset_config works correctly", {
 
   expect_snapshot(subset_processing_config)
 })
+
+
+test_that("load_parent_experiment_data only restores a disk-backed matrix dir", {
+  load_parent_with_counts <- function(counts) {
+    scdata <- Seurat::CreateSeuratObject(counts = counts)
+    mock_restore <- mockery::mock(scdata)
+
+    mockery::stub(
+      load_parent_experiment_data, "paws::s3", function(config) NULL
+    )
+    mockery::stub(
+      load_parent_experiment_data,
+      "load_processed_scdata",
+      function(...) scdata
+    )
+    mockery::stub(
+      load_parent_experiment_data, "load_cellsets", function(...) NULL
+    )
+    mockery::stub(
+      load_parent_experiment_data, "parse_cellsets", function(...) NULL
+    )
+    mockery::stub(
+      load_parent_experiment_data, "restore_processed_matrix_dir", mock_restore
+    )
+
+    load_parent_experiment_data(
+      list(parentExperimentId = "mock_experiment_id"),
+      list(aws_config = NULL)
+    )
+
+    return(mock_restore)
+  }
+
+  # experiments processed before BPCells: no matrix dir to download
+  expect_called(load_parent_with_counts(mock_counts(use_bpcells = FALSE)), 0)
+  expect_called(load_parent_with_counts(mock_counts(use_bpcells = TRUE)), 1)
+})

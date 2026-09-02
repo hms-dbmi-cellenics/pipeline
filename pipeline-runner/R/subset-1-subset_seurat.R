@@ -114,6 +114,16 @@ load_parent_experiment_data <- function(input, pipeline_config) {
   # load parent processed scdata and cellsets
   s3 <- paws::s3(config = pipeline_config$aws_config)
   parent_scdata <- load_processed_scdata(s3, pipeline_config, input$parentExperimentId)
+
+  # a disk-backed (BPCells) parent carries the matrix dir path of the pod that
+  # processed it, which doesn't exist here. Download it and update the paths
+  # before subsetting reads any counts
+  if (methods::is(parent_scdata[["RNA"]]$counts, "IterableMatrix")) {
+    parent_scdata <- restore_processed_matrix_dir(
+      s3, pipeline_config, input$parentExperimentId, parent_scdata
+    )
+  }
+
   parent_cellsets <- parse_cellsets(load_cellsets(s3, pipeline_config, input$parentExperimentId))
 
   return(list(scdata = parent_scdata, cellsets = parent_cellsets))
