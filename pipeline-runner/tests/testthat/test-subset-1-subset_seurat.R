@@ -265,3 +265,148 @@ test_that("generate_subset_config works correctly", {
 
   expect_snapshot(subset_processing_config)
 })
+
+
+test_that("write_sample_matrix_dirs is a no-op for in-memory samples", {
+  scdata <- Seurat::CreateSeuratObject(counts = mock_counts(use_bpcells = FALSE))
+  scdata_list <- list(subset_sample_1 = scdata)
+
+  res <- write_sample_matrix_dirs(scdata_list)
+
+  expect_identical(res$scdata_list, scdata_list)
+  expect_identical(res$matrix_dir_list, list())
+})
+
+
+test_that("write_sample_matrix_dirs writes one dir per disk-backed sample", {
+  counts <- mock_counts(use_bpcells = TRUE)
+  scdata <- Seurat::CreateSeuratObject(counts = counts)
+  expected_counts <- as.matrix(counts)
+
+  parent_dir <- get_matrix_dirs(scdata)
+  sample_ids <- c("subset_sample_1", "subset_sample_2")
+  scdata_list <- setNames(list(scdata, scdata), sample_ids)
+
+  res <- write_sample_matrix_dirs(scdata_list)
+  withr::defer(unlink(unlist(res$matrix_dir_list), recursive = TRUE))
+
+  expect_named(res$matrix_dir_list, sample_ids)
+
+  for (sample_id in sample_ids) {
+    matrix_dir <- res$matrix_dir_list[[sample_id]]
+    sample_scdata <- res$scdata_list[[sample_id]]
+
+    expect_true(dir.exists(matrix_dir))
+    expect_match(matrix_dir, paste0(sample_id, "_matrix_dir"), fixed = TRUE)
+
+    # counts point at the sample's own dir, not the parent's
+    expect_false(identical(get_matrix_dirs(sample_scdata), parent_dir))
+    expect_match(
+      get_matrix_dirs(sample_scdata),
+      paste0(sample_id, "_matrix_dir"),
+      fixed = TRUE
+    )
+    expect_equal(as.matrix(sample_scdata[["RNA"]]$counts), expected_counts)
+  }
+})
+
+
+test_that("subset_seurat gives a disk-backed parent per-sample matrix dirs", {
+  parent_experiment_id <- "mock_experiment_id"
+  cellset_keys <- c("louvain-0", "louvain-1")
+  input <- mock_input(parent_experiment_id, cellset_keys)
+
+  parent_matrix_dir <- file.path(tempdir(), "parent_matrix_dir")
+  unlink(parent_matrix_dir, recursive = TRUE)
+  withr::defer(unlink(parent_matrix_dir, recursive = TRUE))
+
+  mock_bpcells_parent_data <- function(input, pipeline_config = NULL) {
+    parent_data <- mock_parent_experiment_data(input, pipeline_config)
+    parent_data$scdata[["RNA"]]$counts <- counts_to_bpcells(
+      parent_data$scdata[["RNA"]]$counts,
+      matrix_dir = parent_matrix_dir
+    )
+    return(parent_data)
+  }
+
+  mockery::stub(subset_seurat, "UUIDgenerate", stub_UUID_generate, depth = 2)
+  mockery::stub(
+    subset_seurat, "load_parent_experiment_data", mock_bpcells_parent_data
+  )
+
+  res <- subset_seurat(input, list())
+  withr::defer(unlink(unlist(res$output$matrix_dir_list), recursive = TRUE))
+
+  # the parent has more than one sample, so the subset does too
+  sample_ids <- names(res$output$scdata_list)
+  expect_gt(length(sample_ids), 1)
+  expect_named(res$output$matrix_dir_list, sample_ids)
+
+  # same subset from an in-memory parent, to compare the counts against
+  in_memory_res <- stubbed_subset_seurat(input, list())
+
+  for (sample_id in sample_ids) {
+    matrix_dir <- res$output$matrix_dir_list[[sample_id]]
+    sample_scdata <- res$output$scdata_list[[sample_id]]
+
+    expect_true(dir.exists(matrix_dir))
+
+    # each sample gets its own dir, named as the subset's qc run expects to
+    # find it after untarring (see load_source_matrix_dir)
+    expect_equal(
+      matrix_dir,
+      file.path(tempdir(), paste0(sample_id, "_matrix_dir"))
+    )
+    expect_equal(get_matrix_dirs(sample_scdata), normalizePath(matrix_dir))
+
+    # the sample's dir holds that sample's cells only, matching what the same
+    # subset produces from an in-memory parent
+    expected_scdata <- in_memory_res$output$scdata_list[[sample_id]]
+    expect_equal(
+      as.matrix(sample_scdata[["RNA"]]$counts),
+      as.matrix(expected_scdata[["RNA"]]$counts)
+    )
+    expect_equal(colnames(sample_scdata), colnames(expected_scdata))
+  }
+
+  # and no cell ends up in two samples
+  all_cells <- unlist(lapply(res$output$scdata_list, colnames))
+  expect_equal(anyDuplicated(all_cells), 0)
+})
+
+
+test_that("load_parent_experiment_data only restores a disk-backed matrix dir", {
+  load_parent_with_counts <- function(counts) {
+    scdata <- Seurat::CreateSeuratObject(counts = counts)
+    mock_restore <- mockery::mock(scdata)
+
+    mockery::stub(
+      load_parent_experiment_data, "paws::s3", function(config) NULL
+    )
+    mockery::stub(
+      load_parent_experiment_data,
+      "load_processed_scdata",
+      function(...) scdata
+    )
+    mockery::stub(
+      load_parent_experiment_data, "load_cellsets", function(...) NULL
+    )
+    mockery::stub(
+      load_parent_experiment_data, "parse_cellsets", function(...) NULL
+    )
+    mockery::stub(
+      load_parent_experiment_data, "restore_processed_matrix_dir", mock_restore
+    )
+
+    load_parent_experiment_data(
+      list(parentExperimentId = "mock_experiment_id"),
+      list(aws_config = NULL)
+    )
+
+    return(mock_restore)
+  }
+
+  # experiments processed before BPCells: no matrix dir to download
+  expect_called(load_parent_with_counts(mock_counts(use_bpcells = FALSE)), 0)
+  expect_called(load_parent_with_counts(mock_counts(use_bpcells = TRUE)), 1)
+})

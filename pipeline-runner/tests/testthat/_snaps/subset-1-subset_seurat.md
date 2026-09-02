@@ -2069,6 +2069,9 @@
       611: louvain-5 Cluster 5 cluster     271
       612: louvain-5 Cluster 5 cluster     591
       
+      $output$matrix_dir_list
+      list()
+      
       $output$qc_config
       $output$qc_config$cellSizeDistribution
       $output$qc_config$cellSizeDistribution$`this-is-not-a-uuid-2`

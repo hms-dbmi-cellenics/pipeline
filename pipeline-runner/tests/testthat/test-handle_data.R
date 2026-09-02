@@ -817,3 +817,72 @@ test_that("pad_image_width leaves height and channels unchanged", {
   expect_equal(dim(padded)[3], 3)
   expect_equal(dim(padded)[2], 10)
 })
+
+test_that("restore_processed_matrix_dir points BPCells layers at the downloaded dir", {
+  experiment_id <- "restore_matrix_dir_experiment"
+
+  # the parent pod's matrix dir, named as write_merged_matrix_dir names it
+  parent_dir <- file.path(withr::local_tempdir(), "matrix_dir")
+  counts <- BPCells::write_matrix_dir(
+    BPCells::convert_matrix_type(mock_counts()),
+    dir = parent_dir
+  )
+  scdata <- SeuratObject::CreateSeuratObject(counts = counts)
+  expected_counts <- as.matrix(scdata@assays$RNA$counts)
+
+  # tar the dir the way qc uploads it
+  tarfile <- file.path(withr::local_tempdir(), "matrix_dir.tar.zst")
+  withr::with_dir(
+    dirname(parent_dir),
+    system2("tar", c("--zstd", "-cf", tarfile, basename(parent_dir)))
+  )
+
+  # the parent pod's path doesn't exist in this pod
+  unlink(parent_dir, recursive = TRUE)
+  expect_error(
+    SeuratObject::CreateSeuratObject(counts = scdata@assays$RNA$counts),
+    "Missing directory"
+  )
+
+  mock_s3 <- list(
+    download_file = function(Bucket, Key, Filename) file.copy(tarfile, Filename)
+  )
+  restored_dir <- file.path(tempdir(), basename(parent_dir))
+  withr::defer(unlink(restored_dir, recursive = TRUE))
+
+  res <- restore_processed_matrix_dir(
+    mock_s3,
+    list(processed_bucket = "processed-bucket"),
+    experiment_id,
+    scdata
+  )
+
+  expect_equal(get_matrix_dirs(res), normalizePath(restored_dir))
+  expect_true(dir.exists(restored_dir))
+
+  # the counts are readable again, which is what the subset step needs
+  expect_no_error(
+    SeuratObject::CreateSeuratObject(counts = res@assays$RNA$counts)
+  )
+  expect_equal(as.matrix(res@assays$RNA$counts), expected_counts)
+})
+
+
+test_that("restore_processed_matrix_dir errors on more than one matrix dir", {
+  scdata <- SeuratObject::CreateSeuratObject(
+    counts = mock_counts(use_bpcells = TRUE)
+  )
+
+  # a second layer backed by its own dir, which we can't rewrite unambiguously
+  scdata@assays$RNA@layers$data <- mock_counts(use_bpcells = TRUE)
+
+  expect_error(
+    restore_processed_matrix_dir(
+      NULL,
+      list(processed_bucket = "processed-bucket"),
+      "mock_experiment_id",
+      scdata
+    ),
+    "Expected one processed matrix dir"
+  )
+})

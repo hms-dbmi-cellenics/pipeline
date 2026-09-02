@@ -72,6 +72,13 @@ subset_seurat <- function(input, pipeline_config, prev_out = NULL) {
 
   subset_scdata_list <- Seurat::SplitObject(subset_scdata, split.by = "samples")
 
+  # a disk-backed subset must get its own matrix dirs, keyed by the new sample
+  # ids, so that upload_to_aws persists them next to each sample's rds. Without
+  # them the subset experiment's objects would point at this pod's tempdir and
+  # its own QC run would fail to find the matrix. No-op for in-memory counts.
+  c(subset_scdata_list, matrix_dir_list) %<-%
+    write_sample_matrix_dirs(subset_scdata_list)
+
   # TODO: remove from here and refactor all pipeline.
   config <- list(
     name = input$experimentName,
@@ -91,6 +98,7 @@ subset_seurat <- function(input, pipeline_config, prev_out = NULL) {
       config = config,
       disable_qc_filters = TRUE,
       parent_cellsets = parent_data$cellsets,
+      matrix_dir_list = matrix_dir_list,
       qc_config = generate_subset_config(input$parentProcessingConfig, sample_id_map)
     )
   )
@@ -114,6 +122,16 @@ load_parent_experiment_data <- function(input, pipeline_config) {
   # load parent processed scdata and cellsets
   s3 <- paws::s3(config = pipeline_config$aws_config)
   parent_scdata <- load_processed_scdata(s3, pipeline_config, input$parentExperimentId)
+
+  # a disk-backed (BPCells) parent carries the matrix dir path of the pod that
+  # processed it, which doesn't exist here. Download it and update the paths
+  # before subsetting reads any counts
+  if (methods::is(parent_scdata[["RNA"]]$counts, "IterableMatrix")) {
+    parent_scdata <- restore_processed_matrix_dir(
+      s3, pipeline_config, input$parentExperimentId, parent_scdata
+    )
+  }
+
   parent_cellsets <- parse_cellsets(load_cellsets(s3, pipeline_config, input$parentExperimentId))
 
   return(list(scdata = parent_scdata, cellsets = parent_cellsets))
@@ -144,6 +162,42 @@ diet_scdata <- function(scdata) {
   )
 
   return(lean_scdata)
+}
+
+
+#' Write one BPCells matrix dir per subset sample
+#'
+#' The subset samples share the parent's matrix dir, which lives in this pod's
+#' tempdir and is not uploaded with the subset experiment. Writing a dir per
+#' sample gives the subset the same layout gem2s produces, so upload_to_aws can
+#' tar and upload it and the subset's QC run can restore the paths.
+#'
+#' Samples whose counts are in memory (parents processed before BPCells) are
+#' left alone and contribute no entry to the matrix dir list.
+#'
+#' @param scdata_list list of SeuratObjects, named by subset sample id
+#'
+#' @return list with the updated scdata_list and the matrix_dir_list
+#'
+write_sample_matrix_dirs <- function(scdata_list) {
+  matrix_dir_list <- list()
+
+  for (sample_id in names(scdata_list)) {
+    counts <- scdata_list[[sample_id]][["RNA"]]$counts
+
+    if (!methods::is(counts, "IterableMatrix")) next
+
+    matrix_dir <- file.path(tempdir(), paste0(sample_id, "_matrix_dir"))
+    unlink(matrix_dir, recursive = TRUE)
+    message("Writing matrix dir for sample ", sample_id, " to: ", matrix_dir)
+
+    scdata_list[[sample_id]][["RNA"]]$counts <-
+      BPCells::write_matrix_dir(counts, dir = matrix_dir)
+
+    matrix_dir_list[[sample_id]] <- matrix_dir
+  }
+
+  return(list(scdata_list = scdata_list, matrix_dir_list = matrix_dir_list))
 }
 
 
