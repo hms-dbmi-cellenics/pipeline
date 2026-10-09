@@ -175,7 +175,7 @@ test_that("visium_hd config disables the single-cell-only steps", {
   expect_false(any(single_cell_steps %in% names(qc_config)))
 })
 
-test_that("xenium config builds the three spatial filters with correct defaults", {
+test_that("xenium config builds count density, then UMI and gene filters that are off", {
   scdata_list <- mock_scdata_list()
 
   qc_config <- construct_qc_config(
@@ -184,35 +184,29 @@ test_that("xenium config builds the three spatial filters with correct defaults"
     technology = "xenium"
   )
 
-  spatial_steps <- list(
-    spatialUmiOutlier = "lower",
-    spatialNumGenesOutlier = "lower",
-    spatialMitoOutlier = "upper"
+  expect_equal(
+    names(qc_config),
+    c("spatialCountDensity", "spatialUmiOutlier", "spatialNumGenesOutlier",
+      "dataIntegration", "configureEmbedding")
   )
 
-  for (step in names(spatial_steps)) {
-    expect_true(step %in% names(qc_config))
-    for (sample in names(scdata_list)) {
-      cfg <- qc_config[[step]][[sample]]
-      expect_true(cfg$enabled)
-      expect_true(cfg$auto)
-      expect_equal(cfg$filterSettings$method, "localOutlier")
-      expect_equal(cfg$filterSettings$methodSettings$localOutlier$cutoff, 3)
+  for (sample in names(scdata_list)) {
+    density <- qc_config$spatialCountDensity[[sample]]
+    expect_true(density$enabled)
+    expect_true(density$auto)
+    expect_equal(density$filterSettings$nmads, 3)
+    expect_true(density$filterSettings$filterControls)
+    expect_equal(density$filterSettings$maxControlCounts, 0)
 
-      # absolute defaults are this sample's 3-MAD thresholds; no max for UMIs/genes
-      absolute <- cfg$filterSettings$methodSettings$absoluteThreshold
-      if (spatial_steps[[step]] == "lower") {
-        expect_true(is.numeric(absolute$min))
-        expect_true("max" %in% names(absolute))
-        expect_null(absolute$max)
-      } else {
-        expect_false("min" %in% names(absolute))
-        expect_true(is.numeric(absolute$max))
-      }
+    for (step in c("spatialUmiOutlier", "spatialNumGenesOutlier")) {
+      cfg <- qc_config[[step]][[sample]]
+      expect_false(cfg$enabled)
+      expect_true(cfg$auto)
+      expect_equal(cfg$filterSettings$method, "absoluteThreshold")
+      expect_null(cfg$filterSettings$methodSettings$localOutlier)
+      expect_true(is.numeric(cfg$filterSettings$methodSettings$absoluteThreshold$min))
     }
   }
-
-  expect_true(all(c("dataIntegration", "configureEmbedding") %in% names(qc_config)))
 })
 
 test_that("xenium config disables the single-cell-only steps", {
@@ -245,8 +239,7 @@ test_that("non-spatial (10X) config shape is unchanged (no spatial keys)", {
     c("cellSizeDistribution", "mitochondrialContent", "classifier",
       "numGenesVsNumUmis", "doubletScores", "dataIntegration", "configureEmbedding")
   )
-  spatial_steps <- c("spatialUmiOutlier", "spatialNumGenesOutlier", "spatialMitoOutlier")
-  expect_false(any(spatial_steps %in% names(qc_config)))
+  expect_false(any(startsWith(names(qc_config), "spatial")))
 })
 
 test_that("NumGenesVsUmis filter config has linear as default for 10x datasets", {

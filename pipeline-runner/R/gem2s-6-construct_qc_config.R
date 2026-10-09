@@ -22,28 +22,47 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
       processing_config_template[["embedding_clustering"]]
     )
 
-  # Spatial technologies (e.g. Visium HD, Xenium): cells are defined by polygon
-  # segmentation, so the single-cell filters do not apply. Only the spatial
-  # local-outlier filters (keyed off the z-scores computed in
-  # add_spatial_local_outliers) are constructed, followed by integration +
-  # embedding. We only build config for the steps the technology actually runs.
-  if (isTRUE(technology %in% c("visium_hd", "xenium"))) {
+  # Spatial technologies: cells are defined by polygon segmentation, so the
+  # single-cell filters do not apply. We only build config for the steps the
+  # technology actually runs, followed by integration + embedding.
+  spatial_metric_config <- function(template_key, metric, direction) {
+    add_custom_config_per_sample(
+      customize_spatial_outlier_config(metric, direction),
+      processing_config_template[[template_key]],
+      scdata_list,
+      technology = technology
+    )
+  }
+
+  # Visium HD: the three QC metrics as spatial local outliers (OSTA's segmented
+  # Visium HD workflow), each switchable to absolute thresholds
+  if (isTRUE(technology == "visium_hd")) {
     return(list(
-      spatialUmiOutlier = add_custom_config_per_sample(
-        customize_spatial_outlier_config("nCount_RNA", "lower"),
-        processing_config_template[["spatial_umi_outlier"]],
+      spatialUmiOutlier =
+        spatial_metric_config("spatial_umi_outlier", "nCount_RNA", "lower"),
+      spatialNumGenesOutlier =
+        spatial_metric_config("spatial_num_genes_outlier", "nFeature_RNA", "lower"),
+      spatialMitoOutlier =
+        spatial_metric_config("spatial_mito_outlier", "percent.mt", "upper"),
+      dataIntegration = config_data_integration,
+      configureEmbedding = config_embedding_clustering
+    ))
+  }
+
+  # Xenium: count density and controls (OSTA's imaging QC). UMI and gene
+  # thresholds are available but off. Panels have no mitochondrial genes, so
+  # there is no mito filter.
+  if (isTRUE(technology == "xenium")) {
+    return(list(
+      spatialCountDensity = add_custom_config_per_sample(
+        customize_spatial_count_density_config,
+        processing_config_template[["spatial_count_density"]],
         scdata_list
       ),
-      spatialNumGenesOutlier = add_custom_config_per_sample(
-        customize_spatial_outlier_config("nFeature_RNA", "lower"),
-        processing_config_template[["spatial_num_genes_outlier"]],
-        scdata_list
-      ),
-      spatialMitoOutlier = add_custom_config_per_sample(
-        customize_spatial_outlier_config("percent.mt", "upper"),
-        processing_config_template[["spatial_mito_outlier"]],
-        scdata_list
-      ),
+      spatialUmiOutlier =
+        spatial_metric_config("spatial_umi_outlier", "nCount_RNA", "lower"),
+      spatialNumGenesOutlier =
+        spatial_metric_config("spatial_num_genes_outlier", "nFeature_RNA", "lower"),
       dataIntegration = config_data_integration,
       configureEmbedding = config_embedding_clustering
     ))
@@ -100,13 +119,20 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
 
 
 # Spatial QC metric filters: the local-outlier cutoff is static, the absolute
-# thresholds default to this sample's 3-MAD outlier thresholds.
+# thresholds default to this sample's 3-MAD outlier thresholds. Xenium has no
+# local-outlier z-scores, so its UMI and gene filters are absolute and off.
 customize_spatial_outlier_config <- function(metric, direction) {
   function(scdata,
            config,
            sample_name,
            unfiltered_samples,
            technology) {
+    if (isTRUE(technology == "xenium")) {
+      config$enabled <- FALSE
+      config$filterSettings$method <- "absoluteThreshold"
+      config$filterSettings$methodSettings$localOutlier <- NULL
+    }
+
     defaults <- generate_default_values_spatial_absolute(
       scdata@meta.data[[metric]], direction
     )
@@ -119,6 +145,19 @@ customize_spatial_outlier_config <- function(metric, direction) {
     return(config)
   }
 }
+
+
+# Xenium count density: static defaults (3 MADs, controls above 0); the
+# threshold itself depends on the cells reaching the step, so it is computed
+# in the filter.
+customize_spatial_count_density_config <-
+  function(scdata,
+           config,
+           sample_name,
+           unfiltered_samples,
+           technology) {
+    return(config)
+  }
 
 
 customize_classifier_config <-

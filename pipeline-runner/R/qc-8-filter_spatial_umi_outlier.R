@@ -247,7 +247,9 @@ generate_default_values_spatial_absolute <- function(values, direction) {
 # the raw metric (to recompute absolute-threshold outliers client-side), the
 # local-outlier z-score when there is one (to recompute local outliers) and
 # tissue coordinates.
-generate_spatial_outlier_plot_data <- function(scdata, value_metric, metric_z, raw_metric = value_metric) {
+generate_spatial_outlier_plot_data <- function(
+  scdata, value_metric, metric_z, raw_metric = value_metric
+) {
   md <- scdata@meta.data
 
   cols <- list(

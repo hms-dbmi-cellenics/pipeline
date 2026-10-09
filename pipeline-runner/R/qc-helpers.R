@@ -344,6 +344,11 @@ SINGLE_CELL_QC_STEPS <- c(
   "numGenesVsNumUmis", "doubletScores"
 )
 SPATIAL_QC_TECHNOLOGIES <- c("visium_hd", "xenium")
+# spatial filters each spatial technology does not run
+SPATIAL_QC_STEPS_NOT_RUN <- list(
+  visium_hd = "spatialCountDensity",
+  xenium = "spatialMitoOutlier"
+)
 
 #' Ordered QC task names that run for a technology
 #'
@@ -359,7 +364,8 @@ SPATIAL_QC_TECHNOLOGIES <- c("visium_hd", "xenium")
 #'
 get_qc_task_order <- function(task_names, technology = NULL) {
   if (isTRUE(technology %in% SPATIAL_QC_TECHNOLOGIES)) {
-    return(task_names[!task_names %in% SINGLE_CELL_QC_STEPS])
+    not_run <- c(SINGLE_CELL_QC_STEPS, SPATIAL_QC_STEPS_NOT_RUN[[technology]])
+    return(task_names[!task_names %in% not_run])
   }
 
   task_names[!startsWith(task_names, "spatial")]

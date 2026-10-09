@@ -32,15 +32,23 @@ test_that("get_qc_task_order keeps only single-cell steps for non-spatial techno
 })
 
 
-test_that("get_qc_task_order keeps only spatial steps for spatial technologies", {
+test_that("get_qc_task_order keeps only each spatial technology's steps", {
   task_names <- names(QC_TASK_LIST)
 
-  for (technology in c("visium_hd", "xenium")) {
-    order <- get_qc_task_order(task_names, technology)
-    expect_equal(order[1], "spatialUmiOutlier")
-    expect_false(any(c("classifier", "doubletScores") %in% order))
-    expect_equal(tail(order, 2), c("dataIntegration", "configureEmbedding"))
-  }
+  expect_equal(
+    get_qc_task_order(task_names, "visium_hd"),
+    c(
+      "spatialUmiOutlier", "spatialNumGenesOutlier", "spatialMitoOutlier",
+      "dataIntegration", "configureEmbedding"
+    )
+  )
+  expect_equal(
+    get_qc_task_order(task_names, "xenium"),
+    c(
+      "spatialCountDensity", "spatialUmiOutlier", "spatialNumGenesOutlier",
+      "dataIntegration", "configureEmbedding"
+    )
+  )
 })
 
 
@@ -53,6 +61,9 @@ test_that("single-cell doubletScores hands filtered cell ids off to dataIntegrat
 test_that("the last spatial filter hands filtered cell ids off to dataIntegration", {
   order <- get_qc_task_order(names(QC_TASK_LIST), "visium_hd")
   expect_equal(get_next_qc_task("spatialMitoOutlier", order), "dataIntegration")
+
+  order <- get_qc_task_order(names(QC_TASK_LIST), "xenium")
+  expect_equal(get_next_qc_task("spatialNumGenesOutlier", order), "dataIntegration")
 })
 
 

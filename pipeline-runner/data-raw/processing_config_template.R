@@ -83,6 +83,20 @@ processing_config_template <- list(
     )
   ),
 
+  # Xenium count-density filter (OSTA imaging QC): 3-MAD lower outlier on
+  # log(counts / cell area), or control probe + codeword counts above
+  # maxControlCounts when filterControls is TRUE.
+  "spatial_count_density" = list(
+    enabled = TRUE,
+    auto = TRUE,
+    filterSettings = list(
+      nmads = 3,
+      filterControls = TRUE,
+      maxControlCounts = 0,
+      binStep = 0.05
+    )
+  ),
+
   "data_integration" = list(
     dataIntegration = list(
       method = "harmony",
