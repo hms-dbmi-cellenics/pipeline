@@ -439,8 +439,12 @@ call_qc <- function(task_name, input, pipeline_config) {
     message("Single-cell data loaded.\n")
   }
 
+  # single-cell and spatial experiments run different filters, so hand-offs
+  # between steps follow the technology's own task order
+  task_order <- get_qc_task_order(names(tasks), get_scdata_technology(scdata))
+
   if (!exists("cells_id")) {
-    if (task_name == names(tasks)[1]) {
+    if (task_name == task_order[1]) {
       message("Generating first step filtered cell ids...")
       assign("cells_id", generate_first_step_ids(scdata), pos = ".GlobalEnv")
       message("Filtered cells id generated.")
@@ -488,16 +492,15 @@ call_qc <- function(task_name, input, pipeline_config) {
 
   assign("cells_id", new_ids, pos = ".GlobalEnv")
 
-  task_names <- names(tasks)
-  integration_index <- match("dataIntegration", task_names)
-  task_index <- match(task_name, task_names)
+  integration_index <- match("dataIntegration", task_order)
+  task_index <- match(task_name, task_order)
 
-  if (task_index < integration_index) {
+  if (isTRUE(task_index < integration_index)) {
     message(
       "Filtered cell ids from ", length(cells_id[[sample_id]]),
       " to ", length(new_ids[[sample_id]])
     )
-    next_task <- names(tasks)[[task_index + 1]]
+    next_task <- get_next_qc_task(task_name, task_order)
     object_key <- paste0(experiment_id, "/", next_task, "/", sample_id, ".rds")
     upload_cells_id(pipeline_config, object_key, cells_id)
   }
