@@ -380,3 +380,42 @@ test_that("create_seurat does not exclude genes without counts", {
   # gene is still there
   expect_true("NOT-EXPRESSED" %in% row.names(scdata))
 })
+
+
+test_that("get_min_features keeps every non-empty cell only for spatial technologies", {
+  expect_equal(get_min_features("visium_hd"), 1)
+  expect_equal(get_min_features("xenium"), 1)
+  expect_equal(get_min_features("10x"), 10)
+  expect_equal(get_min_features(NULL), 10)
+})
+
+test_that("construct_scdata drops only empty cells for spatial data, <10 genes otherwise", {
+  # cell1: 0 genes, cell2: 5 genes, cell3+: 30 genes
+  ncells <- 40
+  cells <- paste0("cell", seq_len(ncells))
+  counts <- matrix(
+    rpois(30 * ncells, lambda = 5) + 1,
+    nrow = 30,
+    dimnames = list(paste0("Gene", 1:30), cells)
+  )
+  counts[, 1] <- 0
+  counts[6:30, 2] <- 0
+  counts <- as(counts, "dgCMatrix")
+  annot <- data.frame(name = rownames(counts), input = rownames(counts))
+
+  build <- function(type, segmentations = NULL) {
+    construct_scdata(
+      counts = counts, segmentations = segmentations, doublet_score = NULL,
+      edrops_out = NULL, sample = "sample_a", annot = annot,
+      config = list(name = "p", input = list(type = type))
+    )
+  }
+
+  xenium <- build("xenium", mock_xenium_segmentations(cells))
+  expect_false("cell1" %in% colnames(xenium))
+  expect_true("cell2" %in% colnames(xenium))
+
+  single_cell <- build("10x")
+  expect_false(any(c("cell1", "cell2") %in% colnames(single_cell)))
+  expect_equal(ncol(single_cell), ncells - 2)
+})

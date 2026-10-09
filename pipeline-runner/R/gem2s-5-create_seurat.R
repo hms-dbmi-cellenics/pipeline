@@ -63,7 +63,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 construct_scdata <- function(
   counts, segmentations, doublet_score, edrops_out,
   sample, annot, config, microns_per_pixel = NULL,
-  min.cells = 0, min.features = 10
+  min.cells = 0, min.features = get_min_features(config$input$type)
 ) {
   metadata <- construct_metadata(counts, sample, config)
 
@@ -119,6 +119,22 @@ construct_scdata <- function(
   }
 
   return(scdata)
+}
+
+#' Minimum detected genes for a cell to be kept at gem2s
+#'
+#' Single-cell data drops cells with fewer than 10 genes. Spatial data keeps
+#' every non-empty segmented cell, so the visible spatial QC filters decide
+#' which cells to remove (on Xenium Prime 5K, a 10-gene floor would silently
+#' remove ~18% of cells and shift the count-density MAD threshold).
+#'
+#' @param technology character technology of the sample, or NULL
+get_min_features <- function(technology) {
+  if (isTRUE(technology %in% SPATIAL_QC_TECHNOLOGIES)) {
+    return(1)
+  }
+
+  10
 }
 
 #' Assemble a Xenium FOV from raw centroid and boundary frames
