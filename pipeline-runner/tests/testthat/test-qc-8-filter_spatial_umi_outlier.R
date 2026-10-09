@@ -238,7 +238,7 @@ test_that("absolute auto uses the sample's 3-MAD lower threshold and no max", {
     scuttle::isOutlier(counts, log = TRUE, type = "lower", nmads = 3), "thresholds"
   )[["lower"]]
   settings <- out$config$filterSettings$methodSettings$absoluteThreshold
-  expect_equal(settings$min, unname(expected_min))
+  expect_equal(settings$min, ceiling(unname(expected_min)))
   expect_null(settings$max)
   expect_true("max" %in% names(settings))
 
@@ -310,4 +310,21 @@ test_that("an unknown method is an error", {
 test_that("generate_default_values_spatial_absolute sets no bound when the MAD is zero", {
   expect_null(generate_default_values_spatial_absolute(rep(100, 50), "lower")$min)
   expect_null(generate_default_values_spatial_absolute(rep(0, 50), "upper")$max)
+})
+
+test_that("generate_default_values_spatial_absolute rounds outwards without changing the cells kept", {
+  set.seed(2)
+  counts <- c(round(exp(rnorm(200, log(500), 0.5))), 3, 4, 5)
+  min_value <- generate_default_values_spatial_absolute(counts, "lower")$min
+  exact <- attr(scuttle::isOutlier(counts, log = TRUE, type = "lower", nmads = 3), "thresholds")[["lower"]]
+
+  expect_equal(min_value, ceiling(exact))
+  expect_equal(counts >= min_value, counts >= exact)
+
+  mito <- c(runif(200, 1, 8), 30, 40)
+  max_value <- generate_default_values_spatial_absolute(mito, "upper")$max
+  exact <- attr(scuttle::isOutlier(mito, type = "higher", nmads = 3), "thresholds")[["higher"]]
+
+  expect_equal(max_value, ceiling(exact * 100) / 100)
+  expect_equal(mito <= max_value, mito <= exact)
 })

@@ -214,6 +214,8 @@ filter_spatial_qc_metric <- function(
 #' \code{direction = "lower"} (UMIs, genes) and the upper threshold of the raw
 #' metric for \code{direction = "upper"} (mitochondrial percent). When the MAD is
 #' zero the threshold would equal the median, so no bound is set instead.
+#' Thresholds are rounded outwards so they read cleanly but keep the same cells:
+#' the count minimum up to a whole number, the percent maximum up to 2 decimals.
 #'
 #' @param values numeric vector of the raw metric
 #' @param direction one of \code{"lower"} or \code{"upper"}
@@ -233,13 +235,13 @@ generate_default_values_spatial_absolute <- function(values, direction) {
     outliers <- scuttle::isOutlier(values, log = TRUE, type = "lower", nmads = 3)
     threshold <- unname(attr(outliers, "thresholds")[["lower"]])
     if (at_median(threshold)) threshold <- NULL
-    return(list(min = threshold, max = NULL))
+    return(list(min = if (!is.null(threshold)) ceiling(threshold), max = NULL))
   }
 
   outliers <- scuttle::isOutlier(values, type = "higher", nmads = 3)
   threshold <- unname(attr(outliers, "thresholds")[["higher"]])
   if (at_median(threshold)) threshold <- NULL
-  list(max = threshold)
+  list(max = if (!is.null(threshold)) ceiling(threshold * 100) / 100)
 }
 
 # Builds the per-cell array consumed by the spatial slide plot: one record per

@@ -95,6 +95,6 @@ test_that("absolute mito auto uses the sample's 3-MAD upper threshold on percent
 
   expected_max <- attr(scuttle::isOutlier(mito, type = "higher", nmads = 3), "thresholds")[["higher"]]
   settings <- out$config$filterSettings$methodSettings$absoluteThreshold
-  expect_equal(settings$max, unname(expected_max))
+  expect_equal(settings$max, ceiling(unname(expected_max) * 100) / 100)
   expect_equal(length(out$new_ids$spatial1), 60)
 })
