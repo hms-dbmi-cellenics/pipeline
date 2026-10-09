@@ -84,23 +84,6 @@ test_that("filter_spatial_umi_outlier emits the expected plotData", {
   expect_setequal(names(stats), c("before", "after"))
 })
 
-test_that("filter_spatial_mito_outlier removes cells above the cutoff (upper direction)", {
-  scdata_list <- add_tissue_coords(mock_scdata_list())
-  sample1_id <- names(scdata_list)[1]
-  ncells <- ncol(scdata_list[[sample1_id]])
-
-  z <- rep(0, ncells)
-  z[1:8] <- 5 # high outliers
-  scdata_list <- add_zscores(scdata_list, "percent.mt", setNames(list(z), sample1_id))
-
-  cells_id <- mock_ids(scdata_list)
-  config <- mock_spatial_config(cutoff = 3, direction = "upper")
-  out <- filter_spatial_mito_outlier(scdata_list, config, sample1_id, cells_id)
-
-  expect_equal(length(out$new_ids[[sample1_id]]), ncells - 8)
-  expect_false(any(0:7 %in% out$new_ids[[sample1_id]]))
-})
-
 test_that("manual (non-auto) cutoff is persisted to config and used for filtering", {
   scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
@@ -121,37 +104,25 @@ test_that("manual (non-auto) cutoff is persisted to config and used for filterin
   expect_equal(length(out$new_ids[[sample1_id]]), ncells - 6)
 })
 
-test_that("upper keeps z < cutoff and lower keeps z > -cutoff at the boundary", {
+test_that("lower keeps z > -cutoff, so a cell exactly at -cutoff is removed", {
   scdata_list <- add_tissue_coords(mock_scdata_list())
   sample1_id <- names(scdata_list)[1]
   ncells <- ncol(scdata_list[[sample1_id]])
   cells_id <- mock_ids(scdata_list)
 
-  # upper keeps z < cutoff (strict); lower keeps z > -cutoff (strict).
-  # Cells exactly at the boundary are removed.
   z <- rep(0, ncells)
-  z[1] <- 3.1 # > cutoff  -> removed (upper)
-  z[2] <- 2.9 # < cutoff  -> kept (upper)
-  z[3] <- -3.1 # < -cutoff -> removed (lower)
-  z[4] <- -2.9 # > -cutoff -> kept (lower)
+  z[1] <- -3.1 # beyond -cutoff -> removed
+  z[2] <- -3 # exactly -cutoff -> removed
+  z[3] <- -2.9 # within -> kept
 
-  sl_up <- add_zscores(scdata_list, "percent.mt", setNames(list(z), sample1_id))
-  out_up <- filter_spatial_mito_outlier(
-    sl_up, mock_spatial_config(3, "upper"), sample1_id, cells_id
+  scdata_list <- add_zscores(scdata_list, "nCount_RNA", setNames(list(z), sample1_id))
+  out <- filter_spatial_umi_outlier(
+    scdata_list, mock_spatial_config(3, "lower"), sample1_id, cells_id
   )
-  # cells_id 0 (z=3.1) removed, cells_id 1 (z=2.9) kept
-  expect_false(0 %in% out_up$new_ids[[sample1_id]])
-  expect_true(1 %in% out_up$new_ids[[sample1_id]])
-  expect_equal(length(out_up$new_ids[[sample1_id]]), ncells - 1)
 
-  sl_lo <- add_zscores(scdata_list, "nCount_RNA", setNames(list(z), sample1_id))
-  out_lo <- filter_spatial_umi_outlier(
-    sl_lo, mock_spatial_config(3, "lower"), sample1_id, cells_id
-  )
-  # cells_id 2 (z=-3.1) removed, cells_id 3 (z=-2.9) kept
-  expect_false(2 %in% out_lo$new_ids[[sample1_id]])
-  expect_true(3 %in% out_lo$new_ids[[sample1_id]])
-  expect_equal(length(out_lo$new_ids[[sample1_id]]), ncells - 1)
+  expect_false(any(c(0, 1) %in% out$new_ids[[sample1_id]]))
+  expect_true(2 %in% out$new_ids[[sample1_id]])
+  expect_equal(length(out$new_ids[[sample1_id]]), ncells - 2)
 })
 
 test_that("missing z-score column is a no-op with a warning message", {

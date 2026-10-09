@@ -1,6 +1,9 @@
 # ── Spatial local-outlier detection ──────────────────────────────────────────
 # factored out of SpotSweeper::localOutliers, repeated for each metric.
 
+# n_neighbors = 36 is SpotSweeper's default: three rings of a hexagonal grid
+# (6 + 12 + 18). Segmented cells are not on a grid, so the square-grid value of
+# 48 does not apply either; OSTA's segmented Visium HD workflow also uses 36.
 find_spatial_knn <- function(scdata, workers = 1, n_neighbors = 36) {
   neighborhood_coords <- Seurat::GetTissueCoordinates(scdata)
   neighborhood_coords <- as.matrix(neighborhood_coords[, c("x", "y")])
