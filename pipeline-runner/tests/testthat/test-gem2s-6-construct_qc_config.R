@@ -138,8 +138,19 @@ test_that("visium_hd config builds the three spatial filters with correct defaul
       cfg <- qc_config[[step]][[sample]]
       expect_true(cfg$enabled)
       expect_true(cfg$auto)
-      expect_equal(cfg$filterSettings$cutoff, 3)
-      expect_equal(cfg$filterSettings$direction, spatial_steps[[step]])
+      expect_equal(cfg$filterSettings$method, "localOutlier")
+      expect_equal(cfg$filterSettings$methodSettings$localOutlier$cutoff, 3)
+
+      # absolute defaults are this sample's 3-MAD thresholds; no max for UMIs/genes
+      absolute <- cfg$filterSettings$methodSettings$absoluteThreshold
+      if (spatial_steps[[step]] == "lower") {
+        expect_true(is.numeric(absolute$min))
+        expect_true("max" %in% names(absolute))
+        expect_null(absolute$max)
+      } else {
+        expect_false("min" %in% names(absolute))
+        expect_true(is.numeric(absolute$max))
+      }
     }
   }
 
@@ -185,8 +196,19 @@ test_that("xenium config builds the three spatial filters with correct defaults"
       cfg <- qc_config[[step]][[sample]]
       expect_true(cfg$enabled)
       expect_true(cfg$auto)
-      expect_equal(cfg$filterSettings$cutoff, 3)
-      expect_equal(cfg$filterSettings$direction, spatial_steps[[step]])
+      expect_equal(cfg$filterSettings$method, "localOutlier")
+      expect_equal(cfg$filterSettings$methodSettings$localOutlier$cutoff, 3)
+
+      # absolute defaults are this sample's 3-MAD thresholds; no max for UMIs/genes
+      absolute <- cfg$filterSettings$methodSettings$absoluteThreshold
+      if (spatial_steps[[step]] == "lower") {
+        expect_true(is.numeric(absolute$min))
+        expect_true("max" %in% names(absolute))
+        expect_null(absolute$max)
+      } else {
+        expect_false("min" %in% names(absolute))
+        expect_true(is.numeric(absolute$max))
+      }
     }
   }
 

@@ -51,8 +51,7 @@ test_that("filter_spatial_mito_outlier auto uses the default cutoff of 3", {
   config <- mock_spatial_config(cutoff = 100, direction = "upper", auto = TRUE)
   out <- filter_spatial_mito_outlier(scdata_list, config, sample1_id, cells_id)
 
-  expect_equal(out$config$filterSettings$cutoff, 3)
-  expect_equal(out$config$filterSettings$direction, "upper")
+  expect_equal(out$config$filterSettings$methodSettings$localOutlier$cutoff, 3)
   expect_equal(length(out$new_ids[[sample1_id]]), ncells - 4)
 })
 
@@ -69,4 +68,33 @@ test_that("filter_spatial_mito_outlier plots raw percent.mt, not a log value", {
   plot0 <- out$plotData[[generate_gui_uuid(sample1_id, "spatialMitoOutlier", 0)]]
   values <- vapply(plot0, function(cell) cell$value, numeric(1))
   expect_equal(values, unname(scdata_list[[sample1_id]]$percent.mt))
+})
+
+test_that("absolute mito keeps cells at or below max percent and ignores any min", {
+  scdata_list <- mock_spatial_scdata_list(ncells = 64)
+  scdata_list$spatial1$percent.mt <- c(rep(5, 60), 24.9, 25, 25.1, 80)
+  cells_id <- mock_ids(scdata_list)
+
+  out <- filter_spatial_mito_outlier(
+    scdata_list, mock_spatial_absolute_config(min = 10, max = 25), "spatial1", cells_id
+  )
+
+  expect_equal(out$new_ids$spatial1, cells_id$spatial1[1:62])
+})
+
+test_that("absolute mito auto uses the sample's 3-MAD upper threshold on percent", {
+  set.seed(1)
+  mito <- c(runif(60, 2, 6), 40, 50, 60, 70)
+  scdata_list <- mock_spatial_scdata_list(ncells = 64)
+  scdata_list$spatial1$percent.mt <- mito
+  cells_id <- mock_ids(scdata_list)
+
+  out <- filter_spatial_mito_outlier(
+    scdata_list, mock_spatial_absolute_config(auto = TRUE), "spatial1", cells_id
+  )
+
+  expected_max <- attr(scuttle::isOutlier(mito, type = "higher", nmads = 3), "thresholds")[["higher"]]
+  settings <- out$config$filterSettings$methodSettings$absoluteThreshold
+  expect_equal(settings$max, unname(expected_max))
+  expect_equal(length(out$new_ids$spatial1), 60)
 })

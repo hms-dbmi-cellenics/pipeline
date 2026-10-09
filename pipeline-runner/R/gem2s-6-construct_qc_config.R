@@ -30,17 +30,17 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
   if (isTRUE(technology %in% c("visium_hd", "xenium"))) {
     return(list(
       spatialUmiOutlier = add_custom_config_per_sample(
-        customize_spatial_outlier_config,
+        customize_spatial_outlier_config("nCount_RNA", "lower"),
         processing_config_template[["spatial_umi_outlier"]],
         scdata_list
       ),
       spatialNumGenesOutlier = add_custom_config_per_sample(
-        customize_spatial_outlier_config,
+        customize_spatial_outlier_config("nFeature_RNA", "lower"),
         processing_config_template[["spatial_num_genes_outlier"]],
         scdata_list
       ),
       spatialMitoOutlier = add_custom_config_per_sample(
-        customize_spatial_outlier_config,
+        customize_spatial_outlier_config("percent.mt", "upper"),
         processing_config_template[["spatial_mito_outlier"]],
         scdata_list
       ),
@@ -99,16 +99,26 @@ construct_qc_config <- function(scdata_list, unfiltered_samples, technology) {
 }
 
 
-# Spatial local-outlier filters use static defaults (cutoff = 3, fixed direction),
-# so no per-sample customization is required.
-customize_spatial_outlier_config <-
+# Spatial QC metric filters: the local-outlier cutoff is static, the absolute
+# thresholds default to this sample's 3-MAD outlier thresholds.
+customize_spatial_outlier_config <- function(metric, direction) {
   function(scdata,
            config,
            sample_name,
            unfiltered_samples,
            technology) {
+    defaults <- generate_default_values_spatial_absolute(
+      scdata@meta.data[[metric]], direction
+    )
+    config$filterSettings$methodSettings$absoluteThreshold <- utils::modifyList(
+      config$filterSettings$methodSettings$absoluteThreshold,
+      defaults,
+      keep.null = TRUE
+    )
+
     return(config)
   }
+}
 
 
 customize_classifier_config <-

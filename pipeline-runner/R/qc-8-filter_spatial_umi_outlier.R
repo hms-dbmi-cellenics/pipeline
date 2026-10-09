@@ -64,26 +64,29 @@ local_outliers <- function(
   metadata[, c(metric_to_use, metric_z)]
 }
 
-# ── Spatial local-outlier filters (Visium HD) ────────────────────────────────
+# ── Spatial QC metric filters (Visium HD, Xenium) ────────────────────────────
 
-#' Spatial local-outlier filters (Visium HD)
+#' Spatial QC metric filters (Visium HD, Xenium)
 #'
-#' These filters are specific to spatial datasets. Instead of a global threshold,
-#' they flag cells whose metric deviates from its spatial neighborhood, using the
-#' modified z-scores precomputed by \code{add_spatial_local_outliers} and stored in
-#' \code{meta.data} as \code{<metric>_z} (see \code{local_outliers}).
-#'
-#' A cell is filtered out when its z-score is beyond the chosen \code{cutoff}:
+#' Filters cells on one per-cell QC metric with one of two methods, chosen by
+#' \code{config$filterSettings$method}:
 #' \itemize{
-#'   \item \code{direction = "lower"}: outlier (removed) if \code{z <= -cutoff}
-#'     (used for UMI count and number of genes — low local values are suspicious).
-#'   \item \code{direction = "upper"}: outlier (removed) if \code{z >= cutoff}
-#'     (used for mitochondrial content — high local values are suspicious).
+#'   \item \code{"localOutlier"}: flags cells whose metric deviates from its
+#'     spatial neighborhood, using the modified z-scores precomputed by
+#'     \code{add_spatial_local_outliers} and stored in \code{meta.data} as
+#'     \code{<metric>_z}. With \code{direction = "lower"} a cell is removed if
+#'     \code{z <= -cutoff}; with \code{direction = "upper"} if \code{z >= cutoff}.
+#'   \item \code{"absoluteThreshold"}: keeps cells whose raw metric lies within
+#'     \code{[min, max]} (inclusive). A NULL bound is not applied. The upper
+#'     direction (mitochondrial content, in percent) only has a \code{max}.
 #' }
 #'
-#' @param config list with \code{enabled}, \code{auto} and
-#'   \code{filterSettings} (\code{cutoff}, \code{direction}). When \code{auto} is
-#'   TRUE the default \code{cutoff} of 3 is used.
+#' In automatic mode the local-outlier cutoff is 3 and the absolute thresholds
+#' are 3-MAD global outlier thresholds of this sample (see
+#' \code{generate_default_values_spatial_absolute}).
+#'
+#' @param config list with \code{enabled}, \code{auto} and \code{filterSettings}
+#'   (\code{method}, \code{methodSettings}).
 #' @param metric character name of the \code{meta.data} metric column
 #'   (\code{nCount_RNA}, \code{nFeature_RNA} or \code{percent.mt}).
 #' @param direction one of \code{"lower"} or \code{"upper"}.
@@ -91,19 +94,20 @@ local_outliers <- function(
 #'   when TRUE the plot reports the \code{<metric>_log} value.
 #'
 #' @return a list with the filtered \code{scdata_list}, the updated config and the
-#'   plot values (spatial slide data, z-score histogram data, filter statistics).
+#'   plot values (spatial slide data, histogram data, filter statistics).
 #'
 #' @export
 #'
-filter_spatial_local_outlier <- function(
+filter_spatial_qc_metric <- function(
   scdata_list, config, sample_id, cells_id,
   task_name, metric, direction, log_scale = FALSE, num_cells_to_downsample = 6000
 ) {
   sample_cell_ids <- cells_id[[sample_id]]
 
-  if (length(sample_cell_ids) == 0) {
+  # the step is not configured for this experiment (e.g. a single-cell one)
+  if (length(sample_cell_ids) == 0 || is.null(config)) {
     return(list(
-      data = scdata_list[[sample_id]],
+      data = scdata_list,
       new_ids = cells_id,
       config = config,
       plotData = list()
@@ -111,10 +115,12 @@ filter_spatial_local_outlier <- function(
   }
 
   sample_data <- subset_ids(scdata_list[[sample_id]], sample_cell_ids)
+  metadata <- sample_data@meta.data
   metric_z <- paste0(metric, "_z")
+  method <- config$filterSettings$method %||% "localOutlier"
 
   # spatial z-scores are computed in gem2s (add_spatial_local_outliers)
-  if (!metric_z %in% colnames(sample_data@meta.data)) {
+  if (method == "localOutlier" && !metric_z %in% colnames(metadata)) {
     message("Warning! No spatial z-scores (", metric_z, ") computed for this experiment!")
     return(list(
       data = scdata_list,
@@ -124,49 +130,66 @@ filter_spatial_local_outlier <- function(
     ))
   }
 
-  # cutoff: automatic uses the default of 3, manual uses the user-provided value
-  cutoff <- config$filterSettings$cutoff
-  if (is.null(cutoff) || (exists("auto", where = config) && safeTRUE(config$auto))) {
-    cutoff <- 3
+  auto <- safeTRUE(config$auto)
+  settings <- config$filterSettings$methodSettings[[method]]
+  raw <- metadata[[metric]]
+
+  if (method == "localOutlier") {
+    cutoff <- settings$cutoff
+    if (is.null(cutoff) || auto) cutoff <- 3
+    settings$cutoff <- as.numeric(cutoff)
+
+    z <- metadata[[metric_z]]
+    keep <- if (direction == "upper") z < settings$cutoff else z > -settings$cutoff
+  } else if (method == "absoluteThreshold") {
+    if (auto) {
+      settings[c("min", "max")] <- list(NULL)
+      settings <- utils::modifyList(
+        settings,
+        generate_default_values_spatial_absolute(raw, direction),
+        keep.null = TRUE
+      )
+    }
+
+    min_value <- if (direction == "upper") NULL else settings$min
+    keep <- rep(TRUE, length(raw))
+    if (!is.null(min_value)) keep <- keep & raw >= min_value
+    if (!is.null(settings$max)) keep <- keep & raw <= settings$max
+  } else {
+    stop("Unknown spatial QC method: ", method)
   }
-  cutoff <- as.numeric(cutoff)
-  config$filterSettings$cutoff <- cutoff
-  config$filterSettings$direction <- direction
+
+  config$filterSettings$method <- method
+  config$filterSettings$methodSettings[method] <- list(settings)
 
   # Assign updated config to global env so that it can be accessed if there is an error
   config_key <- paste0("config-", task_name, "-", sample_id)
   assign(config_key, config, envir = globalenv())
 
-  z <- sample_data@meta.data[[metric_z]]
-  ids <- sample_data@meta.data$cells_id
-
-  if (safeTRUE(config$enabled)) {
-    if (direction == "upper") {
-      remaining_ids <- ids[z < cutoff]
-    } else {
-      remaining_ids <- ids[z > -cutoff]
-    }
-  } else {
-    remaining_ids <- sample_cell_ids
-  }
+  ids <- metadata$cells_id
+  remaining_ids <- if (safeTRUE(config$enabled)) ids[keep %in% TRUE] else sample_cell_ids
 
   # the slide plot colours by the same (possibly log-scaled) value the z-score
-  # was computed on, so the colouring matches the filtering
+  # was computed on, so the colouring matches the local-outlier filtering
   value_metric <- if (log_scale) paste0(metric, "_log") else metric
-  if (!value_metric %in% colnames(sample_data@meta.data)) value_metric <- metric
+  if (!value_metric %in% colnames(metadata)) value_metric <- metric
+  z_metric <- if (metric_z %in% colnames(metadata)) metric_z else NULL
 
   guidata <- list()
 
   # plot 0: spatial slide data (full per-cell, NOT downsampled — the overlay needs all cells)
   guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <-
-    generate_spatial_outlier_plot_data(sample_data, value_metric, metric_z)
+    generate_spatial_outlier_plot_data(sample_data, value_metric, z_metric, metric)
 
-  # plot 1: histogram of outlier z-scores (downsampled like other filters)
+  # plot 1: histogram data, z-scores and raw values (downsampled like other filters)
   nkeep <- downsample_plotdata(ncol(sample_data), num_cells_to_downsample)
   set.seed(RANDOM_SEED)
   cells_position_to_keep <- sort(sample(seq_len(ncol(sample_data)), nkeep, replace = FALSE))
-  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <-
-    lapply(unname(z[cells_position_to_keep]), function(x) c("zscore" = x))
+  histogram_cols <- list(raw = unname(raw[cells_position_to_keep]))
+  if (!is.null(z_metric)) {
+    histogram_cols$zscore <- unname(metadata[[z_metric]][cells_position_to_keep])
+  }
+  guidata[[generate_gui_uuid(sample_id, task_name, 1)]] <- purrr::transpose(histogram_cols)
 
   # plot 2: filter statistics
   guidata[[generate_gui_uuid(sample_id, task_name, 2)]] <- list(
@@ -184,18 +207,55 @@ filter_spatial_local_outlier <- function(
   )
 }
 
+#' Default absolute thresholds for a spatial QC metric
+#'
+#' 3-MAD global outlier thresholds over one sample, as OSTA and the single-cell
+#' mitochondrial filter use: the lower threshold of the log metric for
+#' \code{direction = "lower"} (UMIs, genes) and the upper threshold of the raw
+#' metric for \code{direction = "upper"} (mitochondrial percent). When the MAD is
+#' zero the threshold would equal the median, so no bound is set instead.
+#'
+#' @param values numeric vector of the raw metric
+#' @param direction one of \code{"lower"} or \code{"upper"}
+#'
+#' @return list with \code{min} and \code{max} (lower) or \code{max} (upper);
+#'   a NULL bound is not applied
+#'
+generate_default_values_spatial_absolute <- function(values, direction) {
+  values <- values[is.finite(values)]
+  median_value <- stats::median(values)
+  # the threshold is back-transformed from log space, so compare with tolerance
+  at_median <- function(threshold) {
+    !is.finite(threshold) || isTRUE(all.equal(threshold, median_value))
+  }
+
+  if (direction == "lower") {
+    outliers <- scuttle::isOutlier(values, log = TRUE, type = "lower", nmads = 3)
+    threshold <- unname(attr(outliers, "thresholds")[["lower"]])
+    if (at_median(threshold)) threshold <- NULL
+    return(list(min = threshold, max = NULL))
+  }
+
+  outliers <- scuttle::isOutlier(values, type = "higher", nmads = 3)
+  threshold <- unname(attr(outliers, "thresholds")[["higher"]])
+  if (at_median(threshold)) threshold <- NULL
+  list(max = threshold)
+}
+
 # Builds the per-cell array consumed by the spatial slide plot: one record per
 # cell with its stable (0-indexed) cells_id, the metric value (for colouring),
-# the local-outlier z-score (to recompute the outlier set client-side) and tissue
-# coordinates.
-generate_spatial_outlier_plot_data <- function(scdata, value_metric, metric_z) {
+# the raw metric (to recompute absolute-threshold outliers client-side), the
+# local-outlier z-score when there is one (to recompute local outliers) and
+# tissue coordinates.
+generate_spatial_outlier_plot_data <- function(scdata, value_metric, metric_z, raw_metric = value_metric) {
   md <- scdata@meta.data
 
   cols <- list(
     cellId = md$cells_id,
     value = unname(md[[value_metric]]),
-    zscore = unname(md[[metric_z]])
+    raw = unname(md[[raw_metric]])
   )
+  if (!is.null(metric_z)) cols$zscore <- unname(md[[metric_z]])
 
   coords <- Seurat::GetTissueCoordinates(scdata)
   rownames(coords) <- coords$cell
@@ -211,14 +271,14 @@ generate_spatial_outlier_plot_data <- function(scdata, value_metric, metric_z) {
 #' Filters cells whose total UMI count (\code{nCount_RNA}) is a local outlier on
 #' the log scale below the chosen z-score cutoff.
 #'
-#' @inheritParams filter_spatial_local_outlier
+#' @inheritParams filter_spatial_qc_metric
 #' @export
 #'
 filter_spatial_umi_outlier <- function(
   scdata_list, config, sample_id, cells_id,
   task_name = "spatialUmiOutlier", num_cells_to_downsample = 6000
 ) {
-  filter_spatial_local_outlier(
+  filter_spatial_qc_metric(
     scdata_list, config, sample_id, cells_id, task_name,
     metric = "nCount_RNA", direction = "lower", log_scale = TRUE,
     num_cells_to_downsample = num_cells_to_downsample

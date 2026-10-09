@@ -3,14 +3,14 @@
 #' Filters cells whose mitochondrial content (\code{percent.mt}) is a local
 #' outlier (not log-scaled) above the chosen z-score cutoff.
 #'
-#' @inheritParams filter_spatial_local_outlier
+#' @inheritParams filter_spatial_qc_metric
 #' @export
 #'
 filter_spatial_mito_outlier <- function(
   scdata_list, config, sample_id, cells_id,
   task_name = "spatialMitoOutlier", num_cells_to_downsample = 6000
 ) {
-  filter_spatial_local_outlier(
+  filter_spatial_qc_metric(
     scdata_list, config, sample_id, cells_id, task_name,
     metric = "percent.mt", direction = "upper",
     num_cells_to_downsample = num_cells_to_downsample

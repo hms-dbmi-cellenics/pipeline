@@ -51,7 +51,7 @@ test_that("filter_spatial_umi_outlier auto uses the default cutoff of 3", {
   config <- mock_spatial_config(cutoff = 100, direction = "lower", auto = TRUE)
 
   out <- filter_spatial_umi_outlier(scdata_list, config, sample1_id, cells_id)
-  expect_equal(out$config$filterSettings$cutoff, 3)
+  expect_equal(out$config$filterSettings$methodSettings$localOutlier$cutoff, 3)
   expect_equal(length(out$new_ids[[sample1_id]]), ncells - 5)
 })
 
@@ -74,11 +74,11 @@ test_that("filter_spatial_umi_outlier emits the expected plotData", {
 
   # plot0: one full per-cell record with cellId, value, zscore and coords (not downsampled)
   expect_equal(length(plot0), ncells)
-  expect_setequal(names(plot0[[1]]), c("cellId", "value", "zscore", "x", "y"))
+  expect_setequal(names(plot0[[1]]), c("cellId", "value", "raw", "zscore", "x", "y"))
 
   # plot1: z-score values for the histogram
   expect_true(length(plot1) > 0)
-  expect_equal(names(plot1[[1]]), "zscore")
+  expect_setequal(names(plot1[[1]]), c("raw", "zscore"))
 
   # plot2: before/after filter statistics
   expect_setequal(names(stats), c("before", "after"))
@@ -98,8 +98,7 @@ test_that("manual (non-auto) cutoff is persisted to config and used for filterin
   config <- mock_spatial_config(cutoff = 2, direction = "lower", auto = FALSE)
   out <- filter_spatial_umi_outlier(scdata_list, config, sample1_id, cells_id)
 
-  expect_equal(out$config$filterSettings$cutoff, 2)
-  expect_equal(out$config$filterSettings$direction, "lower")
+  expect_equal(out$config$filterSettings$methodSettings$localOutlier$cutoff, 2)
   # z = -2.5 is beyond -2, so the 6 outliers are removed
   expect_equal(length(out$new_ids[[sample1_id]]), ncells - 6)
 })
@@ -164,7 +163,151 @@ test_that("plot 0 is the full, non-downsampled per-cell array with x/y coords", 
 
   # plot0 has one record per cell (not downsampled) with coords
   expect_equal(length(plot0), ncells)
-  expect_setequal(names(plot0[[1]]), c("cellId", "value", "zscore", "x", "y"))
+  expect_setequal(names(plot0[[1]]), c("cellId", "value", "raw", "zscore", "x", "y"))
   # plot1 is downsampled to the requested number
   expect_equal(length(plot1), 10)
+})
+
+# ── absolute thresholds ──────────────────────────────────────────────────────
+
+# sample whose nCount_RNA is set to known values; no z-scores are added, as the
+# absolute method must not need them
+mock_counts_sample <- function(counts) {
+  scdata_list <- mock_spatial_scdata_list(ncells = length(counts))
+  scdata_list$spatial1$nCount_RNA <- counts
+  scdata_list
+}
+
+test_that("absolute min keeps cells at or above min, inclusive, without z-scores", {
+  scdata_list <- mock_counts_sample(c(10, 99, 100, 101, rep(500, 60)))
+  cells_id <- mock_ids(scdata_list)
+
+  out <- filter_spatial_umi_outlier(
+    scdata_list, mock_spatial_absolute_config(min = 100), "spatial1", cells_id
+  )
+
+  expect_equal(out$new_ids$spatial1, cells_id$spatial1[-(1:2)])
+  expect_equal(out$config$filterSettings$methodSettings$absoluteThreshold$min, 100)
+  expect_null(out$config$filterSettings$methodSettings$absoluteThreshold$max)
+})
+
+test_that("absolute max keeps cells at or below max, inclusive", {
+  scdata_list <- mock_counts_sample(c(rep(500, 60), 999, 1000, 1001, 5000))
+  cells_id <- mock_ids(scdata_list)
+
+  out <- filter_spatial_umi_outlier(
+    scdata_list, mock_spatial_absolute_config(max = 1000), "spatial1", cells_id
+  )
+
+  expect_equal(out$new_ids$spatial1, cells_id$spatial1[1:62])
+})
+
+test_that("absolute min and max together keep the cells in between", {
+  scdata_list <- mock_counts_sample(c(5, rep(500, 62), 5000))
+  cells_id <- mock_ids(scdata_list)
+
+  out <- filter_spatial_umi_outlier(
+    scdata_list, mock_spatial_absolute_config(min = 100, max = 1000), "spatial1", cells_id
+  )
+
+  expect_equal(out$new_ids$spatial1, cells_id$spatial1[2:63])
+})
+
+test_that("absolute with no bounds keeps every cell", {
+  scdata_list <- mock_counts_sample(c(1, rep(500, 62), 1e6))
+  cells_id <- mock_ids(scdata_list)
+
+  out <- filter_spatial_umi_outlier(
+    scdata_list, mock_spatial_absolute_config(), "spatial1", cells_id
+  )
+
+  expect_equal(out$new_ids$spatial1, cells_id$spatial1)
+})
+
+test_that("absolute auto uses the sample's 3-MAD lower threshold and no max", {
+  set.seed(1)
+  counts <- c(round(exp(rnorm(60, log(500), 0.2))), 5, 6, 1e5, 2e5)
+  scdata_list <- mock_counts_sample(counts)
+  cells_id <- mock_ids(scdata_list)
+
+  # manual values are ignored in auto mode
+  config <- mock_spatial_absolute_config(min = 1, max = 2, auto = TRUE)
+  out <- filter_spatial_umi_outlier(scdata_list, config, "spatial1", cells_id)
+
+  expected_min <- attr(
+    scuttle::isOutlier(counts, log = TRUE, type = "lower", nmads = 3), "thresholds"
+  )[["lower"]]
+  settings <- out$config$filterSettings$methodSettings$absoluteThreshold
+  expect_equal(settings$min, unname(expected_min))
+  expect_null(settings$max)
+  expect_true("max" %in% names(settings))
+
+  # the two low cells are removed, the high ones are kept (no max)
+  expect_equal(length(out$new_ids$spatial1), length(counts) - 2)
+  expect_false(any(cells_id$spatial1[61:62] %in% out$new_ids$spatial1))
+})
+
+test_that("switching method keeps the other method's settings", {
+  scdata_list <- mock_counts_sample(rep(500, 64))
+  config <- mock_spatial_absolute_config(min = 100)
+  config$filterSettings$methodSettings$localOutlier$cutoff <- 2.5
+
+  out <- filter_spatial_umi_outlier(scdata_list, config, "spatial1", mock_ids(scdata_list))
+
+  expect_equal(out$config$filterSettings$method, "absoluteThreshold")
+  expect_equal(out$config$filterSettings$methodSettings$localOutlier$cutoff, 2.5)
+})
+
+test_that("absolute plotData carries raw values, and no z-scores when there are none", {
+  scdata_list <- mock_counts_sample(seq(100, by = 10, length.out = 64))
+  out <- filter_spatial_umi_outlier(
+    scdata_list, mock_spatial_absolute_config(min = 200), "spatial1", mock_ids(scdata_list)
+  )
+
+  plot0 <- out$plotData[[generate_gui_uuid("spatial1", "spatialUmiOutlier", 0)]]
+  plot1 <- out$plotData[[generate_gui_uuid("spatial1", "spatialUmiOutlier", 1)]]
+
+  expect_setequal(names(plot0[[1]]), c("cellId", "value", "raw", "x", "y"))
+  expect_equal(vapply(plot0, function(cell) cell$raw, numeric(1)), seq(100, by = 10, length.out = 64))
+  expect_equal(names(plot1[[1]]), "raw")
+})
+
+test_that("disabled absolute filter keeps every cell but still resolves auto defaults", {
+  set.seed(1)
+  scdata_list <- mock_counts_sample(c(1, round(exp(rnorm(63, log(500), 0.2)))))
+  config <- mock_spatial_absolute_config(auto = TRUE)
+  config$enabled <- FALSE
+
+  out <- filter_spatial_umi_outlier(scdata_list, config, "spatial1", mock_ids(scdata_list))
+
+  expect_equal(length(out$new_ids$spatial1), 64)
+  expect_false(is.null(out$config$filterSettings$methodSettings$absoluteThreshold$min))
+})
+
+test_that("a NULL config (step not configured, e.g. single-cell data) is a no-op", {
+  scdata_list <- mock_scdata_list()
+  cells_id <- mock_ids(scdata_list)
+  sample1_id <- names(scdata_list)[1]
+
+  out <- filter_spatial_umi_outlier(scdata_list, NULL, sample1_id, cells_id)
+
+  expect_identical(out$new_ids, cells_id)
+  expect_null(out$config)
+  expect_equal(length(out$plotData), 0)
+})
+
+test_that("an unknown method is an error", {
+  scdata_list <- mock_counts_sample(rep(500, 64))
+  config <- mock_spatial_config()
+  config$filterSettings$method <- "nope"
+
+  expect_error(
+    filter_spatial_umi_outlier(scdata_list, config, "spatial1", mock_ids(scdata_list)),
+    "Unknown spatial QC method"
+  )
+})
+
+test_that("generate_default_values_spatial_absolute sets no bound when the MAD is zero", {
+  expect_null(generate_default_values_spatial_absolute(rep(100, 50), "lower")$min)
+  expect_null(generate_default_values_spatial_absolute(rep(0, 50), "upper")$max)
 })
