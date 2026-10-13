@@ -221,10 +221,16 @@ mock_xenium_segmentations <- function(cells, nverts = 4) {
     segmentation_method = rep("cell", length(cells)),
     row.names = cells
   )
+  cell_qc <- data.frame(
+    cell_area = seq(50, by = 5, length.out = length(cells)),
+    control_counts = rep(c(0, 1), length.out = length(cells)),
+    row.names = cells
+  )
   list(
     centroids = centroids,
     segmentations = segmentations,
-    segmentation_method = segmentation_method
+    segmentation_method = segmentation_method,
+    cell_qc = cell_qc
   )
 }
 
@@ -243,7 +249,6 @@ test_that("build_xenium_fov assembles a FOV with centroids and segmentations bou
 })
 
 test_that("construct_scdata assembles the FOV and attaches segmentation_method for Xenium", {
-  # >36 cells so add_spatial_local_outliers' spatial KNN (n_neighbors = 36) runs
   ncells <- 40
   cells <- paste0("cell", seq_len(ncells))
   counts <- matrix(
@@ -272,8 +277,26 @@ test_that("construct_scdata assembles the FOV and attaches segmentation_method f
   expect_true("segmentation_method" %in% colnames(scdata@meta.data))
   expect_true(all(scdata$segmentation_method == "cell"))
 
+  # cell area and control counts attached, aligned to cells
+  expect_equal(unname(scdata$cell_area), segs$cell_qc[colnames(scdata), "cell_area"])
+  expect_equal(unname(scdata$control_counts), segs$cell_qc[colnames(scdata), "control_counts"])
+
+  # Xenium QC does not use local outliers, so no z-scores are computed
+  expect_false(any(grepl("_z$", colnames(scdata@meta.data))))
+
   # technology persisted
   expect_equal(scdata@misc$technology, "xenium")
+})
+
+test_that("add_xenium_cell_qc is a no-op when cell_qc is NULL", {
+  scdata <- mock_spatial_scdata(ncells = 16, sample_id = "s1")
+  expect_identical(add_xenium_cell_qc(scdata, NULL), scdata)
+})
+
+test_that("add_spatial_local_outliers skips Xenium", {
+  scdata <- mock_spatial_scdata(ncells = 64, sample_id = "s1")
+  expect_identical(add_spatial_local_outliers(scdata, "xenium"), scdata)
+  expect_true("nCount_RNA_z" %in% colnames(add_spatial_local_outliers(scdata, "visium_hd")@meta.data))
 })
 
 test_that("add_segmentation_method is a no-op when segmentation_method is NULL", {
@@ -356,4 +379,43 @@ test_that("create_seurat does not exclude genes without counts", {
 
   # gene is still there
   expect_true("NOT-EXPRESSED" %in% row.names(scdata))
+})
+
+
+test_that("get_min_features keeps every non-empty cell only for spatial technologies", {
+  expect_equal(get_min_features("visium_hd"), 1)
+  expect_equal(get_min_features("xenium"), 1)
+  expect_equal(get_min_features("10x"), 10)
+  expect_equal(get_min_features(NULL), 10)
+})
+
+test_that("construct_scdata drops only empty cells for spatial data, <10 genes otherwise", {
+  # cell1: 0 genes, cell2: 5 genes, cell3+: 30 genes
+  ncells <- 40
+  cells <- paste0("cell", seq_len(ncells))
+  counts <- matrix(
+    rpois(30 * ncells, lambda = 5) + 1,
+    nrow = 30,
+    dimnames = list(paste0("Gene", 1:30), cells)
+  )
+  counts[, 1] <- 0
+  counts[6:30, 2] <- 0
+  counts <- as(counts, "dgCMatrix")
+  annot <- data.frame(name = rownames(counts), input = rownames(counts))
+
+  build <- function(type, segmentations = NULL) {
+    construct_scdata(
+      counts = counts, segmentations = segmentations, doublet_score = NULL,
+      edrops_out = NULL, sample = "sample_a", annot = annot,
+      config = list(name = "p", input = list(type = type))
+    )
+  }
+
+  xenium <- build("xenium", mock_xenium_segmentations(cells))
+  expect_false("cell1" %in% colnames(xenium))
+  expect_true("cell2" %in% colnames(xenium))
+
+  single_cell <- build("10x")
+  expect_false(any(c("cell1", "cell2") %in% colnames(single_cell)))
+  expect_equal(ncol(single_cell), ncells - 2)
 })

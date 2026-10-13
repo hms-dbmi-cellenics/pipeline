@@ -20,7 +20,7 @@ mock_bpcells_counts <- function(ngenes = 20, ncells = 30) {
 }
 
 # cells.parquet / cell_boundaries.parquet as plain data frames
-mock_cells_parquet <- function(ncells = 30, with_method = TRUE) {
+mock_cells_parquet <- function(ncells = 30, with_method = TRUE, with_qc = TRUE) {
   side <- ceiling(sqrt(ncells))
   grid <- expand.grid(x = seq_len(side), y = seq_len(side))[seq_len(ncells), ]
   df <- data.frame(
@@ -30,6 +30,13 @@ mock_cells_parquet <- function(ncells = 30, with_method = TRUE) {
     transcript_counts = rpois(ncells, 50)
   )
   if (with_method) df$segmentation_method <- "cell"
+  if (with_qc) {
+    df$cell_area <- seq(50, by = 5, length.out = ncells)
+    df$control_probe_counts <- rep(c(0, 1), length.out = ncells)
+    df$control_codeword_counts <- rep(c(0, 0, 2), length.out = ncells)
+    # newer outputs: not part of the control count
+    df$deprecated_codeword_counts <- 7
+  }
   df
 }
 
@@ -72,6 +79,7 @@ test_that("read_xenium_sample returns the gem2s list contract", {
     centroids = mock_cells_parquet()[, c("x_centroid", "y_centroid", "cell_id")],
     segmentations = mock_boundaries_parquet(),
     segmentation_method = NULL,
+    cell_qc = NULL,
     transcripts = NULL
   ))
 
@@ -91,7 +99,7 @@ test_that("read_xenium_sample returns the gem2s list contract", {
   # segmentations is the raw-frame list, FOV assembly deferred to create_seurat
   expect_setequal(
     names(out$segmentations),
-    c("centroids", "segmentations", "segmentation_method", "transcripts")
+    c("centroids", "segmentations", "segmentation_method", "cell_qc", "transcripts")
   )
 
   # no EmptyDrops / Doublets for spatial
@@ -144,6 +152,10 @@ test_that("read_xenium_segmentations parses the parquet frames", {
   # segmentation_method keyed by cell id
   expect_equal(rownames(out$segmentation_method), cells$cell_id)
   expect_true(all(out$segmentation_method$segmentation_method == "cell"))
+
+  # cell area and control counts keyed by cell id
+  expect_equal(rownames(out$cell_qc), cells$cell_id)
+  expect_equal(out$cell_qc$cell_area, cells$cell_area)
 
   # transcripts threaded through from the helper (NULL because stubbed here)
   expect_true("transcripts" %in% names(out))
@@ -224,4 +236,28 @@ test_that("read_xenium_files assembles the per-sample results into the gem2s con
   # no EmptyDrops / Doublets for spatial
   expect_length(out$edrops, 0)
   expect_length(out$doublet_scores, 0)
+})
+
+
+test_that("read_xenium_cell_qc sums control probe and codeword counts only", {
+  cells <- mock_cells_parquet(ncells = 6)
+
+  out <- read_xenium_cell_qc(cells)
+
+  expect_equal(colnames(out), c("cell_area", "control_counts"))
+  expect_equal(rownames(out), cells$cell_id)
+  # probe 0,1,0,1,0,1 + codeword 0,0,2,0,0,2; deprecated codewords ignored
+  expect_equal(out$control_counts, c(0, 1, 2, 1, 0, 3))
+})
+
+test_that("read_xenium_cell_qc handles older outputs and missing area", {
+  cells <- mock_cells_parquet(ncells = 4)
+  cells$control_codeword_counts <- NULL
+
+  expect_equal(read_xenium_cell_qc(cells)$control_counts, c(0, 1, 0, 1))
+
+  cells$control_probe_counts <- NULL
+  expect_equal(read_xenium_cell_qc(cells)$control_counts, rep(0, 4))
+
+  expect_null(read_xenium_cell_qc(mock_cells_parquet(ncells = 4, with_qc = FALSE)))
 })

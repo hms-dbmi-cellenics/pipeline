@@ -43,24 +43,58 @@ processing_config_template <- list(
                           binStep = 0.02)
   ),
 
-  # Spatial (Visium HD) local-outlier filters. cutoff is the user-editable
-  # z-score threshold; direction is fixed per filter.
+  # Spatial (Visium HD, Xenium) QC metric filters. method is "localOutlier"
+  # (z-score cutoff vs the spatial neighbourhood) or "absoluteThreshold" (raw
+  # metric bounds; NULL = no bound). Direction is fixed per filter in code.
+  # The absolute defaults are filled in per sample by construct_qc_config.
   "spatial_umi_outlier" = list(
     enabled = TRUE,
     auto = TRUE,
-    filterSettings = list(cutoff = 3, direction = "lower", binStep = 0.2)
+    filterSettings = list(
+      method = "localOutlier",
+      methodSettings = list(
+        localOutlier = list(cutoff = 3, binStep = 0.2),
+        absoluteThreshold = list(min = NULL, max = NULL, binStep = 0.05)
+      )
+    )
   ),
 
   "spatial_num_genes_outlier" = list(
     enabled = TRUE,
     auto = TRUE,
-    filterSettings = list(cutoff = 3, direction = "lower", binStep = 0.2)
+    filterSettings = list(
+      method = "localOutlier",
+      methodSettings = list(
+        localOutlier = list(cutoff = 3, binStep = 0.2),
+        absoluteThreshold = list(min = NULL, max = NULL, binStep = 0.05)
+      )
+    )
   ),
 
   "spatial_mito_outlier" = list(
     enabled = TRUE,
     auto = TRUE,
-    filterSettings = list(cutoff = 3, direction = "upper", binStep = 0.2)
+    filterSettings = list(
+      method = "localOutlier",
+      methodSettings = list(
+        localOutlier = list(cutoff = 3, binStep = 0.2),
+        absoluteThreshold = list(max = NULL, binStep = 1)
+      )
+    )
+  ),
+
+  # Xenium count-density filter (OSTA imaging QC): 3-MAD lower outlier on
+  # log(counts / cell area), or, when filterControls is TRUE, control probe +
+  # codeword counts above maxControlPercent of the cell's counts.
+  "spatial_count_density" = list(
+    enabled = TRUE,
+    auto = TRUE,
+    filterSettings = list(
+      nmads = 3,
+      filterControls = TRUE,
+      maxControlPercent = 5,
+      binStep = 0.05
+    )
   ),
 
   "data_integration" = list(

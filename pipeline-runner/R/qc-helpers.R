@@ -335,3 +335,61 @@ ensure_is_list_in_json <- function(vector) {
     return(vector)
   }
 }
+
+
+# QC filters that only run on single-cell (non-spatial) data; spatial
+# technologies run the spatial* filters instead.
+SINGLE_CELL_QC_STEPS <- c(
+  "classifier", "cellSizeDistribution", "mitochondrialContent",
+  "numGenesVsNumUmis", "doubletScores"
+)
+SPATIAL_QC_TECHNOLOGIES <- c("visium_hd", "xenium")
+# spatial filters each spatial technology does not run
+SPATIAL_QC_STEPS_NOT_RUN <- list(
+  visium_hd = "spatialCountDensity",
+  xenium = "spatialMitoOutlier"
+)
+
+#' Ordered QC task names that run for a technology
+#'
+#' QC_TASK_LIST holds the single-cell and spatial filters together, but each
+#' experiment only runs one of the two sets. Filtered cell ids are handed off
+#' between steps under the next task's name, so the next task must come from
+#' this order rather than from QC_TASK_LIST.
+#'
+#' @param task_names character vector of all QC task names, in order
+#' @param technology character technology (e.g. "10x", "visium_hd") or NULL
+#'
+#' @return character vector of the task names that run, in order
+#'
+get_qc_task_order <- function(task_names, technology = NULL) {
+  if (isTRUE(technology %in% SPATIAL_QC_TECHNOLOGIES)) {
+    not_run <- c(SINGLE_CELL_QC_STEPS, SPATIAL_QC_STEPS_NOT_RUN[[technology]])
+    return(task_names[!task_names %in% not_run])
+  }
+
+  task_names[!startsWith(task_names, "spatial")]
+}
+
+# Returns the task after task_name in task_order, or NULL if there is none
+get_next_qc_task <- function(task_name, task_order) {
+  task_index <- match(task_name, task_order)
+  if (is.na(task_index) || task_index >= length(task_order)) {
+    return(NULL)
+  }
+
+  task_order[[task_index + 1]]
+}
+
+# Technology of a Seurat object or of the first object in a list of them
+get_scdata_technology <- function(scdata) {
+  if (methods::is(scdata, "Seurat")) {
+    return(scdata@misc$technology)
+  }
+
+  if (is.list(scdata) && length(scdata)) {
+    return(scdata[[1]]@misc$technology)
+  }
+
+  NULL
+}

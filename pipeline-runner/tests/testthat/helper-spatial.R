@@ -34,12 +34,28 @@ add_zscores <- function(scdata_list, metric, zscores_by_sample) {
   scdata_list
 }
 
+# direction is fixed per filter in code; kept as an argument so callers read
+# naturally, but it is not part of the config
 mock_spatial_config <- function(cutoff = 3, direction = "lower", auto = FALSE) {
   list(
     auto = auto,
     enabled = TRUE,
-    filterSettings = list(cutoff = cutoff, direction = direction)
+    filterSettings = list(
+      method = "localOutlier",
+      methodSettings = list(
+        localOutlier = list(cutoff = cutoff, binStep = 0.2),
+        absoluteThreshold = list(min = NULL, max = NULL, binStep = 0.05)
+      )
+    )
   )
+}
+
+mock_spatial_absolute_config <- function(min = NULL, max = NULL, auto = FALSE) {
+  config <- mock_spatial_config(auto = auto)
+  config$filterSettings$method <- "absoluteThreshold"
+  config$filterSettings$methodSettings$absoluteThreshold <-
+    list(min = min, max = max, binStep = 0.05)
+  config
 }
 
 # Build a SeuratObject with a tissue-coordinate FOV (centroids), as the spatial

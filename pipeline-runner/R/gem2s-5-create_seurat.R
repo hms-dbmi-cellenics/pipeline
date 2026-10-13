@@ -63,7 +63,7 @@ create_seurat <- function(input, pipeline_config, prev_out) {
 construct_scdata <- function(
   counts, segmentations, doublet_score, edrops_out,
   sample, annot, config, microns_per_pixel = NULL,
-  min.cells = 0, min.features = 10
+  min.cells = 0, min.features = get_min_features(config$input$type)
 ) {
   metadata <- construct_metadata(counts, sample, config)
 
@@ -79,9 +79,11 @@ construct_scdata <- function(
   # here (object assembly lives in create_seurat, not the loader). The
   # per-cell segmentation_method is attached as metadata after the pipe.
   segmentation_method <- NULL
+  cell_qc <- NULL
   transcripts <- NULL
   if (isTRUE(config$input$type == "xenium") && !is.null(segmentations)) {
     segmentation_method <- segmentations$segmentation_method
+    cell_qc <- segmentations$cell_qc
     # molecules frame: carry it on the object so gem2s-7 can build the molecule
     # artifact straight from it (mirrors the @misc$technology pattern). Not added
     # as CreateMolecules to the FOV — the artifact needs only the frame.
@@ -94,8 +96,9 @@ construct_scdata <- function(
     add_mito(annot) |>
     add_dblscore(doublet_score) |>
     add_edrops(edrops_out) |>
-    add_spatial_local_outliers() |>
-    add_segmentation_method(segmentation_method)
+    add_spatial_local_outliers(config$input$type) |>
+    add_segmentation_method(segmentation_method) |>
+    add_xenium_cell_qc(cell_qc)
 
   # persist the declared technology on the object so downstream consumers
   # (e.g. the worker, which has no pipeline config) can dispatch on it instead
@@ -116,6 +119,22 @@ construct_scdata <- function(
   }
 
   return(scdata)
+}
+
+#' Minimum detected genes for a cell to be kept at gem2s
+#'
+#' Single-cell data drops cells with fewer than 10 genes. Spatial data keeps
+#' every non-empty segmented cell, so the visible spatial QC filters decide
+#' which cells to remove (on Xenium Prime 5K, a 10-gene floor would silently
+#' remove ~18% of cells and shift the count-density MAD threshold).
+#'
+#' @param technology character technology of the sample, or NULL
+get_min_features <- function(technology) {
+  if (isTRUE(technology %in% SPATIAL_QC_TECHNOLOGIES)) {
+    return(1)
+  }
+
+  10
 }
 
 #' Assemble a Xenium FOV from raw centroid and boundary frames
@@ -160,6 +179,26 @@ add_segmentation_method <- function(scdata, segmentation_method) {
   return(scdata)
 }
 
+#' Attach the per-cell Xenium QC metrics as metadata
+#'
+#' Adds \code{cell_area} and \code{control_counts} (see
+#' \code{read_xenium_cell_qc}). No-op when \code{cell_qc} is NULL. Cells with no
+#' entry get NA.
+#'
+#' @param scdata SeuratObject
+#' @param cell_qc data.frame keyed by cell, or NULL
+add_xenium_cell_qc <- function(scdata, cell_qc) {
+  if (is.null(cell_qc)) {
+    return(scdata)
+  }
+
+  message("Adding cell area and control counts metadata...")
+  scdata$cell_area <- cell_qc[colnames(scdata), "cell_area"]
+  scdata$control_counts <- cell_qc[colnames(scdata), "control_counts"]
+
+  return(scdata)
+}
+
 # similar to Seurat::Load10X_Spatial
 add_segmentations <- function(scdata, segmentations, sample) {
   # non-spatial samples have no segmentations: nothing to add
@@ -188,8 +227,15 @@ add_segmentations <- function(scdata, segmentations, sample) {
 #' \code{<metric>_z} column (and \code{<metric>_log} for log-scaled metrics) in
 #' \code{meta.data}. These columns are later thresholded by the spatial QC filters.
 #'
-#' Returns \code{scdata} unchanged for non-spatial datasets (no tissue coordinates).
-add_spatial_local_outliers <- function(scdata) {
+#' Returns \code{scdata} unchanged for non-spatial datasets (no tissue
+#' coordinates) and for Xenium, whose QC filters do not use local outliers.
+#'
+#' @param technology character technology of the sample, or NULL
+add_spatial_local_outliers <- function(scdata, technology = NULL) {
+  if (isTRUE(technology == "xenium")) {
+    return(scdata)
+  }
+
   coords <- tryCatch(
     Seurat::GetTissueCoordinates(scdata),
     error = function(e) NULL

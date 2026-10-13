@@ -32,8 +32,7 @@ test_that("filter_spatial_num_genes_outlier auto uses default cutoff of 3", {
   config <- mock_spatial_config(cutoff = 100, direction = "lower", auto = TRUE)
   out <- filter_spatial_num_genes_outlier(scdata_list, config, sample1_id, cells_id)
 
-  expect_equal(out$config$filterSettings$cutoff, 3)
-  expect_equal(out$config$filterSettings$direction, "lower")
+  expect_equal(out$config$filterSettings$methodSettings$localOutlier$cutoff, 3)
   expect_equal(length(out$new_ids[[sample1_id]]), ncells - 4)
 })
 
@@ -73,6 +72,6 @@ test_that("filter_spatial_num_genes_outlier emits the three plotData entries", {
 
   expect_equal(length(plot0), ncells) # full per-cell, not downsampled
   expect_true(all(c("cellId", "value", "zscore") %in% names(plot0[[1]])))
-  expect_equal(names(plot1[[1]]), "zscore")
+  expect_setequal(names(plot1[[1]]), c("raw", "zscore"))
   expect_setequal(names(stats), c("before", "after"))
 })

@@ -1425,6 +1425,8 @@ read_xenium_sample <- function(sample, input_dir) {
 #'   \item{centroids}{data.frame with columns x, y, cell}
 #'   \item{segmentations}{data.frame of polygon vertices, columns cell, x, y}
 #'   \item{segmentation_method}{data.frame keyed by cell, or NULL if absent}
+#'   \item{cell_qc}{data.frame keyed by cell with cell_area and control_counts,
+#'     or NULL if cells.parquet has no cell_area}
 #'   \item{transcripts}{data.frame of molecules (x, y, gene, and qv if present)}
 #'
 read_xenium_segmentations <- function(sample_dir) {
@@ -1452,6 +1454,8 @@ read_xenium_segmentations <- function(sample_dir) {
     )
   }
 
+  cell_qc <- read_xenium_cell_qc(cells)
+
   # cell_boundaries.parquet: long-format polygon vertices (cell, vertex_x,
   # vertex_y) -> columns cell, x, y
   boundaries <- as.data.frame(arrow::read_parquet(boundaries_path))
@@ -1468,7 +1472,38 @@ read_xenium_segmentations <- function(sample_dir) {
     centroids = centroids,
     segmentations = boundaries,
     segmentation_method = segmentation_method,
+    cell_qc = cell_qc,
     transcripts = transcripts
+  )
+}
+
+#' Per-cell QC metrics from a Xenium cells.parquet frame
+#'
+#' Keeps the segmented cell area (in um^2) and the per-cell control counts used
+#' by the spatialCountDensity filter. Control counts are negative control probe
+#' plus negative control codeword counts, as in OSTA; the genomic control,
+#' unassigned and deprecated codeword columns of newer outputs are not used
+#' (deprecated codewords are non-zero in most Prime 5K cells). Control features
+#' are excluded from the count matrix, so these columns are the only source.
+#'
+#' @param cells data.frame read from cells.parquet, with character cell_id
+#'
+#' @return data.frame keyed by cell id with cell_area and control_counts, or
+#'   NULL when there is no cell_area column
+read_xenium_cell_qc <- function(cells) {
+  if (!"cell_area" %in% colnames(cells)) {
+    return(NULL)
+  }
+
+  control_cols <- intersect(
+    c("control_probe_counts", "control_codeword_counts"), colnames(cells)
+  )
+  control_counts <- rowSums(as.matrix(cells[, control_cols, drop = FALSE]))
+
+  data.frame(
+    cell_area = cells$cell_area,
+    control_counts = unname(control_counts),
+    row.names = cells$cell_id
   )
 }
 
