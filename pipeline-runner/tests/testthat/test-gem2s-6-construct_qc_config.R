@@ -196,7 +196,7 @@ test_that("xenium config builds count density, then UMI and gene filters that ar
     expect_true(density$auto)
     expect_equal(density$filterSettings$nmads, 3)
     expect_true(density$filterSettings$filterControls)
-    expect_equal(density$filterSettings$maxControlCounts, 0)
+    expect_equal(density$filterSettings$maxControlPercent, 5)
 
     for (step in c("spatialUmiOutlier", "spatialNumGenesOutlier")) {
       cfg <- qc_config[[step]][[sample]]

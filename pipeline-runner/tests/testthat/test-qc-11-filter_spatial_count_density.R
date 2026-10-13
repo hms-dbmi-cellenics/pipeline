@@ -1,12 +1,12 @@
 mock_density_config <- function(auto = FALSE, nmads = 3, filter_controls = TRUE,
-                                 max_control_counts = 0) {
+                                 max_control_percent = 5) {
   list(
     enabled = TRUE,
     auto = auto,
     filterSettings = list(
       nmads = nmads,
       filterControls = filter_controls,
-      maxControlCounts = max_control_counts,
+      maxControlPercent = max_control_percent,
       binStep = 0.05
     )
   )
@@ -51,19 +51,22 @@ test_that("density is per area: a small cell with few counts is kept", {
   expect_true(cells_id$spatial1[61] %in% out$new_ids$spatial1)
 })
 
-test_that("removes cells with control counts above the maximum when enabled", {
-  counts <- mock_density_counts()[1:60]
-  controls <- c(1, 2, rep(0, 58))
+test_that("removes cells whose control counts are above the maximum percent, when enabled", {
+  set.seed(3)
+  counts <- c(475, 490, 490, round(500 * exp(rnorm(57, 0, 0.1))))
+  # 25 / (475 + 25) = 5% (kept, inclusive), 10 / 500 = 2% (kept),
+  # 30 / (490 + 30) = 5.8% (removed)
+  controls <- c(25, 10, 30, rep(0, 57))
   scdata_list <- mock_density_sample(counts, controls = controls)
   cells_id <- mock_ids(scdata_list)
 
   out <- filter_spatial_count_density(scdata_list, mock_density_config(), "spatial1", cells_id)
-  expect_equal(out$new_ids$spatial1, cells_id$spatial1[-(1:2)])
+  expect_equal(out$new_ids$spatial1, cells_id$spatial1[-3])
 
   out <- filter_spatial_count_density(
-    scdata_list, mock_density_config(max_control_counts = 1), "spatial1", cells_id
+    scdata_list, mock_density_config(max_control_percent = 1), "spatial1", cells_id
   )
-  expect_equal(out$new_ids$spatial1, cells_id$spatial1[-2])
+  expect_equal(out$new_ids$spatial1, cells_id$spatial1[-(1:3)])
 
   out <- filter_spatial_count_density(
     scdata_list, mock_density_config(filter_controls = FALSE), "spatial1", cells_id
@@ -83,19 +86,19 @@ test_that("nmads widens or narrows the density cut", {
   expect_equal(out$config$filterSettings$nmads, 100)
 })
 
-test_that("auto uses 3 MADs and removes controls above 0", {
+test_that("auto uses 3 MADs and removes cells above 5% control counts", {
   counts <- mock_density_counts()[1:60]
-  scdata_list <- mock_density_sample(counts, controls = c(1, rep(0, 59)))
+  scdata_list <- mock_density_sample(counts, controls = c(counts[1] * 0.1, rep(0, 59)))
   cells_id <- mock_ids(scdata_list)
 
   config <- mock_density_config(
-    auto = TRUE, nmads = 100, filter_controls = FALSE, max_control_counts = 10
+    auto = TRUE, nmads = 100, filter_controls = FALSE, max_control_percent = 50
   )
   out <- filter_spatial_count_density(scdata_list, config, "spatial1", cells_id)
 
   expect_equal(out$config$filterSettings$nmads, 3)
   expect_true(out$config$filterSettings$filterControls)
-  expect_equal(out$config$filterSettings$maxControlCounts, 0)
+  expect_equal(out$config$filterSettings$maxControlPercent, 5)
   expect_false(cells_id$spatial1[1] %in% out$new_ids$spatial1)
 })
 
@@ -123,7 +126,7 @@ test_that("disabled filter keeps every cell", {
 
 test_that("plotData has per-cell densities and the stats to recompute the threshold", {
   counts <- mock_density_counts()
-  scdata_list <- mock_density_sample(counts, controls = c(3, rep(0, 61)))
+  scdata_list <- mock_density_sample(counts, controls = c(counts[1], rep(0, 61)))
   out <- filter_spatial_count_density(
     scdata_list, mock_density_config(), "spatial1", mock_ids(scdata_list),
     num_cells_to_downsample = 10
@@ -134,9 +137,9 @@ test_that("plotData has per-cell densities and the stats to recompute the thresh
   stats <- out$plotData[[generate_gui_uuid("spatial1", "spatialCountDensity", 2)]]
 
   expect_equal(length(plot0), 62)
-  expect_setequal(names(plot0[[1]]), c("cellId", "value", "controls", "x", "y"))
+  expect_setequal(names(plot0[[1]]), c("cellId", "value", "controlPercent", "x", "y"))
   expect_equal(plot0[[1]]$value, log(counts[1] / 100))
-  expect_equal(plot0[[1]]$controls, 3)
+  expect_equal(plot0[[1]]$controlPercent, 50)
 
   expect_equal(length(plot1$values), 10)
   expect_equal(plot1$median, stats::median(log(counts / 100)))

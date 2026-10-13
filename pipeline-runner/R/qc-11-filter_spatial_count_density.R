@@ -6,13 +6,15 @@
 #'     um^2, is below this sample's median by more than \code{nmads} MADs
 #'     (\code{scuttle::isOutlier(type = "lower")}), or
 #'   \item \code{filterControls} is TRUE and its negative control probe plus
-#'     codeword count is above \code{maxControlCounts}.
+#'     codeword counts are more than \code{maxControlPercent} percent of all its
+#'     counts (gene counts plus control counts), as in Vannan et al. 2025 and
+#'     Seo et al. 2026.
 #' }
 #' The density threshold is computed on the cells that reach this step. In
-#' automatic mode \code{nmads} is 3 and controls above 0 are removed.
+#' automatic mode \code{nmads} is 3 and cells above 5\% control counts are removed.
 #'
 #' @param config list with \code{enabled}, \code{auto} and \code{filterSettings}
-#'   (\code{nmads}, \code{filterControls}, \code{maxControlCounts}, \code{binStep})
+#'   (\code{nmads}, \code{filterControls}, \code{maxControlPercent}, \code{binStep})
 #' @inheritParams filter_spatial_qc_metric
 #'
 #' @return a list with the filtered \code{scdata_list}, the updated config and the
@@ -49,11 +51,11 @@ filter_spatial_count_density <- function(
   if (safeTRUE(config$auto)) {
     settings$nmads <- 3
     settings$filterControls <- TRUE
-    settings$maxControlCounts <- 0
+    settings$maxControlPercent <- 5
   }
   settings$nmads <- as.numeric(settings$nmads %||% 3)
   settings$filterControls <- isTRUE(settings$filterControls %||% TRUE)
-  settings$maxControlCounts <- as.numeric(settings$maxControlCounts %||% 0)
+  settings$maxControlPercent <- as.numeric(settings$maxControlPercent %||% 5)
 
   log_density <- log(metadata$nCount_RNA / metadata$cell_area)
   density_stats <- get_log_density_stats(log_density)
@@ -63,9 +65,11 @@ filter_spatial_count_density <- function(
   # there is nothing to judge them on
   keep <- !((log_density < threshold) %in% TRUE)
 
+  # empty cells (0 / 0) have no control percent; the density rule removes them
   control_counts <- metadata$control_counts %||% rep(0, nrow(metadata))
+  control_percent <- 100 * control_counts / (metadata$nCount_RNA + control_counts)
   if (settings$filterControls) {
-    keep <- keep & !((control_counts > settings$maxControlCounts) %in% TRUE)
+    keep <- keep & !((control_percent > settings$maxControlPercent) %in% TRUE)
   }
 
   config$filterSettings <- settings
@@ -86,7 +90,7 @@ filter_spatial_count_density <- function(
   guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- purrr::transpose(list(
     cellId = ids,
     value = unname(finite_or_na(log_density)),
-    controls = unname(control_counts),
+    controlPercent = unname(finite_or_na(control_percent)),
     x = unname(coords$x),
     y = unname(coords$y)
   ))
