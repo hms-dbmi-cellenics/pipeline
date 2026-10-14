@@ -195,35 +195,59 @@ copy_source_matrix_dirs <- function(
 # TODO: Once the filtered_cells objects are actually separated by sample (not identical)
 #  then we can use s3_copy_by_prefix for this function instead of all this code,
 #  so basically replace this function by something similar to copy_source
+#
+# The QC steps that write filtered cells depend on the technology (single-cell
+# and spatial run different filters), so copy whichever objects the source
+# experiment has instead of assuming a fixed list of steps.
 copy_filtered_cells <- function(
   from_experiment_id, to_experiment_id, sample_ids_map, pipeline_config
 ) {
-  steps <- c(
-    "cellSizeDistribution",
-    "dataIntegration",
-    "doubletScores",
-    "mitochondrialContent",
-    "numGenesVsNumUmis"
-  )
-
   bucket <- pipeline_config$cells_id_bucket
   aws_config <- pipeline_config$aws_config
 
-  for (step in steps) {
-    for (original_sample_id in names(sample_ids_map)) {
-      copy_sample_id <- sample_ids_map[[original_sample_id]]
+  original_keys <- list_s3_keys(bucket, paste0(from_experiment_id, "/"), aws_config)
 
-      original_key <- paste0(from_experiment_id, "/", step, "/", original_sample_id, ".rds")
-      copy_key <- paste0(to_experiment_id, "/", step, "/", copy_sample_id, ".rds")
+  for (original_key in original_keys) {
+    # keys are <experiment_id>/<step>/<sample_id>.rds
+    step <- basename(dirname(original_key))
+    original_sample_id <- tools::file_path_sans_ext(basename(original_key))
 
-      filtered_cells <- get_s3_rds(bucket, original_key, aws_config)
-
-      names(filtered_cells) <- translate_sample_ids(names(filtered_cells), sample_ids_map)
-
-      message("Uploading ", original_key, "to ", copy_key, " with samples translated")
-      put_s3_rds(bucket, copy_key, aws_config, filtered_cells)
+    if (!original_sample_id %in% names(sample_ids_map)) {
+      message("Skipping ", original_key, ", sample is not being copied")
+      next
     }
+
+    copy_sample_id <- sample_ids_map[[original_sample_id]]
+    copy_key <- paste0(to_experiment_id, "/", step, "/", copy_sample_id, ".rds")
+
+    filtered_cells <- get_s3_rds(bucket, original_key, aws_config)
+
+    names(filtered_cells) <- translate_sample_ids(names(filtered_cells), sample_ids_map)
+
+    message("Uploading ", original_key, " to ", copy_key, " with samples translated")
+    put_s3_rds(bucket, copy_key, aws_config, filtered_cells)
   }
+}
+
+# Returns the keys of all objects in bucket under prefix
+list_s3_keys <- function(bucket, prefix, aws_config) {
+  s3 <- paws::s3(config = aws_config)
+
+  keys <- c()
+  continuation_token <- NULL
+  repeat {
+    response <- s3$list_objects_v2(
+      Bucket = bucket,
+      Prefix = prefix,
+      ContinuationToken = continuation_token
+    )
+    keys <- c(keys, vapply(response$Contents, function(object) object$Key, character(1)))
+
+    if (!isTRUE(response$IsTruncated)) break
+    continuation_token <- response$NextContinuationToken
+  }
+
+  keys
 }
 
 #' Replaces sample cell sets keys with their matched values in sample_ids_map

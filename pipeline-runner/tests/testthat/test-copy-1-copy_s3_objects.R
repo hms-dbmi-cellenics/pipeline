@@ -163,10 +163,24 @@ test_that("copy_filtered_cells works correctly", {
   sample_ids_map <- params$input$sampleIdsMap
 
 
+  steps <- c(
+    "cellSizeDistribution",
+    "dataIntegration",
+    "doubletScores",
+    "mitochondrialContent",
+    "numGenesVsNumUmis"
+  )
+  keys <- as.vector(outer(
+    steps, names(sample_ids_map),
+    function(step, sample) paste0(from_experiment_id, "/", step, "/", sample, ".rds")
+  ))
+
   filtered_cells_rds <- list("sample-id-1" = c(0, 1), "sample-id-2" = c(60, 61))
 
+  mock_list_s3_keys <- mock(keys)
   mock_get_s3_rds <- mock(filtered_cells_rds, cycle = TRUE)
   mock_put_s3_rds <- mock(cycle = TRUE)
+  mockery::stub(copy_filtered_cells, "list_s3_keys", mock_list_s3_keys)
   mockery::stub(copy_filtered_cells, "get_s3_rds", mock_get_s3_rds)
   mockery::stub(copy_filtered_cells, "put_s3_rds", mock_put_s3_rds)
 
@@ -181,6 +195,85 @@ test_that("copy_filtered_cells works correctly", {
   expect_called(mock_get_s3_rds, 10)
   # expect 10 calls: #filter_steps(5) * #samples (2) = 10
   expect_called(mock_put_s3_rds, 10)
+
+  expect_equal(
+    mock_args(mock_put_s3_rds)[[1]][[2]],
+    "mock-to-experiment-id/cellSizeDistribution/cloned-sample-id-1.rds"
+  )
+  expect_equal(
+    names(mock_args(mock_put_s3_rds)[[1]][[4]]),
+    c("cloned-sample-id-1", "cloned-sample-id-2")
+  )
+})
+
+test_that("copy_filtered_cells copies the spatial QC steps the experiment has", {
+  params <- get_mock_params()
+  pipeline_config <- params$pipelineConfig
+  from_experiment_id <- params$input$fromExperimentId
+  to_experiment_id <- params$input$toExperimentId
+  sample_ids_map <- params$input$sampleIdsMap
+
+  keys <- c(
+    "mock-from-experiment-id/spatialCountDensity/sample-id-1.rds",
+    "mock-from-experiment-id/spatialUmiOutlier/sample-id-1.rds",
+    "mock-from-experiment-id/dataIntegration/sample-id-1.rds",
+    # sample that is not being copied
+    "mock-from-experiment-id/dataIntegration/removed-sample-id.rds"
+  )
+
+  mock_list_s3_keys <- mock(keys)
+  mock_get_s3_rds <- mock(list("sample-id-1" = c(0, 1)), cycle = TRUE)
+  mock_put_s3_rds <- mock(cycle = TRUE)
+  mockery::stub(copy_filtered_cells, "list_s3_keys", mock_list_s3_keys)
+  mockery::stub(copy_filtered_cells, "get_s3_rds", mock_get_s3_rds)
+  mockery::stub(copy_filtered_cells, "put_s3_rds", mock_put_s3_rds)
+
+  copy_filtered_cells(
+    from_experiment_id,
+    to_experiment_id,
+    sample_ids_map,
+    pipeline_config
+  )
+
+  expect_called(mock_get_s3_rds, 3)
+  expect_equal(
+    vapply(mock_args(mock_put_s3_rds), function(args) args[[2]], character(1)),
+    c(
+      "mock-to-experiment-id/spatialCountDensity/cloned-sample-id-1.rds",
+      "mock-to-experiment-id/spatialUmiOutlier/cloned-sample-id-1.rds",
+      "mock-to-experiment-id/dataIntegration/cloned-sample-id-1.rds"
+    )
+  )
+})
+
+test_that("list_s3_keys follows paginated responses", {
+  responses <- list(
+    list(
+      Contents = list(list(Key = "exp/step/a.rds"), list(Key = "exp/step/b.rds")),
+      IsTruncated = TRUE,
+      NextContinuationToken = "token"
+    ),
+    list(Contents = list(list(Key = "exp/step/c.rds")), IsTruncated = FALSE)
+  )
+  mock_list_objects_v2 <- mock(responses[[1]], responses[[2]])
+  mockery::stub(
+    list_s3_keys, "paws::s3", list(list_objects_v2 = mock_list_objects_v2)
+  )
+
+  keys <- list_s3_keys("bucket", "exp/", list())
+
+  expect_equal(keys, c("exp/step/a.rds", "exp/step/b.rds", "exp/step/c.rds"))
+  expect_called(mock_list_objects_v2, 2)
+  expect_equal(mock_args(mock_list_objects_v2)[[2]]$ContinuationToken, "token")
+})
+
+test_that("list_s3_keys returns no keys for an empty prefix", {
+  mockery::stub(
+    list_s3_keys, "paws::s3",
+    list(list_objects_v2 = mock(list(Contents = list(), IsTruncated = FALSE)))
+  )
+
+  expect_length(list_s3_keys("bucket", "exp/", list()), 0)
 })
 
 test_that("copy_source_rds works correctly", {
