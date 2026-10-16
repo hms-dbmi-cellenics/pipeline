@@ -109,3 +109,9 @@ mock_spatial_scdata <- function(ncells = 64, sample_id = "spatial1", technology 
 mock_spatial_scdata_list <- function(ncells = 64, sample_id = "spatial1") {
   setNames(list(mock_spatial_scdata(ncells, sample_id)), sample_id)
 }
+
+# Expand columnar spatial plot data (see columnar_plot_data) into per-cell
+# records, as the UI does on load.
+plot_records <- function(plot_data) {
+  purrr::transpose(lapply(plot_data$columnar, unclass))
+}

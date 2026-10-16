@@ -87,7 +87,7 @@ filter_spatial_count_density <- function(
   coords <- Seurat::GetTissueCoordinates(sample_data)
   rownames(coords) <- coords$cell
   coords <- coords[rownames(metadata), , drop = FALSE]
-  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- purrr::transpose(list(
+  guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- columnar_plot_data(list(
     cellId = ids,
     value = unname(finite_or_na(log_density)),
     controlPercent = unname(finite_or_na(control_percent)),

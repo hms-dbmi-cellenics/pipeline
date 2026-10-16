@@ -267,7 +267,7 @@ generate_spatial_outlier_plot_data <- function(
   cols$x <- unname(coords$x)
   cols$y <- unname(coords$y)
 
-  purrr::transpose(cols)
+  columnar_plot_data(cols)
 }
 
 #' STEP 8. Spatial UMI filter (Visium HD)
