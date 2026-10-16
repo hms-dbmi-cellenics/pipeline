@@ -66,7 +66,7 @@ test_that("filter_spatial_num_genes_outlier emits the three plotData entries", {
   )
 
   task_name <- "spatialNumGenesOutlier"
-  plot0 <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 0)]]
+  plot0 <- plot_records(out$plotData[[generate_gui_uuid(sample1_id, task_name, 0)]])
   plot1 <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 1)]]
   stats <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 2)]]
 

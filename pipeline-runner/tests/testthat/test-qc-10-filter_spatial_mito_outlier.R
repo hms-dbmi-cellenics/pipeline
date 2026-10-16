@@ -65,9 +65,10 @@ test_that("filter_spatial_mito_outlier plots raw percent.mt, not a log value", {
     scdata_list, mock_spatial_config(3, "upper"), sample1_id, mock_ids(scdata_list)
   )
 
-  plot0 <- out$plotData[[generate_gui_uuid(sample1_id, "spatialMitoOutlier", 0)]]
+  plot0 <- plot_records(out$plotData[[generate_gui_uuid(sample1_id, "spatialMitoOutlier", 0)]])
   values <- vapply(plot0, function(cell) cell$value, numeric(1))
-  expect_equal(values, unname(scdata_list[[sample1_id]]$percent.mt))
+  # plot data is rounded to 3 decimals (see columnar_plot_data)
+  expect_equal(values, round(unname(scdata_list[[sample1_id]]$percent.mt), 3))
 })
 
 test_that("absolute mito keeps cells at or below max percent and ignores any min", {

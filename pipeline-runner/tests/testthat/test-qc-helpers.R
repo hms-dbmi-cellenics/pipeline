@@ -82,3 +82,26 @@ test_that("get_scdata_technology reads the technology from a Seurat object or li
   expect_null(get_scdata_technology(list()))
   expect_null(get_scdata_technology(NULL))
 })
+
+test_that("columnar_plot_data rounds metrics to 3 and coordinates to 1 decimal", {
+  out <- columnar_plot_data(list(
+    cellId = c(1L, 2L),
+    value = c(1.23456, NA),
+    x = c(12345.678, 2.25),
+    y = c(0.04, 9.99)
+  ))
+
+  expect_named(out, "columnar")
+  expect_equal(unclass(out$columnar$cellId), c(1L, 2L))
+  expect_equal(unclass(out$columnar$value), c(1.235, NA))
+  expect_equal(unclass(out$columnar$x), c(12345.7, 2.2))
+  expect_equal(unclass(out$columnar$y), c(0, 10))
+})
+
+test_that("columnar_plot_data serialises every column as a JSON array, even length 1", {
+  json <- RJSONIO::toJSON(columnar_plot_data(list(cellId = 7L, value = 1.5, x = 3, y = 4)))
+  parsed <- jsonlite::fromJSON(json, simplifyVector = FALSE)
+
+  expect_equal(parsed$columnar$cellId, list(7L))
+  expect_equal(parsed$columnar$value, list(1.5))
+})

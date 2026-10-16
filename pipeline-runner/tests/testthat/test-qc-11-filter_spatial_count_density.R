@@ -132,13 +132,13 @@ test_that("plotData has per-cell densities and the stats to recompute the thresh
     num_cells_to_downsample = 10
   )
 
-  plot0 <- out$plotData[[generate_gui_uuid("spatial1", "spatialCountDensity", 0)]]
+  plot0 <- plot_records(out$plotData[[generate_gui_uuid("spatial1", "spatialCountDensity", 0)]])
   plot1 <- out$plotData[[generate_gui_uuid("spatial1", "spatialCountDensity", 1)]]
   stats <- out$plotData[[generate_gui_uuid("spatial1", "spatialCountDensity", 2)]]
 
   expect_equal(length(plot0), 62)
   expect_setequal(names(plot0[[1]]), c("cellId", "value", "controlPercent", "x", "y"))
-  expect_equal(plot0[[1]]$value, log(counts[1] / 100))
+  expect_equal(plot0[[1]]$value, round(log(counts[1] / 100), 3))
   expect_equal(plot0[[1]]$controlPercent, 50)
 
   expect_equal(length(plot1$values), 10)

@@ -94,6 +94,31 @@ downsample_plotdata <- function(ncol_sample, max_number_of_cells) {
   return(nkeep)
 }
 
+#' Per-cell spatial plot data as columns
+#'
+#' Full per-cell spatial slide data (not downsampled) is the largest QC plot
+#' payload. Sending it as one array per field instead of one object per cell
+#' drops the repeated keys, and rounding drops digits nobody can see. The UI
+#' expands \code{columnar} back into per-cell records on load.
+#'
+#' @param cols named list of equal-length per-cell vectors
+#' @param coord_cols names of coordinate columns (rounded to 1 decimal, pixels)
+#' @param digits decimals kept for every other numeric column
+#'
+#' @return \code{list(columnar = cols)}; each column wrapped in \code{I()} so
+#'   RJSONIO writes a length-1 column as an array, not a scalar
+#'
+columnar_plot_data <- function(cols, coord_cols = c("x", "y"), digits = 3) {
+  col_names <- names(cols)
+  cols <- lapply(col_names, function(name) {
+    col <- unname(cols[[name]])
+    if (is.double(col)) col <- round(col, if (name %in% coord_cols) 1 else digits)
+    I(col)
+  })
+  names(cols) <- col_names
+  list(columnar = cols)
+}
+
 #' Calculates statistics before/after filter step
 #'
 #' @param scdata \code{SeuratObject}

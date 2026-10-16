@@ -68,7 +68,7 @@ test_that("filter_spatial_umi_outlier emits the expected plotData", {
   out <- filter_spatial_umi_outlier(scdata_list, config, sample1_id, cells_id)
 
   task_name <- "spatialUmiOutlier"
-  plot0 <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 0)]]
+  plot0 <- plot_records(out$plotData[[generate_gui_uuid(sample1_id, task_name, 0)]])
   plot1 <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 1)]]
   stats <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 2)]]
 
@@ -158,7 +158,7 @@ test_that("plot 0 is the full, non-downsampled per-cell array with x/y coords", 
   )
 
   task_name <- "spatialUmiOutlier"
-  plot0 <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 0)]]
+  plot0 <- plot_records(out$plotData[[generate_gui_uuid(sample1_id, task_name, 0)]])
   plot1 <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 1)]]
 
   # plot0 has one record per cell (not downsampled) with coords
@@ -264,7 +264,7 @@ test_that("absolute plotData carries raw values, and no z-scores when there are 
     scdata_list, mock_spatial_absolute_config(min = 200), "spatial1", mock_ids(scdata_list)
   )
 
-  plot0 <- out$plotData[[generate_gui_uuid("spatial1", "spatialUmiOutlier", 0)]]
+  plot0 <- plot_records(out$plotData[[generate_gui_uuid("spatial1", "spatialUmiOutlier", 0)]])
   plot1 <- out$plotData[[generate_gui_uuid("spatial1", "spatialUmiOutlier", 1)]]
 
   expect_setequal(names(plot0[[1]]), c("cellId", "value", "raw", "x", "y"))
