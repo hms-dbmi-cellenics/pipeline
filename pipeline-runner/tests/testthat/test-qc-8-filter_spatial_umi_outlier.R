@@ -72,9 +72,21 @@ test_that("filter_spatial_umi_outlier emits the expected plotData", {
   plot1 <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 1)]]
   stats <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 2)]]
 
-  # plot0: one full per-cell record with cellId, value, zscore and coords (not downsampled)
+  # plot0: one full per-cell record with cellId, raw and zscore (not downsampled);
+  # the UI derives the colouring value from raw
   expect_equal(length(plot0), ncells)
-  expect_setequal(names(plot0[[1]]), c("cellId", "value", "raw", "zscore", "x", "y"))
+  expect_setequal(names(plot0[[1]]), c("cellId", "raw", "zscore"))
+  # the mock has no nCount_RNA_log column, so the slide colours by raw as-is
+  expect_equal(out$plotData[[generate_gui_uuid(sample1_id, task_name, 0)]]$valueTransform, "none")
+
+  # plot4: coordinates for every cell, kept out of plot0
+  plot4 <- plot_records(out$plotData[[generate_gui_uuid(sample1_id, task_name, 4)]])
+  expect_equal(length(plot4), ncells)
+  expect_setequal(names(plot4[[1]]), c("cellId", "x", "y"))
+  expect_equal(
+    vapply(plot4, function(cell) cell$cellId, numeric(1)),
+    vapply(plot0, function(cell) cell$cellId, numeric(1))
+  )
 
   # plot1: z-score values for the histogram
   expect_true(length(plot1) > 0)
@@ -161,9 +173,11 @@ test_that("plot 0 is the full, non-downsampled per-cell array with x/y coords", 
   plot0 <- plot_records(out$plotData[[generate_gui_uuid(sample1_id, task_name, 0)]])
   plot1 <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 1)]]
 
-  # plot0 has one record per cell (not downsampled) with coords
+  # plot0 has one record per cell (not downsampled)
   expect_equal(length(plot0), ncells)
-  expect_setequal(names(plot0[[1]]), c("cellId", "value", "raw", "zscore", "x", "y"))
+  expect_setequal(names(plot0[[1]]), c("cellId", "raw", "zscore"))
+  # with the *_log column present the UI derives the colour value as log1p(raw)
+  expect_equal(out$plotData[[generate_gui_uuid(sample1_id, task_name, 0)]]$valueTransform, "log1p")
   # plot1 is downsampled to the requested number
   expect_equal(length(plot1), 10)
 })
@@ -267,7 +281,7 @@ test_that("absolute plotData carries raw values, and no z-scores when there are 
   plot0 <- plot_records(out$plotData[[generate_gui_uuid("spatial1", "spatialUmiOutlier", 0)]])
   plot1 <- out$plotData[[generate_gui_uuid("spatial1", "spatialUmiOutlier", 1)]]
 
-  expect_setequal(names(plot0[[1]]), c("cellId", "value", "raw", "x", "y"))
+  expect_setequal(names(plot0[[1]]), c("cellId", "raw"))
   expect_equal(vapply(plot0, function(cell) cell$raw, numeric(1)), seq(100, by = 10, length.out = 64))
   expect_equal(names(plot1[[1]]), "raw")
 })

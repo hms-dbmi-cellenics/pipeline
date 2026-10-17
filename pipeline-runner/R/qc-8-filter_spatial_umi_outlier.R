@@ -178,8 +178,12 @@ filter_spatial_qc_metric <- function(
   guidata <- list()
 
   # plot 0: spatial slide data (full per-cell, NOT downsampled — the overlay needs all cells)
+  value_transform <- if (value_metric == metric) "none" else "log1p"
   guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <-
-    generate_spatial_outlier_plot_data(sample_data, value_metric, z_metric, metric)
+    generate_spatial_outlier_plot_data(sample_data, metric, z_metric, value_transform)
+
+  # plot 4: cell coordinates, only fetched by the UI for samples without a segmentation
+  guidata[[generate_gui_uuid(sample_id, task_name, 4)]] <- spatial_coords_plot_data(sample_data)
 
   # plot 1: histogram data, z-scores and raw values (downsampled like other filters)
   nkeep <- downsample_plotdata(ncol(sample_data), num_cells_to_downsample)
@@ -244,30 +248,26 @@ generate_default_values_spatial_absolute <- function(values, direction) {
   list(max = if (!is.null(threshold)) ceiling(threshold * 100) / 100)
 }
 
-# Builds the per-cell array consumed by the spatial slide plot: one record per
-# cell with its stable (0-indexed) cells_id, the metric value (for colouring),
-# the raw metric (to recompute absolute-threshold outliers client-side), the
-# local-outlier z-score when there is one (to recompute local outliers) and
-# tissue coordinates.
+# Builds the per-cell columns consumed by the spatial slide plot: for each
+# cell its stable (0-indexed) cells_id, the raw metric (to recompute
+# absolute-threshold outliers client-side) and the local-outlier z-score when
+# there is one (to recompute local outliers). The value the slide is coloured by
+# isn't sent: the UI derives it from raw via `valueTransform` ("log1p" or "none").
+# Coordinates are a separate plot (see spatial_coords_plot_data).
 generate_spatial_outlier_plot_data <- function(
-  scdata, value_metric, metric_z, raw_metric = value_metric
+  scdata, raw_metric, metric_z, value_transform = "none"
 ) {
   md <- scdata@meta.data
 
   cols <- list(
     cellId = md$cells_id,
-    value = unname(md[[value_metric]]),
     raw = unname(md[[raw_metric]])
   )
   if (!is.null(metric_z)) cols$zscore <- unname(md[[metric_z]])
 
-  coords <- Seurat::GetTissueCoordinates(scdata)
-  rownames(coords) <- coords$cell
-  coords <- coords[rownames(md), , drop = FALSE]
-  cols$x <- unname(coords$x)
-  cols$y <- unname(coords$y)
-
-  columnar_plot_data(cols)
+  plot_data <- columnar_plot_data(cols)
+  plot_data$valueTransform <- value_transform
+  plot_data
 }
 
 #' STEP 8. Spatial UMI filter (Visium HD)

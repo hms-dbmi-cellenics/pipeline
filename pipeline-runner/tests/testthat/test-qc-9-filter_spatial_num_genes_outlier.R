@@ -71,7 +71,9 @@ test_that("filter_spatial_num_genes_outlier emits the three plotData entries", {
   stats <- out$plotData[[generate_gui_uuid(sample1_id, task_name, 2)]]
 
   expect_equal(length(plot0), ncells) # full per-cell, not downsampled
-  expect_true(all(c("cellId", "value", "zscore") %in% names(plot0[[1]])))
+  expect_setequal(names(plot0[[1]]), c("cellId", "raw", "zscore"))
+  # the mock has no nFeature_RNA_log column, so the slide colours by raw as-is
+  expect_equal(out$plotData[[generate_gui_uuid(sample1_id, task_name, 0)]]$valueTransform, "none")
   expect_setequal(names(plot1[[1]]), c("raw", "zscore"))
   expect_setequal(names(stats), c("before", "after"))
 })

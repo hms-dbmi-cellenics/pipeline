@@ -716,10 +716,20 @@ upload_image_to_s3 <- function(
   invisible()
 }
 
+# Chunk compressor for the spatial OME-Zarr images and segmentations: blosc with
+# zstd compresses these ~1.3-1.7x better than zarr's default blosc/lz4, and the
+# UI's zarr decoder (numcodecs) reads it.
+ome_zarr_compressor <- function() {
+  numcodecs <- reticulate::import("numcodecs")
+  numcodecs$Blosc(cname = "zstd", clevel = 5L, shuffle = numcodecs$Blosc$SHUFFLE)
+}
+
 # based off of vitessce-python demo
 rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name,
                                   orig_width = NULL, orig_height = NULL) {
-  np <- reticulate::import("numpy")
+  # convert = FALSE keeps numpy arrays on the Python side: converted back to R
+  # they lose their dtype (uint8 -> integer -> int32, float32 -> double -> float64)
+  np <- reticulate::import("numpy", convert = FALSE)
   zarr <- reticulate::import("zarr")
   ome_zarr <- reticulate::import("ome_zarr")
 
@@ -749,7 +759,8 @@ rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name,
     scale_factors = scale_factors,
     storage_options = list(
       chunks = reticulate::tuple(1L, 512L, 512L),
-      dimension_separator = "/"
+      dimension_separator = "/",
+      compressor = ome_zarr_compressor()
     )
   )
 
@@ -990,7 +1001,9 @@ polygons_to_bitmask_ome_zarr <- function(
   output_path,
   max_pyramid_levels = 4L
 ) {
-  np <- reticulate::import("numpy")
+  # convert = FALSE keeps numpy arrays on the Python side: converted back to R
+  # they lose their dtype (uint8 -> integer -> int32, float32 -> double -> float64)
+  np <- reticulate::import("numpy", convert = FALSE)
   zarr <- reticulate::import("zarr")
   ome_zarr <- reticulate::import("ome_zarr")
   pil <- reticulate::import("PIL")
@@ -1027,7 +1040,8 @@ polygons_to_bitmask_ome_zarr <- function(
       sep = "\n"
     )
   )
-  py$`_draw_label_polygons`(draw, as.integer(pairs$cells_id), pairs$v)
+  # as.list: a single cell id would otherwise reach Python as a scalar, not a list
+  py$`_draw_label_polygons`(draw, as.list(as.integer(pairs$cells_id)), pairs$v)
 
   # float32: integer-exact up to 2^24 ≈ 16.7 M cells.
   # XRLayer uploads this as R32F so the BitmaskLayer shader reads raw cell IDs.
@@ -1064,7 +1078,8 @@ polygons_to_bitmask_ome_zarr <- function(
     method = "nearest",
     storage_options = list(
       chunks = reticulate::tuple(1L, 512L, 512L),
-      dimension_separator = "/"
+      dimension_separator = "/",
+      compressor = ome_zarr_compressor()
     )
   )
 
