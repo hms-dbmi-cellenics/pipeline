@@ -119,6 +119,29 @@ columnar_plot_data <- function(cols, coord_cols = c("x", "y"), digits = 3) {
   list(columnar = cols)
 }
 
+#' Per-cell spatial coordinates as columnar plot data
+#'
+#' Kept out of the per-cell metric plot data: the UI only needs coordinates to
+#' draw centroid dots for samples without a segmentation, so it loads this plot
+#' on demand instead of every sample paying for it.
+#'
+#' @param scdata spatial \code{SeuratObject} for one sample
+#'
+#' @return columnar plot data with \code{cellId}, \code{x} and \code{y}
+#'
+spatial_coords_plot_data <- function(scdata) {
+  md <- scdata@meta.data
+  coords <- Seurat::GetTissueCoordinates(scdata)
+  rownames(coords) <- coords$cell
+  coords <- coords[rownames(md), , drop = FALSE]
+
+  columnar_plot_data(list(
+    cellId = md$cells_id,
+    x = unname(coords$x),
+    y = unname(coords$y)
+  ))
+}
+
 #' Calculates statistics before/after filter step
 #'
 #' @param scdata \code{SeuratObject}

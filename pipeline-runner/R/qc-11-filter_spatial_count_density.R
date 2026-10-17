@@ -84,16 +84,14 @@ filter_spatial_count_density <- function(
   guidata <- list()
 
   # plot 0: spatial slide data (full per-cell, NOT downsampled — the overlay needs all cells)
-  coords <- Seurat::GetTissueCoordinates(sample_data)
-  rownames(coords) <- coords$cell
-  coords <- coords[rownames(metadata), , drop = FALSE]
   guidata[[generate_gui_uuid(sample_id, task_name, 0)]] <- columnar_plot_data(list(
     cellId = ids,
     value = unname(finite_or_na(log_density)),
-    controlPercent = unname(finite_or_na(control_percent)),
-    x = unname(coords$x),
-    y = unname(coords$y)
+    controlPercent = unname(finite_or_na(control_percent))
   ))
+
+  # plot 4: cell coordinates, only fetched by the UI for samples without a segmentation
+  guidata[[generate_gui_uuid(sample_id, task_name, 4)]] <- spatial_coords_plot_data(sample_data)
 
   # plot 1: log density histogram (downsampled like other filters) together with
   # the median and MAD the UI needs to recompute the threshold for any nmads

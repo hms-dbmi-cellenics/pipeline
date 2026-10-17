@@ -65,8 +65,11 @@ test_that("filter_spatial_mito_outlier plots raw percent.mt, not a log value", {
     scdata_list, mock_spatial_config(3, "upper"), sample1_id, mock_ids(scdata_list)
   )
 
-  plot0 <- plot_records(out$plotData[[generate_gui_uuid(sample1_id, "spatialMitoOutlier", 0)]])
-  values <- vapply(plot0, function(cell) cell$value, numeric(1))
+  plot0_data <- out$plotData[[generate_gui_uuid(sample1_id, "spatialMitoOutlier", 0)]]
+  plot0 <- plot_records(plot0_data)
+  # mito isn't log scaled: the UI colours by raw as-is
+  expect_equal(plot0_data$valueTransform, "none")
+  values <- vapply(plot0, function(cell) cell$raw, numeric(1))
   # plot data is rounded to 3 decimals (see columnar_plot_data)
   expect_equal(values, round(unname(scdata_list[[sample1_id]]$percent.mt), 3))
 })
