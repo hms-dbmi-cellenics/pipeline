@@ -18,6 +18,19 @@ test_that("rgb_image_to_ome_zarr stores uint8 chunks compressed with blosc/zstd"
   expect_equal(read_zarray(path)$shape, c(3, 64, 48))
 })
 
+test_that("rgb_image_to_ome_zarr stores all 3 channels of a tile in one chunk", {
+  path <- file.path(tempdir(), "test-image-chunks.ome.zarr")
+  on.exit(unlink(path, recursive = TRUE))
+  image_arr <- array(runif(64 * 48 * 3), dim = c(64, 48, 3))
+
+  rgb_image_to_ome_zarr(image_arr, path, "test")
+
+  # (c, y, x) like the array, so a chunk is a 512x512 tile with every channel
+  for (level in as.character(0:4)) {
+    expect_equal(read_zarray(path, level)$chunks, c(3, 512, 512))
+  }
+})
+
 test_that("polygons_to_bitmask_ome_zarr stores float32 labels compressed with blosc/zstd", {
   path <- file.path(tempdir(), "test-segmentation.ome.zarr")
   on.exit(unlink(path, recursive = TRUE))
