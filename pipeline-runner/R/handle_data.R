@@ -757,8 +757,11 @@ rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name,
     group = z_root,
     axes = "cyx",
     scale_factors = scale_factors,
+    # all 3 channels per chunk, in (c, y, x) order like the array: the UI reads
+    # the R/G/B planes of a tile from one chunk, so one range request per tile
+    # instead of three
     storage_options = list(
-      chunks = reticulate::tuple(1L, 512L, 512L),
+      chunks = reticulate::tuple(3L, 512L, 512L),
       dimension_separator = "/",
       compressor = ome_zarr_compressor()
     )
