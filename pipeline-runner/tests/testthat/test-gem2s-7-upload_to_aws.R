@@ -1046,7 +1046,7 @@ test_that("upload_molecules_to_s3 filters QV, writes one Feather per gene + meta
   )
   mockery::stub(
     upload_molecules_to_s3, "create_sample_file",
-    function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, overwrite_existing, auth_jwt) {
+    function(api_url, experiment_id, sample_id, file_type, file_size, sample_file_id, overwrite_existing, auth_jwt, obj2s_sample_id = NULL) {
       registered <<- list(
         file_type = file_type, sample_file_id = sample_file_id,
         sample_id = sample_id, overwrite_existing = overwrite_existing

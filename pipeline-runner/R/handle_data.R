@@ -647,7 +647,7 @@ get_matrix_dirs <- function(scdata) {
 upload_image_to_s3 <- function(
   pipeline_config, input, experiment_id, image_arr, image_name, image_id, sample_id,
   image_max_height = dim(image_arr)[1], image_max_width = dim(image_arr)[2],
-  overwrite_existing = TRUE
+  overwrite_existing = TRUE, obj2s_sample_id = NULL
 ) {
   # things for api requests
   api_url <- pipeline_config$api_url
@@ -710,7 +710,8 @@ upload_image_to_s3 <- function(
     image_id,
     # FALSE for obj2s so that can have multiple ome_zarr_zip for single "sample"
     overwrite_existing,
-    auth_jwt
+    auth_jwt,
+    obj2s_sample_id
   )
 
   invisible()
@@ -796,7 +797,8 @@ rgb_image_to_ome_zarr <- function(image_arr, output_path, image_name,
 
 upload_polygons_to_s3 <- function(
   pipeline_config, input, experiment_id, polygons, height, width,
-  image_name, polygons_id, sample_id, overwrite_existing
+  image_name, polygons_id, sample_id, overwrite_existing,
+  obj2s_sample_id = NULL
 ) {
   # things for api requests
   api_url <- pipeline_config$api_url
@@ -848,7 +850,8 @@ upload_polygons_to_s3 <- function(
     # gets used as s3_path by API
     polygons_id,
     overwrite_existing,
-    auth_jwt
+    auth_jwt,
+    obj2s_sample_id
   )
 
   invisible()
@@ -877,7 +880,7 @@ XENIUM_QV_THRESHOLD <- 20
 #' @param transcripts data.frame with columns x, y, gene (+ qv if present)
 upload_molecules_to_s3 <- function(
   pipeline_config, input, experiment_id, transcripts, sample_id,
-  overwrite_existing
+  overwrite_existing, obj2s_sample_id = NULL
 ) {
   api_url <- pipeline_config$api_url
   auth_jwt <- input$authJWT
@@ -991,7 +994,8 @@ upload_molecules_to_s3 <- function(
     file.size(zip_path),
     molecules_id,
     overwrite_existing,
-    auth_jwt
+    auth_jwt,
+    obj2s_sample_id
   )
 
   invisible()
@@ -1174,9 +1178,12 @@ pad_image_width <- function(image_arr, target_width) {
   return(padded_image_arr)
 }
 
+#' @param obj2s_sample_id sample cell set an obj2s spatial file belongs to, as
+#'   an obj2s experiment has a single sample holding the files of every image
 create_sample_file <- function(
   api_url, experiment_id, sample_id, file_type,
-  file_size, sample_file_id, overwrite_existing, auth_jwt
+  file_size, sample_file_id, overwrite_existing, auth_jwt,
+  obj2s_sample_id = NULL
 ) {
   url <- paste0(
     api_url,
@@ -1191,6 +1198,7 @@ create_sample_file <- function(
     uploadStatus = "uploaded",
     overwriteExisting = overwrite_existing
   )
+  body$obj2sSampleId <- obj2s_sample_id
 
   response <- httr::POST(
     url,
@@ -1207,29 +1215,119 @@ create_sample_file <- function(
   }
 }
 
-upload_obj2s_images_to_s3 <- function(pipeline_config, input, experiment_id, scdata) {
-  # use the
-  image_ids <- input$sampleIds
-  names(image_ids) <- input$sampleNames
-
-  # associate obj2s images with single sample id for experiment
+#' Upload the images, segmentations and molecules of an obj2s spatial object
+#'
+#' Mirrors gem2s-7 for each technology: Visium uploads its image, Visium HD its
+#' image and segmentations, and Xenium (no tissue image) its segmentations and
+#' molecules. An obj2s experiment has a single sample, so the files of every
+#' sample (image) are attached to it and linked to their sample cell set. Images
+#' keep the sample cell set id as file id, as before files were linked.
+#'
+#' @param scdata SeuratObject with sample ids in \code{samples}
+#' @param transcripts list of Xenium molecules frames by sample id
+upload_obj2s_spatial_to_s3 <- function(
+  pipeline_config, input, experiment_id, scdata, transcripts = list()
+) {
+  # associate obj2s files with single sample id for experiment
   sample_id <- input$obj2sSampleId
+  technology <- scdata@misc$technology
   image_names <- Seurat::Images(scdata)
 
-  for (image_name in image_names) {
-    image_arr <- scdata[[image_name]]@image
-    image_id <- image_ids[image_name]
+  # pad images to common dimensions for the multi-sample grid, as gem2s does
+  has_image <- !isTRUE(technology == "xenium")
+  if (has_image) {
+    image_dims <- sapply(image_names, function(image_name) {
+      dim(scdata[[image_name]]@image)[1:2]
+    })
+    image_max_height <- max(image_dims[1, ])
+    image_max_width <- max(image_dims[2, ])
+  }
 
-    upload_image_to_s3(
-      pipeline_config,
-      input,
-      experiment_id,
-      image_arr,
-      image_name,
-      image_id,
-      sample_id,
-      overwrite_existing = FALSE
-    )
+  # one sample holds a file per image of each type, so only the first upload of
+  # a type overwrites (clearing files from previous runs), the rest append
+  uploaded_types <- c()
+  is_first_upload <- function(type) {
+    first <- !type %in% uploaded_types
+    uploaded_types <<- union(uploaded_types, type)
+    first
+  }
+
+  for (image_name in image_names) {
+    obj2s_sample_id <- get_image_sample(image_name, scdata)
+
+    if (has_image) {
+      upload_image_to_s3(
+        pipeline_config,
+        input,
+        experiment_id,
+        scdata[[image_name]]@image,
+        image_name,
+        obj2s_sample_id,
+        sample_id,
+        image_max_height,
+        image_max_width,
+        overwrite_existing = is_first_upload("image"),
+        obj2s_sample_id = obj2s_sample_id
+      )
+    }
+
+    if (isTRUE(technology == "visium_hd")) {
+      polygons <- get_polygon_coords(
+        image_name,
+        scdata,
+        scale = get_image_scale(image_name, scdata)
+      )
+
+      upload_polygons_to_s3(
+        pipeline_config,
+        input,
+        experiment_id,
+        polygons,
+        image_max_height,
+        image_max_width,
+        image_name,
+        uuid::UUIDgenerate(),
+        sample_id,
+        overwrite_existing = is_first_upload("segmentations"),
+        obj2s_sample_id = obj2s_sample_id
+      )
+    }
+
+    if (isTRUE(technology == "xenium")) {
+      # centroids-only FOVs have no polygons to upload (cells shown as circles)
+      has_segmentations <- "segmentations" %in% SeuratObject::Boundaries(scdata[[image_name]])
+      if (has_segmentations) {
+        # no image: size the bitmask canvas to the polygon coordinate extent
+        polygons <- get_polygon_coords(image_name, scdata)
+
+        upload_polygons_to_s3(
+          pipeline_config,
+          input,
+          experiment_id,
+          polygons,
+          ceiling(max(polygons$y)),
+          ceiling(max(polygons$x)),
+          image_name,
+          uuid::UUIDgenerate(),
+          sample_id,
+          overwrite_existing = is_first_upload("segmentations"),
+          obj2s_sample_id = obj2s_sample_id
+        )
+      }
+
+      sample_transcripts <- transcripts[[obj2s_sample_id]]
+      if (!is.null(sample_transcripts)) {
+        upload_molecules_to_s3(
+          pipeline_config,
+          input,
+          experiment_id,
+          sample_transcripts,
+          sample_id,
+          overwrite_existing = is_first_upload("molecules"),
+          obj2s_sample_id = obj2s_sample_id
+        )
+      }
+    }
   }
 }
 

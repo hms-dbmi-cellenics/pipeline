@@ -13,6 +13,7 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
   input <- add_samples_to_input(scdata, input)
   input <- add_metadata_to_input(scdata, input)
   scdata <- change_sample_names_to_ids(scdata, input)
+  scdata <- rename_obj2s_images(scdata)
   cell_sets <- get_cell_sets(scdata, input)
 
   # detect cluster metadata
@@ -53,11 +54,27 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
 
   qc_config <- build_obj2s_qc_config(scdata)
 
+  # keep the Xenium molecules out of the processed object: they are uploaded
+  # separately as the molecule artifact (as in gem2s-7)
+  transcripts <- get_obj2s_sample_transcripts(scdata, input)
+  scdata@misc$transcripts <- NULL
+
   # seurat object to s3
   object_key <- upload_matrix_to_s3(pipeline_config, experiment_id, scdata)
 
-  # images for spatial to s3
-  upload_obj2s_images_to_s3(pipeline_config, input, experiment_id, scdata)
+  # matrix dir for disk-backed (BPCells) counts
+  if (methods::is(scdata[["RNA"]]$counts, "IterableMatrix")) {
+    matrix_dir_tarfile <- save_matrix_dir_to_tarfile(experiment_id, scdata)
+    upload_matrix_dir_to_s3(pipeline_config, experiment_id, matrix_dir_tarfile)
+  }
+
+  # images, segmentations and molecules for spatial to s3
+  technology <- scdata@misc$technology
+  if (length(Seurat::Images(scdata))) {
+    upload_obj2s_spatial_to_s3(
+      pipeline_config, input, experiment_id, scdata, transcripts
+    )
+  }
 
   experiment_data <- list(
     apiVersion = "2.0.0-data-ingest-seurat-rds-automated",
@@ -69,6 +86,12 @@ upload_obj2s_to_aws <- function(input, pipeline_config, prev_out) {
     ),
     processingConfig = qc_config
   )
+
+  # spatial objects are all uploaded as seurat_spatial_object, report which
+  # technology was detected so it can be saved on the sample
+  if (!is.null(technology)) {
+    experiment_data$meta$spatialTechnology <- technology
+  }
 
   res <- list(
     data = list(
@@ -116,6 +139,8 @@ find_cluster_columns <- function(scdata) {
   group_cols <- find_group_columns(meta, remove.dups = FALSE)
   group_cols <- c(group_cols, "samples")
   scdblfinder_cols <- grep("^scDblFinder", colnames(meta), value = TRUE)
+  # Seurat's per-assay QC counts (e.g. nCount_Spatial.008um, nFeature_Xenium)
+  qc_count_cols <- grep("^n(Count|Feature)_", colnames(meta), value = TRUE)
 
   # order meta to indicate preference for default clusters
   louvain_cols <- c("louvain", "active.ident", "cell_type", "seurat_clusters")
@@ -128,7 +153,7 @@ find_cluster_columns <- function(scdata) {
 
   check_cols <- setdiff(
     colnames(meta),
-    c(scdblfinder_cols, group_cols, "nCount_RNA", "nFeature_RNA")
+    c(scdblfinder_cols, group_cols, qc_count_cols)
   )
 
   cluster_cols <- c()
@@ -190,6 +215,38 @@ add_samples_to_input <- function(scdata, input) {
   input$obj2sSampleId <- input$sampleIds
   input$sampleIds <- ids::uuid(n = length(samples))
   return(input)
+}
+
+# name images as gem2s does: '<sample id>.polygons'. Set directly as Seurat
+# would replace the '-' of sample ids in image names.
+rename_obj2s_images <- function(scdata) {
+  if (!length(scdata@images)) return(scdata)
+
+  sample_ids <- vapply(names(scdata@images), get_image_sample, "", scdata = scdata)
+  names(scdata@images) <- paste0(sample_ids, ".polygons")
+
+  return(scdata)
+}
+
+# the sample of the cells in an image
+get_image_sample <- function(image_name, scdata) {
+  cells <- SeuratObject::Cells(scdata@images[[image_name]])
+  sample <- unique(scdata@meta.data[cells, "samples"])
+  stopifnot(length(sample) == 1)
+
+  return(sample)
+}
+
+# Xenium molecules frames by sample id (kept by sample name on the object)
+get_obj2s_sample_transcripts <- function(scdata, input) {
+  transcripts <- scdata@misc$transcripts
+  if (is.null(transcripts)) return(list())
+
+  sample_ids <- input$sampleIds
+  names(sample_ids) <- input$sampleNames
+  names(transcripts) <- sample_ids[names(transcripts)]
+
+  return(transcripts)
 }
 
 change_sample_names_to_ids <- function(scdata, input) {
@@ -270,13 +327,6 @@ format_obj2s <- function(scdata, experiment_id) {
   # need to mock processing config
   metadata_cols <- list('percent.mt' = 0, 'doublet_scores' = 0, 'doublet_class' = 'singlet')
   scdata <- mock_metadata(scdata, metadata_cols)
-
-  # need that logcounts and counts have same nrow
-  common.genes <- intersect(row.names(scdata[['RNA']]$counts),
-                            row.names(scdata[['RNA']]$data))
-
-  scdata <- scdata[common.genes, ]
-  scdata@misc$gene_annotations <- scdata@misc$gene_annotations[common.genes, ]
 
   return(scdata)
 }
