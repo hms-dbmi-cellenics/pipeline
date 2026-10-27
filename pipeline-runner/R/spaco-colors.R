@@ -3,16 +3,14 @@
 # IMPORTANT: the Spaco colouring here mirrors the worker package
 # (rworker, R/cluster.R). If you update the Spaco logic, change both.
 #
-# For spatial datasets (e.g. Visium HD), this assigns colors so that spatially
-# interlaced categories (clusters, cell-level metadata values) get perceptually
-# distinct colors. We only use it for categoricals that vary WITHIN a slice;
+# For spatial datasets (e.g. Visium HD), this assigns colors so that
+# spatially interlaced categories (clusters, cell-level metadata values) get
+# perceptually distinct colors. We only use it for categoricals that vary WITHIN a slice;
 # per-sample categoricals (samples, sample-level metadata) keep the color pool.
 #
 # This is a native R reimplementation of the Spaco algorithm
-# (https://github.com/BrainStOrmics/Spaco). We reimplement rather than calling
-# the Python package because Spaco's auto-palette generation runs a UMAP
-# embedding whose numba JIT compile dominates runtime (~150s cold in the
-# container); the R version (uwot, no numba) does the same work in ~2s.
+# (https://github.com/BrainStOrmics/Spaco), avoiding the Python package and its
+# slow numba start-up.
 
 #' Resolve the colors to use for a categorical track
 #'
@@ -106,6 +104,33 @@ spaco_palette <- function(scdata_list, cells_id_labels, categories) {
 }
 
 
+# Colors Spaco assigns to categories, most distinct first: the first 20 of the
+# default color pool, then 80 colors each chosen as the one most different
+# (CIEDE2000) from all before it (as in Glasbey et al. 2007), from an sRGB grid
+# of 18 levels per channel excluding near-white/black (Lab L outside 30-88) and
+# greys (chroma <= 15). The default pool alone has near-identical colors after
+# its first ~20, which interlaced clusters of large datasets would get.
+SPACO_COLOR_POOL <- c(
+  "#77aadd", "#ee8866", "#eedd88", "#ffaabb", "#99ddff", "#44bb99",
+  "#bbcc33", "#999900", "#bc9cc9", "#295a8b", "#b14d2c", "#c2aa36",
+  "#d4788a", "#3e8ab1", "#158364", "#737a38", "#4e4e00", "#835794",
+  "#edf761", "#4d8cc4", "#96003c", "#ff00ff", "#4b00e1", "#00ff4b",
+  "#00a50f", "#c37800", "#8769ff", "#2d5a5a", "#c3e1c3", "#ffd2b4",
+  "#693c0f", "#006900", "#e10087", "#00f0f0", "#967869", "#a5a587",
+  "#ff003c", "#965a69", "#3cb4c3", "#d2d2ff", "#ffb44b", "#870078",
+  "#b400e1", "#787896", "#96000f", "#5a8787", "#4b3c87", "#ff96ff",
+  "#876900", "#c369b4", "#87c369", "#693c3c", "#69f0b4", "#005a3c",
+  "#ff3c00", "#c3a587", "#ff871e", "#b496ff", "#78694b", "#005aff",
+  "#699669", "#d2004b", "#965a1e", "#a5874b", "#4b5a3c", "#5a4b69",
+  "#a5d2d2", "#ffd200", "#ffc3f0", "#785a4b", "#ff69b4", "#9678c3",
+  "#ffd2d2", "#6978c3", "#783c5a", "#c3695a", "#e1d2b4", "#2d873c",
+  "#784bc3", "#ff7878", "#c39696", "#c3875a", "#a5f02d", "#ff3c78",
+  "#006987", "#5a4b2d", "#78a596", "#8796b4", "#967896", "#5a785a",
+  "#78963c", "#c3e196", "#007878", "#d29600", "#00c3ff", "#c35a00",
+  "#b43ca5", "#d2001e", "#4bd200", "#003cc3"
+)
+
+
 # Spaco neighbourhood radius, in microns (the Spaco paper's default). Applied
 # directly to Xenium (micron coords); converted to image pixels for Visium HD.
 SPACO_RADIUS_MICRONS <- 50
@@ -150,8 +175,8 @@ get_spaco_radius <- function(scdata, image_name, scale) {
 #' Native R reimplementation of the Spaco colouring, treating each image in the
 #' Seurat object(s) as a slice. Per slice it builds a cluster interlacement
 #' distance graph (\code{\link{spatial_distance_r}}), sums the graphs across
-#' slices, then embeds the cluster graph into CIE-Lab colorspace
-#' (\code{\link{embed_graph_r}}) to auto-generate one color per category.
+#' slices, then assigns \code{SPACO_COLOR_POOL} so the most interlaced
+#' categories get the most distinct colors (\code{\link{assign_spaco_palette}}).
 #'
 #' When a slice is sketched, colors are computed from the sketch cells only (far
 #' fewer cells, so the neighbourhood graph is much cheaper); category colors
@@ -219,8 +244,8 @@ get_spaco_color_map <- function(scdata_list, cells_id_labels) {
       # sum interlacement graphs across slices, aligned to the full category set
       cluster_distance <- merge_cluster_distances(per_slice, categories)
 
-      # auto-generate one CIE-Lab color per category from the graph
-      color_map <- embed_graph_r(cluster_distance)
+      # most interlaced categories get the most distinct colors
+      color_map <- assign_spaco_palette(cluster_distance, SPACO_COLOR_POOL)
 
       message(
         "Spaco(R): coloring time ",
@@ -324,57 +349,67 @@ merge_cluster_distances <- function(per_slice, clusters) {
 }
 
 
-#' Embed a cluster distance graph into CIE-Lab colors (Spaco \code{embed_graph})
+#' Assign palette colors to clusters by interlacement (Spaco palette mode)
 #'
-#' Native R port of \code{spaco.mapping.embed_graph}. Embeds the cluster
-#' distance graph into 3D with UMAP (\code{uwot::umap2}, precomputed distances),
-#' rescales the axes into CIE-Lab ranges (L in \code{l_range}, a/b in
-#' [-100, 100]) via quantile trimming, then converts Lab to hex.
+#' Spaco's mode for a given palette: choose which cluster gets which color so
+#' that the most interlaced clusters get the most distinct colors, maximising
+#' the sum over cluster pairs of interlacement x CIEDE2000 color difference.
+#' Clusters are assigned greedily, most interlaced first, then pairs of clusters
+#' swap colors while that improves the sum.
 #'
-#' Mirrors Spaco's \code{UMAP(metric="precomputed")} call: spectral init and
-#' per-edge SGD (\code{batch = FALSE}). For very few clusters (k = 2,
-#' \code{n_neighbors} collapses to 1) \code{uwot} errors; the caller
-#' (\code{\link{get_spaco_color_map}}) catches it and falls back to the default
-#' color pool.
+#' Used instead of Spaco's auto-generated palette (a UMAP embedding of the graph
+#' into CIE-Lab), which crowds many clusters into similar hues and changes from
+#' run to run.
 #'
-#' @param cluster_distance symmetric cluster x cluster matrix
-#' @param l_range numeric length-2, value range for the Lab L channel
-#' @param trim_fraction quantile used to trim/clip the embedding before scaling
+#' @param cluster_distance symmetric cluster x cluster interlacement matrix
+#' @param palette hex colors, most distinct first. The first one per cluster are
+#'  used, recycled if there are more clusters than colors.
+#' @param max_passes maximum passes over the clusters when swapping. Almost all
+#'  of the improvement comes in the first few, and each costs ~k^3 operations
 #'
 #' @return named character vector mapping cluster to hex color
 #'
-embed_graph_r <- function(
-  cluster_distance, l_range = c(30, 80), trim_fraction = 0.0125
-) {
+assign_spaco_palette <- function(cluster_distance, palette, max_passes = 3) {
   clusters <- rownames(cluster_distance)
-  k_clusters <- length(clusters)
-  d <- stats::as.dist(cluster_distance)
+  k <- length(clusters)
+  colors <- rep_len(palette, k)
 
-  # suppressMessages: umap2's S4 dispatch on the "dist" object emits repeated
-  # "Found more than one class 'dist'" messages when spam and BiocGenerics
-  # (both loaded via Seurat/BPCells) each register a "dist" class
-  embedding <- suppressMessages(uwot::umap2(
-    d,
-    n_components = 3,
-    n_neighbors = min(15L, k_clusters - 1L),
-    init = "spectral",
-    batch = FALSE,
-    seed = RANDOM_SEED
-  ))
+  lab <- farver::convert_colour(t(grDevices::col2rgb(colors)), "rgb", "lab")
+  color_diff <- farver::compare_colour(lab, lab, "lab", method = "cie2000")
 
-  # rescale embedding into CIE-Lab ranges (mirrors Spaco's embed_graph)
-  embedding <- sweep(
-    embedding, 2, apply(embedding, 2, stats::quantile, probs = trim_fraction)
-  )
-  embedding[embedding < 0] <- 0
-  embedding <- embedding / stats::quantile(embedding, 1 - trim_fraction)
-  embedding[embedding > 1] <- 1
-  embedding[, 1] <- embedding[, 1] * (l_range[2] - l_range[1]) + l_range[1]
-  embedding[, 2:3] <- (embedding[, 2:3] - 0.5) * 200
+  # assigned[i] is the index in colors of cluster i's color. Ties go to the
+  # earlier color, so unconnected clusters take the palette in order.
+  assigned <- rep(NA_integer_, k)
+  for (i in order(-rowSums(cluster_distance))) {
+    done <- which(!is.na(assigned))
+    free <- setdiff(seq_len(k), assigned[done])
+    gain <- vapply(free, function(color) {
+      sum(cluster_distance[i, done] * color_diff[color, assigned[done]])
+    }, numeric(1))
+    assigned[i] <- free[which.max(gain)]
+  }
 
-  rgb <- farver::convert_colour(
-    embedding, from = "lab", to = "rgb", white_from = "D65"
-  )
-  hex <- farver::encode_colour(pmin(pmax(rgb, 0), 255))
-  stats::setNames(hex, clusters)
+  # swap cluster i's color with the cluster j where that improves the sum most.
+  # Swapping only changes their pairs with the other clusters m:
+  # gain_j = sum_m (d[i, m] - d[j, m]) * (c[j, m] - c[i, m]), m != i, j
+  for (pass in seq_len(max_passes)) {
+    improved <- FALSE
+    for (i in seq_len(k)) {
+      pair_diff <- color_diff[assigned, assigned]
+      gain <- rowSums(
+        sweep(-cluster_distance, 2, cluster_distance[i, ], `+`) *
+          sweep(pair_diff, 2, pair_diff[i, ])
+      ) + 2 * cluster_distance[i, ] * pair_diff[i, ] # remove the m = i, j terms
+      gain[i] <- 0
+
+      j <- which.max(gain)
+      if (gain[j] > 1e-9) {
+        assigned[c(i, j)] <- assigned[c(j, i)]
+        improved <- TRUE
+      }
+    }
+    if (!improved) break
+  }
+
+  stats::setNames(colors[assigned], clusters)
 }
