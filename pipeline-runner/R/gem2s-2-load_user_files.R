@@ -1223,10 +1223,29 @@ crop_to_capture_area <- function(segmentations, margin_frac = 0.02) {
 
   bounds[["centroids"]]@coords <- coords_shifted_list$centroids
   bounds[["segmentations"]]@sf.data <- coords_shifted_list$polygons
+  bounds <- update_boundary_bboxes(bounds)
   segmentations@boundaries <- bounds
   segmentations@image <- image[row_lo:row_hi, col_lo:col_hi, , drop = FALSE]
 
   return(segmentations)
+}
+
+#' Recompute boundary bounding boxes after their coordinates are moved
+#'
+#' The \code{bbox} slot isn't updated when \code{@coords} / \code{@sf.data} are
+#' set directly. A stale bbox makes later subsetting fail with "New segmentation
+#' boundary does not overlap with existing bounds".
+#'
+#' @param bounds list with \code{centroids} and \code{segmentations} boundaries
+#' @return the boundaries with updated \code{bbox} slots
+update_boundary_bboxes <- function(bounds) {
+  for (b in c("centroids", "segmentations")) {
+    coords <- SeuratObject::GetTissueCoordinates(bounds[[b]])
+    # bbox is a 2x2 matrix: rows x/y, columns min/max
+    bounds[[b]]@bbox[] <- c(range(coords$x), range(coords$y))[c(1, 3, 2, 4)]
+  }
+
+  return(bounds)
 }
 
 pivot_image_wide <- function(segmentations) {
@@ -1306,6 +1325,7 @@ rotate_visiumv2 <- function(segmentations) {
   # update segmentations object
   bounds[["centroids"]]@coords <- coords_rot_list$centroids
   bounds[["segmentations"]]@sf.data <- coords_rot_list$polygons
+  bounds <- update_boundary_bboxes(bounds)
   segmentations@boundaries <- bounds
   segmentations@image <- rotated_image
 
