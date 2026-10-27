@@ -253,21 +253,25 @@ test_that("assign_spaco_palette gives the most interlaced clusters the most dist
 })
 
 
-test_that("SPACO_COLOR_POOL extends the default pool with distinct colors", {
-  # the default pool's first 20, except its light blue close to the background
-  expect_equal(SPACO_COLOR_POOL[1:19], setdiff(get_color_pool()[1:20], "#99ddff"))
+test_that("SPACO_COLOR_POOL is distinct colors that stand out from the background and H&E", {
+  expect_length(SPACO_COLOR_POOL, 100)
   expect_true(is_hex(SPACO_COLOR_POOL))
   expect_equal(anyDuplicated(SPACO_COLOR_POOL), 0)
 
-  # every color stands out from the UI background
-  lab <- farver::convert_colour(t(grDevices::col2rgb(SPACO_COLOR_POOL)), "rgb", "lab")
-  background <- farver::convert_colour(t(grDevices::col2rgb("#F0F2F5")), "rgb", "lab")
-  expect_gte(min(farver::compare_colour(lab, background, "lab", method = "cie2000")), 25)
+  to_lab <- function(hex) farver::convert_colour(t(grDevices::col2rgb(hex)), "rgb", "lab")
+  diff <- function(a, b) farver::compare_colour(to_lab(a), to_lab(b), "lab", method = "cie2000")
 
-  # the added colors are far from every color before them
-  for (i in 20:length(SPACO_COLOR_POOL)) {
-    diff <- farver::compare_colour(lab[i, , drop = FALSE], lab[1:(i - 1), ], "lab", method = "cie2000")
-    expect_gt(min(diff), 7)
+  # starts with Kelly's colors of maximum contrast
+  expect_equal(SPACO_COLOR_POOL[1:3], c("#f3c300", "#f38400", "#be0032"))
+
+  # far from the UI background and from H&E stain
+  expect_gte(min(diff(SPACO_COLOR_POOL, "#F0F2F5")), 25)
+  he_stain <- c("#de8edc", "#bb72cd", "#c983d6", "#d780d5", "#df9be2", "#9d5dbe", "#daade7", "#d9c5ea")
+  expect_gte(min(diff(SPACO_COLOR_POOL, he_stain)), 15)
+
+  # the colors after Kelly's are far from every color before them
+  for (i in 15:length(SPACO_COLOR_POOL)) {
+    expect_gt(min(diff(SPACO_COLOR_POOL[i], SPACO_COLOR_POOL[1:(i - 1)])), 7)
   }
 })
 
