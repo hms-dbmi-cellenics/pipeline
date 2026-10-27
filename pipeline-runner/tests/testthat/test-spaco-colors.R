@@ -254,13 +254,18 @@ test_that("assign_spaco_palette gives the most interlaced clusters the most dist
 
 
 test_that("SPACO_COLOR_POOL extends the default pool with distinct colors", {
-  expect_equal(SPACO_COLOR_POOL[1:20], get_color_pool()[1:20])
+  # the default pool's first 20, except its light blue close to the background
+  expect_equal(SPACO_COLOR_POOL[1:19], setdiff(get_color_pool()[1:20], "#99ddff"))
   expect_true(is_hex(SPACO_COLOR_POOL))
   expect_equal(anyDuplicated(SPACO_COLOR_POOL), 0)
 
-  # the added colors are far from every color before them
+  # every color stands out from the UI background
   lab <- farver::convert_colour(t(grDevices::col2rgb(SPACO_COLOR_POOL)), "rgb", "lab")
-  for (i in 21:length(SPACO_COLOR_POOL)) {
+  background <- farver::convert_colour(t(grDevices::col2rgb("#F0F2F5")), "rgb", "lab")
+  expect_gte(min(farver::compare_colour(lab, background, "lab", method = "cie2000")), 25)
+
+  # the added colors are far from every color before them
+  for (i in 20:length(SPACO_COLOR_POOL)) {
     diff <- farver::compare_colour(lab[i, , drop = FALSE], lab[1:(i - 1), ], "lab", method = "cie2000")
     expect_gt(min(diff), 7)
   }

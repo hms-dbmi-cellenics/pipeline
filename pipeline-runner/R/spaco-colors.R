@@ -105,29 +105,31 @@ spaco_palette <- function(scdata_list, cells_id_labels, categories) {
 
 
 # Colors Spaco assigns to categories, most distinct first: the first 20 of the
-# default color pool, then 80 colors each chosen as the one most different
-# (CIEDE2000) from all before it (as in Glasbey et al. 2007), from an sRGB grid
-# of 18 levels per channel excluding near-white/black (Lab L outside 30-88) and
-# greys (chroma <= 15). The default pool alone has near-identical colors after
-# its first ~20, which interlaced clusters of large datasets would get.
+# default color pool, then colors each chosen as the one most different
+# (CIEDE2000) from all before it (as in Glasbey et al. 2007), up to 100 colors.
+# Candidates are an sRGB grid of 18 levels per channel excluding dark (Lab L <= 30)
+# and grey (chroma <= 15) colors. Colors within CIEDE2000 25 of the UI's light
+# grey background (#F0F2F5), where they are hard to see, are excluded throughout.
+# The default pool alone has near-identical colors after its first ~20, which
+# interlaced clusters of large datasets would get.
 SPACO_COLOR_POOL <- c(
-  "#77aadd", "#ee8866", "#eedd88", "#ffaabb", "#99ddff", "#44bb99",
-  "#bbcc33", "#999900", "#bc9cc9", "#295a8b", "#b14d2c", "#c2aa36",
-  "#d4788a", "#3e8ab1", "#158364", "#737a38", "#4e4e00", "#835794",
-  "#edf761", "#4d8cc4", "#96003c", "#ff00ff", "#4b00e1", "#00ff4b",
-  "#00a50f", "#c37800", "#8769ff", "#2d5a5a", "#c3e1c3", "#ffd2b4",
-  "#693c0f", "#006900", "#e10087", "#00f0f0", "#967869", "#a5a587",
-  "#ff003c", "#965a69", "#3cb4c3", "#d2d2ff", "#ffb44b", "#870078",
-  "#b400e1", "#787896", "#96000f", "#5a8787", "#4b3c87", "#ff96ff",
-  "#876900", "#c369b4", "#87c369", "#693c3c", "#69f0b4", "#005a3c",
-  "#ff3c00", "#c3a587", "#ff871e", "#b496ff", "#78694b", "#005aff",
-  "#699669", "#d2004b", "#965a1e", "#a5874b", "#4b5a3c", "#5a4b69",
-  "#a5d2d2", "#ffd200", "#ffc3f0", "#785a4b", "#ff69b4", "#9678c3",
-  "#ffd2d2", "#6978c3", "#783c5a", "#c3695a", "#e1d2b4", "#2d873c",
-  "#784bc3", "#ff7878", "#c39696", "#c3875a", "#a5f02d", "#ff3c78",
-  "#006987", "#5a4b2d", "#78a596", "#8796b4", "#967896", "#5a785a",
-  "#78963c", "#c3e196", "#007878", "#d29600", "#00c3ff", "#c35a00",
-  "#b43ca5", "#d2001e", "#4bd200", "#003cc3"
+  "#77aadd", "#ee8866", "#eedd88", "#ffaabb", "#44bb99", "#bbcc33",
+  "#999900", "#bc9cc9", "#295a8b", "#b14d2c", "#c2aa36", "#d4788a",
+  "#3e8ab1", "#158364", "#737a38", "#4e4e00", "#835794", "#edf761",
+  "#4d8cc4", "#96003c", "#ff00ff", "#00ff69", "#4b00e1", "#00a50f",
+  "#1ee1f0", "#c37800", "#8769ff", "#2d5a5a", "#693c0f", "#006900",
+  "#e10087", "#967869", "#a5b487", "#ffb469", "#ff003c", "#78ffd2",
+  "#965a69", "#870078", "#b400e1", "#78a5a5", "#787896", "#96000f",
+  "#a59678", "#4b3c87", "#ff96ff", "#876900", "#c369b4", "#693c3c",
+  "#005a3c", "#ff3c00", "#a5e196", "#b496ff", "#78694b", "#005aff",
+  "#699669", "#ff7800", "#69d200", "#ffc300", "#3c8787", "#00b4d2",
+  "#d2004b", "#965a1e", "#4b5a3c", "#5a4b69", "#2dc369", "#785a4b",
+  "#a5873c", "#c39678", "#ff69b4", "#9678c3", "#a5ff00", "#6978c3",
+  "#783c5a", "#c3695a", "#2d873c", "#784bc3", "#ff7878", "#c39696",
+  "#ff3c78", "#006987", "#87a54b", "#5a4b2d", "#8796b4", "#967896",
+  "#00b4b4", "#5a785a", "#c3692d", "#d29600", "#b43ca5", "#d2001e",
+  "#003cc3", "#b45ae1", "#00f0e1", "#3cc3ff", "#8700b4", "#e1ffa5",
+  "#963c3c", "#872d00", "#a5784b", "#5a8700"
 )
 
 
