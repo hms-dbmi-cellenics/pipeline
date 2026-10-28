@@ -268,8 +268,18 @@ get_image_scale <- function(image_name, scdata) {
   # Xenium FOVs have no scale step; Visium HD applies the hires/lowres factor.
   if (is_scaleless_spatial(scdata)) return(NULL)
 
-  dims <- dim(scdata[[image_name]]@image)
-  ifelse(any(dims[1:2] <= 600), "lowres", "hires")
+  # The image size alone can't tell hires from lowres: crop_to_capture_area
+  # can shrink a hires image below lowres size (<= 600px). Use hires when the
+  # cells fit within the image at the hires scale (as after the crop, which
+  # uses hires), otherwise the image must be the smaller lowres one.
+  image <- scdata[[image_name]]
+  dims <- dim(image@image)
+  coords <- Seurat::GetTissueCoordinates(image)
+  hires <- image@scale.factors$hires
+  fits_hires <- max(coords$x) * hires <= dims[2] * 1.05 &&
+    max(coords$y) * hires <= dims[1] * 1.05
+
+  ifelse(fits_hires, "hires", "lowres")
 }
 
 # Max image height/width across samples, used to pad every sample's image to

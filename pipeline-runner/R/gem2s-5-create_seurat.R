@@ -151,9 +151,12 @@ get_min_features <- function(technology) {
 #'
 #' @return a \code{FOV} object
 build_xenium_fov <- function(segmentations) {
+  # segmentations are optional (an obj2s Xenium object may have centroids only)
   boundaries <- Filter(Negate(is.null), list(
     centroids = SeuratObject::CreateCentroids(segmentations$centroids),
-    segmentations = SeuratObject::CreateSegmentation(segmentations$segmentations)
+    segmentations = if (!is.null(segmentations$segmentations)) {
+      SeuratObject::CreateSegmentation(segmentations$segmentations)
+    }
   ))
 
   SeuratObject::CreateFOV(boundaries, assay = "RNA")

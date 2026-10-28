@@ -886,3 +886,18 @@ test_that("restore_processed_matrix_dir errors on more than one matrix dir", {
     "Expected one processed matrix dir"
   )
 })
+
+test_that("create_sample_file links the file to an obj2s sample cell set only when given", {
+  bodies <- list()
+  mockery::stub(create_sample_file, "httr::POST", function(url, body, ...) {
+    bodies[[length(bodies) + 1]] <<- body
+    structure(list(status_code = 200L), class = "response")
+  })
+  mockery::stub(create_sample_file, "httr::status_code", function(...) 200L)
+
+  create_sample_file("api", "exp", "sample", "ome_zarr_zip", 10, "file", TRUE, "jwt")
+  create_sample_file("api", "exp", "sample", "ome_zarr_zip", 10, "file", FALSE, "jwt", "cell-set")
+
+  expect_false("obj2sSampleId" %in% names(bodies[[1]]))
+  expect_equal(bodies[[2]]$obj2sSampleId, "cell-set")
+})

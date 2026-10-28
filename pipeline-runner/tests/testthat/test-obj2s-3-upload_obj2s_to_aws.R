@@ -111,37 +111,6 @@ test_that("add_samples_col uses existing 'samples' or 'sample' metadata column",
 })
 
 
-test_that("format_obj2s ensures logcounts and counts have same nrow", {
-  # filter out genes in logcounts
-  set.seed(0)
-  scdata_orig <- mock_scdata()
-  logcount.genes <- sample(row.names(scdata_orig), nrow(scdata_orig) / 2)
-
-  scdata_filtered <- Seurat::CreateSeuratObject(
-    counts = scdata_orig[["RNA"]]@counts,
-    data = scdata_orig[["RNA"]]@data[logcount.genes, ]
-  )
-
-  scdata_filtered@misc$gene_annotations <- scdata_orig@misc$gene_annotations
-
-  # check that are fewer genes in data
-  expect_lt(
-    nrow(scdata_filtered[["RNA"]]$data),
-    nrow(scdata_filtered[["RNA"]]$counts)
-  )
-
-  scdata <- format_obj2s(scdata_filtered, "1234")
-
-  # check that are same genes after formatting
-  expect_equal(nrow(scdata[["RNA"]]$data), nrow(scdata[["RNA"]]$counts))
-
-  # check that row.names are correct
-  expect_setequal(row.names(scdata), logcount.genes)
-
-  # check that gene_annotations was also corrected
-  expect_setequal(row.names(scdata@misc$gene_annotations), logcount.genes)
-})
-
 test_that("format_obj2s adds required metadata", {
   scdata <- mock_scdata()
   scdata <- format_obj2s(scdata, "1234")
@@ -282,6 +251,21 @@ test_that("find_cluster_columns finds cluster columns", {
   expect_setequal(cluster_cols, expected_cols)
 })
 
+
+test_that("find_cluster_columns skips the per-assay QC count columns", {
+  scdata <- mock_scdata()
+  scdata$samples <- rep(c("A", "B", "C", "D"), each = ncol(scdata) / 4)
+  scdata$seurat_clusters <- scdata$RNA_snn_res.0.8
+
+  # integer-valued with few values, as for a small Visium HD or Xenium object
+  for (col in c("nCount_Spatial.008um", "nFeature_Spatial.008um", "nCount_Xenium", "nFeature_sketch")) {
+    scdata[[col]] <- rep(1:5, length.out = ncol(scdata))
+  }
+
+  cluster_cols <- find_cluster_columns(scdata)
+  expect_false(any(grepl("^n(Count|Feature)_", cluster_cols)))
+  expect_true("seurat_clusters" %in% cluster_cols)
+})
 
 test_that("find_cluster_columns skips column with single value", {
   expected_cols <- c(
@@ -441,4 +425,238 @@ test_that("rename_active_ident works when one column is factor and the other is 
   expect_equal(colnames(meta_renamed)[1], expected_name)
   expect_false("active.ident" %in% colnames(meta_renamed))
   expect_equal(colnames(meta_renamed), c("cell_type", "other_clustering"))
+})
+
+# spatial object as reconstruct_seurat_spatial leaves it: a Xenium-shaped FOV
+# per sample, named by sample, with molecules kept in misc
+mock_spatial_obj2s_scdata <- function(technology = "xenium", segmentations = TRUE) {
+  scdata <- mock_scdata()
+  scdata$seurat_clusters <- rep(letters[1:4], length.out = ncol(scdata))
+
+  image_cells <- split(colnames(scdata), rep(c("A", "B"), length.out = ncol(scdata)))
+  scdata$samples <- NA
+  for (sample in names(image_cells)) {
+    cells <- image_cells[[sample]]
+    scdata@meta.data[cells, "samples"] <- sample
+
+    coords <- data.frame(x = seq_along(cells) * 10, y = seq_along(cells) * 10, cell = cells)
+    squares <- do.call(rbind, lapply(seq_along(cells), function(i) {
+      data.frame(
+        x = coords$x[i] + c(-2, 2, 2, -2, -2),
+        y = coords$y[i] + c(-2, -2, 2, 2, -2),
+        cell = cells[i]
+      )
+    }))
+    fov <- build_xenium_fov(list(centroids = coords, segmentations = if (segmentations) squares))
+    SeuratObject::Key(fov) <- paste0("image", sample, "_")
+    scdata[[sample]] <- fov
+  }
+
+  scdata@misc$technology <- technology
+  scdata@misc$transcripts <- list(
+    A = data.frame(x = 1, y = 1, gene = "MS4A1"),
+    B = data.frame(x = 2, y = 2, gene = "CD79B")
+  )
+  scdata
+}
+
+test_that("rename_obj2s_images names images by sample id as gem2s does", {
+  scdata <- mock_spatial_obj2s_scdata()
+  input <- list(sampleNames = c("A", "B"), sampleIds = c("id-a", "id-b"))
+
+  scdata <- change_sample_names_to_ids(scdata, input)
+  scdata <- rename_obj2s_images(scdata)
+  expect_setequal(Seurat::Images(scdata), c("id-a.polygons", "id-b.polygons"))
+})
+
+test_that("get_obj2s_sample_transcripts keys molecules by sample id", {
+  scdata <- mock_spatial_obj2s_scdata()
+  input <- list(sampleNames = c("B", "A"), sampleIds = c("id-b", "id-a"))
+
+  transcripts <- get_obj2s_sample_transcripts(scdata, input)
+  expect_equal(transcripts[["id-a"]]$gene, "MS4A1")
+  expect_equal(transcripts[["id-b"]]$gene, "CD79B")
+})
+
+test_that("upload_obj2s_to_aws uploads the matrix dir and Xenium files linked to their sample", {
+  scdata <- mock_spatial_obj2s_scdata()
+  scdata[["RNA"]] <- suppressWarnings(as(scdata[["RNA"]], "Assay5"))
+  counts <- scdata[["RNA"]]$counts
+  scdata[["RNA"]]$counts <- BPCells::write_matrix_dir(counts, withr::local_tempfile())
+
+  uploaded_rds <- NULL
+  mockery::stub(upload_obj2s_to_aws, "put_object_in_s3", mock_put_object_in_s3)
+  mockery::stub(upload_obj2s_to_aws, "upload_matrix_to_s3", function(pipeline_config, experiment_id, data) {
+    uploaded_rds <<- data
+    "object_key"
+  })
+
+  save_matrix_dir <- mockery::mock("tarfile")
+  upload_matrix_dir <- mockery::mock(NULL)
+  mockery::stub(upload_obj2s_to_aws, "save_matrix_dir_to_tarfile", save_matrix_dir)
+  mockery::stub(upload_obj2s_to_aws, "upload_matrix_dir_to_s3", upload_matrix_dir)
+
+  upload_spatial <- mockery::mock(NULL)
+  mockery::stub(upload_obj2s_to_aws, "upload_obj2s_spatial_to_s3", upload_spatial)
+
+  input <- list(experimentId = "1234", sampleIds = "obj2s-sample")
+  prev_out <- list(
+    scdata = scdata,
+    config = list(input = list(type = "seurat_spatial_object"))
+  )
+
+  res <- upload_obj2s_to_aws(input, NULL, prev_out)
+
+  # detected technology reported to be saved on the sample
+  expect_equal(res$data$item$meta$type, "seurat_spatial_object")
+  expect_equal(res$data$item$meta$spatialTechnology, "xenium")
+
+  # molecules are not kept on the processed object
+  expect_null(uploaded_rds@misc$transcripts)
+  expect_true(all(grepl("[.]polygons$", Seurat::Images(uploaded_rds))))
+
+  mockery::expect_called(upload_matrix_dir, 1)
+  expect_equal(mockery::mock_args(upload_matrix_dir)[[1]][[3]], "tarfile")
+
+  # spatial files uploaded for the single obj2s sample, molecules by sample id
+  mockery::expect_called(upload_spatial, 1)
+  args <- mockery::mock_args(upload_spatial)[[1]]
+  spatial_input <- args[[2]]
+  expect_equal(spatial_input$obj2sSampleId, "obj2s-sample")
+  expect_setequal(names(args[[5]]), spatial_input$sampleIds)
+})
+
+test_that("upload_obj2s_to_aws does not report a spatial technology for single cell objects", {
+  mockery::stub(upload_obj2s_to_aws, "put_object_in_s3", mock_put_object_in_s3)
+  mockery::stub(upload_obj2s_to_aws, "upload_matrix_to_s3", mock_upload_matrix_to_s3)
+  upload_spatial <- mockery::mock(NULL)
+  mockery::stub(upload_obj2s_to_aws, "upload_obj2s_spatial_to_s3", upload_spatial)
+
+  scdata <- mock_scdata()
+  scdata$seurat_clusters <- rep(letters[1:8], length.out = ncol(scdata))
+  prev_out <- list(scdata = scdata, config = list(input = list(type = "seurat_object")))
+
+  res <- upload_obj2s_to_aws(list(experimentId = "1234"), NULL, prev_out)
+
+  expect_null(res$data$item$meta$spatialTechnology)
+  mockery::expect_called(upload_spatial, 0)
+})
+
+test_that("upload_obj2s_spatial_to_s3 uploads Xenium segmentations and molecules linked to their sample", {
+  scdata <- mock_spatial_obj2s_scdata()
+  scdata$cells_id <- seq_len(ncol(scdata)) - 1
+  input <- list(
+    obj2sSampleId = "obj2s-sample",
+    sampleNames = c("A", "B"),
+    sampleIds = c("id-a", "id-b")
+  )
+  transcripts <- get_obj2s_sample_transcripts(scdata, input)
+  scdata <- change_sample_names_to_ids(scdata, input)
+  scdata <- rename_obj2s_images(scdata)
+
+  upload_image <- mockery::mock(NULL, cycle = TRUE)
+  upload_polygons <- mockery::mock(NULL, cycle = TRUE)
+  upload_molecules <- mockery::mock(NULL, cycle = TRUE)
+  mockery::stub(upload_obj2s_spatial_to_s3, "upload_image_to_s3", upload_image)
+  mockery::stub(upload_obj2s_spatial_to_s3, "upload_polygons_to_s3", upload_polygons)
+  mockery::stub(upload_obj2s_spatial_to_s3, "upload_molecules_to_s3", upload_molecules)
+
+  upload_obj2s_spatial_to_s3(NULL, input, "1234", scdata, transcripts)
+
+  # Xenium has no tissue image
+  mockery::expect_called(upload_image, 0)
+  mockery::expect_called(upload_polygons, 2)
+  mockery::expect_called(upload_molecules, 2)
+
+  polygons_args <- mockery::mock_args(upload_polygons)
+  expect_setequal(
+    unname(sapply(polygons_args, `[[`, "obj2s_sample_id")),
+    c("id-a", "id-b")
+  )
+  # attached to the single obj2s sample: the first upload replaces files from
+  # previous runs, the rest are added alongside it
+  expect_true(all(sapply(polygons_args, `[[`, 9) == "obj2s-sample"))
+  expect_equal(unname(sapply(polygons_args, `[[`, "overwrite_existing")), c(TRUE, FALSE))
+
+  molecules_args <- mockery::mock_args(upload_molecules)
+  expect_equal(unname(sapply(molecules_args, `[[`, "overwrite_existing")), c(TRUE, FALSE))
+  genes <- setNames(
+    sapply(molecules_args, function(args) args[[4]]$gene),
+    sapply(molecules_args, `[[`, "obj2s_sample_id")
+  )
+  expect_equal(genes[["id-a"]], "MS4A1")
+  expect_equal(genes[["id-b"]], "CD79B")
+})
+
+test_that("upload_obj2s_spatial_to_s3 uploads only molecules for Xenium without segmentations", {
+  scdata <- mock_spatial_obj2s_scdata(segmentations = FALSE)
+  scdata$cells_id <- seq_len(ncol(scdata)) - 1
+  input <- list(
+    obj2sSampleId = "obj2s-sample",
+    sampleNames = c("A", "B"),
+    sampleIds = c("id-a", "id-b")
+  )
+  transcripts <- get_obj2s_sample_transcripts(scdata, input)
+  scdata <- change_sample_names_to_ids(scdata, input)
+  scdata <- rename_obj2s_images(scdata)
+
+  upload_image <- mockery::mock(NULL, cycle = TRUE)
+  upload_polygons <- mockery::mock(NULL, cycle = TRUE)
+  upload_molecules <- mockery::mock(NULL, cycle = TRUE)
+  mockery::stub(upload_obj2s_spatial_to_s3, "upload_image_to_s3", upload_image)
+  mockery::stub(upload_obj2s_spatial_to_s3, "upload_polygons_to_s3", upload_polygons)
+  mockery::stub(upload_obj2s_spatial_to_s3, "upload_molecules_to_s3", upload_molecules)
+
+  upload_obj2s_spatial_to_s3(NULL, input, "1234", scdata, transcripts)
+
+  # cells are shown at their centroids, so there are no polygons to upload
+  mockery::expect_called(upload_image, 0)
+  mockery::expect_called(upload_polygons, 0)
+  mockery::expect_called(upload_molecules, 2)
+})
+
+test_that("upload_obj2s_spatial_to_s3 uploads padded Visium images keyed by sample", {
+  scdata <- mock_scdata()
+  scdata$cells_id <- seq_len(ncol(scdata)) - 1
+  image_cells <- split(colnames(scdata), rep(c("A", "B"), length.out = ncol(scdata)))
+
+  scale_factors <- list(spot = 1, fiducial = 1, hires = 1, lowres = 0.1)
+  class(scale_factors) <- "scalefactors"
+  dims <- list(A = c(700, 800), B = c(900, 650))
+  for (sample in names(image_cells)) {
+    cells <- image_cells[[sample]]
+    scdata@meta.data[cells, "samples"] <- paste0("id-", tolower(sample))
+    coords <- data.frame(x = seq_along(cells), y = seq_along(cells), cell = cells)
+    fov <- SeuratObject::CreateFOV(
+      coords = list(centroids = SeuratObject::CreateCentroids(coords)),
+      type = "centroids", assay = "RNA", key = paste0("image", sample, "_")
+    )
+    scdata[[paste0("id-", tolower(sample), ".polygons")]] <- methods::new(
+      "VisiumV2",
+      molecules = fov@molecules, boundaries = fov@boundaries,
+      assay = fov@assay, key = fov@key,
+      image = array(0.5, dim = c(dims[[sample]], 3)),
+      scale.factors = scale_factors
+    )
+  }
+  scdata@misc$technology <- "visium"
+
+  upload_image <- mockery::mock(NULL, cycle = TRUE)
+  upload_polygons <- mockery::mock(NULL, cycle = TRUE)
+  mockery::stub(upload_obj2s_spatial_to_s3, "upload_image_to_s3", upload_image)
+  mockery::stub(upload_obj2s_spatial_to_s3, "upload_polygons_to_s3", upload_polygons)
+
+  input <- list(obj2sSampleId = "obj2s-sample")
+  upload_obj2s_spatial_to_s3(NULL, input, "1234", scdata)
+
+  mockery::expect_called(upload_image, 2)
+  mockery::expect_called(upload_polygons, 0)
+
+  image_args <- mockery::mock_args(upload_image)
+  # image file id is the sample cell set id, as before files were linked
+  expect_setequal(unname(sapply(image_args, `[[`, 6)), c("id-a", "id-b"))
+  expect_setequal(unname(sapply(image_args, `[[`, "obj2s_sample_id")), c("id-a", "id-b"))
+  # padded to the largest height and width
+  expect_true(all(sapply(image_args, `[[`, 8) == 900))
+  expect_true(all(sapply(image_args, `[[`, 9) == 800))
 })

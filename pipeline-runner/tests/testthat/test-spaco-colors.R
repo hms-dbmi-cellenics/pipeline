@@ -47,7 +47,7 @@ test_that("get_spaco_color_map returns NULL when scdata is NULL", {
 })
 
 
-test_that("get_spaco_color_map auto-generates a color per cluster", {
+test_that("get_spaco_color_map assigns a Spaco pool color per cluster", {
   scdata <- mock_spatial_scdata(ncells = 100)
   labels <- mock_cluster_labels(scdata, n_clusters = 6)
 
@@ -125,9 +125,9 @@ test_that("cluster_color_pool colors a cell_sets frame for spatial data", {
     cell_ids = as.integer(names(labels))
   )
 
-  palette <- cluster_color_pool(scdata, cell_sets, get_color_pool())
+  palette <- cluster_color_pool(scdata, cell_sets)
 
-  # one auto-generated hex color per cluster, in the formatter's sorted order
+  # one assigned hex color per cluster, in the formatter's sorted order
   categories <- sort_cluster_names(unique(cell_sets$cluster))
   expect_length(palette, length(categories))
   expect_true(is_hex(palette))
@@ -177,20 +177,16 @@ test_that("get_spaco_radius returns NULL when microns_per_pixel is unavailable",
 })
 
 
-test_that("colouring falls back to the pool when too few clusters to embed", {
-  # with 2 clusters n_neighbors collapses to 1 and uwot's spectral init errors;
-  # get_spaco_color_map should swallow it and return NULL, and the public entry
-  # points should hand back the unchanged colour pool.
+test_that("two clusters get two distinct Spaco pool colors", {
+  # too few clusters for the old UMAP embedding, fine for palette assignment
   scdata <- mock_spatial_scdata(ncells = 64)
   labels <- mock_cluster_labels(scdata, n_clusters = 2)
 
-  expect_null(get_spaco_color_map(scdata, labels))
+  color_map <- get_spaco_color_map(scdata, labels)
 
-  pool <- get_color_pool()
-  cell_sets <- data.frame(
-    cluster = unname(labels), cell_ids = as.integer(names(labels))
-  )
-  expect_identical(cluster_color_pool(scdata, cell_sets, pool), pool)
+  expect_length(color_map, 2)
+  expect_true(all(color_map %in% SPACO_COLOR_POOL))
+  expect_equal(length(unique(color_map)), 2)
 })
 
 
@@ -213,7 +209,7 @@ test_that("spaco_palette aligns colors to the requested category order", {
   color_map <- get_spaco_color_map(scdata, labels)
 
   expect_length(palette, length(categories))
-  # palette[k] must be the auto-generated color for categories[k]
+  # palette[k] must be the assigned color for categories[k]
   expect_equal(palette, unname(color_map[as.character(categories)]))
 })
 
@@ -240,15 +236,67 @@ test_that("spatial_distance_r matches a known checkerboard interlacement", {
 })
 
 
-test_that("embed_graph_r returns one distinct hex color per cluster", {
+test_that("assign_spaco_palette gives the most interlaced clusters the most distinct colors", {
+  clusters <- c("A", "B", "C")
+  interlacement <- matrix(0, 3, 3, dimnames = list(clusters, clusters))
+  interlacement["A", "B"] <- interlacement["B", "A"] <- 10
+  interlacement["B", "C"] <- interlacement["C", "B"] <- 1
+
+  # the first two colors are nearly the same red
+  palette <- c("#ff0000", "#f80808", "#0000ff")
+  colors <- assign_spaco_palette(interlacement, palette)
+
+  expect_named(colors, clusters)
+  expect_setequal(colors, palette)
+  # A and B touch the most, so they can't both be red
+  expect_true("#0000ff" %in% colors[c("A", "B")])
+})
+
+
+test_that("SPACO_COLOR_POOL is distinct colors that stand out from the background and H&E", {
+  expect_length(SPACO_COLOR_POOL, 100)
+  expect_true(is_hex(SPACO_COLOR_POOL))
+  expect_equal(anyDuplicated(SPACO_COLOR_POOL), 0)
+
+  to_lab <- function(hex) farver::convert_colour(t(grDevices::col2rgb(hex)), "rgb", "lab")
+  diff <- function(a, b) farver::compare_colour(to_lab(a), to_lab(b), "lab", method = "cie2000")
+
+  # starts with Kelly's colors of maximum contrast
+  expect_equal(SPACO_COLOR_POOL[1:3], c("#f3c300", "#f38400", "#be0032"))
+
+  # far from the UI background and from H&E stain
+  expect_gte(min(diff(SPACO_COLOR_POOL, "#F0F2F5")), 25)
+  he_stain <- c("#de8edc", "#bb72cd", "#c983d6", "#d780d5", "#df9be2", "#9d5dbe", "#daade7", "#d9c5ea")
+  expect_gte(min(diff(SPACO_COLOR_POOL, he_stain)), 15)
+
+  # the colors after Kelly's are far from every color before them
+  for (i in 15:length(SPACO_COLOR_POOL)) {
+    expect_gt(min(diff(SPACO_COLOR_POOL[i], SPACO_COLOR_POOL[1:(i - 1)])), 7)
+  }
+})
+
+
+test_that("assign_spaco_palette gives unconnected clusters the pool in order", {
+  clusters <- as.character(1:4)
+  interlacement <- matrix(0, 4, 4, dimnames = list(clusters, clusters))
+
+  colors <- assign_spaco_palette(interlacement, get_color_pool())
+
+  expect_equal(unname(colors), get_color_pool()[1:4])
+})
+
+
+test_that("assign_spaco_palette is deterministic and recycles a short pool", {
   coords <- as.matrix(expand.grid(x = 1:12, y = 1:12))
   labels <- as.character(rep(1:6, length.out = nrow(coords)))
   m <- spatial_distance_r(coords, labels, radius = 4)
+  palette <- c("#77aadd", "#ee8866", "#eedd88", "#ffaabb")
 
-  cols <- embed_graph_r(m)
-  expect_named(cols, rownames(m))
-  expect_true(is_hex(cols))
-  expect_equal(length(unique(cols)), length(cols))
+  colors <- assign_spaco_palette(m, palette)
+
+  expect_identical(colors, assign_spaco_palette(m, palette))
+  expect_length(colors, 6)
+  expect_setequal(colors, palette)
 })
 
 
@@ -260,14 +308,12 @@ test_that("embed_graph_r returns one distinct hex color per cluster", {
 # them across slices by summing per (cluster_i, cluster_j) pair aligned to the
 # union of clusters with missing pairs = 0 (pandas
 # stack -> concat -> groupby(["v1","v2"]).sum -> unstack -> fillna(0)), then
-# embeds the merged graph into Lab colour space (mapping.embed_graph) to auto-
-# pick colours.
+# picks colours from the graph. We assign the color pool by interlacement
+# (assign_spaco_palette) rather than Spaco's auto-generated palette.
 #
 # spatial_distance and the cross-slice merge are fully deterministic, so we pin
 # them exactly with an independent, loop-based re-implementation of the Spaco
-# algorithm. The embed_graph stage runs a UMAP, and we use uwot::umap2 rather
-# than Spaco's numba UMAP, so the final colours differ numerically by design (we
-# only assert colour-level properties for that stage).
+# algorithm.
 
 # Independent (loop-based) re-implementation of spaco/distance.py::spatial_distance.
 # For each cell, take its within-radius kNN (self included, as KDTree/nn2 return

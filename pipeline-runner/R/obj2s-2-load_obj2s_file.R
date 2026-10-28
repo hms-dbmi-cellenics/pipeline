@@ -46,6 +46,19 @@ load_obj2s_file <- function(input, pipeline_config, prev_out, input_dir = "/inpu
   return(res)
 }
 
+#' Reconstructs a spatial Seurat object provided by the user
+#'
+#' Supports Visium (VisiumV1/VisiumV2 spots), Visium HD (VisiumV2 with cell
+#' segmentations) and Xenium (FOV without a tissue image) objects, as created by
+#' the Seurat loaders or downloaded from Cellenics. The technology is detected
+#' from the images and persisted to \code{@misc$technology}, as gem2s does.
+#'
+#' Each image is a sample. Images are named by their sample here and renamed to
+#' \code{<sample id>.polygons} (as gem2s names them) once sample ids are known.
+#'
+#' @param dataset_fpath The path to the r.rds file containing the Seurat object.
+#'
+#' @return reconstructed SeuratObject
 reconstruct_seurat_spatial <- function(dataset_fpath) {
 
   # read it
@@ -58,15 +71,27 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
     stop(errors$ERROR_OBJ2S_READ, call. = FALSE)
   })
 
+  # get images, the assay they measure, and the technology they come from
+  tryCatch({
+    images <- get_obj2s_images(user_scdata)
+    assay <- get_spatial_assay(user_scdata, images)
+    images <- images[vapply(images, SeuratObject::DefaultAssay, "") == assay]
+    technology <- detect_spatial_technology(images)
+    message("Detected spatial technology: ", technology, " (assay ", assay, ")")
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_IMAGES, call. = FALSE)
+  })
+
   # get counts
   tryCatch({
 
     # if V5 object, ensure layers are rejoined
-    if (methods::is(user_scdata[["Spatial"]], "Assay5"))
-      user_scdata[["Spatial"]] <- SeuratObject::JoinLayers(user_scdata[["Spatial"]])
+    if (methods::is(user_scdata[[assay]], "Assay5"))
+      user_scdata[[assay]] <- SeuratObject::JoinLayers(user_scdata[[assay]])
 
-
-    counts <- user_scdata[["Spatial"]]$counts
+    counts <- SeuratObject::LayerData(user_scdata, assay = assay, layer = "counts")
     test_user_sparse_mat(counts)
     rns <- row.names(counts)
     check_type_is_safe(rns)
@@ -88,46 +113,33 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
     stop(errors$ERROR_OBJ2S_METADATA, call. = FALSE)
   })
 
-  # reconstruct Seurat object
-  scdata <- SeuratObject::CreateSeuratObject(
-    assay = "RNA",
-    counts,
-    meta.data = metadata,
-  )
-
-  # add image annotation as samples column
-  image_names <- Seurat::Images(user_scdata)
-  scdata$samples <- NA
-  for (image_name in image_names) {
-    image_cells <- Seurat:::CellsByImage(user_scdata, image_name, unlist = TRUE)
-    scdata@meta.data[image_cells, "samples"] <- image_name
-  }
-
-  # use library size factors for logcounts
-  tryCatch({
-    size_factors <- scuttle::librarySizeFactors(counts)
-    logcounts <- scuttle::normalizeCounts(counts, size_factors = size_factors)
-    scdata[["RNA"]]$data <- logcounts
-  },
-  error = function(e) {
-    message(e$message)
-    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
+  # each image is a sample: keep only cells that are in an image
+  image_samples <- get_image_samples(images, metadata)
+  image_cells <- lapply(images, function(image) {
+    intersect(SeuratObject::Cells(image), colnames(counts))
   })
 
-  # add dispersions (need for gene list)
-  # SCT assay uses log1p of SCT corrected counts
-  # see https://github.com/satijalab/seurat/issues/6412
-  scdata <- add_obj2s_dispersions(scdata)
+  keep_cells <- colnames(counts)[colnames(counts) %in% unlist(image_cells)]
+  if (length(keep_cells) < ncol(counts)) {
+    message("Removing ", ncol(counts) - length(keep_cells), " cells not in any image")
+  }
+
+  counts <- counts[, keep_cells]
+  metadata <- metadata[keep_cells, ]
+
+  metadata$samples <- NA
+  for (image_name in names(images)) {
+    metadata[image_cells[[image_name]], "samples"] <- image_samples[[image_name]]
+  }
+
+  # reconstruct Seurat object
+  scdata <- create_obj2s_scdata(counts, metadata)
 
   # add gene annotations
-  gene_annotations <- data.frame(
-    input = rns,
-    name = rns,
-    original_name = rns,
-    row.names = rns
-  )
-  scdata@misc$gene_annotations <- gene_annotations
+  scdata@misc$gene_annotations <- get_obj2s_gene_annotations(user_scdata, rns)
 
+  # add dispersions (need for gene list)
+  scdata <- add_obj2s_dispersions(scdata)
 
   # add default dimensionality reduction
   red_names <- tolower(names(user_scdata@reductions))
@@ -154,9 +166,12 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
     test_user_df(red@cell.embeddings)
     test_user_df(red@feature.loadings)
     test_user_df(red@feature.loadings.projected)
-    red@assay.used <- "RNA"
 
-    scdata@reductions[[red_name]] <- red
+    scdata@reductions[[red_name]] <- SeuratObject::CreateDimReducObject(
+      embeddings = red@cell.embeddings[keep_cells, , drop = FALSE],
+      assay = "RNA",
+      key = paste0(red_name, "_")
+    )
   },
   error = function(e) {
     message(e$message)
@@ -170,8 +185,9 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
       pca <- user_scdata@reductions[["pca"]]@cell.embeddings
       test_user_df(pca)
       red <- SeuratObject::CreateDimReducObject(
-        embeddings = pca,
-        assay = "RNA"
+        embeddings = pca[keep_cells, , drop = FALSE],
+        assay = "RNA",
+        key = "pca_"
       )
       scdata@reductions[["pca"]] <- red
     }
@@ -182,22 +198,308 @@ reconstruct_seurat_spatial <- function(dataset_fpath) {
     stop(errors$ERROR_OBJ2S_REDUCTION, call. = FALSE)
   })
 
-  # add images
+  # add images, one per sample
   tryCatch({
-    image_names <- Seurat::Images(user_scdata)
-    for (image_name in image_names) {
+    build_image <- switch(
+      technology,
+      visium = build_obj2s_visium_image,
+      visium_hd = build_obj2s_visium_hd_image,
+      xenium = build_obj2s_xenium_fov
+    )
 
-      image <- user_scdata@images[[image_name]]
+    transcripts <- list()
+    for (i in seq_along(images)) {
+      image_name <- names(images)[i]
+      sample <- image_samples[[image_name]]
+      image <- images[[image_name]]
 
-      # ensure class of image can be handled
-      stopifnot(class(image) %in% c("VisiumV2", "VisiumV1"))
+      # Xenium molecules are uploaded as their own artifact, not kept on the FOV
+      if (technology == "xenium") {
+        transcripts[[sample]] <- get_obj2s_transcripts(image)
+      }
 
-      check_type_is_safe(image)
-      scdata@images[[image_name]] <- image
+      image <- build_image(image)
+      image <- subset(image, cells = image_cells[[image_name]])
+      SeuratObject::Key(image) <- paste0("image", i, "_")
+      scdata[[sample]] <- image
     }
+
+    if (length(transcripts)) scdata@misc$transcripts <- transcripts
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_IMAGES, call. = FALSE)
   })
 
+  # persist the technology and micron scale as gem2s does, so the worker can
+  # dispatch on them (the micron scale sizes the Spaco colour neighbourhood)
+  scdata@misc$technology <- technology
+  if (technology %in% c("visium", "visium_hd")) {
+    scdata@misc$microns_per_pixel <- get_obj2s_microns_per_pixel(
+      user_scdata, images[[1]], assay, technology
+    )
+  }
+
   return(scdata)
+}
+
+# images of supported classes: VisiumV2 and Xenium FOVs are both FOVs
+get_obj2s_images <- function(user_scdata) {
+  image_names <- Seurat::Images(user_scdata)
+  if (!length(image_names)) stop("Object has no images.")
+
+  images <- user_scdata@images[image_names]
+  is_supported <- vapply(images, function(image) {
+    methods::is(image, "VisiumV1") || methods::is(image, "FOV")
+  }, logical(1))
+
+  if (!all(is_supported)) {
+    stop(
+      "Unsupported image class: ",
+      paste(unique(sapply(images[!is_supported], class)), collapse = ", ")
+    )
+  }
+
+  return(images)
+}
+
+# the assay the images measure: the default assay if it has images, otherwise
+# the first assay with images (e.g. 'Spatial.016um' for binned Visium HD)
+get_spatial_assay <- function(user_scdata, images) {
+  image_assays <- unique(vapply(images, SeuratObject::DefaultAssay, ""))
+  image_assays <- intersect(image_assays, SeuratObject::Assays(user_scdata))
+  if (!length(image_assays)) stop("No assay found for the images.")
+
+  default_assay <- SeuratObject::DefaultAssay(user_scdata)
+  if (default_assay %in% image_assays) return(default_assay)
+
+  if (length(image_assays) > 1) {
+    message(
+      "Images measure several assays (", paste(image_assays, collapse = ", "),
+      "), using ", image_assays[1]
+    )
+  }
+
+  return(image_assays[1])
+}
+
+# Xenium is a FOV without a tissue image, Visium HD a VisiumV2 with cell
+# segmentations. Spots (VisiumV1, binned Visium HD) are Visium.
+get_image_technology <- function(image) {
+  if (methods::is(image, "VisiumV1")) return("visium")
+  if (!methods::is(image, "VisiumV2")) return("xenium")
+  if (!is.null(get_segmentation_boundary(image))) return("visium_hd")
+  return("visium")
+}
+
+detect_spatial_technology <- function(images) {
+  technologies <- unique(vapply(images, get_image_technology, ""))
+  if (length(technologies) > 1) {
+    stop(
+      "Images are from different spatial technologies: ",
+      paste(technologies, collapse = ", ")
+    )
+  }
+
+  return(technologies)
+}
+
+# name of the cell polygons boundary: 'segmentations' in Cellenics objects,
+# 'segmentation' in objects from the Seurat loaders
+get_segmentation_boundary <- function(image) {
+  boundaries <- SeuratObject::Boundaries(image)
+  is_segmentation <- vapply(boundaries, function(boundary) {
+    methods::is(image[[boundary]], "Segmentation")
+  }, logical(1))
+
+  segmentation_boundaries <- boundaries[is_segmentation]
+  if (!length(segmentation_boundaries)) return(NULL)
+  if ("segmentations" %in% segmentation_boundaries) return("segmentations")
+  return(segmentation_boundaries[1])
+}
+
+get_centroids_boundary <- function(image) {
+  boundaries <- SeuratObject::Boundaries(image)
+  is_centroids <- vapply(boundaries, function(boundary) {
+    methods::is(image[[boundary]], "Centroids")
+  }, logical(1))
+
+  centroids_boundaries <- boundaries[is_centroids]
+  if (!length(centroids_boundaries)) return(NULL)
+  if ("centroids" %in% centroids_boundaries) return("centroids")
+  return(centroids_boundaries[1])
+}
+
+# x/y/cell coordinates of a boundary, type checked
+get_boundary_coords <- function(image, boundary) {
+  coords <- SeuratObject::GetTissueCoordinates(image[[boundary]])
+  coords <- coords[, c("x", "y", "cell")]
+  test_user_df(coords)
+  return(coords)
+}
+
+# Sample name of each image: the user's 'samples'/'sample' column (e.g. objects
+# downloaded from Cellenics) when each image has a single distinct value of it,
+# otherwise the image name.
+get_image_samples <- function(images, metadata) {
+  image_names <- names(images)
+  sample_col <- intersect(c("samples", "sample"), colnames(metadata))[1]
+  if (is.na(sample_col)) return(as.list(setNames(image_names, image_names)))
+
+  samples <- lapply(images, function(image) {
+    cells <- intersect(SeuratObject::Cells(image), row.names(metadata))
+    unique(as.character(metadata[cells, sample_col]))
+  })
+
+  is_single <- vapply(samples, function(x) length(x) == 1 && !is.na(x), logical(1))
+  samples <- unlist(samples[is_single])
+
+  if (!all(is_single) || anyDuplicated(samples)) {
+    return(as.list(setNames(image_names, image_names)))
+  }
+
+  return(as.list(samples))
+}
+
+# Visium spots: keep the image, tied to the RNA assay of the new object
+build_obj2s_visium_image <- function(image) {
+  check_type_is_safe(image)
+  SeuratObject::DefaultAssay(image) <- "RNA"
+  return(image)
+}
+
+# Visium HD cells: keep the tissue image with compact centroids and
+# segmentations, then crop and rotate it as gem2s does
+build_obj2s_visium_hd_image <- function(image) {
+  check_type_is_safe(image)
+
+  centroids_boundary <- get_centroids_boundary(image)
+  segmentation_boundary <- get_segmentation_boundary(image)
+  segmentations <- get_boundary_coords(image, segmentation_boundary)
+
+  centroids <- if (is.null(centroids_boundary)) {
+    get_polygon_centroids(segmentations)
+  } else {
+    get_boundary_coords(image, centroids_boundary)
+  }
+
+  image@boundaries <- list(
+    centroids = SeuratObject::CreateCentroids(centroids),
+    segmentations = SeuratObject::CreateSegmentation(segmentations, compact = TRUE)
+  )
+  image@molecules <- list()
+  SeuratObject::DefaultBoundary(image) <- "centroids"
+  SeuratObject::DefaultAssay(image) <- "RNA"
+
+  image |>
+    crop_to_capture_area() |>
+    pivot_image_wide()
+}
+
+# Xenium cells: rebuild the FOV from its coordinates as gem2s does. Cell (or
+# nucleus) segmentations are optional: LoadXenium loads centroids only by default
+build_obj2s_xenium_fov <- function(image) {
+  centroids_boundary <- get_centroids_boundary(image)
+  segmentation_boundary <- get_segmentation_boundary(image)
+  if (is.null(centroids_boundary) && is.null(segmentation_boundary)) {
+    stop("Xenium FOV has no cell centroids or segmentations.")
+  }
+
+  segmentations <- if (!is.null(segmentation_boundary)) {
+    get_boundary_coords(image, segmentation_boundary)
+  }
+  centroids <- if (is.null(centroids_boundary)) {
+    get_polygon_centroids(segmentations)
+  } else {
+    get_boundary_coords(image, centroids_boundary)
+  }
+
+  fov <- build_xenium_fov(list(centroids = centroids, segmentations = segmentations))
+  SeuratObject::DefaultBoundary(fov) <- "centroids"
+  return(fov)
+}
+
+get_polygon_centroids <- function(segmentations) {
+  stats::aggregate(cbind(x, y) ~ cell, data = segmentations, FUN = mean)[, c("x", "y", "cell")]
+}
+
+# molecules frame (x, y, gene) of a Xenium FOV, NULL if it has none
+get_obj2s_transcripts <- function(image) {
+  molecules <- names(image@molecules)
+  if (!length(molecules)) return(NULL)
+
+  transcripts <- SeuratObject::GetTissueCoordinates(image[[molecules[1]]])
+  transcripts <- data.frame(
+    x = transcripts$x,
+    y = transcripts$y,
+    gene = as.character(transcripts$molecule)
+  )
+  test_user_df(transcripts)
+  return(transcripts)
+}
+
+# Space Ranger's spot_diameter_fullres spans a theoretical 65um spot (not the
+# 55um capture area)
+VISIUM_SPOT_DIAMETER_MICRONS <- 65
+# Visium spot centres are 100um apart (~1.54x that diameter) while Visium HD
+# bins touch (1x), so their spacing tells spots from bins
+MIN_SPOT_SPACING_RATIO <- 1.25
+
+is_valid_scale <- function(x) {
+  is.numeric(x) && length(x) == 1 && isTRUE(x > 0)
+}
+
+#' Micron scale of a spatial object's full-resolution pixels
+#'
+#' Uses the scale persisted by Cellenics (\code{@misc$microns_per_pixel}). Objects
+#' from the Seurat loaders don't keep it, so for Visium it is derived from the
+#' spot (or bin) diameter in full-resolution pixels (\code{scale.factors$spot}):
+#' bins are sized by the assay name (e.g. \code{Spatial.008um}), spots are 65um.
+#'
+#' @param user_scdata uploaded SeuratObject
+#' @param image the (uncropped) image of a sample
+#' @param assay the assay the images measure
+#' @param technology detected spatial technology
+#' @return microns per full-resolution pixel, or NULL if unknown
+get_obj2s_microns_per_pixel <- function(user_scdata, image = NULL, assay = NULL,
+                                        technology = NULL) {
+  microns_per_pixel <- user_scdata@misc$microns_per_pixel
+  if (is_valid_scale(microns_per_pixel)) return(microns_per_pixel)
+
+  # spot size isn't a cell size for cell-segmented Visium HD: only spots/bins
+  if (!identical(technology, "visium") || is.null(image)) return(NULL)
+
+  spot_diameter <- tryCatch(image@scale.factors$spot, error = function(e) NULL)
+  if (!is_valid_scale(spot_diameter)) return(NULL)
+
+  bin_microns <- get_bin_size_microns(assay)
+  if (!is.null(bin_microns)) return(bin_microns / spot_diameter)
+
+  spacing <- get_median_spot_spacing(image)
+  if (is.null(spacing) || spacing / spot_diameter < MIN_SPOT_SPACING_RATIO) return(NULL)
+
+  return(VISIUM_SPOT_DIAMETER_MICRONS / spot_diameter)
+}
+
+# bin size of a Visium HD bin assay named by Load10X_Spatial (e.g. Spatial.008um)
+get_bin_size_microns <- function(assay) {
+  if (is.null(assay) || !grepl("\\.[0-9]+um$", assay)) return(NULL)
+  as.numeric(sub(".*\\.([0-9]+)um$", "\\1", assay))
+}
+
+# median distance between neighbouring spot centres, in full-resolution pixels
+get_median_spot_spacing <- function(image, max_spots = 2000) {
+  coords <- Seurat::GetTissueCoordinates(image, scale = NULL)
+  coords <- as.matrix(coords[, vapply(coords, is.numeric, logical(1)), drop = FALSE][, 1:2])
+  if (nrow(coords) < 2) return(NULL)
+
+  sampled <- unique(round(seq(1, nrow(coords), length.out = min(max_spots, nrow(coords)))))
+  query <- coords[sampled, , drop = FALSE]
+  nearest <- RANN::nn2(coords, query, k = 2)$nn.dists[, 2]
+  nearest <- nearest[nearest > 0]
+  if (!length(nearest)) return(NULL)
+
+  stats::median(nearest)
 }
 
 # zellkonverter seems to miss setting this
@@ -212,6 +514,42 @@ get_h5ad_raw_rownames <- function(dataset_fpath) {
   rns <- rhdf5::h5read(dataset_fpath, file.path("/raw/var", raw_name))
   rns <- as.character(rns)
 }
+
+#' Gene annotations for an uploaded Seurat object
+#'
+#' Seurat objects downloaded from Cellenics have Ensembl ids as row names, with
+#' the gene symbols in \code{@misc$gene_annotations} (as gem2s stores them).
+#' Reuse those symbols when they cover every gene, so the re-upload shows gene
+#' names rather than Ensembl ids. Otherwise the row names are used as names.
+#'
+#' @param user_scdata uploaded SeuratObject
+#' @param rns gene row names of the counts
+#' @return gene annotations data.frame with input, name and original_name
+get_obj2s_gene_annotations <- function(user_scdata, rns) {
+  annot <- user_scdata@misc$gene_annotations
+
+  has_symbols <- is.data.frame(annot) &&
+    all(c("input", "name") %in% colnames(annot)) &&
+    all(rns %in% annot$input)
+
+  if (!has_symbols) {
+    return(data.frame(
+      input = rns,
+      name = rns,
+      original_name = rns,
+      row.names = rns
+    ))
+  }
+
+  annot <- annot[match(rns, annot$input), ]
+  symbols <- if ("original_name" %in% colnames(annot)) annot$original_name else annot$name
+  symbols <- as.character(symbols)
+  symbols[is.na(symbols)] <- ""
+
+  # dedup and fill empty names as gem2s does
+  format_annot(list(data.frame(input = rns, name = symbols)))
+}
+
 
 reconstruct_anndata <- function(dataset_fpath) {
 
@@ -269,30 +607,7 @@ reconstruct_anndata <- function(dataset_fpath) {
   })
 
   # construct Seurat object from SingleCellExperiment items
-  scdata <- SeuratObject::CreateSeuratObject(
-    counts,
-    meta.data = metadata,
-  )
-
-  # add logcounts
-  tryCatch({
-
-    # logcounts are in "/X" if "/raw/X" present, otherwise absent
-    if (has.raw) {
-      logcounts <- SummarizedExperiment::assay(user_scdata, "X")
-      test_user_sparse_mat(logcounts)
-    } else {
-      logcounts <- Seurat::NormalizeData(counts)
-    }
-
-    scdata[["RNA"]]$data <- logcounts
-  },
-  error = function(e) {
-    message(e$message)
-    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
-  })
-
-  scdata <- add_obj2s_dispersions(scdata)
+  scdata <- create_obj2s_scdata(counts, metadata)
 
   # add gene annotations
   gene_annotations <- data.frame(
@@ -302,6 +617,8 @@ reconstruct_anndata <- function(dataset_fpath) {
     row.names = rns
   )
   scdata@misc$gene_annotations <- gene_annotations
+
+  scdata <- add_obj2s_dispersions(scdata)
 
   red_names <- tolower(SingleCellExperiment::reducedDimNames(user_scdata))
 
@@ -344,7 +661,7 @@ reconstruct_anndata <- function(dataset_fpath) {
         assay = "RNA",
         key = "pca_"
       )
-      scdata@reductions[["pca"]] <- red
+      scdata@reductions[["pca"]] <- pca
     }
   },
   error = function(e) {
@@ -404,29 +721,7 @@ reconstruct_sce <- function(dataset_fpath) {
   })
 
   # construct Seurat object from SingleCellExperiment items
-  scdata <- SeuratObject::CreateSeuratObject(
-    counts,
-    meta.data = metadata,
-  )
-
-  # add logcounts
-  tryCatch({
-
-    if ("logcounts" %in% SummarizedExperiment::assayNames(user_scdata)) {
-      logcounts <- SingleCellExperiment::logcounts(user_scdata)
-      test_user_sparse_mat(logcounts)
-    } else {
-      logcounts <- Seurat::NormalizeData(counts)
-    }
-
-    scdata[["RNA"]]$data <- logcounts
-  },
-  error = function(e) {
-    message(e$message)
-    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
-  })
-
-  scdata <- add_obj2s_dispersions(scdata)
+  scdata <- create_obj2s_scdata(counts, metadata)
 
   # add gene annotations
   gene_annotations <- data.frame(
@@ -436,6 +731,8 @@ reconstruct_sce <- function(dataset_fpath) {
     row.names = rns
   )
   scdata@misc$gene_annotations <- gene_annotations
+
+  scdata <- add_obj2s_dispersions(scdata)
 
   red_names <- tolower(SingleCellExperiment::reducedDimNames(user_scdata))
 
@@ -485,7 +782,7 @@ reconstruct_sce <- function(dataset_fpath) {
         assay = "RNA",
         key = "pca_"
       )
-      scdata@reductions[["pca"]] <- red
+      scdata@reductions[["pca"]] <- pca
     }
   },
   error = function(e) {
@@ -551,46 +848,13 @@ reconstruct_seurat <- function(dataset_fpath) {
   })
 
   # reconstruct Seurat object
-  scdata <- SeuratObject::CreateSeuratObject(
-    counts,
-    meta.data = metadata,
-  )
+  scdata <- create_obj2s_scdata(counts, metadata)
 
-  # add logcounts
-  tryCatch({
-
-    layers <- SeuratObject::Layers(user_scdata, assay = "RNA")
-    if ("data" %in% layers) {
-      logcounts <- user_scdata[["RNA"]]$data
-      test_user_sparse_mat(logcounts)
-    } else {
-      logcounts <- Seurat::NormalizeData(user_scdata[["RNA"]]$counts)
-    }
-
-    # shouldn't be raw counts
-    suspect.counts <- max(logcounts) > 100
-    if (suspect.counts) logcounts <- Seurat::NormalizeData(logcounts)
-
-    scdata[["RNA"]]$data <- logcounts
-  },
-  error = function(e) {
-    message(e$message)
-    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
-  })
-
+  # add gene annotations
+  scdata@misc$gene_annotations <- get_obj2s_gene_annotations(user_scdata, rns)
 
   # add dispersions (need for gene list)
   scdata <- add_obj2s_dispersions(scdata)
-
-  # add gene annotations
-  gene_annotations <- data.frame(
-    input = rns,
-    name = rns,
-    original_name = rns,
-    row.names = rns
-  )
-  scdata@misc$gene_annotations <- gene_annotations
-
 
   # add default dimensionality reduction
   red_names <- tolower(names(user_scdata@reductions))
@@ -649,20 +913,70 @@ reconstruct_seurat <- function(dataset_fpath) {
 }
 
 
-add_obj2s_dispersions <- function(scdata, assay = "RNA") {
-
-  # add dispersions (need for gene list)
+#' Create the Cellenics object from the user's counts and metadata
+#'
+#' Mirrors a processed count matrix upload (gem2s and QC): counts are stored in
+#' a disk-backed BPCells matrix and logcounts are normalized lazily from them, so
+#' the processed object has a single matrix dir (see
+#' \code{write_merged_matrix_dir}). Logcounts in the user's object are not used.
+#'
+#' @param counts sparse counts matrix, type checked
+#' @param metadata data.frame of cell metadata, type checked
+#'
+#' @return SeuratObject with an RNA assay
+create_obj2s_scdata <- function(counts, metadata) {
   tryCatch({
-    logcounts <- scdata[[assay]]$data
+    counts <- write_obj2s_matrix_dir(counts)
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_COUNTS, call. = FALSE)
+  })
 
-    dispersions <- Seurat::FindVariableFeatures(logcounts)
-    test_user_df(dispersions)
-    colnames(dispersions) <- gsub("^vst[.]", "", colnames(dispersions))
+  scdata <- SeuratObject::CreateSeuratObject(
+    counts,
+    meta.data = metadata,
+  )
 
-    # keep columns that use: same as `HVFInfo(scdata)`
-    dispersions <- dispersions[, c("mean", "variance", "variance.standardized")]
-    dispersions$SYMBOL <- dispersions$ENSEMBL <- row.names(dispersions)
-    scdata@misc$gene_dispersion <- dispersions
+  tryCatch({
+    scdata <- Seurat::NormalizeData(
+      scdata,
+      normalization.method = "LogNormalize",
+      assay = "RNA",
+      verbose = FALSE
+    )
+  },
+  error = function(e) {
+    message(e$message)
+    stop(errors$ERROR_OBJ2S_LOGCOUNTS, call. = FALSE)
+  })
+
+  return(scdata)
+}
+
+# write counts to the matrix dir uploaded with the processed object
+write_obj2s_matrix_dir <- function(counts) {
+  counts <- methods::as(counts, "dgCMatrix")
+
+  # integer counts are stored as integers, as when gem2s imports them
+  is_integer <- all(counts@x >= 0 & counts@x == round(counts@x))
+  counts <- BPCells::convert_matrix_type(
+    counts,
+    ifelse(is_integer, "uint32_t", "double")
+  )
+
+  matrix_dir <- file.path(tempdir(), "matrix_dir")
+  unlink(matrix_dir, recursive = TRUE)
+  message("Writing counts matrix dir to: ", matrix_dir)
+
+  BPCells::write_matrix_dir(counts, dir = matrix_dir)
+}
+
+# dispersions (needed for gene list), computed as in QC for LogNormalize
+add_obj2s_dispersions <- function(scdata) {
+  tryCatch({
+    scdata <- Seurat::FindVariableFeatures(scdata, assay = "RNA", verbose = FALSE)
+    scdata <- add_dispersions(scdata)
   },
   error = function(e) {
     message(e$message)
@@ -681,6 +995,10 @@ test_user_df <- function(df) {
 
 test_user_sparse_mat <- function(counts) {
   stopifnot(isS4(counts))
+
+  if (methods::is(counts, "IterableMatrix")) {
+    stop("Disk-backed (BPCells) counts are not supported, convert them to a dgCMatrix.")
+  }
 
   for (slot in methods::slotNames(counts)) {
     check_type_is_safe(methods::slot(counts, slot))
